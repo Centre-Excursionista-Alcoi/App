@@ -7,5 +7,6 @@ plugins {
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.jetbrainsCompose) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.moko.resources) apply false
     alias(libs.plugins.serialization) apply false
 }

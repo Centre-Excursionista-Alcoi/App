@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+
+    <!-- Generic Strings -->
+    <string name="show_password">Show Password</string>
+    <string name="hide_password">Hide Password</string>
+
+    <!-- Login Page -->
+    <string name="login_title">Login</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_action">Login</string>
+    <string name="login_lost">Lost password?</string>
+    <string name="login_register">Don\'t have an account? Tap here to register</string>
+</resources>

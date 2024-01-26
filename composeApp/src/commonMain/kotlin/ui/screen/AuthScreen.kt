@@ -1,0 +1,150 @@
+package ui.screen
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import backend.supabase
+import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
+import screenmodel.AuthScreenModel
+import ui.pages.auth.HelpPage
+import ui.pages.auth.LoginPage
+import ui.pages.auth.RegisterPage
+import ui.reusable.PopupErrorCard
+
+@OptIn(ExperimentalFoundationApi::class)
+class AuthScreen : Screen {
+    companion object {
+        private const val PAGES = 3
+
+        private const val PAGE_REGISTER = 0
+        private const val PAGE_LOGIN = 1
+        private const val PAGE_HELP = 2
+
+        /**
+         * How long to display error cards in milliseconds.
+         */
+        private const val ERROR_MILLIS = 3_000L
+    }
+
+    private lateinit var model: AuthScreenModel
+
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        // Clear stack on load
+        LaunchedEffect(Unit) { navigator.clearEvent() }
+
+        model = rememberScreenModel { AuthScreenModel() }
+
+        SessionStatusWatcher()
+
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ErrorDisplay()
+
+            PagerComponent()
+        }
+    }
+
+    @Composable
+    private fun SessionStatusWatcher() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        LaunchedEffect(Unit) {
+            supabase.auth.sessionStatus.collect {
+                when (it) {
+                    is SessionStatus.Authenticated -> navigator.push(MainScreen())
+                    SessionStatus.NetworkError -> TODO("Handle network error")
+                    SessionStatus.LoadingFromStorage -> { /* Do nothing */
+                    }
+
+                    SessionStatus.NotAuthenticated -> { /* Do nothing */
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    @OptIn(ExperimentalMaterial3Api::class)
+    private fun BoxScope.ErrorDisplay() {
+        val errors by model.errors.collectAsState(emptyList())
+
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            itemsIndexed(errors) { index, error ->
+                PopupErrorCard(
+                    error,
+                    ERROR_MILLIS
+                ) { model.dismissError(index) }
+            }
+        }
+    }
+
+    @Composable
+    private fun PagerComponent() {
+        val scope = rememberCoroutineScope()
+        val pagerState = rememberPagerState(initialPage = 1) { PAGES }
+
+        HorizontalPager(
+            state = pagerState,
+            userScrollEnabled = false
+        ) { page ->
+            val isLoading by model.isLoading.collectAsState(false)
+
+            Column(
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OutlinedCard(
+                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 32.dp)
+                ) {
+                    when (page) {
+                        PAGE_REGISTER -> RegisterPage()
+                        PAGE_LOGIN -> LoginPage(
+                            isLoading = isLoading,
+                            onLoginRequested = model::login,
+                            onLostPassword = {
+                                scope.launch { pagerState.animateScrollToPage(PAGE_HELP) }
+                            },
+                            onRegisterRequested = {
+                                scope.launch { pagerState.animateScrollToPage(PAGE_REGISTER) }
+                            }
+                        )
+
+                        PAGE_HELP -> HelpPage()
+                    }
+                }
+            }
+        }
+    }
+}

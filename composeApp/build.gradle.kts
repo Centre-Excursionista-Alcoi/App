@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.moko.resources)
     alias(libs.plugins.serialization)
 }
 
@@ -51,14 +52,19 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // Jetpack Compose
-                implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
+                implementation(compose.materialIconsExtended)
+                implementation(compose.runtime)
                 implementation(compose.ui)
 
                 // Compose - Voyager
                 implementation(libs.voyager.navigator)
                 implementation(libs.voyager.screenModel)
+
+                // Moko Resources
+                implementation(libs.moko.resources.base)
+                implementation(libs.moko.resources.compose)
 
                 // Supabase
                 implementation(libs.supabase.auth)
@@ -154,7 +160,7 @@ compose.desktop {
 }
 
 buildkonfig {
-    packageName = "org.centrexcursionistalcoi.app"
+    packageName = "buildkonfig"
 
     defaultConfigs {
         val localProperties = readProperties("local.properties")
@@ -174,4 +180,8 @@ buildkonfig {
                 ?: error("SUPABASE_KEY must be set through local.properties or environment variable")
         )
     }
+}
+
+multiplatformResources {
+    multiplatformResourcesPackage = "resources"
 }
