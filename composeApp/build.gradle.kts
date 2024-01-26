@@ -1,11 +1,28 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.buildkonfig)
     alias(libs.plugins.detekt)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.serialization)
+}
+
+fun readProperties(fileName: String): Properties {
+    val propsFile = project.rootProject.file(fileName)
+    if (!propsFile.exists()) {
+        throw GradleException("$fileName doesn't exist")
+    }
+    if (!propsFile.canRead()) {
+        throw GradleException("Cannot read $fileName")
+    }
+    return Properties().apply {
+        propsFile.inputStream().use { load(it) }
+    }
 }
 
 kotlin {
@@ -29,24 +46,56 @@ kotlin {
             isStatic = true
         }
     }
-    
-    sourceSets {
-        val desktopMain by getting
 
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material)
-            implementation(compose.ui)
-            @OptIn(ExperimentalComposeLibrary::class)
-            implementation(compose.components.resources)
+    @Suppress("UnusedPrivateProperty")
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                // Jetpack Compose
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.ui)
+                @OptIn(ExperimentalComposeLibrary::class)
+                implementation(compose.components.resources)
+
+                // Supabase
+                implementation(libs.supabase.auth)
+                implementation(libs.supabase.realtime)
+            }
         }
-        androidMain.dependencies {
-            implementation(libs.compose.ui.tooling.preview)
-            implementation(libs.androidx.activity.compose)
+
+        val androidMain by getting {
+            dependsOn(commonMain)
+
+            dependencies {
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.compose.ui.tooling.preview)
+                implementation(libs.ktor.client.android)
+            }
         }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
+
+        val desktopMain by getting {
+            dependsOn(commonMain)
+
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.ktor.client.java)
+            }
+        }
+
+        val iosX64Main by getting
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+        val iosMain by creating {
+            dependsOn(commonMain)
+            iosX64Main.dependsOn(this)
+            iosArm64Main.dependsOn(this)
+            iosSimulatorArm64Main.dependsOn(this)
+
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
         }
     }
 }
@@ -100,5 +149,28 @@ compose.desktop {
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+buildkonfig {
+    packageName = "org.centrexcursionistalcoi.app"
+
+    defaultConfigs {
+        val localProperties = readProperties("local.properties")
+
+        buildConfigField(
+            STRING,
+            "SUPABASE_URL",
+            localProperties["SUPABASE_URL"] as String?
+                ?: System.getenv("SUPABASE_URL")
+                ?: error("SUPABASE_URL must be set through local.properties or environment variable")
+        )
+        buildConfigField(
+            STRING,
+            "SUPABASE_KEY",
+            localProperties["SUPABASE_KEY"] as String?
+                ?: System.getenv("SUPABASE_KEY")
+                ?: error("SUPABASE_KEY must be set through local.properties or environment variable")
+        )
     }
 }
