@@ -22,19 +22,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import backend.supabase
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import io.github.jan.supabase.gotrue.SessionStatus
-import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.launch
 import screenmodel.AuthScreenModel
 import ui.pages.auth.HelpPage
 import ui.pages.auth.LoginPage
 import ui.pages.auth.RegisterPage
 import ui.reusable.PopupErrorCard
+import ui.state.ConfirmationStatusWatcher
+import ui.state.SessionStatusWatcher
 
 @OptIn(ExperimentalFoundationApi::class)
 class AuthScreen : Screen {
@@ -63,6 +62,7 @@ class AuthScreen : Screen {
         model = rememberScreenModel { AuthScreenModel() }
 
         SessionStatusWatcher()
+        ConfirmationStatusWatcher()
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -70,25 +70,6 @@ class AuthScreen : Screen {
             ErrorDisplay()
 
             PagerComponent()
-        }
-    }
-
-    @Composable
-    private fun SessionStatusWatcher() {
-        val navigator = LocalNavigator.currentOrThrow
-
-        LaunchedEffect(Unit) {
-            supabase.auth.sessionStatus.collect {
-                when (it) {
-                    is SessionStatus.Authenticated -> navigator.push(MainScreen())
-                    SessionStatus.NetworkError -> TODO("Handle network error")
-                    SessionStatus.LoadingFromStorage -> { /* Do nothing */
-                    }
-
-                    SessionStatus.NotAuthenticated -> { /* Do nothing */
-                    }
-                }
-            }
         }
     }
 
@@ -134,10 +115,9 @@ class AuthScreen : Screen {
                             onLoginRequested = {
                                 scope.launch { pagerState.animateScrollToPage(PAGE_LOGIN) }
                             },
-                            onRegisterRequested = { email, password, fullName, birthday ->
-
-                            }
+                            onRegisterRequested = model::register
                         )
+
                         PAGE_LOGIN -> LoginPage(
                             isLoading = isLoading,
                             onLoginRequested = model::login,

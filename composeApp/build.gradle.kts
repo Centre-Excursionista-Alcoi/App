@@ -69,6 +69,11 @@ kotlin {
                 // Supabase
                 implementation(libs.supabase.auth)
                 implementation(libs.supabase.realtime)
+
+                // Multiplatform Settings
+                implementation(libs.multiplatformSettings.base)
+                implementation(libs.multiplatformSettings.coroutines)
+                implementation(libs.multiplatformSettings.serialization)
             }
         }
 
@@ -79,6 +84,10 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.compose.ui.tooling.preview)
                 implementation(libs.ktor.client.android)
+
+                // Multiplatform Settings
+                implementation(libs.datastore)
+                implementation(libs.multiplatformSettings.datastore)
             }
         }
 
