@@ -1,5 +1,4 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.util.Properties
 
@@ -54,10 +53,12 @@ kotlin {
                 // Jetpack Compose
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-                implementation(compose.material)
+                implementation(compose.material3)
                 implementation(compose.ui)
-                @OptIn(ExperimentalComposeLibrary::class)
-                implementation(compose.components.resources)
+
+                // Compose - Voyager
+                implementation(libs.voyager.navigator)
+                implementation(libs.voyager.screenModel)
 
                 // Supabase
                 implementation(libs.supabase.auth)
