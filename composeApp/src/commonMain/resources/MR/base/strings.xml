@@ -26,4 +26,9 @@
     <string name="waiting_title">Account confirmation</string>
     <string name="waiting_message">Please check your email for a confirmation link.</string>
     <string name="waiting_retry">Retry</string>
+
+    <!-- Main Screen -->
+    <string name="nav_main_rental">Rental</string>
+    <string name="nav_main_profile">Profile</string>
+    <string name="nav_main_settings">Settings</string>
 </resources>
