@@ -129,7 +129,15 @@ class AuthScreen : Screen {
                     modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 32.dp)
                 ) {
                     when (page) {
-                        PAGE_REGISTER -> RegisterPage()
+                        PAGE_REGISTER -> RegisterPage(
+                            isLoading = isLoading,
+                            onLoginRequested = {
+                                scope.launch { pagerState.animateScrollToPage(PAGE_LOGIN) }
+                            },
+                            onRegisterRequested = { email, password, fullName, birthday ->
+
+                            }
+                        )
                         PAGE_LOGIN -> LoginPage(
                             isLoading = isLoading,
                             onLoginRequested = model::login,

@@ -12,4 +12,13 @@
     <string name="login_action">Login</string>
     <string name="login_lost">Lost password?</string>
     <string name="login_register">Don\'t have an account? Tap here to register</string>
+
+    <!-- Register Page -->
+    <string name="register_title">Registration</string>
+    <string name="register_email">Email</string>
+    <string name="register_password">Password</string>
+    <string name="register_name">Full Name</string>
+    <string name="register_birthday">Birthday</string>
+    <string name="register_action">Register</string>
+    <string name="register_login">Already have an account? Tap here to login</string>
 </resources>

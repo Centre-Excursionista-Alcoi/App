@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -49,6 +51,8 @@ fun ColumnScope.LoginPage(
     var email by remember { mutableStateOf(TextFieldValue("")) }
     var password by remember { mutableStateOf(TextFieldValue("")) }
 
+    val passwordFocusRequester = remember { FocusRequester() }
+
     FormField(
         value = email,
         onValueChange = { email = it },
@@ -59,6 +63,7 @@ fun ColumnScope.LoginPage(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .autofill(AutofillType.EmailAddress) { email = TextFieldValue(it) },
+        nextFocusRequester = passwordFocusRequester,
         onSubmit = { onLoginRequested(email.text, password.text) }
     )
     FormField(
@@ -70,7 +75,8 @@ fun ColumnScope.LoginPage(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .autofill(AutofillType.Password) { password = TextFieldValue(it) },
+            .autofill(AutofillType.Password) { password = TextFieldValue(it) }
+            .focusRequester(passwordFocusRequester),
         onSubmit = { onLoginRequested(email.text, password.text) }
     )
 
