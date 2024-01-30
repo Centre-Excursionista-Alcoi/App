@@ -63,7 +63,7 @@ jobs:
           script: ./gradlew :composeApp:connectedCheck
 
       - name: Run the Gradle package task
-        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2
+        uses: gradle/actions/setup-gradle@v3
         with:
           arguments: :composeApp:check
       - name: Store reports
