@@ -57,6 +57,7 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation(compose.runtime)
                 implementation(compose.ui)
+                implementation(libs.compose.placeholder)
 
                 // Compose - Voyager
                 implementation(libs.voyager.navigator)
@@ -68,6 +69,7 @@ kotlin {
 
                 // Supabase
                 implementation(libs.supabase.auth)
+                implementation(libs.supabase.postgrest)
                 implementation(libs.supabase.realtime)
 
                 // Multiplatform Settings
