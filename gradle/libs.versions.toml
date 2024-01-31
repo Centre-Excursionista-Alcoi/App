@@ -15,7 +15,7 @@ kotlin = "1.9.22"
 ktor = "2.3.7"
 moko-resources = "0.23.0"
 multiplatformSettings = "1.1.1"
-supabase = "2.0.4"
+supabase = "2.1.0"
 voyager = "1.0.0"
 
 [libraries]
