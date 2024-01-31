@@ -8,5 +8,6 @@ import kotlinx.serialization.Serializable
 data class Category(
     val id: Long,
     @SerialName("created_at") val createdAt: Instant,
-    @SerialName("display_name") val displayName: String
+    @SerialName("display_name") val displayName: String,
+    val icon: String?
 )
