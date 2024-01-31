@@ -15,6 +15,7 @@ kotlin = "1.9.22"
 ktor = "2.3.7"
 moko-resources = "0.23.0"
 multiplatformSettings = "1.1.1"
+napier = "2.7.1"
 supabase = "2.1.0"
 voyager = "1.0.0"
 
@@ -34,6 +35,7 @@ multiplatformSettings-base = { module = "com.russhwolf:multiplatform-settings", 
 multiplatformSettings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
 multiplatformSettings-datastore = { module = "com.russhwolf:multiplatform-settings-datastore", version.ref = "multiplatformSettings" }
 multiplatformSettings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "multiplatformSettings" }
+napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:gotrue-kt", version.ref = "supabase" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }

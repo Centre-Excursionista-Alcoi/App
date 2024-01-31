@@ -146,6 +146,9 @@ kotlin {
                 implementation(libs.multiplatformSettings.base)
                 implementation(libs.multiplatformSettings.coroutines)
                 implementation(libs.multiplatformSettings.serialization)
+
+                // Logging library
+                implementation(libs.napier)
             }
         }
 
