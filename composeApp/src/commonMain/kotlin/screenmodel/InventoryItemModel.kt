@@ -17,7 +17,7 @@ class InventoryItemModel : ScreenModel {
             createdAt = Clock.System.now(),
             displayName = displayName,
             localizedDisplayName = null,
-            category = null
+            categoryId = null
         )
         supabase.postgrest.from("inventory").insert(item)
     }
