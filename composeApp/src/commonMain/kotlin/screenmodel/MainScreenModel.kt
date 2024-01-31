@@ -9,19 +9,26 @@ import io.github.aakira.napier.Napier
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 class MainScreenModel : ScreenModel {
+    companion object {
+        private val defaultCategories = listOf(
+            Category(1000, Clock.System.now(), "Muntanyisme", "hiking"),
+            Category(1001, Clock.System.now(), "Escalada", "carabiner"),
+            Category(1002, Clock.System.now(), "Espeleologia", "cave"),
+        )
+    }
+
     val userLoggedOut = MutableStateFlow(false)
 
     val currentUser = MutableStateFlow<UserInfo?>(null)
 
-    val categories = MutableStateFlow<List<Category>?>(null)
+    private var categories: List<Category>? = null
     val items = MutableStateFlow<List<InventoryItem>?>(null)
 
     init {
@@ -31,25 +38,39 @@ class MainScreenModel : ScreenModel {
         } else {
             currentUser.tryEmit(user)
         }
-        loadInventoryItems().invokeOnCompletion {
+        loadCategories().invokeOnCompletion {
             Napier.i { "Finished loading data." }
         }
     }
 
     private fun loadCategories() = screenModelScope.async(Dispatchers.IO) {
         Napier.i { "Loading categories..." }
-        val categories = supabase.postgrest
+        val categoryList = supabase.postgrest
             .from("categories")
             .select()
             .decodeList<Category>()
-            .also(categories::tryEmit)
-        Napier.d { "Decoded ${categories.size} categories." }
+            .also { categories = it }
+        Napier.d { "Decoded ${categoryList.size} categories." }
 
-        loadInventoryItems().await()
+        val createCategories = mutableListOf<Category>()
+        for (defaultCategory in defaultCategories) {
+            val exists = categoryList.find { it.id == defaultCategory.id }
+            if (exists != null) continue
+            else createCategories.add(defaultCategory)
+        }
+        if (createCategories.isNotEmpty()) {
+            Napier.i { "Creating ${createCategories.size} categories..." }
+            val result = supabase.postgrest.from("categories").insert(createCategories)
+            Napier.d { "Creation result: ${result.data}" }
+            categories = categoryList.toMutableList().apply { addAll(createCategories) }
+            Napier.i { "Categories created!" }
+        }
+
+        loadInventoryItems()
     }
 
-    private fun loadInventoryItems() = screenModelScope.async(Dispatchers.IO) {
-        val categories = categories.value ?: emptyList()
+    private suspend fun loadInventoryItems() {
+        val categories = categories ?: emptyList()
         println("Loading inventory items...")
         val inventoryItems = supabase.postgrest
             .from("inventory")
