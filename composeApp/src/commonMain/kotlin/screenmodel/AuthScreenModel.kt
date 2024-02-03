@@ -45,7 +45,10 @@ class AuthScreenModel : ScreenModel {
             try {
                 isLoading.emit(true)
 
-                supabase.auth.signInWith(Email) {
+                supabase.auth.signInWith(
+                    Email,
+                    "app://org.centrexcursionistalcoi.app"
+                ) {
                     this.email = email
                     this.password = password
                 }
@@ -77,7 +80,10 @@ class AuthScreenModel : ScreenModel {
 
                 val data = UserData(fullName, birthday.toInstant(), phone, city)
 
-                val result = supabase.auth.signUpWith(Email) {
+                val result = supabase.auth.signUpWith(
+                    Email,
+                    "app://org.centrexcursionistalcoi.app"
+                ) {
                     this.email = email
                     this.password = password
                     this.data = Json.encodeToJsonElement(data).jsonObject
