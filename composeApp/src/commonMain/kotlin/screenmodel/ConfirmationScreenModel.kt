@@ -21,6 +21,7 @@ class ConfirmationScreenModel : ScreenModel {
             val password = settings.getStringOrNull(TEMP_USER_PASSWORD)
 
             if (email == null || password == null) {
+                println("There isn't any email or password stored in memory, cannot verify email.")
                 settings.remove(TEMP_USER_EMAIL)
                 settings.remove(TEMP_USER_PASSWORD)
                 settings.remove(CONFIRMATION_ID)

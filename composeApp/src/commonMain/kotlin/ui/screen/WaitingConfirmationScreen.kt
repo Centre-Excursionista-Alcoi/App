@@ -34,7 +34,7 @@ class WaitingConfirmationScreen : Screen {
 
         SessionStatusWatcher()
         ConfirmationStatusWatcher {
-            if (it == null) navigator.push(LoadingScreen)
+            if (it == null) navigator.push(LoadingScreen())
         }
 
         Box(

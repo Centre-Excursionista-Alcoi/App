@@ -6,6 +6,6 @@ import ui.theme.AppTheme
 @Composable
 fun App() {
     AppTheme {
-        Navigator(LoadingScreen)
+        Navigator(LoadingScreen())
     }
 }

@@ -17,7 +17,7 @@ import storage.SettingsKeys
 import storage.settings
 import ui.reusable.LoadingIndicator
 
-object LoadingScreen : Screen {
+class LoadingScreen : Screen {
     private val auth = supabase.auth
 
     @Composable

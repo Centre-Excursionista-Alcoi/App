@@ -25,7 +25,7 @@ fun Screen.ConfirmationStatusWatcher(
     DisposableEffect(Unit) {
         val listener = settings.addStringOrNullListener(SettingsKeys.CONFIRMATION_ID) { id ->
             if (id != null) {
-                navigator.push(LoadingScreen)
+                navigator.push(LoadingScreen())
             }
             onUpdateReceived(id)
         }
