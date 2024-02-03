@@ -23,6 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -100,7 +105,18 @@ class AuthScreen : Screen {
 
         HorizontalPager(
             state = pagerState,
-            userScrollEnabled = false
+            userScrollEnabled = false,
+            modifier = Modifier.onKeyEvent { event ->
+                when {
+                    event.key == Key.Escape && event.type == KeyEventType.KeyUp -> {
+                        if (pagerState.currentPage != 1) {
+                            scope.launch { pagerState.animateScrollToPage(1) }
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
         ) { page ->
             val isLoading by model.isLoading.collectAsState(false)
 

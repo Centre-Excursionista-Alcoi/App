@@ -7,6 +7,11 @@
     <string name="validation_email">Please, introduce a valid email address.</string>
     <string name="validation_password">Passwords must have at least 8 characters consisting of lowercase and uppercase letters, and numbers.</string>
 
+    <!-- Desktop -->
+    <string name="window_minimize" comment="Content description of the button for minimizing the window">Minimize</string>
+    <string name="window_maximize" comment="Content description of the button for maximizing the window">Maximize</string>
+    <string name="window_close" comment="Content description of the button for closing the window">Close</string>
+
     <!-- Login Page -->
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>

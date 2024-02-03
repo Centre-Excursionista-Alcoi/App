@@ -194,10 +194,10 @@ fun ColumnScope.RegisterPage(
         text = stringResource(MR.strings.register_login),
         style = MaterialTheme.typography.labelMedium,
         modifier = Modifier
+            .clickable(enabled = !isLoading, onClick = onLoginRequested)
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 8.dp, bottom = 16.dp)
-            .clickable(enabled = !isLoading, onClick = onLoginRequested),
+            .padding(top = 8.dp, bottom = 16.dp),
         textAlign = TextAlign.Center
     )
 }

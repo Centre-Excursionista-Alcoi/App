@@ -1,10 +1,16 @@
 package ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import ui.theme.fonts.Jost
+import ui.theme.fonts.Roboto
 
 
 private val LightColors = lightColorScheme(
@@ -72,6 +78,30 @@ private val DarkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
+private val Typography: Typography
+    @Composable
+    get() = MaterialTheme.typography.copy(
+        displayLarge = MaterialTheme.typography.displayLarge.copy(fontFamily = Jost.Bold),
+        displayMedium = MaterialTheme.typography.displayMedium.copy(fontFamily = Jost.Bold),
+        displaySmall = MaterialTheme.typography.displaySmall.copy(fontFamily = Jost.Bold),
+
+        headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontFamily = Jost.Bold),
+        headlineMedium = MaterialTheme.typography.headlineMedium.copy(fontFamily = Jost.Bold),
+        headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontFamily = Jost.Bold),
+
+        titleLarge = MaterialTheme.typography.titleLarge.copy(fontFamily = Jost.Regular),
+        titleMedium = MaterialTheme.typography.titleMedium.copy(fontFamily = Jost.Regular),
+        titleSmall = MaterialTheme.typography.titleSmall.copy(fontFamily = Jost.Regular),
+
+        bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontFamily = Roboto.Regular),
+        bodyMedium = MaterialTheme.typography.bodyMedium.copy(fontFamily = Roboto.Regular),
+        bodySmall = MaterialTheme.typography.bodySmall.copy(fontFamily = Roboto.Regular),
+
+        labelLarge = MaterialTheme.typography.labelLarge.copy(fontFamily = Roboto.Medium),
+        labelMedium = MaterialTheme.typography.labelMedium.copy(fontFamily = Roboto.Medium),
+        labelSmall = MaterialTheme.typography.labelSmall.copy(fontFamily = Roboto.Medium)
+    )
+
 @Composable
 fun AppTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),
@@ -85,6 +115,13 @@ fun AppTheme(
 
     MaterialTheme(
         colorScheme = colors,
-        content = content
-    )
+        typography = Typography
+    ) {
+        // Force background color
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            content = content
+        )
+    }
 }
