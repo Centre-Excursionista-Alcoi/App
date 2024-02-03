@@ -62,6 +62,9 @@ kotlin {
                 implementation(libs.voyager.navigator)
                 implementation(libs.voyager.screenModel)
 
+                // Compose - WindowSizeClass
+                implementation(libs.compose.windowSizeClass)
+
                 // Moko Resources
                 implementation(libs.moko.resources.base)
                 implementation(libs.moko.resources.compose)
