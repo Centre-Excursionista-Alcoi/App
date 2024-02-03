@@ -1,5 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Properties
 
 plugins {
@@ -25,6 +27,66 @@ fun readProperties(fileName: String): Properties {
     }
 }
 
+inline fun updateProperties(fileName: String, block: Properties.() -> Unit) {
+    val propsFile = project.rootProject.file(fileName)
+    val props = readProperties(propsFile.name)
+    block(props)
+    propsFile.outputStream().use {
+        val date = LocalDateTime.now()
+        props.store(it, "Updated at $date")
+    }
+}
+
+open class PlatformVersion(
+    open val versionName: String
+)
+
+data class PlatformVersionWithCode(
+    override val versionName: String,
+    val versionCode: Int
+) : PlatformVersion(versionName)
+
+typealias AndroidVersion = PlatformVersionWithCode
+typealias IOSVersion = PlatformVersion
+typealias WindowsVersion = PlatformVersion
+typealias MacOSVersion = PlatformVersion
+typealias LinuxVersion = PlatformVersionWithCode
+
+sealed class Platform<VersionType : PlatformVersion> {
+    object Android : Platform<PlatformVersionWithCode>()
+    object IOS : Platform<IOSVersion>()
+    object Windows : Platform<WindowsVersion>()
+    object MacOS : Platform<MacOSVersion>()
+    object Linux : Platform<LinuxVersion>()
+}
+
+fun <VersionType : PlatformVersion> getVersionForPlatform(platform: Platform<VersionType>?): VersionType {
+    val versionProperties = readProperties("version.properties")
+
+    fun getAndReplaceVersion(key: String): String {
+        val versionName = versionProperties.getProperty("VERSION_NAME")
+        return versionProperties.getProperty(key).replace("\$VERSION_NAME", versionName)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    return when (platform) {
+        Platform.Android -> PlatformVersionWithCode(
+            getAndReplaceVersion("VERSION_ANDROID"),
+            versionProperties.getProperty("VERSION_ANDROID_CODE").toInt()
+        ) as VersionType
+
+        Platform.IOS -> IOSVersion(getAndReplaceVersion("VERSION_NAME")) as VersionType
+        Platform.Windows -> WindowsVersion(getAndReplaceVersion("VERSION_WIN")) as VersionType
+        Platform.MacOS -> MacOSVersion(getAndReplaceVersion("VERSION_MAC")) as VersionType
+        Platform.Linux -> LinuxVersion(
+            getAndReplaceVersion("VERSION_LIN"),
+            versionProperties.getProperty("VERSION_LIN_RELEASE").toInt()
+        ) as VersionType
+
+        else -> PlatformVersion(versionProperties.getProperty("VERSION_NAME")) as VersionType
+    }
+}
+
 kotlin {
     androidTarget {
         compilations.all {
@@ -33,9 +95,9 @@ kotlin {
             }
         }
     }
-    
+
     jvm("desktop")
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -44,6 +106,14 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+        }
+    }
+
+    targets.all {
+        compilations.all {
+            compilerOptions.configure {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
+            }
         }
     }
 
@@ -57,6 +127,7 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation(compose.runtime)
                 implementation(compose.ui)
+                implementation(libs.compose.placeholder)
 
                 // Compose - Voyager
                 implementation(libs.voyager.navigator)
@@ -71,12 +142,16 @@ kotlin {
 
                 // Supabase
                 implementation(libs.supabase.auth)
+                implementation(libs.supabase.postgrest)
                 implementation(libs.supabase.realtime)
 
                 // Multiplatform Settings
                 implementation(libs.multiplatformSettings.base)
                 implementation(libs.multiplatformSettings.coroutines)
                 implementation(libs.multiplatformSettings.serialization)
+
+                // Logging library
+                implementation(libs.napier)
             }
         }
 
@@ -163,10 +238,63 @@ compose.desktop {
     application {
         mainClass = "MainKt"
 
+        buildTypes.release.proguard {
+            isEnabled = false
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+
             packageName = "org.centrexcursionistalcoi.app"
-            packageVersion = "1.0.0"
+            packageVersion = getVersionForPlatform<PlatformVersion>(null).versionName
+
+            description = "CEA App"
+            copyright =
+                "© ${LocalDate.now().year} Centre Excursionista d'Alcoi & Arnau Mora Gras. All rights reserved."
+            vendor = "Centre Excursionista d'Alcoi"
+
+            // val iconsDir = File(rootDir, "icons")
+
+            windows {
+                /*iconFile.set(
+                    File(iconsDir, "icon.ico")
+                )*/
+                dirChooser = true
+                perUserInstall = true
+                menuGroup = "Centre Excursionista d'Alcoi"
+                packageName = "CEA App"
+                upgradeUuid = "db4a9e58-d033-4ee9-978e-b5065e7f4395"
+                val version = getVersionForPlatform(Platform.Windows)
+                msiPackageVersion = version.versionName
+                exePackageVersion = version.versionName
+            }
+            linux {
+                /*iconFile.set(
+                    File(iconsDir, "icon.png")
+                )*/
+                debMaintainer = "cea.app.linux@arnyminerz.com"
+                menuGroup = "Centre Excursionista d'Alcoi"
+                appCategory = "Utility"
+                val version = getVersionForPlatform(Platform.Linux)
+                appRelease = version.versionCode.toString()
+                debPackageVersion = version.versionName
+                rpmPackageVersion = version.versionName
+            }
+            macOS {
+                /*iconFile.set(
+                    File(iconsDir, "icon.icns")
+                )*/
+                bundleID = "org.centrexcursionistalcoi.app"
+                dockName = "Escalar Alcoià i Comtat"
+                appStore = true
+                appCategory = "public.app-category.utilities"
+                val version = getVersionForPlatform(Platform.MacOS)
+                dmgPackageVersion = version.versionName
+                pkgPackageVersion = version.versionName
+                packageBuildVersion = version.versionName
+                dmgPackageBuildVersion = version.versionName
+                pkgPackageBuildVersion = version.versionName
+            }
         }
     }
 }
@@ -197,3 +325,27 @@ buildkonfig {
 multiplatformResources {
     multiplatformResourcesPackage = "resources"
 }
+
+fun increaseNumberInProperties(key: String) {
+    var code = 0
+    updateProperties("version.properties") {
+        code = getProperty(key).toInt() + 1
+        setProperty(key, code.toString())
+    }
+
+    println("Increased $key to $code")
+}
+
+val increaseVersionCode = task("increaseVersionCode") {
+    doFirst {
+        increaseNumberInProperties("VERSION_ANDROID_CODE")
+    }
+}
+val increaseLinuxRelease = task("increaseLinuxRelease") {
+    doFirst {
+        increaseNumberInProperties("VERSION_LIN_RELEASE")
+    }
+}
+
+tasks.findByName("bundleRelease")?.dependsOn?.add(increaseVersionCode)
+tasks.findByName("packageDeb")?.dependsOn?.add(increaseLinuxRelease)

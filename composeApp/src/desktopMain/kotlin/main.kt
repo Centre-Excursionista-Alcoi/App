@@ -14,6 +14,8 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import kotlinx.coroutines.flow.MutableStateFlow
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 import ui.theme.AppTheme
 import ui.window.WindowTopBar
 
@@ -23,6 +25,8 @@ val windowTitle = MutableStateFlow("App")
 fun main() = application {
     val windowState = rememberWindowState()
     val title by windowTitle.collectAsState("")
+
+    Napier.base(DebugAntilog())
 
     Window(
         onCloseRequest = ::exitApplication,
