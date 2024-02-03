@@ -2,6 +2,7 @@
 <resources>
 
     <!-- Generic Strings -->
+    <string name="back">Back</string>
     <string name="show_password">Show Password</string>
     <string name="hide_password">Hide Password</string>
     <string name="validation_email">Please, introduce a valid email address.</string>

@@ -2,7 +2,6 @@ package ui.window
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,7 +15,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import dev.icerock.moko.resources.compose.stringResource
 
@@ -27,6 +25,7 @@ fun WindowActionButton(
     contentDescription: StringResource,
     idleColor: Color,
     hoverColor: Color = idleColor,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
@@ -37,10 +36,9 @@ fun WindowActionButton(
         imageVector = icon,
         contentDescription = stringResource(contentDescription),
         tint = if (enabled) color else idleColor.copy(alpha = .5f),
-        modifier = Modifier
+        modifier = modifier
             .onPointerEvent(PointerEventType.Enter) { isHovering = true }
             .onPointerEvent(PointerEventType.Exit) { isHovering = false }
             .clickable(enabled, stringResource(contentDescription), Role.Button, onClick)
-            .padding(4.dp)
     )
 }

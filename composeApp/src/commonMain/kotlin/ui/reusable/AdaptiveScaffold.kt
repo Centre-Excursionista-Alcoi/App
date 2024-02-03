@@ -20,6 +20,9 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import com.eygraber.compose.placeholder.PlaceholderHighlight
+import com.eygraber.compose.placeholder.material3.fade
+import com.eygraber.compose.placeholder.material3.placeholder
 import kotlinx.coroutines.launch
 import ui.reusable.navigation.ScaffoldPage
 
@@ -27,7 +30,9 @@ import ui.reusable.navigation.ScaffoldPage
 @ExperimentalFoundationApi
 @ExperimentalMaterial3WindowSizeClassApi
 fun AdaptiveScaffold(
-    pages: List<ScaffoldPage>
+    pages: List<ScaffoldPage>,
+    floatingActionButton: @Composable () -> Unit = {},
+    loadingItems: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { pages.size }
@@ -41,14 +46,28 @@ fun AdaptiveScaffold(
                     for ((index, page) in pages.withIndex()) {
                         NavigationBarItem(
                             selected = pagerState.currentPage == index,
-                            icon = { Icon(page.icon, page.contentDescription) },
+                            icon = {
+                                Icon(
+                                    imageVector = page.icon,
+                                    contentDescription = page.contentDescription,
+                                    modifier = Modifier
+                                        .placeholder(loadingItems, highlight = PlaceholderHighlight.fade())
+                                )
+                            },
                             onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            label = { Text(page.label()) }
+                            label = {
+                                Text(
+                                    text = page.label(),
+                                    modifier = Modifier
+                                        .placeholder(loadingItems, highlight = PlaceholderHighlight.fade())
+                                )
+                            }
                         )
                     }
                 }
             }
-        }
+        },
+        floatingActionButton = floatingActionButton
     ) { paddingValues ->
         Row(
             modifier = Modifier
@@ -63,9 +82,22 @@ fun AdaptiveScaffold(
                     for ((index, page) in pages.withIndex()) {
                         NavigationRailItem(
                             selected = pagerState.currentPage == index,
-                            icon = { Icon(page.icon, page.contentDescription) },
+                            icon = {
+                                Icon(
+                                    imageVector = page.icon,
+                                    contentDescription = page.contentDescription,
+                                    modifier = Modifier
+                                        .placeholder(loadingItems, highlight = PlaceholderHighlight.fade())
+                                )
+                            },
                             onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            label = { Text(page.label()) },
+                            label = {
+                                Text(
+                                    text = page.label(),
+                                    modifier = Modifier
+                                        .placeholder(loadingItems, highlight = PlaceholderHighlight.fade())
+                                )
+                            },
                             alwaysShowLabel = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
                         )
                     }

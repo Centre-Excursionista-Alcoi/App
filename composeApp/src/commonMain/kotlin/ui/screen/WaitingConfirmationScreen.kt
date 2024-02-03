@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.compose.stringResource
@@ -25,9 +24,11 @@ import screenmodel.ConfirmationScreenModel
 import ui.state.ConfirmationStatusWatcher
 import ui.state.SessionStatusWatcher
 
-class WaitingConfirmationScreen : Screen {
+class WaitingConfirmationScreen : BaseScreen() {
     @Composable
     override fun Content() {
+        super.Content()
+
         val navigator = LocalNavigator.currentOrThrow
 
         val model = rememberScreenModel { ConfirmationScreenModel() }

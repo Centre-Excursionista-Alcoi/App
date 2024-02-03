@@ -13,25 +13,23 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import kotlinx.coroutines.flow.MutableStateFlow
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
+import ui.state.SharedApplicationState
 import ui.theme.AppTheme
 import ui.window.WindowTopBar
-
-val windowTitle = MutableStateFlow("App")
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 fun main() = application {
     val windowState = rememberWindowState()
-    val title by windowTitle.collectAsState("")
+    val title by SharedApplicationState.title.collectAsState(null)
 
     Napier.base(DebugAntilog())
 
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = title,
+        title = title ?: "CEA App",
         undecorated = true,
         resizable = windowState.placement == WindowPlacement.Floating
     ) {
@@ -39,7 +37,7 @@ fun main() = application {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                WindowTopBar(windowState, title, ::exitApplication)
+                WindowTopBar(windowState, title ?: "CEA App", ::exitApplication)
 
                 Box(
                     modifier = Modifier.weight(1f).fillMaxWidth()

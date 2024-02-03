@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import backend.supabase
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.russhwolf.settings.ExperimentalSettingsApi
@@ -17,12 +16,14 @@ import storage.SettingsKeys
 import storage.settings
 import ui.reusable.LoadingIndicator
 
-class LoadingScreen : Screen {
+class LoadingScreen : BaseScreen() {
     private val auth = supabase.auth
 
     @Composable
     @OptIn(ExperimentalSettingsApi::class)
     override fun Content() {
+        super.Content()
+
         val navigator = LocalNavigator.currentOrThrow
 
         var status: SessionStatus? by remember { mutableStateOf(null) }

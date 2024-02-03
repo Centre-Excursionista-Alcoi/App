@@ -30,7 +30,6 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.launch
@@ -43,7 +42,7 @@ import ui.state.ConfirmationStatusWatcher
 import ui.state.SessionStatusWatcher
 
 @OptIn(ExperimentalFoundationApi::class)
-class AuthScreen : Screen {
+class AuthScreen : BaseScreen() {
     companion object {
         private const val PAGES = 3
 
@@ -61,6 +60,8 @@ class AuthScreen : Screen {
 
     @Composable
     override fun Content() {
+        super.Content()
+
         val navigator = LocalNavigator.currentOrThrow
 
         // Clear stack on load

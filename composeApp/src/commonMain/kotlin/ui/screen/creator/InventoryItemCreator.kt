@@ -7,15 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,17 +27,21 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import platform.NavigationInformation
 import screenmodel.InventoryItemModel
 import ui.reusable.form.FormField
+import ui.reusable.navigation.AppBarBackButton
+import ui.screen.BaseScreen
 
-class InventoryItemCreator : Screen {
+class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
     @Composable
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun Content() {
+        super.Content()
+
         val navigator = LocalNavigator.currentOrThrow
 
         val model = rememberScreenModel { InventoryItemModel() }
@@ -109,15 +108,13 @@ class InventoryItemCreator : Screen {
     @Composable
     @OptIn(ExperimentalMaterial3Api::class)
     private fun TopBar() {
-        val navigator = LocalNavigator.currentOrThrow
-
-        TopAppBar(
-            title = { Text("Create New Item") },
-            navigationIcon = {
-                IconButton(
-                    onClick = { navigator.pop() }
-                ) { Icon(Icons.Rounded.ChevronLeft, null) }
-            }
-        )
+        if (!NavigationInformation.hasNavigationBar) {
+            TopAppBar(
+                title = { Text("Create New Item") },
+                navigationIcon = {
+                    AppBarBackButton()
+                }
+            )
+        }
     }
 }
