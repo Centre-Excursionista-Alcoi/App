@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +31,7 @@ import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.datetime.LocalDate
 import resources.MR
 import ui.modifier.autofill
+import ui.reusable.form.FieldFormatValidators
 import ui.reusable.form.FormDatePicker
 import ui.reusable.form.FormField
 
@@ -39,7 +41,7 @@ import ui.reusable.form.FormField
 fun ColumnScope.RegisterPage(
     isLoading: Boolean,
     onLoginRequested: () -> Unit,
-    onRegisterRequested: (email: String, password: String, fullName: String, birthday: LocalDate) -> Unit
+    onRegisterRequested: (email: String, password: String, fullName: String, phone: String, city: String, birthday: LocalDate) -> Unit
 ) {
     Text(
         text = stringResource(MR.strings.register_title),
@@ -48,31 +50,46 @@ fun ColumnScope.RegisterPage(
         textAlign = TextAlign.Center
     )
 
-    var email by remember { mutableStateOf(TextFieldValue("")) }
-    var password by remember { mutableStateOf(TextFieldValue("")) }
-    var fullName by remember { mutableStateOf(TextFieldValue("")) }
+    var email by remember { mutableStateOf<TextFieldValue?>(null) }
+    var password by remember { mutableStateOf<TextFieldValue?>(null) }
+    var fullName by remember { mutableStateOf<TextFieldValue?>(null) }
+    var phone by remember { mutableStateOf<TextFieldValue?>(null) }
+    var city by remember { mutableStateOf<TextFieldValue?>(null) }
     var birthday by remember { mutableStateOf<LocalDate?>(null) }
 
-    val formFilled = email.text.isNotBlank() &&
-        password.text.isNotBlank() &&
-        fullName.text.isNotBlank() &&
+    val formFilled = !email?.text.isNullOrBlank() &&
+        !password?.text.isNullOrBlank() &&
+        !fullName?.text.isNullOrBlank() &&
+        !phone?.text.isNullOrBlank() &&
+        !city?.text.isNullOrBlank() &&
         birthday != null
 
     val register: () -> Unit = {
         if (formFilled) {
-            onRegisterRequested(email.text, password.text, fullName.text, birthday!!)
+            onRegisterRequested(
+                email!!.text,
+                password!!.text,
+                fullName!!.text,
+                phone!!.text,
+                city!!.text,
+                birthday!!
+            )
         }
     }
 
     val passwordFocusRequester = remember { FocusRequester() }
     val fullNameFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
+    val cityFocusRequester = remember { FocusRequester() }
 
     FormField(
         value = email,
         onValueChange = { email = it },
         label = stringResource(MR.strings.register_email),
         enabled = !isLoading,
+        isRequired = true,
         keyboardType = KeyboardType.Email,
+        validator = FieldFormatValidators.Email,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -85,7 +102,9 @@ fun ColumnScope.RegisterPage(
         onValueChange = { password = it },
         label = stringResource(MR.strings.register_password),
         enabled = !isLoading,
+        isRequired = true,
         isPassword = true,
+        validator = FieldFormatValidators.Password,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -99,11 +118,41 @@ fun ColumnScope.RegisterPage(
         onValueChange = { fullName = it },
         label = stringResource(MR.strings.register_name),
         enabled = !isLoading,
+        isRequired = true,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .autofill(AutofillType.PersonFullName) { fullName = TextFieldValue(it) }
             .focusRequester(fullNameFocusRequester),
+        nextFocusRequester = phoneFocusRequester,
+        onSubmit = register
+    )
+    FormField(
+        value = phone,
+        onValueChange = { phone = it },
+        label = stringResource(MR.strings.register_phone),
+        enabled = !isLoading,
+        isRequired = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .autofill(AutofillType.PhoneNumber) { phone = TextFieldValue(it) }
+            .focusRequester(phoneFocusRequester),
+        nextFocusRequester = cityFocusRequester,
+        onSubmit = register
+    )
+    FormField(
+        value = city,
+        onValueChange = { city = it },
+        label = stringResource(MR.strings.register_city),
+        enabled = !isLoading,
+        isRequired = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .autofill(AutofillType.AddressLocality) { city = TextFieldValue(it) }
+            .focusRequester(cityFocusRequester),
+        capitalization = KeyboardCapitalization.Words,
         onSubmit = register
     )
     FormDatePicker(
@@ -111,6 +160,7 @@ fun ColumnScope.RegisterPage(
         onValueChange = { birthday = it },
         label = stringResource(MR.strings.register_birthday),
         enabled = !isLoading,
+        isRequired = true,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)

@@ -1,10 +1,14 @@
 package ui.reusable.form
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,8 +28,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -61,11 +66,12 @@ import resources.MR
  * field to the user.
  * Won't be displayed if [error] is not null.
  * @param isRequired If `true`, a red tick (`*`) will be displayed at the end of [label].
+ * @param validator If not null, will be used for validating the current text. Will show
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun FormField(
-    value: TextFieldValue,
+    value: TextFieldValue?,
     onValueChange: (TextFieldValue) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
@@ -77,39 +83,50 @@ fun FormField(
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     supportingText: String? = null,
     keyboardType: KeyboardType? = null,
-    isRequired: Boolean = false
+    isRequired: Boolean = false,
+    validator: FieldFormatValidator? = null
 ) {
+    val focusManager = LocalFocusManager.current
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
     var showingPassword by remember { mutableStateOf(!isPassword) }
 
     var selection: TextRange? = null
 
+    val validationError = validator
+        // Only validate if text has been introduced
+        ?.takeIf { value != null }
+        ?.takeUnless { it.validate(value?.text) }
+        ?.error()
+
     OutlinedTextField(
-        value = value,
+        value = value ?: TextFieldValue(),
         onValueChange = {
             selection = it.selection
             onValueChange(it)
         },
         modifier = Modifier
-            .onPreviewKeyEvent { ev ->
+            .onKeyEvent { ev ->
                 when {
                     (ev.key == Key.Enter || ev.key == Key.NumPadEnter) && ev.type == KeyEventType.KeyUp -> {
                         onSubmit?.invoke()
                         true
                     }
 
-                    ev.key == Key.Tab && ev.type == KeyEventType.KeyUp -> {
-                        nextFocusRequester?.requestFocus()
+                    ev.key == Key.Tab -> {
+                        if (ev.type == KeyEventType.KeyUp) {
+                            nextFocusRequester?.requestFocus() ?: focusManager.clearFocus()
+                        }
                         true
                     }
 
                     ev.isCtrlPressed && ev.key == Key.Backspace && ev.type == KeyEventType.KeyUp -> {
                         selection
+                            ?.takeIf { value != null }
                             ?.takeIf { it.length <= 0 }
                             ?.takeIf { it.start > 0 }
                             ?.let { range ->
-                                val textToRemove = value.text.substring(0, range.start)
+                                val textToRemove = value!!.text.substring(0, range.start)
                                 onValueChange(
                                     value.copy(
                                         text = value.text.replace(textToRemove, "")
@@ -121,9 +138,10 @@ fun FormField(
 
                     ev.isCtrlPressed && ev.key == Key.Delete && ev.type == KeyEventType.KeyUp -> {
                         selection
+                            ?.takeIf { value != null }
                             ?.takeIf { it.length <= 0 }
                             ?.let { range ->
-                                val textToRemove = value.text.substring(range.start)
+                                val textToRemove = value!!.text.substring(range.start)
                                 onValueChange(
                                     value.copy(
                                         text = value.text.replace(textToRemove, "")
@@ -188,9 +206,9 @@ fun FormField(
                 ) {
                     Icon(
                         imageVector = if (showingPassword) {
-                            Icons.Rounded.VisibilityOff
+                            Icons.Outlined.VisibilityOff
                         } else {
-                            Icons.Rounded.Visibility
+                            Icons.Outlined.Visibility
                         },
                         contentDescription = if (showingPassword) {
                             stringResource(MR.strings.hide_password)
@@ -201,11 +219,18 @@ fun FormField(
                 }
             }
         }).takeIf { isPassword },
-        isError = error != null,
-        supportingText = (@Composable {
-            Text(error ?: "")
-        }).takeIf { error != null } ?: supportingText?.let {
-            { Text(it) }
+        isError = error != null || validationError != null,
+        supportingText = {
+            AnimatedContent(
+                targetState = error to validationError,
+                transitionSpec = {
+                    slideInVertically { -it } togetherWith slideOutVertically { -it }
+                }
+            ) { (err, validation) ->
+                err?.let { Text(it) }
+                    ?: validation?.let { Text(it) }
+                    ?: supportingText?.let { Text(it) }
+            }
         }
     )
 }

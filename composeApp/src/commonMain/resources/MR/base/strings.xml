@@ -4,6 +4,8 @@
     <!-- Generic Strings -->
     <string name="show_password">Show Password</string>
     <string name="hide_password">Hide Password</string>
+    <string name="validation_email">Please, introduce a valid email address.</string>
+    <string name="validation_password">Passwords must have at least 8 characters consisting of lowercase and uppercase letters, and numbers.</string>
 
     <!-- Login Page -->
     <string name="login_title">Login</string>
@@ -18,6 +20,8 @@
     <string name="register_email">Email</string>
     <string name="register_password">Password</string>
     <string name="register_name">Full Name</string>
+    <string name="register_phone">Phone</string>
+    <string name="register_city">City</string>
     <string name="register_birthday">Birthday</string>
     <string name="register_action">Register</string>
     <string name="register_login">Already have an account? Tap here to login</string>

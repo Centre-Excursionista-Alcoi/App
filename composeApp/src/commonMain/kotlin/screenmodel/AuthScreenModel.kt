@@ -61,13 +61,21 @@ class AuthScreenModel : ScreenModel {
         }
     }
 
+    @Suppress("LongParameterList")
     @OptIn(ExperimentalSettingsApi::class)
-    fun register(email: String, password: String, fullName: String, birthday: LocalDate) {
+    fun register(
+        email: String,
+        password: String,
+        fullName: String,
+        city: String,
+        phone: String,
+        birthday: LocalDate
+    ) {
         screenModelScope.launch(Dispatchers.IO) {
             try {
                 isLoading.emit(true)
 
-                val data = UserData(fullName, birthday.toInstant())
+                val data = UserData(fullName, birthday.toInstant(), phone, city)
 
                 val result = supabase.auth.signUpWith(Email) {
                     this.email = email
