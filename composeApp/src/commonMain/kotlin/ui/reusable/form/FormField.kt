@@ -8,6 +8,7 @@ import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltipBox
 import androidx.compose.material3.Text
@@ -26,13 +27,16 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import dev.icerock.moko.resources.compose.stringResource
 import resources.MR
 
@@ -56,6 +60,7 @@ import resources.MR
  * @param supportingText If any, the text that will be displayed under the field for giving more information about the
  * field to the user.
  * Won't be displayed if [error] is not null.
+ * @param isRequired If `true`, a red tick (`*`) will be displayed at the end of [label].
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -71,7 +76,8 @@ fun FormField(
     onSubmit: (() -> Unit)? = null,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     supportingText: String? = null,
-    keyboardType: KeyboardType? = null
+    keyboardType: KeyboardType? = null,
+    isRequired: Boolean = false
 ) {
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
@@ -131,13 +137,28 @@ fun FormField(
                 }
             }
             .then(modifier),
-        label = { Text(label) },
+        label = {
+            Text(
+                text = buildAnnotatedString {
+                    append(label)
+                    if (isRequired) {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                            append(" *")
+                        }
+                    }
+                }
+            )
+        },
         enabled = enabled,
         singleLine = true,
         maxLines = 1,
         visualTransformation = if (showingPassword) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(
-            keyboardType = if (isPassword) KeyboardType.Password else keyboardType ?: KeyboardType.Text,
+            keyboardType = if (isPassword) {
+                KeyboardType.Password
+            } else {
+                keyboardType ?: KeyboardType.Text
+            },
             imeAction = when {
                 nextFocusRequester != null -> ImeAction.Next
                 onSubmit != null -> ImeAction.Go

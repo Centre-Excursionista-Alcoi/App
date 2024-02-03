@@ -9,6 +9,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -20,6 +21,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import utils.toInstant
@@ -39,6 +43,7 @@ private const val SecondsInADay = 24 * 60 * 60L
  * @param supportingText If any, the text that will be displayed under the field for giving more information about the
  * field to the user.
  * Won't be displayed if [error] is not null.
+ * @param isRequired If `true`, a red tick (`*`) will be displayed at the end of [label].
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +53,8 @@ fun FormDatePicker(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    supportingText: String? = null
+    supportingText: String? = null,
+    isRequired: Boolean = false
 ) {
     val valueString = value?.let {
         "${it.year}/${it.monthNumber}/${it.dayOfMonth}"
@@ -88,7 +94,18 @@ fun FormDatePicker(
         value = valueString,
         onValueChange = { },
         modifier = modifier,
-        label = { Text(label) },
+        label = {
+            Text(
+                text = buildAnnotatedString {
+                    append(label)
+                    if (isRequired) {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                            append(" *")
+                        }
+                    }
+                }
+            )
+        },
         enabled = enabled,
         readOnly = true,
         singleLine = true,
