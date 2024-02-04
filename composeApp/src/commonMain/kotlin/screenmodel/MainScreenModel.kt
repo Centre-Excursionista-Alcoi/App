@@ -1,8 +1,10 @@
 package screenmodel
 
-import backend.database.Category
-import backend.database.InventoryItem
+import backend.data.database.Category
+import backend.data.database.InventoryItem
+import backend.data.user.Role
 import backend.supabase
+import backend.users.getRoles
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.aakira.napier.Napier
@@ -31,19 +33,31 @@ class MainScreenModel : ScreenModel {
     private var categories: List<Category>? = null
     val items = MutableStateFlow<List<InventoryItem>?>(null)
 
+    /** Whether the user is authorized to use the lending system. */
+    val lendingAuth = MutableStateFlow<Boolean?>(null)
+
     init {
         val user = supabase.auth.currentUserOrNull()
         if (user == null) {
             userLoggedOut.tryEmit(true)
         } else {
             currentUser.tryEmit(user)
-        }
-        loadCategories().invokeOnCompletion {
-            Napier.i { "Finished loading data." }
+
+            loadUserPermissions(user).invokeOnCompletion {
+                Napier.i { "Finished loading data." }
+            }
         }
     }
 
-    private fun loadCategories() = screenModelScope.async(Dispatchers.IO) {
+    private fun loadUserPermissions(userInfo: UserInfo) = screenModelScope.async(Dispatchers.IO) {
+        Napier.i { "Loading user roles..." }
+        val roles = userInfo.getRoles()
+        lendingAuth.tryEmit(roles.contains(Role.LENDING))
+
+        loadCategories()
+    }
+
+    private suspend fun loadCategories() {
         Napier.i { "Loading categories..." }
         val categoryList = supabase.postgrest
             .from("categories")

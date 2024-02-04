@@ -59,9 +59,7 @@ class AuthScreen : BaseScreen() {
     private lateinit var model: AuthScreenModel
 
     @Composable
-    override fun Content() {
-        super.Content()
-
+    override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
 
         // Clear stack on load

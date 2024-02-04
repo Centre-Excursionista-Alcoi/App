@@ -1,4 +1,4 @@
-package backend.database
+package backend.data.database
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName

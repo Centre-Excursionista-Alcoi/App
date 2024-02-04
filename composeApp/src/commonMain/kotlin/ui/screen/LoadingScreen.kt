@@ -21,9 +21,7 @@ class LoadingScreen : BaseScreen() {
 
     @Composable
     @OptIn(ExperimentalSettingsApi::class)
-    override fun Content() {
-        super.Content()
-
+    override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
 
         var status: SessionStatus? by remember { mutableStateOf(null) }

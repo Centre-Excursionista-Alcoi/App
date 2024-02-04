@@ -1,6 +1,8 @@
 package ui.screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EditNote
@@ -16,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -23,7 +26,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.compose.stringResource
 import resources.MR
 import screenmodel.MainScreenModel
-import ui.pages.main.RentalPage
+import ui.pages.main.LendingPage
 import ui.reusable.AdaptiveScaffold
 import ui.reusable.navigation.ScaffoldPage
 import ui.screen.creator.InventoryItemCreator
@@ -32,16 +35,19 @@ import ui.screen.creator.InventoryItemCreator
 class MainScreen : BaseScreen() {
     private lateinit var model: MainScreenModel
 
-    private inner class RentalPage: ScaffoldPage() {
+    private inner class LendingPage: ScaffoldPage() {
         override val icon: ImageVector = Icons.Outlined.EditNote
 
         @Composable
-        override fun label(): String = stringResource(MR.strings.nav_main_rental)
+        override fun label(): String = stringResource(MR.strings.nav_main_lending)
 
         @Composable
         override fun PagerScope.PageContent() {
             val items by model.items.collectAsState(null)
-            RentalPage(items)
+            val lendingAuth by model.lendingAuth.collectAsState(null)
+            Box(modifier = Modifier.fillMaxSize()) {
+                LendingPage(items, lendingAuth)
+            }
         }
     }
 
@@ -70,9 +76,7 @@ class MainScreen : BaseScreen() {
     }
 
     @Composable
-    override fun Content() {
-        super.Content()
-
+    override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
 
         model = rememberScreenModel { MainScreenModel() }
@@ -90,7 +94,7 @@ class MainScreen : BaseScreen() {
 
         AdaptiveScaffold(
             pages = listOf(
-                RentalPage(), ProfilePage(), SettingsPage()
+                LendingPage(), ProfilePage(), SettingsPage()
             ),
             floatingActionButton = {
                 FloatingActionButton(

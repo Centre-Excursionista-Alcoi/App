@@ -1,4 +1,4 @@
-package backend.data
+package backend.data.user
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable

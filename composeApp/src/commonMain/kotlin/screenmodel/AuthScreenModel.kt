@@ -1,6 +1,6 @@
 package screenmodel
 
-import backend.data.UserData
+import backend.data.user.UserData
 import backend.supabase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope

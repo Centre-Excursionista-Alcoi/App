@@ -22,5 +22,10 @@ abstract class BaseScreen(
         LaunchedEffect(navigator) {
             SharedApplicationState.navigator.tryEmit(navigator)
         }
+
+        ScreenContent()
     }
+
+    @Composable
+    abstract fun ScreenContent()
 }

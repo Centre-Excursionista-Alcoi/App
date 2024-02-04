@@ -7,6 +7,7 @@
     <string name="hide_password">Hide Password</string>
     <string name="validation_email">Please, introduce a valid email address.</string>
     <string name="validation_password">Passwords must have at least 8 characters consisting of lowercase and uppercase letters, and numbers.</string>
+    <string name="access_form" comment="Shown as an action button in an authorization card to access the sign up form.">Access Form</string>
 
     <!-- Desktop -->
     <string name="window_minimize" comment="Content description of the button for minimizing the window">Minimize</string>
@@ -38,7 +39,14 @@
     <string name="waiting_retry">Retry</string>
 
     <!-- Main Screen -->
-    <string name="nav_main_rental">Rental</string>
+    <string name="nav_main_lending">Lending</string>
     <string name="nav_main_profile">Profile</string>
     <string name="nav_main_settings">Settings</string>
+
+    <!-- Missing Authorization -->
+    <string name="missing_authorization_title">Missing Authorization</string>
+    <string name="missing_authorization_lending">You are not authorized to use the lending system. Please, click the button below to complete the sign up form.</string>
+
+    <!-- Lending authorization screen -->
+    <string name="lending_auth_title">Lending Authorization Form</string>
 </resources>

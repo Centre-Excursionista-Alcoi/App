@@ -26,9 +26,7 @@ import ui.state.SessionStatusWatcher
 
 class WaitingConfirmationScreen : BaseScreen() {
     @Composable
-    override fun Content() {
-        super.Content()
-
+    override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
 
         val model = rememberScreenModel { ConfirmationScreenModel() }

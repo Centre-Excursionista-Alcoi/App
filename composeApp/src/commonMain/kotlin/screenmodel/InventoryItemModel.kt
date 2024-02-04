@@ -1,6 +1,6 @@
 package screenmodel
 
-import backend.database.InventoryItem
+import backend.data.database.InventoryItem
 import backend.supabase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope

@@ -39,9 +39,7 @@ import ui.screen.BaseScreen
 class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
     @Composable
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun Content() {
-        super.Content()
-
+    override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
 
         val model = rememberScreenModel { InventoryItemModel() }
