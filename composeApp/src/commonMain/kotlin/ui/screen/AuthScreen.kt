@@ -38,6 +38,7 @@ import ui.pages.auth.HelpPage
 import ui.pages.auth.LoginPage
 import ui.pages.auth.RegisterPage
 import ui.reusable.PopupErrorCard
+import ui.reusable.form.FormColumn
 import ui.state.ConfirmationStatusWatcher
 import ui.state.SessionStatusWatcher
 
@@ -113,47 +114,37 @@ class AuthScreen : BaseScreen() {
                         }
                         true
                     }
+
                     else -> false
                 }
             }
         ) { page ->
             val isLoading by model.isLoading.collectAsState(false)
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+            FormColumn(
+                modifier = Modifier.padding(8.dp)
             ) {
-                OutlinedCard(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth()
-                        .padding(top = 32.dp)
-                ) {
-                    when (page) {
-                        PAGE_REGISTER -> RegisterPage(
-                            isLoading = isLoading,
-                            onLoginRequested = {
-                                scope.launch { pagerState.animateScrollToPage(PAGE_LOGIN) }
-                            },
-                            onRegisterRequested = model::register
-                        )
+                when (page) {
+                    PAGE_REGISTER -> RegisterPage(
+                        isLoading = isLoading,
+                        onLoginRequested = {
+                            scope.launch { pagerState.animateScrollToPage(PAGE_LOGIN) }
+                        },
+                        onRegisterRequested = model::register
+                    )
 
-                        PAGE_LOGIN -> LoginPage(
-                            isLoading = isLoading,
-                            onLoginRequested = model::login,
-                            onLostPassword = {
-                                scope.launch { pagerState.animateScrollToPage(PAGE_HELP) }
-                            },
-                            onRegisterRequested = {
-                                scope.launch { pagerState.animateScrollToPage(PAGE_REGISTER) }
-                            }
-                        )
+                    PAGE_LOGIN -> LoginPage(
+                        isLoading = isLoading,
+                        onLoginRequested = model::login,
+                        onLostPassword = {
+                            scope.launch { pagerState.animateScrollToPage(PAGE_HELP) }
+                        },
+                        onRegisterRequested = {
+                            scope.launch { pagerState.animateScrollToPage(PAGE_REGISTER) }
+                        }
+                    )
 
-                        PAGE_HELP -> HelpPage()
-                    }
+                    PAGE_HELP -> HelpPage()
                 }
             }
         }
