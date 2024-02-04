@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FormColumn(
     modifier: Modifier = Modifier,
+    contentModifier: Modifier = Modifier,
     scrollState: ScrollState = rememberScrollState(),
     maxWidth: Dp = 600.dp,
     content: @Composable ColumnScope.() -> Unit
@@ -33,8 +34,13 @@ fun FormColumn(
             modifier = Modifier
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
-                .then(modifier),
-            content = content
-        )
+                .then(modifier)
+        )  {
+            Column(
+                modifier = Modifier.fillMaxWidth().then(contentModifier)
+            ) {
+                content()
+            }
+        }
     }
 }

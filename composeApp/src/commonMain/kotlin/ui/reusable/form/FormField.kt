@@ -76,6 +76,7 @@ fun FormField(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     error: String? = null,
     isPassword: Boolean = false,
     nextFocusRequester: FocusRequester? = null,
@@ -168,6 +169,7 @@ fun FormField(
             )
         },
         enabled = enabled,
+        readOnly = readOnly,
         singleLine = true,
         maxLines = 1,
         visualTransformation = if (showingPassword) VisualTransformation.None else PasswordVisualTransformation(),

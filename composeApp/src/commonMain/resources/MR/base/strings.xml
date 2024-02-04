@@ -49,4 +49,41 @@
 
     <!-- Lending authorization screen -->
     <string name="lending_auth_title">Lending Authorization Form</string>
+    <string name="lending_auth_message">Please, verify your personal information below, and read carefully all the information provided.</string>
+    <string name="lending_auth_name">Full Name</string>
+    <string name="lending_auth_name_info">This should match the name displayed in your identification card (DNI, NIE...)</string>
+    <string name="lending_auth_email">Email</string>
+    <string name="lending_auth_phone">Phone Number</string>
+    <string name="lending_auth_birthday">Birthday</string>
+    <string name="lending_auth_city">City</string>
+    <string name="lending_auth_check_info">Please, make sure all the information above is correct, otherwise leave this form and modify it.</string>
+    <string name="lending_auth_sports">Practiced Sports</string>
+    <string name="lending_auth_sports_message">Please, mark the sports you practise more often.</string>
+    <string name="lending_auth_sports_climbing_1">Climbing (equipped paths)</string>
+    <string name="lending_auth_sports_climbing_2">Climbing (semi-equipped or not-equipped paths)</string>
+    <string name="lending_auth_sports_via_ferrata">Via Ferrata</string>
+    <string name="lending_auth_sports_canyoning">Canyoning</string>
+    <string name="lending_auth_sports_trekking">Trekking (&lt;3000m)</string>
+    <string name="lending_auth_sports_mountaineering">Mountaineering (&gt;3000m)</string>
+    <string name="lending_auth_insurance">Insurance</string>
+    <string name="lending_auth_insurance_message">To be able to use the lending system, you must have an insurance. Please, select the type below.</string>
+    <string name="lending_auth_insurance_federative_femecv">FEMECV</string>
+    <string name="lending_auth_insurance_federative_other">Other Federative</string>
+    <string name="lending_auth_insurance_private">Private Insurance</string>
+    <string name="lending_auth_insurance_expire">Expiration Date</string>
+    <string name="lending_auth_sections">Sections</string>
+    <string name="lending_auth_sections_message">Select the sections you usually do activities with.</string>
+    <string name="lending_auth_sections_mountaineering">Mountaineering</string>
+    <string name="lending_auth_sections_climbing">Climbing</string>
+    <string name="lending_auth_sections_speleology">Speleology</string>
+    <string name="lending_auth_sections_orientation">Orientation</string>
+    <string name="lending_auth_sections_nordic_walking">Nordic Walking</string>
+    <string name="lending_auth_sections_mountain_trail">Mountain Trail</string>
+    <string name="lending_auth_sections_btt">BTT</string>
+    <string name="lending_auth_verification">Final check</string>
+    <string name="lending_auth_verification_rules">I certify that I know the specific internal rules of the mountaineering and climbing sections that enable the free use of equipment property of the CEA.</string>
+    <string name="lending_auth_verification_preparation">I certify that I have the required skills and knowledge to use the material lent.</string>
+    <string name="lending_auth_verification_responsibility">I know that I am the first and only responsible of the damages that might occur to the people using the equipment, and the equipment itself.</string>
+    <string name="lending_auth_verification_memory">I know that at the end of the activity I have to complete a memory with the results of the activity.</string>
+    <string name="lending_auth_submit">Submit</string>
 </resources>
