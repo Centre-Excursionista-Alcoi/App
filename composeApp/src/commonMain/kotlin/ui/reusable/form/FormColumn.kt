@@ -13,26 +13,27 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun FormColumn(
     modifier: Modifier = Modifier,
     scrollState: ScrollState = rememberScrollState(),
+    maxWidth: Dp = 600.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .then(modifier)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedCard(
             modifier = Modifier
-                .widthIn(max = 600.dp)
+                .widthIn(max = maxWidth)
                 .fillMaxWidth()
-                .padding(top = 32.dp),
+                .then(modifier),
             content = content
         )
     }

@@ -122,7 +122,9 @@ class AuthScreen : BaseScreen() {
             val isLoading by model.isLoading.collectAsState(false)
 
             FormColumn(
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .padding(8.dp)
+                    .padding(top = 32.dp)
             ) {
                 when (page) {
                     PAGE_REGISTER -> RegisterPage(
