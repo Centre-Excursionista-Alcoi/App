@@ -9,6 +9,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerButton
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -22,6 +26,9 @@ import ui.window.WindowTopBar
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 fun main() = application {
     val windowState = rememberWindowState()
+
+    val canGoBack by SharedApplicationState.canGoBack.collectAsState(null)
+    val navigator by SharedApplicationState.navigator.collectAsState(null)
     val title by SharedApplicationState.title.collectAsState(null)
 
     Napier.base(DebugAntilog())
@@ -35,7 +42,20 @@ fun main() = application {
     ) {
         AppTheme {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                if (event.type != PointerEventType.Release && event.button == PointerButton.Back) {
+                                    if (canGoBack == true && navigator?.canPop == true) {
+                                        navigator?.pop()
+                                    }
+                                }
+                            }
+                        }
+                    }
             ) {
                 WindowTopBar(windowState, title ?: "CEA App", ::exitApplication)
 
