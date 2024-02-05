@@ -143,16 +143,26 @@ class MainScreenModel : ScreenModel {
         println("Decoded ${inventoryItems.size} inventory items.")
     }
 
-    fun updateIcon(item: InventoryItem, icon: String?) = screenModelScope.launch(Dispatchers.IO) {
+    private suspend fun updateInventoryItem(item: InventoryItem, property: String, value: String?) {
         supabase.postgrest
             .from("inventory")
             .update(
                 {
-                    set("icon", icon)
+                    set(property, value)
                 }
             ) {
                 filter { eq("id", item.id) }
             }
+    }
+
+    fun updateIcon(item: InventoryItem, icon: String?) = screenModelScope.launch(Dispatchers.IO) {
+        updateInventoryItem(item, "icon", icon)
         loadInventoryItems().await()
     }
+
+    fun updateDisplayName(item: InventoryItem, displayName: String?) =
+        screenModelScope.launch(Dispatchers.IO) {
+            updateInventoryItem(item, "display_name", displayName)
+            loadInventoryItems().await()
+        }
 }

@@ -51,6 +51,8 @@
 
     <!-- Lending Page -->
     <string name="lending_icon_selection_dialog_title">Select an Icon</string>
+    <string name="lending_display_name">Display Name</string>
+    <string name="lending_display_name_edit">Modify Display Name</string>
 
     <!-- Lending authorization screen -->
     <string name="lending_auth_title">Lending Authorization Form</string>

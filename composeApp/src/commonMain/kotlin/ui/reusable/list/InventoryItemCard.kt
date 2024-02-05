@@ -38,6 +38,8 @@ import com.eygraber.compose.placeholder.material3.placeholder
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.Job
 import resources.MR
+import ui.dialog.CoroutineDialog
+import ui.dialog.TextInputDialog
 import kotlin.random.Random
 
 /**
@@ -49,52 +51,43 @@ fun InventoryItemCard(
     item: InventoryItem?,
     isManager: Boolean = false,
     modifier: Modifier = Modifier,
-    onIconUpdateRequested: ((newIcon: String?) -> Job)? = null
+    onIconUpdateRequested: ((newIcon: String?) -> Job)? = null,
+    onDisplayNameUpdateRequested: ((displayName: String) -> Job)? = null
 ) {
-    var updatingIcon by remember { mutableStateOf(false) }
     var showingIconsDialog: Boolean by remember { mutableStateOf(false) }
     if (showingIconsDialog) {
         var iconSelection by remember { mutableStateOf(item?.category?.icon) }
-        AlertDialog(
-            onDismissRequest = {
-                if (!updatingIcon) showingIconsDialog = false
-            },
-            title = { Text(stringResource(MR.strings.lending_icon_selection_dialog_title)) },
-            text = {
-                LazyVerticalGrid(
-                    columns = GridCells.FixedSize(48.dp)
-                ) {
-                    items(IconProvider.icons.toList()) { (key, icon) ->
-                        IconButton(
-                            enabled = !updatingIcon,
-                            onClick = { iconSelection = key },
-                            colors = if (iconSelection == key) {
-                                IconButtonDefaults.filledIconButtonColors()
-                            } else {
-                                IconButtonDefaults.iconButtonColors()
-                            }
-                        ) { Icon(icon, key) }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = !updatingIcon,
-                    onClick = {
-                        updatingIcon = true
-                        onIconUpdateRequested?.invoke(iconSelection)?.invokeOnCompletion {
-                            updatingIcon = false
-                            showingIconsDialog = false
+
+        CoroutineDialog(
+            title = stringResource(MR.strings.lending_icon_selection_dialog_title),
+            onDismissRequest = { showingIconsDialog = false },
+            onSubmit = onIconUpdateRequested?.let { { onIconUpdateRequested(iconSelection) } }
+        ) { isLoading ->
+            LazyVerticalGrid(
+                columns = GridCells.FixedSize(48.dp)
+            ) {
+                items(IconProvider.icons.toList()) { (key, icon) ->
+                    IconButton(
+                        enabled = !isLoading,
+                        onClick = { iconSelection = key },
+                        colors = if (iconSelection == key) {
+                            IconButtonDefaults.filledIconButtonColors()
+                        } else {
+                            IconButtonDefaults.iconButtonColors()
                         }
-                    }
-                ) { Text(stringResource(MR.strings.ok)) }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !updatingIcon,
-                    onClick = { showingIconsDialog = false }
-                ) { Text(stringResource(MR.strings.cancel)) }
+                    ) { Icon(icon, key) }
+                }
             }
+        }
+    }
+    var editingDisplayName by remember { mutableStateOf(false) }
+    if (editingDisplayName) {
+        TextInputDialog(
+            title = stringResource(MR.strings.lending_display_name_edit),
+            label = stringResource(MR.strings.lending_display_name),
+            initialValue = item?.displayName ?: "",
+            onValueChange = onDisplayNameUpdateRequested,
+            onDismissRequest = { editingDisplayName = false }
         )
     }
 
@@ -128,7 +121,10 @@ fun InventoryItemCard(
                         .placeholder(
                             visible = item == null,
                             highlight = PlaceholderHighlight.fade()
-                        ),
+                        )
+                        .clickable(enabled = item != null && isManager) {
+                            editingDisplayName = true
+                        },
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(

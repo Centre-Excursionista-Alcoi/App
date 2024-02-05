@@ -61,7 +61,8 @@ class MainScreen : BaseScreen() {
                     items = items,
                     lendingAuth = lendingAuth,
                     isManager = roles?.contains(Role.INVENTORY_MANAGER) == true,
-                    onIconUpdateRequested = model::updateIcon
+                    onIconUpdateRequested = model::updateIcon,
+                    onDisplayNameUpdateRequested = model::updateDisplayName
                 )
             }
         }

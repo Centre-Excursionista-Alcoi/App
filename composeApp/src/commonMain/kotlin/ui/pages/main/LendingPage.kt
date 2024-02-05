@@ -55,7 +55,8 @@ fun BoxScope.LendingPage(
     items: List<InventoryItem>?,
     lendingAuth: Boolean?,
     isManager: Boolean,
-    onIconUpdateRequested: (item: InventoryItem, newIcon: String?) -> Job
+    onIconUpdateRequested: (item: InventoryItem, newIcon: String?) -> Job,
+    onDisplayNameUpdateRequested: (item: InventoryItem, displayName: String) -> Job
 ) {
     val navigator = LocalNavigator.currentOrThrow
 
@@ -72,7 +73,8 @@ fun BoxScope.LendingPage(
                         modifier = Modifier
                             .widthIn(max = 600.dp)
                             .padding(horizontal = 4.dp, vertical = 8.dp),
-                        onIconUpdateRequested = { onIconUpdateRequested(item, it) }
+                        onIconUpdateRequested = { onIconUpdateRequested(item, it) },
+                        onDisplayNameUpdateRequested = { onDisplayNameUpdateRequested(item, it) }
                     )
                 }
             }
