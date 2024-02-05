@@ -2,56 +2,56 @@ package ui.theme.fonts
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
-import dev.icerock.moko.resources.compose.fontFamilyResource
-import resources.MR
+import app.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.Font
 
 @Suppress("unused")
 object Roboto {
     val Black: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.black)
+        get() = FontFamily(Font(Res.font.roboto_black))
 
     val BlackItalic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.blackItalic)
+        get() = FontFamily(Font(Res.font.roboto_blackitalic))
 
     val Bold: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.bold)
+        get() = FontFamily(Font(Res.font.roboto_bold))
 
     val BoldItalic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.boldItalic)
+        get() = FontFamily(Font(Res.font.roboto_bolditalic))
 
     val Italic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.italic)
+        get() = FontFamily(Font(Res.font.roboto_italic))
 
     val Light: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.light)
+        get() = FontFamily(Font(Res.font.roboto_light))
 
     val LightItalic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.lightItalic)
+        get() = FontFamily(Font(Res.font.roboto_lightitalic))
 
     val Medium: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.medium)
+        get() = FontFamily(Font(Res.font.roboto_medium))
 
     val MediumItalic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.mediumItalic)
+        get() = FontFamily(Font(Res.font.roboto_mediumitalic))
 
     val Regular: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.regular)
+        get() = FontFamily(Font(Res.font.roboto_regular))
 
     val Thin: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.thin)
+        get() = FontFamily(Font(Res.font.roboto_thin))
 
     val ThinItalic: FontFamily
         @Composable
-        get() = fontFamilyResource(MR.fonts.Roboto.thinItalic)
+        get() = FontFamily(Font(Res.font.roboto_thinitalic))
 }

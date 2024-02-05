@@ -8,9 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import dev.icerock.moko.resources.compose.stringResource
+import app.composeapp.generated.resources.Res
 import kotlinx.coroutines.Job
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 
 interface CoroutineDialogContext {
     fun dismiss()
@@ -49,13 +49,13 @@ fun CoroutineDialog(
             TextButton(
                 enabled = !isLoading,
                 onClick = context::submit
-            ) { Text(stringResource(MR.strings.ok)) }
+            ) { Text(stringResource(Res.string.ok)) }
         },
         dismissButton = {
             TextButton(
                 enabled = !isLoading,
                 onClick = onDismissRequest
-            ) { Text(stringResource(MR.strings.cancel)) }
+            ) { Text(stringResource(Res.string.cancel)) }
         }
     )
 }

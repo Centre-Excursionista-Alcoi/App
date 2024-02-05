@@ -7,14 +7,13 @@ androidx-activityCompose = "1.8.2"
 buildkonfig = "0.15.1"
 compose-compiler = "1.5.8"
 compose-placeholder = "1.0.7"
-compose-plugin = "1.5.12"
+compose-plugin = "1.6.0-beta01"
 compose-ui = "1.6.0"
 compose-windowSizeClass = "0.3.2"
 datastore = "1.0.0"
 detekt = "1.23.5"
 kotlin = "1.9.22"
 ktor = "2.3.8"
-moko-resources = "0.23.0"
 multiplatformSettings = "1.1.1"
 napier = "2.7.1"
 supabase = "2.1.1"
@@ -30,9 +29,6 @@ datastore = { module = "androidx.datastore:datastore-preferences", version.ref =
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
-moko-resources-base = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
-moko-resources-compose = { module = "dev.icerock.moko:resources-compose", version.ref = "moko-resources" }
-moko-resources-test = { module = "dev.icerock.moko:resources-test", version.ref = "moko-resources" }
 multiplatformSettings-base = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatformSettings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
 multiplatformSettings-datastore = { module = "com.russhwolf:multiplatform-settings-datastore", version.ref = "multiplatformSettings" }
@@ -51,5 +47,4 @@ buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig"
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko-resources" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

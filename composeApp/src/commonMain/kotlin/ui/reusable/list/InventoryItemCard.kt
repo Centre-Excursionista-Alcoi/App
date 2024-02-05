@@ -29,15 +29,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import app.composeapp.generated.resources.Res
 import backend.data.database.InventoryItem
 import backend.int.IconProvider
 import backend.int.imageVector
 import com.eygraber.compose.placeholder.PlaceholderHighlight
 import com.eygraber.compose.placeholder.material3.fade
 import com.eygraber.compose.placeholder.material3.placeholder
-import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.Job
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 import ui.dialog.CoroutineDialog
 import ui.dialog.TextInputDialog
 import kotlin.random.Random
@@ -59,7 +59,7 @@ fun InventoryItemCard(
         var iconSelection by remember { mutableStateOf(item?.category?.icon) }
 
         CoroutineDialog(
-            title = stringResource(MR.strings.lending_icon_selection_dialog_title),
+            title = stringResource(Res.string.lending_icon_selection_dialog_title),
             onDismissRequest = { showingIconsDialog = false },
             onSubmit = onIconUpdateRequested?.let { { onIconUpdateRequested(iconSelection) } }
         ) { isLoading ->
@@ -83,8 +83,8 @@ fun InventoryItemCard(
     var editingDisplayName by remember { mutableStateOf(false) }
     if (editingDisplayName) {
         TextInputDialog(
-            title = stringResource(MR.strings.lending_display_name_edit),
-            label = stringResource(MR.strings.lending_display_name),
+            title = stringResource(Res.string.lending_display_name_edit),
+            label = stringResource(Res.string.lending_display_name),
             initialValue = item?.displayName ?: "",
             onValueChange = onDisplayNameUpdateRequested,
             onDismissRequest = { editingDisplayName = false }

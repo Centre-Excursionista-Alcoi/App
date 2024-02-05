@@ -27,8 +27,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.icerock.moko.resources.compose.stringResource
-import resources.MR
+import app.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.stringResource
 import ui.modifier.autofill
 import ui.reusable.form.FormField
 
@@ -42,7 +42,7 @@ fun ColumnScope.LoginPage(
     onRegisterRequested: () -> Unit
 ) {
     Text(
-        text = stringResource(MR.strings.login_title),
+        text = stringResource(Res.string.login_title),
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         textAlign = TextAlign.Center
@@ -56,7 +56,7 @@ fun ColumnScope.LoginPage(
     FormField(
         value = email,
         onValueChange = { email = it },
-        label = stringResource(MR.strings.login_email),
+        label = stringResource(Res.string.login_email),
         enabled = !isLoading,
         keyboardType = KeyboardType.Email,
         modifier = Modifier
@@ -69,7 +69,7 @@ fun ColumnScope.LoginPage(
     FormField(
         value = password,
         onValueChange = { password = it },
-        label = stringResource(MR.strings.login_password),
+        label = stringResource(Res.string.login_password),
         enabled = !isLoading,
         isPassword = true,
         modifier = Modifier
@@ -93,18 +93,18 @@ fun ColumnScope.LoginPage(
             onClick = onLostPassword,
             enabled = !isLoading
         ) {
-            Text(stringResource(MR.strings.login_lost))
+            Text(stringResource(Res.string.login_lost))
         }
         OutlinedButton(
             onClick = { onLoginRequested(email.text, password.text) },
             enabled = !isLoading
         ) {
-            Text(stringResource(MR.strings.login_action))
+            Text(stringResource(Res.string.login_action))
         }
     }
 
     Text(
-        text = stringResource(MR.strings.login_register),
+        text = stringResource(Res.string.login_register),
         style = MaterialTheme.typography.labelMedium,
         modifier = Modifier
             .clickable(enabled = !isLoading, onClick = onRegisterRequested)

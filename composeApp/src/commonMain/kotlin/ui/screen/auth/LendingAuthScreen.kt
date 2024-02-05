@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import app.composeapp.generated.resources.Res
 import backend.data.ext.InsuranceType
 import backend.data.ext.Section
 import backend.data.ext.Sport
@@ -27,7 +28,6 @@ import backend.supabase
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
 import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,7 +35,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 import screenmodel.LendingAuthScreenModel
 import ui.reusable.form.FormCheckbox
 import ui.reusable.form.FormCheckboxList
@@ -47,7 +47,7 @@ import ui.screen.BaseScreen
 import ui.screen.MainScreen
 import utils.toLocalDate
 
-class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_title) }, true) {
+class LendingAuthScreen : BaseScreen({ stringResource(Res.string.lending_auth_title) }, true) {
     @Composable
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun ScreenContent() {
@@ -117,12 +117,12 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 contentModifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = stringResource(MR.strings.lending_auth_title),
+                    text = stringResource(Res.string.lending_auth_title),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(
-                    text = stringResource(MR.strings.lending_auth_message),
+                    text = stringResource(Res.string.lending_auth_message),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -132,16 +132,16 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormField(
                     value = TextFieldValue(data.fullName),
                     onValueChange = {},
-                    label = stringResource(MR.strings.lending_auth_name),
+                    label = stringResource(Res.string.lending_auth_name),
                     readOnly = true,
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
-                    supportingText = stringResource(MR.strings.lending_auth_name_info)
+                    supportingText = stringResource(Res.string.lending_auth_name_info)
                 )
                 FormField(
                     value = TextFieldValue(user.email!!),
                     onValueChange = {},
-                    label = stringResource(MR.strings.lending_auth_email),
+                    label = stringResource(Res.string.lending_auth_email),
                     readOnly = true,
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
@@ -149,7 +149,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormField(
                     value = TextFieldValue(data.phone),
                     onValueChange = {},
-                    label = stringResource(MR.strings.lending_auth_phone),
+                    label = stringResource(Res.string.lending_auth_phone),
                     readOnly = true,
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
@@ -157,7 +157,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormField(
                     value = TextFieldValue(data.birthday.toLocalDate().toString()),
                     onValueChange = {},
-                    label = stringResource(MR.strings.lending_auth_birthday),
+                    label = stringResource(Res.string.lending_auth_birthday),
                     readOnly = true,
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
@@ -165,25 +165,25 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormField(
                     value = TextFieldValue(data.city),
                     onValueChange = {},
-                    label = stringResource(MR.strings.lending_auth_city),
+                    label = stringResource(Res.string.lending_auth_city),
                     readOnly = true,
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Text(
-                    text = stringResource(MR.strings.lending_auth_check_info),
+                    text = stringResource(Res.string.lending_auth_check_info),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
 
                 Text(
-                    text = stringResource(MR.strings.lending_auth_sports),
+                    text = stringResource(Res.string.lending_auth_sports),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 Text(
-                    text = stringResource(MR.strings.lending_auth_sports_message),
+                    text = stringResource(Res.string.lending_auth_sports_message),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
@@ -196,24 +196,24 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                         }
                     },
                     listOf(
-                        MR.strings.lending_auth_sports_climbing_1,
-                        MR.strings.lending_auth_sports_climbing_2,
-                        MR.strings.lending_auth_sports_via_ferrata,
-                        MR.strings.lending_auth_sports_canyoning,
-                        MR.strings.lending_auth_sports_trekking,
-                        MR.strings.lending_auth_sports_mountaineering
+                        Res.string.lending_auth_sports_climbing_1,
+                        Res.string.lending_auth_sports_climbing_2,
+                        Res.string.lending_auth_sports_via_ferrata,
+                        Res.string.lending_auth_sports_canyoning,
+                        Res.string.lending_auth_sports_trekking,
+                        Res.string.lending_auth_sports_mountaineering
                     ).map { { stringResource(it) } },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 )
 
                 Text(
-                    text = stringResource(MR.strings.lending_auth_insurance),
+                    text = stringResource(Res.string.lending_auth_insurance),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 Text(
-                    text = stringResource(MR.strings.lending_auth_insurance_message),
+                    text = stringResource(Res.string.lending_auth_insurance_message),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
@@ -221,7 +221,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     value = insuranceType,
                     onValueChanged = { insuranceType = it },
                     options = InsuranceType.entries,
-                    label = stringResource(MR.strings.lending_auth_insurance),
+                    label = stringResource(Res.string.lending_auth_insurance),
                     modifier = Modifier.fillMaxWidth(),
                     toStringConverter = { stringResource(it.labelRes) },
                     enabled = !isLoading
@@ -229,18 +229,18 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormDatePicker(
                     value = insuranceExpiration,
                     onValueChange = { insuranceExpiration = it },
-                    label = stringResource(MR.strings.lending_auth_insurance_expire),
+                    label = stringResource(Res.string.lending_auth_insurance_expire),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 )
 
                 Text(
-                    text = stringResource(MR.strings.lending_auth_sections),
+                    text = stringResource(Res.string.lending_auth_sections),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 Text(
-                    text = stringResource(MR.strings.lending_auth_sections_message),
+                    text = stringResource(Res.string.lending_auth_sections_message),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
@@ -253,45 +253,45 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                         }
                     },
                     listOf(
-                        MR.strings.lending_auth_sections_mountaineering,
-                        MR.strings.lending_auth_sections_climbing,
-                        MR.strings.lending_auth_sections_speleology,
-                        MR.strings.lending_auth_sections_orientation,
-                        MR.strings.lending_auth_sections_nordic_walking,
-                        MR.strings.lending_auth_sections_mountain_trail,
-                        MR.strings.lending_auth_sections_btt
+                        Res.string.lending_auth_sections_mountaineering,
+                        Res.string.lending_auth_sections_climbing,
+                        Res.string.lending_auth_sections_speleology,
+                        Res.string.lending_auth_sections_orientation,
+                        Res.string.lending_auth_sections_nordic_walking,
+                        Res.string.lending_auth_sections_mountain_trail,
+                        Res.string.lending_auth_sections_btt
                     ).map { { stringResource(it) } },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 )
 
                 Text(
-                    text = stringResource(MR.strings.lending_auth_verification),
+                    text = stringResource(Res.string.lending_auth_verification),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 FormCheckbox(
                     checked = checkRules,
                     onCheckedChange = { checkRules = it },
-                    text = stringResource(MR.strings.lending_auth_verification_rules),
+                    text = stringResource(Res.string.lending_auth_verification_rules),
                     enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkPreparation,
                     onCheckedChange = { checkPreparation = it },
-                    text = stringResource(MR.strings.lending_auth_verification_preparation),
+                    text = stringResource(Res.string.lending_auth_verification_preparation),
                     enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkResponsibility,
                     onCheckedChange = { checkResponsibility = it },
-                    text = stringResource(MR.strings.lending_auth_verification_responsibility),
+                    text = stringResource(Res.string.lending_auth_verification_responsibility),
                     enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkMemory,
                     onCheckedChange = { checkMemory = it },
-                    text = stringResource(MR.strings.lending_auth_verification_memory),
+                    text = stringResource(Res.string.lending_auth_verification_memory),
                     enabled = !isLoading
                 )
 
@@ -309,7 +309,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                         checkResponsibility &&
                         checkMemory
                 ) {
-                    Text(stringResource(MR.strings.lending_auth_submit))
+                    Text(stringResource(Res.string.lending_auth_submit))
                 }
             }
         }

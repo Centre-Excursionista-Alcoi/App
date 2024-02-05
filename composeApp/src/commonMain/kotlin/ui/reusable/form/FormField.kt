@@ -42,8 +42,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
-import dev.icerock.moko.resources.compose.stringResource
-import resources.MR
+import app.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Displays an outlined text field intended to be used in forms.
@@ -196,9 +196,9 @@ fun FormField(
                 tooltip = {
                     Text(
                         text = if (showingPassword) {
-                            stringResource(MR.strings.hide_password)
+                            stringResource(Res.string.hide_password)
                         } else {
-                            stringResource(MR.strings.show_password)
+                            stringResource(Res.string.show_password)
                         }
                     )
                 }
@@ -213,9 +213,9 @@ fun FormField(
                             Icons.Outlined.Visibility
                         },
                         contentDescription = if (showingPassword) {
-                            stringResource(MR.strings.hide_password)
+                            stringResource(Res.string.hide_password)
                         } else {
-                            stringResource(MR.strings.show_password)
+                            stringResource(Res.string.show_password)
                         }
                     )
                 }

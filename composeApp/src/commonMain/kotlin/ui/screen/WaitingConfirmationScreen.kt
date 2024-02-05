@@ -15,11 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.composeapp.generated.resources.Res
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.icerock.moko.resources.compose.stringResource
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 import screenmodel.ConfirmationScreenModel
 import ui.state.ConfirmationStatusWatcher
 import ui.state.SessionStatusWatcher
@@ -47,7 +47,7 @@ class WaitingConfirmationScreen : BaseScreen() {
                     .padding(horizontal = 12.dp)
             ) {
                 Text(
-                    text = stringResource(MR.strings.waiting_title),
+                    text = stringResource(Res.string.waiting_title),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -56,7 +56,7 @@ class WaitingConfirmationScreen : BaseScreen() {
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = stringResource(MR.strings.waiting_message),
+                    text = stringResource(Res.string.waiting_message),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -73,7 +73,7 @@ class WaitingConfirmationScreen : BaseScreen() {
                     onClick = model::verify,
                     modifier = Modifier.align(Alignment.End).padding(end = 12.dp, bottom = 16.dp)
                 ) {
-                    Text(stringResource(MR.strings.waiting_retry))
+                    Text(stringResource(Res.string.waiting_retry))
                 }
             }
         }

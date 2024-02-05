@@ -21,15 +21,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.composeapp.generated.resources.Res
 import backend.data.user.Role
-import backend.supabase
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.icerock.moko.resources.compose.stringResource
-import io.github.jan.supabase.postgrest.postgrest
-import kotlinx.coroutines.runBlocking
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 import screenmodel.MainScreenModel
 import ui.pages.main.LendingPage
 import ui.reusable.AdaptiveScaffold
@@ -45,7 +42,7 @@ class MainScreen : BaseScreen() {
         override val icon: ImageVector = Icons.Outlined.EditNote
 
         @Composable
-        override fun label(): String = stringResource(MR.strings.nav_main_lending)
+        override fun label(): String = stringResource(Res.string.nav_main_lending)
 
         @Composable
         override fun PagerScope.PageContent() {
@@ -72,7 +69,7 @@ class MainScreen : BaseScreen() {
         override val icon: ImageVector = Icons.Outlined.Person
 
         @Composable
-        override fun label(): String = stringResource(MR.strings.nav_main_profile)
+        override fun label(): String = stringResource(Res.string.nav_main_profile)
 
         @Composable
         override fun PagerScope.PageContent() {
@@ -84,7 +81,7 @@ class MainScreen : BaseScreen() {
         override val icon: ImageVector = Icons.Outlined.Settings
 
         @Composable
-        override fun label(): String = stringResource(MR.strings.nav_main_settings)
+        override fun label(): String = stringResource(Res.string.nav_main_settings)
 
         @Composable
         override fun PagerScope.PageContent() {

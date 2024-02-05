@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.moko.resources)
     alias(libs.plugins.serialization)
 }
 
@@ -119,9 +118,15 @@ kotlin {
 
     @Suppress("UnusedPrivateProperty")
     sourceSets {
+        all {
+            languageSettings {
+                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
+            }
+        }
         val commonMain by getting {
             dependencies {
                 // Jetpack Compose
+                implementation(compose.components.resources)
                 implementation(compose.foundation)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
@@ -135,10 +140,6 @@ kotlin {
 
                 // Compose - WindowSizeClass
                 implementation(libs.compose.windowSizeClass)
-
-                // Moko Resources
-                implementation(libs.moko.resources.base)
-                implementation(libs.moko.resources.compose)
 
                 // Supabase
                 implementation(libs.supabase.auth)
@@ -320,10 +321,6 @@ buildkonfig {
                 ?: error("SUPABASE_KEY must be set through local.properties or environment variable")
         )
     }
-}
-
-multiplatformResources {
-    multiplatformResourcesPackage = "resources"
 }
 
 fun increaseNumberInProperties(key: String) {

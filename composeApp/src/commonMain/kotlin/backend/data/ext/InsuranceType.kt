@@ -1,10 +1,10 @@
 package backend.data.ext
 
-import dev.icerock.moko.resources.StringResource
-import resources.MR
+import app.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.StringResource
 
 enum class InsuranceType(val labelRes: StringResource) {
-    FEMECV(MR.strings.lending_auth_insurance_federative_femecv),
-    FEDERATIVE(MR.strings.lending_auth_insurance_federative_other),
-    PRIVATE(MR.strings.lending_auth_insurance_private)
+    FEMECV(Res.string.lending_auth_insurance_federative_femecv),
+    FEDERATIVE(Res.string.lending_auth_insurance_federative_other),
+    PRIVATE(Res.string.lending_auth_insurance_private)
 }

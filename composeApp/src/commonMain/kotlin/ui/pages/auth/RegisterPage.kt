@@ -27,9 +27,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.icerock.moko.resources.compose.stringResource
+import app.composeapp.generated.resources.Res
 import kotlinx.datetime.LocalDate
-import resources.MR
+import org.jetbrains.compose.resources.stringResource
 import ui.modifier.autofill
 import ui.reusable.form.FieldFormatValidators
 import ui.reusable.form.FormDatePicker
@@ -44,7 +44,7 @@ fun ColumnScope.RegisterPage(
     onRegisterRequested: (email: String, password: String, fullName: String, phone: String, city: String, birthday: LocalDate) -> Unit
 ) {
     Text(
-        text = stringResource(MR.strings.register_title),
+        text = stringResource(Res.string.register_title),
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         textAlign = TextAlign.Center
@@ -85,7 +85,7 @@ fun ColumnScope.RegisterPage(
     FormField(
         value = email,
         onValueChange = { email = it },
-        label = stringResource(MR.strings.register_email),
+        label = stringResource(Res.string.register_email),
         enabled = !isLoading,
         isRequired = true,
         keyboardType = KeyboardType.Email,
@@ -100,7 +100,7 @@ fun ColumnScope.RegisterPage(
     FormField(
         value = password,
         onValueChange = { password = it },
-        label = stringResource(MR.strings.register_password),
+        label = stringResource(Res.string.register_password),
         enabled = !isLoading,
         isRequired = true,
         isPassword = true,
@@ -116,7 +116,7 @@ fun ColumnScope.RegisterPage(
     FormField(
         value = fullName,
         onValueChange = { fullName = it },
-        label = stringResource(MR.strings.register_name),
+        label = stringResource(Res.string.register_name),
         enabled = !isLoading,
         isRequired = true,
         modifier = Modifier
@@ -130,7 +130,7 @@ fun ColumnScope.RegisterPage(
     FormField(
         value = phone,
         onValueChange = { phone = it },
-        label = stringResource(MR.strings.register_phone),
+        label = stringResource(Res.string.register_phone),
         enabled = !isLoading,
         isRequired = true,
         modifier = Modifier
@@ -144,7 +144,7 @@ fun ColumnScope.RegisterPage(
     FormField(
         value = city,
         onValueChange = { city = it },
-        label = stringResource(MR.strings.register_city),
+        label = stringResource(Res.string.register_city),
         enabled = !isLoading,
         isRequired = true,
         modifier = Modifier
@@ -158,7 +158,7 @@ fun ColumnScope.RegisterPage(
     FormDatePicker(
         value = birthday,
         onValueChange = { birthday = it },
-        label = stringResource(MR.strings.register_birthday),
+        label = stringResource(Res.string.register_birthday),
         enabled = !isLoading,
         isRequired = true,
         modifier = Modifier
@@ -186,12 +186,12 @@ fun ColumnScope.RegisterPage(
             onClick = register,
             enabled = !isLoading && formFilled
         ) {
-            Text(stringResource(MR.strings.register_action))
+            Text(stringResource(Res.string.register_action))
         }
     }
 
     Text(
-        text = stringResource(MR.strings.register_login),
+        text = stringResource(Res.string.register_login),
         style = MaterialTheme.typography.labelMedium,
         modifier = Modifier
             .clickable(enabled = !isLoading, onClick = onLoginRequested)

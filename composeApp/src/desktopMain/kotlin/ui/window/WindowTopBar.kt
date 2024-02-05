@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FilterNone
-import androidx.compose.material.icons.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.rounded.Minimize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
-import resources.MR
+import app.composeapp.generated.resources.Res
 import ui.state.SharedApplicationState
 import java.awt.MouseInfo
 import java.awt.Point
@@ -96,8 +96,8 @@ fun FrameWindowScope.WindowTopBar(
             exit = slideOutHorizontally { -it }
         ) {
             WindowActionButton(
-                icon = Icons.Rounded.KeyboardArrowLeft,
-                contentDescription = MR.strings.back,
+                icon = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                contentDescription = Res.string.back,
                 idleColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 onClick = { navigator?.pop() },
                 modifier = Modifier.padding(start = 8.dp)
@@ -117,7 +117,7 @@ fun FrameWindowScope.WindowTopBar(
 
         WindowActionButton(
             icon = Icons.Rounded.Minimize,
-            contentDescription = MR.strings.window_minimize,
+            contentDescription = Res.string.window_minimize,
             idleColor = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(4.dp)
         ) { windowState.isMinimized = true }
@@ -127,7 +127,7 @@ fun FrameWindowScope.WindowTopBar(
             } else {
                 Icons.Rounded.CheckBoxOutlineBlank
             },
-            contentDescription = MR.strings.window_maximize,
+            contentDescription = Res.string.window_maximize,
             idleColor = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(4.dp)
         ) {
@@ -138,7 +138,7 @@ fun FrameWindowScope.WindowTopBar(
         }
         WindowActionButton(
             icon = Icons.Rounded.Close,
-            contentDescription = MR.strings.window_close,
+            contentDescription = Res.string.window_close,
             idleColor = MaterialTheme.colorScheme.onSurfaceVariant,
             hoverColor = MaterialTheme.colorScheme.error,
             onClick = onClose,

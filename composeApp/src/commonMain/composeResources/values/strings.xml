@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
-
     <!-- Generic Strings -->
     <string name="back">Back</string>
     <string name="show_password">Show Password</string>
