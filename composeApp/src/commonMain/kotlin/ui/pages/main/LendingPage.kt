@@ -1,13 +1,12 @@
 package ui.pages.main
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -26,15 +25,17 @@ import ui.screen.auth.LendingAuthScreen
 
 @Composable
 private fun ItemsPlaceholder() {
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .horizontalScroll(rememberScrollState())
+    val modifier = Modifier
+        .widthIn(max = 600.dp)
+        .padding(horizontal = 4.dp, vertical = 8.dp)
+
+    LazyVerticalGrid(
+        modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().padding(horizontal = 8.dp),
+        columns = GridCells.Adaptive(280.dp)
     ) {
-        InventoryItemCard(null, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
-        InventoryItemCard(null, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
-        InventoryItemCard(null, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
+        item { InventoryItemCard(null, modifier = modifier) }
+        item { InventoryItemCard(null, modifier = modifier) }
+        item { InventoryItemCard(null, modifier = modifier) }
     }
 }
 
@@ -44,16 +45,16 @@ fun BoxScope.LendingPage(items: List<InventoryItem>?, lendingAuth: Boolean?) {
 
     if (items != null && lendingAuth != null) {
         if (lendingAuth) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .horizontalScroll(rememberScrollState())
+            LazyVerticalGrid(
+                modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().padding(horizontal = 8.dp),
+                columns = GridCells.Adaptive(280.dp)
             ) {
-                for (item in items) {
+                items(items) { item ->
                     InventoryItemCard(
                         item,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                        modifier = Modifier
+                            .widthIn(max = 600.dp)
+                            .padding(horizontal = 4.dp, vertical = 8.dp)
                     )
                 }
             }

@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -32,9 +34,12 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import platform.NavigationInformation
 import screenmodel.InventoryItemModel
+import ui.reusable.form.FormColumn
 import ui.reusable.form.FormField
+import ui.reusable.form.FormMultilineField
 import ui.reusable.navigation.AppBarBackButton
 import ui.screen.BaseScreen
+import ui.screen.MainScreen
 
 class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
     @Composable
@@ -44,16 +49,28 @@ class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
 
         val model = rememberScreenModel { InventoryItemModel() }
 
-        var displayName by remember { mutableStateOf(TextFieldValue("")) }
+        var displayName by remember { mutableStateOf<TextFieldValue?>(null) }
+        var description by remember { mutableStateOf<TextFieldValue?>(null) }
+
+        val descriptionFocusRequester = remember { FocusRequester() }
 
         fun create() {
-            val task = model.create(displayName.text)
+            val displayNameValue = displayName?.text ?: return
+            val descriptionValue = description?.text
+
+            val task = model.create(displayNameValue, descriptionValue)
             task.invokeOnCompletion {
                 val exception = task.getCompletionExceptionOrNull()
                 if (exception == null) {
                     val result = task.getCompleted()
                     println("Inserted new item with result: ${result.data}")
                     navigator.pop()
+                    navigator.items
+                        .filterIsInstance<MainScreen>()
+                        .firstOrNull()
+                        ?.model
+                        ?.loadInventoryItems()
+                        ?.start()
                 } else {
                     throw exception
                 }
@@ -82,7 +99,15 @@ class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
                         label = "Display Name",
                         capitalization = KeyboardCapitalization.Sentences,
                         modifier = Modifier.fillMaxWidth(),
-                        onSubmit = ::create
+                        onSubmit = ::create,
+                        nextFocusRequester = descriptionFocusRequester
+                    )
+                    FormMultilineField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = "Description",
+                        capitalization = KeyboardCapitalization.Sentences,
+                        modifier = Modifier.fillMaxWidth().focusRequester(descriptionFocusRequester)
                     )
                 }
                 Row(
@@ -93,7 +118,7 @@ class InventoryItemCreator : BaseScreen({ "Create New Item" }, true) {
                 ) {
                     TextButton(
                         onClick = ::create,
-                        enabled = displayName.text.isNotBlank(),
+                        enabled = !displayName?.text.isNullOrBlank(),
                         modifier = Modifier.padding(vertical = 8.dp).padding(end = 12.dp)
                     ) {
                         Text("Store")

@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
 import utils.toLocalDate
@@ -89,10 +90,10 @@ class MainScreenModel : ScreenModel {
             Napier.i { "Categories created!" }
         }
 
-        loadInventoryItems()
+        loadInventoryItems().await()
     }
 
-    private suspend fun loadInventoryItems() {
+    fun loadInventoryItems() = screenModelScope.async(Dispatchers.IO) {
         val categories = categories ?: emptyList()
         println("Loading inventory items...")
         val inventoryItems = supabase.postgrest

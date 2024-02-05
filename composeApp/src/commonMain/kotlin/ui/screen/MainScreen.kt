@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -46,7 +47,7 @@ class MainScreen : BaseScreen() {
         override fun PagerScope.PageContent() {
             val items by model.items.collectAsState(null)
             val lendingAuth by model.lendingAuth.collectAsState(null)
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                 LendingPage(items, lendingAuth)
             }
         }

@@ -1,6 +1,5 @@
 package screenmodel
 
-import backend.data.database.InventoryItem
 import backend.supabase
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -9,16 +8,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
+import utils.putEncoded
 
 class InventoryItemModel : ScreenModel {
-    fun create(displayName: String) = screenModelScope.async(Dispatchers.IO) {
-        val item = InventoryItem(
-            id = 0L,
-            createdAt = Clock.System.now(),
-            displayName = displayName,
-            localizedDisplayName = null,
-            categoryId = null
-        )
-        supabase.postgrest.from("inventory").insert(item)
+    fun create(displayName: String, description: String?) = screenModelScope.async(Dispatchers.IO) {
+        supabase.postgrest.from("inventory")
+            .insert(
+                buildJsonObject {
+                    putEncoded("created_at", Clock.System.now())
+                    put("display_name", displayName)
+                    put("description", description)
+                }
+            )
     }
 }

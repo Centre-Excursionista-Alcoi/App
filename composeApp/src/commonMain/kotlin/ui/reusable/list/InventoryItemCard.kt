@@ -2,10 +2,14 @@ package ui.reusable.list
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,33 +36,41 @@ import kotlin.random.Random
 @Composable
 fun InventoryItemCard(item: InventoryItem?, modifier: Modifier = Modifier) {
     OutlinedCard(
-        modifier = Modifier.width(200.dp).then(modifier)
+        modifier = modifier
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
-            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Category, null)
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Rounded.Category, null)
+            }
+            Column(
+                modifier = Modifier.weight(1f).padding(vertical = 8.dp).padding(end = 8.dp)
+            ) {
+                Text(
+                    text = item?.displayName ?: "X".repeat(Random.Default.nextInt(5, 10)),
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = "#${item?.id ?: 10} - ${item?.let { it.category ?: "null" } ?: 10}",
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                        .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
         }
-        Text(
-            text = item?.displayName ?: "X".repeat(Random.Default.nextInt(5, 10)),
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text(
-            text = "#${item?.id ?: 10} - ${item?.let { it.category ?: "null" } ?: 10}",
-            modifier = Modifier
-                .padding(horizontal = 8.dp).padding(bottom = 8.dp)
-                .placeholder(visible = item == null, highlight = PlaceholderHighlight.fade()),
-            style = MaterialTheme.typography.labelSmall
-        )
     }
 }
