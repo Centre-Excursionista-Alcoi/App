@@ -4,7 +4,6 @@ import backend.data.database.Category
 import backend.data.database.InventoryItem
 import backend.data.user.Role
 import backend.supabase
-import backend.users.getRoles
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.aakira.napier.Napier
@@ -18,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import utils.toLocalDate
 
 class MainScreenModel : ScreenModel {
@@ -36,6 +37,8 @@ class MainScreenModel : ScreenModel {
     private var categories: List<Category>? = null
     val items = MutableStateFlow<List<InventoryItem>?>(null)
 
+    val userRoles = MutableStateFlow<List<Role>?>(null)
+
     /** Whether the user is authorized to use the lending system. */
     val lendingAuth = MutableStateFlow<Boolean?>(null)
 
@@ -46,12 +49,46 @@ class MainScreenModel : ScreenModel {
         } else {
             currentUser.tryEmit(user)
 
-            loadUserLendingForm().invokeOnCompletion {
-                loadCategories().invokeOnCompletion {
-                    Napier.i { "Finished loading data." }
-                }
+            screenModelScope.launch(Dispatchers.IO) {
+                loadUserRoles().await()
+                loadUserLendingForm().await()
+                loadCategories().await()
+                loadInventoryItems().await()
+                Napier.i { "Finished loading data." }
             }
         }
+    }
+
+    fun loadUserRoles() = screenModelScope.async(Dispatchers.IO) {
+        Napier.i { "Loading user roles..." }
+        val user = supabase.auth.currentUserOrNull()!!
+        val rows = supabase.postgrest
+            .from("user_roles")
+            .select {
+                filter { eq("user_id", user.id) }
+            }
+            .decodeList<JsonElement>()
+            .map { it.jsonObject }
+        val roles = rows
+            // Convert to string
+            .map { it.getValue("role").jsonPrimitive.toString().trim('"') }
+            // Convert to Role
+            .map { Role.valueOf(it) }
+        userRoles.emit(roles)
+        Napier.i { "Roles: $roles" }
+
+        // Ony for development
+        /*if (!roles.contains(Role.INVENTORY_MANAGER)) {
+            Napier.i { "Inserting inventory_manager role..." }
+            supabase.postgrest
+                .from("user_roles")
+                .insert(
+                    buildJsonObject {
+                        put("user_id", user.id)
+                        put("role", Role.INVENTORY_MANAGER.name)
+                    }
+                )
+        }*/
     }
 
     fun loadUserLendingForm() = screenModelScope.async(Dispatchers.IO) {
@@ -64,10 +101,10 @@ class MainScreenModel : ScreenModel {
                 filter { eq("year", year) }
             }
             .decodeSingleOrNull<JsonElement>()
-        lendingAuth.tryEmit(form != null)
+        lendingAuth.emit(form != null)
     }
 
-    private fun loadCategories() = screenModelScope.async(Dispatchers.IO) {
+    fun loadCategories() = screenModelScope.async(Dispatchers.IO) {
         Napier.i { "Loading categories..." }
         val categoryList = supabase.postgrest
             .from("categories")
@@ -89,8 +126,6 @@ class MainScreenModel : ScreenModel {
             categories = categoryList.toMutableList().apply { addAll(createCategories) }
             Napier.i { "Categories created!" }
         }
-
-        loadInventoryItems().await()
     }
 
     fun loadInventoryItems() = screenModelScope.async(Dispatchers.IO) {
@@ -106,5 +141,18 @@ class MainScreenModel : ScreenModel {
             }
         items.tryEmit(inventoryItems)
         println("Decoded ${inventoryItems.size} inventory items.")
+    }
+
+    fun updateIcon(item: InventoryItem, icon: String?) = screenModelScope.launch(Dispatchers.IO) {
+        supabase.postgrest
+            .from("inventory")
+            .update(
+                {
+                    set("icon", icon)
+                }
+            ) {
+                filter { eq("id", item.id) }
+            }
+        loadInventoryItems().await()
     }
 }

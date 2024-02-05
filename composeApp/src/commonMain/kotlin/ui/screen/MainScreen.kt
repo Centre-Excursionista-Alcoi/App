@@ -21,10 +21,14 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import backend.data.user.Role
+import backend.supabase
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.compose.stringResource
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.runBlocking
 import resources.MR
 import screenmodel.MainScreenModel
 import ui.pages.main.LendingPage
@@ -47,8 +51,18 @@ class MainScreen : BaseScreen() {
         override fun PagerScope.PageContent() {
             val items by model.items.collectAsState(null)
             val lendingAuth by model.lendingAuth.collectAsState(null)
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                LendingPage(items, lendingAuth)
+            val roles by model.userRoles.collectAsState(null)
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                LendingPage(
+                    items = items,
+                    lendingAuth = lendingAuth,
+                    isManager = roles?.contains(Role.INVENTORY_MANAGER) == true,
+                    onIconUpdateRequested = model::updateIcon
+                )
             }
         }
     }
@@ -85,6 +99,7 @@ class MainScreen : BaseScreen() {
 
         val userLoggedOut by model.userLoggedOut.collectAsState(false)
         val currentUser by model.currentUser.collectAsState(null)
+        val roles by model.userRoles.collectAsState(null)
 
         LaunchedEffect(userLoggedOut) {
             snapshotFlow { userLoggedOut }.collect { loggedOut ->
@@ -99,9 +114,11 @@ class MainScreen : BaseScreen() {
                 LendingPage(), ProfilePage(), SettingsPage()
             ),
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navigator.push(InventoryItemCreator()) }
-                ) { Icon(Icons.Rounded.Add, null) }
+                if (roles?.contains(Role.INVENTORY_MANAGER) == true) {
+                    FloatingActionButton(
+                        onClick = { navigator.push(InventoryItemCreator()) }
+                    ) { Icon(Icons.Rounded.Add, null) }
+                }
             },
             loadingItems = currentUser == null
         )
