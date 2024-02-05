@@ -40,7 +40,7 @@ fun AdaptiveScaffold(
     val windowSizeClass = calculateWindowSizeClass()
 
     Scaffold(
-        topBar = {
+        bottomBar = {
             if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
                 NavigationBar {
                     for ((index, page) in pages.withIndex()) {
