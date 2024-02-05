@@ -33,9 +33,10 @@ import ui.screen.creator.InventoryItemCreator
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 class MainScreen : BaseScreen() {
-    private lateinit var model: MainScreenModel
+    lateinit var model: MainScreenModel
+        private set
 
-    private inner class LendingPage: ScaffoldPage() {
+    private inner class LendingPage : ScaffoldPage() {
         override val icon: ImageVector = Icons.Outlined.EditNote
 
         @Composable
@@ -51,7 +52,7 @@ class MainScreen : BaseScreen() {
         }
     }
 
-    private inner class ProfilePage: ScaffoldPage() {
+    private inner class ProfilePage : ScaffoldPage() {
         override val icon: ImageVector = Icons.Outlined.Person
 
         @Composable
@@ -63,7 +64,7 @@ class MainScreen : BaseScreen() {
         }
     }
 
-    private inner class SettingsPage: ScaffoldPage() {
+    private inner class SettingsPage : ScaffoldPage() {
         override val icon: ImageVector = Icons.Outlined.Settings
 
         @Composable

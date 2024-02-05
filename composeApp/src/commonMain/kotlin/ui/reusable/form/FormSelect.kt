@@ -24,12 +24,13 @@ fun <Type> FormSelect(
     options: List<Type>,
     modifier: Modifier = Modifier,
     dismissOnSelect: Boolean = true,
-    toStringConverter: @Composable (Type) -> String = { it.toString() }
+    toStringConverter: @Composable (Type) -> String = { it.toString() },
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
-        expanded = expanded,
+        expanded = expanded && enabled,
         onExpandedChange = { expanded = it }
     ) {
         OutlinedTextField(
@@ -38,11 +39,12 @@ fun <Type> FormSelect(
             modifier = Modifier.menuAnchor().then(modifier),
             label = { Text(label) },
             readOnly = true,
+            enabled = enabled,
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
         )
         ExposedDropdownMenu(
-            expanded = expanded,
+            expanded = expanded && enabled,
             onDismissRequest = { expanded = false }
         ) {
             for (option in options) {
@@ -50,7 +52,7 @@ fun <Type> FormSelect(
                     headlineContent = { Text(toStringConverter(option)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(enabled = enabled) {
                             onValueChanged(option)
                             if (dismissOnSelect) expanded = false
                         }

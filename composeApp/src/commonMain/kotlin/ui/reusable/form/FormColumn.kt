@@ -13,6 +13,11 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -22,12 +27,22 @@ fun FormColumn(
     contentModifier: Modifier = Modifier,
     scrollState: ScrollState = rememberScrollState(),
     maxWidth: Dp = 600.dp,
+    onSubmit: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState),
+            .verticalScroll(scrollState)
+            .onKeyEvent { event ->
+                when {
+                    event.key == Key.Escape && event.type == KeyEventType.KeyUp -> {
+                        onSubmit()
+                        true
+                    }
+                    else -> false
+                }
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedCard(
@@ -35,7 +50,7 @@ fun FormColumn(
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
                 .then(modifier)
-        )  {
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth().then(contentModifier)
             ) {

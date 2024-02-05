@@ -16,6 +16,8 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonElement
+import utils.toLocalDate
 
 class MainScreenModel : ScreenModel {
     companion object {
@@ -43,21 +45,28 @@ class MainScreenModel : ScreenModel {
         } else {
             currentUser.tryEmit(user)
 
-            loadUserPermissions(user).invokeOnCompletion {
-                Napier.i { "Finished loading data." }
+            loadUserLendingForm().invokeOnCompletion {
+                loadCategories().invokeOnCompletion {
+                    Napier.i { "Finished loading data." }
+                }
             }
         }
     }
 
-    private fun loadUserPermissions(userInfo: UserInfo) = screenModelScope.async(Dispatchers.IO) {
-        Napier.i { "Loading user roles..." }
-        val roles = userInfo.getRoles()
-        lendingAuth.tryEmit(roles.contains(Role.LENDING))
-
-        loadCategories()
+    fun loadUserLendingForm() = screenModelScope.async(Dispatchers.IO) {
+        val user = supabase.auth.currentUserOrNull()!!
+        val year = Clock.System.now().toLocalDate().year
+        val form = supabase.postgrest
+            .from("lending_users")
+            .select {
+                filter { eq("user_id", user.id) }
+                filter { eq("year", year) }
+            }
+            .decodeSingleOrNull<JsonElement>()
+        lendingAuth.tryEmit(form != null)
     }
 
-    private suspend fun loadCategories() {
+    private fun loadCategories() = screenModelScope.async(Dispatchers.IO) {
         Napier.i { "Loading categories..." }
         val categoryList = supabase.postgrest
             .from("categories")

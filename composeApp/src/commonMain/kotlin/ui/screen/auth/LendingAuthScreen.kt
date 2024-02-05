@@ -10,6 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,15 +20,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import backend.data.ext.InsuranceType
+import backend.data.ext.Section
+import backend.data.ext.Sport
 import backend.data.user.UserData
 import backend.supabase
+import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.compose.stringResource
+import io.github.aakira.napier.Napier
 import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import resources.MR
+import screenmodel.LendingAuthScreenModel
 import ui.reusable.form.FormCheckbox
 import ui.reusable.form.FormCheckboxList
 import ui.reusable.form.FormColumn
@@ -35,31 +44,76 @@ import ui.reusable.form.FormDatePicker
 import ui.reusable.form.FormField
 import ui.reusable.form.FormSelect
 import ui.screen.BaseScreen
+import ui.screen.MainScreen
 import utils.toLocalDate
 
 class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_title) }, true) {
     @Composable
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun ScreenContent() {
+        val navigator = LocalNavigator.currentOrThrow
         val user = supabase.auth.currentUserOrNull() ?: return
         val data = Json.decodeFromJsonElement<UserData>(user.userMetadata!!.jsonObject)
 
+        val model = rememberScreenModel { LendingAuthScreenModel() }
+        val isLoading by model.isLoading.collectAsState(false)
+
         var sports by remember {
-            mutableStateOf(listOf(false, false, false, false, false, false))
+            mutableStateOf(
+                Sport.entries.associateWith { false }
+            )
         }
         var insuranceType by remember { mutableStateOf(InsuranceType.FEMECV) }
         var insuranceExpiration by remember { mutableStateOf<LocalDate?>(null) }
         var sections by remember {
-            mutableStateOf(listOf(false, false, false, false, false, false, false))
+            mutableStateOf(
+                Section.entries.associateWith { false }
+            )
         }
         var checkRules by remember { mutableStateOf(false) }
         var checkPreparation by remember { mutableStateOf(false) }
         var checkResponsibility by remember { mutableStateOf(false) }
         var checkMemory by remember { mutableStateOf(false) }
 
+        fun submit() {
+            // Make sure everything is filled up
+            if (sports.all { !it.value } ||
+                insuranceExpiration == null ||
+                sections.all { !it.value } ||
+                !checkRules ||
+                !checkPreparation ||
+                !checkResponsibility ||
+                !checkMemory
+            ) return
+
+            val request = model.submit(
+                sports = sports.filter { it.value }.keys.toList(),
+                insuranceType = insuranceType,
+                insuranceExpiration = insuranceExpiration!!,
+                sections = sections.filter { it.value }.keys.toList()
+            )
+            request.invokeOnCompletion {
+                val exception = request.getCompletionExceptionOrNull()
+                if (exception != null) {
+                    Napier.e(exception) { "Could not submit form." }
+                } else {
+                    Napier.i { "Form signed successfully." }
+                    navigator.pop()
+                    navigator
+                        .items
+                        .filterIsInstance<MainScreen>()
+                        .firstOrNull()
+                        ?.model
+                        ?.loadUserLendingForm()
+                        ?.start()
+                }
+            }
+        }
+
         Scaffold { paddingValues ->
             FormColumn(
                 modifier = Modifier.padding(paddingValues).padding(8.dp),
+                onSubmit = ::submit,
                 contentModifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -80,6 +134,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     onValueChange = {},
                     label = stringResource(MR.strings.lending_auth_name),
                     readOnly = true,
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = stringResource(MR.strings.lending_auth_name_info)
                 )
@@ -88,6 +143,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     onValueChange = {},
                     label = stringResource(MR.strings.lending_auth_email),
                     readOnly = true,
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
                 FormField(
@@ -95,6 +151,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     onValueChange = {},
                     label = stringResource(MR.strings.lending_auth_phone),
                     readOnly = true,
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
                 FormField(
@@ -102,6 +159,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     onValueChange = {},
                     label = stringResource(MR.strings.lending_auth_birthday),
                     readOnly = true,
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
                 FormField(
@@ -109,6 +167,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     onValueChange = {},
                     label = stringResource(MR.strings.lending_auth_city),
                     readOnly = true,
+                    enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -129,8 +188,13 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 FormCheckboxList(
-                    sports,
-                    { sports = it },
+                    sports.values.toList(),
+                    { values ->
+                        sports = sports.mapValues { (sport, _) ->
+                            val index = sports.keys.indexOf(sport)
+                            values[index]
+                        }
+                    },
                     listOf(
                         MR.strings.lending_auth_sports_climbing_1,
                         MR.strings.lending_auth_sports_climbing_2,
@@ -139,7 +203,8 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                         MR.strings.lending_auth_sports_trekking,
                         MR.strings.lending_auth_sports_mountaineering
                     ).map { { stringResource(it) } },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
 
                 Text(
@@ -158,13 +223,15 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     options = InsuranceType.entries,
                     label = stringResource(MR.strings.lending_auth_insurance),
                     modifier = Modifier.fillMaxWidth(),
-                    toStringConverter = { stringResource(it.labelRes) }
+                    toStringConverter = { stringResource(it.labelRes) },
+                    enabled = !isLoading
                 )
                 FormDatePicker(
                     value = insuranceExpiration,
                     onValueChange = { insuranceExpiration = it },
                     label = stringResource(MR.strings.lending_auth_insurance_expire),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
 
                 Text(
@@ -178,8 +245,13 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 FormCheckboxList(
-                    sections,
-                    { sections = it },
+                    sections.values.toList(),
+                    { values ->
+                        sections = sections.mapValues { (section, _) ->
+                            val index = sections.keys.indexOf(section)
+                            values[index]
+                        }
+                    },
                     listOf(
                         MR.strings.lending_auth_sections_mountaineering,
                         MR.strings.lending_auth_sections_climbing,
@@ -189,7 +261,8 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                         MR.strings.lending_auth_sections_mountain_trail,
                         MR.strings.lending_auth_sections_btt
                     ).map { { stringResource(it) } },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 )
 
                 Text(
@@ -200,33 +273,37 @@ class LendingAuthScreen : BaseScreen({ stringResource(MR.strings.lending_auth_ti
                 FormCheckbox(
                     checked = checkRules,
                     onCheckedChange = { checkRules = it },
-                    text = stringResource(MR.strings.lending_auth_verification_rules)
+                    text = stringResource(MR.strings.lending_auth_verification_rules),
+                    enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkPreparation,
                     onCheckedChange = { checkPreparation = it },
-                    text = stringResource(MR.strings.lending_auth_verification_preparation)
+                    text = stringResource(MR.strings.lending_auth_verification_preparation),
+                    enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkResponsibility,
                     onCheckedChange = { checkResponsibility = it },
-                    text = stringResource(MR.strings.lending_auth_verification_responsibility)
+                    text = stringResource(MR.strings.lending_auth_verification_responsibility),
+                    enabled = !isLoading
                 )
                 FormCheckbox(
                     checked = checkMemory,
                     onCheckedChange = { checkMemory = it },
-                    text = stringResource(MR.strings.lending_auth_verification_memory)
+                    text = stringResource(MR.strings.lending_auth_verification_memory),
+                    enabled = !isLoading
                 )
 
                 TextButton(
-                    onClick = { /*TODO*/ },
+                    onClick = ::submit,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(horizontal = 16.dp)
                         .padding(top = 24.dp),
-                    enabled = sports.any { it } &&
+                    enabled = sports.any { it.value } &&
                         insuranceExpiration != null &&
-                        sections.any { it } &&
+                        sections.any { it.value } &&
                         checkRules &&
                         checkPreparation &&
                         checkResponsibility &&

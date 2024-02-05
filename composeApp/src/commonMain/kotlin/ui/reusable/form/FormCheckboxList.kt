@@ -8,7 +8,8 @@ fun FormCheckboxList(
     states: List<Boolean>,
     onStatesChanged: (List<Boolean>) -> Unit,
     labels: List<@Composable () -> String>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     labels.forEachIndexed { index, label ->
         val checked = states.getOrNull(index)
@@ -19,7 +20,8 @@ fun FormCheckboxList(
                 onStatesChanged(newState)
             },
             text = label(),
-            modifier = modifier
+            modifier = modifier,
+            enabled = enabled
         )
     }
 }

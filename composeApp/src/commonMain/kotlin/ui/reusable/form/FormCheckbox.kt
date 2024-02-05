@@ -17,11 +17,12 @@ fun FormCheckbox(
     onCheckedChange: (Boolean) -> Unit,
     text: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     textStyle: TextStyle = MaterialTheme.typography.labelMedium
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
-            checked, onCheckedChange
+            checked, onCheckedChange, enabled = enabled
         )
         Text(
             text = text,
