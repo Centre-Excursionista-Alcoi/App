@@ -213,8 +213,9 @@ android {
         minSdk = 24
         targetSdk = 34
 
-        versionCode = 1
-        versionName = "1.0.0"
+        val version = getVersionForPlatform(Platform.Android)
+        versionCode = version.versionCode
+        versionName = version.versionName
     }
 
     packaging {
