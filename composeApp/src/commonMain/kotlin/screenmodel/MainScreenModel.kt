@@ -34,7 +34,7 @@ class MainScreenModel : ScreenModel {
 
     val currentUser = MutableStateFlow<UserInfo?>(null)
 
-    private var categories: List<Category>? = null
+    var categories = MutableStateFlow<List<Category>?>(null)
     val items = MutableStateFlow<List<InventoryItem>?>(null)
 
     val userRoles = MutableStateFlow<List<Role>?>(null)
@@ -110,8 +110,11 @@ class MainScreenModel : ScreenModel {
             .from("categories")
             .select()
             .decodeList<Category>()
-            .also { categories = it }
+            .also { categories.value = it }
         Napier.d { "Decoded ${categoryList.size} categories." }
+        Napier.d {
+            "Categories:\n${categoryList.joinToString("\n") { "- ${it.id} :: ${it.displayName}" }}"
+        }
 
         val createCategories = mutableListOf<Category>()
         for (defaultCategory in defaultCategories) {
@@ -123,27 +126,40 @@ class MainScreenModel : ScreenModel {
             Napier.i { "Creating ${createCategories.size} categories..." }
             val result = supabase.postgrest.from("categories").insert(createCategories)
             Napier.d { "Creation result: ${result.data}" }
-            categories = categoryList.toMutableList().apply { addAll(createCategories) }
+            categories.value = categoryList.toMutableList().apply { addAll(createCategories) }
             Napier.i { "Categories created!" }
         }
     }
 
     fun loadInventoryItems() = screenModelScope.async(Dispatchers.IO) {
-        val categories = categories ?: emptyList()
-        println("Loading inventory items...")
+        val categories = categories.value ?: emptyList()
+        Napier.d { "There are ${categories.size} categories available." }
+        Napier.i { "Loading inventory items..." }
         val inventoryItems = supabase.postgrest
             .from("inventory")
             .select()
             .decodeList<InventoryItem>()
-            .onEach { item ->
-                val category = categories.find { it.id == item.id }
-                item.category = category
+            .map { item ->
+                val category = categories.find { it.id == item.categoryId }
+                if (category == null) {
+                    Napier.w {
+                        "Got an item (#${item.id}) with an invalid category (#${item.categoryId})."
+                    }
+                }
+                item.copy(category = category)
             }
         items.tryEmit(inventoryItems)
-        println("Decoded ${inventoryItems.size} inventory items.")
+        Napier.d { "Decoded ${inventoryItems.size} inventory items." }
+        Napier.d {
+            "Inventory Items:\n${inventoryItems.joinToString("\n") { "- ${it.categoryId} :: ${it.category != null}" }}"
+        }
     }
 
-    private suspend fun updateInventoryItem(item: InventoryItem, property: String, value: String?) {
+    private suspend inline fun <reified Type: Any> updateInventoryItem(
+        item: InventoryItem,
+        property: String,
+        value: Type?
+    ) {
         supabase.postgrest
             .from("inventory")
             .update(
@@ -163,6 +179,12 @@ class MainScreenModel : ScreenModel {
     fun updateDisplayName(item: InventoryItem, displayName: String?) =
         screenModelScope.launch(Dispatchers.IO) {
             updateInventoryItem(item, "display_name", displayName)
+            loadInventoryItems().await()
+        }
+
+    fun updateCategory(item: InventoryItem, category: Category?) =
+        screenModelScope.launch(Dispatchers.IO) {
+            updateInventoryItem(item, "category", category?.id)
             loadInventoryItems().await()
         }
 }

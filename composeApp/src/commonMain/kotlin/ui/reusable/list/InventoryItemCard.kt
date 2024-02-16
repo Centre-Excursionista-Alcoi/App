@@ -8,18 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import backend.data.database.Category
 import backend.data.database.InventoryItem
 import backend.int.IconProvider
 import backend.int.imageVector
@@ -38,9 +35,15 @@ import com.eygraber.compose.placeholder.material3.fade
 import com.eygraber.compose.placeholder.material3.placeholder
 import kotlinx.coroutines.Job
 import org.jetbrains.compose.resources.stringResource
-import ui.dialog.CoroutineDialog
+import ui.dialog.GridCoroutineDialog
+import ui.dialog.ListCoroutineDialog
 import ui.dialog.TextInputDialog
 import kotlin.random.Random
+
+/**
+ * The number used for placeholders (will be hidden).
+ */
+private const val PlaceholderNumber = "10"
 
 /**
  * Draws a new inventory item in a card.
@@ -49,35 +52,32 @@ import kotlin.random.Random
 @Composable
 fun InventoryItemCard(
     item: InventoryItem?,
+    categories: List<Category>?,
     isManager: Boolean = false,
     modifier: Modifier = Modifier,
     onIconUpdateRequested: ((newIcon: String?) -> Job)? = null,
-    onDisplayNameUpdateRequested: ((displayName: String) -> Job)? = null
+    onDisplayNameUpdateRequested: ((displayName: String) -> Job)? = null,
+    onCategoryUpdateRequested: ((category: Category?) -> Job)? = null
 ) {
     var showingIconsDialog: Boolean by remember { mutableStateOf(false) }
     if (showingIconsDialog) {
-        var iconSelection by remember { mutableStateOf(item?.category?.icon) }
+        var iconSelection by remember { mutableStateOf(item?.icon ?: item?.category?.icon) }
 
-        CoroutineDialog(
+        GridCoroutineDialog(
             title = stringResource(Res.string.lending_icon_selection_dialog_title),
             onDismissRequest = { showingIconsDialog = false },
-            onSubmit = onIconUpdateRequested?.let { { onIconUpdateRequested(iconSelection) } }
-        ) { isLoading ->
-            LazyVerticalGrid(
-                columns = GridCells.FixedSize(48.dp)
-            ) {
-                items(IconProvider.icons.toList()) { (key, icon) ->
-                    IconButton(
-                        enabled = !isLoading,
-                        onClick = { iconSelection = key },
-                        colors = if (iconSelection == key) {
-                            IconButtonDefaults.filledIconButtonColors()
-                        } else {
-                            IconButtonDefaults.iconButtonColors()
-                        }
-                    ) { Icon(icon, key) }
+            onSubmit = onIconUpdateRequested?.let { { it(iconSelection) } },
+            items = IconProvider.icons.toList()
+        ) { isLoading, (key, icon) ->
+            IconButton(
+                enabled = !isLoading,
+                onClick = { iconSelection = key },
+                colors = if (iconSelection == key) {
+                    IconButtonDefaults.filledIconButtonColors()
+                } else {
+                    IconButtonDefaults.iconButtonColors()
                 }
-            }
+            ) { Icon(icon, key) }
         }
     }
     var editingDisplayName by remember { mutableStateOf(false) }
@@ -89,6 +89,23 @@ fun InventoryItemCard(
             onValueChange = onDisplayNameUpdateRequested,
             onDismissRequest = { editingDisplayName = false }
         )
+    }
+    var editingCategory by remember { mutableStateOf(false) }
+    if (editingCategory) {
+        var categorySelection by remember { mutableStateOf(item?.category) }
+
+        ListCoroutineDialog(
+            title = stringResource(Res.string.lending_category_selection_dialog_title),
+            onDismissRequest = { editingCategory = false },
+            onSubmit = onCategoryUpdateRequested?.let { { it(categorySelection) } },
+            items = categories?.let { listOf(null, *it.toTypedArray()) }
+        ) { isLoading, category ->
+            SelectableListItem(
+                selected = category == categorySelection,
+                text = category?.displayName ?: stringResource(Res.string.lending_category_none),
+                enabled = !isLoading
+            ) { categorySelection = category }
+        }
     }
 
     OutlinedCard(
@@ -128,13 +145,23 @@ fun InventoryItemCard(
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = "#${item?.id ?: 10} - ${item?.let { it.category ?: "null" } ?: 10}",
+                    text = buildAnnotatedString {
+                        if (item != null) {
+                            val displayName = item.category?.displayName ?: stringResource(Res.string.lending_category_none)
+                            append(displayName)
+                        } else {
+                            append(PlaceholderNumber)
+                        }
+                    },
                     modifier = Modifier
                         .padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         .placeholder(
                             visible = item == null,
                             highlight = PlaceholderHighlight.fade()
-                        ),
+                        )
+                        .clickable(enabled = item != null && isManager) {
+                            editingCategory = true
+                        },
                     style = MaterialTheme.typography.labelSmall
                 )
             }

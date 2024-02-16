@@ -9,6 +9,11 @@
     <string name="access_form" comment="Shown as an action button in an authorization card to access the sign up form.">Access Form</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="checked">Checked</string>
+    <string name="unchecked">Unchecked</string>
+    <string name="select" comment="Shown on list items that are not selected, to indicate that it can be tapped to be selected.">Select</string>
+    <string name="selected" comment="Shown on list items that are currently selected. Tapping the item again does nothing.">Selected</string>
+    <string name="disabled" comment="Shown as description on elements that are disabled.">Disabled</string>
 
     <!-- Desktop -->
     <string name="window_minimize" comment="Content description of the button for minimizing the window">Minimize</string>
@@ -52,6 +57,8 @@
     <string name="lending_icon_selection_dialog_title">Select an Icon</string>
     <string name="lending_display_name">Display Name</string>
     <string name="lending_display_name_edit">Modify Display Name</string>
+    <string name="lending_category_selection_dialog_title">Select a Category</string>
+    <string name="lending_category_none">No Category</string>
 
     <!-- Lending authorization screen -->
     <string name="lending_auth_title">Lending Authorization Form</string>

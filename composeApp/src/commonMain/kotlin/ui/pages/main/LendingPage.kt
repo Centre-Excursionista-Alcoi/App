@@ -52,9 +52,9 @@ class LendingPage(
             modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().padding(horizontal = 8.dp),
             columns = GridCells.Adaptive(280.dp)
         ) {
-            item { InventoryItemCard(null, modifier = modifier) }
-            item { InventoryItemCard(null, modifier = modifier) }
-            item { InventoryItemCard(null, modifier = modifier) }
+            item { InventoryItemCard(null, null, modifier = modifier) }
+            item { InventoryItemCard(null, null, modifier = modifier) }
+            item { InventoryItemCard(null, null, modifier = modifier) }
         }
     }
 
@@ -63,6 +63,7 @@ class LendingPage(
         val navigator = LocalNavigator.currentOrThrow
 
         val items by model.items.collectAsState(null)
+        val categories by model.categories.collectAsState(null)
         val lendingAuth by model.lendingAuth.collectAsState(null)
         val roles by model.userRoles.collectAsState(null)
 
@@ -79,12 +80,14 @@ class LendingPage(
                         items(items ?: emptyList()) { item ->
                             InventoryItemCard(
                                 item,
+                                categories = categories,
                                 isManager = roles?.contains(Role.INVENTORY_MANAGER) == true,
                                 modifier = Modifier
                                     .widthIn(max = 600.dp)
                                     .padding(horizontal = 4.dp, vertical = 8.dp),
                                 onIconUpdateRequested = { model.updateIcon(item, it) },
-                                onDisplayNameUpdateRequested = { model.updateDisplayName(item, it) }
+                                onDisplayNameUpdateRequested = { model.updateDisplayName(item, it) },
+                                onCategoryUpdateRequested = { model.updateCategory(item, it) }
                             )
                         }
                     }
