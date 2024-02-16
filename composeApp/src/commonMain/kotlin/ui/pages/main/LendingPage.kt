@@ -53,9 +53,9 @@ class LendingPage(
             modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth().padding(horizontal = 8.dp),
             columns = GridCells.Adaptive(280.dp)
         ) {
-            item { InventoryItemCard(null, null, modifier = modifier) }
-            item { InventoryItemCard(null, null, modifier = modifier) }
-            item { InventoryItemCard(null, null, modifier = modifier) }
+            item { InventoryItemCard(null, modifier = modifier) }
+            item { InventoryItemCard(null, modifier = modifier) }
+            item { InventoryItemCard(null, modifier = modifier) }
         }
     }
 

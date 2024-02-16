@@ -61,7 +61,7 @@ private val PlaceholderDisplayNameLength = 5..10
 @OptIn(ExperimentalMaterial3Api::class)
 fun InventoryItemCard(
     item: InventoryItem?,
-    categories: List<Category>?,
+    categories: List<Category>? = null,
     isManager: Boolean = false,
     modifier: Modifier = Modifier,
     onIconUpdateRequested: ((newIcon: String?) -> Job)? = null,
