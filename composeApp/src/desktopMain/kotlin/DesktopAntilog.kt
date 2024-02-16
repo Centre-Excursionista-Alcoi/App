@@ -56,9 +56,12 @@ class DesktopAntilog : Antilog() {
             append(message)
         }
         println(line)
+        print(ANSI_RESET)
         throwable?.let {
             println()
+            print(ANSI_RED)
             it.printStackTrace()
+            print(ANSI_RESET)
         }
     }
 }
