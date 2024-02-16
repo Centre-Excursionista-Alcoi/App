@@ -44,11 +44,14 @@ import ui.dialog.GridCoroutineDialog
 import ui.dialog.ListCoroutineDialog
 import ui.dialog.TextInputDialog
 import kotlin.random.Random
+import kotlin.random.nextInt
 
 /**
  * The number used for placeholders (will be hidden).
  */
 private const val PlaceholderNumber = "10"
+
+private val PlaceholderDisplayNameLength = 5..10
 
 /**
  * Draws a new inventory item in a card.
@@ -105,7 +108,12 @@ fun InventoryItemCard(
             title = stringResource(Res.string.lending_category_selection_dialog_title),
             onDismissRequest = { editingCategory = false },
             onSubmit = onCategoryUpdateRequested?.let { { it(categorySelection) } },
-            items = categories?.let { listOf(null, *it.toTypedArray()) }
+            items = categories?.let {
+                mutableListOf<Category?>().apply {
+                    add(null)
+                    addAll(it)
+                }
+            }
         ) { isLoading, category ->
             SelectableListItem(
                 selected = category == categorySelection,
@@ -141,7 +149,8 @@ fun InventoryItemCard(
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp).padding(end = 8.dp)
             ) {
                 Text(
-                    text = item?.displayName ?: "X".repeat(Random.Default.nextInt(5, 10)),
+                    text = item?.displayName
+                        ?: "X".repeat(Random.Default.nextInt(PlaceholderDisplayNameLength)),
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .placeholder(
