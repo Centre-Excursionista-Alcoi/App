@@ -10,6 +10,7 @@ compose-windowSizeClass = "0.3.2"
 datastore = "1.0.0"
 detekt = "1.23.5"
 kotlin = "1.9.22"
+kotlinx-io = "0.3.1"
 ktor = "2.3.8"
 multiplatformSettings = "1.1.1"
 napier = "2.7.1"
@@ -23,6 +24,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = 
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
 compose-windowSizeClass = { module = "dev.chrisbanes.material3:material3-window-size-class-multiplatform", version.ref = "compose-windowSizeClass" }
 datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
