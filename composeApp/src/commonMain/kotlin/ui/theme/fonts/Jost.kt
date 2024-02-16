@@ -9,73 +9,73 @@ import org.jetbrains.compose.resources.Font
 object Jost {
     val Black: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_black))
+        get() = FontFamily(Font(Res.font.Jost_Black))
 
     val BlackItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_blackitalic))
+        get() = FontFamily(Font(Res.font.Jost_BlackItalic))
 
     val Bold: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_bold))
+        get() = FontFamily(Font(Res.font.Jost_Bold))
 
     val BoldItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_bolditalic))
+        get() = FontFamily(Font(Res.font.Jost_BoldItalic))
 
     val ExtraBold: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_extrabold))
+        get() = FontFamily(Font(Res.font.Jost_ExtraBold))
 
     val ExtraBoldItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_extrabolditalic))
+        get() = FontFamily(Font(Res.font.Jost_ExtraBoldItalic))
 
     val ExtraLight: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_extralight))
+        get() = FontFamily(Font(Res.font.Jost_ExtraLight))
 
     val ExtraLightItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_extralightitalic))
+        get() = FontFamily(Font(Res.font.Jost_ExtraLightItalic))
 
     val Italic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_italic))
+        get() = FontFamily(Font(Res.font.Jost_Italic))
 
     val Light: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_light))
+        get() = FontFamily(Font(Res.font.Jost_Light))
 
     val LightItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_lightitalic))
+        get() = FontFamily(Font(Res.font.Jost_LightItalic))
 
     val Medium: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_medium))
+        get() = FontFamily(Font(Res.font.Jost_Medium))
 
     val MediumItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_mediumitalic))
+        get() = FontFamily(Font(Res.font.Jost_MediumItalic))
 
     val Regular: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_regular))
+        get() = FontFamily(Font(Res.font.Jost_Regular))
 
     val SemiBold: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_semibold))
+        get() = FontFamily(Font(Res.font.Jost_SemiBold))
 
     val SemiBoldItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_semibolditalic))
+        get() = FontFamily(Font(Res.font.Jost_SemiBoldItalic))
 
     val Thin: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_thin))
+        get() = FontFamily(Font(Res.font.Jost_Thin))
 
     val ThinItalic: FontFamily
         @Composable
-        get() = FontFamily(Font(Res.font.jost_thinitalic))
+        get() = FontFamily(Font(Res.font.Jost_ThinItalic))
 }

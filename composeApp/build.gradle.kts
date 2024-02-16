@@ -1,3 +1,7 @@
+import Build_gradle.IOSVersion
+import Build_gradle.LinuxVersion
+import Build_gradle.MacOSVersion
+import Build_gradle.WindowsVersion
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.time.LocalDate
@@ -197,7 +201,7 @@ kotlin {
 
 android {
     namespace = "org.centrexcursionistalcoi.app"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = 34
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
@@ -206,8 +210,8 @@ android {
     defaultConfig {
         applicationId = "org.centrexcursionistalcoi.app"
 
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = 24
+        targetSdk = 34
 
         versionCode = 1
         versionName = "1.0.0"

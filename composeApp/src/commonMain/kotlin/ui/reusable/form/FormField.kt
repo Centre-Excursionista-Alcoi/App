@@ -14,14 +14,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PlainTooltipBox
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.key.Key
@@ -69,7 +71,7 @@ import org.jetbrains.compose.resources.stringResource
  * @param validator If not null, will be used for validating the current text. Will show
  */
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun FormField(
     value: TextFieldValue?,
     onValueChange: (TextFieldValue) -> Unit,
@@ -192,15 +194,19 @@ fun FormField(
             onGo = { onSubmit?.invoke() }
         ),
         trailingIcon = (@Composable {
-            PlainTooltipBox(
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                state = rememberTooltipState(),
                 tooltip = {
-                    Text(
-                        text = if (showingPassword) {
-                            stringResource(Res.string.hide_password)
-                        } else {
-                            stringResource(Res.string.show_password)
-                        }
-                    )
+                    PlainTooltip {
+                        Text(
+                            text = if (showingPassword) {
+                                stringResource(Res.string.hide_password)
+                            } else {
+                                stringResource(Res.string.show_password)
+                            }
+                        )
+                    }
                 }
             ) {
                 IconButton(
