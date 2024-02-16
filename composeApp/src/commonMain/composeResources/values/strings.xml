@@ -59,6 +59,8 @@
     <string name="lending_display_name_edit">Modify Display Name</string>
     <string name="lending_category_selection_dialog_title">Select a Category</string>
     <string name="lending_category_none">No Category</string>
+    <string name="lending_category" comment="Tooltip shown on the category indicator.">Category</string>
+    <string name="lending_category_edit" comment="Tooltip shown on the category indicator when the user is an administrator, and can change the category.">Change Category</string>
 
     <!-- Lending authorization screen -->
     <string name="lending_auth_title">Lending Authorization Form</string>

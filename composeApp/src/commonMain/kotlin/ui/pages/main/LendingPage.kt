@@ -31,6 +31,7 @@ import org.jetbrains.compose.resources.stringResource
 import screenmodel.MainScreenModel
 import ui.reusable.list.InventoryItemCard
 import ui.reusable.navigation.ScaffoldPage
+import ui.screen.InventoryItemScreen
 import ui.screen.auth.LendingAuthScreen
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -88,7 +89,7 @@ class LendingPage(
                                 onIconUpdateRequested = { model.updateIcon(item, it) },
                                 onDisplayNameUpdateRequested = { model.updateDisplayName(item, it) },
                                 onCategoryUpdateRequested = { model.updateCategory(item, it) }
-                            )
+                            ) { navigator.push(InventoryItemScreen(item)) }
                         }
                     }
                 } else {

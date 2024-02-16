@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +55,7 @@ private const val PlaceholderNumber = "10"
  * @param item The item to display, or null if only a placeholder.
  */
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun InventoryItemCard(
     item: InventoryItem?,
     categories: List<Category>?,
@@ -57,7 +63,8 @@ fun InventoryItemCard(
     modifier: Modifier = Modifier,
     onIconUpdateRequested: ((newIcon: String?) -> Job)? = null,
     onDisplayNameUpdateRequested: ((displayName: String) -> Job)? = null,
-    onCategoryUpdateRequested: ((category: Category?) -> Job)? = null
+    onCategoryUpdateRequested: ((category: Category?) -> Job)? = null,
+    onClick: () -> Unit = {}
 ) {
     var showingIconsDialog: Boolean by remember { mutableStateOf(false) }
     if (showingIconsDialog) {
@@ -109,7 +116,9 @@ fun InventoryItemCard(
     }
 
     OutlinedCard(
-        modifier = modifier
+        modifier = Modifier
+            .clickable(enabled = item != null, onClick = onClick)
+            .then(modifier)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
@@ -144,26 +153,43 @@ fun InventoryItemCard(
                         },
                     style = MaterialTheme.typography.labelLarge
                 )
-                Text(
-                    text = buildAnnotatedString {
-                        if (item != null) {
-                            val displayName = item.category?.displayName ?: stringResource(Res.string.lending_category_none)
-                            append(displayName)
-                        } else {
-                            append(PlaceholderNumber)
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    state = rememberTooltipState(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text(
+                                text = if (isManager) {
+                                    stringResource(Res.string.lending_category_edit)
+                                } else {
+                                    stringResource(Res.string.lending_category)
+                                }
+                            )
                         }
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp).padding(bottom = 8.dp)
-                        .placeholder(
-                            visible = item == null,
-                            highlight = PlaceholderHighlight.fade()
-                        )
-                        .clickable(enabled = item != null && isManager) {
-                            editingCategory = true
+                    }
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            if (item != null) {
+                                val displayName = item.category?.displayName
+                                    ?: stringResource(Res.string.lending_category_none)
+                                append(displayName)
+                            } else {
+                                append(PlaceholderNumber)
+                            }
                         },
-                    style = MaterialTheme.typography.labelSmall
-                )
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                            .placeholder(
+                                visible = item == null,
+                                highlight = PlaceholderHighlight.fade()
+                            )
+                            .clickable(enabled = item != null && isManager) {
+                                editingCategory = true
+                            },
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }

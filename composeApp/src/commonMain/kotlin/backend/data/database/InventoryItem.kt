@@ -15,6 +15,6 @@ data class InventoryItem(
     @SerialName("category") val categoryId: Long? = null,
     val description: String? = null,
     override val icon: String? = null,
-    @Transient
-    var category: Category? = null
+    val images: List<String>? = null,
+    @Transient var category: Category? = null
 ): IconProvider
