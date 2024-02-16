@@ -11,13 +11,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import ui.state.SharedApplicationState
 import ui.theme.AppTheme
@@ -31,7 +29,7 @@ fun main() = application {
     val navigator by SharedApplicationState.navigator.collectAsState(null)
     val title by SharedApplicationState.title.collectAsState(null)
 
-    Napier.base(DebugAntilog())
+    Napier.base(DesktopAntilog())
 
     Window(
         onCloseRequest = ::exitApplication,
