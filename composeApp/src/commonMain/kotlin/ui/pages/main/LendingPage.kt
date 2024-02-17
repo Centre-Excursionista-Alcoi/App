@@ -28,6 +28,7 @@ import app.composeapp.generated.resources.access_form
 import app.composeapp.generated.resources.missing_authorization_lending
 import app.composeapp.generated.resources.missing_authorization_title
 import app.composeapp.generated.resources.nav_main_lending
+import backend.Backend
 import backend.data.user.Role
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -67,8 +68,8 @@ class LendingPage(
     override fun PagerScope.PageContent() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val items by model.items.collectAsState(null)
-        val categories by model.categories.collectAsState(null)
+        val items by Backend.inventoryItems.collectAsState(null)
+        val categories by Backend.categories.collectAsState(null)
         val lendingAuth by model.lendingAuth.collectAsState(null)
         val roles by model.userRoles.collectAsState(null)
 
