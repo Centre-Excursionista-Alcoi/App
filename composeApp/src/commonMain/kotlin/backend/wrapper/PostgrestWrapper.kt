@@ -8,16 +8,16 @@ import io.github.jan.supabase.postgrest.query.PostgrestUpdate
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import kotlin.reflect.KClass
 
-class PostgrestWrapper(private val postgrest: Postgrest) {
+class PostgrestWrapper(private val postgrest: Postgrest) : IPostgrestWrapper {
     /**
      * Runs a select statement for extracting a list of items from the database.
      */
-    suspend fun <Type: Any> selectList(
+    override suspend fun <Type : Any> selectList(
         table: String,
         kClass: KClass<Type>,
-        columns: Columns = Columns.ALL,
-        head: Boolean = false,
-        request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit) = {}
+        columns: Columns,
+        head: Boolean,
+        request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit)
     ): List<Type> {
         return postgrest.from(table)
             .select(columns, head, request)
@@ -34,12 +34,12 @@ class PostgrestWrapper(private val postgrest: Postgrest) {
     /**
      * Runs a select statement for extracting a single item from the database.
      */
-    suspend fun <Type: Any> selectOrNull(
+    override suspend fun <Type : Any> selectOrNull(
         table: String,
         kClass: KClass<Type>,
-        columns: Columns = Columns.ALL,
-        head: Boolean = false,
-        request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit) = {}
+        columns: Columns,
+        head: Boolean,
+        request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit)
     ): Type? {
         val decoded = postgrest.from(table)
             .select(columns, head, request)
@@ -54,7 +54,7 @@ class PostgrestWrapper(private val postgrest: Postgrest) {
     /**
      * Runs an insert statement for adding a list of items to the database.
      */
-    suspend fun <Type: Any> insert(table: String, items: List<Type>): PostgrestResult {
+    override suspend fun <Type : Any> insert(table: String, items: List<Type>): PostgrestResult {
         // Convert to List<Any> so that inlining is not required
         val list: List<Any> = items
         return postgrest.from(table).insert(list)
@@ -63,17 +63,17 @@ class PostgrestWrapper(private val postgrest: Postgrest) {
     /**
      * Runs an insert statement for adding an item to the database.
      */
-    suspend fun <Type: Any> insert(table: String, element: Type): PostgrestResult {
+    override suspend fun <Type : Any> insert(table: String, element: Type): PostgrestResult {
         return postgrest.from(table).insert(element as Any)
     }
 
     /**
      * Runs an update statement for updating an element in the database.
      */
-    suspend fun <Type: Any> update(
+    override suspend fun <Type : Any> update(
         table: String,
         element: Type,
-        request: PostgrestRequestBuilder.() -> Unit = {}
+        request: PostgrestRequestBuilder.() -> Unit
     ): PostgrestResult {
         return postgrest.from(table).update(element as Any, request)
     }
@@ -81,10 +81,10 @@ class PostgrestWrapper(private val postgrest: Postgrest) {
     /**
      * Runs an update statement for updating an element in the database.
      */
-    suspend fun update(
+    override suspend fun update(
         table: String,
-        update: PostgrestUpdate.() -> Unit = {},
-        request: PostgrestRequestBuilder.() -> Unit = {}
+        update: PostgrestUpdate.() -> Unit,
+        request: PostgrestRequestBuilder.() -> Unit
     ): PostgrestResult {
         return postgrest.from(table).update(update, request)
     }

@@ -2,6 +2,7 @@ import Build_gradle.IOSVersion
 import Build_gradle.LinuxVersion
 import Build_gradle.MacOSVersion
 import Build_gradle.WindowsVersion
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.time.LocalDate
@@ -163,6 +164,12 @@ kotlin {
                 implementation(libs.napier)
             }
         }
+        val commonTest by getting {
+            dependencies {
+                // Kotlin Test Dependency
+                implementation(libs.kotlin.test)
+            }
+        }
 
         val androidMain by getting {
             dependsOn(commonMain)
@@ -177,6 +184,28 @@ kotlin {
                 implementation(libs.multiplatformSettings.datastore)
             }
         }
+        val androidInstrumentedTest by getting {
+            dependencies {
+                // Kotlin Test Dependency
+                implementation(libs.kotlin.test)
+
+                // Mockk
+                implementation(libs.mockk.agent)
+                implementation(libs.mockk.android)
+                implementation(libs.mockk.base)
+            }
+        }
+        val androidUnitTest by getting {
+            dependencies {
+                // Kotlin Test Dependency
+                implementation(libs.kotlin.test)
+
+                // Mockk
+                implementation(libs.mockk.agent)
+                implementation(libs.mockk.android)
+                implementation(libs.mockk.base)
+            }
+        }
 
         val desktopMain by getting {
             dependsOn(commonMain)
@@ -184,6 +213,15 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.ktor.client.java)
+            }
+        }
+        val desktopTest by getting {
+            dependencies {
+                // Kotlin Test Dependency
+                implementation(libs.kotlin.test)
+
+                // Mockk
+                implementation(libs.mockk.base)
             }
         }
 
@@ -329,6 +367,10 @@ buildkonfig {
                 ?: System.getenv("SUPABASE_KEY")
                 ?: error("SUPABASE_KEY must be set through local.properties or environment variable")
         )
+        buildConfigField(BOOLEAN, "TESTING", "false")
+    }
+    defaultConfigs("test") {
+        buildConfigField(BOOLEAN, "TESTING", "true")
     }
 }
 

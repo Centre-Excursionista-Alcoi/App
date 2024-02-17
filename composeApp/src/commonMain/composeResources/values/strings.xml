@@ -101,4 +101,8 @@
     <string name="lending_auth_verification_responsibility">I know that I am the first and only responsible of the damages that might occur to the people using the equipment, and the equipment itself.</string>
     <string name="lending_auth_verification_memory">I know that at the end of the activity I have to complete a memory with the results of the activity.</string>
     <string name="lending_auth_submit">Submit</string>
+
+    <!-- Inventory Item Screen -->
+    <string name="inventory_item_images">Images</string>
+    <string name="inventory_item_images_none">No Images Available</string>
 </resources>

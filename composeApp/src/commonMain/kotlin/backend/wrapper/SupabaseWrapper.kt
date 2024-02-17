@@ -1,6 +1,7 @@
 package backend.wrapper
 
 import buildkonfig.BuildKonfig
+import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
@@ -19,7 +20,7 @@ private val supabase = createSupabaseClient(BuildKonfig.SUPABASE_URL, BuildKonfi
 }
 
 object SupabaseWrapper {
-    lateinit var postgrest: PostgrestWrapper
+    lateinit var postgrest: IPostgrestWrapper
         private set
 
     lateinit var auth: Auth
@@ -28,10 +29,26 @@ object SupabaseWrapper {
     lateinit var storage: Storage
         private set
 
+    private inline fun initialize(module: String, set: () -> Unit) {
+        try {
+            set()
+        } catch (_: IllegalStateException) {
+            Napier.w(tag = "SupabaseWrapper") {
+                "Could not initialize Supabase $module: Not installed"
+            }
+        }
+    }
+
     fun initialize(client: SupabaseClient) {
-        auth = client.auth
-        postgrest = PostgrestWrapper(client.postgrest)
-        storage = client.storage
+        initialize("Auth") {
+            auth = client.auth
+        }
+        initialize("Postgrest") {
+            postgrest = PostgrestWrapper(client.postgrest)
+        }
+        initialize("Storage") {
+            storage = client.storage
+        }
     }
 
     /**
@@ -42,6 +59,8 @@ object SupabaseWrapper {
     }
 
     init {
-        reset()
+        // Initialize the default SupabaseClient if not in testing mode
+        // Tests will initialize the SupabaseClient by themselves
+        if (!BuildKonfig.TESTING) reset()
     }
 }
