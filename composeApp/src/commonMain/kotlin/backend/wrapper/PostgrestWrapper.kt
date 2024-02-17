@@ -6,7 +6,9 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.PostgrestRequestBuilder
 import io.github.jan.supabase.postgrest.query.PostgrestUpdate
 import io.github.jan.supabase.postgrest.result.PostgrestResult
-import kotlin.reflect.KClass
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 class PostgrestWrapper(private val postgrest: Postgrest) : IPostgrestWrapper {
     /**
@@ -14,21 +16,15 @@ class PostgrestWrapper(private val postgrest: Postgrest) : IPostgrestWrapper {
      */
     override suspend fun <Type : Any> selectList(
         table: String,
-        kClass: KClass<Type>,
+        serializer: DeserializationStrategy<Type>,
         columns: Columns,
         head: Boolean,
         request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit)
     ): List<Type> {
         return postgrest.from(table)
             .select(columns, head, request)
-            .decodeList<Any>()
-            .mapNotNull {
-                @Suppress("UNCHECKED_CAST")
-                if (it::class == kClass)
-                    it as Type
-                else
-                    null
-            }
+            .decodeList<JsonElement>()
+            .map { Json.decodeFromJsonElement(serializer, it) }
     }
 
     /**
@@ -36,19 +32,19 @@ class PostgrestWrapper(private val postgrest: Postgrest) : IPostgrestWrapper {
      */
     override suspend fun <Type : Any> selectOrNull(
         table: String,
-        kClass: KClass<Type>,
+        serializer: DeserializationStrategy<Type>,
         columns: Columns,
         head: Boolean,
         request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit)
     ): Type? {
         val decoded = postgrest.from(table)
             .select(columns, head, request)
-            .decodeSingleOrNull<Any>()
-        @Suppress("UNCHECKED_CAST")
-        (return if (decoded != null && decoded::class == kClass)
-            decoded as Type
-        else
-            null)
+            .decodeSingleOrNull<JsonElement>()
+        return if (decoded != null) {
+            Json.decodeFromJsonElement(serializer, decoded)
+        } else {
+            null
+        }
     }
 
     /**

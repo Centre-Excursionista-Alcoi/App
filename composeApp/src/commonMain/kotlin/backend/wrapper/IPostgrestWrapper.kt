@@ -5,7 +5,7 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.PostgrestRequestBuilder
 import io.github.jan.supabase.postgrest.query.PostgrestUpdate
 import io.github.jan.supabase.postgrest.result.PostgrestResult
-import kotlin.reflect.KClass
+import kotlinx.serialization.DeserializationStrategy
 
 interface IPostgrestWrapper {
     /**
@@ -13,7 +13,7 @@ interface IPostgrestWrapper {
      */
     suspend fun <Type: Any> selectList(
         table: String,
-        kClass: KClass<Type>,
+        serializer: DeserializationStrategy<Type>,
         columns: Columns = Columns.ALL,
         head: Boolean = false,
         request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit) = {}
@@ -24,7 +24,7 @@ interface IPostgrestWrapper {
      */
     suspend fun <Type: Any> selectOrNull(
         table: String,
-        kClass: KClass<Type>,
+        serializer: DeserializationStrategy<Type>,
         columns: Columns = Columns.ALL,
         head: Boolean = false,
         request: @PostgrestFilterDSL (PostgrestRequestBuilder.() -> Unit) = {}

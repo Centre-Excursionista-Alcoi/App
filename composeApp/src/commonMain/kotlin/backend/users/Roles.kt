@@ -6,6 +6,6 @@ import io.github.jan.supabase.gotrue.user.UserInfo
 
 suspend fun UserInfo.getRoles(): List<Role> =
     SupabaseWrapper.postgrest
-        .selectList("user_roles", Role::class) {
+        .selectList("user_roles", Role.Serializer) {
             filter { eq("user_id", id) }
         }

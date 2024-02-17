@@ -51,7 +51,7 @@ class MainScreenModel : ScreenModel {
         Napier.i { "Loading user roles..." }
         val user = SupabaseWrapper.auth.currentUserOrNull()!!
         val rows = SupabaseWrapper.postgrest
-            .selectList("user_roles", JsonElement::class) {
+            .selectList("user_roles", JsonElement.serializer()) {
                 filter { eq("user_id", user.id) }
             }
             .map { it.jsonObject }
@@ -81,7 +81,7 @@ class MainScreenModel : ScreenModel {
         val user = SupabaseWrapper.auth.currentUserOrNull()!!
         val year = Clock.System.now().toLocalDate().year
         val form = SupabaseWrapper.postgrest
-            .selectOrNull("lending_users", JsonElement::class) {
+            .selectOrNull("lending_users", JsonElement.serializer()) {
                 filter { eq("user_id", user.id) }
                 filter { eq("year", year) }
             }

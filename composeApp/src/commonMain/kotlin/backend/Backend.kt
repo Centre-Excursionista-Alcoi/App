@@ -23,7 +23,7 @@ object Backend {
     suspend fun loadCategories(): List<Category> {
         Napier.i { "Loading categories..." }
         val categoryList = SupabaseWrapper.postgrest
-            .selectList("categories", Category::class)
+            .selectList("categories", Category.serializer())
             .also { categories.value = it }
         Napier.d { "Decoded ${categoryList.size} categories." }
         Napier.d {
@@ -59,7 +59,7 @@ object Backend {
         Napier.d { "There are ${categories.size} categories available." }
         Napier.i { "Loading inventory items..." }
         val items = SupabaseWrapper.postgrest
-            .selectList("inventory", InventoryItem::class)
+            .selectList("inventory", InventoryItem.serializer())
             .map { item ->
                 val category = categories.find { it.id == item.categoryId }
                 if (category == null) {

@@ -103,6 +103,10 @@
     <string name="lending_auth_submit">Submit</string>
 
     <!-- Inventory Item Screen -->
+    <string name="inventory_item_stock">Stock</string>
+    <string name="inventory_item_stock_available">Available: %d</string>
+    <string name="inventory_item_stock_in_use">In Use: %d</string>
+    <string name="inventory_item_stock_reserved">Reserved: %d</string>
     <string name="inventory_item_images">Images</string>
     <string name="inventory_item_images_none">No Images Available</string>
 </resources>
