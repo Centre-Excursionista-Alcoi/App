@@ -3,16 +3,13 @@ package screenmodel
 import backend.data.ext.InsuranceType
 import backend.data.ext.Section
 import backend.data.ext.Sport
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -20,7 +17,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import utils.toInstant
 
 class LendingAuthScreenModel : ScreenModel {
     val isLoading = MutableStateFlow(false)
@@ -34,10 +30,10 @@ class LendingAuthScreenModel : ScreenModel {
         try {
             isLoading.emit(true)
 
-            val user = supabase.auth.currentUserOrNull()!!
-            supabase.postgrest
-                .from("lending_users")
+            val user = SupabaseWrapper.auth.currentUserOrNull()!!
+            SupabaseWrapper.postgrest
                 .insert(
+                    "lending_users",
                     buildJsonObject {
                         put("user_id", user.id)
                         put("year", insuranceExpiration.minus(1, DateTimeUnit.DAY).year)

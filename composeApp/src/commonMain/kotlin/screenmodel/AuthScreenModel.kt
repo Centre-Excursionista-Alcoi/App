@@ -1,14 +1,13 @@
 package screenmodel
 
 import backend.data.user.UserData
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.set
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
-import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +44,7 @@ class AuthScreenModel : ScreenModel {
             try {
                 isLoading.emit(true)
 
-                supabase.auth.signInWith(
+                SupabaseWrapper.auth.signInWith(
                     Email,
                     "app://org.centrexcursionistalcoi.app"
                 ) {
@@ -80,7 +79,7 @@ class AuthScreenModel : ScreenModel {
 
                 val data = UserData(fullName, birthday.toInstant(), phone, city)
 
-                val result = supabase.auth.signUpWith(
+                val result = SupabaseWrapper.auth.signUpWith(
                     Email,
                     "app://org.centrexcursionistalcoi.app"
                 ) {

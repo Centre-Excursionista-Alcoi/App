@@ -6,19 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.russhwolf.settings.ExperimentalSettingsApi
 import io.github.jan.supabase.gotrue.SessionStatus
-import io.github.jan.supabase.gotrue.auth
 import storage.SettingsKeys
 import storage.settings
 import ui.reusable.LoadingIndicator
 
 class LoadingScreen : BaseScreen() {
-    private val auth = supabase.auth
-
     @Composable
     @OptIn(ExperimentalSettingsApi::class)
     override fun ScreenContent() {
@@ -28,7 +25,7 @@ class LoadingScreen : BaseScreen() {
         var confirmationId: String? by remember { mutableStateOf(null) }
 
         LaunchedEffect(navigator) {
-            auth.sessionStatus.collect { status = it }
+            SupabaseWrapper.auth.sessionStatus.collect { status = it }
         }
         LaunchedEffect(settings) {
             confirmationId = settings.getStringOrNull(SettingsKeys.CONFIRMATION_ID) ?: ""

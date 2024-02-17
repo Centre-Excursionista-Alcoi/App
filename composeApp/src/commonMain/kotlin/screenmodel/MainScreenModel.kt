@@ -4,13 +4,11 @@ import backend.Backend
 import backend.data.database.Category
 import backend.data.database.InventoryItem
 import backend.data.user.Role
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.aakira.napier.Napier
-import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.user.UserInfo
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -33,7 +31,7 @@ class MainScreenModel : ScreenModel {
     val lendingAuth = MutableStateFlow<Boolean?>(null)
 
     init {
-        val user = supabase.auth.currentUserOrNull()
+        val user = SupabaseWrapper.auth.currentUserOrNull()
         if (user == null) {
             userLoggedOut.tryEmit(true)
         } else {
@@ -51,13 +49,11 @@ class MainScreenModel : ScreenModel {
 
     fun loadUserRoles() = screenModelScope.async(Dispatchers.IO) {
         Napier.i { "Loading user roles..." }
-        val user = supabase.auth.currentUserOrNull()!!
-        val rows = supabase.postgrest
-            .from("user_roles")
-            .select {
+        val user = SupabaseWrapper.auth.currentUserOrNull()!!
+        val rows = SupabaseWrapper.postgrest
+            .selectList("user_roles", JsonElement::class) {
                 filter { eq("user_id", user.id) }
             }
-            .decodeList<JsonElement>()
             .map { it.jsonObject }
         val roles = rows
             // Convert to string
@@ -82,15 +78,13 @@ class MainScreenModel : ScreenModel {
     }
 
     fun loadUserLendingForm() = screenModelScope.async(Dispatchers.IO) {
-        val user = supabase.auth.currentUserOrNull()!!
+        val user = SupabaseWrapper.auth.currentUserOrNull()!!
         val year = Clock.System.now().toLocalDate().year
-        val form = supabase.postgrest
-            .from("lending_users")
-            .select {
+        val form = SupabaseWrapper.postgrest
+            .selectOrNull("lending_users", JsonElement::class) {
                 filter { eq("user_id", user.id) }
                 filter { eq("year", year) }
             }
-            .decodeSingleOrNull<JsonElement>()
         lendingAuth.emit(form != null)
     }
 
@@ -107,15 +101,14 @@ class MainScreenModel : ScreenModel {
         property: String,
         value: Type?
     ) {
-        supabase.postgrest
-            .from("inventory")
-            .update(
-                {
-                    set(property, value)
-                }
-            ) {
-                filter { eq("id", item.id) }
+        SupabaseWrapper.postgrest.update(
+            "inventory",
+            {
+                set(property, value)
             }
+        ) {
+            filter { eq("id", item.id) }
+        }
     }
 
     fun updateIcon(item: InventoryItem, icon: String?) = screenModelScope.launch(Dispatchers.IO) {

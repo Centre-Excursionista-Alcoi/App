@@ -2,8 +2,8 @@ package backend
 
 import backend.data.database.Category
 import backend.data.database.InventoryItem
+import backend.wrapper.SupabaseWrapper
 import io.github.aakira.napier.Napier
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.Clock
 
@@ -20,12 +20,10 @@ object Backend {
     /**
      * Load the categories from the database and create the default ones if they don't exist.
      */
-    suspend fun loadCategories() {
+    suspend fun loadCategories(): List<Category> {
         Napier.i { "Loading categories..." }
-        val categoryList = supabase.postgrest
-            .from("categories")
-            .select()
-            .decodeList<Category>()
+        val categoryList = SupabaseWrapper.postgrest
+            .selectList("categories", Category::class)
             .also { categories.value = it }
         Napier.d { "Decoded ${categoryList.size} categories." }
         Napier.d {
@@ -40,21 +38,28 @@ object Backend {
         }
         if (createCategories.isNotEmpty()) {
             Napier.i { "Creating ${createCategories.size} categories..." }
-            val result = supabase.postgrest.from("categories").insert(createCategories)
+            val result = SupabaseWrapper.postgrest.insert("categories", createCategories)
             Napier.d { "Creation result: ${result.data}" }
             categories.value = categoryList.toMutableList().apply { addAll(createCategories) }
             Napier.i { "Categories created!" }
         }
+
+        return categories.value!!
     }
 
-    suspend fun loadInventoryItems() {
-        val categories = categories.value ?: emptyList()
+    /**
+     * Get the categories from the database or the local cache if they are already loaded.
+     */
+    suspend fun getCategories(): List<Category> {
+        return categories.value ?: loadCategories()
+    }
+
+    suspend fun loadInventoryItems(): List<InventoryItem> {
+        val categories = getCategories()
         Napier.d { "There are ${categories.size} categories available." }
         Napier.i { "Loading inventory items..." }
-        val items = supabase.postgrest
-            .from("inventory")
-            .select()
-            .decodeList<InventoryItem>()
+        val items = SupabaseWrapper.postgrest
+            .selectList("inventory", InventoryItem::class)
             .map { item ->
                 val category = categories.find { it.id == item.categoryId }
                 if (category == null) {
@@ -69,5 +74,14 @@ object Backend {
         Napier.d {
             "Inventory Items:\n${items.joinToString("\n") { "- ${it.categoryId} :: ${it.category != null}" }}"
         }
+
+        return items
+    }
+
+    /**
+     * Get the inventory items from the database or the local cache if they are already loaded.
+     */
+    suspend fun getInventoryItems(): List<InventoryItem> {
+        return inventoryItems.value ?: loadInventoryItems()
     }
 }

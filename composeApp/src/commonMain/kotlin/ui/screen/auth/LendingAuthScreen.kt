@@ -59,12 +59,11 @@ import backend.data.ext.InsuranceType
 import backend.data.ext.Section
 import backend.data.ext.Sport
 import backend.data.user.UserData
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import io.github.aakira.napier.Napier
-import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -87,7 +86,7 @@ class LendingAuthScreen : BaseScreen({ stringResource(Res.string.lending_auth_ti
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
     override fun ScreenContent() {
         val navigator = LocalNavigator.currentOrThrow
-        val user = supabase.auth.currentUserOrNull() ?: return
+        val user = SupabaseWrapper.auth.currentUserOrNull() ?: return
         val data = Json.decodeFromJsonElement<UserData>(user.userMetadata!!.jsonObject)
 
         val model = rememberScreenModel { LendingAuthScreenModel() }

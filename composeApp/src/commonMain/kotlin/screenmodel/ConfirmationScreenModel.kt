@@ -1,10 +1,9 @@
 package screenmodel
 
-import backend.supabase
+import backend.wrapper.SupabaseWrapper
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.russhwolf.settings.ExperimentalSettingsApi
-import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,7 +27,7 @@ class ConfirmationScreenModel : ScreenModel {
                 return@launch
             }
 
-            supabase.auth.signInWith(Email) {
+            SupabaseWrapper.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
