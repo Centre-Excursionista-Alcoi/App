@@ -2,6 +2,24 @@ package ui.theme.fonts
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
+import app.composeapp.generated.resources.Jost_Black
+import app.composeapp.generated.resources.Jost_BlackItalic
+import app.composeapp.generated.resources.Jost_Bold
+import app.composeapp.generated.resources.Jost_BoldItalic
+import app.composeapp.generated.resources.Jost_ExtraBold
+import app.composeapp.generated.resources.Jost_ExtraBoldItalic
+import app.composeapp.generated.resources.Jost_ExtraLight
+import app.composeapp.generated.resources.Jost_ExtraLightItalic
+import app.composeapp.generated.resources.Jost_Italic
+import app.composeapp.generated.resources.Jost_Light
+import app.composeapp.generated.resources.Jost_LightItalic
+import app.composeapp.generated.resources.Jost_Medium
+import app.composeapp.generated.resources.Jost_MediumItalic
+import app.composeapp.generated.resources.Jost_Regular
+import app.composeapp.generated.resources.Jost_SemiBold
+import app.composeapp.generated.resources.Jost_SemiBoldItalic
+import app.composeapp.generated.resources.Jost_Thin
+import app.composeapp.generated.resources.Jost_ThinItalic
 import app.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.Font
 

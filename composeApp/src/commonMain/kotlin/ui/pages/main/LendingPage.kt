@@ -24,6 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.access_form
+import app.composeapp.generated.resources.missing_authorization_lending
+import app.composeapp.generated.resources.missing_authorization_title
+import app.composeapp.generated.resources.nav_main_lending
 import backend.data.user.Role
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow

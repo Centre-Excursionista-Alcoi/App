@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.cancel
+import app.composeapp.generated.resources.ok
 import kotlinx.coroutines.Job
 import org.jetbrains.compose.resources.stringResource
 

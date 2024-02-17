@@ -45,6 +45,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.hide_password
+import app.composeapp.generated.resources.show_password
 import org.jetbrains.compose.resources.stringResource
 
 /**

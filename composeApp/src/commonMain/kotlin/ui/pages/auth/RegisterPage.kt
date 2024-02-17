@@ -28,6 +28,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.register_action
+import app.composeapp.generated.resources.register_birthday
+import app.composeapp.generated.resources.register_city
+import app.composeapp.generated.resources.register_email
+import app.composeapp.generated.resources.register_login
+import app.composeapp.generated.resources.register_name
+import app.composeapp.generated.resources.register_password
+import app.composeapp.generated.resources.register_phone
+import app.composeapp.generated.resources.register_title
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import ui.modifier.autofill

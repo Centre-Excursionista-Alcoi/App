@@ -31,6 +31,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.lending_category
+import app.composeapp.generated.resources.lending_category_edit
+import app.composeapp.generated.resources.lending_category_none
+import app.composeapp.generated.resources.lending_category_selection_dialog_title
+import app.composeapp.generated.resources.lending_display_name
+import app.composeapp.generated.resources.lending_display_name_edit
+import app.composeapp.generated.resources.lending_icon_selection_dialog_title
 import backend.data.database.Category
 import backend.data.database.InventoryItem
 import backend.int.IconProvider

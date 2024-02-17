@@ -2,6 +2,8 @@ package ui.reusable.form
 
 import androidx.compose.runtime.Composable
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.validation_email
+import app.composeapp.generated.resources.validation_password
 import org.jetbrains.compose.resources.stringResource
 
 object FieldFormatValidators {

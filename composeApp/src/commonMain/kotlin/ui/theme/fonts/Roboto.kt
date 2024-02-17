@@ -3,6 +3,18 @@ package ui.theme.fonts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.Roboto_Black
+import app.composeapp.generated.resources.Roboto_BlackItalic
+import app.composeapp.generated.resources.Roboto_Bold
+import app.composeapp.generated.resources.Roboto_BoldItalic
+import app.composeapp.generated.resources.Roboto_Italic
+import app.composeapp.generated.resources.Roboto_Light
+import app.composeapp.generated.resources.Roboto_LightItalic
+import app.composeapp.generated.resources.Roboto_Medium
+import app.composeapp.generated.resources.Roboto_MediumItalic
+import app.composeapp.generated.resources.Roboto_Regular
+import app.composeapp.generated.resources.Roboto_Thin
+import app.composeapp.generated.resources.Roboto_ThinItalic
 import org.jetbrains.compose.resources.Font
 
 @Suppress("unused")

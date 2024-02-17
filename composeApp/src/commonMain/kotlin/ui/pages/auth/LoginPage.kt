@@ -28,6 +28,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.login_action
+import app.composeapp.generated.resources.login_email
+import app.composeapp.generated.resources.login_lost
+import app.composeapp.generated.resources.login_password
+import app.composeapp.generated.resources.login_register
+import app.composeapp.generated.resources.login_title
 import org.jetbrains.compose.resources.stringResource
 import ui.modifier.autofill
 import ui.reusable.form.FormField

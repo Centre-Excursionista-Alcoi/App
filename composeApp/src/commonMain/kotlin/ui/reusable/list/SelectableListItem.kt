@@ -13,6 +13,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.checked
+import app.composeapp.generated.resources.disabled
+import app.composeapp.generated.resources.select
+import app.composeapp.generated.resources.selected
+import app.composeapp.generated.resources.unchecked
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

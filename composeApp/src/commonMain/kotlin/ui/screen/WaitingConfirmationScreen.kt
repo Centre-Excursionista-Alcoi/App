@@ -16,6 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.waiting_message
+import app.composeapp.generated.resources.waiting_retry
+import app.composeapp.generated.resources.waiting_title
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow

@@ -34,6 +34,10 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.back
+import app.composeapp.generated.resources.window_close
+import app.composeapp.generated.resources.window_maximize
+import app.composeapp.generated.resources.window_minimize
 import ui.state.SharedApplicationState
 import java.awt.MouseInfo
 import java.awt.Point

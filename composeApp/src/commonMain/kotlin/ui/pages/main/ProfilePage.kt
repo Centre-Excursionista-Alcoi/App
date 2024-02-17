@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.composeapp.generated.resources.Res
+import app.composeapp.generated.resources.nav_main_profile
 import org.jetbrains.compose.resources.stringResource
 import ui.reusable.navigation.ScaffoldPage
 
