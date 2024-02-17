@@ -34,7 +34,14 @@ object SupabaseWrapper {
         storage = client.storage
     }
 
-    init {
+    /**
+     * Reset the SupabaseWrapper to use the default SupabaseClient.
+     */
+    fun reset() {
         initialize(supabase)
+    }
+
+    init {
+        reset()
     }
 }
