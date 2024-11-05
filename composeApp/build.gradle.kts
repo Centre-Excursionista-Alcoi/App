@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.serialization)
 }
 
 kotlin {
@@ -54,25 +55,63 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting
-        
+
+        commonMain.dependencies {
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            implementation(compose.runtime)
+            implementation(compose.ui)
+
+            implementation(libs.compose.carbon)
+
+            implementation(libs.compose.navigation)
+
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+
+            implementation(libs.napier)
+
+            // Ktor
+            implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.core)
+
+            // Multiplatform Settings
+            implementation(libs.multiplatformSettings.base)
+            implementation(libs.multiplatformSettings.coroutines)
+            implementation(libs.multiplatformSettings.makeObservable)
+            implementation(libs.multiplatformSettings.serialization)
+
+            implementation(projects.shared)
+        }
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlinx.coroutines.android)
+
+            implementation(libs.datastore.base)
+            implementation(libs.datastore.preferences)
+            implementation(libs.multiplatformSettings.datastore)
+
+            implementation(libs.ktor.client.okhttp)
         }
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(projects.shared)
+        iosMain.dependencies {
+            implementation(libs.datastore.base)
+            implementation(libs.datastore.preferences)
+            implementation(libs.multiplatformSettings.datastore)
+            implementation(libs.ktor.client.darwin)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+
+            implementation(libs.datastore.base)
+            implementation(libs.datastore.preferences)
+            implementation(libs.multiplatformSettings.datastore)
+
+            implementation(libs.ktor.client.okhttp)
         }
     }
 }

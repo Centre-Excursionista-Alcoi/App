@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+    <string name="login_title">Login</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_button">Login</string>
+
+    <string name="error_wrong_credentials">Wrong credentials</string>
+    <string name="error_unknown">Unknown error. Code #%1$d: %2$s</string>
+</resources>
