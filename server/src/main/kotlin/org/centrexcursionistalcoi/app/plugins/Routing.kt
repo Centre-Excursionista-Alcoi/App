@@ -2,20 +2,30 @@ package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
-import io.ktor.server.routing.Routing
+import io.ktor.server.auth.authenticate
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import org.centrexcursionistalcoi.app.endpoints.Endpoint
+import org.centrexcursionistalcoi.app.endpoints.RegisterEndpoint
+import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
+import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
+import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Routing")
 
-private val endpoints = listOf<Endpoint>()
+private val endpoints = listOf<Endpoint>(
+    RootEndpoint
+)
 
-private fun Routing.configureEndpoint(endpoint: Endpoint) {
+private val basicAuthEndpoints = listOf<BasicAuthEndpoint>(
+    RegisterEndpoint
+)
+
+private fun Route.configureEndpoint(endpoint: Endpoint) {
     logger.trace("${endpoint.method.value} :: ${endpoint.route}")
     when (endpoint.method) {
         HttpMethod.Get -> get(endpoint.route) { endpoint(this) }
@@ -32,6 +42,12 @@ fun Application.configureRouting() {
         logger.debug("Adding ${endpoints.size} endpoints...")
         for (endpoint in endpoints) {
             configureEndpoint(endpoint)
+        }
+        authenticate(BASIC_AUTH_NAME) {
+            logger.debug("Adding ${basicAuthEndpoints.size} basic auth endpoints...")
+            for (endpoint in basicAuthEndpoints) {
+                configureEndpoint(endpoint)
+            }
         }
     }
 }
