@@ -9,6 +9,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import org.centrexcursionistalcoi.app.endpoints.LoginEndpoint
+import org.centrexcursionistalcoi.app.endpoints.LogoutEndpoint
 import org.centrexcursionistalcoi.app.endpoints.RegisterEndpoint
 import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
@@ -17,12 +19,14 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Routing")
 
-private val endpoints = listOf<Endpoint>(
-    RootEndpoint
+private val endpoints: List<Endpoint> = listOf(
+    RootEndpoint,
+    LogoutEndpoint
 )
 
-private val basicAuthEndpoints = listOf<BasicAuthEndpoint>(
-    RegisterEndpoint
+private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
+    RegisterEndpoint,
+    LoginEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {
