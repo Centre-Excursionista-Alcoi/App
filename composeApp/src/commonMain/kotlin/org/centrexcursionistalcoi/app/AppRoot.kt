@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.route.Loading
 import org.centrexcursionistalcoi.app.screen.HomeScreen
 import org.centrexcursionistalcoi.app.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.screen.LoginScreen
+import org.centrexcursionistalcoi.app.screen.RegisterScreen
 import org.centrexcursionistalcoi.app.screen.composable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -25,6 +26,7 @@ fun AppRoot() {
             NavHost(navController, startDestination = Loading) {
                 composable(LoadingScreen)
                 composable(LoginScreen)
+                composable(RegisterScreen)
                 composable(HomeScreen)
             }
         }

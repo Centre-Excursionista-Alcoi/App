@@ -8,4 +8,6 @@ expect object AccountManager {
     fun flow(): Flow<Account?>
 
     suspend fun put(account: Account, password: String)
+
+    suspend fun logout()
 }

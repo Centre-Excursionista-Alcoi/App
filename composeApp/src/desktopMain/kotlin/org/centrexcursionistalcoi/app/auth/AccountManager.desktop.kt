@@ -19,4 +19,8 @@ actual object AccountManager {
     actual suspend fun put(account: Account, password: String) {
         settings.putString(KEY_EMAIL, account.email)
     }
+
+    actual suspend fun logout() {
+        settings.remove(KEY_EMAIL)
+    }
 }

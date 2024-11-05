@@ -7,33 +7,37 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.centrexcursionistalcoi.app.auth.Account
-import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.network.Auth
-import org.centrexcursionistalcoi.app.route.Loading
+import org.centrexcursionistalcoi.app.route.Login
 import org.jetbrains.compose.resources.getString
 
-class LoginViewModel : ViewModel() {
+class RegisterViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    fun login(navController: NavController, email: String, password: String) = launch {
+    fun register(
+        navController: NavController,
+        email: String,
+        password: String,
+        firstName: String,
+        familyName: String,
+        nif: String,
+        phone: String
+    ) = launch {
         try {
             _isLoading.emit(true)
-            Napier.i { "Logging is as $email..." }
-            Auth.login(email, password)
-            Napier.i { "Logged in successfully." }
-            AccountManager.put(Account(email), password)
-            navController.navigate(Loading)
+            Napier.i { "Registering $email..." }
+            Auth.register(email, password, firstName, familyName, nif, phone)
+            Napier.i { "Registered successfully." }
+            navController.navigate(Login)
         } catch (e: ServerException) {
             when (e) {
                 is AuthException.WrongCredentials -> {
-                    // TODO: Handle wrong credentials
                     Napier.e { "Wrong credentials" }
                     _error.emit(getString(Res.string.error_wrong_credentials))
                 }

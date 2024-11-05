@@ -76,7 +76,9 @@ kotlin {
 
             // Ktor
             implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.serialization.kotlinxJson)
 
             // Multiplatform Settings
             implementation(libs.multiplatformSettings.base)

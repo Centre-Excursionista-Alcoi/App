@@ -4,7 +4,22 @@
     <string name="login_email">Email</string>
     <string name="login_password">Password</string>
     <string name="login_button">Login</string>
+    <string name="login_no_account">Not yet registered?</string>
+
+    <string name="register_title">Register</string>
+    <string name="register_email">Email</string>
+    <string name="register_password">Password</string>
+    <string name="register_password_confirm">Password Confirmation</string>
+    <string name="register_first_name">First Name</string>
+    <string name="register_family_name">Family Name (Surname)</string>
+    <string name="register_nif">NIF</string>
+    <string name="register_phone">Phone Number</string>
+    <string name="register_button">Register</string>
+    <string name="register_already">Already registered?</string>
 
     <string name="error_wrong_credentials">Wrong credentials</string>
+    <string name="error_nif_invalid">NIF is not valid.</string>
+    <string name="error_email_invalid">Email is not valid.</string>
+    <string name="error_passwords_dont_match">Passwords do not match.</string>
     <string name="error_unknown">Unknown error. Code #%1$d: %2$s</string>
 </resources>

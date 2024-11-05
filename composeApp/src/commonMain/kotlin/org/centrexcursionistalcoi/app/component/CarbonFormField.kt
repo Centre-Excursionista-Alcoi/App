@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -25,6 +26,7 @@ fun CarbonFormField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     thisFocusRequester: FocusRequester? = null,
+    previousFocusRequester: FocusRequester? = null,
     nextFocusRequester: FocusRequester? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
@@ -45,6 +47,24 @@ fun CarbonFormField(
             modifier = Modifier
                 .let { mod ->
                     thisFocusRequester?.let { mod.focusRequester(it) } ?: mod
+                }
+                .let { mod ->
+                    if (nextFocusRequester != null || previousFocusRequester != null) {
+                        mod.focusProperties {
+                            previousFocusRequester?.let {
+                                previous = it
+                                left = it
+                                up = it
+                            }
+                            nextFocusRequester?.let {
+                                next = it
+                                right = it
+                                down = it
+                            }
+                        }
+                    } else {
+                        mod
+                    }
                 }
                 .then(modifier),
             state = if (enabled) if (error != null) TextInputState.Error else TextInputState.Enabled else TextInputState.Disabled,
