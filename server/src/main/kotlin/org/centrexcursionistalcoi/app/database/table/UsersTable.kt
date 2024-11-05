@@ -5,11 +5,12 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 
-object Users : IdTable<String>("users") {
+object UsersTable : IdTable<String>("users") {
     // Emails have a max length of 320 characters
     override val id: Column<EntityID<String>> = varchar("email", 320).entityId()
 
     val confirmed = bool("confirmed").default(false)
+    val isAdmin = bool("is_admin").default(false)
 
     val name = varchar("name", 128)
     val familyName = varchar("family_name", 256)
@@ -21,4 +22,6 @@ object Users : IdTable<String>("users") {
 
     val salt = binary("salt", Passwords.SALT_LENGTH)
     val hash = binary("hash", Passwords.HASH_LENGTH)
+
+    override val primaryKey: PrimaryKey = PrimaryKey(id)
 }

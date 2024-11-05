@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.endpoints
+package org.centrexcursionistalcoi.app.endpoints.auth
 
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.sessions

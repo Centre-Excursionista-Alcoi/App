@@ -23,4 +23,7 @@ object Errors {
 
     @Serializable
     data object NotLoggedIn : ErrorResponse(7, "Not logged in")
+
+    @Serializable
+    data object UserNotFound : ErrorResponse(8, "User not found")
 }

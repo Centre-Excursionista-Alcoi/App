@@ -6,7 +6,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
+import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.server.response.ErrorResponse
+import org.centrexcursionistalcoi.app.serverJson
 
 abstract class Endpoint(
     val route: String,
@@ -24,6 +26,16 @@ abstract class Endpoint(
         status: HttpStatusCode = HttpStatusCode.OK
     ) {
         call.respondText("OK", contentType = ContentType.Text.Plain, status = status)
+    }
+
+    protected suspend fun <Type> RoutingContext.respondSuccess(
+        data: Type,
+        serializer: SerializationStrategy<Type>,
+        status: HttpStatusCode = HttpStatusCode.OK
+    ) {
+        val json = serverJson.encodeToString(serializer, data)
+
+        call.respondText(json, contentType = ContentType.Application.Json, status = status)
     }
 
     protected suspend fun RoutingContext.respondFailure(

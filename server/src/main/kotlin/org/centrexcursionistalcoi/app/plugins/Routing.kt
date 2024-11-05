@@ -9,12 +9,15 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import org.centrexcursionistalcoi.app.endpoints.LoginEndpoint
-import org.centrexcursionistalcoi.app.endpoints.LogoutEndpoint
-import org.centrexcursionistalcoi.app.endpoints.RegisterEndpoint
 import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.LoginEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.LogoutEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.RegisterEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.CreateTypesEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.ListTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
+import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Routing")
@@ -27,6 +30,11 @@ private val endpoints: List<Endpoint> = listOf(
 private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
     RegisterEndpoint,
     LoginEndpoint
+)
+
+private val secureEndpoints: List<SecureEndpoint> = listOf(
+    ListTypesEndpoint,
+    CreateTypesEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {
@@ -52,6 +60,10 @@ fun Application.configureRouting() {
             for (endpoint in basicAuthEndpoints) {
                 configureEndpoint(endpoint)
             }
+        }
+        logger.debug("Adding ${secureEndpoints.size} secure endpoints...")
+        for (endpoint in secureEndpoints) {
+            configureEndpoint(endpoint)
         }
     }
 }

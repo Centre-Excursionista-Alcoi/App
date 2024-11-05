@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.endpoints
+package org.centrexcursionistalcoi.app.endpoints.auth
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
