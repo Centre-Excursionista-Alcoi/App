@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LoginEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LogoutEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.RegisterEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.UserDataEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.CreateTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.ListTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
@@ -34,7 +35,8 @@ private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
 
 private val secureEndpoints: List<SecureEndpoint> = listOf(
     ListTypesEndpoint,
-    CreateTypesEndpoint
+    CreateTypesEndpoint,
+    UserDataEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {

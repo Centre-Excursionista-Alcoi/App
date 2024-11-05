@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import org.centrexcursionistalcoi.app.database.table.UsersTable
+import org.centrexcursionistalcoi.app.server.response.data.UserD
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -20,4 +21,14 @@ class User(id: EntityID<String>): Entity<String>(id) {
 
     var salt by UsersTable.salt
     var hash by UsersTable.hash
+
+    fun serializable(): UserD = UserD(
+        email = id.value,
+        isConfirmed = confirmed,
+        isAdmin = isAdmin,
+        name = name,
+        familyName = familyName,
+        nif = nif,
+        phone = phone
+    )
 }
