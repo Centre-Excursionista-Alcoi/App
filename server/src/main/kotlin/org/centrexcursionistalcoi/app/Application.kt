@@ -9,6 +9,7 @@ import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.installAuthentication
 import org.centrexcursionistalcoi.app.plugins.installContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.installSessions
+import org.centrexcursionistalcoi.app.plugins.installStatusPages
 
 fun main() = runBlocking<Unit> {
     start()
@@ -26,4 +27,5 @@ fun Application.module() {
     installContentNegotiation()
     configureRouting()
     installSessions()
+    installStatusPages()
 }

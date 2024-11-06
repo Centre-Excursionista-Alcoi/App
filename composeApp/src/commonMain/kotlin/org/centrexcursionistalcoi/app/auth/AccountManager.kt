@@ -2,10 +2,12 @@ package org.centrexcursionistalcoi.app.auth
 
 import kotlinx.coroutines.flow.Flow
 
-expect object AccountManager {
-    suspend fun get(): Account?
+typealias AccountAndPassword = Pair<Account, String>
 
-    fun flow(): Flow<Account?>
+expect object AccountManager {
+    suspend fun get(): AccountAndPassword?
+
+    fun flow(): Flow<AccountAndPassword?>
 
     suspend fun put(account: Account, password: String)
 

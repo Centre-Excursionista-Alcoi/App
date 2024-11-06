@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.sessions)
+    implementation(libs.ktor.server.statusPages)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)

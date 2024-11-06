@@ -7,6 +7,7 @@ import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.basicAuth
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -16,6 +17,8 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.serverJson
 
@@ -37,6 +40,42 @@ object Backend {
         install(ContentNegotiation) {
             json(serverJson)
         }
+    }
+
+    /**
+     * Send a GET request to the server
+     * @param path The path to send the request to
+     * @param block Additional configuration for the request
+     * @return The response from the server
+     * @throws ServerException If the server responds with an error
+     */
+    suspend fun get(path: String, block: HttpRequestBuilder.() -> Unit = {}): HttpResponse {
+        val response = client.get(path, block)
+        if (response.status.isSuccess()) {
+            return response
+        }
+
+        val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
+        throw ServerException(code, response.bodyAsText())
+    }
+
+    /**
+     * Send a GET request to the server and deserialize the response
+     * @param path The path to send the request to
+     * @param deserializer The deserializer to use for the response
+     * @param block Additional configuration for the request
+     * @return The deserialized response from the server
+     * @throws ServerException If the server responds with an error
+     * @throws SerializationException If the response cannot be deserialized
+     */
+    suspend fun <Type> get(
+        path: String,
+        deserializer: DeserializationStrategy<Type>,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): Type {
+        val response = get(path, block)
+        val body = response.bodyAsText()
+        return serverJson.decodeFromString(deserializer, body)
     }
 
     /**

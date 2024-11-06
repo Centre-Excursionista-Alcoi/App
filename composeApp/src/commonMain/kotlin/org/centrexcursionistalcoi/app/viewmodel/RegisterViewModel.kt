@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
-import org.centrexcursionistalcoi.app.network.Auth
+import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.route.Login
 import org.jetbrains.compose.resources.getString
 
@@ -32,9 +32,11 @@ class RegisterViewModel : ViewModel() {
         try {
             _isLoading.emit(true)
             Napier.i { "Registering $email..." }
-            Auth.register(email, password, firstName, familyName, nif, phone)
+            AuthBackend.register(email, password, firstName, familyName, nif, phone)
             Napier.i { "Registered successfully." }
-            navController.navigate(Login)
+            uiThread {
+                navController.navigate(Login)
+            }
         } catch (e: ServerException) {
             when (e) {
                 is AuthException.WrongCredentials -> {

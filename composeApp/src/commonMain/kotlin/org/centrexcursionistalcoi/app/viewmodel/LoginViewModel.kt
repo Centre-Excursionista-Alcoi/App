@@ -11,7 +11,7 @@ import org.centrexcursionistalcoi.app.auth.Account
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
-import org.centrexcursionistalcoi.app.network.Auth
+import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.route.Loading
 import org.jetbrains.compose.resources.getString
 
@@ -26,10 +26,12 @@ class LoginViewModel : ViewModel() {
         try {
             _isLoading.emit(true)
             Napier.i { "Logging is as $email..." }
-            Auth.login(email, password)
+            AuthBackend.login(email, password)
             Napier.i { "Logged in successfully." }
             AccountManager.put(Account(email), password)
-            navController.navigate(Loading)
+            uiThread {
+                navController.navigate(Loading)
+            }
         } catch (e: ServerException) {
             when (e) {
                 is AuthException.WrongCredentials -> {

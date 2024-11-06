@@ -40,7 +40,7 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {
-    logger.trace("${endpoint.method.value} :: ${endpoint.route}")
+    logger.trace("${endpoint.method.value.padEnd(4, ' ')} :: ${endpoint.route}")
     when (endpoint.method) {
         HttpMethod.Get -> get(endpoint.route) { endpoint(this) }
         HttpMethod.Post -> post(endpoint.route) { endpoint(this) }

@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import org.centrexcursionistalcoi.app.auth.Account
+import org.centrexcursionistalcoi.app.auth.AccountAndPassword
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.route.Route
 
@@ -20,7 +20,7 @@ import org.centrexcursionistalcoi.app.route.Route
 fun AccountStateNavigator(onLoggedIn: Route? = null, onLoggedOut: Route? = null) {
     val navController = LocalNavController.current
     val account by AccountManager.flow().collectAsState(null)
-    var initial: Account? by remember { mutableStateOf(null) }
+    var initial: AccountAndPassword? by remember { mutableStateOf(null) }
     LaunchedEffect(account) {
         // Ignore the initial state
         if (initial == null) {
