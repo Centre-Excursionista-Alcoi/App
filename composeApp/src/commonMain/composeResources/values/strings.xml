@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <resources>
+    <string name="back">Go Back</string>
+    <string name="add">Add</string>
+
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>
     <string name="login_password">Password</string>

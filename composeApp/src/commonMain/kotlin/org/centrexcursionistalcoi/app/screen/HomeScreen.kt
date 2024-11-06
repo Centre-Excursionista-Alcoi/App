@@ -1,14 +1,18 @@
 package org.centrexcursionistalcoi.app.screen
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Doorbell
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,6 +21,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
+import org.centrexcursionistalcoi.app.pages.home.AdminPage
+import org.centrexcursionistalcoi.app.pages.home.DashboardPage
+import org.centrexcursionistalcoi.app.pages.home.NotificationsPage
+import org.centrexcursionistalcoi.app.pages.home.ReservePage
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.route.Home
@@ -27,9 +35,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
+        val itemTypes by viewModel.itemTypes.collectAsState()
 
         val scope = rememberCoroutineScope()
-        val pagerState = rememberPagerState { 3 }
+        val pagerState = rememberPagerState { if (user?.isAdmin == true) 4 else 3 }
 
         LaunchedEffect(Unit) {
             viewModel.load()
@@ -49,10 +58,11 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                 PlatformNavigationBar(
                     selection = pagerState.currentPage,
                     onSelectionChanged = { scope.launch { pagerState.animateScrollToPage(it) } },
-                    items = listOf(
+                    items = listOfNotNull(
                         Icons.Default.Dashboard to "Dashboard",
+                        Icons.Default.Notifications to "Notifications",
                         Icons.Default.Add to "Reserve",
-                        Icons.Default.Doorbell to "Notifications"
+                        if (user?.isAdmin == true) Icons.Default.AdminPanelSettings to "Admin" else null
                     )
                 )
             }
@@ -60,8 +70,17 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
-            ) {
-
+            ) { page ->
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                ) {
+                    when (page) {
+                        0 -> DashboardPage()
+                        1 -> NotificationsPage()
+                        2 -> ReservePage()
+                        3 -> AdminPage(itemTypes)
+                    }
+                }
             }
         }
     }

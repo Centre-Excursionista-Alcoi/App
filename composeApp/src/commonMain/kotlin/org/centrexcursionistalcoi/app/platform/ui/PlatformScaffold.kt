@@ -10,5 +10,6 @@ expect fun PlatformScaffold(
     title: String? = null,
     actions: List<Triple<ImageVector, String, () -> Unit>> = emptyList(),
     navigationBar: (@Composable () -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
 )

@@ -14,12 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import ceaapp.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun PlatformScaffold(
     title: String?,
     actions: List<Triple<ImageVector, String, () -> Unit>>,
     navigationBar: (@Composable () -> Unit)?,
+    onBack: (() -> Unit)?,
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
 ) {
     Column(
@@ -29,6 +32,9 @@ actual fun PlatformScaffold(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            onBack?.let {
+                PlatformButton(stringResource(Res.string.back), onClick = it)
+            }
             AnimatedContent(
                 targetState = title,
                 modifier = Modifier.weight(1f).padding(start = 12.dp)
