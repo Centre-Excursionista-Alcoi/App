@@ -26,4 +26,7 @@ object Errors {
 
     @Serializable
     data object UserNotFound : ErrorResponse(8, "User not found")
+
+    @Serializable
+    data object Forbidden : ErrorResponse(9, "No permission", 403 /* Forbidden */)
 }
