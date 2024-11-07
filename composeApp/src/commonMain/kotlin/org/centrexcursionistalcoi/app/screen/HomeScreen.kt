@@ -35,9 +35,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
-        val itemTypes by viewModel.itemTypes.collectAsState()
-        val creatingSection by viewModel.creatingSection.collectAsState()
         val sections by viewModel.sections.collectAsState()
+        val creatingSection by viewModel.creatingSection.collectAsState()
+        val itemTypes by viewModel.itemTypes.collectAsState()
+        val creatingType by viewModel.creatingType.collectAsState()
 
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState { if (user?.isAdmin == true) 4 else 3 }
@@ -81,11 +82,12 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                         1 -> NotificationsPage()
                         2 -> ReservePage()
                         3 -> AdminPage(
-                            isAdmin = user?.isAdmin == true,
-                            isCreatingSection = creatingSection,
                             sections = sections,
+                            isCreatingSection = creatingSection,
                             onCreateSectionRequested = viewModel::create,
-                            itemTypes = itemTypes
+                            itemTypes = itemTypes,
+                            isCreatingType = creatingType,
+                            onCreateTypeRequested = viewModel::create
                         )
                     }
                 }

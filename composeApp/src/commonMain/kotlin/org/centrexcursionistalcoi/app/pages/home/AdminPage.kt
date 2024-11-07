@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
+import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
@@ -29,55 +30,29 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AdminPage(
-    isAdmin: Boolean,
     isCreatingSection: Boolean,
     sections: List<SectionD>?,
     onCreateSectionRequested: (SectionD, onCreate: () -> Unit) -> Unit,
-    itemTypes: List<ItemTypeD>?
+    itemTypes: List<ItemTypeD>?,
+    isCreatingType: Boolean,
+    onCreateTypeRequested: (ItemTypeD, onCreate: () -> Unit) -> Unit
 ) {
-    SectionsCard(isAdmin, sections, isCreatingSection, onCreateSectionRequested)
+    SectionsCard(sections, isCreatingSection, onCreateSectionRequested)
 
-    PlatformCard(
-        title = "Types",
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { TODO() },
-        modifier = Modifier.fillMaxWidth().padding(8.dp)
-    ) {
-        AnimatedContent(
-            targetState = itemTypes,
-            modifier = Modifier.fillMaxWidth()
-        ) { types ->
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                if (types == null) {
-                    PlatformLoadingIndicator()
-                } else {
-                    if (types.isEmpty()) {
-                        BasicText(
-                            text = "No types found",
-                            style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                        )
-                    }
-                    for (type in types) {
-                        BasicText(text = type.title)
-                    }
-                }
-            }
-        }
-    }
+    TypesCard(itemTypes, isCreatingType, onCreateTypeRequested)
 }
 
 @Composable
 fun SectionsCard(
-    isAdmin: Boolean,
     sections: List<SectionD>?,
-    isCreatingSection: Boolean,
-    onCreateSectionRequested: (SectionD, onCreate: () -> Unit) -> Unit,
+    isCreating: Boolean,
+    onCreateRequested: (SectionD, onCreate: () -> Unit) -> Unit,
 ) {
     var showingCreationDialog by remember { mutableStateOf(false) }
 
     if (showingCreationDialog) {
         PlatformDialog(
-            onDismissRequest = { if (!isCreatingSection) showingCreationDialog = false }
+            onDismissRequest = { if (!isCreating) showingCreationDialog = false }
         ) {
             var displayName by remember { mutableStateOf("") }
 
@@ -91,14 +66,14 @@ fun SectionsCard(
                 onValueChange = { displayName = it },
                 label = stringResource(Res.string.sections_name),
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
-                enabled = !isCreatingSection
+                enabled = !isCreating
             )
             PlatformButton(
                 text = stringResource(Res.string.create),
                 modifier = Modifier.align(Alignment.End).padding(8.dp),
-                enabled = !isCreatingSection
+                enabled = !isCreating
             ) {
-                onCreateSectionRequested(
+                onCreateRequested(
                     SectionD(displayName = displayName)
                 ) { showingCreationDialog = false }
             }
@@ -107,8 +82,7 @@ fun SectionsCard(
 
     PlatformCard(
         title = stringResource(Res.string.sections_title),
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = true })
-            .takeIf { isAdmin },
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = true }),
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         AnimatedContent(
@@ -128,6 +102,102 @@ fun SectionsCard(
                     }
                     for (item in list) {
                         BasicText(text = item.displayName)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TypesCard(
+    itemTypes: List<ItemTypeD>?,
+    isCreating: Boolean,
+    onCreateRequested: (ItemTypeD, onCreate: () -> Unit) -> Unit
+) {
+    var showingCreationDialog by remember { mutableStateOf(false) }
+
+    if (showingCreationDialog) {
+        PlatformDialog(
+            onDismissRequest = { if (!isCreating) showingCreationDialog = false }
+        ) {
+            var title by remember { mutableStateOf("") }
+            var description by remember { mutableStateOf("") }
+            var brand by remember { mutableStateOf("") }
+            var model by remember { mutableStateOf("") }
+
+            BasicText(
+                text = stringResource(Res.string.types_create),
+                style = getPlatformTextStyles().heading,
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            PlatformFormField(
+                value = title,
+                onValueChange = { title = it },
+                label = stringResource(Res.string.types_name),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !isCreating
+            )
+            PlatformTextArea(
+                value = description,
+                onValueChange = { description = it },
+                label = stringResource(Res.string.types_description),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !isCreating
+            )
+            PlatformFormField(
+                value = brand,
+                onValueChange = { brand = it },
+                label = stringResource(Res.string.types_brand),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !isCreating
+            )
+            PlatformFormField(
+                value = model,
+                onValueChange = { model = it },
+                label = stringResource(Res.string.types_model),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !isCreating
+            )
+            PlatformButton(
+                text = stringResource(Res.string.create),
+                modifier = Modifier.align(Alignment.End).padding(8.dp),
+                enabled = !isCreating
+            ) {
+                onCreateRequested(
+                    ItemTypeD(
+                        title = title,
+                        description = description.takeIf(String::isNotBlank),
+                        brand = brand.takeIf(String::isNotBlank),
+                        model = model.takeIf(String::isNotBlank)
+                    )
+                ) { showingCreationDialog = false }
+            }
+        }
+    }
+
+    PlatformCard(
+        title = stringResource(Res.string.types_title),
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = true },
+        modifier = Modifier.fillMaxWidth().padding(8.dp)
+    ) {
+        AnimatedContent(
+            targetState = itemTypes,
+            modifier = Modifier.fillMaxWidth()
+        ) { types ->
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (types == null) {
+                    PlatformLoadingIndicator()
+                } else {
+                    if (types.isEmpty()) {
+                        BasicText(
+                            text = stringResource(Res.string.types_empty),
+                            style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
+                    for (type in types) {
+                        BasicText(text = type.title)
                     }
                 }
             }

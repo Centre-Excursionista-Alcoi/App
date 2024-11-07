@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ItemTypeD(
     val id: Int? = null,
-    val createdAt: Long,
+    val createdAt: Long? = null,
     val title: String,
     val description: String? = null,
     val brand: String? = null,

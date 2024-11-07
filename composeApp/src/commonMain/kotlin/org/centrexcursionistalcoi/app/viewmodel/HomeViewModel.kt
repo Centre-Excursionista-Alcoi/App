@@ -24,6 +24,9 @@ class HomeViewModel : ViewModel() {
     private val _itemTypes = MutableStateFlow<List<ItemTypeD>?>(null)
     val itemTypes get() = _itemTypes.asStateFlow()
 
+    private val _creatingType = MutableStateFlow(false)
+    val creatingType get() = _creatingType.asStateFlow()
+
     fun load() {
         launch {
             val data = UserDataBackend.getUserData()
@@ -52,6 +55,19 @@ class HomeViewModel : ViewModel() {
                 uiThread { onCreate() }
             } finally {
                 _creatingSection.emit(false)
+            }
+        }
+    }
+
+    fun create(itemTypeD: ItemTypeD, onCreate: () -> Unit) {
+        launch {
+            try {
+                _creatingType.emit(true)
+                InventoryBackend.create(itemTypeD)
+                load()
+                uiThread { onCreate() }
+            } finally {
+                _creatingType.emit(false)
             }
         }
     }
