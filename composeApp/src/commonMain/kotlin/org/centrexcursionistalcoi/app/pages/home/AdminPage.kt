@@ -8,19 +8,35 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
+import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
+import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
+import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun AdminPage(itemTypes: List<ItemTypeD>?) {
+fun AdminPage(
+    isAdmin: Boolean,
+    isCreatingSection: Boolean,
+    sections: List<SectionD>?,
+    onCreateSectionRequested: (SectionD, onCreate: () -> Unit) -> Unit,
+    itemTypes: List<ItemTypeD>?
+) {
+    SectionsCard(isAdmin, sections, isCreatingSection, onCreateSectionRequested)
+
     PlatformCard(
         title = "Types",
         action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { TODO() },
@@ -43,6 +59,75 @@ fun AdminPage(itemTypes: List<ItemTypeD>?) {
                     }
                     for (type in types) {
                         BasicText(text = type.title)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SectionsCard(
+    isAdmin: Boolean,
+    sections: List<SectionD>?,
+    isCreatingSection: Boolean,
+    onCreateSectionRequested: (SectionD, onCreate: () -> Unit) -> Unit,
+) {
+    var showingCreationDialog by remember { mutableStateOf(false) }
+
+    if (showingCreationDialog) {
+        PlatformDialog(
+            onDismissRequest = { if (!isCreatingSection) showingCreationDialog = false }
+        ) {
+            var displayName by remember { mutableStateOf("") }
+
+            BasicText(
+                text = stringResource(Res.string.sections_create),
+                style = getPlatformTextStyles().heading,
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            PlatformFormField(
+                value = displayName,
+                onValueChange = { displayName = it },
+                label = stringResource(Res.string.sections_name),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !isCreatingSection
+            )
+            PlatformButton(
+                text = stringResource(Res.string.create),
+                modifier = Modifier.align(Alignment.End).padding(8.dp),
+                enabled = !isCreatingSection
+            ) {
+                onCreateSectionRequested(
+                    SectionD(displayName = displayName)
+                ) { showingCreationDialog = false }
+            }
+        }
+    }
+
+    PlatformCard(
+        title = stringResource(Res.string.sections_title),
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = true })
+            .takeIf { isAdmin },
+        modifier = Modifier.fillMaxWidth().padding(8.dp)
+    ) {
+        AnimatedContent(
+            targetState = sections,
+            modifier = Modifier.fillMaxWidth()
+        ) { list ->
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (list == null) {
+                    PlatformLoadingIndicator()
+                } else {
+                    if (list.isEmpty()) {
+                        BasicText(
+                            text = stringResource(Res.string.sections_empty),
+                            style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
+                    for (item in list) {
+                        BasicText(text = item.displayName)
                     }
                 }
             }

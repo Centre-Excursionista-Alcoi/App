@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.centrexcursionistalcoi.app.database.table.ItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
+import org.centrexcursionistalcoi.app.database.table.SectionsTable
 import org.centrexcursionistalcoi.app.database.table.UsersTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -21,7 +22,8 @@ object ServerDatabase {
         UsersTable,
         ItemTypesTable,
         ItemsTable,
-        LendingsTable
+        LendingsTable,
+        SectionsTable
     )
 
     suspend fun initialize(

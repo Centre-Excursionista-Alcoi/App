@@ -19,6 +19,7 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.serverJson
 
@@ -77,7 +78,6 @@ object Backend {
         val body = response.bodyAsText()
         return serverJson.decodeFromString(deserializer, body)
     }
-
     /**
      * Send a POST request to the server
      * @param path The path to send the request to
@@ -88,15 +88,44 @@ object Backend {
     suspend fun post(
         path: String,
         basicAuth: Pair<String, String>? = null,
-        body: Any? = null,
         block: HttpRequestBuilder.() -> Unit = {}
     ): HttpResponse {
         val response = client.post(path) {
             basicAuth?.let { (username, password) -> basicAuth(username, password) }
-            body?.let {
-                contentType(ContentType.Application.Json)
-                setBody(it)
-            }
+
+            block()
+        }
+        if (response.status.isSuccess()) {
+            return response
+        }
+
+        val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
+        throw ServerException(code, response.bodyAsText())
+    }
+
+    /**
+     * Send a POST request to the server
+     * @param path The path to send the request to
+     * @param block Additional configuration for the request
+     * @param body The body to send with the request
+     * @param bodySerializer The serializer to use for the body
+     * @param basicAuth The basic authentication credentials to use
+     * @return The response from the server
+     * @throws ServerException If the server responds with an error
+     */
+    suspend fun <Type> post(
+        path: String,
+        body: Type,
+        bodySerializer: SerializationStrategy<Type>,
+        basicAuth: Pair<String, String>? = null,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse {
+        val response = client.post(path) {
+            basicAuth?.let { (username, password) -> basicAuth(username, password) }
+
+            val json = serverJson.encodeToString(bodySerializer, body)
+            contentType(ContentType.Application.Json)
+            setBody(json)
 
             block()
         }

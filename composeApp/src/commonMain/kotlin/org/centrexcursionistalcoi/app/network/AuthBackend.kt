@@ -28,6 +28,7 @@ object AuthBackend {
             Backend.post(
                 "/register",
                 basicAuth = email to password,
+                bodySerializer = RegistrationRequest.serializer(),
                 body = RegistrationRequest(
                     name = firstName,
                     familyName = familyName,

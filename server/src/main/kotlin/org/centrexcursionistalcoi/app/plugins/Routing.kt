@@ -19,6 +19,8 @@ import org.centrexcursionistalcoi.app.endpoints.inventory.ListTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
+import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
+import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Routing")
@@ -34,9 +36,11 @@ private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
 )
 
 private val secureEndpoints: List<SecureEndpoint> = listOf(
+    UserDataEndpoint,
     ListTypesEndpoint,
     CreateTypesEndpoint,
-    UserDataEndpoint
+    ListSectionsEndpoint,
+    CreateSectionEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {
