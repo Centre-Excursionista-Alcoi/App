@@ -18,7 +18,7 @@ import com.gabrieldrn.carbon.foundation.color.containerBackground
 
 @Composable
 actual fun PlatformCard(
-    title: String,
+    title: String?,
     modifier: Modifier,
     action: Triple<ImageVector, String, () -> Unit>?,
     content: @Composable ColumnScope.() -> Unit
@@ -27,30 +27,30 @@ actual fun PlatformCard(
         Column(
             modifier = modifier.containerBackground()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicText(
-                    text = title,
-                    style = getPlatformTextStyles().heading,
-                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 8.dp)
-                )
+            if (title != null || action != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (title != null) {
+                        BasicText(
+                            text = title,
+                            style = getPlatformTextStyles().heading,
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
 
-                action?.let { (_, text, onClick) ->
-                    Button(
-                        label = text,
-                        onClick = onClick,
-                        buttonType = ButtonType.Tertiary
-                    )
+                    action?.let { (_, text, onClick) ->
+                        Button(
+                            label = text,
+                            onClick = onClick,
+                            buttonType = ButtonType.Tertiary
+                        )
+                    }
                 }
             }
 
-            Column(
-                modifier = modifier.fillMaxWidth().padding(8.dp)
-            ) {
-                content()
-            }
+            content()
         }
     }
 }

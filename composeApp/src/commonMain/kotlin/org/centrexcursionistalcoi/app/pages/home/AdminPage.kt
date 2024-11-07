@@ -2,14 +2,13 @@ package org.centrexcursionistalcoi.app.pages.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,9 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -188,25 +189,60 @@ fun TypesCard(
             targetState = itemTypes,
             modifier = Modifier.fillMaxWidth()
         ) { list ->
-            LazyVerticalGrid(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                columns = GridCells.Adaptive(200.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (list == null) {
-                    item {
-                        PlatformLoadingIndicator(large = false)
-                    }
+                    PlatformLoadingIndicator(large = false)
                 } else if (list.isEmpty()) {
-                    item {
-                        BasicText(
-                            text = stringResource(Res.string.types_empty),
-                            style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                        )
-                    }
+                    BasicText(
+                        text = stringResource(Res.string.types_empty),
+                        style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
                 } else {
-                    items(list) { item ->
-                        BasicText(text = item.title)
+                    val windowSizeClass = calculateWindowSizeClass()
+                    val groupCount = when (windowSizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Compact -> 1
+                        WindowWidthSizeClass.Medium -> 2
+                        WindowWidthSizeClass.Expanded -> 3
+                        else -> 1
+                    }
+                    // group the elements in list
+                    val groups = list.chunked(groupCount)
+                    for (group in groups) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (item in group) {
+                                PlatformCard(
+                                    modifier = Modifier.weight(1f).padding(8.dp)
+                                ) {
+                                    BasicText(
+                                        text = item.title,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp)
+                                            .padding(top = 8.dp),
+                                        style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    BasicText(
+                                        text = (item.brand ?: "") + " " + (item.model ?: ""),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                        style = getPlatformTextStyles().label
+                                    )
+                                    BasicText(
+                                        text = item.description ?: "",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp)
+                                            .padding(bottom = 8.dp),
+                                        style = getPlatformTextStyles().body
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

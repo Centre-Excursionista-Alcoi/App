@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 expect fun PlatformCard(
-    title: String,
+    title: String? = null,
     modifier: Modifier = Modifier,
     action: Triple<ImageVector, String, () -> Unit>? = null,
     content: @Composable ColumnScope.() -> Unit

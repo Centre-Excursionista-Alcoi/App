@@ -66,6 +66,7 @@ kotlin {
             implementation(compose.ui)
 
             implementation(libs.compose.carbon)
+            implementation(libs.compose.windowSizeClass)
 
             implementation(libs.compose.navigation)
 
