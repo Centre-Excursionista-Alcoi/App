@@ -4,6 +4,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -91,7 +94,7 @@ fun SectionsCard(
         ) { list ->
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (list == null) {
-                    PlatformLoadingIndicator()
+                    PlatformLoadingIndicator(large = false)
                 } else {
                     if (list.isEmpty()) {
                         BasicText(
@@ -184,20 +187,26 @@ fun TypesCard(
         AnimatedContent(
             targetState = itemTypes,
             modifier = Modifier.fillMaxWidth()
-        ) { types ->
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                if (types == null) {
-                    PlatformLoadingIndicator()
-                } else {
-                    if (types.isEmpty()) {
+        ) { list ->
+            LazyVerticalGrid(
+                modifier = Modifier.fillMaxWidth(),
+                columns = GridCells.Adaptive(200.dp)
+            ) {
+                if (list == null) {
+                    item {
+                        PlatformLoadingIndicator(large = false)
+                    }
+                } else if (list.isEmpty()) {
+                    item {
                         BasicText(
                             text = stringResource(Res.string.types_empty),
                             style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
                         )
                     }
-                    for (type in types) {
-                        BasicText(text = type.title)
+                } else {
+                    items(list) { item ->
+                        BasicText(text = item.title)
                     }
                 }
             }
