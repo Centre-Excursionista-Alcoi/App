@@ -11,4 +11,10 @@ object InventoryBackend {
         body = itemType,
         bodySerializer = ItemTypeD.serializer()
     )
+
+    suspend fun update(itemType: ItemTypeD) = Backend.patch(
+        path = "/inventory/types",
+        body = itemType,
+        bodySerializer = ItemTypeD.serializer()
+    )
 }

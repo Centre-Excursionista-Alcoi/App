@@ -11,4 +11,10 @@ object SectionsBackend {
         body = section,
         bodySerializer = SectionD.serializer()
     )
+
+    suspend fun update(section: SectionD) = Backend.patch(
+        path = "/sections",
+        body = section,
+        bodySerializer = SectionD.serializer()
+    )
 }

@@ -46,11 +46,15 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun create(sectionD: SectionD, onCreate: () -> Unit) {
+    fun onCreateOrUpdate(sectionD: SectionD, onCreate: () -> Unit) {
         launch {
             try {
                 _creatingSection.emit(true)
-                SectionsBackend.create(sectionD)
+                if (sectionD.id == null) {
+                    SectionsBackend.create(sectionD)
+                } else {
+                    SectionsBackend.update(sectionD)
+                }
                 load()
                 uiThread { onCreate() }
             } finally {
@@ -59,11 +63,15 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun create(itemTypeD: ItemTypeD, onCreate: () -> Unit) {
+    fun createOrUpdate(itemTypeD: ItemTypeD, onCreate: () -> Unit) {
         launch {
             try {
                 _creatingType.emit(true)
-                InventoryBackend.create(itemTypeD)
+                if (itemTypeD.id == null) {
+                    InventoryBackend.create(itemTypeD)
+                } else {
+                    InventoryBackend.update(itemTypeD)
+                }
                 load()
                 uiThread { onCreate() }
             } finally {

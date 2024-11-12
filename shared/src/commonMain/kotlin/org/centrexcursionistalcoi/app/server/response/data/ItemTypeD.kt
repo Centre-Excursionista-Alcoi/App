@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ItemTypeD(
-    val id: Int? = null,
+    override val id: Int? = null,
     val createdAt: Long? = null,
-    val title: String,
+    val title: String = "",
     val description: String? = null,
     val brand: String? = null,
     val model: String? = null
-)
+): DatabaseData

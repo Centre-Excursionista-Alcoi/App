@@ -29,4 +29,10 @@ object Errors {
 
     @Serializable
     data object Forbidden : ErrorResponse(9, "No permission", 403 /* Forbidden */)
+
+    @Serializable
+    data object MissingId : ErrorResponse(10, "Missing id")
+
+    @Serializable
+    data object ObjectNotFound : ErrorResponse(11, "Object not found")
 }

@@ -7,12 +7,12 @@ import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.basicAuth
-import io.ktor.client.request.get
-import io.ktor.client.request.post
+import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -43,15 +43,19 @@ object Backend {
         }
     }
 
-    /**
-     * Send a GET request to the server
-     * @param path The path to send the request to
-     * @param block Additional configuration for the request
-     * @return The response from the server
-     * @throws ServerException If the server responds with an error
-     */
-    suspend fun get(path: String, block: HttpRequestBuilder.() -> Unit = {}): HttpResponse {
-        val response = client.get(path, block)
+    private suspend fun request(
+        httpMethod: HttpMethod,
+        path: String,
+        basicAuth: Pair<String, String>?,
+        block: HttpRequestBuilder.() -> Unit
+    ): HttpResponse {
+        val response = client.request(path) {
+            method = httpMethod
+
+            basicAuth?.let { (username, password) -> basicAuth(username, password) }
+
+            block()
+        }
         if (response.status.isSuccess()) {
             return response
         }
@@ -59,6 +63,18 @@ object Backend {
         val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
         throw ServerException(code, response.bodyAsText())
     }
+
+    /**
+     * Send a GET request to the server
+     * @param path The path to send the request to
+     * @param block Additional configuration for the request
+     * @return The response from the server
+     * @throws ServerException If the server responds with an error
+     */
+    suspend fun get(
+        path: String,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = request(HttpMethod.Get, path, null, block)
 
     /**
      * Send a GET request to the server and deserialize the response
@@ -89,19 +105,7 @@ object Backend {
         path: String,
         basicAuth: Pair<String, String>? = null,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse {
-        val response = client.post(path) {
-            basicAuth?.let { (username, password) -> basicAuth(username, password) }
-
-            block()
-        }
-        if (response.status.isSuccess()) {
-            return response
-        }
-
-        val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
-        throw ServerException(code, response.bodyAsText())
-    }
+    ): HttpResponse = request(HttpMethod.Post, path, basicAuth, block)
 
     /**
      * Send a POST request to the server
@@ -119,21 +123,35 @@ object Backend {
         bodySerializer: SerializationStrategy<Type>,
         basicAuth: Pair<String, String>? = null,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse {
-        val response = client.post(path) {
-            basicAuth?.let { (username, password) -> basicAuth(username, password) }
+    ): HttpResponse = post(path, basicAuth) {
+        val json = serverJson.encodeToString(bodySerializer, body)
+        contentType(ContentType.Application.Json)
+        setBody(json)
 
-            val json = serverJson.encodeToString(bodySerializer, body)
-            contentType(ContentType.Application.Json)
-            setBody(json)
+        block()
+    }
 
-            block()
-        }
-        if (response.status.isSuccess()) {
-            return response
-        }
+    /**
+     * Send a PATCH request to the server
+     * @param path The path to send the request to
+     * @param block Additional configuration for the request
+     * @param body The body to send with the request
+     * @param bodySerializer The serializer to use for the body
+     * @param basicAuth The basic authentication credentials to use
+     * @return The response from the server
+     * @throws ServerException If the server responds with an error
+     */
+    suspend fun <Type> patch(
+        path: String,
+        body: Type,
+        bodySerializer: SerializationStrategy<Type>,
+        basicAuth: Pair<String, String>? = null,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = request(HttpMethod.Patch, path, basicAuth) {
+        val json = serverJson.encodeToString(bodySerializer, body)
+        contentType(ContentType.Application.Json)
+        setBody(json)
 
-        val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
-        throw ServerException(code, response.bodyAsText())
+        block()
     }
 }

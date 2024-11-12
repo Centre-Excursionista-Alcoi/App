@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SectionD(
-    val id: Int? = null,
+    override val id: Int? = null,
     val createdAt: Long? = null,
-    val displayName: String
-)
+    val displayName: String = ""
+): DatabaseData

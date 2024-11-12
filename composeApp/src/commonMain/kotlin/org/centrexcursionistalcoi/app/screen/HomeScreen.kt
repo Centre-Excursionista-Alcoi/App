@@ -84,10 +84,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                         3 -> AdminPage(
                             sections = sections,
                             isCreatingSection = creatingSection,
-                            onCreateSectionRequested = viewModel::create,
+                            onSectionOperation = viewModel::onCreateOrUpdate,
                             itemTypes = itemTypes,
                             isCreatingType = creatingType,
-                            onCreateTypeRequested = viewModel::create
+                            onTypeOperation = viewModel::createOrUpdate
                         )
                     }
                 }
