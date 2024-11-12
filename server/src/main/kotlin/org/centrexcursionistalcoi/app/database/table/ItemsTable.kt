@@ -9,7 +9,6 @@ object ItemsTable : IntIdTable("items") {
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 
     val health = enumeration("health", ItemHealth::class)
-    val amount = integer("amount")
 
     val type = reference("type", ItemTypesTable)
 }

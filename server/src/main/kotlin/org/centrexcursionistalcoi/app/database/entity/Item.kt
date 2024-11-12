@@ -12,7 +12,6 @@ class Item(id: EntityID<Int>) : IntEntity(id) {
     val createdAt by ItemsTable.createdAt
 
     var health by ItemsTable.health
-    var amount by ItemsTable.amount
 
     var type by ItemType referencedOn ItemsTable.type
 
@@ -21,7 +20,6 @@ class Item(id: EntityID<Int>) : IntEntity(id) {
             id = id.value,
             createdAt = createdAt.toEpochMilli(),
             health = health,
-            amount = amount,
             typeId = type.id.value
         )
     }

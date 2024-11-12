@@ -5,33 +5,36 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
-import org.centrexcursionistalcoi.app.pages.home.DashboardPage
-import org.centrexcursionistalcoi.app.pages.home.NotificationsPage
-import org.centrexcursionistalcoi.app.pages.home.ReservePage
+import org.centrexcursionistalcoi.app.pages.home.HomePage
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Loading
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
+import org.jetbrains.compose.resources.stringResource
 
 object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
+    private const val NUM_PAGES = 2
+
+    private const val IDX_HOME = 0
+    private const val IDX_SETTINGS = 1
+    private const val IDX_ADMIN = NUM_PAGES
+
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
@@ -43,7 +46,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val creatingItem by viewModel.creatingItem.collectAsState()
 
         val scope = rememberCoroutineScope()
-        val pagerState = rememberPagerState { if (user?.isAdmin == true) 4 else 3 }
+        val pagerState = rememberPagerState { if (user?.isAdmin == true) (NUM_PAGES + 1) else NUM_PAGES }
 
         LaunchedEffect(Unit) {
             viewModel.load()
@@ -52,11 +55,11 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         AccountStateNavigator(onLoggedOut = Loading)
 
         PlatformScaffold(
-            title = user?.let { "Welcome, ${it.name}" } ?: "",
+            title = user?.let { stringResource(Res.string.home_welcome, it.name) } ?: "",
             actions = listOf(
                 Triple(
                     Icons.AutoMirrored.Rounded.Logout,
-                    "Logout"
+                    stringResource(Res.string.logout)
                 ) { viewModel.logout() }
             ),
             navigationBar = {
@@ -64,10 +67,9 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     selection = pagerState.currentPage,
                     onSelectionChanged = { scope.launch { pagerState.animateScrollToPage(it) } },
                     items = listOfNotNull(
-                        Icons.Default.Dashboard to "Dashboard",
-                        Icons.Default.Notifications to "Notifications",
-                        Icons.Default.Add to "Reserve",
-                        if (user?.isAdmin == true) Icons.Default.AdminPanelSettings to "Admin" else null
+                        Icons.Default.Home to stringResource(Res.string.nav_home),
+                        Icons.Default.Settings to stringResource(Res.string.nav_settings),
+                        if (user?.isAdmin == true) Icons.Default.AdminPanelSettings to stringResource(Res.string.nav_admin) else null
                     )
                 )
             }
@@ -77,13 +79,12 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) { page ->
                 Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     when (page) {
-                        0 -> DashboardPage(items, itemTypes)
-                        1 -> NotificationsPage()
-                        2 -> ReservePage()
-                        3 -> AdminPage(
+                        IDX_HOME -> HomePage(items, itemTypes)
+                        IDX_SETTINGS -> {}
+                        IDX_ADMIN -> AdminPage(
                             sections = sections,
                             isCreatingSection = creatingSection,
                             onSectionOperation = viewModel::onCreateOrUpdate,

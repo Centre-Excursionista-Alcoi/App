@@ -29,7 +29,6 @@ object UpdateItemEndpoint : SecureEndpoint("/inventory/items", HttpMethod.Patch)
                 null
             } else {
                 item.health = body.health
-                body.amount?.let { item.amount = it }
             }
         }
         if (result == null) {

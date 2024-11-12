@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -51,11 +54,18 @@ fun AdminPage(
     isCreatingItem: Boolean,
     onItemOperation: (ItemD, onCreate: () -> Unit) -> Unit
 ) {
-    SectionsCard(sections, isCreatingSection, onSectionOperation)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        SectionsCard(sections, isCreatingSection, onSectionOperation)
 
-    TypesCard(itemTypes, isCreatingType, onTypeOperation)
+        TypesCard(itemTypes, isCreatingType, onTypeOperation)
 
-    ItemsCard(items, itemTypes, isCreatingItem, onItemOperation)
+        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation)
+    }
 }
 
 @Composable
@@ -295,20 +305,6 @@ fun ItemsCard(
             enabled = !isCreating,
             toString = { it?.name ?: "" }
         )
-        PlatformFormField(
-            value = data.amount?.toString() ?: "",
-            onValueChange = { value ->
-                if (value.isBlank()) {
-                    showingCreationDialog = data.copy(amount = null)
-                } else {
-                    val num = value.toIntOrNull() ?: return@PlatformFormField
-                    showingCreationDialog = data.copy(amount = num)
-                }
-            },
-            label = stringResource(Res.string.items_amount),
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            enabled = !isCreating
-        )
         PlatformDropdown(
             value = data.typeId?.let { typeId -> itemTypes?.find { it.id == typeId } },
             onValueChange = { showingCreationDialog = data.copy(typeId = it.id) },
@@ -351,7 +347,7 @@ fun ItemsCard(
                                 .clickable { showingCreationDialog = item }
                         ) {
                             BasicText(
-                                text = type.title + " x" + item.amount,
+                                text = type.title,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp)

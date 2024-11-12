@@ -30,15 +30,9 @@ object CreateItemEndpoint : SecureEndpoint("/inventory/items", HttpMethod.Post) 
             respondFailure(Errors.ReferenceNotFound)
             return
         }
-        val itemAmount = body.amount
-        if (itemAmount == null) {
-            respondFailure(Errors.InvalidRequest)
-            return
-        }
         ServerDatabase {
             Item.new {
                 health = body.health
-                amount = itemAmount
                 type = itemType
             }
         }
