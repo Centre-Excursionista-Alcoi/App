@@ -35,6 +35,13 @@
     <string name="types_brand">Brand</string>
     <string name="types_model">Model</string>
 
+    <string name="items_title">Items</string>
+    <string name="items_health">Health</string>
+    <string name="items_amount">Amount</string>
+    <string name="items_type">Type</string>
+
+    <string name="dashboard_available_items">Available Items</string>
+
     <string name="error_wrong_credentials">Wrong credentials</string>
     <string name="error_nif_invalid">NIF is not valid.</string>
     <string name="error_email_invalid">Email is not valid.</string>

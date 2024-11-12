@@ -35,4 +35,10 @@ object Errors {
 
     @Serializable
     data object ObjectNotFound : ErrorResponse(11, "Object not found")
+
+    @Serializable
+    data object MissingReferenceId : ErrorResponse(12, "Missing reference id")
+
+    @Serializable
+    data object ReferenceNotFound : ErrorResponse(13, "Reference not found")
 }

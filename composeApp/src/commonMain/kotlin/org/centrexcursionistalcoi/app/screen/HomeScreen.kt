@@ -39,6 +39,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val creatingSection by viewModel.creatingSection.collectAsState()
         val itemTypes by viewModel.itemTypes.collectAsState()
         val creatingType by viewModel.creatingType.collectAsState()
+        val items by viewModel.items.collectAsState()
+        val creatingItem by viewModel.creatingItem.collectAsState()
 
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState { if (user?.isAdmin == true) 4 else 3 }
@@ -78,7 +80,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                 ) {
                     when (page) {
-                        0 -> DashboardPage()
+                        0 -> DashboardPage(items, itemTypes)
                         1 -> NotificationsPage()
                         2 -> ReservePage()
                         3 -> AdminPage(
@@ -87,7 +89,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             onSectionOperation = viewModel::onCreateOrUpdate,
                             itemTypes = itemTypes,
                             isCreatingType = creatingType,
-                            onTypeOperation = viewModel::createOrUpdate
+                            onTypeOperation = viewModel::createOrUpdate,
+                            items = items,
+                            isCreatingItem = creatingItem,
+                            onItemOperation = viewModel::createOrUpdate
                         )
                     }
                 }

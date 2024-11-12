@@ -26,13 +26,16 @@ import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
+import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
+import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
+import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -43,11 +46,16 @@ fun AdminPage(
     onSectionOperation: (SectionD, onCreate: () -> Unit) -> Unit,
     itemTypes: List<ItemTypeD>?,
     isCreatingType: Boolean,
-    onTypeOperation: (ItemTypeD, onCreate: () -> Unit) -> Unit
+    onTypeOperation: (ItemTypeD, onCreate: () -> Unit) -> Unit,
+    items: List<ItemD>?,
+    isCreatingItem: Boolean,
+    onItemOperation: (ItemD, onCreate: () -> Unit) -> Unit
 ) {
     SectionsCard(sections, isCreatingSection, onSectionOperation)
 
     TypesCard(itemTypes, isCreatingType, onTypeOperation)
+
+    ItemsCard(items, itemTypes, isCreatingItem, onItemOperation)
 }
 
 @Composable
@@ -255,6 +263,109 @@ fun TypesCard(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemsCard(
+    items: List<ItemD>?,
+    itemTypes: List<ItemTypeD>?,
+    isCreating: Boolean,
+    onCreateRequested: (ItemD, onCreate: () -> Unit) -> Unit
+) {
+    var showingCreationDialog: ItemD? by remember { mutableStateOf(null) }
+    CreationDialog(
+        showingCreationDialog = showingCreationDialog,
+        title = Res.string.items_title,
+        isCreating = isCreating,
+        onCreateRequested = onCreateRequested,
+        onDismissRequested = { if (!isCreating) showingCreationDialog = null }
+    ) { data ->
+        PlatformDropdown(
+            value = data.health,
+            onValueChange = { showingCreationDialog = data.copy(health = it) },
+            options = ItemHealth.entries,
+            label = stringResource(Res.string.items_health),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            enabled = !isCreating,
+            toString = { it?.name ?: "" }
+        )
+        PlatformFormField(
+            value = data.amount?.toString() ?: "",
+            onValueChange = { value ->
+                if (value.isBlank()) {
+                    showingCreationDialog = data.copy(amount = null)
+                } else {
+                    val num = value.toIntOrNull() ?: return@PlatformFormField
+                    showingCreationDialog = data.copy(amount = num)
+                }
+            },
+            label = stringResource(Res.string.items_amount),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            enabled = !isCreating
+        )
+        PlatformDropdown(
+            value = data.typeId?.let { typeId -> itemTypes?.find { it.id == typeId } },
+            onValueChange = { showingCreationDialog = data.copy(typeId = it.id) },
+            options = itemTypes ?: emptyList(),
+            label = stringResource(Res.string.items_type),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            enabled = !isCreating,
+            toString = { it?.title ?: "" }
+        )
+    }
+
+    PlatformCard(
+        title = stringResource(Res.string.types_title),
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = ItemD() },
+        modifier = Modifier.fillMaxWidth().padding(8.dp)
+    ) {
+        AnimatedContent(
+            targetState = items to itemTypes,
+            modifier = Modifier.fillMaxWidth()
+        ) { (list, types) ->
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (list == null || types == null) {
+                    PlatformLoadingIndicator(large = false)
+                } else if (list.isEmpty()) {
+                    BasicText(
+                        text = stringResource(Res.string.types_empty),
+                        style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                } else {
+                    for (item in list) {
+                        val type = types.find { it.id == item.typeId } ?: continue
+                        PlatformCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .clickable { showingCreationDialog = item }
+                        ) {
+                            BasicText(
+                                text = type.title + " x" + item.amount,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                                    .padding(top = 8.dp),
+                                style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
+                            )
+                            BasicText(
+                                text = item.health.name,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                                    .padding(top = 8.dp),
+                                style = getPlatformTextStyles().label
+                            )
                         }
                     }
                 }

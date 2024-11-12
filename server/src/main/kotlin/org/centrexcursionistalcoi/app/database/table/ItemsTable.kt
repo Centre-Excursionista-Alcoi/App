@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import org.centrexcursionistalcoi.app.database.data.ItemHealth
+import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
 import org.jetbrains.exposed.sql.javatime.timestamp

@@ -7,6 +7,8 @@ import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
+import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.centrexcursionistalcoi.app.server.response.data.UserD
@@ -27,6 +29,12 @@ class HomeViewModel : ViewModel() {
     private val _creatingType = MutableStateFlow(false)
     val creatingType get() = _creatingType.asStateFlow()
 
+    private val _items = MutableStateFlow<List<ItemD>?>(null)
+    val items get() = _items.asStateFlow()
+
+    private val _creatingItem = MutableStateFlow(false)
+    val creatingItem get() = _creatingItem.asStateFlow()
+
     fun load() {
         launch {
             val data = UserDataBackend.getUserData()
@@ -37,6 +45,9 @@ class HomeViewModel : ViewModel() {
 
             val types = InventoryBackend.listTypes()
             _itemTypes.emit(types)
+
+            val items = InventoryBackend.listItems()
+            _items.emit(items)
         }
     }
 
@@ -46,37 +57,56 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun onCreateOrUpdate(sectionD: SectionD, onCreate: () -> Unit) {
+    private fun <Type: DatabaseData> onCreateOrUpdate(
+        value: Type,
+        creating: MutableStateFlow<Boolean>,
+        creator: suspend (Type) -> Unit,
+        updater: suspend (Type) -> Unit,
+        onCreate: () -> Unit
+    ) {
         launch {
             try {
-                _creatingSection.emit(true)
-                if (sectionD.id == null) {
-                    SectionsBackend.create(sectionD)
+                creating.emit(true)
+                if (value.id == null) {
+                    creator(value)
                 } else {
-                    SectionsBackend.update(sectionD)
+                    updater(value)
                 }
                 load()
                 uiThread { onCreate() }
             } finally {
-                _creatingSection.emit(false)
+                creating.emit(false)
             }
         }
     }
 
+    fun onCreateOrUpdate(sectionD: SectionD, onCreate: () -> Unit) {
+        onCreateOrUpdate(
+            sectionD,
+            _creatingSection,
+            SectionsBackend::create,
+            SectionsBackend::update,
+            onCreate
+        )
+    }
+
     fun createOrUpdate(itemTypeD: ItemTypeD, onCreate: () -> Unit) {
-        launch {
-            try {
-                _creatingType.emit(true)
-                if (itemTypeD.id == null) {
-                    InventoryBackend.create(itemTypeD)
-                } else {
-                    InventoryBackend.update(itemTypeD)
-                }
-                load()
-                uiThread { onCreate() }
-            } finally {
-                _creatingType.emit(false)
-            }
-        }
+        onCreateOrUpdate(
+            itemTypeD,
+            _creatingType,
+            InventoryBackend::create,
+            InventoryBackend::update,
+            onCreate
+        )
+    }
+
+    fun createOrUpdate(itemD: ItemD, onCreate: () -> Unit) {
+        onCreateOrUpdate(
+            itemD,
+            _creatingItem,
+            InventoryBackend::create,
+            InventoryBackend::update,
+            onCreate
+        )
     }
 }
