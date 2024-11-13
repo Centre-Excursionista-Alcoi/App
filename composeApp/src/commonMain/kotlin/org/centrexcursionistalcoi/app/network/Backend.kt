@@ -20,6 +20,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
+import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.serverJson
 
@@ -28,9 +29,9 @@ object Backend {
         // Set the default server URL
         defaultRequest {
             url {
-                protocol = URLProtocol.HTTP
-                host = "127.0.0.1"
-                port = 8080
+                protocol = if (BuildKonfig.BACKEND_HTTPS) URLProtocol.HTTPS else URLProtocol.HTTP
+                host = BuildKonfig.BACKEND_HOST
+                port = BuildKonfig.BACKEND_PORT
             }
         }
         // Install authentication plugin

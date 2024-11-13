@@ -1,3 +1,6 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -7,10 +10,13 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
 }
+
+val appVersion = "1.0.0"
 
 kotlin {
     androidTarget {
@@ -132,7 +138,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = appVersion
     }
     packaging {
         resources {
@@ -150,6 +156,16 @@ android {
     }
 }
 
+buildkonfig {
+    packageName = "org.centrexcursionistalcoi.app"
+
+    defaultConfigs {
+        buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "127.0.0.1")
+        buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "8080")
+        buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "false")
+    }
+}
+
 dependencies {
     debugImplementation(compose.uiTooling)
 }
@@ -161,7 +177,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
-            packageVersion = "1.0.0"
+            packageVersion = appVersion
 
             // Required by Filekit: https://github.com/vinceglb/FileKit?tab=readme-ov-file#-installation
             linux {
