@@ -8,6 +8,7 @@ on:
       - "server/**"
       - "shared/**"
       - "gradle/**"
+      - ".github/workflows/build-server.yml"
   release:
     types:
       - released
@@ -43,7 +44,7 @@ jobs:
           VERSION: ${{ github.event.release.tag_name }}
         run: ./gradlew server:publishImage
       - name: Build and publish development
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name != 'release' }}
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
