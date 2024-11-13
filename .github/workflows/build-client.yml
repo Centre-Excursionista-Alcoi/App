@@ -24,6 +24,10 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
 
       - name: Build
+        env:
+          BACKEND_HOST: ceaapp.escalaralcoiaicomtat.org
+          BACKEND_PORT: 443
+          BACKEND_HTTPS: true
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
 
       - name: Release
