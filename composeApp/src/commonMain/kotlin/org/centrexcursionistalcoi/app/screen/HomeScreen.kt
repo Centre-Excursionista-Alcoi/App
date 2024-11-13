@@ -8,7 +8,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
 import org.centrexcursionistalcoi.app.pages.home.HomePage
+import org.centrexcursionistalcoi.app.pages.home.ReservationPage
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.route.Home
@@ -29,10 +31,11 @@ import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
 
 object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
-    private const val NUM_PAGES = 2
+    private const val NUM_PAGES = 3
 
     private const val IDX_HOME = 0
-    private const val IDX_SETTINGS = 1
+    private const val IDX_RESERVE = 1
+    private const val IDX_SETTINGS = 2
     private const val IDX_ADMIN = NUM_PAGES
 
     @Composable
@@ -44,6 +47,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val creatingType by viewModel.creatingType.collectAsState()
         val items by viewModel.items.collectAsState()
         val creatingItem by viewModel.creatingItem.collectAsState()
+
+        val availableItems by viewModel.availableItems.collectAsState()
 
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState { if (user?.isAdmin == true) (NUM_PAGES + 1) else NUM_PAGES }
@@ -67,7 +72,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     selection = pagerState.currentPage,
                     onSelectionChanged = { scope.launch { pagerState.animateScrollToPage(it) } },
                     items = listOfNotNull(
-                        Icons.Default.Home to stringResource(Res.string.nav_home),
+                        Icons.Default.CalendarMonth to stringResource(Res.string.nav_home),
+                        Icons.Default.EditCalendar to stringResource(Res.string.nav_reserve),
                         Icons.Default.Settings to stringResource(Res.string.nav_settings),
                         if (user?.isAdmin == true) Icons.Default.AdminPanelSettings to stringResource(Res.string.nav_admin) else null
                     )
@@ -82,7 +88,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (page) {
-                        IDX_HOME -> HomePage(items, itemTypes)
+                        IDX_HOME -> HomePage()
+                        IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
                         IDX_SETTINGS -> {}
                         IDX_ADMIN -> AdminPage(
                             sections = sections,

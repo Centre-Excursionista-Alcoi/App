@@ -11,6 +11,8 @@ object LendingsTable: IntIdTable("lendings") {
 
     val createdAt = timestamp("createdAt").defaultExpression(CurrentTimestamp)
 
+    val confirmed = bool("confirmed").default(false)
+
     val from = datetime("from")
     val to = datetime("to")
 

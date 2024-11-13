@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
@@ -31,5 +32,10 @@ object InventoryBackend {
         path = "/inventory/items",
         body = item,
         bodySerializer = ItemD.serializer()
+    )
+
+    suspend fun availability(from: Instant, to: Instant) = Backend.get(
+        "/availability?from=${from.toEpochMilliseconds()}&to=${to.toEpochMilliseconds()}",
+        ListSerializer(ItemD.serializer())
     )
 }

@@ -20,6 +20,8 @@ import org.centrexcursionistalcoi.app.endpoints.inventory.ListItemsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.ListTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateItemEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateTypesEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.AvailabilityEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.BookItemEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
@@ -53,7 +55,10 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
 
     ListItemsEndpoint,
     CreateItemEndpoint,
-    UpdateItemEndpoint
+    UpdateItemEndpoint,
+
+    BookItemEndpoint,
+    AvailabilityEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {

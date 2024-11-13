@@ -1,0 +1,16 @@
+package org.centrexcursionistalcoi.app.server.response.data
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class LendingD(
+    override val id: Int? = null,
+    val createdAt: Long? = null,
+    val itemId: Int? = null,
+    val userId: String? = null,
+    val confirmed: Boolean = false,
+    val from: Long? = null,
+    val to: Long? = null,
+    val takenAt: Long? = null,
+    val returnedAt: Long? = null
+): DatabaseData

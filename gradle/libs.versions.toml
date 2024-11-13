@@ -4,15 +4,16 @@ android-compileSdk = "34"
 android-minSdk = "24"
 android-targetSdk = "34"
 androidx-activityCompose = "1.9.3"
-androidx-lifecycle = "2.8.3"
+androidx-lifecycle = "2.8.4"
 carbon = "0.2.0"
-compose-multiplatform = "1.7.0"
+compose-multiplatform = "1.7.1"
 compose-navigation = "2.8.0-alpha10"
 datastore = "1.1.1"
 exposed = "0.56.0"
 h2 = "2.3.232"
 kotlin = "2.0.21"
 kotlinx-coroutines = "1.9.0"
+kotlinx-datetime = "0.6.1"
 kotlinx-serialization =  "1.7.3"
 ktor = "3.0.1"
 logback = "1.5.12"
@@ -34,6 +35,7 @@ exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exp
 exposed-javaTime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }

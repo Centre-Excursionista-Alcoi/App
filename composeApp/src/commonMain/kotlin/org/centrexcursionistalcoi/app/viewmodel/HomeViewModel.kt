@@ -3,6 +3,9 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
@@ -16,6 +19,11 @@ import org.centrexcursionistalcoi.app.server.response.data.UserD
 class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
     val userData get() = _userData.asStateFlow()
+
+
+    private val _availableItems = MutableStateFlow<List<ItemD>?>(null)
+    val availableItems get() = _availableItems.asStateFlow()
+
 
     private val _sections = MutableStateFlow<List<SectionD>?>(null)
     val sections get() = _sections.asStateFlow()
@@ -54,6 +62,16 @@ class HomeViewModel : ViewModel() {
     fun logout() {
         launch {
             AccountManager.logout()
+        }
+    }
+
+    fun availability(from: LocalDate, to: LocalDate) {
+        launch {
+            val items = InventoryBackend.availability(
+                from.atStartOfDayIn(TimeZone.currentSystemDefault()),
+                to.atStartOfDayIn(TimeZone.currentSystemDefault())
+            )
+            _availableItems.emit(items)
         }
     }
 

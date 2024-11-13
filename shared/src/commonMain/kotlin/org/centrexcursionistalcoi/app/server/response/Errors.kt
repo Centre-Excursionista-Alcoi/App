@@ -41,4 +41,10 @@ object Errors {
 
     @Serializable
     data object ReferenceNotFound : ErrorResponse(13, "Reference not found")
+
+    @Serializable
+    data object UserNotConfirmed : ErrorResponse(14, "User not confirmed")
+
+    @Serializable
+    data object ObjectNotAvailable : ErrorResponse(15, "Object not available")
 }
