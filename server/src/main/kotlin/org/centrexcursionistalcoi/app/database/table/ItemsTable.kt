@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 object ItemsTable : IntIdTable("items") {
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 
+    val notes = varchar("notes", 1023).nullable()
+
     val health = enumeration("health", ItemHealth::class)
 
     val type = reference("type", ItemTypesTable)

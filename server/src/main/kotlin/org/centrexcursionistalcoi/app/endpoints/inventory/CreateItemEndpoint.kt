@@ -33,6 +33,7 @@ object CreateItemEndpoint : SecureEndpoint("/inventory/items", HttpMethod.Post) 
         ServerDatabase {
             Item.new {
                 health = body.health
+                notes = body.notes
                 type = itemType
             }
         }

@@ -21,7 +21,9 @@ fun lendingsForDates(from: LocalDateTime, to: LocalDateTime): List<LendingD> {
     return Lending.find {
         // (StartA <= EndB) and (EndA >= StartB)
         // Proof: https://stackoverflow.com/a/325964
-        (LendingsTable.from lessEq to) and (LendingsTable.to greaterEq from)
+        (LendingsTable.from lessEq to) and (LendingsTable.to greaterEq from) and
+                // Only fetch the lendings that are not returned
+                (LendingsTable.returnedAt eq null)
     }.map(Lending::serializable)
 }
 

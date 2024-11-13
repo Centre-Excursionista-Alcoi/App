@@ -55,7 +55,7 @@
 
     <string name="items_title">Items</string>
     <string name="items_health">Health</string>
-    <string name="items_amount">Amount</string>
+    <string name="items_notes">Notes</string>
     <string name="items_type">Type</string>
 
     <string name="item_health_new">New</string>

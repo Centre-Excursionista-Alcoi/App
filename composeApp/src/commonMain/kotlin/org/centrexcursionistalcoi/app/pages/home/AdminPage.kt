@@ -331,6 +331,13 @@ fun ItemsCard(
             enabled = !isCreating,
             toString = { it?.name ?: "" }
         )
+        PlatformTextArea(
+            value = data.notes ?: "",
+            onValueChange = { showingCreationDialog = data.copy(notes = it.takeIf(String::isNotBlank)) },
+            label = stringResource(Res.string.items_notes),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            enabled = !isCreating
+        )
         PlatformDropdown(
             value = data.typeId?.let { typeId -> itemTypes?.find { it.id == typeId } },
             onValueChange = { showingCreationDialog = data.copy(typeId = it.id) },
