@@ -34,7 +34,16 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
-      - name: Login to Docker Hub
+
+      - name: Build and publish release
+        if: ${{ github.event_name == 'release' }}
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          VERSION: ${{ github.event.release.tag_name }}
+        run: ./gradlew server:publishImage
+      - name: Build and publish development
+        if: ${{ github.event_name == 'release' }}
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
