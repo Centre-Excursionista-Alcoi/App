@@ -10,6 +10,8 @@
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="confirm">Confirm</string>
+    <string name="select">Select</string>
+    <string name="selected_size">Selected (%1$s)</string>
 
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>
@@ -51,6 +53,7 @@
     <string name="types_description">Description</string>
     <string name="types_brand">Brand</string>
     <string name="types_model">Model</string>
+    <string name="types_image">Image</string>
     <string name="types_section">Section</string>
 
     <string name="items_title">Items</string>

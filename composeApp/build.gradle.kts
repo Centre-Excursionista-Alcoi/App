@@ -66,6 +66,8 @@ kotlin {
             implementation(compose.ui)
 
             implementation(libs.compose.carbon)
+            implementation(libs.compose.coil.base)
+            implementation(libs.compose.filekit)
             implementation(libs.compose.windowSizeClass)
 
             implementation(libs.compose.navigation)
@@ -160,6 +162,11 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = "1.0.0"
+
+            // Required by Filekit: https://github.com/vinceglb/FileKit?tab=readme-ov-file#-installation
+            linux {
+                modules("jdk.security.auth")
+            }
         }
     }
 }

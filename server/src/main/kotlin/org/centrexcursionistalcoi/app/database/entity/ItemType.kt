@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.jetbrains.exposed.dao.IntEntity
@@ -17,8 +19,11 @@ class ItemType(id: EntityID<Int>): IntEntity(id) {
     var brand by ItemTypesTable.brand
     var model by ItemTypesTable.model
 
+    var image by ItemTypesTable.image
+
     var section by Section referencedOn ItemTypesTable.section
 
+    @ExperimentalEncodingApi
     fun serializable(): ItemTypeD = ItemTypeD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
@@ -26,6 +31,7 @@ class ItemType(id: EntityID<Int>): IntEntity(id) {
         description = description,
         brand = brand,
         model = model,
+        imageBytesBase64 = image?.let { Base64.encode(it) },
         sectionId = section.id.value
     )
 }

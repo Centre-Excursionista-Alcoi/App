@@ -27,6 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.data.fromDate
 import org.centrexcursionistalcoi.app.data.returnedDate
@@ -47,6 +55,7 @@ import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
+import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -79,7 +88,15 @@ fun AdminPage(
 
         ItemsCard(items, itemTypes, isCreatingItem, onItemOperation)
 
-        BookingsCard(allBookings, items, itemTypes, isUpdatingBooking, onConfirmBookingRequested, onMarkAsTakenRequested, onMarkAsReturnedRequested)
+        BookingsCard(
+            allBookings,
+            items,
+            itemTypes,
+            isUpdatingBooking,
+            onConfirmBookingRequested,
+            onMarkAsTakenRequested,
+            onMarkAsReturnedRequested
+        )
     }
 }
 
@@ -179,6 +196,7 @@ fun SectionsCard(
     }
 }
 
+@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun TypesCard(
     itemTypes: List<ItemTypeD>?,
@@ -222,6 +240,27 @@ fun TypesCard(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             enabled = !isCreating
         )
+
+        val filePicker = rememberFilePickerLauncher(mode = PickerMode.Single, type = PickerType.Image) { file ->
+            CoroutineScope(Dispatchers.Main).launch {
+                val bytes = file?.readBytes()
+                val base64 = bytes?.let { Base64.encode(bytes) }
+                showingCreationDialog = data.copy(imageBytesBase64 = base64)
+            }
+        }
+        BasicText(
+            text = stringResource(Res.string.types_image),
+            style = getPlatformTextStyles().label,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+        )
+        PlatformButton(
+            text = if (data.imageBytesBase64 == null)
+                stringResource(Res.string.select)
+            else
+                stringResource(Res.string.selected_size, data.imageBytes()!!.humanReadableSize()),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            enabled = !isCreating
+        ) { filePicker.launch() }
 
         PlatformDropdown(
             value = data.sectionId?.let { sectionId -> sections?.find { it.id == sectionId } },

@@ -13,5 +13,7 @@ object ItemTypesTable : IntIdTable() {
     val brand = varchar("brand", 255).nullable()
     val model = varchar("model", 255).nullable()
 
+    val image = binary("image").nullable()
+
     val section = reference("section", SectionsTable)
 }

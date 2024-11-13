@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.server.response.data
 
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,5 +12,21 @@ data class ItemTypeD(
     val description: String? = null,
     val brand: String? = null,
     val model: String? = null,
+    val imageBytesBase64: String? = null,
     val sectionId: Int? = null
-): DatabaseData
+): DatabaseData {
+    @ExperimentalEncodingApi
+    constructor(
+        id: Int? = null,
+        createdAt: Long? = null,
+        title: String = "",
+        description: String? = null,
+        brand: String? = null,
+        model: String? = null,
+        imageBytes: ByteArray,
+        sectionId: Int? = null
+    ): this(id, createdAt, title, description, brand, model, imageBytes.let(Base64::encode), sectionId)
+
+    @ExperimentalEncodingApi
+    fun imageBytes() = imageBytesBase64?.let(Base64::decode)
+}
