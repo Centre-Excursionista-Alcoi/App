@@ -18,8 +18,10 @@ fun main() = runBlocking {
 private suspend fun start() {
     val databaseUrl = System.getenv("DATABASE_URL") ?: "jdbc:h2:file:./CEA"
     val databaseDriver = System.getenv("DATABASE_DRIVER") ?: "org.h2.Driver"
+    val databaseUsername = System.getenv("DATABASE_USERNAME") ?: ""
+    val databasePassword = System.getenv("DATABASE_PASSWORD") ?: ""
 
-    ServerDatabase.initialize(databaseUrl, databaseDriver)
+    ServerDatabase.initialize(databaseUrl, databaseDriver, databaseUsername, databasePassword)
 
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)

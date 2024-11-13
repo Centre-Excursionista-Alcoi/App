@@ -30,10 +30,12 @@ object ServerDatabase {
 
     suspend fun initialize(
         url: String = "jdbc:h2:file:./CEA",
-        driver: String = "org.h2.Driver"
+        driver: String = "org.h2.Driver",
+        username: String = "",
+        password: String = ""
     ) {
         logger.info("Initializing database at $url with $driver...")
-        instance = Database.connect(url, driver)
+        instance = Database.connect(url, driver, username, password)
 
         invoke {
             for (table in tables) {
