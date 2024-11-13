@@ -17,12 +17,15 @@ class ItemType(id: EntityID<Int>): IntEntity(id) {
     var brand by ItemTypesTable.brand
     var model by ItemTypesTable.model
 
+    var section by Section referencedOn ItemTypesTable.section
+
     fun serializable(): ItemTypeD = ItemTypeD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
         title = title,
         description = description,
         brand = brand,
-        model = model
+        model = model,
+        sectionId = section.id.value
     )
 }

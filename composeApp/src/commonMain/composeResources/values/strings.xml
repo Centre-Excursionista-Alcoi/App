@@ -9,6 +9,7 @@
     <string name="continue">Continue</string>
     <string name="from">From</string>
     <string name="to">To</string>
+    <string name="confirm">Confirm</string>
 
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>
@@ -50,6 +51,7 @@
     <string name="types_description">Description</string>
     <string name="types_brand">Brand</string>
     <string name="types_model">Model</string>
+    <string name="types_section">Section</string>
 
     <string name="items_title">Items</string>
     <string name="items_health">Health</string>
@@ -60,6 +62,38 @@
     <string name="item_health_used">Used</string>
     <string name="item_health_damaged">Damaged</string>
     <string name="item_health_broken">Broken</string>
+
+    <string name="bookings_empty">No bookings found</string>
+    <string name="bookings_pending">Not confirmed</string>
+    <string name="bookings_confirm">Confirm Booking</string>
+    <string name="bookings_info">Booking Information</string>
+    <string name="bookings_made_by">Made by: %1$s</string>
+    <string name="bookings_from">From: %1$s</string>
+    <string name="bookings_to">To: %1$s</string>
+    <string name="bookings_items">Items:</string>
+    <string name="bookings_items_count">%1$d Items</string>
+    <string name="bookings_taken_at">Taken at: %1$s</string>
+    <string name="bookings_not_taken">Not taken yet</string>
+    <string name="bookings_returned_at">Returned at: %1$s</string>
+    <string name="bookings_not_returned">Not returned yet</string>
+    <string name="bookings_mark_taken">Mark as Taken</string>
+    <string name="bookings_mark_returned">Mark as Returned</string>
+    <string name="bookings_returned">Returned</string>
+    <string name="bookings_hide_complete">Hide Completed</string>
+    <string name="bookings_pending_confirmation">Confirmation Pending</string>
+    <string name="bookings_pending_return">Return Pending</string>
+    <string name="bookings_list">Bookings</string>
+    <string name="bookings_your">Your Bookings</string>
+    <string name="bookings_old">Old Bookings</string>
+
+    <string name="reservation_title_draft">Reservation (draft)</string>
+    <string name="reservation_from">From: %1$s</string>
+    <string name="reservation_to">To: %1$s</string>
+    <string name="reservation_as">Reserving as %1$s for %2$d days</string>
+    <string name="reservation_items">Items</string>
+    <string name="reservation_no_items">No items selected</string>
+    <string name="reservation_spaces">Spaces</string>
+    <string name="reservation_no_spaces">No spaces selected</string>
 
     <string name="error_wrong_credentials">Wrong credentials</string>
     <string name="error_nif_invalid">NIF is not valid.</string>

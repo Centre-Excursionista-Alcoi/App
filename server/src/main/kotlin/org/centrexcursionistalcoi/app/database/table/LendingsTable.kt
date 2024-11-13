@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.javatime.timestamp
 
 object LendingsTable: IntIdTable("lendings") {
-    val item = reference("item", ItemsTable)
     val user = reference("user", UsersTable)
 
     val createdAt = timestamp("createdAt").defaultExpression(CurrentTimestamp)

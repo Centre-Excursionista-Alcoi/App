@@ -6,6 +6,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
@@ -19,12 +20,26 @@ object CreateTypesEndpoint : SecureEndpoint("/inventory/types", HttpMethod.Post)
         }
 
         val body = call.receive<ItemTypeD>()
+
+        // Make sure that the section exists
+        val sectionId = body.sectionId
+        if (sectionId == null) {
+            respondFailure(Errors.InvalidRequest)
+            return
+        }
+        val itemSection = ServerDatabase { Section.findById(sectionId) }
+        if (itemSection == null) {
+            respondFailure(Errors.InvalidRequest)
+            return
+        }
+
         ServerDatabase {
             ItemType.new {
                 title = body.title
                 description = body.description
                 brand = body.brand
                 model = body.model
+                section = itemSection
             }
         }
         respondSuccess(HttpStatusCode.Created)

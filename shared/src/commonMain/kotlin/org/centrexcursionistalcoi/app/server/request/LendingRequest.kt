@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LendingRequest(
-    val itemId: Int,
     val from: Long,
-    val to: Long
+    val to: Long,
+    val itemIds: Set<Int>
 )

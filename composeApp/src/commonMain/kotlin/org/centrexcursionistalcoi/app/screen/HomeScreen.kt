@@ -41,12 +41,16 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
+        val bookings by viewModel.bookings.collectAsState()
+
         val sections by viewModel.sections.collectAsState()
         val creatingSection by viewModel.creatingSection.collectAsState()
         val itemTypes by viewModel.itemTypes.collectAsState()
         val creatingType by viewModel.creatingType.collectAsState()
         val items by viewModel.items.collectAsState()
         val creatingItem by viewModel.creatingItem.collectAsState()
+        val updatingBooking by viewModel.updatingBooking.collectAsState()
+        val allBookings by viewModel.allBookings.collectAsState()
 
         val availableItems by viewModel.availableItems.collectAsState()
 
@@ -88,7 +92,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (page) {
-                        IDX_HOME -> HomePage()
+                        IDX_HOME -> HomePage(bookings)
                         IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
                         IDX_SETTINGS -> {}
                         IDX_ADMIN -> AdminPage(
@@ -100,7 +104,12 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             onTypeOperation = viewModel::createOrUpdate,
                             items = items,
                             isCreatingItem = creatingItem,
-                            onItemOperation = viewModel::createOrUpdate
+                            onItemOperation = viewModel::createOrUpdate,
+                            allBookings = allBookings,
+                            isUpdatingBooking = updatingBooking,
+                            onConfirmBookingRequested = viewModel::confirmBooking,
+                            onMarkAsTakenRequested = viewModel::markAsTaken,
+                            onMarkAsReturnedRequested = viewModel::markAsReturned
                         )
                     }
                 }

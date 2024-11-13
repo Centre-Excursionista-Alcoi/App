@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class LendingD(
     override val id: Int? = null,
     val createdAt: Long? = null,
-    val itemId: Int? = null,
+    val itemIds: Set<Int>? = null,
     val userId: String? = null,
     val confirmed: Boolean = false,
     val from: Long? = null,

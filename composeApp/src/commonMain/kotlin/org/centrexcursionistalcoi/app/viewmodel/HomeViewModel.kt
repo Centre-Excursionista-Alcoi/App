@@ -13,12 +13,16 @@ import org.centrexcursionistalcoi.app.network.UserDataBackend
 import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
+import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.centrexcursionistalcoi.app.server.response.data.UserD
 
 class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
     val userData get() = _userData.asStateFlow()
+
+    private val _bookings = MutableStateFlow<List<LendingD>?>(null)
+    val bookings get() = _bookings.asStateFlow()
 
 
     private val _availableItems = MutableStateFlow<List<ItemD>?>(null)
@@ -43,6 +47,12 @@ class HomeViewModel : ViewModel() {
     private val _creatingItem = MutableStateFlow(false)
     val creatingItem get() = _creatingItem.asStateFlow()
 
+    private val _updatingBooking = MutableStateFlow(false)
+    val updatingBooking get() = _updatingBooking.asStateFlow()
+
+    private val _allBookings = MutableStateFlow<List<LendingD>?>(null)
+    val allBookings get() = _allBookings.asStateFlow()
+
     fun load() {
         launch {
             val data = UserDataBackend.getUserData()
@@ -56,6 +66,12 @@ class HomeViewModel : ViewModel() {
 
             val items = InventoryBackend.listItems()
             _items.emit(items)
+
+            val bookings = InventoryBackend.listBookings()
+            _bookings.emit(bookings)
+
+            val allBookings = InventoryBackend.allBookings()
+            _allBookings.emit(allBookings)
         }
     }
 
@@ -67,6 +83,7 @@ class HomeViewModel : ViewModel() {
 
     fun availability(from: LocalDate, to: LocalDate) {
         launch {
+            _availableItems.emit(null)
             val items = InventoryBackend.availability(
                 from.atStartOfDayIn(TimeZone.currentSystemDefault()),
                 to.atStartOfDayIn(TimeZone.currentSystemDefault())
@@ -126,5 +143,44 @@ class HomeViewModel : ViewModel() {
             InventoryBackend::update,
             onCreate
         )
+    }
+
+    fun confirmBooking(booking: LendingD, onConfirm: () -> Unit) {
+        launch {
+            try {
+                _updatingBooking.emit(true)
+                InventoryBackend.confirm(booking.id!!)
+                load()
+                uiThread { onConfirm() }
+            } finally {
+                _updatingBooking.emit(false)
+            }
+        }
+    }
+
+    fun markAsTaken(booking: LendingD, onMarked: () -> Unit) {
+        launch {
+            try {
+                _updatingBooking.emit(true)
+                InventoryBackend.markTaken(booking.id!!)
+                load()
+                uiThread { onMarked() }
+            } finally {
+                _updatingBooking.emit(false)
+            }
+        }
+    }
+
+    fun markAsReturned(booking: LendingD, onMarked: () -> Unit) {
+        launch {
+            try {
+                _updatingBooking.emit(true)
+                InventoryBackend.markReturned(booking.id!!)
+                load()
+                uiThread { onMarked() }
+            } finally {
+                _updatingBooking.emit(false)
+            }
+        }
     }
 }

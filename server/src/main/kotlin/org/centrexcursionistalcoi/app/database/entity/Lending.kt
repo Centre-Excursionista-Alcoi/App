@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import java.time.ZoneId
-import java.time.ZoneOffset
+import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.jetbrains.exposed.dao.IntEntity
@@ -13,7 +13,6 @@ class Lending(id: EntityID<Int>) : IntEntity(id) {
 
     val createdAt by LendingsTable.createdAt
 
-    var item by Item referencedOn LendingsTable.item
     var user by User referencedOn LendingsTable.user
 
     var confirmed by LendingsTable.confirmed
@@ -27,12 +26,15 @@ class Lending(id: EntityID<Int>) : IntEntity(id) {
     fun serializable() = LendingD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
-        itemId = item.id.value,
         userId = user.id.value,
         confirmed = confirmed,
-        from = from.toInstant(ZoneOffset.of(ZoneId.systemDefault().id)).toEpochMilli(),
-        to = to.toInstant(ZoneOffset.of(ZoneId.systemDefault().id)).toEpochMilli(),
+        from = from.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+        to = to.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
         takenAt = takenAt?.toEpochMilli(),
-        returnedAt = returnedAt?.toEpochMilli()
+        returnedAt = returnedAt?.toEpochMilli(),
+        itemIds = LendingItem
+            .find { LendingItemsTable.lending eq id }
+            .map { it.item.id.value }
+            .toSet()
     )
 }

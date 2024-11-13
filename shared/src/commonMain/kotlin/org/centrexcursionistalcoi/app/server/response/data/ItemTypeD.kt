@@ -9,5 +9,6 @@ data class ItemTypeD(
     val title: String = "",
     val description: String? = null,
     val brand: String? = null,
-    val model: String? = null
+    val model: String? = null,
+    val sectionId: Int? = null
 ): DatabaseData

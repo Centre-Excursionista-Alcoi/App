@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.centrexcursionistalcoi.app.database.table.ItemsTable
+import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.database.table.SectionsTable
 import org.centrexcursionistalcoi.app.database.table.UsersTable
@@ -23,6 +24,7 @@ object ServerDatabase {
         ItemTypesTable,
         ItemsTable,
         LendingsTable,
+        LendingItemsTable,
         SectionsTable
     )
 

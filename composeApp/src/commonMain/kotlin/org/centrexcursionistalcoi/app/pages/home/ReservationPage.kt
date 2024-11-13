@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -25,10 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import com.gabrieldrn.carbon.checkbox.Checkbox
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -36,6 +39,7 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDatePicker
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.route.Reservation
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.jetbrains.compose.resources.stringResource
@@ -47,6 +51,8 @@ fun ColumnScope.ReservationPage(
     availableItems: List<ItemD>?,
     onLoadAvailabilityRequested: (from: LocalDate, to: LocalDate) -> Unit
 ) {
+    val navController = LocalNavController.current
+
     var from by remember { mutableStateOf<LocalDate?>(null) }
     var to by remember { mutableStateOf<LocalDate?>(null) }
     var selectedItems by remember { mutableStateOf<Set<Int>>(emptySet()) }
@@ -56,7 +62,19 @@ fun ColumnScope.ReservationPage(
         modifier = Modifier.fillMaxWidth().weight(1f)
     ) { (items, types) ->
         LaunchedEffect(from, to) {
-            onLoadAvailabilityRequested(from ?: return@LaunchedEffect, to ?: return@LaunchedEffect)
+            snapshotFlow { from to to }
+                .distinctUntilChanged()
+                .collect { (start, end) ->
+                    start ?: return@collect
+                    end ?: return@collect
+
+                    if (start > end) {
+                        to = null
+                        return@collect
+                    }
+
+                    onLoadAvailabilityRequested(start, end)
+                }
         }
 
         LazyVerticalGrid(
@@ -140,7 +158,13 @@ fun ColumnScope.ReservationPage(
             text = stringResource(Res.string.`continue`),
             enabled = from != null && to != null && selectedItems.isNotEmpty()
         ) {
-            // TODO: Navigate to the next page
+            navController.navigate(
+                Reservation(
+                    from = from ?: return@PlatformButton,
+                    to = to ?: return@PlatformButton,
+                    selectedItems = selectedItems
+                )
+            )
         }
     }
 }
