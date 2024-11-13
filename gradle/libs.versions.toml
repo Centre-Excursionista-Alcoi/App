@@ -21,6 +21,7 @@ ktor = "3.0.1"
 logback = "1.5.12"
 multiplatform-settings = "1.2.0"
 napier = "2.7.1"
+postgresql = "42.7.4"
 
 [libraries]
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -63,6 +64,7 @@ multiplatformSettings-datastore = { module = "com.russhwolf:multiplatform-settin
 multiplatformSettings-makeObservable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "multiplatform-settings" }
 multiplatformSettings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "multiplatform-settings" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

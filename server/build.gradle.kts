@@ -1,3 +1,7 @@
+import io.ktor.plugin.features.DockerImageRegistry
+import io.ktor.plugin.features.DockerPortMapping
+import io.ktor.plugin.features.DockerPortMappingProtocol
+
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
@@ -6,7 +10,7 @@ plugins {
 }
 
 group = "org.centrexcursionistalcoi.app"
-version = "1.0.0"
+version = System.getenv("VERSION") ?: "development"
 
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
@@ -32,6 +36,7 @@ dependencies {
     implementation(libs.exposed.javaTime)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
+    implementation(libs.postgresql)
 
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
@@ -40,5 +45,20 @@ dependencies {
 ktor {
     docker {
         jreVersion.set(JavaVersion.VERSION_21)
+
+        localImageName.set("cea-app")
+        imageTag.set(version.toString())
+
+        portMappings.set(listOf(
+            DockerPortMapping(80, 8080, DockerPortMappingProtocol.TCP)
+        ))
+
+        externalRegistry.set(
+            DockerImageRegistry.dockerHub(
+                appName = provider { "cea-app" },
+                username = providers.environmentVariable("DOCKER_HUB_USERNAME"),
+                password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
+            )
+        )
     }
 }
