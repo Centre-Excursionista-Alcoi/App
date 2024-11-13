@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
@@ -35,8 +36,13 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.data.fromDate
+import org.centrexcursionistalcoi.app.data.health
+import org.centrexcursionistalcoi.app.data.localizedName
 import org.centrexcursionistalcoi.app.data.returnedDate
 import org.centrexcursionistalcoi.app.data.takenDate
 import org.centrexcursionistalcoi.app.data.toDate
@@ -86,7 +92,7 @@ fun AdminPage(
 
         TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
 
-        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation)
+        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allBookings)
 
         BookingsCard(
             allBookings,
@@ -351,7 +357,8 @@ fun ItemsCard(
     items: List<ItemD>?,
     itemTypes: List<ItemTypeD>?,
     isCreating: Boolean,
-    onCreateRequested: (ItemD, onCreate: () -> Unit) -> Unit
+    onCreateRequested: (ItemD, onCreate: () -> Unit) -> Unit,
+    allBookings: List<LendingD>?
 ) {
     var showingCreationDialog: ItemD? by remember { mutableStateOf(null) }
     CreationDialog(
@@ -388,6 +395,83 @@ fun ItemsCard(
         )
     }
 
+    var showingDetailsDialog: ItemD? by remember { mutableStateOf(null) }
+    showingDetailsDialog?.let { data ->
+        PlatformDialog(
+            onDismissRequest = { showingDetailsDialog = null }
+        ) {
+            BasicText(
+                text = stringResource(Res.string.items_details_title),
+                style = getPlatformTextStyles().heading,
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            BasicText(
+                text = stringResource(Res.string.items_health_value, stringResource(data.health())),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            BasicText(
+                text = stringResource(Res.string.items_notes_value, "\n${data.notes ?: "N/A"}"),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            BasicText(
+                text = stringResource(
+                    Res.string.items_type_value,
+                    itemTypes?.find { it.id == data.typeId }?.title ?: "N/A"
+                ),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+
+            allBookings
+                // Filter bookings that contain this item
+                ?.filter { it.itemIds?.contains(data.id) == true }
+                // Filter bookings that have not been completed (still not returned)
+                ?.filter { it.returnedAt == null }
+                ?.let { bookings ->
+                    val taken = bookings.find { it.takenAt != null }
+                    if (taken != null) {
+                        val at = Instant.fromEpochMilliseconds(taken.takenAt!!)
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                            .date
+
+                        BasicText(
+                            text = stringResource(Res.string.items_details_taken, taken.userId ?: "N/A", at.toString()),
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
+                    val future = bookings.filter { it.id != taken?.id }
+                    if (future.isNotEmpty()) {
+                        BasicText(
+                            text = stringResource(Res.string.items_details_future_bookings),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                        )
+                        for (booking in future) {
+                            val from = Instant.fromEpochMilliseconds(booking.from!!)
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                                .date
+
+                            BasicText(
+                                text = "· " + stringResource(
+                                    if (booking.confirmed)
+                                        Res.string.items_details_future_booking
+                                    else
+                                        Res.string.items_details_future_booking_not_confirmed,
+                                    from.toString(),
+                                    booking.userId ?: "N/A"
+                                ),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    } else {
+                        BasicText(
+                            text = stringResource(Res.string.items_details_not_booked),
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        )
+                    }
+                }
+        }
+    }
+
     PlatformCard(
         title = stringResource(Res.string.items_title),
         action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = ItemD() },
@@ -416,7 +500,7 @@ fun ItemsCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)
-                                .clickable { showingCreationDialog = item }
+                                .clickable { showingDetailsDialog = item }
                         ) {
                             BasicText(
                                 text = "#${item.id} - ${type.title}",
@@ -427,12 +511,24 @@ fun ItemsCard(
                                 style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                             )
                             BasicText(
-                                text = item.health.name,
+                                text = stringResource(item.health.localizedName()),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp)
                                     .padding(top = 8.dp),
                                 style = getPlatformTextStyles().label
+                            )
+
+                            BasicText(
+                                text = "Edit",
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .padding(vertical = 8.dp)
+                                    .clickable { showingCreationDialog = item },
+                                style = getPlatformTextStyles().label.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
                             )
                         }
                     }

@@ -60,6 +60,15 @@
     <string name="items_health">Health</string>
     <string name="items_notes">Notes</string>
     <string name="items_type">Type</string>
+    <string name="items_details_title">Item Details</string>
+    <string name="items_health_value">Health: %1$s</string>
+    <string name="items_notes_value">Notes: %1$s</string>
+    <string name="items_type_value">Type: %1$s</string>
+    <string name="items_details_taken">Taken by %1$s on %2$s</string>
+    <string name="items_details_future_bookings">Next Bookings:</string>
+    <string name="items_details_future_booking">%1$s by %2$s</string>
+    <string name="items_details_future_booking_not_confirmed">%1$s by %2$s (not confirmed)</string>
+    <string name="items_details_not_booked">Not currently booked</string>
 
     <string name="item_health_new">New</string>
     <string name="item_health_used">Used</string>
