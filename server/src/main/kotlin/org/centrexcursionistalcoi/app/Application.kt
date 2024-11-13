@@ -11,12 +11,15 @@ import org.centrexcursionistalcoi.app.plugins.installContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.installSessions
 import org.centrexcursionistalcoi.app.plugins.installStatusPages
 
-fun main() = runBlocking<Unit> {
+fun main() = runBlocking {
     start()
 }
 
 private suspend fun start() {
-    ServerDatabase.initialize()
+    val databaseUrl = System.getenv("DATABASE_URL") ?: "jdbc:h2:file:./CEA"
+    val databaseDriver = System.getenv("DATABASE_DRIVER") ?: "org.h2.Driver"
+
+    ServerDatabase.initialize(databaseUrl, databaseDriver)
 
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
