@@ -36,3 +36,9 @@ dependencies {
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
 }
+
+ktor {
+    docker {
+        jreVersion.set(JavaVersion.VERSION_21)
+    }
+}
