@@ -9,17 +9,15 @@ on:
       - "Dockerfile-*"
       - "entrypoint/*"
 
-permissions:
-  checks: write
-  pull-requests: write
-
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
