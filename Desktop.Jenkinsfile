@@ -31,7 +31,7 @@ pipeline {
                             }
                             post {
                                 success {
-                                    archiveArtifacts artifacts: 'composeApp/build/compose/**/*.dmg', fingerprint: true
+                                    archiveArtifacts artifacts: 'composeApp/build/compose/binaries/main/dmg/*.dmg', fingerprint: true
                                 }
                             }
                         }
