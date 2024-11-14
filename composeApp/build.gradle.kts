@@ -18,9 +18,13 @@ plugins {
 
 val appVersion = file("version.txt").readText()
 
-fun readPropertiesFile(path: String): Properties {
+fun readPropertiesFile(path: String): Properties? {
+    val file = rootProject.file(path)
+    if (!file.exists()) {
+        return null
+    }
     val props = Properties()
-    rootProject.file(path).inputStream().use { props.load(it) }
+    file.inputStream().use { props.load(it) }
     return props
 }
 
@@ -230,11 +234,14 @@ compose.desktop {
                     sign.set(true)
                     identity.set("Arnau Mora")
                 }
-                notarization {
-                    val props = readPropertiesFile("notarization.properties")
-                    appleID.set(props["APPLE_ID"] as String)
-                    password.set(props["NOTARIZATION_PASSWORD"] as String)
-                    teamID.set(props["TEAM_ID"] as String)
+
+                val notarizationProps = readPropertiesFile("notarization.properties")
+                if (notarizationProps != null) {
+                    notarization {
+                        appleID.set(notarizationProps["APPLE_ID"] as String)
+                        password.set(notarizationProps["NOTARIZATION_PASSWORD"] as String)
+                        teamID.set(notarizationProps["TEAM_ID"] as String)
+                    }
                 }
             }
             windows {
