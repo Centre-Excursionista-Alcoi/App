@@ -17,7 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import ceaapp.composeapp.generated.resources.*
+import ceaapp.composeapp.generated.resources.Res
+import ceaapp.composeapp.generated.resources.home_welcome
+import ceaapp.composeapp.generated.resources.logout
+import ceaapp.composeapp.generated.resources.nav_admin
+import ceaapp.composeapp.generated.resources.nav_home
+import ceaapp.composeapp.generated.resources.nav_reserve
+import ceaapp.composeapp.generated.resources.nav_settings
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
@@ -43,6 +49,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val user by viewModel.userData.collectAsState()
         val bookings by viewModel.bookings.collectAsState()
 
+        val usersList by viewModel.usersList.collectAsState()
+        val updatingUser by viewModel.updatingUser.collectAsState()
         val sections by viewModel.sections.collectAsState()
         val creatingSection by viewModel.creatingSection.collectAsState()
         val itemTypes by viewModel.itemTypes.collectAsState()
@@ -96,6 +104,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                         IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
                         IDX_SETTINGS -> {}
                         IDX_ADMIN -> AdminPage(
+                            updatingUser = updatingUser,
+                            users = usersList,
+                            onUserConfirmationRequested = viewModel::confirm,
+                            onUserDeleteRequested = viewModel::delete,
                             sections = sections,
                             isCreatingSection = creatingSection,
                             onSectionOperation = viewModel::onCreateOrUpdate,

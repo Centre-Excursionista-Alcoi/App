@@ -12,6 +12,7 @@
     <string name="confirm">Confirm</string>
     <string name="select">Select</string>
     <string name="selected_size">Selected (%1$s)</string>
+    <string name="delete">Delete</string>
     <string name="hide_password">Hide Password</string>
     <string name="show_password">Show Password</string>
 
@@ -47,6 +48,12 @@
     <string name="sections_empty">No sections found</string>
     <string name="sections_create">Create new Section</string>
     <string name="sections_name">Name</string>
+
+    <string name="unconfirmed_users_title">Unconfirmed users</string>
+    <string name="unconfirmed_users_message">Are you sure that you want to confirm this user?</string>
+    <string name="unconfirmed_users_full_name">Full Name: %1$s</string>
+    <string name="unconfirmed_users_email">Email: %1$s</string>
+    <string name="unconfirmed_users_phone">Phone: %1$s</string>
 
     <string name="types_title">Item Types</string>
     <string name="types_empty">No types found</string>

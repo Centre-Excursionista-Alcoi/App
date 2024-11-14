@@ -155,4 +155,16 @@ object Backend {
 
         block()
     }
+
+    /**
+     * Send a DELETE request to the server
+     * @param path The path to send the request to
+     * @param block Additional configuration for the request
+     * @return The response from the server
+     * @throws ServerException If the server responds with an error
+     */
+    suspend fun delete(
+        path: String,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse = request(HttpMethod.Delete, path, null, block)
 }

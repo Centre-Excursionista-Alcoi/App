@@ -29,6 +29,12 @@ class HomeViewModel : ViewModel() {
     val availableItems get() = _availableItems.asStateFlow()
 
 
+    private val _usersList = MutableStateFlow<List<UserD>?>(null)
+    val usersList get() = _usersList.asStateFlow()
+
+    private val _updatingUser = MutableStateFlow(false)
+    val updatingUser get() = _updatingUser.asStateFlow()
+
     private val _sections = MutableStateFlow<List<SectionD>?>(null)
     val sections get() = _sections.asStateFlow()
 
@@ -72,6 +78,9 @@ class HomeViewModel : ViewModel() {
 
             val allBookings = InventoryBackend.allBookings()
             _allBookings.emit(allBookings)
+
+            val usersList = UserDataBackend.listUsers()
+            _usersList.emit(usersList)
         }
     }
 
@@ -180,6 +189,32 @@ class HomeViewModel : ViewModel() {
                 uiThread { onMarked() }
             } finally {
                 _updatingBooking.emit(false)
+            }
+        }
+    }
+
+    fun confirm(user: UserD, onConfirm: () -> Unit) {
+        launch {
+            try {
+                _updatingUser.emit(true)
+                UserDataBackend.confirm(user)
+                load()
+                uiThread { onConfirm() }
+            } finally {
+                _updatingUser.emit(false)
+            }
+        }
+    }
+
+    fun delete(user: UserD, onDelete: () -> Unit) {
+        launch {
+            try {
+                _updatingUser.emit(true)
+                UserDataBackend.delete(user)
+                load()
+                uiThread { onDelete() }
+            } finally {
+                _updatingUser.emit(false)
             }
         }
     }

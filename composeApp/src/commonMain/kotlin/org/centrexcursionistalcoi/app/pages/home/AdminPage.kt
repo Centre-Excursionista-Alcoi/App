@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.pages.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,62 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ceaapp.composeapp.generated.resources.*
+import ceaapp.composeapp.generated.resources.Res
+import ceaapp.composeapp.generated.resources.add
+import ceaapp.composeapp.generated.resources.bookings_confirm
+import ceaapp.composeapp.generated.resources.bookings_empty
+import ceaapp.composeapp.generated.resources.bookings_from
+import ceaapp.composeapp.generated.resources.bookings_hide_complete
+import ceaapp.composeapp.generated.resources.bookings_info
+import ceaapp.composeapp.generated.resources.bookings_items
+import ceaapp.composeapp.generated.resources.bookings_list
+import ceaapp.composeapp.generated.resources.bookings_made_by
+import ceaapp.composeapp.generated.resources.bookings_mark_returned
+import ceaapp.composeapp.generated.resources.bookings_mark_taken
+import ceaapp.composeapp.generated.resources.bookings_not_returned
+import ceaapp.composeapp.generated.resources.bookings_not_taken
+import ceaapp.composeapp.generated.resources.bookings_pending
+import ceaapp.composeapp.generated.resources.bookings_returned
+import ceaapp.composeapp.generated.resources.bookings_returned_at
+import ceaapp.composeapp.generated.resources.bookings_taken_at
+import ceaapp.composeapp.generated.resources.bookings_to
+import ceaapp.composeapp.generated.resources.confirm
+import ceaapp.composeapp.generated.resources.create
+import ceaapp.composeapp.generated.resources.delete
+import ceaapp.composeapp.generated.resources.items_details_future_booking
+import ceaapp.composeapp.generated.resources.items_details_future_booking_not_confirmed
+import ceaapp.composeapp.generated.resources.items_details_future_bookings
+import ceaapp.composeapp.generated.resources.items_details_not_booked
+import ceaapp.composeapp.generated.resources.items_details_taken
+import ceaapp.composeapp.generated.resources.items_details_title
+import ceaapp.composeapp.generated.resources.items_health
+import ceaapp.composeapp.generated.resources.items_health_value
+import ceaapp.composeapp.generated.resources.items_notes
+import ceaapp.composeapp.generated.resources.items_notes_value
+import ceaapp.composeapp.generated.resources.items_title
+import ceaapp.composeapp.generated.resources.items_type
+import ceaapp.composeapp.generated.resources.items_type_value
+import ceaapp.composeapp.generated.resources.sections_create
+import ceaapp.composeapp.generated.resources.sections_empty
+import ceaapp.composeapp.generated.resources.sections_name
+import ceaapp.composeapp.generated.resources.sections_title
+import ceaapp.composeapp.generated.resources.select
+import ceaapp.composeapp.generated.resources.selected_size
+import ceaapp.composeapp.generated.resources.types_brand
+import ceaapp.composeapp.generated.resources.types_create
+import ceaapp.composeapp.generated.resources.types_description
+import ceaapp.composeapp.generated.resources.types_empty
+import ceaapp.composeapp.generated.resources.types_image
+import ceaapp.composeapp.generated.resources.types_model
+import ceaapp.composeapp.generated.resources.types_name
+import ceaapp.composeapp.generated.resources.types_section
+import ceaapp.composeapp.generated.resources.types_title
+import ceaapp.composeapp.generated.resources.unconfirmed_users_email
+import ceaapp.composeapp.generated.resources.unconfirmed_users_full_name
+import ceaapp.composeapp.generated.resources.unconfirmed_users_message
+import ceaapp.composeapp.generated.resources.unconfirmed_users_phone
+import ceaapp.composeapp.generated.resources.unconfirmed_users_title
+import ceaapp.composeapp.generated.resources.update
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
@@ -60,6 +116,7 @@ import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
+import org.centrexcursionistalcoi.app.server.response.data.UserD
 import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
 import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.StringResource
@@ -67,6 +124,10 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AdminPage(
+    updatingUser: Boolean,
+    users: List<UserD>?,
+    onUserConfirmationRequested: (UserD, () -> Unit) -> Unit,
+    onUserDeleteRequested: (UserD, () -> Unit) -> Unit,
     isCreatingSection: Boolean,
     sections: List<SectionD>?,
     onSectionOperation: (SectionD, onCreate: () -> Unit) -> Unit,
@@ -88,6 +149,13 @@ fun AdminPage(
             .padding(8.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        users
+            ?.filter { !it.isConfirmed }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { unconfirmedUsers ->
+                UnconfirmedUsersCard(unconfirmedUsers, updatingUser, onUserConfirmationRequested, onUserDeleteRequested)
+            }
+
         SectionsCard(sections, isCreatingSection, onSectionOperation)
 
         TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
@@ -131,6 +199,90 @@ private fun <Type : DatabaseData> CreationDialog(
                 enabled = !isCreating
             ) {
                 onCreateRequested(data, onDismissRequested)
+            }
+        }
+    }
+}
+
+@Composable
+fun UnconfirmedUsersCard(
+    unconfirmedUsers: List<UserD>,
+    isConfirming: Boolean,
+    onConfirmRequested: (UserD, onComplete: () -> Unit) -> Unit,
+    onDeleteRequested: (UserD, onComplete: () -> Unit) -> Unit
+) {
+    var confirmingUser: UserD? by remember { mutableStateOf(null) }
+    confirmingUser?.let { user ->
+        PlatformDialog(
+            onDismissRequest = { confirmingUser = null }
+        ) {
+            BasicText(
+                text = stringResource(Res.string.unconfirmed_users_message),
+                style = getPlatformTextStyles().label,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+            BasicText(
+                text = stringResource(Res.string.unconfirmed_users_full_name, user.name + " " + user.familyName),
+                style = getPlatformTextStyles().label,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BasicText(
+                text = stringResource(Res.string.unconfirmed_users_email, user.email),
+                style = getPlatformTextStyles().label,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BasicText(
+                text = stringResource(Res.string.unconfirmed_users_email, user.email),
+                style = getPlatformTextStyles().label,
+                modifier = Modifier.fillMaxWidth()
+            )
+            BasicText(
+                text = stringResource(Res.string.unconfirmed_users_phone, user.phone),
+                style = getPlatformTextStyles().label,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                PlatformButton(
+                    text = stringResource(Res.string.delete),
+                    modifier = Modifier.padding(end = 8.dp).padding(vertical = 8.dp),
+                    enabled = !isConfirming
+                ) {
+                    onDeleteRequested(user) { confirmingUser = null }
+                }
+                PlatformButton(
+                    text = stringResource(Res.string.confirm),
+                    modifier = Modifier.padding(end = 8.dp).padding(vertical = 8.dp),
+                    enabled = !isConfirming
+                ) {
+                    onConfirmRequested(user) { confirmingUser = null }
+                }
+            }
+        }
+    }
+
+    PlatformCard(
+        title = stringResource(Res.string.unconfirmed_users_title),
+        modifier = Modifier.fillMaxWidth().padding(8.dp)
+    ) {
+        for (user in unconfirmedUsers) {
+            PlatformCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .clickable { confirmingUser = user }
+            ) {
+                BasicText(
+                    text = user.email,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .padding(top = 8.dp),
+                    style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
+                )
             }
         }
     }
