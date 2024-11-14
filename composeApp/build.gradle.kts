@@ -237,8 +237,7 @@ compose.desktop {
                 iconFile.set(File(icons, "CEA.icns"))
 
                 signing {
-                    sign.set(true)
-                    identity.set("Arnau Mora")
+                    identity.set(System.getenv("APPLE_IDENTITY"))
 
                     val keychainPath = System.getenv("APPLE_KEYCHAIN_PATH")
                     if (keychainPath != null) {

@@ -105,7 +105,8 @@ jobs:
         if: steps.notarization-creds.outcome == 'success'
         env:
           APPLE_KEYCHAIN_PATH: ${{ steps.install-apple-certificate.outputs.KEYCHAIN_PATH }}
-        run: ./gradlew :composeApp:notarizeDmg
+          APPLE_IDENTITY: ${{ secrets.APPLE_IDENTITY }}
+        run: ./gradlew :composeApp:notarizeDmg -Pcompose.desktop.mac.sign=true
       - name: Clean up keychain
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
