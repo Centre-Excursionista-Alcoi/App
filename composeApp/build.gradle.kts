@@ -214,7 +214,6 @@ compose.desktop {
                 debMaintainer = "arnyminerz@proton.me"
                 debPackageVersion = packageVersion
 
-                packageName = "CEA App"
                 menuGroup = "Centre Excursionista d'Alcoi"
                 appCategory = "misc"
                 appRelease = Instant.now().toString()
