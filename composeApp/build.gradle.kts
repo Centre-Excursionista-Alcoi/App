@@ -1,6 +1,4 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.*
 import com.codingfeline.buildkonfig.gradle.TargetConfigDsl
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -194,13 +192,30 @@ compose.desktop {
         mainClass = "org.centrexcursionistalcoi.app.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = appVersion
 
-            // Required by Filekit: https://github.com/vinceglb/FileKit?tab=readme-ov-file#-installation
+            description = "The official app for the Centre Excursionista d'Alcoi"
+            copyright = "© 2024 Arnau Mora Gras. All rights reserved."
+            vendor = "Centre Excursionista d'Alcoi"
+
             linux {
+                debMaintainer = "arnyminerz@proton.me"
+                menuGroup = "Utility"
+                debPackageVersion = packageVersion
+
+                // Required by Filekit: https://github.com/vinceglb/FileKit?tab=readme-ov-file#-installation
                 modules("jdk.security.auth")
+            }
+            macOS {
+                bundleID = "org.centrexcursionistalcoi.app"
+                dockName = "CEA App"
+                appStore = false
+            }
+            windows {
+                menuGroup = "Centre Excursionista d'Alcoi"
+                upgradeUuid = "c6d0ef80-3e17-4fed-b4e1-92b0161373b4"
             }
         }
     }
