@@ -99,8 +99,8 @@ jobs:
         run: |
           touch notarization.properties
           echo "APPLE_ID=$APPLE_ID" >> notarization.properties
-          echo "NOTARIZATION_PASSWORD=NOTARIZATION_PASSWORD" >> notarization.properties
-          echo "TEAM_ID=TEAM_ID" >> notarization.properties
+          echo "NOTARIZATION_PASSWORD=$NOTARIZATION_PASSWORD" >> notarization.properties
+          echo "TEAM_ID=$TEAM_ID" >> notarization.properties
       - name: Notarize DMG
         if: steps.notarization-creds.outcome == 'success'
         env:
