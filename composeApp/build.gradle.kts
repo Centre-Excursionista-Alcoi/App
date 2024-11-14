@@ -199,6 +199,7 @@ compose.desktop {
     application {
         mainClass = "org.centrexcursionistalcoi.app.MainKt"
 
+        val epoch = Instant.now().toEpochMilli()
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
@@ -211,12 +212,12 @@ compose.desktop {
             val icons = file("icons")
 
             linux {
-                debMaintainer = "arnyminerz@proton.me"
-                debPackageVersion = packageVersion
+                debPackageVersion = appVersion
 
+                debMaintainer = "arnyminerz@proton.me"
                 menuGroup = "Centre Excursionista d'Alcoi"
                 appCategory = "misc"
-                appRelease = Instant.now().toString()
+                appRelease = epoch.toString()
 
                 iconFile.set(File(icons, "CEA.png"))
 
