@@ -64,7 +64,7 @@ jobs:
         if: ${{ matrix.os != 'macos-latest' }}
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
 
-      - name: Install the Apple certificate and provisioning profile
+      - name: Install the Apple certificate
         id: install-apple-certificate
         if: ${{ matrix.os == 'macos-latest' }}
         env:
@@ -75,7 +75,7 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # import certificate and provisioning profile from secrets
+          # import certificate from secrets
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
 
           # create temporary keychain
@@ -102,8 +102,8 @@ jobs:
       - name: Notarize DMG
         if: steps.notarization-creds.outcome == 'success'
         run: ./gradlew :composeApp:notarizeDmg
-      - name: Clean up keychain and provisioning profile
-        if: ${{ always() }}
+      - name: Clean up keychain
+        if: ${{ matrix.os == 'macos-latest' }}
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
 
