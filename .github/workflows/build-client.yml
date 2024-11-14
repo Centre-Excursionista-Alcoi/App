@@ -62,7 +62,7 @@ jobs:
 
       - name: Package release distribution
         if: ${{ matrix.os != 'macos-latest' }}
-        run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+        run: ./gradlew :composeApp:packageDistributionForCurrentOS
 
       - name: Install the Apple certificate
         id: install-apple-certificate
@@ -117,5 +117,5 @@ jobs:
         with:
           files: |
             composeApp/build/compose/binaries/main/**/*.dmg
-            composeApp/build/compose/binaries/main-release/**/*.msi
-            composeApp/build/compose/binaries/main-release/**/*.deb
+            composeApp/build/compose/binaries/main/**/*.msi
+            composeApp/build/compose/binaries/main/**/*.deb
