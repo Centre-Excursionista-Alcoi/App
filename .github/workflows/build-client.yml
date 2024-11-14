@@ -74,6 +74,8 @@ jobs:
           # create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH\n" >> $GITHUB_OUTPUT
 
           # import certificate from secrets
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
@@ -101,6 +103,8 @@ jobs:
           echo "TEAM_ID=TEAM_ID" >> notarization.properties
       - name: Notarize DMG
         if: steps.notarization-creds.outcome == 'success'
+        env:
+          APPLE_KEYCHAIN_PATH: ${{ steps.install-apple-certificate.outputs.KEYCHAIN_PATH }}
         run: ./gradlew :composeApp:notarizeDmg
       - name: Clean up keychain
         if: ${{ matrix.os == 'macos-latest' }}

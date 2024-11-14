@@ -239,6 +239,11 @@ compose.desktop {
                 signing {
                     sign.set(true)
                     identity.set("Arnau Mora")
+
+                    val keychainPath = System.getenv("APPLE_KEYCHAIN_PATH")
+                    if (keychainPath != null) {
+                        keychain.set(keychainPath)
+                    }
                 }
 
                 val notarizationProps = readPropertiesFile("notarization.properties")
