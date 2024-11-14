@@ -1,21 +1,12 @@
 pipeline {
     agent any
     environment {
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
         DIR = 'App'
     }
     stages {
-        stage('Checkout') {
-            steps {
-                sh 'git clone https://github.com/Centre-Excursionista-Alcoi/App.git'
-            }
-        }
         stage('Setup') {
             steps {
-                dir(DIR) {
-                    sh 'chmod +x ./gradlew'
-                    sh 'echo sdk.dir=/android-sdk >> local.properties'
-                }
+                sh 'echo sdk.dir=/android-sdk >> local.properties'
             }
         }
         stage('Load credentials') {
@@ -29,16 +20,12 @@ pipeline {
                 KEYSTORE_PATH = credentials('ANDROID_KEYSTORE')
             }
             steps {
-                dir(DIR) {
-                    sh 'cp "$KEYSTORE_PATH" ./composeApp'
-                }
+                sh 'cp "$KEYSTORE_PATH" ./composeApp'
             }
         }
         stage('Assemble and Bundle Release') {
             steps {
-                dir(DIR) {
-                    sh './gradlew :composeApp:assembleRelease'
-                }
+                sh './gradlew :composeApp:assembleRelease'
             }
         }
     }
