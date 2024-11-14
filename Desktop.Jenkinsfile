@@ -27,7 +27,7 @@ pipeline {
                         }
                         stage('Build Dmg') {
                             steps {
-                                sh './gradlew --no-daemon :composeApp:packageDmg -Pcompose.desktop.mac.sign=true -Dorg.gradle.java.home=$JAVA_HOME_17'
+                                sh './gradlew --no-daemon :composeApp:notarizeDmg -Pcompose.desktop.mac.sign=true -Dorg.gradle.java.home=$JAVA_HOME_17'
                             }
                             post {
                                 success {
