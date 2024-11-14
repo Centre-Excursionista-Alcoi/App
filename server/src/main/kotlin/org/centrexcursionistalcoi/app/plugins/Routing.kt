@@ -1,13 +1,33 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpMethod
+import io.ktor.server.application.Application
+import io.ktor.server.auth.authenticate
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
-import org.centrexcursionistalcoi.app.endpoints.auth.*
-import org.centrexcursionistalcoi.app.endpoints.inventory.*
-import org.centrexcursionistalcoi.app.endpoints.lending.*
+import org.centrexcursionistalcoi.app.endpoints.auth.ConfirmUserEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.LoginEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.LogoutEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.RegisterEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.UserDataEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.UsersEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.CreateItemEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.CreateTypesEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.ListItemsEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.ListTypesEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateItemEndpoint
+import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateTypesEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.AvailabilityEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.BookItemEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.ConfirmEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.LendingsEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.MarkReturnedEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.MarkTakenEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
@@ -31,6 +51,7 @@ private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
 private val secureEndpoints: List<SecureEndpoint> = listOf(
     UserDataEndpoint,
     UsersEndpoint,
+    ConfirmUserEndpoint,
 
     ListTypesEndpoint,
     CreateTypesEndpoint,
