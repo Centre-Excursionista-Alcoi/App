@@ -5,7 +5,7 @@ pipeline {
     }
     stages {
         stage('Build binaries') {
-            stages {
+            parallel {
                 stage('Build for Linux') {
                     agent {
                         label "linux"
@@ -21,7 +21,7 @@ pipeline {
                 }
                 stage('Build for Windows') {
                     agent {
-                        label "linux"
+                        label "windows"
                     }
                     steps {
                         sh './gradlew --no-daemon :composeApp:packageExe -Dorg.gradle.java.home=$JAVA_HOME_17'
