@@ -1,16 +1,12 @@
 package org.centrexcursionistalcoi.app.platform.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 
 @Composable
 actual fun PlatformCard(
@@ -24,12 +20,14 @@ actual fun PlatformCard(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             title?.let {
                 Text(
                     text = it,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).padding(8.dp),
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
             action?.let { (icon, title, action) ->
