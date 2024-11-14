@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import java.util.*
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -17,11 +18,17 @@ plugins {
 
 val appVersion = "1.0.0"
 
+fun readPropertiesFile(path: String): Properties {
+    val props = Properties()
+    rootProject.file(path).inputStream().use { props.load(it) }
+    return props
+}
+
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     
@@ -150,8 +157,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -211,8 +218,20 @@ compose.desktop {
             macOS {
                 bundleID = "org.centrexcursionistalcoi.app"
                 dockName = "CEA App"
+                packageName = "CEA App"
                 appStore = false
                 appCategory = "public.app-category.utilities"
+
+                signing {
+                    sign.set(true)
+                    identity.set("Arnau Mora")
+                }
+                notarization {
+                    val props = readPropertiesFile("notarization.properties")
+                    appleID.set(props["APPLE_ID"] as String)
+                    password.set(props["NOTARIZATION_PASSWORD"] as String)
+                    teamID.set(props["TEAM_ID"] as String)
+                }
             }
             windows {
                 menuGroup = "Centre Excursionista d'Alcoi"
