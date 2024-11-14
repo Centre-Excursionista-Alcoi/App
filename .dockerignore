@@ -1,0 +1,10 @@
+build
+.fleet
+.github
+.gradle
+.idea
+.kotlin
+.run
+scripts
+sample_data
+iosApp
