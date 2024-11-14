@@ -1,6 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.time.Instant
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -211,8 +212,12 @@ compose.desktop {
 
             linux {
                 debMaintainer = "arnyminerz@proton.me"
-                menuGroup = "Utility"
                 debPackageVersion = packageVersion
+
+                packageName = "CEA App"
+                menuGroup = "Centre Excursionista d'Alcoi"
+                appCategory = "misc"
+                appRelease = Instant.now().toString()
 
                 iconFile.set(File(icons, "CEA.png"))
 
@@ -249,6 +254,9 @@ compose.desktop {
             windows {
                 menuGroup = "Centre Excursionista d'Alcoi"
                 upgradeUuid = "c6d0ef80-3e17-4fed-b4e1-92b0161373b4"
+
+                msiPackageVersion = appVersion
+                exePackageVersion = appVersion
 
                 iconFile.set(File(icons, "CEA.ico"))
             }
