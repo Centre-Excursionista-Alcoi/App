@@ -141,9 +141,11 @@ android {
 
     defaultConfig {
         applicationId = "org.centrexcursionistalcoi.app"
+
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
+
+        versionCode = file("code.txt").readText().toInt()
         versionName = appVersion
     }
     packaging {
