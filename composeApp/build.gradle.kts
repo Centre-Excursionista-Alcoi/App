@@ -212,6 +212,7 @@ compose.desktop {
                 bundleID = "org.centrexcursionistalcoi.app"
                 dockName = "CEA App"
                 appStore = false
+                appCategory = "public.app-category.utilities"
             }
             windows {
                 menuGroup = "Centre Excursionista d'Alcoi"
