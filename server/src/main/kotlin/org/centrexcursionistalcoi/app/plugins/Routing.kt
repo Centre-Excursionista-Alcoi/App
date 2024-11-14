@@ -11,6 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import org.centrexcursionistalcoi.app.endpoints.RootEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.ConfirmUserEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.DeleteUserEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LoginEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LogoutEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.RegisterEndpoint
@@ -52,6 +53,7 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     UserDataEndpoint,
     UsersEndpoint,
     ConfirmUserEndpoint,
+    DeleteUserEndpoint,
 
     ListTypesEndpoint,
     CreateTypesEndpoint,
