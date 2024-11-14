@@ -4,16 +4,25 @@ pipeline {
         DIR = 'App'
     }
     stages {
-        stage('Build for Linux') {
-            steps {
-                sh './gradlew --no-daemon :composeApp:packageDeb -Dorg.gradle.java.home=$JAVA_HOME_17'
+        stage('Build binaries') {
+            parallel {
+                stage('Build for Linux') {
+                    agent {
+                        label "linux"
+                    }
+                    steps {
+                        sh './gradlew --no-daemon :composeApp:packageDeb -Dorg.gradle.java.home=$JAVA_HOME_17'
+                    }
+                    post {
+                        success {
+                            archiveArtifacts artifacts: 'composeApp/build/compose/**/*.deb', fingerprint: true
+                        }
+                    }
+                }
             }
         }
     }
     post {
-        success {
-            archiveArtifacts artifacts: 'App/composeApp/build/outputs/**/*.apk', fingerprint: true
-        }
         always {
             cleanWs()
         }
