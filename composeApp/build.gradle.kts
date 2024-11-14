@@ -240,7 +240,7 @@ compose.desktop {
                     sign.set(true)
                     identity.set("Arnau Mora")
 
-                    val keychainPath = System.getenv("APPLE_KEYCHAIN_PATH")
+                    val keychainPath = System.getenv("APPLE_KEYCHAIN_PATH")?.trimEnd('\n')
                     if (keychainPath != null) {
                         keychain.set(keychainPath)
                     }
