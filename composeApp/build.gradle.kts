@@ -1,7 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import com.codingfeline.buildkonfig.gradle.TargetConfigDsl
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -185,27 +184,9 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(STRING, "VERSION", appVersion)
 
-        buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "127.0.0.1")
-        buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "8080")
-        buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "false")
-    }
-
-    targetConfigs {
-        val productionBackend: TargetConfigDsl.() -> Unit = {
-            buildConfigField(STRING, "BACKEND_HOST", "ceaapp.escalaralcoiaicomtat.org")
-            buildConfigField(INT, "BACKEND_PORT", "443")
-            buildConfigField(BOOLEAN, "BACKEND_HTTPS", "true")
-        }
-
-        create("android") {
-            productionBackend()
-        }
-        create("ios") {
-            productionBackend()
-        }
-        create("wasmJs") {
-            productionBackend()
-        }
+        buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "ceaapp.escalaralcoiaicomtat.org")
+        buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "443")
+        buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "true")
     }
 }
 
