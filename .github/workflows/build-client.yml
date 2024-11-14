@@ -101,7 +101,7 @@ jobs:
         with:
           files: |
             composeApp/build/compose/binaries/main/**/*.dmg
-            composeApp/build/compose/binaries/main/**/*.msi
+            composeApp/build/compose/binaries/main/**/*.exe
             composeApp/build/compose/binaries/main/**/*.deb
 
   build-android:

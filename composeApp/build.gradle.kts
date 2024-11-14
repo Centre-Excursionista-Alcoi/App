@@ -200,7 +200,7 @@ compose.desktop {
         mainClass = "org.centrexcursionistalcoi.app.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = appVersion
 
@@ -255,7 +255,6 @@ compose.desktop {
                 menuGroup = "Centre Excursionista d'Alcoi"
                 upgradeUuid = "c6d0ef80-3e17-4fed-b4e1-92b0161373b4"
 
-                msiPackageVersion = appVersion
                 exePackageVersion = appVersion
 
                 iconFile.set(File(icons, "CEA.ico"))
