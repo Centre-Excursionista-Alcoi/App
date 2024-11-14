@@ -12,6 +12,8 @@
     <string name="confirm">Confirm</string>
     <string name="select">Select</string>
     <string name="selected_size">Selected (%1$s)</string>
+    <string name="hide_password">Hide Password</string>
+    <string name="show_password">Show Password</string>
 
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>
