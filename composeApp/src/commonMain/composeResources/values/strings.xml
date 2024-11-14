@@ -113,5 +113,6 @@
     <string name="error_nif_invalid">NIF is not valid.</string>
     <string name="error_email_invalid">Email is not valid.</string>
     <string name="error_passwords_dont_match">Passwords do not match.</string>
+    <string name="error_user_not_confirmed">Your account must be confirmed by an administrator first.</string>
     <string name="error_unknown">Unknown error. Code #%1$d: %2$s</string>
 </resources>

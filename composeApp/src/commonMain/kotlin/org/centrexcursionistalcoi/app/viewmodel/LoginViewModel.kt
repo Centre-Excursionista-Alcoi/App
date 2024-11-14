@@ -2,7 +2,10 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import ceaapp.composeapp.generated.resources.*
+import ceaapp.composeapp.generated.resources.Res
+import ceaapp.composeapp.generated.resources.error_unknown
+import ceaapp.composeapp.generated.resources.error_user_not_confirmed
+import ceaapp.composeapp.generated.resources.error_wrong_credentials
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +41,10 @@ class LoginViewModel : ViewModel() {
                     // TODO: Handle wrong credentials
                     Napier.e { "Wrong credentials" }
                     _error.emit(getString(Res.string.error_wrong_credentials))
+                }
+                is AuthException.UserNotConfirmed -> {
+                    Napier.e { "User not confirmed" }
+                    _error.emit(getString(Res.string.error_user_not_confirmed))
                 }
                 else -> {
                     // TODO: Handle other errors
