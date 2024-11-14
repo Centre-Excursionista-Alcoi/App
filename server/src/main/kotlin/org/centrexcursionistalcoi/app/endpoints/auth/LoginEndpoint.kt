@@ -1,8 +1,7 @@
 package org.centrexcursionistalcoi.app.endpoints.auth
 
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
@@ -16,6 +15,12 @@ object LoginEndpoint : BasicAuthEndpoint("/login") {
         val user = ServerDatabase { User.findById(username) }
         if (user == null) {
             respondFailure(Errors.WrongCredentials)
+            return
+        }
+
+        // Check that it's confirmed
+        if (!user.confirmed) {
+            respondFailure(Errors.UserNotConfirmed)
             return
         }
 

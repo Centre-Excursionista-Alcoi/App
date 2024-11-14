@@ -6,12 +6,14 @@ import org.centrexcursionistalcoi.app.server.response.Errors
 abstract class AuthException(code: Int?, response: String): ServerException(code, response) {
     constructor(error: ErrorResponse): this(error.code, error.message)
 
+    class UserNotConfirmed: AuthException(Errors.UserNotConfirmed)
     class WrongCredentials: AuthException(Errors.WrongCredentials)
 
     companion object {
         fun fromCode(code: Int?): ServerException? {
             return when (code) {
                 Errors.WrongCredentials.code -> WrongCredentials()
+                Errors.UserNotConfirmed.code -> WrongCredentials()
                 else -> null
             }
         }
