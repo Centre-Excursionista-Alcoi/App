@@ -23,12 +23,25 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
-      - name: Build
-        env:
-          BACKEND_HOST: ceaapp.escalaralcoiaicomtat.org
-          BACKEND_PORT: 443
-          BACKEND_HTTPS: true
+      - name: Package release distribution
+        if: ${{ matrix.os != 'macos-latest' }}
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+
+      - name: Load notarization credentials
+        id: notarization-creds
+        if: ${{ matrix.os == 'macos-latest' }}
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          touch notarization.properties
+          echo "APPLE_ID=$APPLE_ID" >> notarization.properties
+          echo "NOTARIZATION_PASSWORD=NOTARIZATION_PASSWORD" >> notarization.properties
+          echo "TEAM_ID=TEAM_ID" >> notarization.properties
+      - name: Notarize DMG
+        if: steps.notarization-creds.outcome == 'success'
+        run: ./gradlew :composeApp:notarizeDmg
 
       - name: Release
         uses: softprops/action-gh-release@v2
