@@ -215,10 +215,14 @@ compose.desktop {
             copyright = "© 2024 Arnau Mora Gras. All rights reserved."
             vendor = "Centre Excursionista d'Alcoi"
 
+            val icons = file("icons")
+
             linux {
                 debMaintainer = "arnyminerz@proton.me"
                 menuGroup = "Utility"
                 debPackageVersion = packageVersion
+
+                iconFile.set(File(icons, "CEA.png"))
 
                 // Required by Filekit: https://github.com/vinceglb/FileKit?tab=readme-ov-file#-installation
                 modules("jdk.security.auth")
@@ -229,6 +233,8 @@ compose.desktop {
                 packageName = "CEA App"
                 appStore = false
                 appCategory = "public.app-category.utilities"
+
+                iconFile.set(File(icons, "CEA.icns"))
 
                 signing {
                     sign.set(true)
@@ -247,6 +253,8 @@ compose.desktop {
             windows {
                 menuGroup = "Centre Excursionista d'Alcoi"
                 upgradeUuid = "c6d0ef80-3e17-4fed-b4e1-92b0161373b4"
+
+                iconFile.set(File(icons, "CEA.ico"))
             }
         }
     }
