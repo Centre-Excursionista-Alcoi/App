@@ -41,6 +41,8 @@ pipeline {
                         APPLE_ID = credentials('APPLE_ID')
                         NOTARIZATION_PASSWORD = credentials('NOTARIZATION_PASSWORD')
                         TEAM_ID = credentials('TEAM_ID')
+
+                        JAVA_HOME_17 = '/Users/arnyminerz/Library/Java/JavaVirtualMachines/corretto-17.0.10/Contents/Home/'
                     }
                     stages {
                         stage('Prepare notarization credentials file') {
