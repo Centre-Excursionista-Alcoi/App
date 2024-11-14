@@ -16,7 +16,7 @@ plugins {
     alias(libs.plugins.serialization)
 }
 
-val appVersion = "1.0.0"
+val appVersion = file("version.txt").readText()
 
 fun readPropertiesFile(path: String): Properties {
     val props = Properties()
@@ -166,6 +166,8 @@ buildkonfig {
     packageName = "org.centrexcursionistalcoi.app"
 
     defaultConfigs {
+        buildConfigField(STRING, "VERSION", appVersion)
+
         buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "127.0.0.1")
         buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "8080")
         buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "false")
