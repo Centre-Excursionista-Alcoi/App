@@ -17,18 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import ceaapp.composeapp.generated.resources.Res
-import ceaapp.composeapp.generated.resources.home_welcome
-import ceaapp.composeapp.generated.resources.logout
-import ceaapp.composeapp.generated.resources.nav_admin
-import ceaapp.composeapp.generated.resources.nav_home
-import ceaapp.composeapp.generated.resources.nav_reserve
-import ceaapp.composeapp.generated.resources.nav_settings
+import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
 import org.centrexcursionistalcoi.app.pages.home.HomePage
 import org.centrexcursionistalcoi.app.pages.home.ReservationPage
+import org.centrexcursionistalcoi.app.pages.home.SettingsPage
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.route.Home
@@ -102,7 +97,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     when (page) {
                         IDX_HOME -> HomePage(bookings)
                         IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
-                        IDX_SETTINGS -> {}
+                        IDX_SETTINGS -> SettingsPage()
                         IDX_ADMIN -> AdminPage(
                             updatingUser = updatingUser,
                             users = usersList,
