@@ -30,7 +30,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Updated Version'
-          file_pattern: 'composeApp/version.txt iosApp/iosApp.xcodeproj/project.pbxproj iosApp/iosApp/Info.plist'
+          file_pattern: 'composeApp/version.txt composeApp/code.txt iosApp/iosApp.xcodeproj/project.pbxproj iosApp/iosApp/Info.plist'
           branch: master
 
   build-desktop:
