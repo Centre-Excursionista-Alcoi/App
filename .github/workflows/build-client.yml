@@ -73,7 +73,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          fail_on_unmatched_files: true
           files: |
             composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app-${{ github.event.release.name }}*.exe
             composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app_${{ github.event.release.name }}*.deb
