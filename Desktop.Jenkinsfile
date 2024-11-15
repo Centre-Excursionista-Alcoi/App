@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         DIR = 'App'
+        GITHUB_API_TOKEN = credentials('GITHUB_TOKEN')
+        GITHUB_REPO = 'Centre-Excursionista-Alcoi/App'
     }
     stages {
         stage('Build binaries') {
@@ -64,6 +66,31 @@ pipeline {
                             post {
                                 success {
                                     archiveArtifacts artifacts: 'composeApp/build/compose/binaries/main/dmg/*.dmg', fingerprint: true
+                                }
+                            }
+                        }
+                        stage('Upload to GitHub Release') {
+                            when {
+                                expression { currentBuild.getRawBuild().getCause(hudson.triggers.SCMTrigger.SCMTriggerCause) == null } // Skip if triggered by SCM
+                            }
+                            steps {
+                                script {
+                                    // Parse release information from webhook payload
+                                    def releasePayload = readJSON text: env.GITHUB_WEBHOOK_PAYLOAD
+                                    def releaseTag = releasePayload.release.tag_name
+                                    def releaseId = releasePayload.release.id
+
+                                    // Get the artifact path
+                                    def artifactPath = 'composeApp/build/compose/binaries/main/dmg/*.dmg' // Update this to match your artifact
+
+                                    // Use GitHub API to upload the artifact
+                                    sh """
+                                        curl -X POST \
+                                            -H "Authorization: token ${env.GITHUB_API_TOKEN}" \
+                                            -H "Content-Type: application/zip" \
+                                            --data-binary @${artifactPath} \
+                                            "https://uploads.github.com/repos/${env.GITHUB_REPO}/releases/${releaseId}/assets?name=$(basename ${artifactPath})"
+                                    """
                                 }
                             }
                         }
