@@ -37,7 +37,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -48,9 +48,9 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm("desktop")
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         moduleName = "composeApp"
@@ -70,7 +70,7 @@ kotlin {
         }
         binaries.executable()
     }
-    
+
     sourceSets {
         val desktopMain by getting
 
@@ -113,6 +113,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(compose.preview)
+            implementation(libs.androidx.appcompat)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
 
@@ -145,6 +146,9 @@ android {
     namespace = "org.centrexcursionistalcoi.app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    androidResources {
+        generateLocaleConfig = true
+    }
     defaultConfig {
         applicationId = "org.centrexcursionistalcoi.app"
 
