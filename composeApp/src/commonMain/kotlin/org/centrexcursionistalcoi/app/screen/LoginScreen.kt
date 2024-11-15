@@ -99,7 +99,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                         up = emailFocusRequester
                     }
                     .autofill(
-                        listOf(AutofillType.EmailAddress)
+                        listOf(AutofillType.Password)
                     ) { password = it; viewModel.clearError() },
                 label = stringResource(Res.string.login_password),
                 thisFocusRequester = passwordFocusRequester,
