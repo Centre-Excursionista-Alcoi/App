@@ -7,6 +7,8 @@ import java.util.Locale
 actual object PlatformLanguage {
     actual val isLanguageChangeSupported: Boolean = true
 
+    actual val isLanguageFetchSupported: Boolean = true
+
     actual fun getSelectedLanguage(): String? {
         return LocaleListCompat.getDefault()[0]?.toLanguageTag()
     }
