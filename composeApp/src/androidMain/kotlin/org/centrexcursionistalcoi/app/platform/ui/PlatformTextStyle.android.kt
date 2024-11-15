@@ -8,7 +8,7 @@ actual fun getPlatformTextStyles(): PlatformTextStyles {
     return PlatformTextStyles(
         titleLarge = MaterialTheme.typography.headlineLarge,
         titleRegular = MaterialTheme.typography.headlineSmall,
-        heading = MaterialTheme.typography.titleLarge,
+        heading = MaterialTheme.typography.titleSmall,
         body = MaterialTheme.typography.bodyMedium,
         label = MaterialTheme.typography.labelMedium
     )
