@@ -1,7 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import java.time.Instant
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -203,7 +202,6 @@ compose.desktop {
     application {
         mainClass = "org.centrexcursionistalcoi.app.MainKt"
 
-        val epoch = Instant.now().toEpochMilli()
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "org.centrexcursionistalcoi.app"
@@ -221,7 +219,6 @@ compose.desktop {
                 debMaintainer = "arnyminerz@proton.me"
                 menuGroup = "Centre Excursionista d'Alcoi"
                 appCategory = "misc"
-                appRelease = epoch.toString()
 
                 iconFile.set(File(icons, "CEA.png"))
 
