@@ -17,12 +17,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -32,6 +35,7 @@ import org.centrexcursionistalcoi.app.validation.isValidEmail
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalComposeUiApi::class)
 object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
     @Composable
     override fun Content(viewModel: LoginViewModel) {
@@ -72,8 +76,11 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                         next = passwordFocusRequester
                         right = passwordFocusRequester
                         down = passwordFocusRequester
-                    },
-                label = "Email",
+                    }
+                    .autofill(
+                        listOf(AutofillType.EmailAddress)
+                    ) { email = it; viewModel.clearError() },
+                label = stringResource(Res.string.login_email),
                 thisFocusRequester = emailFocusRequester,
                 nextFocusRequester = passwordFocusRequester,
                 error = error?.let { "" }, // Do not show any message, just show in red
@@ -90,8 +97,11 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                         previous = emailFocusRequester
                         left = emailFocusRequester
                         up = emailFocusRequester
-                    },
-                label = "Password",
+                    }
+                    .autofill(
+                        listOf(AutofillType.EmailAddress)
+                    ) { password = it; viewModel.clearError() },
+                label = stringResource(Res.string.login_password),
                 thisFocusRequester = passwordFocusRequester,
                 isPassword = true,
                 error = error,
@@ -112,7 +122,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
                 PlatformButton(
-                    text = "Login",
+                    text = stringResource(Res.string.login_button),
                     enabled = !isLoading && fieldsValid,
                 ) {
                     viewModel.login(navController, email, password)

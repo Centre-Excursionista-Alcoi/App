@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -29,6 +31,7 @@ import ceaapp.composeapp.generated.resources.*
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.containerBackground
 import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -39,6 +42,7 @@ import org.centrexcursionistalcoi.app.validation.isValidNif
 import org.centrexcursionistalcoi.app.viewmodel.RegisterViewModel
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalComposeUiApi::class)
 object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel) {
     @Composable
     override fun Content(viewModel: RegisterViewModel) {
@@ -88,7 +92,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.EmailAddress)
+                    ) { email = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_email),
                 error = if (email.isNotBlank() && !email.isValidEmail) stringResource(Res.string.error_email_invalid) else null,
                 thisFocusRequester = emailFocusRequester,
@@ -100,7 +107,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.Password, AutofillType.NewPassword)
+                    ) { password = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_password),
                 isPassword = true,
                 thisFocusRequester = passwordFocusRequester,
@@ -112,7 +122,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.Password, AutofillType.NewPassword)
+                    ) { passwordConfirm = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_password_confirm),
                 isPassword = true,
                 error = if (passwordConfirm.isNotBlank() && password != passwordConfirm) stringResource(Res.string.error_passwords_dont_match) else null,
@@ -125,7 +138,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.PersonFirstName, AutofillType.PersonNamePrefix)
+                    ) { firstName = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_first_name),
                 thisFocusRequester = firstNameFocusRequester,
                 nextFocusRequester = familyNameFocusRequester
@@ -136,7 +152,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.PersonLastName, AutofillType.PersonMiddleName, AutofillType.PersonNameSuffix)
+                    ) { firstName = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_family_name),
                 thisFocusRequester = familyNameFocusRequester,
                 nextFocusRequester = nifFocusRequester
@@ -159,7 +178,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .autofill(
+                        listOf(AutofillType.PhoneNumber)
+                    ) { phone = it; viewModel.clearError() },
                 label = stringResource(Res.string.register_phone),
                 thisFocusRequester = phoneFocusRequester
             )
