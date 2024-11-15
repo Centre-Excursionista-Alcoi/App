@@ -179,6 +179,7 @@ private fun <Type : DatabaseData> CreationDialog(
     showingCreationDialog: Type?,
     title: StringResource,
     isCreating: Boolean,
+    isEnabled: (Type) -> Boolean,
     onCreateRequested: (Type, onCreate: () -> Unit) -> Unit,
     onDismissRequested: () -> Unit,
     content: @Composable ColumnScope.(Type) -> Unit
@@ -196,7 +197,7 @@ private fun <Type : DatabaseData> CreationDialog(
             PlatformButton(
                 text = stringResource(if (data.id == null) Res.string.create else Res.string.update),
                 modifier = Modifier.align(Alignment.End).padding(8.dp),
-                enabled = !isCreating
+                enabled = !isCreating && isEnabled(data)
             ) {
                 onCreateRequested(data, onDismissRequested)
             }
@@ -299,6 +300,7 @@ fun SectionsCard(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.sections_create,
         isCreating = isCreating,
+        isEnabled = SectionD::validate,
         onCreateRequested = onOperationRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -342,8 +344,7 @@ fun SectionsCard(
                                 text = item.displayName,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 8.dp)
-                                    .padding(top = 8.dp),
+                                    .padding(8.dp),
                                 style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -367,6 +368,7 @@ fun TypesCard(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.types_create,
         isCreating = isCreating,
+        isEnabled = ItemTypeD::validate,
         onCreateRequested = onCreateRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -517,6 +519,7 @@ fun ItemsCard(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.items_title,
         isCreating = isCreating,
+        isEnabled = ItemD::validate,
         onCreateRequested = onCreateRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->

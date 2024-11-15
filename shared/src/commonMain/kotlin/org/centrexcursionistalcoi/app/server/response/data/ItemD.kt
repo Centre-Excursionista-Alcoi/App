@@ -10,4 +10,8 @@ data class ItemD(
     val health: ItemHealth = ItemHealth.NEW,
     val notes: String? = null,
     val typeId: Int? = null
-): DatabaseData
+): DatabaseData, Validator {
+    override fun validate(): Boolean {
+        return typeId != null
+    }
+}

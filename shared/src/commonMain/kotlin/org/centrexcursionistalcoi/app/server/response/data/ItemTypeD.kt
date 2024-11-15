@@ -14,7 +14,7 @@ data class ItemTypeD(
     val model: String? = null,
     val imageBytesBase64: String? = null,
     val sectionId: Int? = null
-): DatabaseData {
+): DatabaseData, Validator {
     @ExperimentalEncodingApi
     constructor(
         id: Int? = null,
@@ -29,4 +29,8 @@ data class ItemTypeD(
 
     @ExperimentalEncodingApi
     fun imageBytes() = imageBytesBase64?.let(Base64::decode)
+
+    override fun validate(): Boolean {
+        return title.isNotBlank() && sectionId != null
+    }
 }
