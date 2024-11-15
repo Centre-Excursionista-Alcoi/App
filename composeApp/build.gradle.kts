@@ -210,6 +210,7 @@ compose.desktop {
             description = "The official app for the Centre Excursionista d'Alcoi"
             copyright = "© 2024 Arnau Mora Gras. All rights reserved."
             vendor = "Centre Excursionista d'Alcoi"
+            licenseFile.set(rootProject.file("LICENSE"))
 
             val icons = file("icons")
 
