@@ -13,6 +13,7 @@
     <string name="select">Select</string>
     <string name="selected_size">Selected (%1$s)</string>
     <string name="delete">Delete</string>
+    <string name="loading">Loading...</string>
     <string name="hide_password">Hide Password</string>
     <string name="show_password">Show Password</string>
 
@@ -74,6 +75,7 @@
     <string name="items_notes_value">Notes: %1$s</string>
     <string name="items_type_value">Type: %1$s</string>
     <string name="items_details_taken">Taken by %1$s on %2$s</string>
+    <string name="items_details_taken_by">Taken by %1$s</string>
     <string name="items_details_future_bookings">Next Bookings:</string>
     <string name="items_details_future_booking">%1$s by %2$s</string>
     <string name="items_details_future_booking_not_confirmed">%1$s by %2$s (not confirmed)</string>

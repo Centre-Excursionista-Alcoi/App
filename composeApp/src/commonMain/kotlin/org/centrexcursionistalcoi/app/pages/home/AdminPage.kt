@@ -1,8 +1,12 @@
 package org.centrexcursionistalcoi.app.pages.home
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BasicTooltipBox
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -11,7 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberBasicTooltipState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,66 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ceaapp.composeapp.generated.resources.Res
-import ceaapp.composeapp.generated.resources.add
-import ceaapp.composeapp.generated.resources.bookings_confirm
-import ceaapp.composeapp.generated.resources.bookings_empty
-import ceaapp.composeapp.generated.resources.bookings_from
-import ceaapp.composeapp.generated.resources.bookings_hide_complete
-import ceaapp.composeapp.generated.resources.bookings_info
-import ceaapp.composeapp.generated.resources.bookings_items
-import ceaapp.composeapp.generated.resources.bookings_list
-import ceaapp.composeapp.generated.resources.bookings_made_by
-import ceaapp.composeapp.generated.resources.bookings_mark_returned
-import ceaapp.composeapp.generated.resources.bookings_mark_taken
-import ceaapp.composeapp.generated.resources.bookings_not_returned
-import ceaapp.composeapp.generated.resources.bookings_not_taken
-import ceaapp.composeapp.generated.resources.bookings_pending
-import ceaapp.composeapp.generated.resources.bookings_returned
-import ceaapp.composeapp.generated.resources.bookings_returned_at
-import ceaapp.composeapp.generated.resources.bookings_taken_at
-import ceaapp.composeapp.generated.resources.bookings_to
-import ceaapp.composeapp.generated.resources.confirm
-import ceaapp.composeapp.generated.resources.create
-import ceaapp.composeapp.generated.resources.delete
-import ceaapp.composeapp.generated.resources.items_details_future_booking
-import ceaapp.composeapp.generated.resources.items_details_future_booking_not_confirmed
-import ceaapp.composeapp.generated.resources.items_details_future_bookings
-import ceaapp.composeapp.generated.resources.items_details_not_booked
-import ceaapp.composeapp.generated.resources.items_details_taken
-import ceaapp.composeapp.generated.resources.items_details_title
-import ceaapp.composeapp.generated.resources.items_health
-import ceaapp.composeapp.generated.resources.items_health_value
-import ceaapp.composeapp.generated.resources.items_notes
-import ceaapp.composeapp.generated.resources.items_notes_value
-import ceaapp.composeapp.generated.resources.items_title
-import ceaapp.composeapp.generated.resources.items_type
-import ceaapp.composeapp.generated.resources.items_type_value
-import ceaapp.composeapp.generated.resources.sections_create
-import ceaapp.composeapp.generated.resources.sections_empty
-import ceaapp.composeapp.generated.resources.sections_name
-import ceaapp.composeapp.generated.resources.sections_title
-import ceaapp.composeapp.generated.resources.select
-import ceaapp.composeapp.generated.resources.selected_size
-import ceaapp.composeapp.generated.resources.types_brand
-import ceaapp.composeapp.generated.resources.types_create
-import ceaapp.composeapp.generated.resources.types_description
-import ceaapp.composeapp.generated.resources.types_empty
-import ceaapp.composeapp.generated.resources.types_image
-import ceaapp.composeapp.generated.resources.types_model
-import ceaapp.composeapp.generated.resources.types_name
-import ceaapp.composeapp.generated.resources.types_section
-import ceaapp.composeapp.generated.resources.types_title
-import ceaapp.composeapp.generated.resources.unconfirmed_users_email
-import ceaapp.composeapp.generated.resources.unconfirmed_users_full_name
-import ceaapp.composeapp.generated.resources.unconfirmed_users_message
-import ceaapp.composeapp.generated.resources.unconfirmed_users_phone
-import ceaapp.composeapp.generated.resources.unconfirmed_users_title
-import ceaapp.composeapp.generated.resources.update
+import ceaapp.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
@@ -96,6 +50,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
+import org.centrexcursionistalcoi.app.composition.rememberPlainPositionProvider
 import org.centrexcursionistalcoi.app.data.fromDate
 import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.data.localizedName
@@ -506,6 +461,7 @@ fun TypesCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemsCard(
     items: List<ItemD>?,
@@ -657,14 +613,40 @@ fun ItemsCard(
                                 .padding(8.dp)
                                 .clickable { showingDetailsDialog = item }
                         ) {
-                            BasicText(
-                                text = "#${item.id} - ${type.title}",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp)
-                                    .padding(top = 8.dp),
-                                style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val (color, tooltip) = allBookings
+                                    ?.filter { it.itemIds?.contains(item.id) == true }
+                                    ?.let { bookings ->
+                                        val taken = bookings.find { it.takenAt != null }
+                                        if (taken != null) {
+                                            Color.Red to stringResource(Res.string.items_details_taken_by, taken.userId ?: "N/A")
+                                        } else {
+                                            Color.Green to stringResource(Res.string.items_details_not_booked)
+                                        }
+                                    } ?: (Color.Yellow to stringResource(Res.string.loading))
+
+                                BasicTooltipBox(
+                                    positionProvider = rememberPlainPositionProvider(),
+                                    state = rememberBasicTooltipState(),
+                                    tooltip = { BasicText(tooltip) },
+                                    modifier = Modifier.padding(end = 4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(color)
+                                    )
+                                }
+                                BasicText(
+                                    text = "#${item.id} - ${type.title}",
+                                    modifier = Modifier.weight(1f),
+                                    style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
                             BasicText(
                                 text = stringResource(item.health.localizedName()),
                                 modifier = Modifier
