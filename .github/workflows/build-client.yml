@@ -14,7 +14,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -57,6 +58,14 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
+      # Refresh version name just in case
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Update version name
+        run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
+
       - name: Package release distribution
         run: ./gradlew :composeApp:packageDistributionForCurrentOS
 
@@ -93,6 +102,14 @@ jobs:
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" > keystore.base64
           base64 --decode keystore.base64 > ./composeApp/keystore.jks
+
+      # Refresh version name just in case
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Update version name
+        run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
 
       - name: Build release APK
         env:
