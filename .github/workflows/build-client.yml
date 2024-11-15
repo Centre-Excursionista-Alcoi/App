@@ -75,8 +75,8 @@ jobs:
         with:
           fail_on_unmatched_files: true
           files: |
-            composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app${{ github.event.release.name }}*.exe
-            composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app${{ github.event.release.name }}*.deb
+            composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app-${{ github.event.release.name }}*.exe
+            composeApp/build/compose/binaries/**/org.centrexcursionistalcoi.app_${{ github.event.release.name }}*.deb
 
   build-android:
     name: Build for Android
