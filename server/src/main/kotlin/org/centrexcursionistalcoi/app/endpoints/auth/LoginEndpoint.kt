@@ -1,7 +1,8 @@
 package org.centrexcursionistalcoi.app.endpoints.auth
 
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.sessions.sessions
+import io.ktor.server.sessions.set
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
@@ -12,7 +13,7 @@ import org.centrexcursionistalcoi.app.server.response.Errors
 object LoginEndpoint : BasicAuthEndpoint("/login") {
     override suspend fun RoutingContext.secureBody(username: String, password: String) {
         // Find the user
-        val user = ServerDatabase { User.findById(username) }
+        val user = ServerDatabase { User.findById(username.lowercase()) }
         if (user == null) {
             respondFailure(Errors.WrongCredentials)
             return

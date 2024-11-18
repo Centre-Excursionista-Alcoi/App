@@ -15,7 +15,8 @@ import org.centrexcursionistalcoi.app.validation.isValidEmail
 object RegisterEndpoint: BasicAuthEndpoint("/register") {
     override suspend fun RoutingContext.secureBody(username: String, password: String) {
         // Validate the email
-        if (!username.isValidEmail) {
+        val email = username.lowercase()
+        if (!email.isValidEmail) {
             respondFailure(Errors.InvalidEmail)
             return
         }
@@ -26,7 +27,7 @@ object RegisterEndpoint: BasicAuthEndpoint("/register") {
         }
 
         // Make sure the user doesn't exist
-        val userExists = ServerDatabase { User.findById(username) != null }
+        val userExists = ServerDatabase { User.findById(email) != null }
         if (userExists) {
             respondFailure(Errors.UserAlreadyExists)
             return
@@ -44,7 +45,7 @@ object RegisterEndpoint: BasicAuthEndpoint("/register") {
         val passwordHash = Passwords.hash(password, passwordSalt)
 
         ServerDatabase {
-            User.new(username) {
+            User.new(email) {
                 name = body.name
                 familyName = body.familyName
                 nif = body.nif
