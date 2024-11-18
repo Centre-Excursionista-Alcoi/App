@@ -35,13 +35,15 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
+import org.centrexcursionistalcoi.app.endpoints.status.PingEndpoint
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Routing")
 
 private val endpoints: List<Endpoint> = listOf(
     RootEndpoint,
-    LogoutEndpoint
+    LogoutEndpoint,
+    PingEndpoint
 )
 
 private val basicAuthEndpoints: List<BasicAuthEndpoint> = listOf(
