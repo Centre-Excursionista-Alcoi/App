@@ -14,7 +14,7 @@ version = System.getenv("VERSION") ?: "development"
 
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+    // applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
 dependencies {
