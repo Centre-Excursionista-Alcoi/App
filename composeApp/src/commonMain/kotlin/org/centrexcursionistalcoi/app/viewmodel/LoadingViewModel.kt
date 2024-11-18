@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.auth.AccountManager
@@ -30,14 +31,20 @@ class LoadingViewModel : ViewModel() {
                 _serverAvailable.emit(true)
             }
 
-            val account = AccountManager.get()
-            if (account != null) {
-                // Login again to refresh the token
-                AuthBackend.login(account.first.email, account.second)
+            try {
+                val account = AccountManager.get()
+                if (account != null) {
+                    // Login again to refresh the token
+                    AuthBackend.login(account.first.email, account.second)
 
-                navController.navigate(Home)
-            } else {
-                navController.navigate(Login)
+                    uiThread { navController.navigate(Home) }
+                } else {
+                    uiThread { navController.navigate(Login) }
+                }
+            } catch (e: Exception) {
+                Napier.e(e) { "Could not log in." }
+
+                uiThread { navController.navigate(Login) }
             }
         }
     }
