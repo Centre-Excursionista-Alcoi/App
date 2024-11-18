@@ -61,8 +61,8 @@ jobs:
       - name: Update version name
         run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
 
-      - name: Package release distribution
-        run: ./gradlew :composeApp:packageReleaseExe
+      - name: Package distribution
+        run: ./gradlew :composeApp:packageExe
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -98,8 +98,8 @@ jobs:
       - name: Update version name
         run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
 
-      - name: Package release distribution
-        run: ./gradlew :composeApp:packageReleaseDeb
+      - name: Package distribution
+        run: ./gradlew :composeApp:packageDeb
 
       - name: Release
         uses: softprops/action-gh-release@v2
