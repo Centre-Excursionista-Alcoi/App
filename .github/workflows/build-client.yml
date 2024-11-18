@@ -36,7 +36,7 @@ jobs:
 
   build-windows:
     name: Build for Windows
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     needs: update-version-name
     if: always()
@@ -62,7 +62,7 @@ jobs:
         run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
 
       - name: Package distribution
-        run: ./gradlew :composeApp:packageExe
+        run: ./gradlew :composeApp:packageDistributionForCurrentOS
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -99,7 +99,7 @@ jobs:
         run: python ./composeApp/scripts/updateVersionName.py --name=${{ github.event.release.name }}
 
       - name: Package distribution
-        run: ./gradlew :composeApp:packageDeb
+        run: ./gradlew :composeApp:packageDistributionForCurrentOS
 
       - name: Release
         uses: softprops/action-gh-release@v2
