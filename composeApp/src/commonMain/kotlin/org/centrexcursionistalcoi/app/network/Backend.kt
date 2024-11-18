@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
+import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -167,4 +168,26 @@ object Backend {
         path: String,
         block: HttpRequestBuilder.() -> Unit = {}
     ): HttpResponse = request(HttpMethod.Delete, path, null, block)
+
+    /**
+     * Makes a ping request to the server.
+     * @return `true` if the server is reachable, `false` otherwise.
+     */
+    suspend fun ping(onError: (suspend (body: String?, error: Exception?) -> Unit)? = null): Boolean {
+        try {
+            val response = get("/ping")
+            val body = response.bodyAsText()
+            if (body == "pong") {
+                return true
+            } else {
+                Napier.e { "Server answered unexpectedly. Body: $body" }
+                onError?.invoke(body, null)
+                return false
+            }
+        } catch (e: Exception) {
+            Napier.e(e) { "Could not ping server." }
+            onError?.invoke(null, e)
+            return false
+        }
+    }
 }
