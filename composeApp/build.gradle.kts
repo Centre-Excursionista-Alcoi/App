@@ -70,6 +70,14 @@ kotlin {
         binaries.executable()
     }
 
+    targets.configureEach {
+        compilations.configureEach {
+            compileTaskProvider.get().compilerOptions {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
+            }
+        }
+    }
+
     sourceSets {
         val desktopMain by getting
 
