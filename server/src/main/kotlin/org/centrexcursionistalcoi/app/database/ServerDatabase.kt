@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.database
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.centrexcursionistalcoi.app.database.table.ItemsTable
@@ -17,7 +19,16 @@ import org.slf4j.LoggerFactory
 object ServerDatabase {
     private val logger = LoggerFactory.getLogger(ServerDatabase::class.java)
 
-    private var instance: Database? = null
+    private var url: String = "jdbc:h2:file:./CEA"
+    private var driver: String = "org.h2.Driver"
+    private var username: String = ""
+    private var password: String = ""
+
+    private val instance: Database by lazy {
+        Database.connect(url, driver, username, password)
+    }
+
+    private val databaseMutex = Semaphore(1)
 
     private val tables = listOf<Table>(
         UsersTable,
@@ -35,7 +46,10 @@ object ServerDatabase {
         password: String = ""
     ) {
         logger.info("Initializing database at $url with $driver...")
-        instance = Database.connect(url, driver, username, password)
+        this.url = url
+        this.driver = driver
+        this.username = username
+        this.password = password
 
         invoke {
             for (table in tables) {
@@ -46,10 +60,11 @@ object ServerDatabase {
     }
 
     suspend operator fun <R> invoke(block: () -> R): R {
-        check(instance != null) { "Database is not initialized." }
         return withContext(Dispatchers.IO) {
-            transaction(instance) {
-                block()
+            databaseMutex.withPermit {
+                transaction(instance) {
+                    block()
+                }
             }
         }
     }
