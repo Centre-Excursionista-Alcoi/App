@@ -1,14 +1,19 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.PreferencesSettings
+import com.russhwolf.settings.coroutines.getStringOrNullFlow
+import java.util.prefs.Preferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.zip
-import org.centrexcursionistalcoi.app.settings.settings
 
 @OptIn(ExperimentalSettingsApi::class)
 actual object AccountManager {
     private const val KEY_EMAIL = "email"
     private const val KEY_PASSWORD = "password"
+
+    private val preferences = Preferences.userRoot().node("org.centrexcursionistalcoi.app")
+    private val settings = PreferencesSettings(preferences)
 
     private val emailFlow = settings.getStringOrNullFlow(KEY_EMAIL)
     private val passwordFlow = settings.getStringOrNullFlow(KEY_PASSWORD)
