@@ -16,7 +16,6 @@ fun Application.installAuthentication() {
         basic(BASIC_AUTH_NAME) {
             realm = "Access to endpoints with basic auth"
             validate { credentials ->
-                logger.debug("Got request with credentials: ${credentials.name} :: ${credentials.password}")
                 if (credentials.name.isNotBlank() && credentials.password.isNotBlank()) {
                     credentials
                 } else {
