@@ -162,7 +162,7 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
             )
             PlatformFormField(
                 value = nif,
-                onValueChange = { nif = it; viewModel.clearError() },
+                onValueChange = { nif = it.uppercase(); viewModel.clearError() },
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
