@@ -13,7 +13,7 @@ abstract class AuthException(code: Int?, response: String): ServerException(code
         fun fromCode(code: Int?): ServerException? {
             return when (code) {
                 Errors.WrongCredentials.code -> WrongCredentials()
-                Errors.UserNotConfirmed.code -> WrongCredentials()
+                Errors.UserNotConfirmed.code -> UserNotConfirmed()
                 else -> null
             }
         }
