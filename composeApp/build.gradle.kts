@@ -188,7 +188,7 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(STRING, "VERSION", appVersion)
 
-        buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "ceaapp.escalaralcoiaicomtat.org")
+        buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "app.cea.escalaralcoiaicomtat.org")
         buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "443")
         buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "true")
     }
