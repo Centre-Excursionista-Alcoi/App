@@ -232,8 +232,14 @@ class HomeViewModel : ViewModel() {
                 when (booking) {
                     is ItemLendingD -> InventoryBackend.markTaken(booking.id!!)
                     is SpaceBookingD -> {
-                        val keyId = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int
-                        SpacesBackend.markTaken(booking.id!!, keyId)
+                        val space = spaces.value?.find { it.id == booking.spaceId } ?: error("Space not found")
+                        val keys = space.keys?.takeUnless { it.isEmpty() }
+                        if (keys != null) {
+                            val keyId = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int
+                            SpacesBackend.markTaken(booking.id!!, keyId)
+                        } else {
+                            SpacesBackend.markTaken(booking.id!!)
+                        }
                     }
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }

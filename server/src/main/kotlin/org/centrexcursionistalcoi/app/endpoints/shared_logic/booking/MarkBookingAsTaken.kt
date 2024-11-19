@@ -15,6 +15,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, EntityClass : IntEntityClass<Entity>> RoutingContext.markBookingAsTaken(
     user: User,
     entityClass: EntityClass,
+    extraBookingValidations: suspend RoutingContext.(Entity) -> Boolean = { true },
     extraDatabaseUpdates: (Entity) -> Unit = {}
 ) {
     // Verify that the user is admin
@@ -43,6 +44,11 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     // Verify that the booking is not already taken
     if (booking.takenAt != null) {
         respondFailure(Errors.InvalidRequest)
+        return
+    }
+
+    // Any extra validations to take into account
+    if (!extraBookingValidations(booking)) {
         return
     }
 

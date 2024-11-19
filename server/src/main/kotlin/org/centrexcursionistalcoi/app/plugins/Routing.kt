@@ -39,6 +39,7 @@ import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkReturnedEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenKeyEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingsListEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceCreateEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceEndpoint
@@ -95,6 +96,7 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     SpaceBookingsListEndpoint,
     SpaceBookingConfirmEndpoint,
     SpaceBookingMarkTakenEndpoint,
+    SpaceBookingMarkTakenKeyEndpoint,
     SpaceBookingMarkReturnedEndpoint
 )
 

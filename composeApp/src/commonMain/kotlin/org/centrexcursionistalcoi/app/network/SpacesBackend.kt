@@ -47,6 +47,10 @@ object SpacesBackend {
         path = "/spaces/bookings/$bookingId/confirm"
     )
 
+    suspend fun markTaken(bookingId: Int) = Backend.post(
+        path = "/spaces/bookings/$bookingId/taken"
+    )
+
     suspend fun markTaken(bookingId: Int, keyId: Int) = Backend.post(
         path = "/spaces/bookings/$bookingId/taken/$keyId"
     )

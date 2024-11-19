@@ -56,4 +56,10 @@ object Errors {
 
     @Serializable
     data object BookingAlreadyReturned : ErrorResponse(18, "Booking already returned", 409 /* Conflict */)
+
+    @Serializable
+    data object SpaceWithoutKeys : ErrorResponse(19, "The space doesn't have any defined key", 406 /* Not Acceptable */)
+
+    @Serializable
+    data object KeyNotSpecified : ErrorResponse(20, "The space requires a key to be given")
 }

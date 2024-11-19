@@ -10,8 +10,10 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.endpoints.shared_logic.booking.markBookingAsTaken
 import org.centrexcursionistalcoi.app.server.response.Errors
 
-object SpaceBookingMarkTakenEndpoint : SecureEndpoint("/spaces/bookings/{id}/taken") {
+object SpaceBookingMarkTakenKeyEndpoint : SecureEndpoint("/spaces/bookings/{id}/taken/{keyId}") {
     override suspend fun RoutingContext.secureBody(user: User) {
+        var key: SpaceKey? = null
+
         markBookingAsTaken(
             user,
             SpaceBooking,
@@ -20,11 +22,24 @@ object SpaceBookingMarkTakenEndpoint : SecureEndpoint("/spaces/bookings/{id}/tak
                     SpaceKey.find { SpaceKeysTable.space eq booking.space.id }.count()
                 }
                 if (spaceKeysCount <= 0) {
-                    true
-                } else {
-                    respondFailure(Errors.KeyNotSpecified)
+                    respondFailure(Errors.SpaceWithoutKeys)
                     false
+                } else {
+                    val keyId = call.parameters["keyId"]?.toIntOrNull()
+                    if (keyId == null) {
+                        respondFailure(Errors.InvalidRequest)
+                        return@markBookingAsTaken false
+                    }
+                    key = ServerDatabase { SpaceKey.findById(keyId) }
+                    if (key == null) {
+                        respondFailure(Errors.ObjectNotFound)
+                        return@markBookingAsTaken false
+                    }
+                    true
                 }
+            },
+            extraDatabaseUpdates = {
+                it.key = key!!
             }
         )
     }
