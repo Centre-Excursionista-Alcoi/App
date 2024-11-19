@@ -35,6 +35,9 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceCreateEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceUpdateEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpacesListEndpoint
 import org.centrexcursionistalcoi.app.endpoints.status.PingEndpoint
 import org.slf4j.LoggerFactory
 
@@ -74,7 +77,11 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     LendingsEndpoint,
     ConfirmEndpoint,
     MarkTakenEndpoint,
-    MarkReturnedEndpoint
+    MarkReturnedEndpoint,
+
+    SpacesListEndpoint,
+    SpaceCreateEndpoint,
+    SpaceUpdateEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {
