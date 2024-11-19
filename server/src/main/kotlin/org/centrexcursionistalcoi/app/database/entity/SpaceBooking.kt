@@ -31,8 +31,8 @@ class SpaceBooking(id: EntityID<Int>) : BookingEntity<SpaceBookingD>(id) {
     override fun serializable(): SpaceBookingD = SpaceBookingD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
-        from = from.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-        to = to.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
+        from = from.atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
+        to = to.atTime(23, 59, 59).toEpochSecond(ZoneOffset.UTC) * 1000,
         userId = user.id.value,
         spaceId = space.id.value,
         confirmed = confirmed,
