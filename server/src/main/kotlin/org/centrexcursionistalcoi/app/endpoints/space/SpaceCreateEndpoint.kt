@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceImage
+import org.centrexcursionistalcoi.app.database.entity.SpaceKey
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
@@ -42,6 +43,13 @@ object SpaceCreateEndpoint : SecureEndpoint("/spaces", HttpMethod.Post) {
                 SpaceImage.new {
                     this.space = space
                     this.image = imageBytes
+                }
+            }
+            for (key in body.keys.orEmpty()) {
+                SpaceKey.new {
+                    this.space = space
+                    this.name = key.name
+                    this.description = key.description
                 }
             }
         }

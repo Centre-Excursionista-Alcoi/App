@@ -8,7 +8,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class Lending(id: EntityID<Int>) : BookingEntity(id) {
+class Lending(id: EntityID<Int>) : BookingEntity<ItemLendingD>(id) {
     companion object : IntEntityClass<Lending>(LendingsTable)
 
     val createdAt by LendingsTable.createdAt
@@ -23,7 +23,7 @@ class Lending(id: EntityID<Int>) : BookingEntity(id) {
     override var takenAt by LendingsTable.takenAt
     override var returnedAt by LendingsTable.returnedAt
 
-    fun serializable() = ItemLendingD(
+    override fun serializable() = ItemLendingD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
         userId = user.id.value,

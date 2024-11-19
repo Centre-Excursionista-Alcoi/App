@@ -3,12 +3,13 @@ package org.centrexcursionistalcoi.app.database.entity
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.database.common.SerializableEntity
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class ItemType(id: EntityID<Int>): IntEntity(id) {
+class ItemType(id: EntityID<Int>): IntEntity(id), SerializableEntity<ItemTypeD> {
     companion object : IntEntityClass<ItemType>(ItemTypesTable)
 
     val createdAt by ItemTypesTable.createdAt
@@ -24,7 +25,7 @@ class ItemType(id: EntityID<Int>): IntEntity(id) {
     var section by Section referencedOn ItemTypesTable.section
 
     @ExperimentalEncodingApi
-    fun serializable(): ItemTypeD = ItemTypeD(
+    override fun serializable(): ItemTypeD = ItemTypeD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
         title = title,

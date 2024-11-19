@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.data
 
-interface DatabaseData {
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface DatabaseData {
     val id: Int?
 }

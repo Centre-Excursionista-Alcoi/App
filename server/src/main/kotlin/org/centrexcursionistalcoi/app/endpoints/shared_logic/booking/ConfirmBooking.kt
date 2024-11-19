@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.endpoints.shared_logic.booking
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.RoutingContext
+import org.centrexcursionistalcoi.app.data.IBookingD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.User
@@ -10,7 +11,7 @@ import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoin
 import org.centrexcursionistalcoi.app.server.response.Errors
 import org.jetbrains.exposed.dao.IntEntityClass
 
-suspend fun <Entity: BookingEntity, EntityClass: IntEntityClass<Entity>> RoutingContext.confirmBooking(
+suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, EntityClass : IntEntityClass<Entity>> RoutingContext.confirmBooking(
     user: User,
     entityClass: EntityClass
 ) {

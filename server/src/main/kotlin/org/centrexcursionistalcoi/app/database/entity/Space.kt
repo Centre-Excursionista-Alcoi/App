@@ -4,8 +4,9 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.data.Address
 import org.centrexcursionistalcoi.app.data.Location
-import org.centrexcursionistalcoi.app.data.Serializable
 import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.database.common.SerializableEntity
+import org.centrexcursionistalcoi.app.database.table.SpaceKeysTable
 import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.centrexcursionistalcoi.app.utils.serializable
@@ -13,7 +14,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class Space(id: EntityID<Int>) : IntEntity(id), Serializable<SpaceD> {
+class Space(id: EntityID<Int>) : IntEntity(id), SerializableEntity<SpaceD> {
     companion object : IntEntityClass<Space>(SpacesTable)
 
     val createdAt by SpacesTable.createdAt
@@ -67,6 +68,8 @@ class Space(id: EntityID<Int>) : IntEntity(id), Serializable<SpaceD> {
         },
         images = SpaceImage.find { SpacesImagesTable.space eq id }
             .map { it.image }
-            .map { Base64.encode(it) }
+            .map { Base64.encode(it) },
+        keys = SpaceKey.find { SpaceKeysTable.space eq id }
+            .map(SpaceKey::serializable)
     )
 }

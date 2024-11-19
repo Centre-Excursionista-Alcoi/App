@@ -9,7 +9,9 @@ import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceImage
+import org.centrexcursionistalcoi.app.database.entity.SpaceKey
 import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.database.table.SpaceKeysTable
 import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
@@ -58,6 +60,26 @@ object SpaceUpdateEndpoint : SecureEndpoint("/spaces", HttpMethod.Patch) {
                             SpaceImage.new {
                                 this.space = this@apply
                                 this.image = image
+                            }
+                        }
+                    }
+
+                    // Update keys
+                    val bodyKeys = body.keys.orEmpty()
+                    val spaceKeys = SpaceKey.find { SpaceKeysTable.space eq id }
+                    for (key in spaceKeys) {
+                        val isKeyInBody = bodyKeys.find { it.name == key.name } != null
+                        if (!isKeyInBody) {
+                            key.delete()
+                        }
+                    }
+                    for (key in bodyKeys) {
+                        val isKeyInSpace = spaceKeys.find { it.name == key.name } != null
+                        if (!isKeyInSpace) {
+                            SpaceKey.new {
+                                this.space = this@apply
+                                this.name = key.name
+                                this.description = key.description
                             }
                         }
                     }

@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class SpaceBooking(id: EntityID<Int>) : BookingEntity(id) {
+class SpaceBooking(id: EntityID<Int>) : BookingEntity<SpaceBookingD>(id) {
     companion object : IntEntityClass<SpaceBooking>(SpaceBookingsTable)
 
     val createdAt by SpaceBookingsTable.createdAt
@@ -28,7 +28,7 @@ class SpaceBooking(id: EntityID<Int>) : BookingEntity(id) {
     var space by Space referencedOn SpaceBookingsTable.space
     override var user by User referencedOn SpaceBookingsTable.user
 
-    fun serializable(): SpaceBookingD = SpaceBookingD(
+    override fun serializable(): SpaceBookingD = SpaceBookingD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
         from = from.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
