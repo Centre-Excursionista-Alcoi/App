@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.network.InventoryBackend
@@ -24,8 +25,11 @@ class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
     val userData get() = _userData.asStateFlow()
 
-    private val _bookings = MutableStateFlow<List<ItemLendingD>?>(null)
-    val bookings get() = _bookings.asStateFlow()
+    private val _itemBookings = MutableStateFlow<List<ItemLendingD>?>(null)
+    val itemBookings get() = _itemBookings.asStateFlow()
+
+    private val _spaceBookings = MutableStateFlow<List<SpaceBookingD>?>(null)
+    val spaceBookings get() = _spaceBookings.asStateFlow()
 
 
     private val _availableItems = MutableStateFlow<List<ItemD>?>(null)
@@ -86,7 +90,7 @@ class HomeViewModel : ViewModel() {
             _items.emit(items)
 
             val bookings = InventoryBackend.listBookings()
-            _bookings.emit(bookings)
+            _itemBookings.emit(bookings)
 
             val allBookings = InventoryBackend.allBookings()
             _allBookings.emit(allBookings)
@@ -96,6 +100,9 @@ class HomeViewModel : ViewModel() {
 
             val spaces = SpacesBackend.list()
             _spaces.emit(spaces)
+
+            val spaceBookings = SpacesBackend.listBookings()
+            _spaceBookings.emit(spaceBookings)
         }
     }
 

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.server.request.DateRangeRequest
 
@@ -31,4 +32,9 @@ object SpacesBackend {
         body = DateRangeRequest(from, to),
         bodySerializer = DateRangeRequest.serializer()
     )
+
+    /**
+     * Lists all the bookings made by the user.
+     */
+    suspend fun listBookings() = Backend.get("/spaces/bookings", ListSerializer(SpaceBookingD.serializer()))
 }

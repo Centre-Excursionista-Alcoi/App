@@ -42,7 +42,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
-        val bookings by viewModel.bookings.collectAsState()
+        val itemBookings by viewModel.itemBookings.collectAsState()
+        val spaceBookings by viewModel.spaceBookings.collectAsState()
 
         val usersList by viewModel.usersList.collectAsState()
         val updatingUser by viewModel.updatingUser.collectAsState()
@@ -98,7 +99,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (page) {
-                        IDX_HOME -> HomePage(bookings)
+                        IDX_HOME -> HomePage(itemBookings, spaceBookings, spaces)
                         IDX_RESERVE -> ReservationPage(
                             itemTypes,
                             availableItems,
