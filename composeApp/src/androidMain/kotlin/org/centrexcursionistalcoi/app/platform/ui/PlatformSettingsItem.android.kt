@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 @Composable
 actual fun PlatformSettingsItem(
     title: String,
-    icon: ImageVector,
     modifier: Modifier,
+    icon: ImageVector?,
     summary: String?,
     onClick: (() -> Unit)?
 ) {
@@ -20,6 +20,6 @@ actual fun PlatformSettingsItem(
         headlineContent = { Text(title) },
         modifier = modifier.clickable(enabled = onClick != null) { onClick?.invoke() },
         supportingContent = if (summary != null) { { Text(summary) } } else { null },
-        leadingContent = { Icon(icon, summary) }
+        leadingContent = if (icon != null) { { Icon(icon, summary) } } else { null }
     )
 }

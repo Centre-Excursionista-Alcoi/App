@@ -7,8 +7,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 @Composable
 expect fun PlatformSettingsItem(
     title: String,
-    icon: ImageVector,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
     summary: String? = null,
     onClick: (() -> Unit)? = null
 )

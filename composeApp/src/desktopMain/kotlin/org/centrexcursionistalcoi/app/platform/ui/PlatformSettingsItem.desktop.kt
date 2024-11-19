@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 actual fun PlatformSettingsItem(
     title: String,
-    icon: ImageVector,
     modifier: Modifier,
+    icon: ImageVector?,
     summary: String?,
     onClick: (() -> Unit)?
 ) {
@@ -28,12 +28,14 @@ actual fun PlatformSettingsItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Spacer(Modifier.width(16.dp))
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            tint = getPlatformTextStyles().label.color
-        )
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                tint = getPlatformTextStyles().label.color
+            )
+        }
         Column(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         ) {
