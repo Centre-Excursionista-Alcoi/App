@@ -13,6 +13,7 @@ data class SpaceD(
     val externalPrice: MoneyD? = null,
     val location: Location? = null,
     val address: Address? = null,
+    val images: List<String>? = null
 ): DatabaseData, Validator {
     override fun validate(): Boolean = name.isNotBlank()
 }

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 object SpacesImagesTable : UUIDTable() {
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
 
-    val image = binary("image").nullable()
+    val image = binary("image")
 
     val space = reference("space_id", SpacesTable, onDelete = ReferenceOption.CASCADE)
 }
