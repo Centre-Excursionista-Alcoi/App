@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.network
 
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.server.request.DateRangeRequest
 
 object SpacesBackend {
     suspend fun list() = Backend.get("/spaces", ListSerializer(SpaceD.serializer()))
@@ -23,5 +24,11 @@ object SpacesBackend {
     suspend fun availability(from: Long, to: Long) = Backend.get(
         "/spaces/availability?from=${from}&to=${to}",
         ListSerializer(SpaceD.serializer())
+    )
+
+    suspend fun book(spaceId: Int, from: Long, to: Long) = Backend.post(
+        path = "/spaces/$spaceId/book",
+        body = DateRangeRequest(from, to),
+        bodySerializer = DateRangeRequest.serializer()
     )
 }

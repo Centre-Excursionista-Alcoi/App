@@ -35,6 +35,7 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceCreateEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceUpdateEndpoint
@@ -85,7 +86,8 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     SpacesListEndpoint,
     SpaceCreateEndpoint,
     SpaceUpdateEndpoint,
-    SpacesAvailabilityEndpoint
+    SpacesAvailabilityEndpoint,
+    SpaceBookEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {

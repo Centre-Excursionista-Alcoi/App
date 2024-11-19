@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SpaceD
@@ -13,6 +12,8 @@ import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.utils.atEndOfDayInMilliseconds
+import org.centrexcursionistalcoi.app.utils.atStartOfDayInMilliseconds
 
 class ReservationViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
@@ -54,13 +55,17 @@ class ReservationViewModel : ViewModel() {
         launch {
             if (itemIds.isNotEmpty()) {
                 InventoryBackend.book(
-                    from = from.atStartOfDayIn(TimeZone.currentSystemDefault()),
-                    to = to.atStartOfDayIn(TimeZone.currentSystemDefault()),
+                    from = from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
+                    to = to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault()),
                     itemIds = itemIds
                 )
             }
             if (spaceId != null) {
-                // TODO: Book space
+                SpacesBackend.book(
+                    spaceId = spaceId,
+                    from = from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
+                    to = to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault())
+                )
             }
             uiThread { onBookingComplete() }
         }
