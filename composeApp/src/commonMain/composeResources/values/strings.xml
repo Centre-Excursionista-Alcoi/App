@@ -135,6 +135,9 @@
     <string name="spaces_city">City</string>
     <string name="spaces_postal_code">Postal Code</string>
     <string name="spaces_country">Country</string>
+    <string name="spaces_keys">Access Keys</string>
+    <string name="spaces_key_name">Key name</string>
+    <string name="spaces_key_description">Key description</string>
 
     <string name="reservation_title_draft">Reservation (draft)</string>
     <string name="reservation_from">From: %1$s</string>

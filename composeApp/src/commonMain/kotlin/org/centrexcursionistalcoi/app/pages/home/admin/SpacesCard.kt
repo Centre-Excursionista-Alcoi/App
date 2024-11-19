@@ -2,12 +2,17 @@ package org.centrexcursionistalcoi.app.pages.home.admin
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +38,7 @@ import org.centrexcursionistalcoi.app.data.Address
 import org.centrexcursionistalcoi.app.data.Location
 import org.centrexcursionistalcoi.app.data.MoneyD
 import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.data.SpaceKeyD
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
@@ -222,6 +228,63 @@ fun SpacesCard(
             label = stringResource(Res.string.spaces_country),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
             enabled = !isCreating
+        )
+
+        HorizontalDivider()
+
+        BasicText(
+            text = stringResource(Res.string.spaces_keys),
+            style = getPlatformTextStyles().label,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+        )
+        for (key in data.keys.orEmpty()) {
+            PlatformCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.delete),
+                        modifier = Modifier.padding(8.dp).clickable {
+                            showingCreationDialog = data.copy(
+                                keys = data.keys?.toMutableList()?.apply { remove(key) }
+                            )
+                        }
+                    )
+                }
+                PlatformFormField(
+                    value = key.name,
+                    onValueChange = { value ->
+                        showingCreationDialog = data.copy(
+                            keys = data.keys?.toMutableList()?.apply { set(indexOf(key), key.copy(name = value)) }
+                        )
+                    },
+                    label = stringResource(Res.string.spaces_key_name),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                )
+                PlatformTextArea(
+                    value = key.description ?: "",
+                    onValueChange = { value ->
+                        showingCreationDialog = data.copy(
+                            keys = data.keys?.toMutableList()?.apply { set(indexOf(key), key.copy(description = value.takeIf { it.isNotBlank() })) }
+                        )
+                    },
+                    label = stringResource(Res.string.spaces_key_description),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                )
+            }
+        }
+        PlatformButton(
+            text = stringResource(Res.string.create),
+            onClick = {
+                showingCreationDialog = data.copy(
+                    keys = data.keys.orEmpty().toMutableList().apply { add(SpaceKeyD()) }
+                )
+            },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)
         )
     }
 
