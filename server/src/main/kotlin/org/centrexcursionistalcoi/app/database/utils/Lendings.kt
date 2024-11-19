@@ -17,7 +17,7 @@ import org.jetbrains.exposed.sql.and
  *
  * **Must be called within a transaction.**
  */
-fun lendingsForDates(from: LocalDateTime, to: LocalDateTime): List<ItemLendingD> {
+fun itemLendingsForDates(from: LocalDateTime, to: LocalDateTime): List<ItemLendingD> {
     return Lending.find {
         // (StartA <= EndB) and (EndA >= StartB)
         // Proof: https://stackoverflow.com/a/325964
@@ -36,7 +36,7 @@ fun itemsAvailableForDates(from: LocalDateTime, to: LocalDateTime): List<ItemD> 
     // Fetch all items in the database
     val allItems = Item.all().map(Item::serializable)
     // Fetch the existing lendings that overlap with the requested period
-    val lendingsIds = lendingsForDates(from, to).mapNotNull { it.id }
+    val lendingsIds = itemLendingsForDates(from, to).mapNotNull { it.id }
     // Fetch all the items booked for the requested period
     val usedItemsIds = LendingItem.find { LendingItemsTable.lending inList lendingsIds }
         .map { it.item.id.value }
