@@ -35,19 +35,6 @@ object FCM {
         messaging = FirebaseMessaging.getInstance(app)
     }
 
-    private fun topic(user: User): String {
-        val id = user.id.value
-        val prefix = id
-            .substringBefore('@')
-            .lowercase()
-            .replace('.', '_')
-        val suffix = id
-            .substringAfter('@')
-            .hashCode()
-
-        return "$prefix$suffix"
-    }
-
     /**
      * Send a notification to a user.
      * It will include [data] serialized as Json using [serializer] in the `data` field.
@@ -62,7 +49,7 @@ object FCM {
      * @throws FirebaseMessagingException If an error occurs while sending the message
      */
     fun <DataType> notify(user: User, type: NotificationType, data: DataType, serializer: KSerializer<DataType>): String {
-        val topic = topic(user)
+        val topic = PushTopic.topic(user.id.value)
         val json = Json.encodeToString(serializer, data)
 
         val message = Message.builder()
