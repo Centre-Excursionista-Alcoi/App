@@ -9,6 +9,10 @@ import org.centrexcursionistalcoi.app.database.table.ItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.database.table.SectionsTable
+import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
+import org.centrexcursionistalcoi.app.database.table.SpaceKeysTable
+import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
+import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.centrexcursionistalcoi.app.database.table.UsersTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -36,7 +40,11 @@ object ServerDatabase {
         ItemsTable,
         LendingsTable,
         LendingItemsTable,
-        SectionsTable
+        SectionsTable,
+        SpacesTable,
+        SpacesImagesTable,
+        SpaceKeysTable,
+        SpaceBookingsTable
     )
 
     suspend fun initialize(
