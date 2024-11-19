@@ -95,6 +95,19 @@ fun BookingsCard(
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                     )
+
+                    if (booking is SpaceBookingD) {
+                        val space = spaces?.find { it.id == booking.spaceId }
+                        val key = space?.keys?.find { it.id == booking.keyId }
+                        if (space != null && key != null) {
+                            BasicText(
+                                text = stringResource(Res.string.bookings_taken_key, key.name),
+                                style = getPlatformTextStyles().heading,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            )
+                        }
+                    }
+
                     if (booking.returnedAt == null) {
                         BasicText(
                             text = stringResource(Res.string.bookings_not_returned),

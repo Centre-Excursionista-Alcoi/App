@@ -104,6 +104,7 @@
     <string name="bookings_items">Items:</string>
     <string name="bookings_items_count">%1$d Items</string>
     <string name="bookings_taken_at">Taken at: %1$s</string>
+    <string name="bookings_taken_key">Key taken: %1$s</string>
     <string name="bookings_not_taken">Not taken yet</string>
     <string name="bookings_returned_at">Returned at: %1$s</string>
     <string name="bookings_not_returned">Not returned yet</string>
