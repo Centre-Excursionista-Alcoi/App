@@ -10,7 +10,12 @@ actual object PlatformLanguage {
     actual val isLanguageFetchSupported: Boolean = true
 
     actual fun getSelectedLanguage(): String? {
-        return LocaleListCompat.getDefault()[0]?.toLanguageTag()
+        val supportedLanguages = languages.map(Locale::forLanguageTag)
+
+        val list = LocaleListCompat.getDefault().let {
+            (0 until it.size()).mapNotNull(it::get)
+        }
+        return list.find { supportedLanguages.contains(it) }?.toLanguageTag()
     }
 
     actual fun changeAppLanguage(language: String) {
