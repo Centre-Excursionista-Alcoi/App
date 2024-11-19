@@ -47,4 +47,19 @@ object Errors {
 
     @Serializable
     data object ObjectNotAvailable : ErrorResponse(15, "Object not available")
+
+    @Serializable
+    data object BookingNotConfirmed : ErrorResponse(16, "Booking not confirmed", 412 /* Conflict */)
+
+    @Serializable
+    data object BookingNotTaken : ErrorResponse(17, "Booking not taken", 409 /* Conflict */)
+
+    @Serializable
+    data object BookingAlreadyReturned : ErrorResponse(18, "Booking already returned", 409 /* Conflict */)
+
+    @Serializable
+    data object SpaceWithoutKeys : ErrorResponse(19, "The space doesn't have any defined key", 406 /* Not Acceptable */)
+
+    @Serializable
+    data object KeyNotSpecified : ErrorResponse(20, "The space requires a key to be given")
 }

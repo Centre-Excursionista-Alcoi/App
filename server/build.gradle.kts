@@ -35,8 +35,12 @@ dependencies {
     implementation(libs.exposed.dao)
     implementation(libs.exposed.javaTime)
     implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.money)
     implementation(libs.h2)
     implementation(libs.postgresql)
+
+    implementation(libs.javax.money.api)
+    implementation(libs.javax.money.impl)
 
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)

@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import kotlinx.serialization.builtins.ListSerializer
-import org.centrexcursionistalcoi.app.server.response.data.SectionD
+import org.centrexcursionistalcoi.app.data.SectionD
 
 object SectionsBackend {
     suspend fun list() = Backend.get("/sections", ListSerializer(SectionD.serializer()))

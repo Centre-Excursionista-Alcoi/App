@@ -10,15 +10,23 @@ data class Reservation(
     /** LocalDate in epoch days */
     val to: Int,
     /** Ids of the selected items separated by , */
-    val selectedItems: String
+    val selectedItems: String,
+    /** The id of the selected space, if any */
+    val selectedSpaceId: Int?
 ) : Route {
-    constructor(from: LocalDate, to: LocalDate, selectedItems: Set<Int>) : this(
+    constructor(from: LocalDate, to: LocalDate, selectedItems: Set<Int>, selectedSpaceId: Int?) : this(
         from.toEpochDays(),
         to.toEpochDays(),
-        selectedItems.joinToString(",")
+        selectedItems.joinToString(","),
+        selectedSpaceId
     )
 
     fun fromDate(): LocalDate = LocalDate.fromEpochDays(from)
     fun toDate(): LocalDate = LocalDate.fromEpochDays(to)
-    fun selectedItemsSet(): Set<Int> = selectedItems.split(",").map { it.toInt() }.toSet()
+    fun selectedItemsSet(): Set<Int> = selectedItems
+        .takeIf { it.isNotBlank() }
+        ?.split(",")
+        .orEmpty()
+        .map(String::toInt)
+        .toSet()
 }

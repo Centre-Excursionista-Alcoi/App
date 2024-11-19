@@ -35,6 +35,17 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkReturnedEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenKeyEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingsListEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceCreateEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceUpdateEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpacesAvailabilityEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpacesListEndpoint
 import org.centrexcursionistalcoi.app.endpoints.status.PingEndpoint
 import org.slf4j.LoggerFactory
 
@@ -74,7 +85,19 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     LendingsEndpoint,
     ConfirmEndpoint,
     MarkTakenEndpoint,
-    MarkReturnedEndpoint
+    MarkReturnedEndpoint,
+
+    SpaceEndpoint,
+    SpacesListEndpoint,
+    SpaceCreateEndpoint,
+    SpaceUpdateEndpoint,
+    SpacesAvailabilityEndpoint,
+    SpaceBookEndpoint,
+    SpaceBookingsListEndpoint,
+    SpaceBookingConfirmEndpoint,
+    SpaceBookingMarkTakenEndpoint,
+    SpaceBookingMarkTakenKeyEndpoint,
+    SpaceBookingMarkReturnedEndpoint
 )
 
 private fun Route.configureEndpoint(endpoint: Endpoint) {

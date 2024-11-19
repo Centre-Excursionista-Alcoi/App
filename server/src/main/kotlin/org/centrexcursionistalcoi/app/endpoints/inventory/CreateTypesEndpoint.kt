@@ -5,13 +5,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
 import kotlin.io.encoding.ExperimentalEncodingApi
+import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 
 object CreateTypesEndpoint : SecureEndpoint("/inventory/types", HttpMethod.Post) {
     @OptIn(ExperimentalEncodingApi::class)

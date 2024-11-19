@@ -1,37 +1,38 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.ZoneId
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
-import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class Lending(id: EntityID<Int>) : IntEntity(id) {
+class Lending(id: EntityID<Int>) : BookingEntity<ItemLendingD>(id) {
     companion object : IntEntityClass<Lending>(LendingsTable)
 
     val createdAt by LendingsTable.createdAt
 
-    var user by User referencedOn LendingsTable.user
+    override var user by User referencedOn LendingsTable.user
 
-    var confirmed by LendingsTable.confirmed
+    override var confirmed by LendingsTable.confirmed
 
-    var from by LendingsTable.from
-    var to by LendingsTable.to
+    override var from by LendingsTable.from
+    override var to by LendingsTable.to
 
-    var takenAt by LendingsTable.takenAt
-    var returnedAt by LendingsTable.returnedAt
+    override var takenAt by LendingsTable.takenAt
+    override var returnedAt by LendingsTable.returnedAt
 
-    fun serializable() = LendingD(
+    override fun serializable() = ItemLendingD(
         id = id.value,
-        createdAt = createdAt.toEpochMilli(),
+        createdAt = createdAt.toKotlinInstant(),
         userId = user.id.value,
         confirmed = confirmed,
-        from = from.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-        to = to.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-        takenAt = takenAt?.toEpochMilli(),
-        returnedAt = returnedAt?.toEpochMilli(),
+        from = from.toKotlinLocalDate(),
+        to = to.toKotlinLocalDate(),
+        takenAt = takenAt?.toKotlinInstant(),
+        returnedAt = returnedAt?.toKotlinInstant(),
         itemIds = LendingItem
             .find { LendingItemsTable.lending eq id }
             .map { it.item.id.value }

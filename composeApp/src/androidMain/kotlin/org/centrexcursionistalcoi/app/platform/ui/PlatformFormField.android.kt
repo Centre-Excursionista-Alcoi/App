@@ -9,7 +9,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -18,9 +22,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import ceaapp.composeapp.generated.resources.Res
-import ceaapp.composeapp.generated.resources.hide_password
-import ceaapp.composeapp.generated.resources.show_password
+import ceaapp.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -35,6 +37,7 @@ actual fun PlatformFormField(
     keyboardType: KeyboardType,
     isPassword: Boolean,
     error: String?,
+    supportingText: String?,
     onSubmit: (() -> Unit)?
 ) {
     val softwareKeyboard = LocalSoftwareKeyboardController.current
@@ -53,7 +56,7 @@ actual fun PlatformFormField(
         enabled = enabled,
         singleLine = true,
         isError = error != null,
-        supportingText = error?.let { { Text(it) } },
+        supportingText = error?.let { { Text(it) } } ?: supportingText?.let { { Text(it) } },
         visualTransformation = if (textVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(
             imeAction = if (onSubmit != null) ImeAction.Go else if (nextFocusRequester != null) ImeAction.Next else ImeAction.Done,

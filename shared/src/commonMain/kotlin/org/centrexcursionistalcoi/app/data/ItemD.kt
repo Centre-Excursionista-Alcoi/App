@@ -1,7 +1,7 @@
-package org.centrexcursionistalcoi.app.server.response.data
+package org.centrexcursionistalcoi.app.data
 
 import kotlinx.serialization.Serializable
-import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
+import org.centrexcursionistalcoi.app.data.enumeration.ItemHealth
 
 @Serializable
 data class ItemD(

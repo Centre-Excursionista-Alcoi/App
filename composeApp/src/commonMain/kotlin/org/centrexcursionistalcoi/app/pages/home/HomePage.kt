@@ -15,25 +15,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
-import org.centrexcursionistalcoi.app.data.fromDate
-import org.centrexcursionistalcoi.app.data.toDate
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.SpaceBookingD
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomePage(bookings: List<LendingD>?) {
+fun HomePage(
+    itemBookings: List<ItemLendingD>?,
+    spaceBookings: List<SpaceBookingD>?,
+    spaces: List<SpaceD>?
+) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         modifier = Modifier.fillMaxSize().padding(8.dp)
     ) {
-        if (bookings != null) {
-            val incompleteBookings = bookings.filter { it.returnedAt == null }
-            val completeBookings = bookings.filter { it.returnedAt != null }
+        if (itemBookings != null && spaceBookings != null) {
+            val incompleteItemBookings = itemBookings.filter { it.returnedAt == null }
+            val completeItemBookings = itemBookings.filter { it.returnedAt != null }
 
-            if (incompleteBookings.isEmpty() && completeBookings.isEmpty()) {
+            val incompleteSpaceBookings = spaceBookings.filter { it.returnedAt == null }
+            val completeSpaceBookings = spaceBookings.filter { it.returnedAt != null }
+
+            if (itemBookings.isEmpty() && spaceBookings.isEmpty()) {
                 item(
                     key = "no-bookings",
                     span = maxGridItemSpan
@@ -41,12 +48,15 @@ fun HomePage(bookings: List<LendingD>?) {
                     BasicText(
                         text = stringResource(Res.string.bookings_no_bookings),
                         modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
-                        style = getPlatformTextStyles().titleRegular.copy(fontSize = 18.sp, textAlign = TextAlign.Center)
+                        style = getPlatformTextStyles().titleRegular.copy(
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center
+                        )
                     )
                 }
             }
 
-            if (incompleteBookings.isNotEmpty()) {
+            if (incompleteItemBookings.isNotEmpty() || incompleteSpaceBookings.isNotEmpty()) {
                 item(
                     key = "incomplete-header",
                     span = maxGridItemSpan
@@ -57,7 +67,7 @@ fun HomePage(bookings: List<LendingD>?) {
                         style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp)
                     )
                 }
-                items(incompleteBookings) { booking ->
+                items(incompleteItemBookings) { booking ->
                     PlatformCard(
                         title = stringResource(Res.string.bookings_items_count, booking.itemIds?.size ?: 0),
                         modifier = Modifier.padding(8.dp)
@@ -79,22 +89,57 @@ fun HomePage(bookings: List<LendingD>?) {
                             )
                         }
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
+                            modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                        )
+                    }
+                }
+                items(
+                    items = incompleteSpaceBookings.map { booking -> booking to spaces?.find { it.id == booking.spaceId } }
+                ) { (booking, space) ->
+                    space ?: return@items
+
+                    PlatformCard(
+                        title = space.name,
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        if (!booking.confirmed) {
+                            BasicText(
+                                text = stringResource(Res.string.bookings_pending_confirmation),
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        } else if (booking.takenAt == null) {
+                            BasicText(
+                                text = stringResource(Res.string.bookings_not_taken),
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        } else if (booking.takenAt != null && booking.returnedAt == null) {
+                            BasicText(
+                                text = stringResource(Res.string.bookings_pending_return),
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                        BasicText(
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
+                            modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
+                        )
+                        BasicText(
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }
                 }
 
-                if (completeBookings.isNotEmpty()) {
+                if (completeItemBookings.isNotEmpty() || completeSpaceBookings.isNotEmpty()) {
                     item(key = "middle-space", contentType = "spacer") { Spacer(Modifier.height(16.dp)) }
                 }
             }
 
-            if (completeBookings.isNotEmpty()) {
+            if (completeItemBookings.isNotEmpty() || completeSpaceBookings.isNotEmpty()) {
                 item(
                     key = "old-header",
                     span = maxGridItemSpan
@@ -105,17 +150,35 @@ fun HomePage(bookings: List<LendingD>?) {
                         style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp)
                     )
                 }
-                items(completeBookings) { booking ->
+                items(completeItemBookings) { booking ->
                     PlatformCard(
                         title = stringResource(Res.string.bookings_items_count, booking.itemIds?.size ?: 0),
                         modifier = Modifier.padding(8.dp)
                     ) {
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
+                            modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                        )
+                    }
+                }
+                items(
+                    items = completeSpaceBookings.map { booking -> booking to spaces?.find { it.id == booking.spaceId } }
+                ) { (booking, space) ->
+                    space ?: return@items
+                    PlatformCard(
+                        title = space.name,
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        BasicText(
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        BasicText(
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }

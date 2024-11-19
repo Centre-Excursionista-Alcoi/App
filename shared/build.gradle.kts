@@ -44,6 +44,7 @@ kotlin {
         commonMain.dependencies {
             // put your Multiplatform dependencies here
             api(libs.kotlinx.serialization.json)
+            api(libs.kotlinx.datetime)
         }
     }
 }

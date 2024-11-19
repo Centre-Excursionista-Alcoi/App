@@ -17,6 +17,12 @@
     <string name="hide_password">Hide Password</string>
     <string name="show_password">Show Password</string>
     <string name="tap_to_open">Tap to open</string>
+    <string name="remove">Remove</string>
+
+    <string name="address_address">Address</string>
+    <string name="address_city">City</string>
+    <string name="address_postal_code">Postal Code</string>
+    <string name="address_country">Country</string>
 
     <string name="login_title">Login</string>
     <string name="login_email">Email</string>
@@ -32,6 +38,7 @@
     <string name="home_welcome">Welcome, %1$s</string>
     <string name="home_available_items">Available Items</string>
     <string name="home_selected_items">Selected Items</string>
+    <string name="home_available_spaces">Available Spaces</string>
     <string name="home_select_date_range">Please, select a date range</string>
     <string name="home_items_selection">Items Selection</string>
 
@@ -97,6 +104,7 @@
     <string name="bookings_items">Items:</string>
     <string name="bookings_items_count">%1$d Items</string>
     <string name="bookings_taken_at">Taken at: %1$s</string>
+    <string name="bookings_taken_key">Key taken: %1$s</string>
     <string name="bookings_not_taken">Not taken yet</string>
     <string name="bookings_returned_at">Returned at: %1$s</string>
     <string name="bookings_not_returned">Not returned yet</string>
@@ -111,14 +119,48 @@
     <string name="bookings_old">Old Bookings</string>
     <string name="bookings_no_bookings">You do not have any booking</string>
 
+    <string name="spaces_title">Spaces</string>
+    <string name="spaces_empty">No spaces found</string>
+    <string name="spaces_create">Create new Space</string>
+    <string name="spaces_name">Name</string>
+    <string name="spaces_description">Description</string>
+    <string name="spaces_images">Images</string>
+    <string name="spaces_capacity">Capacity</string>
+    <string name="spaces_member_price">Member Price (€)</string>
+    <string name="spaces_member_price_info">The price in Euros that each member using the space must pay, per day.</string>
+    <string name="spaces_non_member_price">Non-Member Price (€)</string>
+    <string name="spaces_non_member_price_info">The price in Euros that each person that comes from outside the organization and is using the space must pay, per day.</string>
+    <string name="spaces_latitude">Latitude</string>
+    <string name="spaces_longitude">Longitude</string>
+    <string name="spaces_address">Address</string>
+    <string name="spaces_city">City</string>
+    <string name="spaces_postal_code">Postal Code</string>
+    <string name="spaces_country">Country</string>
+    <string name="spaces_key">Access Key</string>
+    <string name="spaces_keys">Access Keys</string>
+    <string name="spaces_key_name">Key name</string>
+    <string name="spaces_key_description">Key description</string>
+
     <string name="reservation_title_draft">Reservation (draft)</string>
     <string name="reservation_from">From: %1$s</string>
     <string name="reservation_to">To: %1$s</string>
     <string name="reservation_as">Reserving as %1$s for %2$d days</string>
     <string name="reservation_items">Items</string>
     <string name="reservation_no_items">No items selected</string>
-    <string name="reservation_spaces">Spaces</string>
-    <string name="reservation_no_spaces">No spaces selected</string>
+    <string name="reservation_space">Space</string>
+    <string name="reservation_space_price_calculation">This amount is for you to take into account. The payment must be performed outside the app, either by presentially paying, or with a bank transfer.</string>
+    <plurals name="reservation_space_price_members_count">
+        <item quantity="one">%1$d member</item>
+        <item quantity="other">%1$d members</item>
+    </plurals>
+    <plurals name="reservation_space_price_non_members_count">
+        <item quantity="one">%1$d non-member</item>
+        <item quantity="other">%1$d non-members</item>
+    </plurals>
+    <plurals name="reservation_space_price_days">
+        <item quantity="one">%1$s at %2$s pp x %3$d day: %4$s</item>
+        <item quantity="other">%1$s at %2$s pp x %3$d days: %4$s</item>
+    </plurals>
 
     <string name="settings_language">Language</string>
     <string name="settings_language_default">Default</string>
@@ -132,6 +174,8 @@
     <string name="error_email_invalid">Email is not valid.</string>
     <string name="error_passwords_dont_match">Passwords do not match.</string>
     <string name="error_user_not_confirmed">Your account must be confirmed by an administrator first.</string>
+    <string name="error_latitude_not_set">You must set a latitude if a longitude is given.</string>
+    <string name="error_longitude_not_set">You must set a longitude if a latitude is given.</string>
     <string name="error_unknown">Unknown error. Code #%1$d: %2$s</string>
 
     <string name="error_ping_message">Server not available. Please, try again later.</string>

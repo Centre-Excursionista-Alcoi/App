@@ -22,13 +22,13 @@ abstract class Endpoint(
 
     abstract suspend fun RoutingContext.body()
 
-    protected suspend fun RoutingContext.respondSuccess(
+    suspend fun RoutingContext.respondSuccess(
         status: HttpStatusCode = HttpStatusCode.OK
     ) {
         call.respondText("OK", contentType = ContentType.Text.Plain, status = status)
     }
 
-    protected suspend fun <Type> RoutingContext.respondSuccess(
+    suspend fun <Type> RoutingContext.respondSuccess(
         data: Type,
         serializer: SerializationStrategy<Type>,
         status: HttpStatusCode = HttpStatusCode.OK
@@ -38,7 +38,7 @@ abstract class Endpoint(
         call.respondText(json, contentType = ContentType.Application.Json, status = status)
     }
 
-    protected suspend fun RoutingContext.respondFailure(
+    suspend fun RoutingContext.respondFailure(
         error: ErrorResponse
     ) {
         val status = HttpStatusCode.fromValue(error.httpStatusCode)

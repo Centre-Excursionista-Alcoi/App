@@ -4,12 +4,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
+import org.centrexcursionistalcoi.app.data.SectionD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.SectionD
 
 object UpdateSectionEndpoint : SecureEndpoint("/sections", HttpMethod.Patch) {
     override suspend fun RoutingContext.secureBody(user: User) {

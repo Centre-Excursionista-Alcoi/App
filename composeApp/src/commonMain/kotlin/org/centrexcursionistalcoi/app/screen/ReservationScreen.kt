@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,14 +26,18 @@ import ceaapp.composeapp.generated.resources.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Reservation
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.UserD
+import org.centrexcursionistalcoi.app.utils.toStringWithDecimals
 import org.centrexcursionistalcoi.app.viewmodel.ReservationViewModel
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 object ReservationScreen : Screen<Reservation, ReservationViewModel>(::ReservationViewModel) {
@@ -40,15 +46,16 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         val userData by viewModel.userData.collectAsState()
         val itemsState by viewModel.items.collectAsState()
         val typesState by viewModel.types.collectAsState()
+        val spaceState by viewModel.space.collectAsState()
 
         val from = route.fromDate()
         val to = route.toDate()
-        val itemsId = route.selectedItemsSet()
+        val itemsIds = route.selectedItemsSet()
 
         val navController = LocalNavController.current
 
         LaunchedEffect(Unit) {
-            viewModel.load(itemsId)
+            viewModel.load(itemsIds, route.selectedSpaceId)
         }
 
         PlatformScaffold(
@@ -56,25 +63,30 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             title = stringResource(Res.string.reservation_title_draft),
             actions = listOf(
                 Triple(Icons.AutoMirrored.Filled.ArrowRight, stringResource(Res.string.confirm)) {
-                    viewModel.confirm(from, to, itemsId) {
+                    viewModel.confirm(from, to, itemsIds, route.selectedSpaceId) {
                         navController.popBackStack()
                     }
                 }
             )
         ) { paddingValues ->
-            userData?.let { user ->
-                itemsState?.let { items ->
-                    typesState?.let { types ->
-                        Content(paddingValues, user, from, to, items, types)
-                    } ?: run {
-                        PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
-                    }
-                } ?: run {
-                    PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
-                }
-            } ?: run {
-                PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
-            }
+            LoadingContent(paddingValues, userData, from, to, itemsState, typesState, spaceState)
+        }
+    }
+
+    @Composable
+    private fun LoadingContent(
+        paddingValues: PaddingValues,
+        userData: UserD?,
+        from: LocalDate,
+        to: LocalDate,
+        selectedItems: List<ItemD>?,
+        types: List<ItemTypeD>?,
+        space: SpaceD?
+    ) {
+        if (userData == null || selectedItems == null || types == null) {
+            PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
+        } else {
+            Content(paddingValues, userData, from, to, selectedItems, types, space)
         }
     }
 
@@ -85,7 +97,8 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         from: LocalDate,
         to: LocalDate,
         selectedItems: List<ItemD>,
-        types: List<ItemTypeD>
+        types: List<ItemTypeD>,
+        space: SpaceD?
     ) {
         Column(
             modifier = Modifier
@@ -129,16 +142,17 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 ItemsDisplay(selectedItems, types)
             }
 
-            /*BasicText(
-                text = stringResource(Res.string.reservation_spaces),
-                style = getPlatformTextStyles().titleRegular,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-            )
-            BasicText(
-                text = stringResource(Res.string.reservation_no_spaces),
-                style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp, textAlign = TextAlign.Center),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            )*/
+            if (space != null) {
+                BasicText(
+                    text = stringResource(Res.string.reservation_space),
+                    style = getPlatformTextStyles().titleRegular,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                )
+                SpaceDisplay(
+                    space = space,
+                    days = (to - from).days
+                )
+            }
         }
     }
 
@@ -181,6 +195,83 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun SpaceDisplay(space: SpaceD, days: Int) {
+        BasicText(
+            text = space.name,
+            style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+
+        val memberPrice = space.memberPrice
+        val externalPrice = space.externalPrice
+        if (memberPrice != null || externalPrice != null) {
+            var membersCount by remember { mutableStateOf("") }
+            var externalsCount by remember { mutableStateOf("") }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                PlatformFormField(
+                    value = membersCount,
+                    onValueChange = { value ->
+                        val num = value.toUIntOrNull()
+                        if (num != null) {
+                            membersCount = value
+                        }
+                    },
+                    label = "Members",
+                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                )
+                PlatformFormField(
+                    value = externalsCount,
+                    onValueChange = { value ->
+                        val num = value.toUIntOrNull()
+                        if (num != null) {
+                            externalsCount = value
+                        }
+                    },
+                    label = "Non-Members",
+                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                )
+            }
+            if (memberPrice != null) {
+                val count = membersCount.toIntOrNull() ?: 0
+                BasicText(
+                    text = pluralStringResource(
+                        Res.plurals.reservation_space_price_days,
+                        days,
+                        pluralStringResource(Res.plurals.reservation_space_price_members_count, count, count),
+                        memberPrice.amount.toStringWithDecimals(2) + "€",
+                        days,
+                        (memberPrice.amount * count * days).toStringWithDecimals(2) + "€"
+                    ),
+                    style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                )
+            }
+            if (externalPrice != null) {
+                val count = externalsCount.toIntOrNull() ?: 0
+                BasicText(
+                    text = pluralStringResource(
+                        Res.plurals.reservation_space_price_days,
+                        days,
+                        pluralStringResource(Res.plurals.reservation_space_price_members_count, count, count),
+                        externalPrice.amount.toStringWithDecimals(2) + "€",
+                        days,
+                        (externalPrice.amount * count * days).toStringWithDecimals(2) + "€"
+                    ),
+                    style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                )
+            }
+            BasicText(
+                text = stringResource(Res.string.reservation_space_price_calculation),
+                style = getPlatformTextStyles().heading.copy(fontSize = 16.sp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
         }
     }
 }

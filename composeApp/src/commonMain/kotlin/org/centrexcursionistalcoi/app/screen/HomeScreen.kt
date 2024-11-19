@@ -42,7 +42,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
     @Composable
     override fun Content(viewModel: HomeViewModel) {
         val user by viewModel.userData.collectAsState()
-        val bookings by viewModel.bookings.collectAsState()
+        val itemBookings by viewModel.itemBookings.collectAsState()
+        val spaceBookings by viewModel.spaceBookings.collectAsState()
 
         val usersList by viewModel.usersList.collectAsState()
         val updatingUser by viewModel.updatingUser.collectAsState()
@@ -53,9 +54,13 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val items by viewModel.items.collectAsState()
         val creatingItem by viewModel.creatingItem.collectAsState()
         val updatingBooking by viewModel.updatingBooking.collectAsState()
-        val allBookings by viewModel.allBookings.collectAsState()
+        val allItemBookings by viewModel.allItemBookings.collectAsState()
+        val allSpaceBookings by viewModel.allSpaceBookings.collectAsState()
+        val spaces by viewModel.spaces.collectAsState()
+        val creatingSpace by viewModel.creatingSpace.collectAsState()
 
         val availableItems by viewModel.availableItems.collectAsState()
+        val availableSpaces by viewModel.availableSpaces.collectAsState()
 
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState { if (user?.isAdmin == true) (NUM_PAGES + 1) else NUM_PAGES }
@@ -95,8 +100,13 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (page) {
-                        IDX_HOME -> HomePage(bookings)
-                        IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
+                        IDX_HOME -> HomePage(itemBookings, spaceBookings, spaces)
+                        IDX_RESERVE -> ReservationPage(
+                            itemTypes,
+                            availableItems,
+                            availableSpaces,
+                            viewModel::availability
+                        )
                         IDX_SETTINGS -> SettingsPage()
                         IDX_ADMIN -> AdminPage(
                             updatingUser = updatingUser,
@@ -112,11 +122,15 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             items = items,
                             isCreatingItem = creatingItem,
                             onItemOperation = viewModel::createOrUpdate,
-                            allBookings = allBookings,
+                            allItemBookings = allItemBookings,
+                            allSpaceBookings = allSpaceBookings,
                             isUpdatingBooking = updatingBooking,
                             onConfirmBookingRequested = viewModel::confirmBooking,
                             onMarkAsTakenRequested = viewModel::markAsTaken,
-                            onMarkAsReturnedRequested = viewModel::markAsReturned
+                            onMarkAsReturnedRequested = viewModel::markAsReturned,
+                            spaces = spaces,
+                            isCreatingSpace = creatingSpace,
+                            onSpaceOperation = viewModel::createOrUpdate
                         )
                     }
                 }

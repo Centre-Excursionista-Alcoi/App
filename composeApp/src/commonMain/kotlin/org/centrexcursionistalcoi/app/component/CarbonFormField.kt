@@ -31,6 +31,7 @@ fun CarbonFormField(
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
     error: String? = null,
+    supportingText: String? = null,
     onSubmit: (() -> Unit)? = null
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
@@ -68,7 +69,7 @@ fun CarbonFormField(
                 }
                 .then(modifier),
             state = if (enabled) if (error != null) TextInputState.Error else TextInputState.Enabled else TextInputState.Disabled,
-            helperText = error ?: "",
+            helperText = error ?: supportingText ?: "",
             keyboardOptions = KeyboardOptions(
                 autoCorrectEnabled = false,
                 imeAction = if (nextFocusRequester != null) {
@@ -101,7 +102,7 @@ fun CarbonFormField(
                 }
                 .then(modifier),
             state = if (enabled) if (error != null) TextInputState.Error else TextInputState.Enabled else TextInputState.Disabled,
-            helperText = error ?: "",
+            helperText = error ?: supportingText ?: "",
             keyboardOptions = KeyboardOptions(
                 autoCorrectEnabled = false,
                 imeAction = if (nextFocusRequester != null) {
