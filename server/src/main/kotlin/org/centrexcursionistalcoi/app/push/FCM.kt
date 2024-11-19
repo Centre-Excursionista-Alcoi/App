@@ -35,7 +35,7 @@ object FCM {
         messaging = FirebaseMessaging.getInstance(app)
     }
 
-    private suspend fun topic(user: User): String {
+    private fun topic(user: User): String {
         val id = user.id.value
         val prefix = id
             .substringBefore('@')
@@ -61,7 +61,7 @@ object FCM {
      *
      * @throws FirebaseMessagingException If an error occurs while sending the message
      */
-    suspend fun <DataType> notify(user: User, type: NotificationType, data: DataType, serializer: KSerializer<DataType>): String {
+    fun <DataType> notify(user: User, type: NotificationType, data: DataType, serializer: KSerializer<DataType>): String {
         val topic = topic(user)
         val json = Json.encodeToString(serializer, data)
 
