@@ -28,10 +28,6 @@ import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
-import org.centrexcursionistalcoi.app.data.fromDate
-import org.centrexcursionistalcoi.app.data.returnedDate
-import org.centrexcursionistalcoi.app.data.takenDate
-import org.centrexcursionistalcoi.app.data.toDate
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCheckbox
@@ -72,12 +68,12 @@ fun BookingsCard(
             )
 
             BasicText(
-                text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                text = stringResource(Res.string.bookings_from, booking.from.toString()),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
             BasicText(
-                text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                text = stringResource(Res.string.bookings_to, booking.to.toString()),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)
             )
@@ -91,7 +87,7 @@ fun BookingsCard(
                     )
                 } else {
                     BasicText(
-                        text = stringResource(Res.string.bookings_taken_at, booking.takenDate().toString()),
+                        text = stringResource(Res.string.bookings_taken_at, booking.takenAt.toString()),
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                     )
@@ -116,7 +112,7 @@ fun BookingsCard(
                         )
                     } else {
                         BasicText(
-                            text = stringResource(Res.string.bookings_returned_at, booking.returnedDate().toString()),
+                            text = stringResource(Res.string.bookings_returned_at, booking.returnedAt.toString()),
                             style = getPlatformTextStyles().heading,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                         )

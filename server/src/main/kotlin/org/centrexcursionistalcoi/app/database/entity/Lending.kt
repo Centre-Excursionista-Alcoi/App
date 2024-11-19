@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.ZoneOffset
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
@@ -25,13 +26,13 @@ class Lending(id: EntityID<Int>) : BookingEntity<ItemLendingD>(id) {
 
     override fun serializable() = ItemLendingD(
         id = id.value,
-        createdAt = createdAt.toEpochMilli(),
+        createdAt = createdAt.toKotlinInstant(),
         userId = user.id.value,
         confirmed = confirmed,
-        from = from.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-        to = to.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-        takenAt = takenAt?.toEpochMilli(),
-        returnedAt = returnedAt?.toEpochMilli(),
+        from = from.toKotlinLocalDate(),
+        to = to.toKotlinLocalDate(),
+        takenAt = takenAt?.toKotlinInstant(),
+        returnedAt = returnedAt?.toKotlinInstant(),
         itemIds = LendingItem
             .find { LendingItemsTable.lending eq id }
             .map { it.item.id.value }

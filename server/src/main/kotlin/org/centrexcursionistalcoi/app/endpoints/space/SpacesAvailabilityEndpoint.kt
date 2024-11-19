@@ -2,9 +2,7 @@ package org.centrexcursionistalcoi.app.endpoints.space
 
 import io.ktor.http.HttpMethod
 import io.ktor.server.routing.RoutingContext
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
@@ -21,17 +19,12 @@ object SpacesAvailabilityEndpoint: SecureEndpoint("/spaces/availability", HttpMe
         }
 
         val params = call.request.queryParameters
-        val fromEpoch = params["from"]?.toLongOrNull()
-        val toEpoch = params["to"]?.toLongOrNull()
-        if (fromEpoch == null || toEpoch == null) {
+        val from = params["from"]?.let(LocalDate::parse)
+        val to = params["to"]?.let(LocalDate::parse)
+        if (from == null || to == null) {
             respondFailure(Errors.InvalidRequest)
             return
         }
-
-        val from = Instant.ofEpochMilli(fromEpoch)
-            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
-        val to = Instant.ofEpochMilli(toEpoch)
-            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
 
         // Fetch the existing bookings for the spaces that overlap with the requested period
         val availableSpaces = ServerDatabase { spacesAvailableForDates(from, to) }

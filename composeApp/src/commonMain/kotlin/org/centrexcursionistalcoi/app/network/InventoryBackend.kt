@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
@@ -40,7 +41,7 @@ object InventoryBackend {
         bodySerializer = ItemD.serializer()
     )
 
-    suspend fun availability(from: Long, to: Long) = Backend.get(
+    suspend fun availability(from: LocalDate, to: LocalDate) = Backend.get(
         "/availability?from=${from}&to=${to}",
         ListSerializer(ItemD.serializer())
     )
@@ -56,7 +57,7 @@ object InventoryBackend {
      */
     suspend fun allBookings() = Backend.get("/lendings?all=true", ListSerializer(ItemLendingD.serializer()))
 
-    suspend fun book(from: Long, to: Long, itemIds: Set<Int>) = Backend.post(
+    suspend fun book(from: LocalDate, to: LocalDate, itemIds: Set<Int>) = Backend.post(
         path = "/lending",
         body = LendingRequest(from, to, itemIds),
         bodySerializer = LendingRequest.serializer()

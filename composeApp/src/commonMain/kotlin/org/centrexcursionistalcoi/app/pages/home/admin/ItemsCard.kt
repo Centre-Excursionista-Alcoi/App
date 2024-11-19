@@ -32,9 +32,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.composition.rememberPlainPositionProvider
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
@@ -129,9 +126,7 @@ fun ItemsCard(
                 ?.let { bookings ->
                     val taken = bookings.find { it.takenAt != null }
                     if (taken != null) {
-                        val at = Instant.fromEpochMilliseconds(taken.takenAt!!)
-                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                            .date
+                        val at = taken.takenAt
 
                         BasicText(
                             text = stringResource(Res.string.items_details_taken, taken.userId ?: "N/A", at.toString()),
@@ -145,9 +140,7 @@ fun ItemsCard(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
                         for (booking in future) {
-                            val from = Instant.fromEpochMilliseconds(booking.from!!)
-                                .toLocalDateTime(TimeZone.currentSystemDefault())
-                                .date
+                            val from = booking.from
 
                             BasicText(
                                 text = "· " + stringResource(

@@ -18,8 +18,6 @@ import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
-import org.centrexcursionistalcoi.app.data.fromDate
-import org.centrexcursionistalcoi.app.data.toDate
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -91,11 +89,11 @@ fun HomePage(
                             )
                         }
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }
@@ -126,11 +124,11 @@ fun HomePage(
                             )
                         }
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }
@@ -158,11 +156,11 @@ fun HomePage(
                         modifier = Modifier.padding(8.dp)
                     ) {
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }
@@ -176,11 +174,11 @@ fun HomePage(
                         modifier = Modifier.padding(8.dp)
                     ) {
                         BasicText(
-                            text = stringResource(Res.string.bookings_from, booking.fromDate().toString()),
+                            text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         BasicText(
-                            text = stringResource(Res.string.bookings_to, booking.toDate().toString()),
+                            text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
                     }

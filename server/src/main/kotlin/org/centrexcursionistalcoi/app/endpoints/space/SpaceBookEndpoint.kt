@@ -4,9 +4,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Space
@@ -42,10 +40,8 @@ object SpaceBookEndpoint: SecureEndpoint("/spaces/{id}/book", HttpMethod.Post) {
         }
 
         // Verify that the space is available
-        val from = Instant.ofEpochMilli(body.from)
-            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
-        val to = Instant.ofEpochMilli(body.to)
-            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
+        val from = body.from.toJavaLocalDate()
+        val to = body.to.toJavaLocalDate()
         val availableSpaces = ServerDatabase { spacesAvailableForDates(from, to) }.map(SpaceD::id)
         if (id !in availableSpaces) {
             respondFailure(Errors.InvalidRequest)

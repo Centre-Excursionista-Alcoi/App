@@ -1,19 +1,21 @@
 package org.centrexcursionistalcoi.app.data
 
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class SpaceBookingD(
     override val id: Int? = null,
-    val createdAt: Long? = null,
-    override val from: Long? = null,
-    override val to: Long? = null,
+    val createdAt: Instant? = null,
+    override val from: LocalDate? = null,
+    override val to: LocalDate? = null,
     override val userId: String? = null,
     val spaceId: Int? = null,
     override val confirmed: Boolean = false,
     val keyId: Int? = null,
-    override val takenAt: Long? = null,
-    override val returnedAt: Long? = null,
+    override val takenAt: Instant? = null,
+    override val returnedAt: Instant? = null,
     val paid: Boolean = false,
     val paymentReference: String? = null,
     val paymentDocument: ByteArray? = null

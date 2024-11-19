@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.DatabaseData
 import org.centrexcursionistalcoi.app.data.IBookingD
@@ -19,8 +18,6 @@ import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
-import org.centrexcursionistalcoi.app.utils.atEndOfDayInMilliseconds
-import org.centrexcursionistalcoi.app.utils.atStartOfDayInMilliseconds
 
 class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
@@ -131,16 +128,10 @@ class HomeViewModel : ViewModel() {
             _availableItems.emit(null)
             _availableSpaces.emit(null)
 
-            val items = InventoryBackend.availability(
-                from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
-                to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault())
-            )
+            val items = InventoryBackend.availability(from, to)
             _availableItems.emit(items)
 
-            val spaces = SpacesBackend.availability(
-                from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
-                to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault())
-            )
+            val spaces = SpacesBackend.availability(from, to)
             _availableSpaces.emit(spaces)
         }
     }

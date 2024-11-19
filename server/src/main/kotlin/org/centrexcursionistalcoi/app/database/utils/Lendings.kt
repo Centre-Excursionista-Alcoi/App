@@ -36,7 +36,9 @@ fun <BookingD : IBookingD, Entity : BookingEntity<BookingD>, EntityClass : IntEn
     return entityClass.find {
         // (StartA <= EndB) and (EndA >= StartB)
         // Proof: https://stackoverflow.com/a/325964
-        (table.from lessEq to) and (table.to greaterEq from) and (table.returnedAt.isNull())
+        (table.from lessEq to) and (table.to greaterEq from) and
+            // if already returned, the element can be used again
+            (table.returnedAt.isNull())
     }.map { it.serializable() }
 }
 

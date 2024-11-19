@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.ZoneOffset
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
@@ -30,15 +31,15 @@ class SpaceBooking(id: EntityID<Int>) : BookingEntity<SpaceBookingD>(id) {
 
     override fun serializable(): SpaceBookingD = SpaceBookingD(
         id = id.value,
-        createdAt = createdAt.toEpochMilli(),
-        from = from.atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
-        to = to.atTime(23, 59, 59).toEpochSecond(ZoneOffset.UTC) * 1000,
+        createdAt = createdAt.toKotlinInstant(),
+        from = from.toKotlinLocalDate(),
+        to = to.toKotlinLocalDate(),
         userId = user.id.value,
         spaceId = space.id.value,
         confirmed = confirmed,
         keyId = key?.id?.value,
-        takenAt = takenAt?.toEpochMilli(),
-        returnedAt = returnedAt?.toEpochMilli(),
+        takenAt = takenAt?.toKotlinInstant(),
+        returnedAt = returnedAt?.toKotlinInstant(),
         paid = paid,
         paymentReference = paymentReference,
         paymentDocument = paymentDocument
