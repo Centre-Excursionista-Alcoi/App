@@ -16,8 +16,9 @@ object SpaceBookingsTable : IntIdTable() {
     // If the space requires a key, this field will be filled once the user takes it
     val key = reference("key_id", SpaceKeysTable).nullable()
 
-    // When the user takes the key, this field will be filled
+    // When the user takes and returns the key, those fields will be filled
     val takenAt = timestamp("taken_at").nullable()
+    val returnedAt = timestamp("returned_at").nullable()
 
     // Payment information
     val paid = bool("paid").default(false)
