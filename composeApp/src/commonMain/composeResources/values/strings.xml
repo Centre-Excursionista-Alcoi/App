@@ -38,6 +38,7 @@
     <string name="home_welcome">Welcome, %1$s</string>
     <string name="home_available_items">Available Items</string>
     <string name="home_selected_items">Selected Items</string>
+    <string name="home_available_spaces">Available Spaces</string>
     <string name="home_select_date_range">Please, select a date range</string>
     <string name="home_items_selection">Items Selection</string>
 
@@ -141,8 +142,20 @@
     <string name="reservation_as">Reserving as %1$s for %2$d days</string>
     <string name="reservation_items">Items</string>
     <string name="reservation_no_items">No items selected</string>
-    <string name="reservation_spaces">Spaces</string>
-    <string name="reservation_no_spaces">No spaces selected</string>
+    <string name="reservation_space">Space</string>
+    <string name="reservation_space_price_calculation">This amount is for you to take into account. The payment must be performed outside the app, either by presentially paying, or with a bank transfer.</string>
+    <plurals name="reservation_space_price_members_count">
+        <item quantity="one">%1$d member</item>
+        <item quantity="other">%1$d members</item>
+    </plurals>
+    <plurals name="reservation_space_price_non_members_count">
+        <item quantity="one">%1$d non-member</item>
+        <item quantity="other">%1$d non-members</item>
+    </plurals>
+    <plurals name="reservation_space_price_days">
+        <item quantity="one">%1$s at %2$s pp x %3$d day: %4$s</item>
+        <item quantity="other">%1$s at %2$s pp x %3$d days: %4$s</item>
+    </plurals>
 
     <string name="settings_language">Language</string>
     <string name="settings_language_default">Default</string>

@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.pages.home
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -31,15 +31,18 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import com.gabrieldrn.carbon.checkbox.Checkbox
+import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -52,107 +55,117 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ColumnScope.ReservationPage(
-    itemsList: List<ItemD>?,
     itemTypes: List<ItemTypeD>?,
     availableItems: List<ItemD>?,
+    availableSpaces: List<SpaceD>?,
     onLoadAvailabilityRequested: (from: LocalDate, to: LocalDate) -> Unit
 ) {
     val navController = LocalNavController.current
 
-    var from by remember { mutableStateOf<LocalDate?>(null) }
-    var to by remember { mutableStateOf<LocalDate?>(null) }
+    var from by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    var to by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     var selectedItems by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var selectedSpaceId by remember { mutableStateOf<Int?>(null) }
 
-    AnimatedContent(
-        targetState = availableItems to itemTypes,
-        modifier = Modifier.fillMaxWidth().weight(1f)
-    ) { (items, types) ->
-        LaunchedEffect(from, to) {
-            snapshotFlow { from to to }
-                .distinctUntilChanged()
-                .collect { (start, end) ->
-                    start ?: return@collect
-                    end ?: return@collect
+    LaunchedEffect(from, to) {
+        snapshotFlow { from to to }
+            .distinctUntilChanged()
+            .collect { (start, end) ->
+                start ?: return@collect
+                end ?: return@collect
 
-                    if (start > end) {
-                        to = null
-                        return@collect
-                    }
-
-                    onLoadAvailabilityRequested(start, end)
+                if (start > end) {
+                    to = null
+                    return@collect
                 }
-        }
 
-        LazyVerticalGrid(
-            modifier = Modifier.fillMaxWidth(),
-            columns = GridCells.Adaptive(200.dp)
-        ) {
-            if (types == null) {
+                onLoadAvailabilityRequested(start, end)
+            }
+    }
+
+    LazyVerticalGrid(
+        modifier = Modifier.fillMaxWidth().weight(1f),
+        columns = GridCells.Adaptive(200.dp)
+    ) {
+        if (itemTypes == null) {
+            item(key = "loading", span = maxGridItemSpan) {
+                PlatformLoadingIndicator(large = false)
+            }
+        } else {
+            item(key = "date-range", span = maxGridItemSpan) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                ) {
+                    PlatformDatePicker(
+                        value = from,
+                        onValueChanged = { from = it },
+                        label = stringResource(Res.string.from),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
+                        min = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                    )
+                    PlatformDatePicker(
+                        value = to,
+                        onValueChanged = { to = it },
+                        label = stringResource(Res.string.to),
+                        modifier = Modifier.weight(1f).padding(start = 8.dp),
+                        min = from,
+                        enabled = from != null,
+                        initialDisplayedDate = from
+                    )
+                }
+            }
+
+            if (from == null || to == null) {
+                item(key = "select-date-range", span = maxGridItemSpan) {
+                    BasicText(
+                        text = stringResource(Res.string.home_select_date_range),
+                        style = getPlatformTextStyles().heading,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                }
+            } else if (availableItems == null || availableSpaces == null) {
                 item(key = "loading", span = maxGridItemSpan) {
                     PlatformLoadingIndicator(large = false)
                 }
             } else {
-                item(key = "date-range", span = maxGridItemSpan) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    ) {
-                        PlatformDatePicker(
-                            value = from,
-                            onValueChanged = { from = it },
-                            label = stringResource(Res.string.from),
-                            modifier = Modifier.weight(1f).padding(end = 8.dp),
-                            min = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                        )
-                        PlatformDatePicker(
-                            value = to,
-                            onValueChanged = { to = it },
-                            label = stringResource(Res.string.to),
-                            modifier = Modifier.weight(1f).padding(start = 8.dp),
-                            min = from,
-                            enabled = from != null,
-                            initialDisplayedDate = from
-                        )
-                    }
+                item(key = "summary", span = maxGridItemSpan) {
+                    SummaryRow(availableItems.size, selectedItems.size, availableSpaces.size)
                 }
 
-                if (from == null || to == null) {
-                    item(key = "select-date-range", span = maxGridItemSpan) {
-                        BasicText(
-                            text = stringResource(Res.string.home_select_date_range),
-                            style = getPlatformTextStyles().heading,
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                        )
+                items(
+                    key = { "item-${it.first.id}-${it.second?.id}" },
+                    items = availableItems.map { item ->
+                        item to itemTypes.find { it.id == item.typeId }
                     }
-                } else if (items == null) {
-                    item(key = "loading", span = maxGridItemSpan) {
-                        PlatformLoadingIndicator(large = false)
-                    }
-                } else {
-                    item(key = "items-summary", span = maxGridItemSpan) {
-                        SummaryRow(items.size, selectedItems.size)
-                    }
-
-                    items(
-                        key = { "item-${it.first.id}-${it.second?.id}" },
-                        items = items.map { item ->
-                            item to types.find { it.id == item.typeId }
-                        }
-                    ) { (item, type) ->
-                        if (type == null) return@items
-                        val id = item.id ?: return@items
-                        ItemCard(
-                            item = item,
-                            type = type,
-                            isSelected = selectedItems.contains(id),
-                            toggle = {
-                                selectedItems = if (selectedItems.contains(id)) {
-                                    selectedItems - id
-                                } else {
-                                    selectedItems + id
-                                }
+                ) { (item, type) ->
+                    if (type == null) return@items
+                    val id = item.id ?: return@items
+                    ItemCard(
+                        item = item,
+                        type = type,
+                        isSelected = selectedItems.contains(id),
+                        toggle = {
+                            selectedItems = if (selectedItems.contains(id)) {
+                                selectedItems - id
+                            } else {
+                                selectedItems + id
                             }
-                        )
-                    }
+                        }
+                    )
+                }
+
+                items(
+                    key = { "space-${it.id}" },
+                    items = availableSpaces
+                ) { space ->
+                    val id = space.id ?: return@items
+                    SpaceCard(
+                        space = space,
+                        isSelected = selectedSpaceId == id,
+                        toggle = {
+                            selectedSpaceId = if (selectedSpaceId == id) null else id
+                        }
+                    )
                 }
             }
         }
@@ -163,13 +176,14 @@ fun ColumnScope.ReservationPage(
     ) {
         PlatformButton(
             text = stringResource(Res.string.`continue`),
-            enabled = from != null && to != null && selectedItems.isNotEmpty()
+            enabled = from != null && to != null && (selectedItems.isNotEmpty() || selectedSpaceId != null)
         ) {
             navController.navigate(
                 Reservation(
                     from = from ?: return@PlatformButton,
                     to = to ?: return@PlatformButton,
-                    selectedItems = selectedItems
+                    selectedItems = selectedItems,
+                    selectedSpaceId = selectedSpaceId
                 )
             )
         }
@@ -177,7 +191,7 @@ fun ColumnScope.ReservationPage(
 }
 
 @Composable
-private fun SummaryRow(availableItems: Int, selectedItems: Int) {
+private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces: Int) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 8.dp)
     ) {
@@ -196,7 +210,7 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int) {
             )
         }
         PlatformCard(
-            modifier = Modifier.weight(1f).padding(start = 8.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
         ) {
             BasicText(
                 text = selectedItems.toString(),
@@ -205,6 +219,20 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int) {
             )
             BasicText(
                 text = stringResource(Res.string.home_selected_items),
+                style = getPlatformTextStyles().heading.copy(textAlign = TextAlign.Center),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+        }
+        PlatformCard(
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+        ) {
+            BasicText(
+                text = availableSpaces.toString(),
+                style = getPlatformTextStyles().titleRegular.copy(textAlign = TextAlign.Center),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            BasicText(
+                text = stringResource(Res.string.home_available_spaces),
                 style = getPlatformTextStyles().heading.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
@@ -268,6 +296,51 @@ private fun ItemCard(
                         modifier = Modifier.fillMaxWidth().aspectRatio(1f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalEncodingApi::class)
+@Composable
+private fun SpaceCard(
+    space: SpaceD,
+    isSelected: Boolean,
+    toggle: () -> Unit
+) {
+    PlatformCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable(role = Role.Checkbox) { toggle() }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Checkbox(
+                checked = isSelected,
+                onClick = { toggle() },
+                label = "",
+                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+            )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                BasicText(
+                    text = space.name,
+                    style = getPlatformTextStyles().heading
+                        .copy(textAlign = TextAlign.Center, fontSize = 20.sp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .padding(horizontal = 8.dp)
+                )
+                ImagesCarousel(
+                    images = space.images.orEmpty().map(Base64::decode),
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .padding(horizontal = 8.dp)
+                )
             }
         }
     }

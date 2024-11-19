@@ -36,6 +36,7 @@ import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceCreateEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceUpdateEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpacesAvailabilityEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpacesListEndpoint
@@ -80,6 +81,7 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     MarkTakenEndpoint,
     MarkReturnedEndpoint,
 
+    SpaceEndpoint,
     SpacesListEndpoint,
     SpaceCreateEndpoint,
     SpaceUpdateEndpoint,

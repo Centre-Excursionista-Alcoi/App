@@ -58,6 +58,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val creatingSpace by viewModel.creatingSpace.collectAsState()
 
         val availableItems by viewModel.availableItems.collectAsState()
+        val availableSpaces by viewModel.availableSpaces.collectAsState()
 
         val scope = rememberCoroutineScope()
         val pagerState = rememberPagerState { if (user?.isAdmin == true) (NUM_PAGES + 1) else NUM_PAGES }
@@ -98,7 +99,12 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                 ) {
                     when (page) {
                         IDX_HOME -> HomePage(bookings)
-                        IDX_RESERVE -> ReservationPage(items, itemTypes, availableItems, viewModel::availability)
+                        IDX_RESERVE -> ReservationPage(
+                            itemTypes,
+                            availableItems,
+                            availableSpaces,
+                            viewModel::availability
+                        )
                         IDX_SETTINGS -> SettingsPage()
                         IDX_ADMIN -> AdminPage(
                             updatingUser = updatingUser,

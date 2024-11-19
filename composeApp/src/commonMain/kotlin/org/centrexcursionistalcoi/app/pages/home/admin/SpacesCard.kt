@@ -39,6 +39,7 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalEncodingApi::class)
@@ -92,6 +93,13 @@ fun SpacesCard(
         ImagesCarousel(
             images = data.images.orEmpty().map(Base64::decode),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            supportingContent = { image ->
+                BasicText(
+                    text = image.humanReadableSize(),
+                    style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            },
             onRemove = { index ->
                 showingCreationDialog = data.copy(images = data.images?.toMutableList()?.apply { removeAt(index) })
             }

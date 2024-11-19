@@ -41,8 +41,8 @@ object InventoryBackend {
         bodySerializer = ItemD.serializer()
     )
 
-    suspend fun availability(from: Instant, to: Instant) = Backend.get(
-        "/availability?from=${from.toEpochMilliseconds()}&to=${to.toEpochMilliseconds()}",
+    suspend fun availability(from: Long, to: Long) = Backend.get(
+        "/availability?from=${from}&to=${to}",
         ListSerializer(ItemD.serializer())
     )
 

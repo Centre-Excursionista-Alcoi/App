@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.DatabaseData
 import org.centrexcursionistalcoi.app.data.ItemD
@@ -18,6 +17,8 @@ import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.utils.atEndOfDayInMilliseconds
+import org.centrexcursionistalcoi.app.utils.atStartOfDayInMilliseconds
 
 class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
@@ -29,6 +30,9 @@ class HomeViewModel : ViewModel() {
 
     private val _availableItems = MutableStateFlow<List<ItemD>?>(null)
     val availableItems get() = _availableItems.asStateFlow()
+
+    private val _availableSpaces = MutableStateFlow<List<SpaceD>?>(null)
+    val availableSpaces get() = _availableSpaces.asStateFlow()
 
 
     private val _usersList = MutableStateFlow<List<UserD>?>(null)
@@ -104,11 +108,19 @@ class HomeViewModel : ViewModel() {
     fun availability(from: LocalDate, to: LocalDate) {
         launch {
             _availableItems.emit(null)
+            _availableSpaces.emit(null)
+
             val items = InventoryBackend.availability(
-                from.atStartOfDayIn(TimeZone.currentSystemDefault()),
-                to.atStartOfDayIn(TimeZone.currentSystemDefault())
+                from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
+                to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault())
             )
             _availableItems.emit(items)
+
+            val spaces = SpacesBackend.availability(
+                from.atStartOfDayInMilliseconds(TimeZone.currentSystemDefault()),
+                to.atEndOfDayInMilliseconds(TimeZone.currentSystemDefault())
+            )
+            _availableSpaces.emit(spaces)
         }
     }
 

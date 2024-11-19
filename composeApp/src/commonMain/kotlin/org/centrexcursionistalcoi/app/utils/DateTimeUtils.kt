@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.utils
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 
@@ -26,6 +28,20 @@ fun LocalDate.toEpochMilliseconds(
     return atTime(hour, minute, second, nanosecond)
         .toInstant(timeZone)
         .toEpochMilliseconds()
+}
+
+/**
+ * Converts this [LocalDate] to the number of milliseconds since the Unix epoch at the start of the given day.
+ *
+ * Note that it's not equivalent to `atTime(0, 0).toInstant(timeZone)` because a day does not always start at a fixed
+ * time `00:00:00`. For example, if, due to daylight saving time, clocks were shifted from `23:30` of one day directly
+ * to `00:30` of the next day, skipping the midnight, then `atStartOfDayIn` would return the [Instant] corresponding to
+ * `00:30`, whereas `atTime(0, 0).toInstant(timeZone)` would return the [Instant] corresponding to `01:00`.
+ */
+fun LocalDate.atStartOfDayInMilliseconds(
+    timeZone: TimeZone = TimeZone.currentSystemDefault()
+): Long {
+    return atStartOfDayIn(timeZone).toEpochMilliseconds()
 }
 
 /**

@@ -3,14 +3,13 @@ package org.centrexcursionistalcoi.app.component
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
@@ -18,13 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
-import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -33,6 +29,7 @@ fun ImagesCarousel(
     modifier: Modifier = Modifier,
     pageSize: PageSize = PageSize.Fixed(150.dp),
     pageSpacing: Dp = 4.dp,
+    supportingContent: (@Composable ColumnScope.(image: ByteArray) -> Unit)? = null,
     onRemove: ((index: Int) -> Unit)? = null
 ) {
     HorizontalPager(
@@ -69,11 +66,7 @@ fun ImagesCarousel(
                 )
             }
 
-            BasicText(
-                text = image.humanReadableSize(),
-                style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+            supportingContent?.invoke(this, image)
         }
     }
 }
