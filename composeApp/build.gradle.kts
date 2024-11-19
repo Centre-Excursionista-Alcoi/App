@@ -124,6 +124,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
 
+            implementation(libs.compose.googlefonts)
+
             implementation(libs.datastore.base)
             implementation(libs.datastore.preferences)
             implementation(libs.multiplatformSettings.datastore)
