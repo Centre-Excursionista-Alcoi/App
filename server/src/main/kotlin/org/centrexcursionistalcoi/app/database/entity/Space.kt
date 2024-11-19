@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.data.Serializable
+import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.centrexcursionistalcoi.app.server.response.data.Address
 import org.centrexcursionistalcoi.app.server.response.data.Location
@@ -45,6 +48,7 @@ class Space(id: EntityID<Int>) : IntEntity(id), Serializable<SpaceD> {
         longitude = location.longitude
     }
 
+    @ExperimentalEncodingApi
     override fun serializable(): SpaceD = SpaceD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
@@ -60,6 +64,9 @@ class Space(id: EntityID<Int>) : IntEntity(id), Serializable<SpaceD> {
             Address(address, city, postalCode, country)
         } else {
             null
-        }
+        },
+        images = SpaceImage.find { SpacesImagesTable.space eq id }
+            .map { it.image }
+            .map { Base64.encode(it) }
     )
 }
