@@ -14,7 +14,8 @@ import org.jetbrains.exposed.dao.IntEntityClass
 
 suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, EntityClass : IntEntityClass<Entity>> RoutingContext.markBookingAsTaken(
     user: User,
-    entityClass: EntityClass
+    entityClass: EntityClass,
+    extraDatabaseUpdates: (Entity) -> Unit = {}
 ) {
     // Verify that the user is admin
     if (!user.isAdmin) {
@@ -48,6 +49,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     // Mark the booking as taken
     ServerDatabase {
         booking.takenAt = Instant.now()
+        extraDatabaseUpdates(booking)
     }
 
     respondSuccess(HttpStatusCode.Accepted)

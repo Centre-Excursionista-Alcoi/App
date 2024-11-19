@@ -225,13 +225,16 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsTaken(booking: IBookingD, onMarked: () -> Unit) {
+    fun markAsTaken(booking: IBookingD, meta: Map<String, Any>, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
                 when (booking) {
                     is ItemLendingD -> InventoryBackend.markTaken(booking.id!!)
-                    is SpaceBookingD -> SpacesBackend.markTaken(booking.id!!)
+                    is SpaceBookingD -> {
+                        val keyId = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int
+                        SpacesBackend.markTaken(booking.id!!, keyId)
+                    }
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
                 load()
@@ -283,5 +286,14 @@ class HomeViewModel : ViewModel() {
                 _updatingUser.emit(false)
             }
         }
+    }
+
+
+    companion object {
+        /**
+         * The key used to pass the space key id when marking a booking as taken.
+         * @see markAsTaken
+         */
+        const val BOOKING_CONFIRM_META_SPACE_KEY = "space_key"
     }
 }

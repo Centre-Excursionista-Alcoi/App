@@ -2,13 +2,16 @@ package org.centrexcursionistalcoi.app.pages.home.admin
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,8 +36,10 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCheckbox
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
+import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel.Companion.BOOKING_CONFIRM_META_SPACE_KEY
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -46,7 +51,7 @@ fun BookingsCard(
     spaces: List<SpaceD>?,
     isUpdatingBooking: Boolean,
     onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (IBookingD, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (IBookingD, meta: Map<String, Any>, () -> Unit) -> Unit,
     onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit
 ) {
     var confirmBooking by remember { mutableStateOf<IBookingD?>(null) }
@@ -142,12 +147,42 @@ fun BookingsCard(
                     onConfirmBookingRequested(booking) { confirmBooking = null }
                 }
             } else if (booking.takenAt == null) {
-                PlatformButton(
-                    text = stringResource(Res.string.bookings_mark_taken),
-                    modifier = Modifier.align(Alignment.End).padding(8.dp).padding(top = 8.dp),
-                    enabled = !isUpdatingBooking
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp).padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    onMarkAsTakenRequested(booking) { confirmBooking = null }
+                    var isEnabled by remember { mutableStateOf(true) }
+                    val meta by remember { mutableStateOf(mutableMapOf<String, Any>()) }
+
+                    if (booking is SpaceBookingD) {
+                        val space = spaces?.find { it.id == booking.spaceId }
+                        val keys = space?.keys?.takeIf { it.isNotEmpty() }
+                        if (keys != null) {
+                            LaunchedEffect(Unit) {
+                                isEnabled = false
+                            }
+
+                            PlatformDropdown(
+                                value = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int?,
+                                onValueChange = {
+                                    meta[BOOKING_CONFIRM_META_SPACE_KEY] = it
+                                    isEnabled = meta.containsKey(BOOKING_CONFIRM_META_SPACE_KEY)
+                                },
+                                options = keys.mapNotNull { it.id },
+                                label = stringResource(Res.string.spaces_key),
+                                toString = { id -> keys.find { it.id == id }?.name ?: "" },
+                                modifier = Modifier.weight(1f).padding(end = 8.dp)
+                            )
+                        }
+                    }
+
+                    PlatformButton(
+                        text = stringResource(Res.string.bookings_mark_taken),
+                        enabled = !isUpdatingBooking && isEnabled
+                    ) {
+                        onMarkAsTakenRequested(booking, meta) { confirmBooking = null }
+                    }
                 }
             } else if (booking.returnedAt == null) {
                 PlatformButton(

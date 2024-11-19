@@ -42,7 +42,7 @@ fun AdminPage(
     allSpaceBookings: List<SpaceBookingD>?,
     isUpdatingBooking: Boolean,
     onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (IBookingD, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (IBookingD, meta: Map<String, Any>, () -> Unit) -> Unit,
     onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit,
     spaces: List<SpaceD>?,
     isCreatingSpace: Boolean,
