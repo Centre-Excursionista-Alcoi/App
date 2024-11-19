@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.gms)
     alias(libs.plugins.serialization)
 }
 
@@ -45,6 +46,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+
+            export(libs.kmpnotifier)
         }
     }
 
@@ -103,6 +106,8 @@ kotlin {
             implementation(libs.kotlinx.datetime)
 
             implementation(libs.napier)
+
+            implementation(libs.kmpnotifier)
 
             // Ktor
             implementation(libs.ktor.client.auth)

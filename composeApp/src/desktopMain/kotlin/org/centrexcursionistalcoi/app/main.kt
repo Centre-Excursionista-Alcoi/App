@@ -2,14 +2,24 @@ package org.centrexcursionistalcoi.app
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import ceaapp.composeapp.generated.resources.CEA
-import ceaapp.composeapp.generated.resources.Res
+import ceaapp.composeapp.generated.resources.*
+import com.mmk.kmpnotifier.extensions.composeDesktopResourcesPath
+import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
+import java.io.File
 import org.jetbrains.compose.resources.painterResource
 
 fun main() {
     Napier.base(DebugAntilog())
+
+    NotifierManager.initialize(
+        NotificationPlatformConfiguration.Desktop(
+            showPushNotification = false,
+            notificationIconPath = composeDesktopResourcesPath() + File.separator + "ic_notification.png"
+        )
+    )
 
     application {
         Window(
