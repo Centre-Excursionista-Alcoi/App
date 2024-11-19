@@ -13,4 +13,10 @@ class BaseApp : Application() {
 
         AccountManager.initialize(this)
     }
+
+    override fun onTerminate() {
+        super.onTerminate()
+
+        AccountManager.close()
+    }
 }
