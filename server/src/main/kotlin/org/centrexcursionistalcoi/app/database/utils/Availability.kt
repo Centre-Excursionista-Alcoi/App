@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
+import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.sql.and
 
@@ -66,13 +67,9 @@ fun itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
  */
 @OptIn(ExperimentalEncodingApi::class)
 fun spacesAvailableForDates(from: LocalDate, to: LocalDate): List<SpaceD> {
-    // Fetch all spaces in the database
-    val allSpaces = Space.all().map(Space::serializable)
     // Fetch the existing lendings that overlap with the requested period
-    val bookingsIds = lendingsForDates(from, to, SpaceBooking, SpaceBookingsTable).mapNotNull { it.id }
-    // Fetch all the spaces booked for the requested period
-    val usedIds = SpaceBooking.find { SpaceBookingsTable.space inList bookingsIds }
-        .map { it.space.id.value }
+    val usedSpacesIds = lendingsForDates(from, to, SpaceBooking, SpaceBookingsTable).mapNotNull { it.spaceId }
     // Return all the spaces in the database that are not used
-    return allSpaces.filter { it.id !in usedIds }
+    return Space.find { SpacesTable.id notInList usedSpacesIds }
+        .map(Space::serializable)
 }
