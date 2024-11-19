@@ -16,6 +16,8 @@ compose-navigation = "2.8.0-alpha10"
 datastore = "1.1.1"
 exposed = "0.56.0"
 h2 = "2.3.232"
+javax-money = "1.1"
+javamoney = "1.4.2"
 kotlin = "2.0.21"
 kotlinx-coroutines = "1.9.0"
 kotlinx-datetime = "0.6.1"
@@ -46,6 +48,8 @@ exposed-javaTime = { module = "org.jetbrains.exposed:exposed-java-time", version
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+javax-money-api = { module = "javax.money:money-api", version.ref = "javax-money" }
+javax-money-impl = { module = "org.javamoney:moneta", version.ref = "javamoney" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }

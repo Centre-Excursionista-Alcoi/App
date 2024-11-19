@@ -39,6 +39,9 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.postgresql)
 
+    implementation(libs.javax.money.api)
+    implementation(libs.javax.money.impl)
+
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
 }
