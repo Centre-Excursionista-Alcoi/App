@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import java.time.ZoneId
+import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

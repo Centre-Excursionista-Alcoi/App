@@ -29,16 +29,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
+import org.centrexcursionistalcoi.app.data.Address
+import org.centrexcursionistalcoi.app.data.Location
+import org.centrexcursionistalcoi.app.data.MoneyD
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.server.response.data.Address
-import org.centrexcursionistalcoi.app.server.response.data.Location
-import org.centrexcursionistalcoi.app.server.response.data.MoneyD
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalEncodingApi::class)

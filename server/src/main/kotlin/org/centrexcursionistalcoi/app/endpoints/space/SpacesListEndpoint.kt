@@ -4,12 +4,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.server.routing.RoutingContext
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 
 object SpacesListEndpoint: SecureEndpoint("/spaces", HttpMethod.Get) {
     @OptIn(ExperimentalEncodingApi::class)

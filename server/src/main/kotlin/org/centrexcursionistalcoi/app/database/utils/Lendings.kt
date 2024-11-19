@@ -1,13 +1,13 @@
 package org.centrexcursionistalcoi.app.database.utils
 
 import java.time.LocalDateTime
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.Lending
 import org.centrexcursionistalcoi.app.database.entity.LendingItem
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.jetbrains.exposed.sql.and
 
 /**

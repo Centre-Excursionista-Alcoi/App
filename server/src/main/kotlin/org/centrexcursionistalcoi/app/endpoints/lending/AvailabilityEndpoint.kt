@@ -6,12 +6,12 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.database.utils.itemsAvailableForDates
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
 
 object AvailabilityEndpoint: SecureEndpoint("/availability", HttpMethod.Get) {
     override suspend fun RoutingContext.secureBody(user: User) {

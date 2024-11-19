@@ -2,8 +2,8 @@ package org.centrexcursionistalcoi.app.network
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.error.ServerException
-import org.centrexcursionistalcoi.app.server.response.data.UserD
 
 object UserDataBackend {
     /**

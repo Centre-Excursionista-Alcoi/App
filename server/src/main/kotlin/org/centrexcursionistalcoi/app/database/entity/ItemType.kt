@@ -2,8 +2,8 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

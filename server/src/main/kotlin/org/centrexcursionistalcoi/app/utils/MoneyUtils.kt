@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.utils
 
 import javax.money.Monetary
 import javax.money.MonetaryAmount
-import org.centrexcursionistalcoi.app.server.response.data.MoneyD
+import org.centrexcursionistalcoi.app.data.MoneyD
 
 /**
  * Convert a [MonetaryAmount] to a [MoneyD].

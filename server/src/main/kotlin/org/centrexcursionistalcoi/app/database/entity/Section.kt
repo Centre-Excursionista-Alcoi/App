@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import org.centrexcursionistalcoi.app.data.SectionD
 import org.centrexcursionistalcoi.app.database.table.SectionsTable
-import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

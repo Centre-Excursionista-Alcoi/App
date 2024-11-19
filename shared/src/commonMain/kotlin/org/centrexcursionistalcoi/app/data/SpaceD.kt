@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.server.response.data
+package org.centrexcursionistalcoi.app.data
 
 import kotlinx.serialization.Serializable
 

@@ -36,6 +36,10 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.composition.rememberPlainPositionProvider
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.enumeration.ItemHealth
 import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.data.localizedName
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
@@ -44,10 +48,6 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalFoundationApi::class)

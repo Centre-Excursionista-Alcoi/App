@@ -7,17 +7,17 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.auth.AccountManager
+import org.centrexcursionistalcoi.app.data.DatabaseData
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
-import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.SectionD
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
-import org.centrexcursionistalcoi.app.server.response.data.UserD
 
 class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)

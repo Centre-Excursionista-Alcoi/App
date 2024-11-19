@@ -38,6 +38,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -46,8 +48,6 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformDatePicker
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Reservation
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

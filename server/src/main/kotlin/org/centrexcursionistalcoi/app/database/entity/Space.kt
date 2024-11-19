@@ -2,12 +2,12 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import org.centrexcursionistalcoi.app.data.Address
+import org.centrexcursionistalcoi.app.data.Location
 import org.centrexcursionistalcoi.app.data.Serializable
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
-import org.centrexcursionistalcoi.app.server.response.data.Address
-import org.centrexcursionistalcoi.app.server.response.data.Location
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.centrexcursionistalcoi.app.utils.serializable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

@@ -7,6 +7,7 @@ import io.ktor.server.routing.RoutingContext
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.Lending
@@ -16,7 +17,6 @@ import org.centrexcursionistalcoi.app.database.utils.itemsAvailableForDates
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.request.LendingRequest
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
 
 object BookItemEndpoint : SecureEndpoint("/lending", HttpMethod.Post) {
     override suspend fun RoutingContext.secureBody(user: User) {

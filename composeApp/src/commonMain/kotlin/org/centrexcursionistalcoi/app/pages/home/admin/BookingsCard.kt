@@ -19,6 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.fromDate
 import org.centrexcursionistalcoi.app.data.returnedDate
 import org.centrexcursionistalcoi.app.data.takenDate
@@ -29,9 +32,6 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformCheckbox
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

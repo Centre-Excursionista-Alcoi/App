@@ -24,13 +24,13 @@ import ceaapp.composeapp.generated.resources.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Reservation
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.UserD
 import org.centrexcursionistalcoi.app.viewmodel.ReservationViewModel
 import org.jetbrains.compose.resources.stringResource
 

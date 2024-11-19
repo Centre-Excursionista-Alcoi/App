@@ -2,10 +2,10 @@ package org.centrexcursionistalcoi.app.network
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.request.LendingRequest
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 
 object InventoryBackend {
     suspend fun listTypes() = Backend.get("/inventory/types", ListSerializer(ItemTypeD.serializer()))

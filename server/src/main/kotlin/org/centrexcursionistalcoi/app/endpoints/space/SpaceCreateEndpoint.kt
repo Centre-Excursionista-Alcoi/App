@@ -6,13 +6,13 @@ import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceImage
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.centrexcursionistalcoi.app.utils.toMonetaryAmount
 
 object SpaceCreateEndpoint : SecureEndpoint("/spaces", HttpMethod.Post) {

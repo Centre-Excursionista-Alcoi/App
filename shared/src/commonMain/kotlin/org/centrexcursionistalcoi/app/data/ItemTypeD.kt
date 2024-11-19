@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.server.response.data
+package org.centrexcursionistalcoi.app.data
 
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi

@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import kotlinx.serialization.builtins.ListSerializer
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
+import org.centrexcursionistalcoi.app.data.SpaceD
 
 object SpacesBackend {
     suspend fun list() = Backend.get("/spaces", ListSerializer(SpaceD.serializer()))

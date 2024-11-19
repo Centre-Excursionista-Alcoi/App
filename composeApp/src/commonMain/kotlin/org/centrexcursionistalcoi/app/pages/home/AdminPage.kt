@@ -8,18 +8,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
+import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.pages.home.admin.BookingsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.ItemsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SectionsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SpacesCard
 import org.centrexcursionistalcoi.app.pages.home.admin.TypesCard
 import org.centrexcursionistalcoi.app.pages.home.admin.UnconfirmedUsersCard
-import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
-import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.SectionD
-import org.centrexcursionistalcoi.app.server.response.data.SpaceD
-import org.centrexcursionistalcoi.app.server.response.data.UserD
 
 @Composable
 fun AdminPage(
