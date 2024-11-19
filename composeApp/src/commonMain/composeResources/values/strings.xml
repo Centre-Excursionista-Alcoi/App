@@ -109,6 +109,7 @@
     <string name="bookings_list">Bookings</string>
     <string name="bookings_your">Your Bookings</string>
     <string name="bookings_old">Old Bookings</string>
+    <string name="bookings_no_bookings">You do not have any booking</string>
 
     <string name="reservation_title_draft">Reservation (draft)</string>
     <string name="reservation_from">From: %1$s</string>
