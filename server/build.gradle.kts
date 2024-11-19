@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.javax.money.api)
     implementation(libs.javax.money.impl)
 
+    implementation(libs.firebase.admin)
+
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
 }
