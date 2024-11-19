@@ -10,6 +10,7 @@ buildkonfig = "0.15.2"
 carbon = "0.3.1"
 coil = "3.0.3"
 compose-filekit = "0.8.7"
+compose-googlefonts = "1.7.5"
 compose-multiplatform = "1.7.1"
 compose-navigation = "2.8.0-alpha10"
 datastore = "1.1.1"
@@ -34,6 +35,7 @@ androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle
 compose-coil-base = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 compose-carbon = { module = "io.github.gabrieldrn:carbon", version.ref = "carbon" }
 compose-filekit = { module = "io.github.vinceglb:filekit-compose", version.ref = "compose-filekit" }
+compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "compose-googlefonts" }
 compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
 compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-multiplatform" }
 datastore-base = { module = "androidx.datastore:datastore", version.ref = "datastore" }
