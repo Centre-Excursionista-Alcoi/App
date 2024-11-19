@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
@@ -39,11 +40,10 @@ fun HomePage(bookings: List<LendingD>?) {
                 ) {
                     BasicText(
                         text = stringResource(Res.string.bookings_no_bookings),
-                        modifier = Modifier.fillMaxWidth(),
-                        style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
+                        style = getPlatformTextStyles().titleRegular.copy(fontSize = 18.sp, textAlign = TextAlign.Center)
                     )
                 }
-                return@LazyVerticalGrid
             }
 
             if (incompleteBookings.isNotEmpty()) {
