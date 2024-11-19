@@ -20,11 +20,11 @@ import org.centrexcursionistalcoi.app.data.toDate
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomePage(bookings: List<LendingD>?) {
+fun HomePage(bookings: List<ItemLendingD>?) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         modifier = Modifier.fillMaxSize().padding(8.dp)

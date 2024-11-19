@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database.entity
 import java.time.ZoneId
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -23,7 +23,7 @@ class Lending(id: EntityID<Int>) : IntEntity(id) {
     var takenAt by LendingsTable.takenAt
     var returnedAt by LendingsTable.returnedAt
 
-    fun serializable() = LendingD(
+    fun serializable() = ItemLendingD(
         id = id.value,
         createdAt = createdAt.toEpochMilli(),
         userId = user.id.value,

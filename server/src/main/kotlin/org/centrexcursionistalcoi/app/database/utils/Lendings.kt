@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingItem
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.jetbrains.exposed.sql.and
 
 /**
@@ -17,7 +17,7 @@ import org.jetbrains.exposed.sql.and
  *
  * **Must be called within a transaction.**
  */
-fun lendingsForDates(from: LocalDateTime, to: LocalDateTime): List<LendingD> {
+fun lendingsForDates(from: LocalDateTime, to: LocalDateTime): List<ItemLendingD> {
     return Lending.find {
         // (StartA <= EndB) and (EndA >= StartB)
         // Proof: https://stackoverflow.com/a/325964

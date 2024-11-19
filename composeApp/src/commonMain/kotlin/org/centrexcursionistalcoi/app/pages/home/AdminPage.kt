@@ -15,8 +15,8 @@ import org.centrexcursionistalcoi.app.pages.home.admin.SpacesCard
 import org.centrexcursionistalcoi.app.pages.home.admin.TypesCard
 import org.centrexcursionistalcoi.app.pages.home.admin.UnconfirmedUsersCard
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.centrexcursionistalcoi.app.server.response.data.UserD
@@ -36,11 +36,11 @@ fun AdminPage(
     items: List<ItemD>?,
     isCreatingItem: Boolean,
     onItemOperation: (ItemD, onCreate: () -> Unit) -> Unit,
-    allBookings: List<LendingD>?,
+    allBookings: List<ItemLendingD>?,
     isUpdatingBooking: Boolean,
-    onConfirmBookingRequested: (LendingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (LendingD, () -> Unit) -> Unit,
-    onMarkAsReturnedRequested: (LendingD, () -> Unit) -> Unit,
+    onConfirmBookingRequested: (ItemLendingD, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (ItemLendingD, () -> Unit) -> Unit,
+    onMarkAsReturnedRequested: (ItemLendingD, () -> Unit) -> Unit,
     spaces: List<SpaceD>?,
     isCreatingSpace: Boolean,
     onSpaceOperation: (SpaceD, onCreate: () -> Unit) -> Unit,

@@ -13,8 +13,8 @@ import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
 import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
 import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.centrexcursionistalcoi.app.server.response.data.UserD
@@ -23,7 +23,7 @@ class HomeViewModel : ViewModel() {
     private val _userData = MutableStateFlow<UserD?>(null)
     val userData get() = _userData.asStateFlow()
 
-    private val _bookings = MutableStateFlow<List<LendingD>?>(null)
+    private val _bookings = MutableStateFlow<List<ItemLendingD>?>(null)
     val bookings get() = _bookings.asStateFlow()
 
 
@@ -58,7 +58,7 @@ class HomeViewModel : ViewModel() {
     private val _updatingBooking = MutableStateFlow(false)
     val updatingBooking get() = _updatingBooking.asStateFlow()
 
-    private val _allBookings = MutableStateFlow<List<LendingD>?>(null)
+    private val _allBookings = MutableStateFlow<List<ItemLendingD>?>(null)
     val allBookings get() = _allBookings.asStateFlow()
 
     private val _spaces = MutableStateFlow<List<SpaceD>?>(null)
@@ -175,7 +175,7 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun confirmBooking(booking: LendingD, onConfirm: () -> Unit) {
+    fun confirmBooking(booking: ItemLendingD, onConfirm: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
@@ -188,7 +188,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsTaken(booking: LendingD, onMarked: () -> Unit) {
+    fun markAsTaken(booking: ItemLendingD, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
@@ -201,7 +201,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsReturned(booking: LendingD, onMarked: () -> Unit) {
+    fun markAsReturned(booking: ItemLendingD, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)

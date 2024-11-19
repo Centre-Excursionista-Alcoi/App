@@ -8,7 +8,7 @@ import org.centrexcursionistalcoi.app.database.entity.Lending
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 
 object LendingsEndpoint: SecureEndpoint("/lendings", HttpMethod.Get) {
     override suspend fun RoutingContext.secureBody(user: User) {
@@ -24,7 +24,7 @@ object LendingsEndpoint: SecureEndpoint("/lendings", HttpMethod.Get) {
         }
         respondSuccess(
             data = lendings,
-            serializer = ListSerializer(LendingD.serializer())
+            serializer = ListSerializer(ItemLendingD.serializer())
         )
     }
 }

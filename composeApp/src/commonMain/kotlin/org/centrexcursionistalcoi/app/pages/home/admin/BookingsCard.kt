@@ -30,21 +30,21 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun BookingsCard(
-    bookings: List<LendingD>?,
+    bookings: List<ItemLendingD>?,
     items: List<ItemD>?,
     itemTypes: List<ItemTypeD>?,
     isUpdatingBooking: Boolean,
-    onConfirmBookingRequested: (LendingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (LendingD, () -> Unit) -> Unit,
-    onMarkAsReturnedRequested: (LendingD, () -> Unit) -> Unit
+    onConfirmBookingRequested: (ItemLendingD, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (ItemLendingD, () -> Unit) -> Unit,
+    onMarkAsReturnedRequested: (ItemLendingD, () -> Unit) -> Unit
 ) {
-    var confirmBooking by remember { mutableStateOf<LendingD?>(null) }
+    var confirmBooking by remember { mutableStateOf<ItemLendingD?>(null) }
     confirmBooking?.let { booking ->
         PlatformDialog(
             onDismissRequest = { confirmBooking = null }

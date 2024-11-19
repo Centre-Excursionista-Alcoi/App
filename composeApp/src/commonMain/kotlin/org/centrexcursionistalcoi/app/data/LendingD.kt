@@ -5,16 +5,16 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 
-fun LendingD.fromDate(): LocalDate =
+fun ItemLendingD.fromDate(): LocalDate =
     Instant.fromEpochMilliseconds(from!!).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-fun LendingD.toDate(): LocalDate =
+fun ItemLendingD.toDate(): LocalDate =
     Instant.fromEpochMilliseconds(to!!).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-fun LendingD.takenDate(): LocalDateTime =
+fun ItemLendingD.takenDate(): LocalDateTime =
     Instant.fromEpochMilliseconds(takenAt!!).toLocalDateTime(TimeZone.currentSystemDefault())
 
-fun LendingD.returnedDate(): LocalDateTime =
+fun ItemLendingD.returnedDate(): LocalDateTime =
     Instant.fromEpochMilliseconds(returnedAt!!).toLocalDateTime(TimeZone.currentSystemDefault())

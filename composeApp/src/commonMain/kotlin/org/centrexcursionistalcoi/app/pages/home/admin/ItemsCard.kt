@@ -45,8 +45,8 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
+import org.centrexcursionistalcoi.app.server.response.data.ItemLendingD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
-import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.enumeration.ItemHealth
 import org.jetbrains.compose.resources.stringResource
 
@@ -57,7 +57,7 @@ fun ItemsCard(
     itemTypes: List<ItemTypeD>?,
     isCreating: Boolean,
     onCreateRequested: (ItemD, onCreate: () -> Unit) -> Unit,
-    allBookings: List<LendingD>?
+    allBookings: List<ItemLendingD>?
 ) {
     var showingCreationDialog: ItemD? by remember { mutableStateOf(null) }
     CreationDialog(

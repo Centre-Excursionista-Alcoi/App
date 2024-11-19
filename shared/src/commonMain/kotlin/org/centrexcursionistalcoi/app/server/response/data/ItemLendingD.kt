@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.server.response.data
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LendingD(
+data class ItemLendingD(
     override val id: Int? = null,
     val createdAt: Long? = null,
     val itemIds: Set<Int>? = null,
