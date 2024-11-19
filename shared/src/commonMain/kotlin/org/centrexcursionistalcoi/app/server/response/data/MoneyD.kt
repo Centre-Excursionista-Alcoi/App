@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MoneyD(
-    val currency: String,
+    val currency: String = "EUR",
     val amount: Double,
-    val factory: String
+    val factory: String? = null
 ) {
     companion object
 }

@@ -18,6 +18,7 @@ actual fun PlatformFormField(
     keyboardType: KeyboardType,
     isPassword: Boolean,
     error: String?,
+    supportingText: String?,
     onSubmit: (() -> Unit)?
 ) {
     CarbonFormField(

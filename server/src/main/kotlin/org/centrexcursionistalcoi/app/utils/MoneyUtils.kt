@@ -21,8 +21,9 @@ fun MonetaryAmount.serializable(): MoneyD = MoneyD.fromMonetaryAmount(this)
  * Convert a [MoneyD] to a [MonetaryAmount].
  */
 fun MoneyD.toMonetaryAmount(): MonetaryAmount {
-    val factory = Monetary.getAmountFactories().find { it::class.java.name == factory }
-    require(factory != null) { "Unknown factory: $factory" }
+    val factories = Monetary.getAmountFactories()
+    require(factories.isNotEmpty()) { "No factories available" }
+    val factory = factories.find { it::class.java.name == factory } ?: factories.first()
 
     factory.setCurrency(currency)
     factory.setNumber(amount)

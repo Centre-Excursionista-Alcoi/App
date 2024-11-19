@@ -9,12 +9,14 @@ import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
+import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
 import org.centrexcursionistalcoi.app.server.response.data.DatabaseData
 import org.centrexcursionistalcoi.app.server.response.data.ItemD
 import org.centrexcursionistalcoi.app.server.response.data.ItemTypeD
 import org.centrexcursionistalcoi.app.server.response.data.LendingD
 import org.centrexcursionistalcoi.app.server.response.data.SectionD
+import org.centrexcursionistalcoi.app.server.response.data.SpaceD
 import org.centrexcursionistalcoi.app.server.response.data.UserD
 
 class HomeViewModel : ViewModel() {
@@ -59,6 +61,12 @@ class HomeViewModel : ViewModel() {
     private val _allBookings = MutableStateFlow<List<LendingD>?>(null)
     val allBookings get() = _allBookings.asStateFlow()
 
+    private val _spaces = MutableStateFlow<List<SpaceD>?>(null)
+    val spaces get() = _spaces.asStateFlow()
+
+    private val _creatingSpace = MutableStateFlow(false)
+    val creatingSpace get() = _creatingSpace.asStateFlow()
+
     fun load() {
         launch {
             val data = UserDataBackend.getUserData()
@@ -81,6 +89,9 @@ class HomeViewModel : ViewModel() {
 
             val usersList = UserDataBackend.listUsers()
             _usersList.emit(usersList)
+
+            val spaces = SpacesBackend.list()
+            _spaces.emit(spaces)
         }
     }
 
@@ -150,6 +161,16 @@ class HomeViewModel : ViewModel() {
             _creatingItem,
             InventoryBackend::create,
             InventoryBackend::update,
+            onCreate
+        )
+    }
+
+    fun createOrUpdate(spaceD: SpaceD, onCreate: () -> Unit) {
+        onCreateOrUpdate(
+            spaceD,
+            _creatingSpace,
+            SpacesBackend::create,
+            SpacesBackend::update,
             onCreate
         )
     }

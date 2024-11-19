@@ -17,5 +17,6 @@ expect fun PlatformFormField(
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
     error: String? = null,
+    supportingText: String? = null,
     onSubmit: (() -> Unit)? = null
 )
