@@ -10,6 +10,8 @@ import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.database.table.SectionsTable
 import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
+import org.centrexcursionistalcoi.app.database.table.SpaceIncidenceImagesTable
+import org.centrexcursionistalcoi.app.database.table.SpaceIncidencesTable
 import org.centrexcursionistalcoi.app.database.table.SpaceKeysTable
 import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
@@ -44,7 +46,9 @@ object ServerDatabase {
         SpacesTable,
         SpacesImagesTable,
         SpaceKeysTable,
-        SpaceBookingsTable
+        SpaceBookingsTable,
+        SpaceIncidencesTable,
+        SpaceIncidenceImagesTable
     )
 
     suspend fun initialize(
