@@ -54,7 +54,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val items by viewModel.items.collectAsState()
         val creatingItem by viewModel.creatingItem.collectAsState()
         val updatingBooking by viewModel.updatingBooking.collectAsState()
-        val allBookings by viewModel.allBookings.collectAsState()
+        val allItemBookings by viewModel.allItemBookings.collectAsState()
+        val allSpaceBookings by viewModel.allSpaceBookings.collectAsState()
         val spaces by viewModel.spaces.collectAsState()
         val creatingSpace by viewModel.creatingSpace.collectAsState()
 
@@ -121,7 +122,8 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             items = items,
                             isCreatingItem = creatingItem,
                             onItemOperation = viewModel::createOrUpdate,
-                            allBookings = allBookings,
+                            allItemBookings = allItemBookings,
+                            allSpaceBookings = allSpaceBookings,
                             isUpdatingBooking = updatingBooking,
                             onConfirmBookingRequested = viewModel::confirmBooking,
                             onMarkAsTakenRequested = viewModel::markAsTaken,

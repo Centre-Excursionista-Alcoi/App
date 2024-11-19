@@ -6,18 +6,18 @@ import kotlinx.serialization.Serializable
 data class SpaceBookingD(
     override val id: Int? = null,
     val createdAt: Long? = null,
-    val from: Long? = null,
-    val to: Long? = null,
-    val userId: String? = null,
+    override val from: Long? = null,
+    override val to: Long? = null,
+    override val userId: String? = null,
     val spaceId: Int? = null,
-    val confirmed: Boolean = false,
+    override val confirmed: Boolean = false,
     val keyId: Int? = null,
-    val takenAt: Long? = null,
-    val returnedAt: Long? = null,
+    override val takenAt: Long? = null,
+    override val returnedAt: Long? = null,
     val paid: Boolean = false,
     val paymentReference: String? = null,
     val paymentDocument: ByteArray? = null
-): DatabaseData {
+): IBookingD {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false

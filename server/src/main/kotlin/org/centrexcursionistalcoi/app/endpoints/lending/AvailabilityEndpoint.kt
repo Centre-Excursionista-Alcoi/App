@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.endpoints.lending
 import io.ktor.http.HttpMethod
 import io.ktor.server.routing.RoutingContext
 import java.time.Instant
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.ItemD
@@ -29,9 +29,9 @@ object AvailabilityEndpoint: SecureEndpoint("/availability", HttpMethod.Get) {
         }
 
         val from = Instant.ofEpochMilli(fromEpoch)
-            .let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
         val to = Instant.ofEpochMilli(toEpoch)
-            .let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
 
         // Fetch the existing lendings for the item that overlap with the requested period
         val availableItems = ServerDatabase { itemsAvailableForDates(from, to) }

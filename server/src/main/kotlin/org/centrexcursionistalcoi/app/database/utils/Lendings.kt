@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.database.utils
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
@@ -24,7 +23,7 @@ import org.jetbrains.exposed.sql.and
  *
  * **Must be called within a transaction.**
  */
-fun itemLendingsForDates(from: LocalDateTime, to: LocalDateTime): List<ItemLendingD> {
+fun itemLendingsForDates(from: LocalDate, to: LocalDate): List<ItemLendingD> {
     return Lending.find {
         // (StartA <= EndB) and (EndA >= StartB)
         // Proof: https://stackoverflow.com/a/325964
@@ -39,7 +38,7 @@ fun itemLendingsForDates(from: LocalDateTime, to: LocalDateTime): List<ItemLendi
  *
  * **Must be called within a transaction.**
  */
-fun itemsAvailableForDates(from: LocalDateTime, to: LocalDateTime): List<ItemD> {
+fun itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
     // Fetch all items in the database
     val allItems = Item.all().map(Item::serializable)
     // Fetch the existing lendings that overlap with the requested period

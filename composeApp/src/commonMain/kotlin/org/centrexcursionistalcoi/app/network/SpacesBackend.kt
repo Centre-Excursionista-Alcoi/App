@@ -37,4 +37,21 @@ object SpacesBackend {
      * Lists all the bookings made by the user.
      */
     suspend fun listBookings() = Backend.get("/spaces/bookings", ListSerializer(SpaceBookingD.serializer()))
+
+    /**
+     * Lists all the bookings made by all users.
+     */
+    suspend fun allBookings() = Backend.get("/spaces/bookings?all=true", ListSerializer(SpaceBookingD.serializer()))
+
+    suspend fun confirm(bookingId: Int) = Backend.post(
+        path = "/spaces/bookings/$bookingId/confirm"
+    )
+
+    suspend fun markTaken(bookingId: Int) = Backend.post(
+        path = "/spaces/bookings/$bookingId/taken"
+    )
+
+    suspend fun markReturned(bookingId: Int) = Backend.post(
+        path = "/spaces/bookings/$bookingId/returned"
+    )
 }

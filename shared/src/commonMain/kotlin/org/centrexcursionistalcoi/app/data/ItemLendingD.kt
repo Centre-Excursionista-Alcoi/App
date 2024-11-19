@@ -7,10 +7,10 @@ data class ItemLendingD(
     override val id: Int? = null,
     val createdAt: Long? = null,
     val itemIds: Set<Int>? = null,
-    val userId: String? = null,
-    val confirmed: Boolean = false,
-    val from: Long? = null,
-    val to: Long? = null,
-    val takenAt: Long? = null,
-    val returnedAt: Long? = null
-): DatabaseData
+    override val userId: String? = null,
+    override val confirmed: Boolean = false,
+    override val from: Long? = null,
+    override val to: Long? = null,
+    override val takenAt: Long? = null,
+    override val returnedAt: Long? = null
+): IBookingD

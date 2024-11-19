@@ -7,6 +7,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.DatabaseData
+import org.centrexcursionistalcoi.app.data.IBookingD
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
@@ -66,8 +67,11 @@ class HomeViewModel : ViewModel() {
     private val _updatingBooking = MutableStateFlow(false)
     val updatingBooking get() = _updatingBooking.asStateFlow()
 
-    private val _allBookings = MutableStateFlow<List<ItemLendingD>?>(null)
-    val allBookings get() = _allBookings.asStateFlow()
+    private val _allItemBookings = MutableStateFlow<List<ItemLendingD>?>(null)
+    val allItemBookings get() = _allItemBookings.asStateFlow()
+
+    private val _allSpaceBookings = MutableStateFlow<List<SpaceBookingD>?>(null)
+    val allSpaceBookings get() = _allSpaceBookings.asStateFlow()
 
     private val _spaces = MutableStateFlow<List<SpaceD>?>(null)
     val spaces get() = _spaces.asStateFlow()
@@ -89,20 +93,30 @@ class HomeViewModel : ViewModel() {
             val items = InventoryBackend.listItems()
             _items.emit(items)
 
-            val bookings = InventoryBackend.listBookings()
-            _itemBookings.emit(bookings)
-
-            val allBookings = InventoryBackend.allBookings()
-            _allBookings.emit(allBookings)
-
-            val usersList = UserDataBackend.listUsers()
-            _usersList.emit(usersList)
+            val itemBookings = InventoryBackend.listBookings()
+            _itemBookings.emit(itemBookings)
 
             val spaces = SpacesBackend.list()
             _spaces.emit(spaces)
 
             val spaceBookings = SpacesBackend.listBookings()
             _spaceBookings.emit(spaceBookings)
+
+            // only for administrators
+            if (data.isAdmin) {
+                val usersList = UserDataBackend.listUsers()
+                _usersList.emit(usersList)
+
+                val allItemBookings = InventoryBackend.allBookings()
+                _allItemBookings.emit(allItemBookings)
+
+                val allSpaceBookings = SpacesBackend.allBookings()
+                _allSpaceBookings.emit(allSpaceBookings)
+            } else {
+                _usersList.emit(emptyList())
+                _allItemBookings.emit(emptyList())
+                _allSpaceBookings.emit(emptyList())
+            }
         }
     }
 
@@ -194,11 +208,15 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun confirmBooking(booking: ItemLendingD, onConfirm: () -> Unit) {
+    fun confirmBooking(booking: IBookingD, onConfirm: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
-                InventoryBackend.confirm(booking.id!!)
+                when (booking) {
+                    is ItemLendingD -> InventoryBackend.confirm(booking.id!!)
+                    is SpaceBookingD -> SpacesBackend.confirm(booking.id!!)
+                    else -> error("Unsupported booking type: ${booking::class.simpleName}")
+                }
                 load()
                 uiThread { onConfirm() }
             } finally {
@@ -207,11 +225,15 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsTaken(booking: ItemLendingD, onMarked: () -> Unit) {
+    fun markAsTaken(booking: IBookingD, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
-                InventoryBackend.markTaken(booking.id!!)
+                when (booking) {
+                    is ItemLendingD -> InventoryBackend.markTaken(booking.id!!)
+                    is SpaceBookingD -> SpacesBackend.markTaken(booking.id!!)
+                    else -> error("Unsupported booking type: ${booking::class.simpleName}")
+                }
                 load()
                 uiThread { onMarked() }
             } finally {
@@ -220,11 +242,15 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsReturned(booking: ItemLendingD, onMarked: () -> Unit) {
+    fun markAsReturned(booking: IBookingD, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
-                InventoryBackend.markReturned(booking.id!!)
+                when (booking) {
+                    is ItemLendingD -> InventoryBackend.markReturned(booking.id!!)
+                    is SpaceBookingD -> SpacesBackend.markReturned(booking.id!!)
+                    else -> error("Unsupported booking type: ${booking::class.simpleName}")
+                }
                 load()
                 uiThread { onMarked() }
             } finally {

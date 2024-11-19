@@ -8,10 +8,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.centrexcursionistalcoi.app.data.IBookingD
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.pages.home.admin.BookingsCard
@@ -36,11 +38,12 @@ fun AdminPage(
     items: List<ItemD>?,
     isCreatingItem: Boolean,
     onItemOperation: (ItemD, onCreate: () -> Unit) -> Unit,
-    allBookings: List<ItemLendingD>?,
+    allItemBookings: List<ItemLendingD>?,
+    allSpaceBookings: List<SpaceBookingD>?,
     isUpdatingBooking: Boolean,
-    onConfirmBookingRequested: (ItemLendingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (ItemLendingD, () -> Unit) -> Unit,
-    onMarkAsReturnedRequested: (ItemLendingD, () -> Unit) -> Unit,
+    onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (IBookingD, () -> Unit) -> Unit,
+    onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit,
     spaces: List<SpaceD>?,
     isCreatingSpace: Boolean,
     onSpaceOperation: (SpaceD, onCreate: () -> Unit) -> Unit,
@@ -62,12 +65,14 @@ fun AdminPage(
 
         TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
 
-        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allBookings)
+        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
 
         BookingsCard(
-            allBookings,
+            allItemBookings,
             items,
             itemTypes,
+            allSpaceBookings,
+            spaces,
             isUpdatingBooking,
             onConfirmBookingRequested,
             onMarkAsTakenRequested,

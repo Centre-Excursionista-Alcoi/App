@@ -63,7 +63,7 @@ object Backend {
         }
 
         val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
-        throw ServerException(code, response.bodyAsText())
+        throw ServerException(code, response.bodyAsText(), path, httpMethod)
     }
 
     /**

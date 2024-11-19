@@ -5,7 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.routing.RoutingContext
 import java.time.Instant
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.ZoneId
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
@@ -36,9 +36,9 @@ object BookItemEndpoint : SecureEndpoint("/lending", HttpMethod.Post) {
 
         // Verify that the item is available
         val from = Instant.ofEpochMilli(body.from)
-            .let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
         val to = Instant.ofEpochMilli(body.to)
-            .let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+            .let { LocalDate.ofInstant(it, ZoneId.systemDefault()) }
         val requestedItemsIds = body.itemIds
         val availableItemsIds = ServerDatabase { itemsAvailableForDates(from, to) }.map(ItemD::id)
         val someItemNotAvailable = requestedItemsIds.any { it !in availableItemsIds }
