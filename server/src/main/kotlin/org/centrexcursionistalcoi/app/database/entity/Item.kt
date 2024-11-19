@@ -3,11 +3,10 @@ package org.centrexcursionistalcoi.app.database.entity
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.database.common.SerializableEntity
 import org.centrexcursionistalcoi.app.database.table.ItemsTable
-import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class Item(id: EntityID<Int>) : IntEntity(id), SerializableEntity<ItemD> {
+class Item(id: EntityID<Int>) : SerializableEntity<ItemD>(id) {
     companion object : IntEntityClass<Item>(ItemsTable)
 
     val createdAt by ItemsTable.createdAt

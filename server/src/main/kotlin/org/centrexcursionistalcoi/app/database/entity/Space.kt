@@ -10,11 +10,10 @@ import org.centrexcursionistalcoi.app.database.table.SpaceKeysTable
 import org.centrexcursionistalcoi.app.database.table.SpacesImagesTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.centrexcursionistalcoi.app.utils.serializable
-import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
-class Space(id: EntityID<Int>) : IntEntity(id), SerializableEntity<SpaceD> {
+class Space(id: EntityID<Int>) : SerializableEntity<SpaceD>(id) {
     companion object : IntEntityClass<Space>(SpacesTable)
 
     val createdAt by SpacesTable.createdAt

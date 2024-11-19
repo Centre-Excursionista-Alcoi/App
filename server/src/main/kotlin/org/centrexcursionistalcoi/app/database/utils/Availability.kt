@@ -53,10 +53,10 @@ fun itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
     // Fetch the existing lendings that overlap with the requested period
     val lendingsIds = lendingsForDates(from, to, Lending, LendingsTable).mapNotNull { it.id }
     // Fetch all the items booked for the requested period
-    val usedItemsIds = LendingItem.find { LendingItemsTable.lending inList lendingsIds }
+    val usedIds = LendingItem.find { LendingItemsTable.lending inList lendingsIds }
         .map { it.item.id.value }
     // Return all the items in the database that are not used
-    return allItems.filter { it.id !in usedItemsIds }
+    return allItems.filter { it.id !in usedIds }
 }
 
 /**
@@ -71,8 +71,8 @@ fun spacesAvailableForDates(from: LocalDate, to: LocalDate): List<SpaceD> {
     // Fetch the existing lendings that overlap with the requested period
     val bookingsIds = lendingsForDates(from, to, SpaceBooking, SpaceBookingsTable).mapNotNull { it.id }
     // Fetch all the spaces booked for the requested period
-    val usedSpacesIds = SpaceBooking.find { SpaceBookingsTable.space inList bookingsIds }
+    val usedIds = SpaceBooking.find { SpaceBookingsTable.space inList bookingsIds }
         .map { it.space.id.value }
     // Return all the spaces in the database that are not used
-    return allSpaces.filter { it.id !in usedSpacesIds }
+    return allSpaces.filter { it.id !in usedIds }
 }
