@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.pages.home.admin
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
@@ -24,9 +23,12 @@ import ceaapp.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
@@ -37,9 +39,9 @@ import org.centrexcursionistalcoi.app.server.response.data.Address
 import org.centrexcursionistalcoi.app.server.response.data.Location
 import org.centrexcursionistalcoi.app.server.response.data.MoneyD
 import org.centrexcursionistalcoi.app.server.response.data.SpaceD
-import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun SpacesCard(
     spaces: List<SpaceD>?,
@@ -55,13 +57,15 @@ fun SpacesCard(
         onCreateRequested = onOperationRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
-        var images by remember { mutableStateOf(mapOf<String, ByteArray>()) }
-
-        val filePicker = rememberFilePickerLauncher(mode = PickerMode.Single, type = PickerType.Image) { file ->
-            file ?: return@rememberFilePickerLauncher
+        val filePicker = rememberFilePickerLauncher(mode = PickerMode.Multiple(), type = PickerType.Image) { files ->
+            files?.takeIf { it.isNotEmpty() } ?: return@rememberFilePickerLauncher
             CoroutineScope(Dispatchers.Main).launch {
-                val bytes = file.readBytes()
-                images = images + (file.name to bytes)
+                val newImages = data.images.orEmpty().toMutableList()
+                for (file in files) {
+                    val bytes = file.readBytes()
+                    newImages += Base64.encode(bytes)
+                }
+                showingCreationDialog = data.copy(images = newImages)
             }
         }
 
@@ -85,22 +89,13 @@ fun SpacesCard(
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
         )
-        for ((name, image) in images) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicText(
-                    text = "$name (${image.humanReadableSize()})",
-                    style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.weight(1f)
-                )
-                PlatformButton(
-                    text = stringResource(Res.string.remove),
-                    onClick = { images = images - name },
-                )
+        ImagesCarousel(
+            images = data.images.orEmpty().map(Base64::decode),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            onRemove = { index ->
+                showingCreationDialog = data.copy(images = data.images?.toMutableList()?.apply { removeAt(index) })
             }
-        }
+        )
         PlatformButton(
             text = stringResource(Res.string.select),
             onClick = { filePicker.launch() },
