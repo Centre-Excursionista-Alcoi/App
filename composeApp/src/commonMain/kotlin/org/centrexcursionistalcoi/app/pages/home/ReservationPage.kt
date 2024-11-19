@@ -109,7 +109,8 @@ fun ColumnScope.ReservationPage(
                             label = stringResource(Res.string.to),
                             modifier = Modifier.weight(1f).padding(start = 8.dp),
                             min = from,
-                            enabled = from != null
+                            enabled = from != null,
+                            initialDisplayedDate = from
                         )
                     }
                 }

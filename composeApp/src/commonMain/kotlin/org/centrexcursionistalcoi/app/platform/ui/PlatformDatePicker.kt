@@ -21,5 +21,6 @@ expect fun PlatformDatePicker(
         dayOfMonth()
     },
     min: LocalDate? = null,
-    max: LocalDate? = null
+    max: LocalDate? = null,
+    initialDisplayedDate: LocalDate? = null
 )

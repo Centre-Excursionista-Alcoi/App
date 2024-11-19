@@ -24,6 +24,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.toLocalDateTime
+import org.centrexcursionistalcoi.app.utils.atEndOfDayInMilliseconds
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,11 +37,14 @@ actual fun PlatformDatePicker(
     enabled: Boolean,
     format: DateTimeFormat<LocalDate>,
     min: LocalDate?,
-    max: LocalDate?
+    max: LocalDate?,
+    initialDisplayedDate: LocalDate?
 ) {
     var showingPicker by remember { mutableStateOf(false) }
     if (enabled && showingPicker) {
         val state = rememberDatePickerState(
+            initialSelectedDateMillis = value?.atEndOfDayInMilliseconds(),
+            initialDisplayedMonthMillis = (value ?: initialDisplayedDate)?.atEndOfDayInMilliseconds(),
             selectableDates = if (min == null && max == null) {
                 DatePickerDefaults.AllDates
             } else {

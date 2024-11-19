@@ -2,16 +2,28 @@ package org.centrexcursionistalcoi.app.platform.ui
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import ceaapp.composeapp.generated.resources.Res
-import ceaapp.composeapp.generated.resources.ok
+import ceaapp.composeapp.generated.resources.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.toLocalDateTime
+import org.centrexcursionistalcoi.app.utils.atEndOfDayInMilliseconds
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -24,11 +36,14 @@ actual fun PlatformDatePicker(
     enabled: Boolean,
     format: DateTimeFormat<LocalDate>,
     min: LocalDate?,
-    max: LocalDate?
+    max: LocalDate?,
+    initialDisplayedDate: LocalDate?
 ) {
     var showingPicker by remember { mutableStateOf(false) }
     if (enabled && showingPicker) {
         val state = rememberDatePickerState(
+            initialSelectedDateMillis = value?.atEndOfDayInMilliseconds(),
+            initialDisplayedMonthMillis = (value ?: initialDisplayedDate)?.atEndOfDayInMilliseconds(),
             selectableDates = if (min == null && max == null) {
                 DatePickerDefaults.AllDates
             } else {
