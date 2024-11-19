@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -17,7 +18,7 @@ actual fun PlatformSettingsItem(
 ) {
     ListItem(
         headlineContent = { Text(title) },
-        modifier = modifier,
+        modifier = modifier.clickable(enabled = onClick != null) { onClick?.invoke() },
         supportingContent = if (summary != null) { { Text(summary) } } else { null },
         leadingContent = { Icon(icon, summary) }
     )
