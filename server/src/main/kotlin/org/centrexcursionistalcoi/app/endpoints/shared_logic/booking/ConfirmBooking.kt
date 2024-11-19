@@ -8,6 +8,9 @@ import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint.respondFailure
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint.respondSuccess
+import org.centrexcursionistalcoi.app.push.FCM
+import org.centrexcursionistalcoi.app.push.NotificationType
+import org.centrexcursionistalcoi.app.push.payload.BookingConfirmedPayload
 import org.centrexcursionistalcoi.app.server.response.Errors
 import org.jetbrains.exposed.dao.IntEntityClass
 
@@ -27,11 +30,10 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     }
 
     // Verify that the booking is valid
-    val booking = call.parameters["id"]
-        ?.toIntOrNull()
-        ?.let {
-            ServerDatabase { entityClass.findById(it) }
-        }
+    val bookingId = call.parameters["id"]?.toIntOrNull()
+    val booking = bookingId?.let {
+        ServerDatabase { entityClass.findById(it) }
+    }
     if (booking == null) {
         respondFailure(Errors.ObjectNotFound)
         return
@@ -41,6 +43,13 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     ServerDatabase {
         booking.confirmed = true
     }
+
+    val payload = BookingConfirmedPayload(
+        bookingId = bookingId,
+        bookingType = entityClass::class.simpleName!!
+    )
+    val notifyUser = ServerDatabase { booking.user }
+    FCM.notify(notifyUser, NotificationType.BookingConfirmed, payload, BookingConfirmedPayload.serializer())
 
     respondSuccess(HttpStatusCode.Accepted)
 }

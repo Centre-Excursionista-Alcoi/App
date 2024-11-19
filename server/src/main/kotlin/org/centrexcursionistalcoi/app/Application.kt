@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.plugins.installAuthentication
 import org.centrexcursionistalcoi.app.plugins.installContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.installSessions
 import org.centrexcursionistalcoi.app.plugins.installStatusPages
+import org.centrexcursionistalcoi.app.push.FCM
 
 fun main() = runBlocking {
     start()
@@ -25,6 +26,10 @@ private suspend fun start() {
 
         ServerDatabase.initialize(databaseUrl, databaseDriver, databaseUsername, databasePassword)
     }
+
+    FCM.initialize(
+        System.getenv("FCM_SERVICE_ACCOUNT_KEY_PATH") ?: "serviceAccountKey.json"
+    )
 
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)

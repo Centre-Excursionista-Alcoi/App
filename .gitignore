@@ -18,3 +18,4 @@ captures
 *.db
 notarization.properties
 google-services.json
+serviceAccountKey.json
