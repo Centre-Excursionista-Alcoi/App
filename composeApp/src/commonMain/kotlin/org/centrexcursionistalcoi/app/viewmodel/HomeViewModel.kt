@@ -78,42 +78,46 @@ class HomeViewModel : ViewModel() {
 
     fun load() {
         launch {
-            val data = UserDataBackend.getUserData()
-            _userData.emit(data)
+            loadSync()
+        }
+    }
 
-            val sections = SectionsBackend.list()
-            _sections.emit(sections)
+    private suspend fun loadSync() {
+        val data = UserDataBackend.getUserData()
+        _userData.emit(data)
 
-            val types = InventoryBackend.listTypes()
-            _itemTypes.emit(types)
+        val sections = SectionsBackend.list()
+        _sections.emit(sections)
 
-            val items = InventoryBackend.listItems()
-            _items.emit(items)
+        val types = InventoryBackend.listTypes()
+        _itemTypes.emit(types)
 
-            val itemBookings = InventoryBackend.listBookings()
-            _itemBookings.emit(itemBookings)
+        val items = InventoryBackend.listItems()
+        _items.emit(items)
 
-            val spaces = SpacesBackend.list()
-            _spaces.emit(spaces)
+        val itemBookings = InventoryBackend.listBookings()
+        _itemBookings.emit(itemBookings)
 
-            val spaceBookings = SpacesBackend.listBookings()
-            _spaceBookings.emit(spaceBookings)
+        val spaces = SpacesBackend.list()
+        _spaces.emit(spaces)
 
-            // only for administrators
-            if (data.isAdmin) {
-                val usersList = UserDataBackend.listUsers()
-                _usersList.emit(usersList)
+        val spaceBookings = SpacesBackend.listBookings()
+        _spaceBookings.emit(spaceBookings)
 
-                val allItemBookings = InventoryBackend.allBookings()
-                _allItemBookings.emit(allItemBookings)
+        // only for administrators
+        if (data.isAdmin) {
+            val usersList = UserDataBackend.listUsers()
+            _usersList.emit(usersList)
 
-                val allSpaceBookings = SpacesBackend.allBookings()
-                _allSpaceBookings.emit(allSpaceBookings)
-            } else {
-                _usersList.emit(emptyList())
-                _allItemBookings.emit(emptyList())
-                _allSpaceBookings.emit(emptyList())
-            }
+            val allItemBookings = InventoryBackend.allBookings()
+            _allItemBookings.emit(allItemBookings)
+
+            val allSpaceBookings = SpacesBackend.allBookings()
+            _allSpaceBookings.emit(allSpaceBookings)
+        } else {
+            _usersList.emit(emptyList())
+            _allItemBookings.emit(emptyList())
+            _allSpaceBookings.emit(emptyList())
         }
     }
 
@@ -151,7 +155,7 @@ class HomeViewModel : ViewModel() {
                 } else {
                     updater(value)
                 }
-                load()
+                loadSync()
                 uiThread { onCreate() }
             } finally {
                 creating.emit(false)
@@ -199,6 +203,23 @@ class HomeViewModel : ViewModel() {
         )
     }
 
+    fun cancelBooking(booking: IBookingD, onCancel: () -> Unit) {
+        launch {
+            try {
+                _updatingBooking.emit(true)
+                when (booking) {
+                    is ItemLendingD -> InventoryBackend.cancelBooking(booking.id!!)
+                    is SpaceBookingD -> SpacesBackend.cancelBooking(booking.id!!)
+                    else -> error("Unsupported booking type: ${booking::class.simpleName}")
+                }
+                loadSync()
+                uiThread { onCancel() }
+            } finally {
+                _updatingBooking.emit(false)
+            }
+        }
+    }
+
     fun confirmBooking(booking: IBookingD, onConfirm: () -> Unit) {
         launch {
             try {
@@ -208,7 +229,7 @@ class HomeViewModel : ViewModel() {
                     is SpaceBookingD -> SpacesBackend.confirm(booking.id!!)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                load()
+                loadSync()
                 uiThread { onConfirm() }
             } finally {
                 _updatingBooking.emit(false)
@@ -234,7 +255,7 @@ class HomeViewModel : ViewModel() {
                     }
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                load()
+                loadSync()
                 uiThread { onMarked() }
             } finally {
                 _updatingBooking.emit(false)
@@ -251,7 +272,7 @@ class HomeViewModel : ViewModel() {
                     is SpaceBookingD -> SpacesBackend.markReturned(booking.id!!)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                load()
+                loadSync()
                 uiThread { onMarked() }
             } finally {
                 _updatingBooking.emit(false)
@@ -264,7 +285,7 @@ class HomeViewModel : ViewModel() {
             try {
                 _updatingUser.emit(true)
                 UserDataBackend.confirm(user)
-                load()
+                loadSync()
                 uiThread { onConfirm() }
             } finally {
                 _updatingUser.emit(false)
@@ -277,7 +298,7 @@ class HomeViewModel : ViewModel() {
             try {
                 _updatingUser.emit(true)
                 UserDataBackend.delete(user)
-                load()
+                loadSync()
                 uiThread { onDelete() }
             } finally {
                 _updatingUser.emit(false)

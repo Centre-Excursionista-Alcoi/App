@@ -57,6 +57,11 @@ object InventoryBackend {
      */
     suspend fun allBookings() = Backend.get("/lendings?all=true", ListSerializer(ItemLendingD.serializer()))
 
+    suspend fun getBooking(id: Int) = Backend.get(
+        path = "/lending/$id",
+        deserializer = ItemLendingD.serializer()
+    )
+
     suspend fun book(from: LocalDate, to: LocalDate, itemIds: Set<Int>) = Backend.post(
         path = "/lending",
         body = LendingRequest(from, to, itemIds),
@@ -73,5 +78,9 @@ object InventoryBackend {
 
     suspend fun markReturned(bookingId: Int) = Backend.post(
         path = "/lending/$bookingId/returned"
+    )
+
+    suspend fun cancelBooking(bookingId: Int) = Backend.delete(
+        path = "/lending/$bookingId"
     )
 }

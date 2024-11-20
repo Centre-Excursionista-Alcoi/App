@@ -12,6 +12,7 @@ object NotificationChannels {
     const val GROUP_ID_BOOKINGS = "bookings"
 
     const val CHANNEL_ID_CONFIRMATION = "confirmation"
+    const val CHANNEL_ID_CANCELLATION = "cancellation"
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun Context.bookingsGroup(): NotificationChannelGroup {
@@ -33,6 +34,17 @@ object NotificationChannels {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun Context.bookingCancellationsChannel(): NotificationChannel {
+        val name = getString(R.string.channel_name_cancellation_name)
+        val descriptionText = getString(R.string.channel_name_cancellation_description)
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        return NotificationChannel(CHANNEL_ID_CANCELLATION, name, importance).apply {
+            description = descriptionText
+            group = GROUP_ID_BOOKINGS
+        }
+    }
+
     fun create(context: Context) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is not in the Support Library.
@@ -49,7 +61,8 @@ object NotificationChannels {
 
             notificationManager.createNotificationChannels(
                 listOf(
-                    context.bookingConfirmationsChannel()
+                    context.bookingConfirmationsChannel(),
+                    context.bookingCancellationsChannel()
                 )
             )
         }

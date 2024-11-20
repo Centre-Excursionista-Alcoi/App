@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.pages.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,12 +16,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.route.Reservation
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -29,6 +32,8 @@ fun HomePage(
     spaceBookings: List<SpaceBookingD>?,
     spaces: List<SpaceD>?
 ) {
+    val navigator = LocalNavController.current
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(200.dp),
         modifier = Modifier.fillMaxSize().padding(8.dp)
@@ -70,7 +75,11 @@ fun HomePage(
                 items(incompleteItemBookings) { booking ->
                     PlatformCard(
                         title = stringResource(Res.string.bookings_items_count, booking.itemIds?.size ?: 0),
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clickable {
+                                navigator.navigate(Reservation(booking.id, null))
+                            }
                     ) {
                         if (!booking.confirmed) {
                             BasicText(
@@ -105,7 +114,11 @@ fun HomePage(
 
                     PlatformCard(
                         title = space.name,
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clickable {
+                                navigator.navigate(Reservation(null, booking.id))
+                            }
                     ) {
                         if (!booking.confirmed) {
                             BasicText(

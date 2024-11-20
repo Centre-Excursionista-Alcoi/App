@@ -18,6 +18,8 @@
     <string name="show_password">Show Password</string>
     <string name="tap_to_open">Tap to open</string>
     <string name="remove">Remove</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="cancel">Cancel</string>
 
     <string name="address_address">Address</string>
     <string name="address_city">City</string>
@@ -141,14 +143,17 @@
     <string name="spaces_key_name">Key name</string>
     <string name="spaces_key_description">Key description</string>
 
-    <string name="reservation_title_draft">Reservation (draft)</string>
+    <string name="reservation_title">Reservation</string>
+    <string name="reservation_draft_title">Reservation (draft)</string>
     <string name="reservation_from">From: %1$s</string>
     <string name="reservation_to">To: %1$s</string>
-    <string name="reservation_as">Reserving as %1$s for %2$d days</string>
+    <string name="reservation_as">Reserved as %1$s for %2$d days</string>
+    <string name="reservation_draft_as">Reserving as %1$s for %2$d days</string>
     <string name="reservation_items">Items</string>
-    <string name="reservation_no_items">No items selected</string>
     <string name="reservation_space">Space</string>
-    <string name="reservation_space_price_calculation">This amount is for you to take into account. The payment must be performed outside the app, either by presentially paying, or with a bank transfer.</string>
+    <string name="reservation_space_price_calculation">This amount is for you to take into account. The payment must be performed outside the app, either by physically paying, or with a bank transfer.</string>
+    <string name="reservation_space_members">Members</string>
+    <string name="reservation_space_non_members">Non-Members</string>
     <plurals name="reservation_space_price_members_count">
         <item quantity="one">%1$d member</item>
         <item quantity="other">%1$d members</item>
@@ -161,6 +166,8 @@
         <item quantity="one">%1$s at %2$s pp x %3$d day: %4$s</item>
         <item quantity="other">%1$s at %2$s pp x %3$d days: %4$s</item>
     </plurals>
+    <string name="reservation_cancel_confirmation_title">Reservation cancellation</string>
+    <string name="reservation_cancel_confirmation_message">Are you sure that you want to cancel this reservation?</string>
 
     <string name="settings_language">Language</string>
     <string name="settings_language_default">Default</string>
@@ -183,4 +190,6 @@
 
     <string name="notification_booking_confirmed_title">Booking confirmed</string>
     <string name="notification_booking_confirmed_message">Your booking has been confirmed</string>
+    <string name="notification_booking_cancelled_title">Booking cancelled</string>
+    <string name="notification_booking_cancelled_message">Your booking has been cancelled</string>
 </resources>

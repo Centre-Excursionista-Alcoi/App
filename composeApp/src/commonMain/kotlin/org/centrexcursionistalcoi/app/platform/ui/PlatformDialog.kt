@@ -8,5 +8,7 @@ import androidx.compose.ui.window.DialogProperties
 expect fun PlatformDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(),
+    title: String? = null,
+    actions: @Composable PlatformDialogContext.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 )
