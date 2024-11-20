@@ -14,14 +14,12 @@ object NotificationChannels {
     const val CHANNEL_ID_CONFIRMATION = "confirmation"
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun Context.createBookingsGroup(notificationManager: NotificationManager) {
-        notificationManager.createNotificationChannelGroup(
-            NotificationChannelGroup(GROUP_ID_BOOKINGS, getString(R.string.group_name_bookings_name)).apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    description = getString(R.string.group_name_bookings_description)
-                }
+    private fun Context.bookingsGroup(): NotificationChannelGroup {
+        return NotificationChannelGroup(GROUP_ID_BOOKINGS, getString(R.string.group_name_bookings_name)).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                description = getString(R.string.group_name_bookings_description)
             }
-        )
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -43,7 +41,11 @@ object NotificationChannels {
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            context.createBookingsGroup(notificationManager)
+            notificationManager.createNotificationChannelGroups(
+                listOf(
+                    context.bookingsGroup()
+                )
+            )
 
             notificationManager.createNotificationChannels(
                 listOf(

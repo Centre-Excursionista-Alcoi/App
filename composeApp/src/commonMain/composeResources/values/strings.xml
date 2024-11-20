@@ -180,4 +180,7 @@
 
     <string name="error_ping_message">Server not available. Please, try again later.</string>
     <string name="error_ping_body">Response body: %1$s</string>
+
+    <string name="notification_booking_confirmed_title">Booking confirmed</string>
+    <string name="notification_booking_confirmed_message">Your booking has been confirmed</string>
 </resources>

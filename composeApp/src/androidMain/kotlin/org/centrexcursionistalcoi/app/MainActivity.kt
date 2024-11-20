@@ -22,6 +22,11 @@ class MainActivity : AppCompatActivity() {
             AppRoot()
         }
     }
+
+    companion object {
+        const val EXTRA_BOOKING_ID = "booking_id"
+        const val EXTRA_BOOKING_TYPE = "booking_type"
+    }
 }
 
 @Preview
