@@ -62,4 +62,7 @@ object Errors {
 
     @Serializable
     data object KeyNotSpecified : ErrorResponse(20, "The space requires a key to be given")
+
+    @Serializable
+    data object BookingTaken : ErrorResponse(21, "Booking taken", 409 /* Conflict */)
 }

@@ -7,11 +7,11 @@ expect abstract class PlatformDialogContext : RowScope {
     abstract fun dismiss()
 
     @Composable
-    fun RowScope.PositiveButton(text: String, onClick: () -> Unit)
+    fun RowScope.PositiveButton(text: String, enabled: Boolean = true, onClick: () -> Unit)
 
     @Composable
-    fun RowScope.NeutralButton(text: String, onClick: () -> Unit)
+    fun RowScope.NeutralButton(text: String, enabled: Boolean = true, onClick: () -> Unit)
 
     @Composable
-    fun RowScope.DestructiveButton(text: String, onClick: () -> Unit)
+    fun RowScope.DestructiveButton(text: String, enabled: Boolean = true, onClick: () -> Unit)
 }

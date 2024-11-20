@@ -41,6 +41,7 @@ fun AdminPage(
     allItemBookings: List<ItemLendingD>?,
     allSpaceBookings: List<SpaceBookingD>?,
     isUpdatingBooking: Boolean,
+    onCancelBookingRequested: (IBookingD, () -> Unit) -> Unit,
     onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
     onMarkAsTakenRequested: (IBookingD, meta: Map<String, Any>, () -> Unit) -> Unit,
     onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit,
@@ -74,6 +75,7 @@ fun AdminPage(
             allSpaceBookings,
             spaces,
             isUpdatingBooking,
+            onCancelBookingRequested,
             onConfirmBookingRequested,
             onMarkAsTakenRequested,
             onMarkAsReturnedRequested

@@ -2,12 +2,8 @@ package org.centrexcursionistalcoi.app.pages.home.admin
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -28,7 +24,6 @@ import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
-import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCheckbox
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -46,21 +41,75 @@ fun BookingsCard(
     spaceBookings: List<SpaceBookingD>?,
     spaces: List<SpaceD>?,
     isUpdatingBooking: Boolean,
+    onCancelBookingRequested: (IBookingD, () -> Unit) -> Unit,
     onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
     onMarkAsTakenRequested: (IBookingD, meta: Map<String, Any>, () -> Unit) -> Unit,
     onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit
 ) {
-    var confirmBooking by remember { mutableStateOf<IBookingD?>(null) }
-    confirmBooking?.let { booking ->
+    var bookingDialog by remember { mutableStateOf<IBookingD?>(null) }
+    bookingDialog?.let { booking ->
         PlatformDialog(
-            onDismissRequest = { confirmBooking = null }
-        ) {
-            BasicText(
-                text = stringResource(if (booking.confirmed) Res.string.bookings_info else Res.string.bookings_confirm),
-                style = getPlatformTextStyles().heading,
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-            )
+            onDismissRequest = { bookingDialog = null },
+            title = stringResource(if (booking.confirmed) Res.string.bookings_info else Res.string.bookings_confirm),
+            actions = {
+                if (booking.takenAt == null) {
+                    DestructiveButton(
+                        text = stringResource(Res.string.cancel),
+                        enabled = !isUpdatingBooking
+                    ) {
+                        onCancelBookingRequested(booking) { bookingDialog = null }
+                    }
+                }
 
+                if (!booking.confirmed) {
+                    PositiveButton(
+                        text = stringResource(Res.string.confirm),
+                        enabled = !isUpdatingBooking
+                    ) {
+                        onConfirmBookingRequested(booking) { bookingDialog = null }
+                    }
+                } else if (booking.takenAt == null) {
+                    var isEnabled by remember { mutableStateOf(true) }
+                    val meta by remember { mutableStateOf(mutableMapOf<String, Any>()) }
+
+                    if (booking is SpaceBookingD) {
+                        val space = spaces?.find { it.id == booking.spaceId }
+                        val keys = space?.keys?.takeIf { it.isNotEmpty() }
+                        if (keys != null) {
+                            LaunchedEffect(Unit) {
+                                isEnabled = false
+                            }
+
+                            PlatformDropdown(
+                                value = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int?,
+                                onValueChange = {
+                                    meta[BOOKING_CONFIRM_META_SPACE_KEY] = it
+                                    isEnabled = meta.containsKey(BOOKING_CONFIRM_META_SPACE_KEY)
+                                },
+                                options = keys.mapNotNull { it.id },
+                                label = stringResource(Res.string.spaces_key),
+                                toString = { id -> keys.find { it.id == id }?.name ?: "" },
+                                modifier = Modifier.weight(1f).padding(end = 8.dp)
+                            )
+                        }
+                    }
+
+                    PositiveButton(
+                        text = stringResource(Res.string.bookings_mark_taken),
+                        enabled = !isUpdatingBooking && isEnabled
+                    ) {
+                        onMarkAsTakenRequested(booking, meta) { bookingDialog = null }
+                    }
+                } else if (booking.returnedAt == null) {
+                    PositiveButton(
+                        text = stringResource(Res.string.bookings_mark_returned),
+                        enabled = !isUpdatingBooking
+                    ) {
+                        onMarkAsReturnedRequested(booking) { bookingDialog = null }
+                    }
+                }
+            }
+        ) {
             BasicText(
                 text = stringResource(Res.string.bookings_made_by, booking.userId ?: "N/A"),
                 style = getPlatformTextStyles().heading,
@@ -146,64 +195,6 @@ fun BookingsCard(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                 )
             }
-
-            if (!booking.confirmed) {
-                PlatformButton(
-                    text = stringResource(Res.string.confirm),
-                    modifier = Modifier.align(Alignment.End).padding(8.dp).padding(top = 8.dp),
-                    enabled = !isUpdatingBooking
-                ) {
-                    onConfirmBookingRequested(booking) { confirmBooking = null }
-                }
-            } else if (booking.takenAt == null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp).padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    var isEnabled by remember { mutableStateOf(true) }
-                    val meta by remember { mutableStateOf(mutableMapOf<String, Any>()) }
-
-                    if (booking is SpaceBookingD) {
-                        val space = spaces?.find { it.id == booking.spaceId }
-                        val keys = space?.keys?.takeIf { it.isNotEmpty() }
-                        if (keys != null) {
-                            LaunchedEffect(Unit) {
-                                isEnabled = false
-                            }
-
-                            PlatformDropdown(
-                                value = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int?,
-                                onValueChange = {
-                                    meta[BOOKING_CONFIRM_META_SPACE_KEY] = it
-                                    isEnabled = meta.containsKey(BOOKING_CONFIRM_META_SPACE_KEY)
-                                },
-                                options = keys.mapNotNull { it.id },
-                                label = stringResource(Res.string.spaces_key),
-                                toString = { id -> keys.find { it.id == id }?.name ?: "" },
-                                modifier = Modifier.weight(1f).padding(end = 8.dp)
-                            )
-                        }
-                    }
-
-                    PlatformButton(
-                        text = stringResource(Res.string.bookings_mark_taken),
-                        enabled = !isUpdatingBooking && isEnabled
-                    ) {
-                        onMarkAsTakenRequested(booking, meta) { confirmBooking = null }
-                    }
-                }
-            } else if (booking.returnedAt == null) {
-                PlatformButton(
-                    text = stringResource(Res.string.bookings_mark_returned),
-                    modifier = Modifier.align(Alignment.End).padding(8.dp).padding(top = 8.dp),
-                    enabled = !isUpdatingBooking
-                ) {
-                    onMarkAsReturnedRequested(booking) { confirmBooking = null }
-                }
-            } else {
-                Spacer(Modifier.height(8.dp))
-            }
         }
     }
 
@@ -257,7 +248,7 @@ fun BookingsCard(
                                     style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
-                        ) { confirmBooking = item }
+                        ) { bookingDialog = item }
                     }
 
                     val filteredSpacesList = bookedSpaces.filter { booking ->
@@ -282,7 +273,7 @@ fun BookingsCard(
                                     style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
-                        ) { confirmBooking = booking }
+                        ) { bookingDialog = booking }
                     }
                 }
             }

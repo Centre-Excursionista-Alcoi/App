@@ -11,9 +11,10 @@ actual abstract class PlatformDialogContext : RowScope {
     actual abstract fun dismiss()
 
     @Composable
-    actual fun RowScope.PositiveButton(text: String, onClick: () -> Unit) {
+    actual fun RowScope.PositiveButton(text: String, enabled: Boolean, onClick: () -> Unit) {
         TextButton(
             colors = ButtonDefaults.textButtonColors(),
+            enabled = enabled,
             onClick = onClick
         ) {
             Text(text)
@@ -21,9 +22,10 @@ actual abstract class PlatformDialogContext : RowScope {
     }
 
     @Composable
-    actual fun RowScope.NeutralButton(text: String, onClick: () -> Unit) {
+    actual fun RowScope.NeutralButton(text: String, enabled: Boolean, onClick: () -> Unit) {
         TextButton(
             colors = ButtonDefaults.textButtonColors(),
+            enabled = enabled,
             onClick = onClick
         ) {
             Text(text)
@@ -31,12 +33,13 @@ actual abstract class PlatformDialogContext : RowScope {
     }
 
     @Composable
-    actual fun RowScope.DestructiveButton(text: String, onClick: () -> Unit) {
+    actual fun RowScope.DestructiveButton(text: String, enabled: Boolean, onClick: () -> Unit) {
         TextButton(
             colors = ButtonDefaults.textButtonColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer
             ),
+            enabled = enabled,
             onClick = onClick
         ) {
             Text(text)

@@ -27,9 +27,9 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
         return
     }
 
-    // Verify that the booking is confirmed
-    if (!booking.confirmed) {
-        respondFailure(Errors.BookingNotConfirmed)
+    // Verify that the booking is not taken
+    if (booking.takenAt != null) {
+        respondFailure(Errors.BookingTaken)
         return
     }
 

@@ -125,6 +125,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             allItemBookings = allItemBookings,
                             allSpaceBookings = allSpaceBookings,
                             isUpdatingBooking = updatingBooking,
+                            onCancelBookingRequested = viewModel::cancelBooking,
                             onConfirmBookingRequested = viewModel::confirmBooking,
                             onMarkAsTakenRequested = viewModel::markAsTaken,
                             onMarkAsReturnedRequested = viewModel::markAsReturned,

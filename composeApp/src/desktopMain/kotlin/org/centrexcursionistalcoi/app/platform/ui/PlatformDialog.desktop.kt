@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import com.gabrieldrn.carbon.foundation.color.containerBackground
 actual fun PlatformDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties,
+    title: String?,
     actions: @Composable PlatformDialogContext.() -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -35,10 +37,19 @@ actual fun PlatformDialog(
                 .containerBackground()
                 .verticalScroll(rememberScrollState())
         ) {
+            if (title != null) {
+                BasicText(
+                    text = title,
+                    style = getPlatformTextStyles().heading,
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                )
+            }
+
             content()
 
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
                 actions(
                     object : PlatformDialogContext() {
