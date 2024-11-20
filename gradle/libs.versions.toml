@@ -16,6 +16,8 @@ compose-navigation = "2.8.0-alpha10"
 datastore = "1.1.1"
 exposed = "0.56.0"
 firebase-admin = "9.4.1"
+firebase-bom = "33.6.0"
+firebase-crashlytics = "3.0.2"
 google-services = "4.4.2"
 h2 = "2.3.232"
 javax-money = "1.1"
@@ -51,6 +53,9 @@ exposed-javaTime = { module = "org.jetbrains.exposed:exposed-java-time", version
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 javax-money-api = { module = "javax.money:money-api", version.ref = "javax-money" }
 javax-money-impl = { module = "org.javamoney:moneta", version.ref = "javamoney" }
@@ -87,6 +92,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
 gms = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

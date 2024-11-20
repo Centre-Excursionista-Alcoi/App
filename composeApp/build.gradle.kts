@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.gms)
     alias(libs.plugins.serialization)
 }
@@ -136,6 +137,10 @@ kotlin {
             implementation(libs.multiplatformSettings.datastore)
 
             implementation(libs.ktor.client.okhttp)
+
+            implementation(platform(libs.firebase.bom))
+            implementation(libs.firebase.analytics)
+            implementation(libs.firebase.crashlytics)
         }
         iosMain.dependencies {
             implementation(libs.datastore.base)
