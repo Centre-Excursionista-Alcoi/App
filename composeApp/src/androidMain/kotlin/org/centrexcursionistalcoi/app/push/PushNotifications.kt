@@ -20,7 +20,7 @@ import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.R
 import org.centrexcursionistalcoi.app.notifications.NotificationChannels
-import org.centrexcursionistalcoi.app.push.payload.BookingConfirmedPayload
+import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.serverJson
 import org.jetbrains.compose.resources.getString
 
@@ -65,17 +65,27 @@ object PushNotifications {
             return
         }
 
-        val type = payloadData["payload_type"] as String?
+        val typeValue = payloadData["type"] as String?
         val json = payloadData["data"] as String?
-        if (type == null || json == null) {
+        if (typeValue == null || json == null) {
             Napier.e { "Invalid push notification payload" }
             return
         }
-        Napier.d { "Payload type: $type" }
+        Napier.d { "Payload type: $typeValue" }
+        val type = try {
+            NotificationType.valueOf(typeValue)
+        } catch (_: IllegalArgumentException) {
+            Napier.e { "Invalid notification type: $typeValue" }
+            return
+        }
         when (type) {
-            BookingConfirmedPayload::class.simpleName -> {
-                val payload = serverJson.decodeFromString(BookingConfirmedPayload.serializer(), json)
+            NotificationType.BookingConfirmed -> {
+                val payload = serverJson.decodeFromString(BookingPayload.serializer(), json)
                 showBookingConfirmedNotification(context, payload)
+            }
+            NotificationType.BookingCancelled -> {
+                val payload = serverJson.decodeFromString(BookingPayload.serializer(), json)
+                showBookingCancelledNotification(context, payload)
             }
         }
     }
@@ -108,7 +118,7 @@ object PushNotifications {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun showBookingConfirmedNotification(context: Context, payload: BookingConfirmedPayload) {
+    private suspend fun showBookingConfirmedNotification(context: Context, payload: BookingPayload) {
         Napier.i { "Booking confirmed: ${payload.bookingId}" }
 
         showNotification(
@@ -118,6 +128,25 @@ object PushNotifications {
             getString(Res.string.notification_booking_confirmed_title),
             getString(Res.string.notification_booking_confirmed_message),
             MainActivity::class to {
+                action = MainActivity.ACTION_BOOKING_CONFIRMED
+                putExtra(MainActivity.EXTRA_BOOKING_ID, payload.bookingId)
+                putExtra(MainActivity.EXTRA_BOOKING_TYPE, payload.bookingType)
+            }
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun showBookingCancelledNotification(context: Context, payload: BookingPayload) {
+        Napier.i { "Booking cancelled: ${payload.bookingId}" }
+
+        showNotification(
+            context,
+            NotificationChannels.CHANNEL_ID_CANCELLATION,
+            payload.hashCode(),
+            getString(Res.string.notification_booking_cancelled_title),
+            getString(Res.string.notification_booking_cancelled_message),
+            MainActivity::class to {
+                action = MainActivity.ACTION_BOOKING_CANCELLED
                 putExtra(MainActivity.EXTRA_BOOKING_ID, payload.bookingId)
                 putExtra(MainActivity.EXTRA_BOOKING_TYPE, payload.bookingType)
             }

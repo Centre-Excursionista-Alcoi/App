@@ -190,4 +190,6 @@
 
     <string name="notification_booking_confirmed_title">Booking confirmed</string>
     <string name="notification_booking_confirmed_message">Your booking has been confirmed</string>
+    <string name="notification_booking_cancelled_title">Booking cancelled</string>
+    <string name="notification_booking_cancelled_message">Your booking has been cancelled</string>
 </resources>

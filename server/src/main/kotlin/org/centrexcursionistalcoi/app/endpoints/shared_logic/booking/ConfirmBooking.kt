@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoin
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint.respondSuccess
 import org.centrexcursionistalcoi.app.push.FCM
 import org.centrexcursionistalcoi.app.push.NotificationType
-import org.centrexcursionistalcoi.app.push.payload.BookingConfirmedPayload
+import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.server.response.Errors
 import org.jetbrains.exposed.dao.IntEntityClass
 
@@ -44,12 +44,12 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
         booking.confirmed = true
     }
 
-    val payload = BookingConfirmedPayload(
+    val payload = BookingPayload(
         bookingId = bookingId,
         bookingType = entityClass::class.simpleName!!
     )
-    val notifyUser = ServerDatabase { booking.user }
-    FCM.notify(notifyUser, NotificationType.BookingConfirmed, payload, BookingConfirmedPayload.serializer())
+    val notifyUserId = ServerDatabase { booking.user.id.value }
+    FCM.notify(notifyUserId, NotificationType.BookingConfirmed, payload, BookingPayload.serializer())
 
     respondSuccess(HttpStatusCode.Accepted)
 }
