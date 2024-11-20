@@ -117,8 +117,13 @@ kotlin {
             // Multiplatform Settings
             implementation(libs.multiplatformSettings.base)
             implementation(libs.multiplatformSettings.coroutines)
+            implementation(libs.multiplatformSettings.datastore)
             implementation(libs.multiplatformSettings.makeObservable)
             implementation(libs.multiplatformSettings.serialization)
+
+            // DataStore
+            implementation(libs.datastore.base)
+            implementation(libs.datastore.preferences)
 
             implementation(projects.shared)
         }
@@ -130,10 +135,6 @@ kotlin {
 
             implementation(libs.compose.googlefonts)
 
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
-
             implementation(libs.ktor.client.okhttp)
 
             implementation(project.dependencies.platform(libs.firebase.bom))
@@ -141,18 +142,11 @@ kotlin {
             implementation(libs.firebase.crashlytics)
         }
         iosMain.dependencies {
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
             implementation(libs.ktor.client.darwin)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
 
             implementation(libs.ktor.client.okhttp)
         }
