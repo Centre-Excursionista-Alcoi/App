@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -93,7 +93,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 if (route.isDraft()) Res.string.reservation_draft_title else Res.string.reservation_title
             ),
             actions = listOfNotNull(
-                Triple(Icons.AutoMirrored.Filled.ArrowRight, stringResource(Res.string.confirm)) {
+                Triple(Icons.AutoMirrored.Filled.ArrowForward, stringResource(Res.string.confirm)) {
                     viewModel.confirm(
                         route.fromDate()!!,
                         route.toDate()!!,
