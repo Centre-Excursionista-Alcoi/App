@@ -8,3 +8,9 @@ build
 scripts
 sample_data
 iosApp
+
+*.Jenkinsfile
+notarization.properties
+google-services.json
+serviceAccountKey.json
+android-build.source
