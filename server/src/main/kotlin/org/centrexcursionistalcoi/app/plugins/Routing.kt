@@ -25,7 +25,9 @@ import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateItemEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.UpdateTypesEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.AvailabilityEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.BookItemEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.CancelLendingEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.ConfirmEndpoint
+import org.centrexcursionistalcoi.app.endpoints.lending.LendingEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.LendingsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.MarkReturnedEndpoint
 import org.centrexcursionistalcoi.app.endpoints.lending.MarkTakenEndpoint
@@ -36,7 +38,9 @@ import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingCancelEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint
+import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkReturnedEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenEndpoint
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkTakenKeyEndpoint
@@ -81,11 +85,13 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     UpdateItemEndpoint,
 
     BookItemEndpoint,
+    LendingEndpoint,
     AvailabilityEndpoint,
     LendingsEndpoint,
     ConfirmEndpoint,
     MarkTakenEndpoint,
     MarkReturnedEndpoint,
+    CancelLendingEndpoint,
 
     SpaceEndpoint,
     SpacesListEndpoint,
@@ -93,7 +99,9 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     SpaceUpdateEndpoint,
     SpacesAvailabilityEndpoint,
     SpaceBookEndpoint,
+    SpaceBookingEndpoint,
     SpaceBookingsListEndpoint,
+    SpaceBookingCancelEndpoint,
     SpaceBookingConfirmEndpoint,
     SpaceBookingMarkTakenEndpoint,
     SpaceBookingMarkTakenKeyEndpoint,

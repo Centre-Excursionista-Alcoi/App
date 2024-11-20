@@ -44,6 +44,11 @@ object SpacesBackend {
      */
     suspend fun allBookings() = Backend.get("/spaces/bookings?all=true", ListSerializer(SpaceBookingD.serializer()))
 
+    suspend fun getBooking(id: Int) = Backend.get(
+        path = "/spaces/bookings/$id",
+        deserializer = SpaceBookingD.serializer()
+    )
+
     suspend fun confirm(bookingId: Int) = Backend.post(
         path = "/spaces/bookings/$bookingId/confirm"
     )
@@ -58,5 +63,9 @@ object SpacesBackend {
 
     suspend fun markReturned(bookingId: Int) = Backend.post(
         path = "/spaces/bookings/$bookingId/returned"
+    )
+
+    suspend fun cancelBooking(bookingId: Int) = Backend.delete(
+        path = "/spaces/bookings/$bookingId"
     )
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,7 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
@@ -27,9 +28,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.data.ItemD
+import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.ItemTypeD
+import org.centrexcursionistalcoi.app.data.SpaceBookingD
 import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
@@ -43,62 +47,116 @@ import org.jetbrains.compose.resources.stringResource
 object ReservationScreen : Screen<Reservation, ReservationViewModel>(::ReservationViewModel) {
     @Composable
     override fun Content(viewModel: ReservationViewModel) {
-        val userData by viewModel.userData.collectAsState()
-        val itemsState by viewModel.items.collectAsState()
-        val typesState by viewModel.types.collectAsState()
-        val spaceState by viewModel.space.collectAsState()
-
-        val from = route.fromDate()
-        val to = route.toDate()
-        val itemsIds = route.selectedItemsSet()
-
         val navController = LocalNavController.current
 
-        LaunchedEffect(Unit) {
-            viewModel.load(itemsIds, route.selectedSpaceId)
+        if (!route.isCorrect()) {
+            navController.popBackStack()
+            return
         }
 
-        PlatformScaffold(
-            onBack = { navController.popBackStack() },
-            title = stringResource(Res.string.reservation_title_draft),
-            actions = listOf(
-                Triple(Icons.AutoMirrored.Filled.ArrowRight, stringResource(Res.string.confirm)) {
-                    viewModel.confirm(from, to, itemsIds, route.selectedSpaceId) {
+        val userData by viewModel.userData.collectAsState()
+        val dates by viewModel.dates.collectAsState()
+        val items by viewModel.items.collectAsState()
+        val types by viewModel.types.collectAsState()
+        val space by viewModel.space.collectAsState()
+        val itemLending by viewModel.itemLending.collectAsState()
+        val spaceBooking by viewModel.spaceBooking.collectAsState()
+
+        if (route.isDraft()) {
+            val itemsIds = route.selectedItemsSet()
+
+            LaunchedEffect(Unit) {
+                viewModel.load(route.fromDate()!!, route.toDate()!!, itemsIds, route.selectedSpaceId)
+            }
+        } else {
+            LaunchedEffect(Unit) {
+                viewModel.load(route.lendingId, route.spaceBookingId)
+            }
+        }
+
+        var cancellingReservation by remember { mutableStateOf(false) }
+        if (cancellingReservation) {
+            CancelBookingConfirmationDialog(
+                onDismissRequested = { cancellingReservation = false },
+                onCancellationRequested = {
+                    viewModel.cancelBooking {
+                        cancellingReservation = false
                         navController.popBackStack()
                     }
                 }
             )
+        }
+
+        PlatformScaffold(
+            onBack = { navController.popBackStack() },
+            title = stringResource(
+                if (route.isDraft()) Res.string.reservation_draft_title else Res.string.reservation_title
+            ),
+            actions = listOfNotNull(
+                Triple(Icons.AutoMirrored.Filled.ArrowRight, stringResource(Res.string.confirm)) {
+                    viewModel.confirm(
+                        route.fromDate()!!,
+                        route.toDate()!!,
+                        route.selectedItemsSet(),
+                        route.selectedSpaceId
+                    ) {
+                        navController.popBackStack()
+                    }
+                }.takeIf { route.isDraft() },
+                Triple(Icons.Default.EventBusy, stringResource(Res.string.cancel)) {
+                    cancellingReservation = true
+                }.takeIf {
+                    !route.isDraft() && (itemLending ?: spaceBooking)?.run { takenAt == null } == true
+                },
+            )
         ) { paddingValues ->
-            LoadingContent(paddingValues, userData, from, to, itemsState, typesState, spaceState)
+            LoadingContent(
+                paddingValues,
+                route.isDraft(),
+                userData,
+                dates,
+                items,
+                types,
+                space,
+                itemLending,
+                spaceBooking
+            )
         }
     }
 
     @Composable
     private fun LoadingContent(
         paddingValues: PaddingValues,
+        isDraft: Boolean,
         userData: UserD?,
-        from: LocalDate,
-        to: LocalDate,
+        dates: ClosedRange<LocalDate>?,
         selectedItems: List<ItemD>?,
         types: List<ItemTypeD>?,
-        space: SpaceD?
+        space: SpaceD?,
+        itemLending: ItemLendingD?,
+        spaceBooking: SpaceBookingD?
     ) {
-        if (userData == null || selectedItems == null || types == null) {
+        if (userData == null || dates == null || selectedItems == null || types == null) {
             PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
         } else {
-            Content(paddingValues, userData, from, to, selectedItems, types, space)
+            val (from, to) = dates.start to dates.endInclusive
+
+            Content(paddingValues, isDraft, userData, from, to, selectedItems, types, space, itemLending, spaceBooking)
         }
     }
 
     @Composable
     private fun Content(
         paddingValues: PaddingValues,
+        isDraft: Boolean,
         userData: UserD,
         from: LocalDate,
         to: LocalDate,
         selectedItems: List<ItemD>,
         types: List<ItemTypeD>,
-        space: SpaceD?
+        space: SpaceD?,
+        itemLending: ItemLendingD?,
+        spaceBooking: SpaceBookingD?
     ) {
         Column(
             modifier = Modifier
@@ -122,23 +180,29 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 )
             }
             BasicText(
-                text = stringResource(Res.string.reservation_as, userData.name, (to - from).days),
+                text = stringResource(
+                    if (isDraft) Res.string.reservation_draft_as else Res.string.reservation_as,
+                    userData.name,
+                    (to - from).days
+                ),
                 style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp),
-                modifier = Modifier.fillMaxWidth(1f)
+                modifier = Modifier.fillMaxWidth()
             )
 
-            BasicText(
-                text = stringResource(Res.string.reservation_items),
-                style = getPlatformTextStyles().titleRegular,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-            )
-            if (selectedItems.isEmpty()) {
+            if ((itemLending ?: spaceBooking)?.confirmed == false) {
                 BasicText(
-                    text = stringResource(Res.string.reservation_no_items),
-                    style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp, textAlign = TextAlign.Center),
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    text = stringResource(Res.string.bookings_pending_confirmation),
+                    style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp, color = Color.Red),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                 )
-            } else {
+            }
+
+            if (selectedItems.isNotEmpty()) {
+                BasicText(
+                    text = stringResource(Res.string.reservation_items),
+                    style = getPlatformTextStyles().titleRegular,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                )
                 ItemsDisplay(selectedItems, types)
             }
 
@@ -222,7 +286,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                             membersCount = value
                         }
                     },
-                    label = "Members",
+                    label = stringResource(Res.string.reservation_space_members),
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 )
                 PlatformFormField(
@@ -233,7 +297,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                             externalsCount = value
                         }
                     },
-                    label = "Non-Members",
+                    label = stringResource(Res.string.reservation_space_non_members),
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 )
             }
@@ -270,6 +334,37 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             BasicText(
                 text = stringResource(Res.string.reservation_space_price_calculation),
                 style = getPlatformTextStyles().heading.copy(fontSize = 16.sp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+        }
+    }
+
+    @Composable
+    fun CancelBookingConfirmationDialog(
+        onDismissRequested: () -> Unit,
+        onCancellationRequested: () -> Unit
+    ) {
+        PlatformDialog(
+            onDismissRequested,
+            actions = {
+                NeutralButton(
+                    text = stringResource(Res.string.dismiss),
+                    onClick = onDismissRequested
+                )
+                DestructiveButton(
+                    text = stringResource(Res.string.confirm),
+                    onClick = onCancellationRequested
+                )
+            }
+        ) {
+            BasicText(
+                text = stringResource(Res.string.reservation_cancel_confirmation_title),
+                style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
+            BasicText(
+                text = stringResource(Res.string.reservation_cancel_confirmation_message),
+                style = getPlatformTextStyles().body,
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
         }

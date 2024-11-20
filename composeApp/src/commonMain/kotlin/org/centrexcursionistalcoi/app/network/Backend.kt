@@ -96,6 +96,7 @@ object Backend {
         val body = response.bodyAsText()
         return serverJson.decodeFromString(deserializer, body)
     }
+
     /**
      * Send a POST request to the server
      * @param path The path to send the request to
