@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.gms)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     alias(libs.plugins.serialization)
 }
 
@@ -127,7 +128,6 @@ kotlin {
             implementation(libs.datastore.preferences)
 
             // Room
-            implementation(libs.room.ktx)
             implementation(libs.room.runtime)
 
             implementation(projects.shared)
@@ -197,6 +197,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 buildkonfig {
