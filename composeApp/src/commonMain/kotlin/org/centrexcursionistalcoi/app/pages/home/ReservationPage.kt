@@ -63,8 +63,8 @@ fun ColumnScope.ReservationPage(
 ) {
     val navController = LocalNavController.current
 
-    var from by rememberSaveable { mutableStateOf<LocalDate?>(null) }
-    var to by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    var from by rememberSaveable(saver = LocalDateSaver) { mutableStateOf(null) }
+    var to by rememberSaveable(saver = LocalDateSaver) { mutableStateOf(null) }
     var selectedItems by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var selectedSpaceId by remember { mutableStateOf<Int?>(null) }
 
