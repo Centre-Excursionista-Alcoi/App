@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.gms)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.serialization)
 }
 
@@ -125,6 +126,10 @@ kotlin {
             implementation(libs.datastore.base)
             implementation(libs.datastore.preferences)
 
+            // Room
+            implementation(libs.room.ktx)
+            implementation(libs.room.runtime)
+
             implementation(projects.shared)
         }
         androidMain.dependencies {
@@ -208,6 +213,17 @@ buildkonfig {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+    // Room Compilers
+    add("kspCommonMainMetadata", libs.room.compiler)
+
+    add("kspAndroid", libs.room.compiler)
+
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+
+    add("kspDesktop", libs.room.compiler)
 }
 
 compose.desktop {
