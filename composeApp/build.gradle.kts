@@ -128,6 +128,7 @@ kotlin {
             implementation(libs.datastore.preferences)
 
             // Room
+            implementation(libs.room.bundledSqlite)
             implementation(libs.room.runtime)
 
             implementation(projects.shared)

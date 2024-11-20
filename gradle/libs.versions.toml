@@ -6,6 +6,7 @@ android-targetSdk = "34"
 androidx-activityCompose = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-lifecycle = "2.8.4"
+androidx-sqlite-bundled = "2.5.0-alpha11"
 buildkonfig = "0.15.2"
 carbon = "0.3.1"
 coil = "3.0.3"
@@ -87,6 +88,7 @@ multiplatformSettings-makeObservable = { module = "com.russhwolf:multiplatform-s
 multiplatformSettings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "multiplatform-settings" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+room-bundledSqlite = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite-bundled" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 
