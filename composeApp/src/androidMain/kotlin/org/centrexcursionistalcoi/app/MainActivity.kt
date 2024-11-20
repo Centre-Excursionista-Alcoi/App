@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.mmk.kmpnotifier.permission.permissionUtil
 import io.github.vinceglb.filekit.core.FileKit
 
 class MainActivity : AppCompatActivity() {
@@ -13,9 +14,18 @@ class MainActivity : AppCompatActivity() {
 
         FileKit.init(this)
 
+        // this will ask permission in Android 13(API Level 33) or above, otherwise permission will be granted.
+        val permissionUtil by permissionUtil()
+        permissionUtil.askNotificationPermission()
+
         setContent {
             AppRoot()
         }
+    }
+
+    companion object {
+        const val EXTRA_BOOKING_ID = "booking_id"
+        const val EXTRA_BOOKING_TYPE = "booking_type"
     }
 }
 
