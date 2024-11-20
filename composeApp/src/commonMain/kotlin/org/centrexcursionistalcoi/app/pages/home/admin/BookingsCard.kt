@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.data.IBookingD
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
@@ -110,18 +110,18 @@ fun BookingsCard(
                 }
             }
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_made_by, booking.userId ?: "N/A"),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
 
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_from, booking.from.toString()),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_to, booking.to.toString()),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)
@@ -129,13 +129,13 @@ fun BookingsCard(
 
             if (booking.confirmed) {
                 if (booking.takenAt == null) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_not_taken),
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                     )
                 } else {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_taken_at, booking.takenAt.toString()),
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
@@ -145,7 +145,7 @@ fun BookingsCard(
                         val space = spaces?.find { it.id == booking.spaceId }
                         val key = space?.keys?.find { it.id == booking.keyId }
                         if (space != null && key != null) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_taken_key, key.name),
                                 style = getPlatformTextStyles().heading,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
@@ -154,13 +154,13 @@ fun BookingsCard(
                     }
 
                     if (booking.returnedAt == null) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_not_returned),
                             style = getPlatformTextStyles().heading,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                         )
                     } else {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_returned_at, booking.returnedAt.toString()),
                             style = getPlatformTextStyles().heading,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
@@ -170,7 +170,7 @@ fun BookingsCard(
             }
 
             if (booking is ItemLendingD) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.bookings_items),
                     style = getPlatformTextStyles().heading,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -182,14 +182,14 @@ fun BookingsCard(
                         ?: emptyMap()
                 }
                 for ((item, type) in itemsAndTypes) {
-                    BasicText(
+                    AppText(
                         text = "· ${type.title} (#${item.id})",
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                     )
                 }
             } else if (booking is SpaceBookingD) {
-                BasicText(
+                AppText(
                     text = spaces?.find { it.id == booking.spaceId }?.name ?: "N/A",
                     style = getPlatformTextStyles().heading,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -215,7 +215,7 @@ fun BookingsCard(
                 if (bookedItems == null || bookedSpaces == null) {
                     PlatformLoadingIndicator(large = false)
                 } else if (bookedItems.isEmpty() && bookedSpaces.isEmpty()) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_empty),
                         style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -240,7 +240,7 @@ fun BookingsCard(
                             booking = item,
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                             supportingContent = {
-                                BasicText(
+                                AppText(
                                     text = "${item.itemIds?.size} items",
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -265,7 +265,7 @@ fun BookingsCard(
                             booking = booking,
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
                             supportingContent = {
-                                BasicText(
+                                AppText(
                                     text = space.name,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -291,7 +291,7 @@ private fun BookingCard(
     PlatformCard(
         modifier = modifier.clickable { onClick() }
     ) {
-        BasicText(
+        AppText(
             text = booking.userId ?: "N/A",
             modifier = Modifier
                 .fillMaxWidth()
@@ -302,22 +302,22 @@ private fun BookingCard(
         supportingContent?.invoke()
 
         if (!booking.confirmed) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_pending),
                 modifier = Modifier.padding(8.dp)
             )
         } else if (booking.takenAt == null) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_not_taken),
                 modifier = Modifier.padding(8.dp)
             )
         } else if (booking.returnedAt == null) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_not_returned),
                 modifier = Modifier.padding(8.dp)
             )
         } else {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.bookings_returned),
                 modifier = Modifier.padding(8.dp)
             )

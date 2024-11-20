@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,6 +23,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -59,7 +59,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 .padding(horizontal = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.login_title),
                 style = getPlatformTextStyles().titleLarge,
                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
@@ -112,7 +112,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.login_no_account),
                     style = getPlatformTextStyles().label,
                     modifier = Modifier

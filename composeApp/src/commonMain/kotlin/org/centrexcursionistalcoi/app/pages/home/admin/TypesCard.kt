@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -29,6 +28,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.SectionD
@@ -95,7 +95,7 @@ fun TypesCard(
                 showingCreationDialog = data.copy(imageBytesBase64 = base64)
             }
         }
-        BasicText(
+        AppText(
             text = stringResource(Res.string.types_image),
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -136,7 +136,7 @@ fun TypesCard(
                 if (list == null) {
                     PlatformLoadingIndicator(large = false)
                 } else if (list.isEmpty()) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.types_empty),
                         style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -162,7 +162,7 @@ fun TypesCard(
                                         .padding(8.dp)
                                         .clickable { showingCreationDialog = item }
                                 ) {
-                                    BasicText(
+                                    AppText(
                                         text = item.title,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -170,12 +170,12 @@ fun TypesCard(
                                             .padding(top = 8.dp),
                                         style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                     )
-                                    BasicText(
+                                    AppText(
                                         text = (item.brand ?: "") + " " + (item.model ?: ""),
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                                         style = getPlatformTextStyles().label
                                     )
-                                    BasicText(
+                                    AppText(
                                         text = item.description ?: "",
                                         modifier = Modifier
                                             .fillMaxWidth()

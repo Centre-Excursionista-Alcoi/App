@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberBasicTooltipState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.rememberPlainPositionProvider
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.data.ItemLendingD
@@ -97,20 +97,20 @@ fun ItemsCard(
         PlatformDialog(
             onDismissRequest = { showingDetailsDialog = null }
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.items_details_title),
                 style = getPlatformTextStyles().heading,
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.items_health_value, stringResource(data.health())),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.items_notes_value, "\n${data.notes ?: "N/A"}"),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(
                     Res.string.items_type_value,
                     itemTypes?.find { it.id == data.typeId }?.title ?: "N/A"
@@ -128,21 +128,21 @@ fun ItemsCard(
                     if (taken != null) {
                         val at = taken.takenAt
 
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.items_details_taken, taken.userId ?: "N/A", at.toString()),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
                         )
                     }
                     val future = bookings.filter { it.id != taken?.id }
                     if (future.isNotEmpty()) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.items_details_future_bookings),
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
                         for (booking in future) {
                             val from = booking.from
 
-                            BasicText(
+                            AppText(
                                 text = "· " + stringResource(
                                     if (booking.confirmed)
                                         Res.string.items_details_future_booking
@@ -156,7 +156,7 @@ fun ItemsCard(
                         }
                         Spacer(Modifier.height(8.dp))
                     } else {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.items_details_not_booked),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
                         )
@@ -181,7 +181,7 @@ fun ItemsCard(
                 if (list == null || types == null) {
                     PlatformLoadingIndicator(large = false)
                 } else if (list.isEmpty()) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.types_empty),
                         style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -213,7 +213,7 @@ fun ItemsCard(
                                 BasicTooltipBox(
                                     positionProvider = rememberPlainPositionProvider(),
                                     state = rememberBasicTooltipState(),
-                                    tooltip = { BasicText(tooltip) },
+                                    tooltip = { AppText(tooltip) },
                                     modifier = Modifier.padding(end = 4.dp)
                                 ) {
                                     Box(
@@ -223,13 +223,13 @@ fun ItemsCard(
                                             .background(color)
                                     )
                                 }
-                                BasicText(
+                                AppText(
                                     text = "#${item.id} - ${type.title}",
                                     modifier = Modifier.weight(1f),
                                     style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
-                            BasicText(
+                            AppText(
                                 text = stringResource(item.health.localizedName()),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -238,7 +238,7 @@ fun ItemsCard(
                                 style = getPlatformTextStyles().label
                             )
 
-                            BasicText(
+                            AppText(
                                 text = "Edit",
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)

@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.pages.home
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Dns
@@ -20,6 +19,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.platform.PlatformLanguage
 import org.centrexcursionistalcoi.app.platform.languages
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -39,7 +39,7 @@ fun SettingsPage() {
             PlatformDialog(
                 onDismissRequest = { showingLanguageChangeDialog = false }
             ) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.settings_language),
                     style = getPlatformTextStyles().heading,
                     modifier = Modifier.fillMaxWidth().padding(8.dp)

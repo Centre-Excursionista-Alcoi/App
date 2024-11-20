@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.data.ItemLendingD
 import org.centrexcursionistalcoi.app.data.SpaceBookingD
@@ -50,7 +50,7 @@ fun HomePage(
                     key = "no-bookings",
                     span = maxGridItemSpan
                 ) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_no_bookings),
                         modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
                         style = getPlatformTextStyles().titleRegular.copy(
@@ -66,7 +66,7 @@ fun HomePage(
                     key = "incomplete-header",
                     span = maxGridItemSpan
                 ) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_your),
                         modifier = Modifier.fillMaxWidth(),
                         style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp)
@@ -82,26 +82,26 @@ fun HomePage(
                             }
                     ) {
                         if (!booking.confirmed) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_pending_confirmation),
                                 modifier = Modifier.padding(8.dp)
                             )
                         } else if (booking.takenAt == null) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_not_taken),
                                 modifier = Modifier.padding(8.dp)
                             )
                         } else if (booking.takenAt != null && booking.returnedAt == null) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_pending_return),
                                 modifier = Modifier.padding(8.dp)
                             )
                         }
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
@@ -121,26 +121,26 @@ fun HomePage(
                             }
                     ) {
                         if (!booking.confirmed) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_pending_confirmation),
                                 modifier = Modifier.padding(8.dp)
                             )
                         } else if (booking.takenAt == null) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_not_taken),
                                 modifier = Modifier.padding(8.dp)
                             )
                         } else if (booking.takenAt != null && booking.returnedAt == null) {
-                            BasicText(
+                            AppText(
                                 text = stringResource(Res.string.bookings_pending_return),
                                 modifier = Modifier.padding(8.dp)
                             )
                         }
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp)
                         )
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
@@ -157,7 +157,7 @@ fun HomePage(
                     key = "old-header",
                     span = maxGridItemSpan
                 ) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.bookings_old),
                         modifier = Modifier.fillMaxWidth(),
                         style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp)
@@ -168,11 +168,11 @@ fun HomePage(
                         title = stringResource(Res.string.bookings_items_count, booking.itemIds?.size ?: 0),
                         modifier = Modifier.padding(8.dp)
                     ) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )
@@ -186,11 +186,11 @@ fun HomePage(
                         title = space.name,
                         modifier = Modifier.padding(8.dp)
                     ) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_from, booking.from.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.bookings_to, booking.to.toString()),
                             modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
                         )

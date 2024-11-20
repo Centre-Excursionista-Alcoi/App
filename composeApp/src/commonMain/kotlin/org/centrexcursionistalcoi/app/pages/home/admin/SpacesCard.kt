@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -33,6 +32,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.data.Address
 import org.centrexcursionistalcoi.app.data.Location
@@ -91,7 +91,7 @@ fun SpacesCard(
             enabled = !isCreating
         )
 
-        BasicText(
+        AppText(
             text = stringResource(Res.string.spaces_images),
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -100,7 +100,7 @@ fun SpacesCard(
             images = data.images.orEmpty().map(Base64::decode),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             supportingContent = { image ->
-                BasicText(
+                AppText(
                     text = image.humanReadableSize(),
                     style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
@@ -232,7 +232,7 @@ fun SpacesCard(
 
         HorizontalDivider()
 
-        BasicText(
+        AppText(
             text = stringResource(Res.string.spaces_keys),
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -302,7 +302,7 @@ fun SpacesCard(
                     PlatformLoadingIndicator(large = false)
                 } else {
                     if (list.isEmpty()) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.spaces_empty),
                             style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -315,7 +315,7 @@ fun SpacesCard(
                                 .padding(8.dp)
                                 .clickable { showingCreationDialog = item }
                         ) {
-                            BasicText(
+                            AppText(
                                 text = item.name,
                                 modifier = Modifier
                                     .fillMaxWidth()

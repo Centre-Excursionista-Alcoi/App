@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.data.SectionD
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
@@ -64,7 +64,7 @@ fun SectionsCard(
                     PlatformLoadingIndicator(large = false)
                 } else {
                     if (list.isEmpty()) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.sections_empty),
                             style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -77,7 +77,7 @@ fun SectionsCard(
                                 .padding(8.dp)
                                 .clickable { showingCreationDialog = item }
                         ) {
-                            BasicText(
+                            AppText(
                                 text = item.displayName,
                                 modifier = Modifier
                                     .fillMaxWidth()
