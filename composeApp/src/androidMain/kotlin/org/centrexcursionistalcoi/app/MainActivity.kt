@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.mmk.kmpnotifier.permission.permissionUtil
 import io.github.vinceglb.filekit.core.FileKit
+import org.centrexcursionistalcoi.app.route.Loading
+import org.centrexcursionistalcoi.app.route.Reservation
+import org.centrexcursionistalcoi.app.route.Route
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,9 +21,32 @@ class MainActivity : AppCompatActivity() {
         val permissionUtil by permissionUtil()
         permissionUtil.askNotificationPermission()
 
+        val startDestination = calculateStartDestination()
+
         setContent {
-            AppRoot()
+            AppRoot(startDestination)
         }
+    }
+
+    private fun calculateStartDestination(): Route {
+        val bookingId = intent.getIntExtra(EXTRA_BOOKING_ID, -1).takeIf { it >= 0 }
+        // Lending, SpaceBooking
+        val bookingType = intent.getStringExtra(EXTRA_BOOKING_TYPE)
+
+        when (intent.action) {
+            ACTION_BOOKING_CONFIRMED -> {
+                if (bookingId != null && bookingType != null) {
+                    return Reservation(
+                        lendingId = bookingId.takeIf { bookingType == "Lending" },
+                        spaceBookingId = bookingId.takeIf { bookingType == "SpaceBooking" }
+                    )
+                }
+            }
+            ACTION_BOOKING_CANCELLED -> {
+                // no destination for cancellations
+            }
+        }
+        return Loading
     }
 
     companion object {

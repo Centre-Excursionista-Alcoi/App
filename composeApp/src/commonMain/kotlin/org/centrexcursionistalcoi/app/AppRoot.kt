@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTheme
 import org.centrexcursionistalcoi.app.route.Loading
+import org.centrexcursionistalcoi.app.route.Route
 import org.centrexcursionistalcoi.app.screen.HomeScreen
 import org.centrexcursionistalcoi.app.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.screen.LoginScreen
@@ -17,14 +18,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun AppRoot() {
+fun AppRoot(startDestination: Route = Loading) {
     val navController = rememberNavController()
 
     PlatformTheme {
         CompositionLocalProvider(
             LocalNavController provides navController
         ) {
-            NavHost(navController, startDestination = Loading) {
+            NavHost(navController, startDestination = startDestination) {
                 composable(LoadingScreen)
                 composable(LoginScreen)
                 composable(RegisterScreen)
