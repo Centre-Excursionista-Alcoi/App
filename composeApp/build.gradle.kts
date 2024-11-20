@@ -138,7 +138,7 @@ kotlin {
 
             implementation(libs.ktor.client.okhttp)
 
-            implementation(platform(libs.firebase.bom))
+            implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.analytics)
             implementation(libs.firebase.crashlytics)
         }
