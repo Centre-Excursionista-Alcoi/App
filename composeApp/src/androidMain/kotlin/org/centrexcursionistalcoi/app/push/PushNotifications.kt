@@ -17,12 +17,11 @@ import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfig
 import io.github.aakira.napier.Napier
 import kotlin.reflect.KClass
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.R
 import org.centrexcursionistalcoi.app.notifications.NotificationChannels
 import org.centrexcursionistalcoi.app.push.payload.BookingConfirmedPayload
-import org.centrexcursionistalcoi.app.push.payload.PushPayload
+import org.centrexcursionistalcoi.app.serverJson
 import org.jetbrains.compose.resources.getString
 
 object PushNotifications {
@@ -72,8 +71,10 @@ object PushNotifications {
             Napier.e { "Invalid push notification payload" }
             return
         }
-        when (val payload = Json.decodeFromString<PushPayload>(json)) {
-            is BookingConfirmedPayload -> {
+        Napier.d { "Payload type: $type" }
+        when (type) {
+            BookingConfirmedPayload::class.simpleName -> {
+                val payload = serverJson.decodeFromString(BookingConfirmedPayload.serializer(), json)
                 showBookingConfirmedNotification(context, payload)
             }
         }
@@ -96,6 +97,7 @@ object PushNotifications {
             .setContentTitle(title)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()

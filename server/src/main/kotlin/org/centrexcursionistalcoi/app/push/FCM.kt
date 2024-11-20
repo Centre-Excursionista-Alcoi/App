@@ -8,8 +8,8 @@ import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import java.io.File
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.serverJson
 import org.slf4j.LoggerFactory
 
 object FCM {
@@ -50,7 +50,7 @@ object FCM {
      */
     fun <DataType> notify(user: User, type: NotificationType, data: DataType, serializer: KSerializer<DataType>): String {
         val topic = PushTopic.topic(user.id.value)
-        val json = Json.encodeToString(serializer, data)
+        val json = serverJson.encodeToString(serializer, data)
 
         val message = Message.builder()
             .putData("data", json)
