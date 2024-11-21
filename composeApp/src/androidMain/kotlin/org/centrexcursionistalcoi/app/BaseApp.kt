@@ -7,6 +7,8 @@ import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.roomDatabaseBuilder
 import org.centrexcursionistalcoi.app.push.PushNotifications
+import org.centrexcursionistalcoi.app.settings.createDataStore
+import org.centrexcursionistalcoi.app.settings.dataStore
 
 class BaseApp : Application() {
     override fun onCreate() {
@@ -14,6 +16,7 @@ class BaseApp : Application() {
 
         Napier.base(DebugAntilog())
 
+        dataStore = createDataStore(this)
         roomDatabaseBuilder = getDatabaseBuilder(this)
 
         PushNotifications.initialize(this)
