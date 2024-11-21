@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
+import io.github.aakira.napier.Napier
+import io.ktor.http.isSuccess
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.server.request.RegistrationRequest
@@ -48,6 +51,21 @@ object AuthBackend {
             )
         } catch (e: ServerException) {
             AuthException.fromCode(e.code)?.let { throw it } ?: throw e
+        }
+    }
+
+    /**
+     * Notifies the server of a new FCM token for the current session.
+     * @param token The FCM token
+     * @return True if the token was successfully sent to the server
+     */
+    suspend fun notifyToken(token: String): Boolean {
+        try {
+            val response = Backend.post("/fcm_token", body = token, bodySerializer = String.serializer())
+            return response.status.isSuccess()
+        } catch (e: ServerException) {
+            Napier.e(e) { "Could not notify about new FCM token." }
+            return false
         }
     }
 }

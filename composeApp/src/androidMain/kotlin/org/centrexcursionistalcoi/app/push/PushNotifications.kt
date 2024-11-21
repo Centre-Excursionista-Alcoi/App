@@ -19,6 +19,7 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.R
+import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.notifications.NotificationChannels
 import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.serverJson
@@ -44,6 +45,7 @@ object PushNotifications {
             object : NotifierManager.Listener {
                 override fun onNewToken(token: String) {
                     Napier.i { "Got new FCM token: $token" }
+                    runBlocking { AuthBackend.notifyToken(token) }
                 }
 
                 override fun onPayloadData(data: PayloadData) {
@@ -54,6 +56,15 @@ object PushNotifications {
                 }
             }
         )
+    }
+
+    suspend fun refreshTokenOnServer() {
+        val token = NotifierManager.getPushNotifier().getToken()
+        if (token == null) {
+            Napier.i { "Tried to refresh token on server, but the device doesn't have a token." }
+            return
+        }
+        AuthBackend.notifyToken(token)
     }
 
     private suspend fun decodePayload(context: Context, payloadData: PayloadData) {
