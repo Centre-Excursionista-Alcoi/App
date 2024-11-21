@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.endpoints.auth
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.RoutingContext
+import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
@@ -16,9 +16,10 @@ import org.centrexcursionistalcoi.app.server.response.Errors
 object LoginEndpoint : BasicAuthEndpoint("/login") {
     override suspend fun RoutingContext.secureBody(username: String, password: String) {
         // Check that the user is not already logged in
-        if (call.sessions.get(UserSession::class) != null) {
-            respondSuccess(HttpStatusCode.NoContent)
-            return
+        val currentSession = call.sessions.get(UserSession::class)
+        if (currentSession != null) {
+            SessionsDatabase.deleteSession(currentSession)
+            call.sessions.clear<UserSession>()
         }
 
         // Find the user
