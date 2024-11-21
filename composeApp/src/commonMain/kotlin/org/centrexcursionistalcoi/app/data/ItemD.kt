@@ -10,5 +10,3 @@ fun ItemHealth.localizedName(): StringResource = when (this) {
     ItemHealth.DAMAGED -> Res.string.item_health_damaged
     ItemHealth.BROKEN -> Res.string.item_health_broken
 }
-
-fun ItemD.health(): StringResource = health.localizedName()
