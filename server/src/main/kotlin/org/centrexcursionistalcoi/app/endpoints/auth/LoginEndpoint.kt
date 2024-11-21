@@ -4,6 +4,7 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import org.centrexcursionistalcoi.app.database.ServerDatabase
+import org.centrexcursionistalcoi.app.database.SessionsDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.security.Passwords
@@ -33,8 +34,11 @@ object LoginEndpoint : BasicAuthEndpoint("/login") {
             return
         }
 
+        // Create the session
+        val session = SessionsDatabase.newSession(username, call.request.local.remoteAddress)
+
         // Set the session
-        call.sessions.set(UserSession(username), UserSession::class)
+        call.sessions.set(session, UserSession::class)
 
         respondSuccess()
     }

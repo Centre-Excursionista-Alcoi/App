@@ -65,4 +65,7 @@ object Errors {
 
     @Serializable
     data object BookingTaken : ErrorResponse(21, "Booking taken", 409 /* Conflict */)
+
+    @Serializable
+    data object InvalidSession : ErrorResponse(22, "Session is not valid or has expired", 401 /* Unauthorized */)
 }
