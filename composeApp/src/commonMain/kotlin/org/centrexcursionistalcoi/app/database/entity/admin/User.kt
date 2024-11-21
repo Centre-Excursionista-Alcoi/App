@@ -1,11 +1,12 @@
 package org.centrexcursionistalcoi.app.database.entity.admin
 
 import androidx.room.Entity
+import androidx.room.PrimaryKey
 import org.centrexcursionistalcoi.app.data.UserD
 
 @Entity
 data class User(
-    val email: String,
+    @PrimaryKey val email: String,
     val isAdmin: Boolean,
     val isConfirmed: Boolean,
     val name: String,
