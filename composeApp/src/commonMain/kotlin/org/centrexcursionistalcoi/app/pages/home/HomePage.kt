@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -28,9 +28,9 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomePage(
-    itemBookings: List<ItemLendingD>?,
-    spaceBookings: List<SpaceBookingD>?,
-    spaces: List<SpaceD>?
+    itemBookings: List<ItemBooking>?,
+    spaceBookings: List<SpaceBooking>?,
+    spaces: List<Space>?
 ) {
     val navigator = LocalNavController.current
 
@@ -91,7 +91,7 @@ fun HomePage(
                                 text = stringResource(Res.string.bookings_not_taken),
                                 modifier = Modifier.padding(8.dp)
                             )
-                        } else if (booking.takenAt != null && booking.returnedAt == null) {
+                        } else if (booking.returnedAt == null) {
                             AppText(
                                 text = stringResource(Res.string.bookings_pending_return),
                                 modifier = Modifier.padding(8.dp)
@@ -130,7 +130,7 @@ fun HomePage(
                                 text = stringResource(Res.string.bookings_not_taken),
                                 modifier = Modifier.padding(8.dp)
                             )
-                        } else if (booking.takenAt != null && booking.returnedAt == null) {
+                        } else if (booking.returnedAt == null) {
                             AppText(
                                 text = stringResource(Res.string.bookings_pending_return),
                                 modifier = Modifier.padding(8.dp)
@@ -165,7 +165,7 @@ fun HomePage(
                 }
                 items(completeItemBookings) { booking ->
                     PlatformCard(
-                        title = stringResource(Res.string.bookings_items_count, booking.itemIds?.size ?: 0),
+                        title = stringResource(Res.string.bookings_items_count, booking.itemIds.size),
                         modifier = Modifier.padding(8.dp)
                     ) {
                         AppText(

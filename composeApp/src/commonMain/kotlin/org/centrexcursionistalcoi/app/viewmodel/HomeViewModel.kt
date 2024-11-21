@@ -1,39 +1,58 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.russhwolf.settings.ExperimentalSettingsApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.DatabaseData
-import org.centrexcursionistalcoi.app.data.IBookingD
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SectionD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.entity.BookingEntity
+import org.centrexcursionistalcoi.app.database.entity.DatabaseEntity
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Section
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
+import org.centrexcursionistalcoi.app.database.getRoomDatabase
+import org.centrexcursionistalcoi.app.database.updateEntities
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.serverJson
+import org.centrexcursionistalcoi.app.settings.SettingsKeys
+import org.centrexcursionistalcoi.app.settings.settings
 
+@OptIn(ExperimentalSettingsApi::class)
 class HomeViewModel : ViewModel() {
-    private val _userData = MutableStateFlow<UserD?>(null)
-    val userData get() = _userData.asStateFlow()
+    private val appDatabase = getRoomDatabase()
+    private val bookingsDao = appDatabase.bookingsDao()
+    private val inventoryDao = appDatabase.inventoryDao()
+    private val spacesDao = appDatabase.spacesDao()
 
-    private val _itemBookings = MutableStateFlow<List<ItemLendingD>?>(null)
-    val itemBookings get() = _itemBookings.asStateFlow()
+    val userData
+        get() = settings.getStringOrNullFlow(SettingsKeys.USER_DATA)
+            .map { json -> json?.let { serverJson.decodeFromString(UserD.serializer(), it) } }
 
-    private val _spaceBookings = MutableStateFlow<List<SpaceBookingD>?>(null)
-    val spaceBookings get() = _spaceBookings.asStateFlow()
+    val itemBookings
+        get() = combine(userData, bookingsDao.getAllItemBookingsAsFlow()) { user, bookings ->
+            bookings.filter { it.userId == user?.email }
+        }
+    val spaceBookings
+        get() = combine(userData, bookingsDao.getAllSpaceBookingsAsFlow()) { user, bookings ->
+            bookings.filter { it.userId == user?.email }
+        }
 
 
-    private val _availableItems = MutableStateFlow<List<ItemD>?>(null)
+    private val _availableItems = MutableStateFlow<List<Item>?>(null)
     val availableItems get() = _availableItems.asStateFlow()
 
-    private val _availableSpaces = MutableStateFlow<List<SpaceD>?>(null)
+    private val _availableSpaces = MutableStateFlow<List<Space>?>(null)
     val availableSpaces get() = _availableSpaces.asStateFlow()
 
 
@@ -43,20 +62,17 @@ class HomeViewModel : ViewModel() {
     private val _updatingUser = MutableStateFlow(false)
     val updatingUser get() = _updatingUser.asStateFlow()
 
-    private val _sections = MutableStateFlow<List<SectionD>?>(null)
-    val sections get() = _sections.asStateFlow()
+    val sections get() = inventoryDao.getAllSectionsAsFlow()
 
     private val _creatingSection = MutableStateFlow(false)
     val creatingSection get() = _creatingSection.asStateFlow()
 
-    private val _itemTypes = MutableStateFlow<List<ItemTypeD>?>(null)
-    val itemTypes get() = _itemTypes.asStateFlow()
+    val itemTypes get() = inventoryDao.getAllItemTypesAsFlow()
 
     private val _creatingType = MutableStateFlow(false)
     val creatingType get() = _creatingType.asStateFlow()
 
-    private val _items = MutableStateFlow<List<ItemD>?>(null)
-    val items get() = _items.asStateFlow()
+    val items get() = inventoryDao.getAllItemsAsFlow()
 
     private val _creatingItem = MutableStateFlow(false)
     val creatingItem get() = _creatingItem.asStateFlow()
@@ -64,14 +80,10 @@ class HomeViewModel : ViewModel() {
     private val _updatingBooking = MutableStateFlow(false)
     val updatingBooking get() = _updatingBooking.asStateFlow()
 
-    private val _allItemBookings = MutableStateFlow<List<ItemLendingD>?>(null)
-    val allItemBookings get() = _allItemBookings.asStateFlow()
+    val allItemBookings get() = bookingsDao.getAllItemBookingsAsFlow()
+    val allSpaceBookings get() = bookingsDao.getAllSpaceBookingsAsFlow()
 
-    private val _allSpaceBookings = MutableStateFlow<List<SpaceBookingD>?>(null)
-    val allSpaceBookings get() = _allSpaceBookings.asStateFlow()
-
-    private val _spaces = MutableStateFlow<List<SpaceD>?>(null)
-    val spaces get() = _spaces.asStateFlow()
+    val spaces get() = spacesDao.getAllSpacesAsFlow()
 
     private val _creatingSpace = MutableStateFlow(false)
     val creatingSpace get() = _creatingSpace.asStateFlow()
@@ -83,42 +95,40 @@ class HomeViewModel : ViewModel() {
     }
 
     private suspend fun loadSync() {
-        val data = UserDataBackend.getUserData()
-        _userData.emit(data)
+        val itemBookings = InventoryBackend.listBookings().toMutableList()
+        val spaceBookings = SpacesBackend.listBookings().toMutableList()
 
-        val sections = SectionsBackend.list()
-        _sections.emit(sections)
-
-        val types = InventoryBackend.listTypes()
-        _itemTypes.emit(types)
-
-        val items = InventoryBackend.listItems()
-        _items.emit(items)
-
-        val itemBookings = InventoryBackend.listBookings()
-        _itemBookings.emit(itemBookings)
-
-        val spaces = SpacesBackend.list()
-        _spaces.emit(spaces)
-
-        val spaceBookings = SpacesBackend.listBookings()
-        _spaceBookings.emit(spaceBookings)
+        val userData = settings.getStringOrNull(SettingsKeys.USER_DATA)
+            ?.let { serverJson.decodeFromString(UserD.serializer(), it) }
 
         // only for administrators
-        if (data.isAdmin) {
+        if (userData?.isAdmin == true) {
             val usersList = UserDataBackend.listUsers()
             _usersList.emit(usersList)
 
             val allItemBookings = InventoryBackend.allBookings()
-            _allItemBookings.emit(allItemBookings)
+            itemBookings += allItemBookings.filter { booking -> itemBookings.none { it.id == booking.id } }
 
             val allSpaceBookings = SpacesBackend.allBookings()
-            _allSpaceBookings.emit(allSpaceBookings)
+            spaceBookings += allSpaceBookings.filter { booking -> spaceBookings.none { it.id == booking.id } }
         } else {
             _usersList.emit(emptyList())
-            _allItemBookings.emit(emptyList())
-            _allSpaceBookings.emit(emptyList())
         }
+
+        updateEntities(
+            list = itemBookings,
+            bookingsDao::getAllItemBookings,
+            bookingsDao::insertItemBooking,
+            bookingsDao::updateItemBooking,
+            bookingsDao::deleteItemBooking
+        )
+        updateEntities(
+            list = spaceBookings,
+            bookingsDao::getAllSpaceBookings,
+            bookingsDao::insertSpaceBooking,
+            bookingsDao::updateSpaceBooking,
+            bookingsDao::deleteSpaceBooking
+        )
     }
 
     fun logout() {
@@ -140,17 +150,17 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    private fun <Type: DatabaseData> onCreateOrUpdate(
-        value: Type,
+    private fun <SerializableType : DatabaseData, LocalType : DatabaseEntity<SerializableType>> onCreateOrUpdate(
+        value: LocalType,
         creating: MutableStateFlow<Boolean>,
-        creator: suspend (Type) -> Unit,
-        updater: suspend (Type) -> Unit,
+        creator: suspend (LocalType) -> Unit,
+        updater: suspend (LocalType) -> Unit,
         onCreate: () -> Unit
     ) {
         launch {
             try {
                 creating.emit(true)
-                if (value.id == null) {
+                if (value.id <= 0) {
                     creator(value)
                 } else {
                     updater(value)
@@ -163,9 +173,9 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun onCreateOrUpdate(sectionD: SectionD, onCreate: () -> Unit) {
+    fun onCreateOrUpdate(section: Section, onCreate: () -> Unit) {
         onCreateOrUpdate(
-            sectionD,
+            section,
             _creatingSection,
             SectionsBackend::create,
             SectionsBackend::update,
@@ -173,9 +183,9 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun createOrUpdate(itemTypeD: ItemTypeD, onCreate: () -> Unit) {
+    fun createOrUpdate(itemType: ItemType, onCreate: () -> Unit) {
         onCreateOrUpdate(
-            itemTypeD,
+            itemType,
             _creatingType,
             InventoryBackend::create,
             InventoryBackend::update,
@@ -183,9 +193,9 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun createOrUpdate(itemD: ItemD, onCreate: () -> Unit) {
+    fun createOrUpdate(item: Item, onCreate: () -> Unit) {
         onCreateOrUpdate(
-            itemD,
+            item,
             _creatingItem,
             InventoryBackend::create,
             InventoryBackend::update,
@@ -193,9 +203,9 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun createOrUpdate(spaceD: SpaceD, onCreate: () -> Unit) {
+    fun createOrUpdate(space: Space, onCreate: () -> Unit) {
         onCreateOrUpdate(
-            spaceD,
+            space,
             _creatingSpace,
             SpacesBackend::create,
             SpacesBackend::update,
@@ -203,13 +213,13 @@ class HomeViewModel : ViewModel() {
         )
     }
 
-    fun cancelBooking(booking: IBookingD, onCancel: () -> Unit) {
+    fun cancelBooking(booking: BookingEntity<*>, onCancel: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
                 when (booking) {
-                    is ItemLendingD -> InventoryBackend.cancelBooking(booking.id!!)
-                    is SpaceBookingD -> SpacesBackend.cancelBooking(booking.id!!)
+                    is ItemBooking -> InventoryBackend.cancelBooking(booking.id)
+                    is SpaceBooking -> SpacesBackend.cancelBooking(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
                 loadSync()
@@ -220,13 +230,13 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun confirmBooking(booking: IBookingD, onConfirm: () -> Unit) {
+    fun confirmBooking(booking: BookingEntity<*>, onConfirm: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
                 when (booking) {
-                    is ItemLendingD -> InventoryBackend.confirm(booking.id!!)
-                    is SpaceBookingD -> SpacesBackend.confirm(booking.id!!)
+                    is ItemBooking -> InventoryBackend.confirm(booking.id)
+                    is SpaceBooking -> SpacesBackend.confirm(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
                 loadSync()
@@ -237,22 +247,23 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsTaken(booking: IBookingD, meta: Map<String, Any>, onMarked: () -> Unit) {
+    fun markAsTaken(booking: BookingEntity<*>, meta: Map<String, Any>, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
                 when (booking) {
-                    is ItemLendingD -> InventoryBackend.markTaken(booking.id!!)
-                    is SpaceBookingD -> {
-                        val space = spaces.value?.find { it.id == booking.spaceId } ?: error("Space not found")
+                    is ItemBooking -> InventoryBackend.markTaken(booking.id)
+                    is SpaceBooking -> {
+                        val space = spacesDao.getSpaceById(booking.spaceId) ?: error("Space not found")
                         val keys = space.keys?.takeUnless { it.isEmpty() }
                         if (keys != null) {
                             val keyId = meta[BOOKING_CONFIRM_META_SPACE_KEY] as Int
-                            SpacesBackend.markTaken(booking.id!!, keyId)
+                            SpacesBackend.markTaken(booking.id, keyId)
                         } else {
-                            SpacesBackend.markTaken(booking.id!!)
+                            SpacesBackend.markTaken(booking.id)
                         }
                     }
+
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
                 loadSync()
@@ -263,13 +274,13 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun markAsReturned(booking: IBookingD, onMarked: () -> Unit) {
+    fun markAsReturned(booking: BookingEntity<*>, onMarked: () -> Unit) {
         launch {
             try {
                 _updatingBooking.emit(true)
                 when (booking) {
-                    is ItemLendingD -> InventoryBackend.markReturned(booking.id!!)
-                    is SpaceBookingD -> SpacesBackend.markReturned(booking.id!!)
+                    is ItemBooking -> InventoryBackend.markReturned(booking.id)
+                    is SpaceBooking -> SpacesBackend.markReturned(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
                 loadSync()

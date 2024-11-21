@@ -49,6 +49,9 @@ kotlin {
             isStatic = true
 
             export(libs.kmpnotifier)
+
+            // Room - Required when using NativeSQLiteDriver
+            linkerOpts.add("-lsqlite3")
         }
     }
 

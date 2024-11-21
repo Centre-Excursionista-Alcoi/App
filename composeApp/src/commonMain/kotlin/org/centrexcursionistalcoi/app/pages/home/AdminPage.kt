@@ -8,14 +8,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.centrexcursionistalcoi.app.data.IBookingD
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SectionD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.entity.BookingEntity
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Section
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.pages.home.admin.BookingsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.ItemsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SectionsCard
@@ -30,24 +30,24 @@ fun AdminPage(
     onUserConfirmationRequested: (UserD, () -> Unit) -> Unit,
     onUserDeleteRequested: (UserD, () -> Unit) -> Unit,
     isCreatingSection: Boolean,
-    sections: List<SectionD>?,
-    onSectionOperation: (SectionD, onCreate: () -> Unit) -> Unit,
-    itemTypes: List<ItemTypeD>?,
+    sections: List<Section>?,
+    onSectionOperation: (Section, onCreate: () -> Unit) -> Unit,
+    itemTypes: List<ItemType>?,
     isCreatingType: Boolean,
-    onTypeOperation: (ItemTypeD, onCreate: () -> Unit) -> Unit,
-    items: List<ItemD>?,
+    onTypeOperation: (ItemType, onCreate: () -> Unit) -> Unit,
+    items: List<Item>?,
     isCreatingItem: Boolean,
-    onItemOperation: (ItemD, onCreate: () -> Unit) -> Unit,
-    allItemBookings: List<ItemLendingD>?,
-    allSpaceBookings: List<SpaceBookingD>?,
+    onItemOperation: (Item, onCreate: () -> Unit) -> Unit,
+    allItemBookings: List<ItemBooking>?,
+    allSpaceBookings: List<SpaceBooking>?,
     isUpdatingBooking: Boolean,
-    onCancelBookingRequested: (IBookingD, () -> Unit) -> Unit,
-    onConfirmBookingRequested: (IBookingD, () -> Unit) -> Unit,
-    onMarkAsTakenRequested: (IBookingD, meta: Map<String, Any>, () -> Unit) -> Unit,
-    onMarkAsReturnedRequested: (IBookingD, () -> Unit) -> Unit,
-    spaces: List<SpaceD>?,
+    onCancelBookingRequested: (BookingEntity<*>, () -> Unit) -> Unit,
+    onConfirmBookingRequested: (BookingEntity<*>, () -> Unit) -> Unit,
+    onMarkAsTakenRequested: (BookingEntity<*>, meta: Map<String, Any>, () -> Unit) -> Unit,
+    onMarkAsReturnedRequested: (BookingEntity<*>, () -> Unit) -> Unit,
+    spaces: List<Space>?,
     isCreatingSpace: Boolean,
-    onSpaceOperation: (SpaceD, onCreate: () -> Unit) -> Unit,
+    onSpaceOperation: (Space, onCreate: () -> Unit) -> Unit,
 ) {
     Column(
         modifier = Modifier

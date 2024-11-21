@@ -27,12 +27,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
@@ -54,12 +54,12 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             return
         }
 
-        val userData by viewModel.userData.collectAsState()
+        val userData by viewModel.userData.collectAsState(null)
         val dates by viewModel.dates.collectAsState()
         val items by viewModel.items.collectAsState()
-        val types by viewModel.types.collectAsState()
+        val types by viewModel.types.collectAsState(null)
         val space by viewModel.space.collectAsState()
-        val itemLending by viewModel.itemLending.collectAsState()
+        val itemLending by viewModel.itemBooking.collectAsState()
         val spaceBooking by viewModel.spaceBooking.collectAsState()
 
         if (route.isDraft()) {
@@ -130,11 +130,11 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         isDraft: Boolean,
         userData: UserD?,
         dates: ClosedRange<LocalDate>?,
-        selectedItems: List<ItemD>?,
-        types: List<ItemTypeD>?,
-        space: SpaceD?,
-        itemLending: ItemLendingD?,
-        spaceBooking: SpaceBookingD?
+        selectedItems: List<Item>?,
+        types: List<ItemType>?,
+        space: Space?,
+        itemLending: ItemBooking?,
+        spaceBooking: SpaceBooking?
     ) {
         if (userData == null || dates == null || selectedItems == null || types == null) {
             PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
@@ -152,11 +152,11 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         userData: UserD,
         from: LocalDate,
         to: LocalDate,
-        selectedItems: List<ItemD>,
-        types: List<ItemTypeD>,
-        space: SpaceD?,
-        itemLending: ItemLendingD?,
-        spaceBooking: SpaceBookingD?
+        selectedItems: List<Item>,
+        types: List<ItemType>,
+        space: Space?,
+        itemLending: ItemBooking?,
+        spaceBooking: SpaceBooking?
     ) {
         Column(
             modifier = Modifier
@@ -221,10 +221,10 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
     }
 
     @Composable
-    private fun ItemsDisplay(selectedItems: List<ItemD>, types: List<ItemTypeD>) {
+    private fun ItemsDisplay(selectedItems: List<Item>, types: List<ItemType>) {
         val groupedItems = remember(selectedItems) {
             selectedItems
-                .groupBy { it.typeId }
+                .groupBy { it.itemTypeId }
                 .mapKeys { (typeId, _) -> types.find { it.id == typeId } }
         }
         for ((type, items) in groupedItems) {
@@ -263,7 +263,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
     }
 
     @Composable
-    private fun SpaceDisplay(space: SpaceD, days: Int) {
+    private fun SpaceDisplay(space: Space, days: Int) {
         AppText(
             text = space.name,
             style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),

@@ -33,12 +33,11 @@ import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.rememberPlainPositionProvider
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.data.enumeration.ItemHealth
-import org.centrexcursionistalcoi.app.data.health
 import org.centrexcursionistalcoi.app.data.localizedName
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
@@ -50,18 +49,18 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemsCard(
-    items: List<ItemD>?,
-    itemTypes: List<ItemTypeD>?,
+    items: List<Item>?,
+    itemTypes: List<ItemType>?,
     isCreating: Boolean,
-    onCreateRequested: (ItemD, onCreate: () -> Unit) -> Unit,
-    allBookings: List<ItemLendingD>?
+    onCreateRequested: (Item, onCreate: () -> Unit) -> Unit,
+    allBookings: List<ItemBooking>?
 ) {
-    var showingCreationDialog: ItemD? by remember { mutableStateOf(null) }
+    var showingCreationDialog: Item? by remember { mutableStateOf(null) }
     CreationDialog(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.items_title,
         isCreating = isCreating,
-        isEnabled = ItemD::validate,
+        isEnabled = Item::validate,
         onCreateRequested = onCreateRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -82,8 +81,8 @@ fun ItemsCard(
             enabled = !isCreating
         )
         PlatformDropdown(
-            value = data.typeId?.let { typeId -> itemTypes?.find { it.id == typeId } },
-            onValueChange = { showingCreationDialog = data.copy(typeId = it.id) },
+            value = data.itemTypeId.let { typeId -> itemTypes?.find { it.id == typeId } },
+            onValueChange = { showingCreationDialog = data.copy(itemTypeId = it.id) },
             options = itemTypes ?: emptyList(),
             label = stringResource(Res.string.items_type),
             modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -92,7 +91,7 @@ fun ItemsCard(
         )
     }
 
-    var showingDetailsDialog: ItemD? by remember { mutableStateOf(null) }
+    var showingDetailsDialog: Item? by remember { mutableStateOf(null) }
     showingDetailsDialog?.let { data ->
         PlatformDialog(
             onDismissRequest = { showingDetailsDialog = null }
@@ -103,7 +102,7 @@ fun ItemsCard(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
             AppText(
-                text = stringResource(Res.string.items_health_value, stringResource(data.health())),
+                text = stringResource(Res.string.items_health_value, stringResource(data.health.localizedName())),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
             AppText(
@@ -113,14 +112,14 @@ fun ItemsCard(
             AppText(
                 text = stringResource(
                     Res.string.items_type_value,
-                    itemTypes?.find { it.id == data.typeId }?.title ?: "N/A"
+                    itemTypes?.find { it.id == data.itemTypeId }?.title ?: "N/A"
                 ),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
 
             allBookings
                 // Filter bookings that contain this item
-                ?.filter { it.itemIds?.contains(data.id) == true }
+                ?.filter { it.itemIds.contains(data.id) }
                 // Filter bookings that have not been completed (still not returned)
                 ?.filter { it.returnedAt == null }
                 ?.let { bookings ->
@@ -129,7 +128,7 @@ fun ItemsCard(
                         val at = taken.takenAt
 
                         AppText(
-                            text = stringResource(Res.string.items_details_taken, taken.userId ?: "N/A", at.toString()),
+                            text = stringResource(Res.string.items_details_taken, taken.userId, at.toString()),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
                         )
                     }
@@ -149,7 +148,7 @@ fun ItemsCard(
                                     else
                                         Res.string.items_details_future_booking_not_confirmed,
                                     from.toString(),
-                                    booking.userId ?: "N/A"
+                                    booking.userId
                                 ),
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                             )
@@ -167,7 +166,7 @@ fun ItemsCard(
 
     PlatformCard(
         title = stringResource(Res.string.items_title),
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = ItemD() },
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() },
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         AnimatedContent(
@@ -188,7 +187,7 @@ fun ItemsCard(
                     )
                 } else {
                     for (item in list) {
-                        val type = types.find { it.id == item.typeId } ?: continue
+                        val type = types.find { it.id == item.itemTypeId } ?: continue
                         PlatformCard(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -200,11 +199,11 @@ fun ItemsCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 val (color, tooltip) = allBookings
-                                    ?.filter { it.itemIds?.contains(item.id) == true }
+                                    ?.filter { it.itemIds.contains(item.id) }
                                     ?.let { bookings ->
                                         val taken = bookings.find { it.takenAt != null }
                                         if (taken != null) {
-                                            Color.Red to stringResource(Res.string.items_details_taken_by, taken.userId ?: "N/A")
+                                            Color.Red to stringResource(Res.string.items_details_taken_by, taken.userId)
                                         } else {
                                             Color.Green to stringResource(Res.string.items_details_not_booked)
                                         }
