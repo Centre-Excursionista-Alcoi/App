@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
+import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
@@ -33,6 +34,7 @@ class HomeViewModel : ViewModel() {
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
+    private val adminDao = appDatabase.adminDao()
 
     val userData
         get() = settings.getStringOrNullFlow(SettingsKeys.USER_DATA)
@@ -55,8 +57,7 @@ class HomeViewModel : ViewModel() {
     val availableSpaces get() = _availableSpaces.asStateFlow()
 
 
-    private val _usersList = MutableStateFlow<List<UserD>?>(null)
-    val usersList get() = _usersList.asStateFlow()
+    val usersList get() = adminDao.getAllUsersAsFlow()
 
     private val _updatingUser = MutableStateFlow(false)
     val updatingUser get() = _updatingUser.asStateFlow()
@@ -253,7 +254,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun confirm(user: UserD, onConfirm: () -> Unit) {
+    fun confirm(user: User, onConfirm: () -> Unit) {
         launch {
             try {
                 _updatingUser.emit(true)
@@ -266,7 +267,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun delete(user: UserD, onDelete: () -> Unit) {
+    fun delete(user: User, onDelete: () -> Unit) {
         launch {
             try {
                 _updatingUser.emit(true)

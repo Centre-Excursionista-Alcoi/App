@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -23,7 +24,7 @@ data class Item(
     override val createdAt: Instant = Clock.System.now(),
     val health: ItemHealth = ItemHealth.NEW,
     val notes: String? = null,
-    val itemTypeId: Int = 0
+    @ColumnInfo(index = true) val itemTypeId: Int = 0
 ): DatabaseEntity<ItemD> {
     companion object : EntityDeserializer<ItemD, Item> {
         override fun deserialize(source: ItemD): Item {

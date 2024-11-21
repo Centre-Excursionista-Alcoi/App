@@ -45,7 +45,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val itemBookings by viewModel.itemBookings.collectAsState(null)
         val spaceBookings by viewModel.spaceBookings.collectAsState(null)
 
-        val usersList by viewModel.usersList.collectAsState()
+        val usersList by viewModel.usersList.collectAsState(null)
         val updatingUser by viewModel.updatingUser.collectAsState()
         val sections by viewModel.sections.collectAsState(null)
         val creatingSection by viewModel.creatingSection.collectAsState()

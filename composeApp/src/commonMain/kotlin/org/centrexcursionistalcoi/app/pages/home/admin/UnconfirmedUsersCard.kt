@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
-import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -24,12 +24,12 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun UnconfirmedUsersCard(
-    unconfirmedUsers: List<UserD>,
+    unconfirmedUsers: List<User>,
     isConfirming: Boolean,
-    onConfirmRequested: (UserD, onComplete: () -> Unit) -> Unit,
-    onDeleteRequested: (UserD, onComplete: () -> Unit) -> Unit
+    onConfirmRequested: (User, onComplete: () -> Unit) -> Unit,
+    onDeleteRequested: (User, onComplete: () -> Unit) -> Unit
 ) {
-    var confirmingUser: UserD? by remember { mutableStateOf(null) }
+    var confirmingUser: User? by remember { mutableStateOf(null) }
     confirmingUser?.let { user ->
         PlatformDialog(
             onDismissRequest = { confirmingUser = null }
