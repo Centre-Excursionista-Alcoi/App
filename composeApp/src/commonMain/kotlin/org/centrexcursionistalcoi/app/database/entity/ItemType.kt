@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -26,7 +27,7 @@ data class ItemType(
     val brand: String? = null,
     val model: String? = null,
     val image: ByteArray? = null,
-    val sectionId: Int = 0
+    @ColumnInfo(index = true) val sectionId: Int = 0
 ) : DatabaseEntity<ItemTypeD> {
     companion object : EntityDeserializer<ItemTypeD, ItemType> {
         @OptIn(ExperimentalEncodingApi::class)
