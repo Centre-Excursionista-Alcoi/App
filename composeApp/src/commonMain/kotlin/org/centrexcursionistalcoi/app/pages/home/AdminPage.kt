@@ -8,7 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.database.entity.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
@@ -16,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
+import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.pages.home.admin.BookingsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.ItemsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SectionsCard
@@ -26,9 +26,9 @@ import org.centrexcursionistalcoi.app.pages.home.admin.UnconfirmedUsersCard
 @Composable
 fun AdminPage(
     updatingUser: Boolean,
-    users: List<UserD>?,
-    onUserConfirmationRequested: (UserD, () -> Unit) -> Unit,
-    onUserDeleteRequested: (UserD, () -> Unit) -> Unit,
+    users: List<User>?,
+    onUserConfirmationRequested: (User, () -> Unit) -> Unit,
+    onUserDeleteRequested: (User, () -> Unit) -> Unit,
     isCreatingSection: Boolean,
     sections: List<Section>?,
     onSectionOperation: (Section, onCreate: () -> Unit) -> Unit,

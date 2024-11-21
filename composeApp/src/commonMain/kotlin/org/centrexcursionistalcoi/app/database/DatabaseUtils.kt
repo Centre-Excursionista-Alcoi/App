@@ -10,20 +10,38 @@ suspend fun <Entity: DatabaseEntity<*>> updateEntities(
     update: suspend (Entity) -> Unit,
     delete: suspend (Entity) -> Unit
 ) {
+    updateEntities(
+        list = list,
+        idExtractor = { it.id },
+        getAll = getAll,
+        create = create,
+        update = update,
+        delete = delete
+    )
+}
+
+suspend fun <Entity: Any, IdType: Any> updateEntities(
+    list: List<Entity>,
+    idExtractor: (Entity) -> IdType,
+    getAll: suspend () -> List<Entity>,
+    create: suspend (Entity) -> Unit,
+    update: suspend (Entity) -> Unit,
+    delete: suspend (Entity) -> Unit
+) {
     val entities = getAll()
     for (entity in list) {
-        val existing = entities.find { it.id == entity.id }
+        val existing = entities.find { idExtractor(it) == idExtractor(entity) }
         if (existing == null) {
-            Napier.d { "Inserting ${entity::class.simpleName}#${entity.id}..." }
+            Napier.d { "Inserting ${entity::class.simpleName}#${idExtractor(entity)}..." }
             create(entity)
         } else {
-            Napier.d { "Updating ${entity::class.simpleName}#${entity.id}..." }
+            Napier.d { "Updating ${entity::class.simpleName}#${idExtractor(entity)}..." }
             update(entity)
         }
     }
     for (entity in entities) {
-        if (list.find { it.id == entity.id } == null) {
-            Napier.d { "Deleting ${entity::class.simpleName}#${entity.id}..." }
+        if (list.find { idExtractor(it) == idExtractor(entity) } == null) {
+            Napier.d { "Deleting ${entity::class.simpleName}#${idExtractor(entity)}..." }
             delete(entity)
         }
     }
