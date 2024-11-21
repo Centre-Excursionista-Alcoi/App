@@ -73,6 +73,8 @@ fun SettingsPage() {
         HorizontalDivider()
     }
 
+    PlatformSettings()
+
     PlatformSettingsItem(
         title = stringResource(Res.string.settings_version),
         summary = BuildKonfig.VERSION,

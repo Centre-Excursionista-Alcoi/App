@@ -8,4 +8,6 @@
     <string name="channel_name_confirmation_description">Will notify you whenever a booking you\'ve made is confirmed.</string>
     <string name="channel_name_cancellation_name">Booking Cancellations</string>
     <string name="channel_name_cancellation_description">Will notify you whenever a booking you\'ve made is cancelled.</string>
+
+    <string name="fcm_token">FCM Token</string>
 </resources>
