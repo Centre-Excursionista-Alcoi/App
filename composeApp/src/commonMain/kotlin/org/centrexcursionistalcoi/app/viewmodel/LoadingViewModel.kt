@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.UserD
-import org.centrexcursionistalcoi.app.database.getRoomDatabase
+import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.updateEntities
 import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.network.Backend
@@ -25,8 +25,6 @@ import org.centrexcursionistalcoi.app.settings.SettingsKeys
 import org.centrexcursionistalcoi.app.settings.settings
 
 class LoadingViewModel : ViewModel() {
-    private val appDatabase = getRoomDatabase()
-    private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
 

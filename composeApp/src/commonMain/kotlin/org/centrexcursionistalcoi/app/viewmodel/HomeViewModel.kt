@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.data.DatabaseData
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.entity.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.DatabaseEntity
 import org.centrexcursionistalcoi.app.database.entity.Item
@@ -18,7 +19,6 @@ import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
-import org.centrexcursionistalcoi.app.database.getRoomDatabase
 import org.centrexcursionistalcoi.app.database.updateEntities
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
@@ -30,7 +30,6 @@ import org.centrexcursionistalcoi.app.settings.settings
 
 @OptIn(ExperimentalSettingsApi::class)
 class HomeViewModel : ViewModel() {
-    private val appDatabase = getRoomDatabase()
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()

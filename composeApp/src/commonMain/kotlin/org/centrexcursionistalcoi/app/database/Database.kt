@@ -9,7 +9,7 @@ expect val driver: SQLiteDriver
 
 lateinit var roomDatabaseBuilder: RoomDatabase.Builder<AppDatabase>
 
-fun getRoomDatabase(
+private fun getRoomDatabase(
     builder: RoomDatabase.Builder<AppDatabase> = roomDatabaseBuilder
 ): AppDatabase {
     return builder
@@ -19,3 +19,5 @@ fun getRoomDatabase(
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }
+
+val appDatabase by lazy { getRoomDatabase() }

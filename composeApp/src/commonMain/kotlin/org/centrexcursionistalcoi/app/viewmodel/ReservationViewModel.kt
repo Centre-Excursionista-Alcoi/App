@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
-import org.centrexcursionistalcoi.app.database.getRoomDatabase
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.serverJson
@@ -20,7 +20,6 @@ import org.centrexcursionistalcoi.app.settings.settings
 
 @OptIn(ExperimentalSettingsApi::class)
 class ReservationViewModel : ViewModel() {
-    private val appDatabase = getRoomDatabase()
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
