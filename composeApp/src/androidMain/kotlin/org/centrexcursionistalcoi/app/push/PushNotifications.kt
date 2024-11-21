@@ -64,7 +64,10 @@ object PushNotifications {
             Napier.i { "Tried to refresh token on server, but the device doesn't have a token." }
             return
         }
-        AuthBackend.notifyToken(token)
+        Napier.d { "Notifying server about FCM token..." }
+        if (!AuthBackend.notifyToken(token)) {
+            Napier.w { "Server responded with an error to the FCM token update" }
+        }
     }
 
     private suspend fun decodePayload(context: Context, payloadData: PayloadData) {
