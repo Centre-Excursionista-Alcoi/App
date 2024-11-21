@@ -3,31 +3,18 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.mmk.kmpnotifier.notification.NotifierManager
-import com.russhwolf.settings.ExperimentalSettingsApi
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.auth.AccountManager
-import org.centrexcursionistalcoi.app.data.UserD
-import org.centrexcursionistalcoi.app.database.appDatabase
-import org.centrexcursionistalcoi.app.database.updateEntities
 import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.network.Backend
-import org.centrexcursionistalcoi.app.network.InventoryBackend
-import org.centrexcursionistalcoi.app.network.SectionsBackend
-import org.centrexcursionistalcoi.app.network.SpacesBackend
-import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.network.Sync
 import org.centrexcursionistalcoi.app.push.PushTopic
 import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Login
-import org.centrexcursionistalcoi.app.serverJson
-import org.centrexcursionistalcoi.app.settings.SettingsKeys
-import org.centrexcursionistalcoi.app.settings.settings
 
 class LoadingViewModel : ViewModel() {
-    private val inventoryDao = appDatabase.inventoryDao()
-    private val spacesDao = appDatabase.spacesDao()
-
     private val _serverError = MutableStateFlow<Pair<String?, Exception?>?>(null)
     val serverError = _serverError.asStateFlow()
 
@@ -58,7 +45,7 @@ class LoadingViewModel : ViewModel() {
                     Napier.i { "Subscribing to topic for FCM notifications: $topic" }
                     NotifierManager.getPushNotifier().subscribeToTopic(topic)
 
-                    updateLocalData()
+                    Sync.syncBasics()
 
                     uiThread { navController.navigate(Home) }
                 } else {
@@ -70,47 +57,5 @@ class LoadingViewModel : ViewModel() {
                 uiThread { navController.navigate(Login) }
             }
         }
-    }
-
-    @OptIn(ExperimentalSettingsApi::class)
-    private suspend fun updateLocalData() {
-        val userData = UserDataBackend.getUserData()
-        settings.putString(SettingsKeys.USER_DATA, serverJson.encodeToString(UserD.serializer(), userData))
-
-        val sections = SectionsBackend.list()
-        updateEntities(
-            list = sections,
-            inventoryDao::getAllSections,
-            inventoryDao::insertSection,
-            inventoryDao::updateSection,
-            inventoryDao::deleteSection
-        )
-
-        val types = InventoryBackend.listTypes()
-        updateEntities(
-            list = types,
-            inventoryDao::getAllItemTypes,
-            inventoryDao::insertItemType,
-            inventoryDao::updateItemType,
-            inventoryDao::deleteItemType
-        )
-
-        val items = InventoryBackend.listItems()
-        updateEntities(
-            list = items,
-            inventoryDao::getAllItems,
-            inventoryDao::insertItem,
-            inventoryDao::updateItem,
-            inventoryDao::deleteItem
-        )
-
-        val spaces = SpacesBackend.list()
-        updateEntities(
-            list = spaces,
-            spacesDao::getAllSpaces,
-            spacesDao::insertSpace,
-            spacesDao::updateSpace,
-            spacesDao::deleteSpace
-        )
     }
 }

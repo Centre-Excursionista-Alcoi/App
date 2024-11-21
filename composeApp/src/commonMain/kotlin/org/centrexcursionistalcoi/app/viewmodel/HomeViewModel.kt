@@ -19,10 +19,10 @@ import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
-import org.centrexcursionistalcoi.app.database.updateEntities
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
+import org.centrexcursionistalcoi.app.network.Sync
 import org.centrexcursionistalcoi.app.network.UserDataBackend
 import org.centrexcursionistalcoi.app.serverJson
 import org.centrexcursionistalcoi.app.settings.SettingsKeys
@@ -89,45 +89,8 @@ class HomeViewModel : ViewModel() {
 
     fun load() {
         launch {
-            loadSync()
+            Sync.syncBookings()
         }
-    }
-
-    private suspend fun loadSync() {
-        val itemBookings = InventoryBackend.listBookings().toMutableList()
-        val spaceBookings = SpacesBackend.listBookings().toMutableList()
-
-        val userData = settings.getStringOrNull(SettingsKeys.USER_DATA)
-            ?.let { serverJson.decodeFromString(UserD.serializer(), it) }
-
-        // only for administrators
-        if (userData?.isAdmin == true) {
-            val usersList = UserDataBackend.listUsers()
-            _usersList.emit(usersList)
-
-            val allItemBookings = InventoryBackend.allBookings()
-            itemBookings += allItemBookings.filter { booking -> itemBookings.none { it.id == booking.id } }
-
-            val allSpaceBookings = SpacesBackend.allBookings()
-            spaceBookings += allSpaceBookings.filter { booking -> spaceBookings.none { it.id == booking.id } }
-        } else {
-            _usersList.emit(emptyList())
-        }
-
-        updateEntities(
-            list = itemBookings,
-            bookingsDao::getAllItemBookings,
-            bookingsDao::insertItemBooking,
-            bookingsDao::updateItemBooking,
-            bookingsDao::deleteItemBooking
-        )
-        updateEntities(
-            list = spaceBookings,
-            bookingsDao::getAllSpaceBookings,
-            bookingsDao::insertSpaceBooking,
-            bookingsDao::updateSpaceBooking,
-            bookingsDao::deleteSpaceBooking
-        )
     }
 
     fun logout() {
@@ -164,7 +127,7 @@ class HomeViewModel : ViewModel() {
                 } else {
                     updater(value)
                 }
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onCreate() }
             } finally {
                 creating.emit(false)
@@ -221,7 +184,7 @@ class HomeViewModel : ViewModel() {
                     is SpaceBooking -> SpacesBackend.cancelBooking(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onCancel() }
             } finally {
                 _updatingBooking.emit(false)
@@ -238,7 +201,7 @@ class HomeViewModel : ViewModel() {
                     is SpaceBooking -> SpacesBackend.confirm(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onConfirm() }
             } finally {
                 _updatingBooking.emit(false)
@@ -265,7 +228,7 @@ class HomeViewModel : ViewModel() {
 
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onMarked() }
             } finally {
                 _updatingBooking.emit(false)
@@ -282,7 +245,7 @@ class HomeViewModel : ViewModel() {
                     is SpaceBooking -> SpacesBackend.markReturned(booking.id)
                     else -> error("Unsupported booking type: ${booking::class.simpleName}")
                 }
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onMarked() }
             } finally {
                 _updatingBooking.emit(false)
@@ -295,7 +258,7 @@ class HomeViewModel : ViewModel() {
             try {
                 _updatingUser.emit(true)
                 UserDataBackend.confirm(user)
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onConfirm() }
             } finally {
                 _updatingUser.emit(false)
@@ -308,7 +271,7 @@ class HomeViewModel : ViewModel() {
             try {
                 _updatingUser.emit(true)
                 UserDataBackend.delete(user)
-                loadSync()
+                Sync.syncBookings()
                 uiThread { onDelete() }
             } finally {
                 _updatingUser.emit(false)
