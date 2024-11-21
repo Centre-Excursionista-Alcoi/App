@@ -29,7 +29,6 @@ import ceaapp.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Clock
@@ -336,7 +335,7 @@ private fun SpaceCard(
                         .padding(horizontal = 8.dp)
                 )
                 ImagesCarousel(
-                    images = space.images.orEmpty().map(Base64::decode),
+                    images = space.images.orEmpty(),
                     modifier = Modifier.fillMaxWidth()
                         .padding(bottom = 8.dp)
                         .padding(horizontal = 8.dp)
