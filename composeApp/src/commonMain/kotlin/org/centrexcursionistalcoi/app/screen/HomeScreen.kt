@@ -41,22 +41,22 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
 
     @Composable
     override fun Content(viewModel: HomeViewModel) {
-        val user by viewModel.userData.collectAsState()
-        val itemBookings by viewModel.itemBookings.collectAsState()
-        val spaceBookings by viewModel.spaceBookings.collectAsState()
+        val user by viewModel.userData.collectAsState(null)
+        val itemBookings by viewModel.itemBookings.collectAsState(null)
+        val spaceBookings by viewModel.spaceBookings.collectAsState(null)
 
         val usersList by viewModel.usersList.collectAsState()
         val updatingUser by viewModel.updatingUser.collectAsState()
-        val sections by viewModel.sections.collectAsState()
+        val sections by viewModel.sections.collectAsState(null)
         val creatingSection by viewModel.creatingSection.collectAsState()
-        val itemTypes by viewModel.itemTypes.collectAsState()
+        val itemTypes by viewModel.itemTypes.collectAsState(null)
         val creatingType by viewModel.creatingType.collectAsState()
-        val items by viewModel.items.collectAsState()
+        val items by viewModel.items.collectAsState(null)
         val creatingItem by viewModel.creatingItem.collectAsState()
         val updatingBooking by viewModel.updatingBooking.collectAsState()
-        val allItemBookings by viewModel.allItemBookings.collectAsState()
-        val allSpaceBookings by viewModel.allSpaceBookings.collectAsState()
-        val spaces by viewModel.spaces.collectAsState()
+        val allItemBookings by viewModel.allItemBookings.collectAsState(null)
+        val allSpaceBookings by viewModel.allSpaceBookings.collectAsState(null)
+        val spaces by viewModel.spaces.collectAsState(null)
         val creatingSpace by viewModel.creatingSpace.collectAsState()
 
         val availableItems by viewModel.availableItems.collectAsState()

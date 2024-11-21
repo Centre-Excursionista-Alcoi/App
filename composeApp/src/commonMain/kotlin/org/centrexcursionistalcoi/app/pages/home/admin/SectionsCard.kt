@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
-import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
@@ -28,16 +28,16 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SectionsCard(
-    sections: List<SectionD>?,
+    sections: List<Section>?,
     isCreating: Boolean,
-    onOperationRequested: (SectionD, onCreate: () -> Unit) -> Unit,
+    onOperationRequested: (Section, onCreate: () -> Unit) -> Unit,
 ) {
-    var showingCreationDialog: SectionD? by remember { mutableStateOf(null) }
+    var showingCreationDialog: Section? by remember { mutableStateOf(null) }
     CreationDialog(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.sections_create,
         isCreating = isCreating,
-        isEnabled = SectionD::validate,
+        isEnabled = Section::validate,
         onCreateRequested = onOperationRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -52,7 +52,7 @@ fun SectionsCard(
 
     PlatformCard(
         title = stringResource(Res.string.sections_title),
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = SectionD() }),
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = Section() }),
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         AnimatedContent(

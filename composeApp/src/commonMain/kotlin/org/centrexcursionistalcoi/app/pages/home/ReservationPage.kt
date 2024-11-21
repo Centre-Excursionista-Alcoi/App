@@ -39,10 +39,10 @@ import kotlinx.datetime.todayIn
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SpaceD
-import org.centrexcursionistalcoi.app.data.health
+import org.centrexcursionistalcoi.app.data.localizedName
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
@@ -56,9 +56,9 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ColumnScope.ReservationPage(
-    itemTypes: List<ItemTypeD>?,
-    availableItems: List<ItemD>?,
-    availableSpaces: List<SpaceD>?,
+    itemTypes: List<ItemType>?,
+    availableItems: List<Item>?,
+    availableSpaces: List<Space>?,
     onLoadAvailabilityRequested: (from: LocalDate, to: LocalDate) -> Unit
 ) {
     val navController = LocalNavController.current
@@ -136,11 +136,11 @@ fun ColumnScope.ReservationPage(
                 items(
                     key = { "item-${it.first.id}-${it.second?.id}" },
                     items = availableItems.map { item ->
-                        item to itemTypes.find { it.id == item.typeId }
+                        item to itemTypes.find { it.id == item.itemTypeId }
                     }
                 ) { (item, type) ->
                     if (type == null) return@items
-                    val id = item.id ?: return@items
+                    val id = item.id
                     ItemCard(
                         item = item,
                         type = type,
@@ -159,7 +159,7 @@ fun ColumnScope.ReservationPage(
                     key = { "space-${it.id}" },
                     items = availableSpaces
                 ) { space ->
-                    val id = space.id ?: return@items
+                    val id = space.id
                     SpaceCard(
                         space = space,
                         isSelected = selectedSpaceId == id,
@@ -241,11 +241,10 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces:
     }
 }
 
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 private fun ItemCard(
-    item: ItemD,
-    type: ItemTypeD,
+    item: Item,
+    type: ItemType,
     isSelected: Boolean,
     toggle: () -> Unit
 ) {
@@ -279,7 +278,7 @@ private fun ItemCard(
                         .padding(horizontal = 8.dp)
                 )
                 AppText(
-                    text = stringResource(item.health()),
+                    text = stringResource(item.health.localizedName()),
                     style = getPlatformTextStyles().heading
                         .copy(textAlign = TextAlign.Center, fontSize = 16.sp),
                     modifier = Modifier
@@ -287,7 +286,7 @@ private fun ItemCard(
                         .padding(bottom = 8.dp)
                         .padding(horizontal = 8.dp)
                 )
-                type.imageBytes()?.let { image ->
+                type.image?.let { image ->
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(image)
@@ -305,7 +304,7 @@ private fun ItemCard(
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
 private fun SpaceCard(
-    space: SpaceD,
+    space: Space,
     isSelected: Boolean,
     toggle: () -> Unit
 ) {

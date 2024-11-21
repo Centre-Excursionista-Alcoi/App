@@ -23,15 +23,13 @@ import ceaapp.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SectionD
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
@@ -42,20 +40,19 @@ import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun TypesCard(
-    itemTypes: List<ItemTypeD>?,
-    sections: List<SectionD>?,
+    itemTypes: List<ItemType>?,
+    sections: List<Section>?,
     isCreating: Boolean,
-    onCreateRequested: (ItemTypeD, onCreate: () -> Unit) -> Unit
+    onCreateRequested: (ItemType, onCreate: () -> Unit) -> Unit
 ) {
-    var showingCreationDialog: ItemTypeD? by remember { mutableStateOf(null) }
+    var showingCreationDialog: ItemType? by remember { mutableStateOf(null) }
     CreationDialog(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.types_create,
         isCreating = isCreating,
-        isEnabled = ItemTypeD::validate,
+        isEnabled = ItemType::validate,
         onCreateRequested = onCreateRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -91,8 +88,7 @@ fun TypesCard(
         val filePicker = rememberFilePickerLauncher(mode = PickerMode.Single, type = PickerType.Image) { file ->
             CoroutineScope(Dispatchers.Main).launch {
                 val bytes = file?.readBytes()
-                val base64 = bytes?.let { Base64.encode(bytes) }
-                showingCreationDialog = data.copy(imageBytesBase64 = base64)
+                showingCreationDialog = data.copy(image = bytes)
             }
         }
         AppText(
@@ -101,16 +97,16 @@ fun TypesCard(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
         )
         PlatformButton(
-            text = if (data.imageBytesBase64 == null)
+            text = if (data.image == null)
                 stringResource(Res.string.select)
             else
-                stringResource(Res.string.selected_size, data.imageBytes()!!.humanReadableSize()),
+                stringResource(Res.string.selected_size, data.image.humanReadableSize()),
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             enabled = !isCreating
         ) { filePicker.launch() }
 
         PlatformDropdown(
-            value = data.sectionId?.let { sectionId -> sections?.find { it.id == sectionId } },
+            value = data.sectionId.let { sectionId -> sections?.find { it.id == sectionId } },
             onValueChange = { showingCreationDialog = data.copy(sectionId = it.id) },
             options = sections ?: emptyList(),
             label = stringResource(Res.string.types_section),
@@ -122,7 +118,7 @@ fun TypesCard(
 
     PlatformCard(
         title = stringResource(Res.string.types_title),
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = ItemTypeD() },
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = ItemType() },
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         AnimatedContent(

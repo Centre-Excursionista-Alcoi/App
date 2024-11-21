@@ -14,6 +14,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.gms)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     alias(libs.plugins.serialization)
 }
 
@@ -47,6 +49,9 @@ kotlin {
             isStatic = true
 
             export(libs.kmpnotifier)
+
+            // Room - Required when using NativeSQLiteDriver
+            linkerOpts.add("-lsqlite3")
         }
     }
 
@@ -125,6 +130,10 @@ kotlin {
             implementation(libs.datastore.base)
             implementation(libs.datastore.preferences)
 
+            // Room
+            implementation(libs.room.bundledSqlite)
+            implementation(libs.room.runtime)
+
             implementation(projects.shared)
         }
         androidMain.dependencies {
@@ -194,6 +203,10 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 buildkonfig {
     packageName = "org.centrexcursionistalcoi.app"
 
@@ -208,6 +221,17 @@ buildkonfig {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+    // Room Compilers
+    add("kspCommonMainMetadata", libs.room.compiler)
+
+    add("kspAndroid", libs.room.compiler)
+
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+
+    add("kspDesktop", libs.room.compiler)
 }
 
 compose.desktop {
