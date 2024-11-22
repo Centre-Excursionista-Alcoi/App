@@ -11,6 +11,10 @@ on:
       - 'composeApp/src/commonMain/**'
       - 'shared/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   update-version-code:
     name: Update version code
