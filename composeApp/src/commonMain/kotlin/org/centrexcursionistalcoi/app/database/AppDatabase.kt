@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.database.entity.admin.User
+import org.centrexcursionistalcoi.app.database.migration.AutoMigration2To3
 
 @Database(
     entities = [
@@ -24,10 +25,12 @@ import org.centrexcursionistalcoi.app.database.entity.admin.User
         ItemBooking::class, SpaceBooking::class,
         User::class
     ],
-    version = 2,
+    version = 3,
     autoMigrations = [
         // Added users admin entity
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        // Got rid of embedded data
+        AutoMigration(from = 2, to = 3, AutoMigration2To3::class)
     ]
 )
 @TypeConverters(Converters::class)
