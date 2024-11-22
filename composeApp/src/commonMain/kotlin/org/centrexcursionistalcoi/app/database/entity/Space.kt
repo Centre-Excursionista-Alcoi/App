@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -20,10 +20,14 @@ data class Space(
     val name: String = "",
     val description: String? = null,
     val capacity: Int? = null,
-    @Embedded(prefix = "member") val memberPrice: MoneyD? = null,
-    @Embedded(prefix = "external") val externalPrice: MoneyD? = null,
-    @Embedded val location: Location? = null,
-    @Embedded val address: Address? = null,
+    val memberPrice: Double? = null,
+    val externalPrice: Double? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val address: String? = null,
+    val city: String? = null,
+    val postalCode: String? = null,
+    val country: String? = null,
     val images: List<ByteArray>? = null,
     val keys: List<SpaceKeyD>? = null
 ): DatabaseEntity<SpaceD> {
@@ -46,6 +50,44 @@ data class Space(
         }
     }
 
+    constructor(
+        id: Int,
+        createdAt: Instant,
+        name: String,
+        description: String?,
+        capacity: Int?,
+        memberPrice: MoneyD?,
+        externalPrice: MoneyD?,
+        location: Location?,
+        address: Address?,
+        images: List<ByteArray>?,
+        keys: List<SpaceKeyD>?
+    ): this(
+        id,
+        createdAt,
+        name,
+        description,
+        capacity,
+        memberPrice?.amount,
+        externalPrice?.amount,
+        location?.latitude,
+        location?.longitude,
+        address?.address,
+        address?.city,
+        address?.postalCode,
+        address?.country,
+        images,
+        keys
+    )
+
+    @get:Ignore
+    val location: Location?
+        get() = if (latitude != null && longitude != null) Location(latitude, longitude) else null
+
+    @get:Ignore
+    val fullAddress: Address?
+        get() = Address(address, city, postalCode, country).orNull()
+
     @OptIn(ExperimentalEncodingApi::class)
     override fun serializable(): SpaceD {
         return SpaceD(
@@ -54,10 +96,10 @@ data class Space(
             name = name,
             description = description,
             capacity = capacity,
-            memberPrice = memberPrice,
-            externalPrice = externalPrice,
+            memberPrice = memberPrice?.let { MoneyD(amount = it) },
+            externalPrice = externalPrice?.let { MoneyD(amount = it) },
             location = location,
-            address = address,
+            address = fullAddress,
             images = images?.map { Base64.encode(it) },
             keys = keys
         )
