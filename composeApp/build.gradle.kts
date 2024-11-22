@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.firebaseAppDistribution)
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.firebasePerformance)
     alias(libs.plugins.gms)
@@ -197,6 +198,13 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
+
+            firebaseAppDistribution {
+                artifactType = "AAB"
+                releaseNotes = "This is a release note"
+                groups = "cea-app"
+                serviceCredentialsFile = rootProject.project("server").file("serviceAccountKey.json").absolutePath
+            }
         }
     }
     compileOptions {

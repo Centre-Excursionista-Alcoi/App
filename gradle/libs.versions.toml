@@ -17,6 +17,7 @@ compose-navigation = "2.8.0-alpha10"
 datastore = "1.1.1"
 exposed = "0.56.0"
 firebase-admin = "9.4.1"
+firebase-appdistribution = "5.0.0"
 firebase-bom = "33.6.0"
 firebase-crashlytics = "3.0.2"
 firebase-perf = "1.4.2"
@@ -102,6 +103,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+firebaseAppDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appdistribution" }
 firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
 firebasePerformance = { id = "com.google.firebase.firebase-perf", version.ref = "firebase-perf" }
 gms = { id = "com.google.gms.google-services", version.ref = "google-services" }
