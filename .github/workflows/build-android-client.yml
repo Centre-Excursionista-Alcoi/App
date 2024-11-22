@@ -1,0 +1,86 @@
+name: Release Binaries
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/build-android-client.yml'
+      - '**/*.gradle.kts'
+      - 'composeApp/src/androidMain/**'
+      - 'composeApp/src/commonMain/**'
+      - 'shared/**'
+
+jobs:
+  update-version-code:
+    name: Update version code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Increase version code
+        id: increase_version_code
+        run: python ./composeApp/scripts/increaseVersionCode.py
+
+      - name: Commit modified version code file
+        id: commit_version_code
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Updated Version Code'
+          file_pattern: 'composeApp/code.txt'
+          branch: master
+
+  build-android:
+    name: Build for Android
+    runs-on: ubuntu-latest
+
+    needs: update-version-code
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Import Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" > keystore.base64
+          base64 --decode keystore.base64 > ./composeApp/keystore.jks
+
+      - name: Import Google Services JSON
+        env:
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_BASE64" > google-services.base64
+          base64 --decode google-services.base64 > ./composeApp/google-services.json
+
+      - name: Import Google Service Account Key JSON
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICE_ACCOUNT_KEY_BASE64" > serviceAccountKey.base64
+          base64 --decode serviceAccountKey.base64 > ./server/serviceAccountKey.json
+
+      - name: Release with Firebase App Distribution
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:appDistributionUploadRelease
