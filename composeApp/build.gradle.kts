@@ -4,9 +4,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -16,6 +14,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.gms)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     alias(libs.plugins.serialization)
 }
 
@@ -49,12 +49,15 @@ kotlin {
             isStatic = true
 
             export(libs.kmpnotifier)
+
+            // Room - Required when using NativeSQLiteDriver
+            linkerOpts.add("-lsqlite3")
         }
     }
 
     jvm("desktop")
 
-    @OptIn(ExperimentalWasmDsl::class)
+    /*@OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         moduleName = "composeApp"
         browser {
@@ -72,7 +75,7 @@ kotlin {
             }
         }
         binaries.executable()
-    }
+    }*/
 
     targets.configureEach {
         compilations.configureEach {
@@ -119,8 +122,17 @@ kotlin {
             // Multiplatform Settings
             implementation(libs.multiplatformSettings.base)
             implementation(libs.multiplatformSettings.coroutines)
+            implementation(libs.multiplatformSettings.datastore)
             implementation(libs.multiplatformSettings.makeObservable)
             implementation(libs.multiplatformSettings.serialization)
+
+            // DataStore
+            implementation(libs.datastore.base)
+            implementation(libs.datastore.preferences)
+
+            // Room
+            implementation(libs.room.bundledSqlite)
+            implementation(libs.room.runtime)
 
             implementation(projects.shared)
         }
@@ -132,10 +144,6 @@ kotlin {
 
             implementation(libs.compose.googlefonts)
 
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
-
             implementation(libs.ktor.client.okhttp)
 
             implementation(project.dependencies.platform(libs.firebase.bom))
@@ -143,18 +151,11 @@ kotlin {
             implementation(libs.firebase.crashlytics)
         }
         iosMain.dependencies {
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
             implementation(libs.ktor.client.darwin)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
-
-            implementation(libs.datastore.base)
-            implementation(libs.datastore.preferences)
-            implementation(libs.multiplatformSettings.datastore)
 
             implementation(libs.ktor.client.okhttp)
         }
@@ -202,6 +203,10 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 buildkonfig {
     packageName = "org.centrexcursionistalcoi.app"
 
@@ -216,6 +221,17 @@ buildkonfig {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
+    // Room Compilers
+    add("kspCommonMainMetadata", libs.room.compiler)
+
+    add("kspAndroid", libs.room.compiler)
+
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+
+    add("kspDesktop", libs.room.compiler)
 }
 
 compose.desktop {

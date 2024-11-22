@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,40 +29,41 @@ import ceaapp.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
-import com.gabrieldrn.carbon.checkbox.Checkbox
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SpaceD
-import org.centrexcursionistalcoi.app.data.health
+import org.centrexcursionistalcoi.app.data.localizedName
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.maxGridItemSpan
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
+import org.centrexcursionistalcoi.app.platform.ui.PlatformCheckbox
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDatePicker
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Reservation
+import org.centrexcursionistalcoi.app.state.LocalDateSaver
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ColumnScope.ReservationPage(
-    itemTypes: List<ItemTypeD>?,
-    availableItems: List<ItemD>?,
-    availableSpaces: List<SpaceD>?,
+    itemTypes: List<ItemType>?,
+    availableItems: List<Item>?,
+    availableSpaces: List<Space>?,
     onLoadAvailabilityRequested: (from: LocalDate, to: LocalDate) -> Unit
 ) {
     val navController = LocalNavController.current
 
-    var from by rememberSaveable { mutableStateOf<LocalDate?>(null) }
-    var to by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    var from by rememberSaveable(saver = LocalDateSaver) { mutableStateOf(null) }
+    var to by rememberSaveable(saver = LocalDateSaver) { mutableStateOf(null) }
     var selectedItems by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var selectedSpaceId by remember { mutableStateOf<Int?>(null) }
 
@@ -117,7 +117,7 @@ fun ColumnScope.ReservationPage(
 
             if (from == null || to == null) {
                 item(key = "select-date-range", span = maxGridItemSpan) {
-                    BasicText(
+                    AppText(
                         text = stringResource(Res.string.home_select_date_range),
                         style = getPlatformTextStyles().heading,
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -135,11 +135,11 @@ fun ColumnScope.ReservationPage(
                 items(
                     key = { "item-${it.first.id}-${it.second?.id}" },
                     items = availableItems.map { item ->
-                        item to itemTypes.find { it.id == item.typeId }
+                        item to itemTypes.find { it.id == item.itemTypeId }
                     }
                 ) { (item, type) ->
                     if (type == null) return@items
-                    val id = item.id ?: return@items
+                    val id = item.id
                     ItemCard(
                         item = item,
                         type = type,
@@ -158,7 +158,7 @@ fun ColumnScope.ReservationPage(
                     key = { "space-${it.id}" },
                     items = availableSpaces
                 ) { space ->
-                    val id = space.id ?: return@items
+                    val id = space.id
                     SpaceCard(
                         space = space,
                         isSelected = selectedSpaceId == id,
@@ -198,12 +198,12 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces:
         PlatformCard(
             modifier = Modifier.weight(1f).padding(end = 8.dp)
         ) {
-            BasicText(
+            AppText(
                 text = availableItems.toString(),
                 style = getPlatformTextStyles().titleRegular.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.home_available_items),
                 style = getPlatformTextStyles().heading.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -212,12 +212,12 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces:
         PlatformCard(
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
         ) {
-            BasicText(
+            AppText(
                 text = selectedItems.toString(),
                 style = getPlatformTextStyles().titleRegular.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.home_selected_items),
                 style = getPlatformTextStyles().heading.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -226,12 +226,12 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces:
         PlatformCard(
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
         ) {
-            BasicText(
+            AppText(
                 text = availableSpaces.toString(),
                 style = getPlatformTextStyles().titleRegular.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.home_available_spaces),
                 style = getPlatformTextStyles().heading.copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -240,11 +240,10 @@ private fun SummaryRow(availableItems: Int, selectedItems: Int, availableSpaces:
     }
 }
 
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 private fun ItemCard(
-    item: ItemD,
-    type: ItemTypeD,
+    item: Item,
+    type: ItemType,
     isSelected: Boolean,
     toggle: () -> Unit
 ) {
@@ -259,16 +258,16 @@ private fun ItemCard(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Checkbox(
+            PlatformCheckbox(
                 checked = isSelected,
-                onClick = { toggle() },
-                label = "",
+                onCheckedChanged = { toggle() },
+                label = null,
                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
             )
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                BasicText(
+                AppText(
                     text = type.title,
                     style = getPlatformTextStyles().heading
                         .copy(textAlign = TextAlign.Center, fontSize = 20.sp),
@@ -277,8 +276,8 @@ private fun ItemCard(
                         .padding(top = 8.dp)
                         .padding(horizontal = 8.dp)
                 )
-                BasicText(
-                    text = stringResource(item.health()),
+                AppText(
+                    text = stringResource(item.health.localizedName()),
                     style = getPlatformTextStyles().heading
                         .copy(textAlign = TextAlign.Center, fontSize = 16.sp),
                     modifier = Modifier
@@ -286,7 +285,7 @@ private fun ItemCard(
                         .padding(bottom = 8.dp)
                         .padding(horizontal = 8.dp)
                 )
-                type.imageBytes()?.let { image ->
+                type.image?.let { image ->
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(image)
@@ -304,7 +303,7 @@ private fun ItemCard(
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
 private fun SpaceCard(
-    space: SpaceD,
+    space: Space,
     isSelected: Boolean,
     toggle: () -> Unit
 ) {
@@ -317,16 +316,16 @@ private fun SpaceCard(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Checkbox(
+            PlatformCheckbox(
                 checked = isSelected,
-                onClick = { toggle() },
-                label = "",
+                onCheckedChanged = { toggle() },
+                label = null,
                 modifier = Modifier.padding(start = 8.dp, top = 8.dp)
             )
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                BasicText(
+                AppText(
                     text = space.name,
                     style = getPlatformTextStyles().heading
                         .copy(textAlign = TextAlign.Center, fontSize = 20.sp),
@@ -336,7 +335,7 @@ private fun SpaceCard(
                         .padding(horizontal = 8.dp)
                 )
                 ImagesCarousel(
-                    images = space.images.orEmpty().map(Base64::decode),
+                    images = space.images.orEmpty(),
                     modifier = Modifier.fillMaxWidth()
                         .padding(bottom = 8.dp)
                         .padding(horizontal = 8.dp)

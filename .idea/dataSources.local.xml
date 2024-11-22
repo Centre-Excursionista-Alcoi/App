@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="dataSourceStorageLocal" created-in="IU-243.21565.193">
-    <data-source name="CEA" uuid="ec0405ba-66e5-4e09-94a6-1d1bfb159bae">
+    <data-source name="CEA Local" uuid="ec0405ba-66e5-4e09-94a6-1d1bfb159bae">
       <database-info product="H2" version="2.2.220 (2023-07-04)" jdbc-version="4.2" driver-name="H2 JDBC Driver" driver-version="2.2.220 (2023-07-04)" dbms="H2" exact-version="2.2.220" exact-driver-version="2.2">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>
@@ -27,6 +27,19 @@
           <node kind="database" qname="@">
             <node kind="schema" qname="@" />
           </node>
+        </introspection-scope>
+      </schema-mapping>
+    </data-source>
+    <data-source name="CEA App" uuid="4c97f2a1-324d-4d6c-ab84-8e5bd495c940">
+      <database-info product="SQLite" version="3.45.1" jdbc-version="4.2" driver-name="SQLite JDBC" driver-version="3.45.1.0" dbms="SQLITE" exact-version="3.45.1" exact-driver-version="3.45">
+        <identifier-quote-string>&quot;</identifier-quote-string>
+      </database-info>
+      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <secret-storage>master_key</secret-storage>
+      <auth-provider>no-auth</auth-provider>
+      <schema-mapping>
+        <introspection-scope>
+          <node kind="schema" qname="@" />
         </introspection-scope>
       </schema-mapping>
     </data-source>

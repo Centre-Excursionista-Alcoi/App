@@ -8,6 +8,7 @@ import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import java.io.File
 import kotlinx.serialization.KSerializer
+import org.centrexcursionistalcoi.app.database.SessionsDatabase
 import org.centrexcursionistalcoi.app.serverJson
 import org.slf4j.LoggerFactory
 
@@ -38,25 +39,36 @@ object FCM {
      * Send a notification to a user.
      * It will include [data] serialized as Json using [serializer] in the `data` field.
      *
-     * @param userId The ID of the user to send the notification to
+     * @param email The email of the user to send the notification to
      * @param type The type of notification
      * @param data The data to send
      * @param serializer The serializer to use for the data
      *
-     * @return The message ID
+     * @return The message IDs of the notifications sent
      *
      * @throws FirebaseMessagingException If an error occurs while sending the message
      */
-    fun <DataType> notify(userId: String, type: NotificationType, data: DataType, serializer: KSerializer<DataType>): String {
-        val topic = PushTopic.topic(userId)
+    suspend fun <DataType> notify(
+        email: String,
+        type: NotificationType,
+        data: DataType,
+        serializer: KSerializer<DataType>
+    ): List<String> {
+        val tokens = SessionsDatabase.getTokensForEmail(email)
         val json = serverJson.encodeToString(serializer, data)
 
-        val message = Message.builder()
-            .putData("data", json)
-            .putData("type", type.name)
-            .setTopic(topic)
-            .build()
-        return messaging.send(message)
-            .also { logger.debug("Sent notification to $userId for ${type.name}: $it") }
+        val messages = tokens.map { token ->
+            Message.builder()
+                .putData("data", json)
+                .putData("type", type.name)
+                .setToken(token)
+                .build()
+        }
+        val response = messaging.sendEach(messages)
+        logger.debug(
+            "Sent notification to $email for ${type.name} in ${response.successCount} devices. Failed to deliver to ${response.failureCount} devices"
+        )
+
+        return response.responses.mapNotNull { it.messageId }
     }
 }

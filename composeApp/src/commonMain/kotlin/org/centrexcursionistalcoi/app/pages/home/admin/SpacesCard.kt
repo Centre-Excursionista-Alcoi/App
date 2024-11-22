@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -28,17 +27,16 @@ import ceaapp.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
 import org.centrexcursionistalcoi.app.data.Address
 import org.centrexcursionistalcoi.app.data.Location
 import org.centrexcursionistalcoi.app.data.MoneyD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.SpaceKeyD
+import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
@@ -48,19 +46,18 @@ import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun SpacesCard(
-    spaces: List<SpaceD>?,
+    spaces: List<Space>?,
     isCreating: Boolean,
-    onOperationRequested: (SpaceD, onCreate: () -> Unit) -> Unit,
+    onOperationRequested: (Space, onCreate: () -> Unit) -> Unit,
 ) {
-    var showingCreationDialog: SpaceD? by remember { mutableStateOf(null) }
+    var showingCreationDialog: Space? by remember { mutableStateOf(null) }
     CreationDialog(
         showingCreationDialog = showingCreationDialog,
         title = Res.string.spaces_create,
         isCreating = isCreating,
-        isEnabled = SpaceD::validate,
+        isEnabled = Space::validate,
         onCreateRequested = onOperationRequested,
         onDismissRequested = { if (!isCreating) showingCreationDialog = null }
     ) { data ->
@@ -70,7 +67,7 @@ fun SpacesCard(
                 val newImages = data.images.orEmpty().toMutableList()
                 for (file in files) {
                     val bytes = file.readBytes()
-                    newImages += Base64.encode(bytes)
+                    newImages += bytes
                 }
                 showingCreationDialog = data.copy(images = newImages)
             }
@@ -91,16 +88,16 @@ fun SpacesCard(
             enabled = !isCreating
         )
 
-        BasicText(
+        AppText(
             text = stringResource(Res.string.spaces_images),
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
         )
         ImagesCarousel(
-            images = data.images.orEmpty().map(Base64::decode),
+            images = data.images.orEmpty(),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             supportingContent = { image ->
-                BasicText(
+                AppText(
                     text = image.humanReadableSize(),
                     style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
@@ -232,7 +229,7 @@ fun SpacesCard(
 
         HorizontalDivider()
 
-        BasicText(
+        AppText(
             text = stringResource(Res.string.spaces_keys),
             style = getPlatformTextStyles().label,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
@@ -290,7 +287,7 @@ fun SpacesCard(
 
     PlatformCard(
         title = stringResource(Res.string.spaces_title),
-        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = SpaceD() }),
+        action = Triple(Icons.Default.Add, stringResource(Res.string.add), { showingCreationDialog = Space() }),
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         AnimatedContent(
@@ -302,7 +299,7 @@ fun SpacesCard(
                     PlatformLoadingIndicator(large = false)
                 } else {
                     if (list.isEmpty()) {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.spaces_empty),
                             style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
                             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -315,7 +312,7 @@ fun SpacesCard(
                                 .padding(8.dp)
                                 .clickable { showingCreationDialog = item }
                         ) {
-                            BasicText(
+                            AppText(
                                 text = item.name,
                                 modifier = Modifier
                                     .fillMaxWidth()

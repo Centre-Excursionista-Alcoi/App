@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.endpoints.auth.DeleteUserEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LoginEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.LogoutEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.RegisterEndpoint
+import org.centrexcursionistalcoi.app.endpoints.auth.UpdateFCMTokenEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.UserDataEndpoint
 import org.centrexcursionistalcoi.app.endpoints.auth.UsersEndpoint
 import org.centrexcursionistalcoi.app.endpoints.inventory.CreateItemEndpoint
@@ -71,6 +72,7 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     UsersEndpoint,
     ConfirmUserEndpoint,
     DeleteUserEndpoint,
+    UpdateFCMTokenEndpoint,
 
     ListTypesEndpoint,
     CreateTypesEndpoint,

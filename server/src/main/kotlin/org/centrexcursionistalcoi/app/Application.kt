@@ -6,6 +6,7 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.database.ServerDatabase
+import org.centrexcursionistalcoi.app.database.SessionsDatabase
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.installAuthentication
 import org.centrexcursionistalcoi.app.plugins.installContentNegotiation
@@ -26,6 +27,10 @@ private suspend fun start() {
 
         ServerDatabase.initialize(databaseUrl, databaseDriver, databaseUsername, databasePassword)
     }
+
+    SessionsDatabase.initialize(
+        endpoint = System.getenv("REDIS_ENDPOINT")
+    )
 
     FCM.initialize(
         System.getenv("FCM_SERVICE_ACCOUNT_KEY_PATH") ?: "serviceAccountKey.json"

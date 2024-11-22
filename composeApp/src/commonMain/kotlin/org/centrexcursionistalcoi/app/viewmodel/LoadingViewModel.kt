@@ -2,14 +2,13 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import com.mmk.kmpnotifier.notification.NotifierManager
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.network.Backend
-import org.centrexcursionistalcoi.app.push.PushTopic
+import org.centrexcursionistalcoi.app.network.Sync
 import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Login
 
@@ -39,10 +38,7 @@ class LoadingViewModel : ViewModel() {
                     // Login again to refresh the token
                     AuthBackend.login(account.first.email, account.second)
 
-                    // Subscribe to the user's topic
-                    val topic = PushTopic.topic(account.first.email)
-                    Napier.i { "Subscribing to topic for FCM notifications: $topic" }
-                    NotifierManager.getPushNotifier().subscribeToTopic(topic)
+                    Sync.syncBasics()
 
                     uiThread { navController.navigate(Home) }
                 } else {

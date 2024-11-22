@@ -7,10 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,13 +25,14 @@ import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
@@ -54,12 +54,12 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             return
         }
 
-        val userData by viewModel.userData.collectAsState()
+        val userData by viewModel.userData.collectAsState(null)
         val dates by viewModel.dates.collectAsState()
         val items by viewModel.items.collectAsState()
-        val types by viewModel.types.collectAsState()
+        val types by viewModel.types.collectAsState(null)
         val space by viewModel.space.collectAsState()
-        val itemLending by viewModel.itemLending.collectAsState()
+        val itemLending by viewModel.itemBooking.collectAsState()
         val spaceBooking by viewModel.spaceBooking.collectAsState()
 
         if (route.isDraft()) {
@@ -93,7 +93,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 if (route.isDraft()) Res.string.reservation_draft_title else Res.string.reservation_title
             ),
             actions = listOfNotNull(
-                Triple(Icons.AutoMirrored.Filled.ArrowRight, stringResource(Res.string.confirm)) {
+                Triple(Icons.AutoMirrored.Filled.ArrowForward, stringResource(Res.string.confirm)) {
                     viewModel.confirm(
                         route.fromDate()!!,
                         route.toDate()!!,
@@ -130,11 +130,11 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         isDraft: Boolean,
         userData: UserD?,
         dates: ClosedRange<LocalDate>?,
-        selectedItems: List<ItemD>?,
-        types: List<ItemTypeD>?,
-        space: SpaceD?,
-        itemLending: ItemLendingD?,
-        spaceBooking: SpaceBookingD?
+        selectedItems: List<Item>?,
+        types: List<ItemType>?,
+        space: Space?,
+        itemLending: ItemBooking?,
+        spaceBooking: SpaceBooking?
     ) {
         if (userData == null || dates == null || selectedItems == null || types == null) {
             PlatformLoadingIndicator(modifier = Modifier.fillMaxSize())
@@ -152,11 +152,11 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
         userData: UserD,
         from: LocalDate,
         to: LocalDate,
-        selectedItems: List<ItemD>,
-        types: List<ItemTypeD>,
-        space: SpaceD?,
-        itemLending: ItemLendingD?,
-        spaceBooking: SpaceBookingD?
+        selectedItems: List<Item>,
+        types: List<ItemType>,
+        space: Space?,
+        itemLending: ItemBooking?,
+        spaceBooking: SpaceBooking?
     ) {
         Column(
             modifier = Modifier
@@ -168,18 +168,18 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
             ) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.reservation_from, from.toString()),
                     style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp),
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 )
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.reservation_to, to.toString()),
                     style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp),
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 )
             }
-            BasicText(
+            AppText(
                 text = stringResource(
                     if (isDraft) Res.string.reservation_draft_as else Res.string.reservation_as,
                     userData.name,
@@ -190,7 +190,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             )
 
             if ((itemLending ?: spaceBooking)?.confirmed == false) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.bookings_pending_confirmation),
                     style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp, color = Color.Red),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
@@ -198,7 +198,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             }
 
             if (selectedItems.isNotEmpty()) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.reservation_items),
                     style = getPlatformTextStyles().titleRegular,
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
@@ -207,7 +207,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             }
 
             if (space != null) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.reservation_space),
                     style = getPlatformTextStyles().titleRegular,
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
@@ -221,10 +221,10 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
     }
 
     @Composable
-    private fun ItemsDisplay(selectedItems: List<ItemD>, types: List<ItemTypeD>) {
+    private fun ItemsDisplay(selectedItems: List<Item>, types: List<ItemType>) {
         val groupedItems = remember(selectedItems) {
             selectedItems
-                .groupBy { it.typeId }
+                .groupBy { it.itemTypeId }
                 .mapKeys { (typeId, _) -> types.find { it.id == typeId } }
         }
         for ((type, items) in groupedItems) {
@@ -233,7 +233,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                BasicText(
+                AppText(
                     text = items.size.toString(),
                     style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
                     modifier = Modifier.padding(8.dp)
@@ -241,18 +241,18 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 Column(
                     modifier = Modifier.weight(1f).padding(8.dp)
                 ) {
-                    BasicText(
+                    AppText(
                         text = type.title,
                         style = getPlatformTextStyles().heading.copy(fontSize = 18.sp)
                     )
                     type.brand?.let {
-                        BasicText(
+                        AppText(
                             text = it,
                             style = getPlatformTextStyles().heading
                         )
                     }
                     type.model?.let {
-                        BasicText(
+                        AppText(
                             text = it,
                             style = getPlatformTextStyles().heading
                         )
@@ -263,8 +263,8 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
     }
 
     @Composable
-    private fun SpaceDisplay(space: SpaceD, days: Int) {
-        BasicText(
+    private fun SpaceDisplay(space: Space, days: Int) {
+        AppText(
             text = space.name,
             style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -303,7 +303,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             }
             if (memberPrice != null) {
                 val count = membersCount.toIntOrNull() ?: 0
-                BasicText(
+                AppText(
                     text = pluralStringResource(
                         Res.plurals.reservation_space_price_days,
                         days,
@@ -318,7 +318,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
             }
             if (externalPrice != null) {
                 val count = externalsCount.toIntOrNull() ?: 0
-                BasicText(
+                AppText(
                     text = pluralStringResource(
                         Res.plurals.reservation_space_price_days,
                         days,
@@ -331,7 +331,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                     modifier = Modifier.fillMaxWidth().padding(8.dp)
                 )
             }
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.reservation_space_price_calculation),
                 style = getPlatformTextStyles().heading.copy(fontSize = 16.sp),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -357,12 +357,12 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 )
             }
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.reservation_cancel_confirmation_title),
                 style = getPlatformTextStyles().titleRegular.copy(fontSize = 20.sp),
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.reservation_cancel_confirmation_message),
                 style = getPlatformTextStyles().body,
                 modifier = Modifier.fillMaxWidth().padding(8.dp)

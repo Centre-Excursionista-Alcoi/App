@@ -1,40 +1,49 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.russhwolf.settings.ExperimentalSettingsApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.ItemD
-import org.centrexcursionistalcoi.app.data.ItemLendingD
-import org.centrexcursionistalcoi.app.data.ItemTypeD
-import org.centrexcursionistalcoi.app.data.SpaceBookingD
-import org.centrexcursionistalcoi.app.data.SpaceD
 import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.database.appDatabase
+import org.centrexcursionistalcoi.app.database.entity.Item
+import org.centrexcursionistalcoi.app.database.entity.ItemBooking
+import org.centrexcursionistalcoi.app.database.entity.Space
+import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.network.InventoryBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
-import org.centrexcursionistalcoi.app.network.UserDataBackend
+import org.centrexcursionistalcoi.app.serverJson
+import org.centrexcursionistalcoi.app.settings.SettingsKeys
+import org.centrexcursionistalcoi.app.settings.settings
 
+@OptIn(ExperimentalSettingsApi::class)
 class ReservationViewModel : ViewModel() {
-    private val _userData = MutableStateFlow<UserD?>(null)
-    val userData get() = _userData.asStateFlow()
+    private val bookingsDao = appDatabase.bookingsDao()
+    private val inventoryDao = appDatabase.inventoryDao()
+    private val spacesDao = appDatabase.spacesDao()
+
+    val userData
+        get() = settings.getStringOrNullFlow(SettingsKeys.USER_DATA)
+            .map { json -> json?.let { serverJson.decodeFromString(UserD.serializer(), it) } }
 
     private val _dates = MutableStateFlow<ClosedRange<LocalDate>?>(null)
     val dates get() = _dates.asStateFlow()
 
-    private val _items = MutableStateFlow<List<ItemD>?>(null)
+    private val _items = MutableStateFlow<List<Item>?>(null)
     val items get() = _items.asStateFlow()
 
-    private val _types = MutableStateFlow<List<ItemTypeD>?>(null)
-    val types get() = _types.asStateFlow()
+    val types get() = inventoryDao.getAllItemTypesAsFlow()
 
-    private val _space = MutableStateFlow<SpaceD?>(null)
+    private val _space = MutableStateFlow<Space?>(null)
     val space get() = _space.asStateFlow()
 
 
-    private val _itemLending = MutableStateFlow<ItemLendingD?>(null)
-    val itemLending get() = _itemLending.asStateFlow()
+    private val _itemBooking = MutableStateFlow<ItemBooking?>(null)
+    val itemBooking get() = _itemBooking.asStateFlow()
 
-    private val _spaceBooking = MutableStateFlow<SpaceBookingD?>(null)
+    private val _spaceBooking = MutableStateFlow<SpaceBooking?>(null)
     val spaceBooking get() = _spaceBooking.asStateFlow()
 
     private var itemLendingId: Int? = null
@@ -50,22 +59,15 @@ class ReservationViewModel : ViewModel() {
         launch {
             _dates.emit(from..to)
 
-            val data = UserDataBackend.getUserData()
-            _userData.emit(data)
-
             if (filterItemIds.isNotEmpty()) {
-                val items = InventoryBackend.listItems(filterItemIds)
+                val items = inventoryDao.getAllItemsFromIds(filterItemIds.toList())
                 _items.emit(items)
-
-                val types = InventoryBackend.listTypes()
-                _types.emit(types)
             } else {
                 _items.emit(emptyList())
-                _types.emit(emptyList())
             }
 
             if (selectedSpaceId != null) {
-                val space = SpacesBackend.get(selectedSpaceId)
+                val space = spacesDao.getSpaceById(selectedSpaceId)
                 _space.emit(space)
             }
         }
@@ -76,43 +78,34 @@ class ReservationViewModel : ViewModel() {
             this.itemLendingId = itemLendingId
             this.spaceLendingId = spaceBookingId
 
-            val data = UserDataBackend.getUserData()
-            _userData.emit(data)
-
             var from: LocalDate? = null
             var to: LocalDate? = null
 
             if (itemLendingId != null) {
-                val itemLending = InventoryBackend.getBooking(itemLendingId)
-                _itemLending.emit(itemLending)
+                val itemLending = bookingsDao.getItemBookingWithId(itemLendingId)
+                _itemBooking.emit(itemLending)
 
-                from = itemLending.from
-                to = itemLending.to
+                from = itemLending?.from
+                to = itemLending?.to
 
-                val types = InventoryBackend.listTypes()
-                _types.emit(types)
-
-                itemLending.itemIds?.let { itemIds ->
-                    val items = InventoryBackend.listItems(itemIds)
+                itemLending?.itemIds?.let { itemIds ->
+                    val items = inventoryDao.getAllItemsFromIds(itemIds.toList())
                     _items.emit(items)
-                } ?: run {
-                    _items.emit(emptyList())
                 }
             } else {
                 _items.emit(emptyList())
-                _types.emit(emptyList())
             }
 
             if (spaceBookingId != null) {
-                val spaceBooking = SpacesBackend.getBooking(spaceBookingId)
+                val spaceBooking = bookingsDao.getSpaceBookingWithId(spaceBookingId)
                 _spaceBooking.emit(spaceBooking)
 
-                val sbFrom = spaceBooking.from
-                val sbTo = spaceBooking.to
+                val sbFrom = spaceBooking?.from
+                val sbTo = spaceBooking?.to
                 from = if (from == null) sbFrom else if (sbFrom != null) minOf(from, sbFrom) else null
                 to = if (to == null) sbTo else if (sbTo != null) maxOf(to, sbTo) else null
 
-                spaceBooking.spaceId?.let { spaceId ->
+                spaceBooking?.spaceId?.let { spaceId ->
                     val space = SpacesBackend.get(spaceId)
                     _space.emit(space)
                 }

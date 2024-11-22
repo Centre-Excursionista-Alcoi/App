@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.containerBackground
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -80,7 +80,7 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 .padding(horizontal = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.register_title),
                 style = getPlatformTextStyles().titleLarge,
                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
@@ -197,7 +197,7 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                                 .containerBackground()
                                 .clip(RoundedCornerShape(8.dp))
                         ) {
-                            BasicText(
+                            AppText(
                                 text = err,
                                 style = getPlatformTextStyles().body,
                                 color = { Color.Red },
@@ -213,7 +213,7 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.register_already),
                     style = getPlatformTextStyles().label,
                     modifier = Modifier

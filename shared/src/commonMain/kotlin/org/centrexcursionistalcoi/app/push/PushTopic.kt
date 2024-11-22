@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.push
 
 object PushTopic {
+    @Deprecated("Use device IDs")
     fun topic(email: String): String {
         val prefix = email
             .substringBefore('@')

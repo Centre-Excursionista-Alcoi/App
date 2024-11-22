@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -52,19 +52,19 @@ object LoadingScreen : Screen<Loading, LoadingViewModel>(vmConstructor = ::Loadi
             ) {
                 val textStyle = getPlatformTextStyles().heading.copy(color = Color.Red, textAlign = TextAlign.Center)
 
-                BasicText(
+                AppText(
                     text = stringResource(Res.string.error_ping_message),
                     style = textStyle
                 )
                 serverError?.let { (body, exception) ->
                     body?.let {
-                        BasicText(
+                        AppText(
                             text = stringResource(Res.string.error_ping_body, it),
                             style = textStyle
                         )
                     }
                     exception?.let {
-                        BasicText(
+                        AppText(
                             text = it.toString(),
                             style = textStyle
                         )

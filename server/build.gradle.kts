@@ -44,6 +44,8 @@ dependencies {
 
     implementation(libs.firebase.admin)
 
+    implementation(libs.kreds)
+
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
 }

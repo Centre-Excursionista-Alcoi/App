@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
-import org.centrexcursionistalcoi.app.data.UserD
+import org.centrexcursionistalcoi.app.component.AppText
+import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -24,37 +24,37 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun UnconfirmedUsersCard(
-    unconfirmedUsers: List<UserD>,
+    unconfirmedUsers: List<User>,
     isConfirming: Boolean,
-    onConfirmRequested: (UserD, onComplete: () -> Unit) -> Unit,
-    onDeleteRequested: (UserD, onComplete: () -> Unit) -> Unit
+    onConfirmRequested: (User, onComplete: () -> Unit) -> Unit,
+    onDeleteRequested: (User, onComplete: () -> Unit) -> Unit
 ) {
-    var confirmingUser: UserD? by remember { mutableStateOf(null) }
+    var confirmingUser: User? by remember { mutableStateOf(null) }
     confirmingUser?.let { user ->
         PlatformDialog(
             onDismissRequest = { confirmingUser = null }
         ) {
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.unconfirmed_users_message),
                 style = getPlatformTextStyles().label,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.unconfirmed_users_full_name, user.name + " " + user.familyName),
                 style = getPlatformTextStyles().label,
                 modifier = Modifier.fillMaxWidth()
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.unconfirmed_users_email, user.email),
                 style = getPlatformTextStyles().label,
                 modifier = Modifier.fillMaxWidth()
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.unconfirmed_users_email, user.email),
                 style = getPlatformTextStyles().label,
                 modifier = Modifier.fillMaxWidth()
             )
-            BasicText(
+            AppText(
                 text = stringResource(Res.string.unconfirmed_users_phone, user.phone),
                 style = getPlatformTextStyles().label,
                 modifier = Modifier.fillMaxWidth()
@@ -93,7 +93,7 @@ fun UnconfirmedUsersCard(
                     .padding(8.dp)
                     .clickable { confirmingUser = user }
             ) {
-                BasicText(
+                AppText(
                     text = user.email,
                     modifier = Modifier
                         .fillMaxWidth()

@@ -6,11 +6,12 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import java.io.Closeable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import java.io.Closeable
+import org.centrexcursionistalcoi.app.push.PushNotifications
 import android.accounts.Account as AndroidAccount
 
 actual object AccountManager : Closeable {
@@ -66,6 +67,7 @@ actual object AccountManager : Closeable {
 
     actual suspend fun put(account: Account, password: String) {
         am.addAccountExplicitly(account.toAndroidAccount(), password, Bundle())
+        PushNotifications.refreshTokenOnServer()
     }
 
     actual suspend fun logout() {

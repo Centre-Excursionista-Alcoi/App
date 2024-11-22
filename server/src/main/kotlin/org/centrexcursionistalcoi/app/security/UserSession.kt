@@ -1,8 +1,13 @@
 package org.centrexcursionistalcoi.app.security
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserSession(
-    val email: String
+    val sessionId: String,
+    val expiresAt: Instant,
+    val email: String,
+    val ip: String,
+    val fcmToken: String? = null
 )

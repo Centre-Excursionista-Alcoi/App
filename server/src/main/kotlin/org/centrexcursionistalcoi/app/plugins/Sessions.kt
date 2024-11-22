@@ -15,7 +15,7 @@ fun Application.installSessions() {
     install(Sessions) {
         cookie<UserSession>("user_session") {
             cookie.path = "/"
-            cookie.maxAgeInSeconds = 28 * 24 * 60 * 60
+            cookie.maxAgeInSeconds = System.getenv("SESSION_DURATION")?.toLong()?.times(60) ?: (24 * 60 * 60)
 
             transform(SessionTransportTransformerEncrypt(secretEncryptKey, secretSignKey))
         }

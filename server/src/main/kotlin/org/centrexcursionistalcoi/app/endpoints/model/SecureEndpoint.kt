@@ -5,6 +5,7 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import org.centrexcursionistalcoi.app.database.ServerDatabase
+import org.centrexcursionistalcoi.app.database.SessionsDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.server.response.Errors
@@ -22,6 +23,14 @@ abstract class SecureEndpoint(
         if (session == null) {
             logger.error("Not logged in")
             respondFailure(Errors.NotLoggedIn)
+            return
+        }
+
+        logger.info("Validating session...")
+        val isSessionValid = SessionsDatabase.validateSession(session)
+        if (!isSessionValid) {
+            logger.error("Session not valid")
+            respondFailure(Errors.InvalidSession)
             return
         }
 

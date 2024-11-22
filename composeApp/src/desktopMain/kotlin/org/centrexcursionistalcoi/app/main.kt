@@ -9,10 +9,14 @@ import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfig
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import java.io.File
+import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
+import org.centrexcursionistalcoi.app.database.roomDatabaseBuilder
 import org.jetbrains.compose.resources.painterResource
 
 fun main() {
     Napier.base(DebugAntilog())
+
+    roomDatabaseBuilder = getDatabaseBuilder()
 
     NotifierManager.initialize(
         NotificationPlatformConfiguration.Desktop(
