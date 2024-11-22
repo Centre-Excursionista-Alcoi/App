@@ -15,6 +15,7 @@ import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.PayloadData
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import io.github.aakira.napier.Napier
+import java.io.IOException
 import kotlin.reflect.KClass
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.MainActivity
@@ -59,14 +60,18 @@ object PushNotifications {
     }
 
     suspend fun refreshTokenOnServer() {
-        val token = NotifierManager.getPushNotifier().getToken()
-        if (token == null) {
-            Napier.i { "Tried to refresh token on server, but the device doesn't have a token." }
-            return
-        }
-        Napier.d { "Notifying server about FCM token..." }
-        if (!AuthBackend.notifyToken(token)) {
-            Napier.w { "Server responded with an error to the FCM token update" }
+        try {
+            val token = NotifierManager.getPushNotifier().getToken()
+            if (token == null) {
+                Napier.i { "Tried to refresh token on server, but the device doesn't have a token." }
+                return
+            }
+            Napier.d { "Notifying server about FCM token..." }
+            if (!AuthBackend.notifyToken(token)) {
+                Napier.w { "Server responded with an error to the FCM token update" }
+            }
+        } catch (e: IOException) {
+            Napier.e(e) { "Could not get FCM token." }
         }
     }
 

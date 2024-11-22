@@ -1,4 +1,4 @@
-name: Release Binaries
+name: Release Internal Android Client
 
 on:
   push:
