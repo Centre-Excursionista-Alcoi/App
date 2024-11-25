@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.database
 
-import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
@@ -17,7 +16,6 @@ import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.database.entity.admin.User
-import org.centrexcursionistalcoi.app.database.migration.AutoMigration2To3
 
 @Database(
     entities = [
@@ -25,13 +23,7 @@ import org.centrexcursionistalcoi.app.database.migration.AutoMigration2To3
         ItemBooking::class, SpaceBooking::class,
         User::class
     ],
-    version = 3,
-    autoMigrations = [
-        // Added users admin entity
-        AutoMigration(from = 1, to = 2),
-        // Got rid of embedded data
-        AutoMigration(from = 2, to = 3, AutoMigration2To3::class)
-    ]
+    version = 1
 )
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)

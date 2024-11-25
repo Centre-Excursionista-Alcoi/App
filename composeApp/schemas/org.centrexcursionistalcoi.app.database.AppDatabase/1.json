@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "45d97e43b0f667df57e840db00bbc831",
+    "identityHash": "8a5ff615f88b93c8b021437cc7588aae",
     "entities": [
       {
         "tableName": "Section",
@@ -89,6 +89,17 @@
             "id"
           ]
         },
+        "indices": [
+          {
+            "name": "index_ItemType_sectionId",
+            "unique": false,
+            "columnNames": [
+              "sectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ItemType_sectionId` ON `${TABLE_NAME}` (`sectionId`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "Section",
@@ -143,6 +154,17 @@
             "id"
           ]
         },
+        "indices": [
+          {
+            "name": "index_Item_itemTypeId",
+            "unique": false,
+            "columnNames": [
+              "itemTypeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Item_itemTypeId` ON `${TABLE_NAME}` (`itemTypeId`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "ItemType",
@@ -159,7 +181,7 @@
       },
       {
         "tableName": "Space",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `capacity` INTEGER, `images` TEXT, `keys` TEXT, `membercurrency` TEXT, `memberamount` REAL, `externalcurrency` TEXT, `externalamount` REAL, `latitude` REAL, `longitude` REAL, `address` TEXT, `city` TEXT, `postalCode` TEXT, `country` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `capacity` INTEGER, `memberPrice` REAL, `externalPrice` REAL, `latitude` REAL, `longitude` REAL, `address` TEXT, `city` TEXT, `postalCode` TEXT, `country` TEXT, `images` TEXT, `keys` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -190,6 +212,46 @@
             "affinity": "INTEGER"
           },
           {
+            "fieldPath": "memberPrice",
+            "columnName": "memberPrice",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "externalPrice",
+            "columnName": "externalPrice",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "postalCode",
+            "columnName": "postalCode",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "country",
+            "columnName": "country",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "images",
             "columnName": "images",
             "affinity": "TEXT"
@@ -197,56 +259,6 @@
           {
             "fieldPath": "keys",
             "columnName": "keys",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "memberPrice.currency",
-            "columnName": "membercurrency",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "memberPrice.amount",
-            "columnName": "memberamount",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "externalPrice.currency",
-            "columnName": "externalcurrency",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "externalPrice.amount",
-            "columnName": "externalamount",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "location.latitude",
-            "columnName": "latitude",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "location.longitude",
-            "columnName": "longitude",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "address.address",
-            "columnName": "address",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "address.city",
-            "columnName": "city",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "address.postalCode",
-            "columnName": "postalCode",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "address.country",
-            "columnName": "country",
             "affinity": "TEXT"
           }
         ],
@@ -405,11 +417,65 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "User",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`email` TEXT NOT NULL, `isAdmin` INTEGER NOT NULL, `isConfirmed` INTEGER NOT NULL, `name` TEXT NOT NULL, `familyName` TEXT NOT NULL, `nif` TEXT NOT NULL, `phone` TEXT NOT NULL, PRIMARY KEY(`email`))",
+        "fields": [
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isAdmin",
+            "columnName": "isAdmin",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isConfirmed",
+            "columnName": "isConfirmed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "familyName",
+            "columnName": "familyName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nif",
+            "columnName": "nif",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "email"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '45d97e43b0f667df57e840db00bbc831')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a5ff615f88b93c8b021437cc7588aae')"
     ]
   }
 }
