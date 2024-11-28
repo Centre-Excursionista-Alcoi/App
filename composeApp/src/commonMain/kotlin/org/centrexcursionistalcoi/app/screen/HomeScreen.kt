@@ -15,7 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
@@ -62,10 +65,14 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val availableSpaces by viewModel.availableSpaces.collectAsState()
 
         val scope = rememberCoroutineScope()
+        var page by rememberSaveable { mutableStateOf(0) }
         val pagerState = rememberPagerState { if (user?.isAdmin == true) (NUM_PAGES + 1) else NUM_PAGES }
 
         LaunchedEffect(Unit) {
             viewModel.load()
+        }
+        LaunchedEffect(Unit) {
+            pagerState.scrollToPage(page)
         }
 
         AccountStateNavigator(onLoggedOut = Loading)
@@ -81,7 +88,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
             navigationBar = {
                 PlatformNavigationBar(
                     selection = pagerState.currentPage,
-                    onSelectionChanged = { scope.launch { pagerState.animateScrollToPage(it) } },
+                    onSelectionChanged = {
+                        page = it
+                        scope.launch { pagerState.animateScrollToPage(it) }
+                    },
                     items = listOfNotNull(
                         Icons.Default.CalendarMonth to stringResource(Res.string.nav_home),
                         Icons.Default.EditCalendar to stringResource(Res.string.nav_reserve),
