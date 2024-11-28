@@ -10,6 +10,8 @@ androidx-sqlite-bundled = "2.5.0-alpha11"
 buildkonfig = "0.15.2"
 carbon = "0.3.1"
 coil = "3.0.4"
+compose-calf = "0.6.1"
+compose-cupertino = "0.1.0-alpha04"
 compose-filekit = "0.8.7"
 compose-googlefonts = "1.7.5"
 compose-multiplatform = "1.7.1"
@@ -46,7 +48,10 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 compose-coil-base = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+compose-calf-ui = { module = "com.mohamedrejeb.calf:calf-ui", version.ref = "compose-calf" }
 compose-carbon = { module = "io.github.gabrieldrn:carbon", version.ref = "carbon" }
+compose-cupertino-icons = { module = "io.github.alexzhirkevich:cupertino-icons-extended", version.ref = "compose-cupertino" }
+compose-cupertino-native = { module = "io.github.alexzhirkevich:cupertino-native", version.ref = "compose-cupertino" }
 compose-filekit = { module = "io.github.vinceglb:filekit-compose", version.ref = "compose-filekit" }
 compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "compose-googlefonts" }
 compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }

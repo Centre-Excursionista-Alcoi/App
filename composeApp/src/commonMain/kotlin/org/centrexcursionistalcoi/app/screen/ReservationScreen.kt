@@ -308,9 +308,9 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                         Res.plurals.reservation_space_price_days,
                         days,
                         pluralStringResource(Res.plurals.reservation_space_price_members_count, count, count),
-                        memberPrice.amount.toStringWithDecimals(2) + "€",
+                        memberPrice.toStringWithDecimals(2) + "€",
                         days,
-                        (memberPrice.amount * count * days).toStringWithDecimals(2) + "€"
+                        (memberPrice * count * days).toStringWithDecimals(2) + "€"
                     ),
                     style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
                     modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -323,9 +323,9 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                         Res.plurals.reservation_space_price_days,
                         days,
                         pluralStringResource(Res.plurals.reservation_space_price_members_count, count, count),
-                        externalPrice.amount.toStringWithDecimals(2) + "€",
+                        externalPrice.toStringWithDecimals(2) + "€",
                         days,
-                        (externalPrice.amount * count * days).toStringWithDecimals(2) + "€"
+                        (externalPrice * count * days).toStringWithDecimals(2) + "€"
                     ),
                     style = getPlatformTextStyles().heading.copy(fontSize = 18.sp),
                     modifier = Modifier.fillMaxWidth().padding(8.dp)

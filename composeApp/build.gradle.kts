@@ -51,6 +51,7 @@ kotlin {
             isStatic = true
 
             export(libs.kmpnotifier)
+            export(libs.compose.calf.ui)
 
             // Room - Required when using NativeSQLiteDriver
             linkerOpts.add("-lsqlite3")
@@ -113,7 +114,7 @@ kotlin {
 
             implementation(libs.napier)
 
-            implementation(libs.kmpnotifier)
+            api(libs.kmpnotifier)
 
             // Ktor
             implementation(libs.ktor.client.auth)
@@ -155,6 +156,11 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+
+            api(libs.compose.calf.ui)
+
+            implementation(libs.compose.cupertino.icons)
+            implementation(libs.compose.cupertino.native)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

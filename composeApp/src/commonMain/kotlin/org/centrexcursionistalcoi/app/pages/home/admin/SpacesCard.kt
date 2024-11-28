@@ -32,9 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.component.ImagesCarousel
-import org.centrexcursionistalcoi.app.data.Address
-import org.centrexcursionistalcoi.app.data.Location
-import org.centrexcursionistalcoi.app.data.MoneyD
 import org.centrexcursionistalcoi.app.data.SpaceKeyD
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
@@ -123,10 +120,10 @@ fun SpacesCard(
         )
 
         PlatformFormField(
-            value = data.memberPrice?.amount?.toString() ?: "",
+            value = data.memberPrice?.toString() ?: "",
             onValueChange = { amount ->
                 showingCreationDialog = data.copy(
-                    memberPrice = amount.toDoubleOrNull()?.let { MoneyD(amount = it) } ?: data.memberPrice
+                    memberPrice = amount.toDoubleOrNull() ?: data.memberPrice
                 )
             },
             label = stringResource(Res.string.spaces_member_price),
@@ -136,10 +133,10 @@ fun SpacesCard(
             keyboardType = KeyboardType.Decimal
         )
         PlatformFormField(
-            value = data.externalPrice?.amount?.toString() ?: "",
+            value = data.externalPrice?.toString() ?: "",
             onValueChange = { amount ->
                 showingCreationDialog = data.copy(
-                    externalPrice = amount.toDoubleOrNull()?.let { MoneyD(amount = it) } ?: data.externalPrice
+                    externalPrice = amount.toDoubleOrNull() ?: data.externalPrice
                 )
             },
             label = stringResource(Res.string.spaces_non_member_price),
@@ -153,9 +150,7 @@ fun SpacesCard(
             value = data.location?.latitude?.toString() ?: "",
             onValueChange = { latitude ->
                 showingCreationDialog = data.copy(
-                    location = (data.location ?: Location()).let { loc ->
-                        loc.copy(latitude = latitude.toDoubleOrNull() ?: loc.latitude).orNull()
-                    }
+                    latitude = latitude.toDoubleOrNull() ?: data.latitude
                 )
             },
             label = stringResource(Res.string.spaces_latitude),
@@ -169,9 +164,7 @@ fun SpacesCard(
             value = data.location?.longitude?.toString() ?: "",
             onValueChange = { longitude ->
                 showingCreationDialog = data.copy(
-                    location = (data.location ?: Location()).let { loc ->
-                        loc.copy(longitude = longitude.toDoubleOrNull() ?: loc.longitude).orNull()
-                    }
+                    longitude = longitude.toDoubleOrNull() ?: data.longitude
                 )
             },
             label = stringResource(Res.string.spaces_longitude),
@@ -183,10 +176,10 @@ fun SpacesCard(
         )
 
         PlatformFormField(
-            value = data.address?.address ?: "",
+            value = data.address ?: "",
             onValueChange = { value ->
                 showingCreationDialog = data.copy(
-                    address = (data.address ?: Address()).copy(address = value).orNull()
+                    address = value.takeIf { it.isNotBlank() }
                 )
             },
             label = stringResource(Res.string.spaces_address),
@@ -194,10 +187,10 @@ fun SpacesCard(
             enabled = !isCreating
         )
         PlatformFormField(
-            value = data.address?.city ?: "",
+            value = data.city ?: "",
             onValueChange = { value ->
                 showingCreationDialog = data.copy(
-                    address = (data.address ?: Address()).copy(city = value).orNull()
+                    city = value.takeIf { it.isNotBlank() }
                 )
             },
             label = stringResource(Res.string.spaces_city),
@@ -205,10 +198,10 @@ fun SpacesCard(
             enabled = !isCreating
         )
         PlatformFormField(
-            value = data.address?.postalCode ?: "",
+            value = data.postalCode ?: "",
             onValueChange = { value ->
                 showingCreationDialog = data.copy(
-                    address = (data.address ?: Address()).copy(postalCode = value).orNull()
+                    postalCode = value.takeIf { it.isNotBlank() }
                 )
             },
             label = stringResource(Res.string.spaces_postal_code),
@@ -216,10 +209,10 @@ fun SpacesCard(
             enabled = !isCreating
         )
         PlatformFormField(
-            value = data.address?.country ?: "",
+            value = data.country ?: "",
             onValueChange = { value ->
                 showingCreationDialog = data.copy(
-                    address = (data.address ?: Address()).copy(country = value).orNull()
+                    country = value.takeIf { it.isNotBlank() }
                 )
             },
             label = stringResource(Res.string.spaces_country),
