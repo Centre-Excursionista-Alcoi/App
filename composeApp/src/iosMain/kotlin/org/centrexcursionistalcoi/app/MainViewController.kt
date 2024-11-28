@@ -1,5 +1,13 @@
 package org.centrexcursionistalcoi.app
 
 import androidx.compose.ui.window.ComposeUIViewController
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 
-fun MainViewController() = ComposeUIViewController { AppRoot() }
+fun initialize() {
+    Napier.base(DebugAntilog())
+}
+
+fun MainViewController() = ComposeUIViewController {
+    AppRoot()
+}
