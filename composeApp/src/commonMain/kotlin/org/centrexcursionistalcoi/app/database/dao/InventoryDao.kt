@@ -54,6 +54,9 @@ interface InventoryDao {
     @Query("SELECT * FROM ItemType")
     suspend fun getItemTypesWithItems(): List<ItemTypeWithItems>
 
+    @Query("SELECT * FROM ItemType WHERE id = :id")
+    suspend fun getItemType(id: Int): ItemType?
+
 
     @Insert
     suspend fun insertItem(item: Item)
@@ -72,4 +75,7 @@ interface InventoryDao {
 
     @Query("SELECT * FROM Item WHERE id IN (:filterIds)")
     suspend fun getAllItemsFromIds(filterIds: List<Int>): List<Item>
+
+    @Query("SELECT * FROM Item WHERE itemTypeId = :itemTypeId")
+    suspend fun getAllItemsFromItemType(itemTypeId: Int): List<Item>
 }

@@ -20,6 +20,7 @@
     <string name="remove">Remove</string>
     <string name="dismiss">Dismiss</string>
     <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
 
     <string name="address_address">Address</string>
     <string name="address_city">City</string>

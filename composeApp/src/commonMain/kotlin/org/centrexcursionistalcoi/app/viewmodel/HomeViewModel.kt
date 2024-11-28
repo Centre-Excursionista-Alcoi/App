@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import androidx.lifecycle.ViewModel
 import com.russhwolf.settings.ExperimentalSettingsApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,11 +7,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.auth.AccountManager
-import org.centrexcursionistalcoi.app.data.DatabaseData
 import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.entity.BookingEntity
-import org.centrexcursionistalcoi.app.database.entity.DatabaseEntity
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.ItemType
@@ -28,9 +25,10 @@ import org.centrexcursionistalcoi.app.network.UserDataBackend
 import org.centrexcursionistalcoi.app.serverJson
 import org.centrexcursionistalcoi.app.settings.SettingsKeys
 import org.centrexcursionistalcoi.app.settings.settings
+import org.centrexcursionistalcoi.app.viewmodel.admin.AdminViewModel
 
 @OptIn(ExperimentalSettingsApi::class)
-class HomeViewModel : ViewModel() {
+class HomeViewModel : AdminViewModel() {
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
@@ -74,9 +72,6 @@ class HomeViewModel : ViewModel() {
 
     val items get() = inventoryDao.getAllItemsAsFlow()
 
-    private val _creatingItem = MutableStateFlow(false)
-    val creatingItem get() = _creatingItem.asStateFlow()
-
     private val _updatingBooking = MutableStateFlow(false)
     val updatingBooking get() = _updatingBooking.asStateFlow()
 
@@ -113,29 +108,6 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    private fun <SerializableType : DatabaseData, LocalType : DatabaseEntity<SerializableType>> onCreateOrUpdate(
-        value: LocalType,
-        creating: MutableStateFlow<Boolean>,
-        creator: suspend (LocalType) -> Unit,
-        updater: suspend (LocalType) -> Unit,
-        onCreate: () -> Unit
-    ) {
-        launch {
-            try {
-                creating.emit(true)
-                if (value.id <= 0) {
-                    creator(value)
-                } else {
-                    updater(value)
-                }
-                Sync.syncBookings()
-                uiThread { onCreate() }
-            } finally {
-                creating.emit(false)
-            }
-        }
-    }
-
     fun onCreateOrUpdate(section: Section, onCreate: () -> Unit) {
         onCreateOrUpdate(
             section,
@@ -150,16 +122,6 @@ class HomeViewModel : ViewModel() {
         onCreateOrUpdate(
             itemType,
             _creatingType,
-            InventoryBackend::create,
-            InventoryBackend::update,
-            onCreate
-        )
-    }
-
-    fun createOrUpdate(item: Item, onCreate: () -> Unit) {
-        onCreateOrUpdate(
-            item,
-            _creatingItem,
             InventoryBackend::create,
             InventoryBackend::update,
             onCreate

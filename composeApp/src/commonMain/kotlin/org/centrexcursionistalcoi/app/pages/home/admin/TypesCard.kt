@@ -27,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.component.AppText
+import org.centrexcursionistalcoi.app.composition.LocalNavController
 import org.centrexcursionistalcoi.app.composition.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Section
@@ -37,6 +38,7 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.route.ItemTypeRoute
 import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
@@ -47,6 +49,8 @@ fun TypesCard(
     isCreating: Boolean,
     onCreateRequested: (ItemType, onCreate: () -> Unit) -> Unit
 ) {
+    val navigator = LocalNavController.current
+
     var showingCreationDialog: ItemType? by remember { mutableStateOf(null) }
     CreationDialog(
         showingCreationDialog = showingCreationDialog,
@@ -151,15 +155,19 @@ fun TypesCard(
                         Row(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            for (item in group) {
+                            for (itemType in group) {
                                 PlatformCard(
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(8.dp)
-                                        .clickable { showingCreationDialog = item }
+                                        .clickable {
+                                            navigator.navigate(
+                                                ItemTypeRoute(itemType.id)
+                                            )
+                                        }
                                 ) {
                                     AppText(
-                                        text = item.title,
+                                        text = itemType.title,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp)
@@ -167,18 +175,22 @@ fun TypesCard(
                                         style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                     )
                                     AppText(
-                                        text = (item.brand ?: "") + " " + (item.model ?: ""),
+                                        text = (itemType.brand ?: "") + " " + (itemType.model ?: ""),
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                                         style = getPlatformTextStyles().label
                                     )
                                     AppText(
-                                        text = item.description ?: "",
+                                        text = itemType.description ?: "",
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp)
                                             .padding(bottom = 8.dp),
                                         style = getPlatformTextStyles().body
                                     )
+
+                                    PlatformButton(
+                                        text = stringResource(Res.string.edit)
+                                    ) { showingCreationDialog = itemType }
                                 }
                             }
                         }

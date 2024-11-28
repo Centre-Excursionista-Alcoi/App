@@ -17,7 +17,6 @@ import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.pages.home.admin.BookingsCard
-import org.centrexcursionistalcoi.app.pages.home.admin.ItemsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SectionsCard
 import org.centrexcursionistalcoi.app.pages.home.admin.SpacesCard
 import org.centrexcursionistalcoi.app.pages.home.admin.TypesCard
@@ -36,8 +35,6 @@ fun AdminPage(
     isCreatingType: Boolean,
     onTypeOperation: (ItemType, onCreate: () -> Unit) -> Unit,
     items: List<Item>?,
-    isCreatingItem: Boolean,
-    onItemOperation: (Item, onCreate: () -> Unit) -> Unit,
     allItemBookings: List<ItemBooking>?,
     allSpaceBookings: List<SpaceBooking>?,
     isUpdatingBooking: Boolean,
@@ -66,7 +63,7 @@ fun AdminPage(
 
         TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
 
-        ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
+        // ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
 
         BookingsCard(
             allItemBookings,
