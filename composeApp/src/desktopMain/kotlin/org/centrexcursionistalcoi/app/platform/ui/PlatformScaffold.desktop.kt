@@ -11,13 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerButton
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isBackPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 actual fun PlatformScaffold(
     title: String?,
     actions: List<Triple<ImageVector, String, () -> Unit>>,
@@ -26,7 +32,14 @@ actual fun PlatformScaffold(
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .onPointerEvent(PointerEventType.Press) { event ->
+                // For some reason, the back button seems to be index 5
+                if (event.button == PointerButton.Back || event.buttons.isBackPressed || event.button?.index == 5) {
+                    onBack?.invoke()
+                }
+            }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

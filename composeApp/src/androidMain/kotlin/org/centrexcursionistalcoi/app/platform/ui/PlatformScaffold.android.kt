@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +30,10 @@ actual fun PlatformScaffold(
     onBack: (() -> Unit)?,
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
 ) {
+    BackHandler(enabled = onBack != null) {
+        onBack?.invoke()
+    }
+
     Scaffold(
         topBar = {
             if (title != null || actions.isNotEmpty()) {
