@@ -10,6 +10,7 @@ on:
       - 'composeApp/src/androidMain/**'
       - 'composeApp/src/commonMain/**'
       - 'shared/**'
+      - 'gradle/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
