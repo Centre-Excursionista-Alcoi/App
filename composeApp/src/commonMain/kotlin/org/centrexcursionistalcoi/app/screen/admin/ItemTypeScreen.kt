@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
@@ -43,6 +42,7 @@ import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.pages.home.admin.CreationDialog
+import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDropdown
@@ -72,9 +72,48 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
             viewModel.load(route.id)
         }
 
+        var showingCreationDialog: Item? by remember { mutableStateOf(null) }
+        CreationDialog(
+            showingCreationDialog = showingCreationDialog,
+            title = Res.string.items_title,
+            isCreating = creatingItem,
+            isEnabled = Item::validate,
+            onCreateRequested = viewModel::createOrUpdate,
+            onDismissRequested = { if (!creatingItem) showingCreationDialog = null }
+        ) { data ->
+            PlatformDropdown(
+                value = data.health,
+                onValueChange = { showingCreationDialog = data.copy(health = it) },
+                options = ItemHealth.entries,
+                label = stringResource(Res.string.items_health),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !creatingItem,
+                toString = { it?.name ?: "" }
+            )
+            PlatformTextArea(
+                value = data.notes ?: "",
+                onValueChange = { showingCreationDialog = data.copy(notes = it.takeIf(String::isNotBlank)) },
+                label = stringResource(Res.string.items_notes),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !creatingItem
+            )
+            PlatformDropdown(
+                value = data.itemTypeId.let { typeId -> itemTypes.find { it.id == typeId } },
+                onValueChange = { showingCreationDialog = data.copy(itemTypeId = it.id) },
+                options = itemTypes,
+                label = stringResource(Res.string.items_type),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                enabled = !creatingItem,
+                toString = { it?.title ?: "" }
+            )
+        }
+
         PlatformScaffold(
             onBack = navigator::navigateUp,
-            title = itemType?.title
+            title = itemType?.title,
+            actions = listOf(
+                Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() }
+            )
         ) {
             if (itemType == null || items == null) {
                 Box(
@@ -87,8 +126,7 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
                 ItemsCard(
                     items = items,
                     itemTypes = itemTypes,
-                    isCreating = creatingItem,
-                    onCreateRequested = viewModel::createOrUpdate,
+                    onEditRequested = { showingCreationDialog = it },
                     allBookings = allBookings
                 )
             }
@@ -100,46 +138,9 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
     fun ItemsCard(
         items: List<Item>?,
         itemTypes: List<ItemType>?,
-        isCreating: Boolean,
-        onCreateRequested: (Item, onCreate: () -> Unit) -> Unit,
+        onEditRequested: (Item) -> Unit = {},
         allBookings: List<ItemBooking>?
     ) {
-        var showingCreationDialog: Item? by remember { mutableStateOf(null) }
-        CreationDialog(
-            showingCreationDialog = showingCreationDialog,
-            title = Res.string.items_title,
-            isCreating = isCreating,
-            isEnabled = Item::validate,
-            onCreateRequested = onCreateRequested,
-            onDismissRequested = { if (!isCreating) showingCreationDialog = null }
-        ) { data ->
-            PlatformDropdown(
-                value = data.health,
-                onValueChange = { showingCreationDialog = data.copy(health = it) },
-                options = ItemHealth.entries,
-                label = stringResource(Res.string.items_health),
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                enabled = !isCreating,
-                toString = { it?.name ?: "" }
-            )
-            PlatformTextArea(
-                value = data.notes ?: "",
-                onValueChange = { showingCreationDialog = data.copy(notes = it.takeIf(String::isNotBlank)) },
-                label = stringResource(Res.string.items_notes),
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                enabled = !isCreating
-            )
-            PlatformDropdown(
-                value = data.itemTypeId.let { typeId -> itemTypes?.find { it.id == typeId } },
-                onValueChange = { showingCreationDialog = data.copy(itemTypeId = it.id) },
-                options = itemTypes ?: emptyList(),
-                label = stringResource(Res.string.items_type),
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                enabled = !isCreating,
-                toString = { it?.title ?: "" }
-            )
-        }
-
         var showingDetailsDialog: Item? by remember { mutableStateOf(null) }
         showingDetailsDialog?.let { data ->
             PlatformDialog(
@@ -213,91 +214,77 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
             }
         }
 
-        PlatformCard(
-            title = stringResource(Res.string.items_title),
-            action = Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() },
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
-        ) {
-            AnimatedContent(
-                targetState = items to itemTypes,
-                modifier = Modifier.fillMaxWidth()
-            ) { (list, types) ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (list == null || types == null) {
-                        PlatformLoadingIndicator(large = false)
-                    } else if (list.isEmpty()) {
-                        AppText(
-                            text = stringResource(Res.string.types_empty),
-                            style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                        )
-                    } else {
-                        for (item in list) {
-                            val type = types.find { it.id == item.itemTypeId } ?: continue
-                            PlatformCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                                    .clickable { showingDetailsDialog = item }
+        AnimatedContent(
+            targetState = items to itemTypes,
+            modifier = Modifier.fillMaxWidth()
+        ) { (list, types) ->
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (list == null || types == null) {
+                    PlatformLoadingIndicator(large = false)
+                } else if (list.isEmpty()) {
+                    AppText(
+                        text = stringResource(Res.string.types_empty),
+                        style = getPlatformTextStyles().label.copy(textAlign = TextAlign.Center),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                } else {
+                    for (item in list) {
+                        val type = types.find { it.id == item.itemTypeId } ?: continue
+                        PlatformCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .clickable { showingDetailsDialog = item }
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    val (color, tooltip) = allBookings
-                                        ?.filter { it.itemIds.contains(item.id) }
-                                        ?.let { bookings ->
-                                            val taken = bookings.find { it.takenAt != null }
-                                            if (taken != null) {
-                                                Color.Red to stringResource(Res.string.items_details_taken_by, taken.userId)
-                                            } else {
-                                                Color.Green to stringResource(Res.string.items_details_not_booked)
-                                            }
-                                        } ?: (Color.Yellow to stringResource(Res.string.loading))
+                                val (color, tooltip) = allBookings
+                                    ?.filter { it.itemIds.contains(item.id) }
+                                    ?.let { bookings ->
+                                        val taken = bookings.find { it.takenAt != null }
+                                        if (taken != null) {
+                                            Color.Red to stringResource(Res.string.items_details_taken_by, taken.userId)
+                                        } else {
+                                            Color.Green to stringResource(Res.string.items_details_not_booked)
+                                        }
+                                    } ?: (Color.Yellow to stringResource(Res.string.loading))
 
-                                    BasicTooltipBox(
-                                        positionProvider = rememberPlainPositionProvider(),
-                                        state = rememberBasicTooltipState(),
-                                        tooltip = { AppText(tooltip) },
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .clip(CircleShape)
-                                                .background(color)
-                                        )
-                                    }
-                                    AppText(
-                                        text = "#${item.id} - ${type.title}",
-                                        modifier = Modifier.weight(1f),
-                                        style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
+                                BasicTooltipBox(
+                                    positionProvider = rememberPlainPositionProvider(),
+                                    state = rememberBasicTooltipState(),
+                                    tooltip = { AppText(tooltip) },
+                                    modifier = Modifier.padding(end = 4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(color)
                                     )
                                 }
                                 AppText(
-                                    text = stringResource(item.health.localizedName()),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp)
-                                        .padding(top = 8.dp),
-                                    style = getPlatformTextStyles().label
-                                )
-
-                                AppText(
-                                    text = "Edit",
-                                    modifier = Modifier
-                                        .padding(horizontal = 8.dp)
-                                        .padding(vertical = 8.dp)
-                                        .clickable { showingCreationDialog = item },
-                                    style = getPlatformTextStyles().label.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
+                                    text = "#${item.id} - ${type.title}",
+                                    modifier = Modifier.weight(1f),
+                                    style = getPlatformTextStyles().label.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
+                            AppText(
+                                text = stringResource(item.health.localizedName()),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                                    .padding(top = 8.dp),
+                                style = getPlatformTextStyles().label
+                            )
+
+                            PlatformButton(
+                                text = stringResource(Res.string.edit)
+                            ) { onEditRequested(item) }
                         }
                     }
                 }
