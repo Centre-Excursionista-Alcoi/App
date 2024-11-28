@@ -114,7 +114,7 @@ kotlin {
 
             implementation(libs.napier)
 
-            implementation(libs.kmpnotifier)
+            api(libs.kmpnotifier)
 
             // Ktor
             implementation(libs.ktor.client.auth)
