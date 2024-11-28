@@ -83,9 +83,25 @@ jobs:
           echo "$GOOGLE_SERVICE_ACCOUNT_KEY_BASE64" > serviceAccountKey.base64
           base64 --decode serviceAccountKey.base64 > ./server/serviceAccountKey.json
 
+      - name: Sign in with Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: 'centre-excursionista-d-alcoi'
+          workload_identity_provider: 'projects/1000901057714/locations/global/workloadIdentityPools/github-actions/providers/github'
+
       - name: Release with Firebase App Distribution
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:appDistributionUploadRelease
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: org.centrexcursionistalcoi.app
+          releaseFiles: composeApp/build/outputs/**/*.aab
+          track: qa
+          status: completed
+          inAppUpdatePriority: 1

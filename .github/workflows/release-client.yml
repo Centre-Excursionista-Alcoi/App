@@ -141,6 +141,12 @@ jobs:
           echo "$GOOGLE_SERVICES_BASE64" > google-services.base64
           base64 --decode google-services.base64 > ./composeApp/google-services.json
 
+      - name: Sign in with Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: 'centre-excursionista-d-alcoi'
+          workload_identity_provider: 'projects/1000901057714/locations/global/workloadIdentityPools/github-actions/providers/github'
+
       # Refresh version name just in case
       - name: Setup Python 3.10
         uses: actions/setup-python@v5
@@ -162,3 +168,13 @@ jobs:
         with:
           files: |
             composeApp/build/outputs/**/*.apk
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: org.centrexcursionistalcoi.app
+          releaseFiles: composeApp/build/outputs/**/*.aab
+          track: production
+          status: completed
+          inAppUpdatePriority: 1
