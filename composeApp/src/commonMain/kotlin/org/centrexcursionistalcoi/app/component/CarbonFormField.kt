@@ -36,6 +36,46 @@ fun CarbonFormField(
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
 
+    val mod = Modifier
+        .let { mod ->
+            thisFocusRequester?.let { mod.focusRequester(it) } ?: mod
+        }
+        .let { mod ->
+            if (nextFocusRequester != null || previousFocusRequester != null) {
+                mod.focusProperties {
+                    previousFocusRequester?.let {
+                        previous = it
+                        left = it
+                        up = it
+                    }
+                    nextFocusRequester?.let {
+                        next = it
+                        right = it
+                        down = it
+                    }
+                }
+            } else {
+                mod
+            }
+        }
+        .then(modifier)
+    val imeAction = if (nextFocusRequester != null) {
+        ImeAction.Next
+    } else if (onSubmit != null) {
+        ImeAction.Go
+    } else {
+        ImeAction.Done
+    }
+    val keyboardActions = KeyboardActions {
+        if (nextFocusRequester != null) {
+            nextFocusRequester.requestFocus()
+        } else if (onSubmit != null) {
+            onSubmit()
+        } else {
+            keyboard?.hide()
+        }
+    }
+
     if (isPassword) {
         var passwordHidden by remember { mutableStateOf(true) }
 
@@ -45,84 +85,30 @@ fun CarbonFormField(
             onValueChange = onValueChange,
             passwordHidden = passwordHidden,
             onPasswordHiddenChange = { passwordHidden = it },
-            modifier = Modifier
-                .let { mod ->
-                    thisFocusRequester?.let { mod.focusRequester(it) } ?: mod
-                }
-                .let { mod ->
-                    if (nextFocusRequester != null || previousFocusRequester != null) {
-                        mod.focusProperties {
-                            previousFocusRequester?.let {
-                                previous = it
-                                left = it
-                                up = it
-                            }
-                            nextFocusRequester?.let {
-                                next = it
-                                right = it
-                                down = it
-                            }
-                        }
-                    } else {
-                        mod
-                    }
-                }
-                .then(modifier),
+            modifier = mod,
             state = if (enabled) if (error != null) TextInputState.Error else TextInputState.Enabled else TextInputState.Disabled,
             helperText = error ?: supportingText ?: "",
             keyboardOptions = KeyboardOptions(
                 autoCorrectEnabled = false,
-                imeAction = if (nextFocusRequester != null) {
-                    ImeAction.Next
-                } else if (onSubmit != null) {
-                    ImeAction.Go
-                } else {
-                    ImeAction.Done
-                },
+                imeAction = imeAction,
                 keyboardType = if (isPassword) KeyboardType.Password else keyboardType
             ),
-            keyboardActions = KeyboardActions {
-                if (nextFocusRequester != null) {
-                    nextFocusRequester.requestFocus()
-                } else if (onSubmit != null) {
-                    onSubmit()
-                } else {
-                    keyboard?.hide()
-                }
-            }
+            keyboardActions = keyboardActions
         )
     } else {
         TextInput(
             label = label,
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
-                .let { mod ->
-                    thisFocusRequester?.let { mod.focusRequester(it) } ?: mod
-                }
-                .then(modifier),
+            modifier = mod,
             state = if (enabled) if (error != null) TextInputState.Error else TextInputState.Enabled else TextInputState.Disabled,
             helperText = error ?: supportingText ?: "",
             keyboardOptions = KeyboardOptions(
                 autoCorrectEnabled = false,
-                imeAction = if (nextFocusRequester != null) {
-                    ImeAction.Next
-                } else if (onSubmit != null) {
-                    ImeAction.Go
-                } else {
-                    ImeAction.Done
-                },
-                keyboardType = if (isPassword) KeyboardType.Password else keyboardType
+                imeAction = imeAction,
+                keyboardType = keyboardType
             ),
-            keyboardActions = KeyboardActions {
-                if (nextFocusRequester != null) {
-                    nextFocusRequester.requestFocus()
-                } else if (onSubmit != null) {
-                    onSubmit()
-                } else {
-                    keyboard?.hide()
-                }
-            }
+            keyboardActions = keyboardActions
         )
     }
 }

@@ -20,7 +20,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
@@ -72,11 +71,6 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
-                    .focusProperties {
-                        next = passwordFocusRequester
-                        right = passwordFocusRequester
-                        down = passwordFocusRequester
-                    }
                     .autofill(
                         listOf(AutofillType.EmailAddress)
                     ) { email = it; viewModel.clearError() },
@@ -93,11 +87,6 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
-                    .focusProperties {
-                        previous = emailFocusRequester
-                        left = emailFocusRequester
-                        up = emailFocusRequester
-                    }
                     .autofill(
                         listOf(AutofillType.Password)
                     ) { password = it; viewModel.clearError() },
