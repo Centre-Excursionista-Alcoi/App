@@ -12,7 +12,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -23,9 +25,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import ceaapp.composeapp.generated.resources.*
 import io.github.alexzhirkevich.cupertino.CupertinoText
 import io.github.alexzhirkevich.cupertino.CupertinoTextField
+import org.centrexcursionistalcoi.app.modifier.autofill
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 actual fun PlatformFormField(
     value: String,
     onValueChange: (String) -> Unit,
@@ -38,6 +42,7 @@ actual fun PlatformFormField(
     isPassword: Boolean,
     error: String?,
     supportingText: String?,
+    autofillTypes: List<AutofillType>?,
     onSubmit: (() -> Unit)?
 ) {
     val softwareKeyboard = LocalSoftwareKeyboardController.current
@@ -48,12 +53,20 @@ actual fun PlatformFormField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { CupertinoText(label) },
-        modifier = modifier.let { mod ->
-            if (thisFocusRequester != null)
-                mod.focusRequester(thisFocusRequester)
-            else
-                mod
-        },
+        modifier = modifier
+            .let { mod ->
+                if (thisFocusRequester != null)
+                    mod.focusRequester(thisFocusRequester)
+                else
+                    mod
+            }
+            .let { mod ->
+                if (autofillTypes.isNullOrEmpty()) {
+                    mod
+                } else {
+                    mod.autofill(autofillTypes) { onValueChange(it) }
+                }
+            },
         enabled = enabled,
         singleLine = true,
         isError = error != null,

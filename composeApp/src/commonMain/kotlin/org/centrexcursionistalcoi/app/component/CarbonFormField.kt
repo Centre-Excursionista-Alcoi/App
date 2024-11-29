@@ -7,7 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -17,7 +19,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
 import com.gabrieldrn.carbon.textinput.TextInputState
+import org.centrexcursionistalcoi.app.modifier.autofill
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CarbonFormField(
     value: String,
@@ -32,6 +36,7 @@ fun CarbonFormField(
     isPassword: Boolean = false,
     error: String? = null,
     supportingText: String? = null,
+    autofillTypes: List<AutofillType>? = null,
     onSubmit: (() -> Unit)? = null
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
@@ -56,6 +61,13 @@ fun CarbonFormField(
                 }
             } else {
                 mod
+            }
+        }
+        .let { mod ->
+            if (autofillTypes.isNullOrEmpty()) {
+                mod
+            } else {
+                mod.autofill(autofillTypes) { onValueChange(it) }
             }
         }
         .then(modifier)

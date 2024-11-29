@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -70,14 +69,12 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.EmailAddress)
-                    ) { email = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.login_email),
                 thisFocusRequester = emailFocusRequester,
                 nextFocusRequester = passwordFocusRequester,
                 error = error?.let { "" }, // Do not show any message, just show in red
+                autofillTypes = listOf(AutofillType.EmailAddress),
                 onSubmit = { if (fieldsValid) viewModel.login(navController, email, password) }
             )
             PlatformFormField(
@@ -86,14 +83,12 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.Password)
-                    ) { password = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.login_password),
                 thisFocusRequester = passwordFocusRequester,
                 isPassword = true,
                 error = error,
+                autofillTypes = listOf(AutofillType.Password),
                 onSubmit = { if (fieldsValid) viewModel.login(navController, email, password) }
             )
             Row(

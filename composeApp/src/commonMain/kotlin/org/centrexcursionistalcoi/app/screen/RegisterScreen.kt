@@ -31,7 +31,6 @@ import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.containerBackground
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.LocalNavController
-import org.centrexcursionistalcoi.app.modifier.autofill
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
@@ -92,14 +91,12 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.EmailAddress)
-                    ) { email = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_email),
                 error = if (email.isNotBlank() && !email.isValidEmail) stringResource(Res.string.error_email_invalid) else null,
                 thisFocusRequester = emailFocusRequester,
-                nextFocusRequester = passwordFocusRequester
+                nextFocusRequester = passwordFocusRequester,
+                autofillTypes = listOf(AutofillType.EmailAddress)
             )
             PlatformFormField(
                 value = password,
@@ -107,14 +104,12 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.Password, AutofillType.NewPassword)
-                    ) { password = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_password),
                 isPassword = true,
                 thisFocusRequester = passwordFocusRequester,
-                nextFocusRequester = passwordConfirmFocusRequester
+                nextFocusRequester = passwordConfirmFocusRequester,
+                autofillTypes = listOf(AutofillType.Password, AutofillType.NewPassword)
             )
             PlatformFormField(
                 value = passwordConfirm,
@@ -122,15 +117,13 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.Password, AutofillType.NewPassword)
-                    ) { passwordConfirm = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_password_confirm),
                 isPassword = true,
                 error = if (passwordConfirm.isNotBlank() && password != passwordConfirm) stringResource(Res.string.error_passwords_dont_match) else null,
                 thisFocusRequester = passwordConfirmFocusRequester,
-                nextFocusRequester = firstNameFocusRequester
+                nextFocusRequester = firstNameFocusRequester,
+                autofillTypes = listOf(AutofillType.Password, AutofillType.NewPassword)
             )
             PlatformFormField(
                 value = firstName,
@@ -138,13 +131,11 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.PersonFirstName, AutofillType.PersonNamePrefix)
-                    ) { firstName = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_first_name),
                 thisFocusRequester = firstNameFocusRequester,
-                nextFocusRequester = familyNameFocusRequester
+                nextFocusRequester = familyNameFocusRequester,
+                autofillTypes = listOf(AutofillType.PersonFirstName, AutofillType.PersonNamePrefix)
             )
             PlatformFormField(
                 value = familyName,
@@ -152,13 +143,11 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.PersonLastName, AutofillType.PersonMiddleName, AutofillType.PersonNameSuffix)
-                    ) { firstName = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_family_name),
                 thisFocusRequester = familyNameFocusRequester,
-                nextFocusRequester = nifFocusRequester
+                nextFocusRequester = nifFocusRequester,
+                autofillTypes = listOf(AutofillType.PersonLastName, AutofillType.PersonMiddleName, AutofillType.PersonNameSuffix)
             )
             PlatformFormField(
                 value = nif,
@@ -178,12 +167,10 @@ object RegisterScreen : Screen<Register, RegisterViewModel>(::RegisterViewModel)
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .autofill(
-                        listOf(AutofillType.PhoneNumber)
-                    ) { phone = it; viewModel.clearError() },
+                    .padding(bottom = 8.dp),
                 label = stringResource(Res.string.register_phone),
-                thisFocusRequester = phoneFocusRequester
+                thisFocusRequester = phoneFocusRequester,
+                autofillTypes = listOf(AutofillType.PhoneNumber)
             )
 
             AnimatedContent(
