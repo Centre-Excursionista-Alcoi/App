@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,6 +45,7 @@ import org.centrexcursionistalcoi.app.utils.humanReadableSize
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 fun SpacesCard(
     spaces: List<Space>?,
     isCreating: Boolean,
