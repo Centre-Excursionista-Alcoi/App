@@ -35,6 +35,8 @@ import org.centrexcursionistalcoi.app.endpoints.lending.MarkTakenEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.endpoints.model.Endpoint
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
+import org.centrexcursionistalcoi.app.endpoints.notifications.MarkNotificationAsViewedEndpoint
+import org.centrexcursionistalcoi.app.endpoints.notifications.NotificationsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.CreateSectionEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.ListSectionsEndpoint
 import org.centrexcursionistalcoi.app.endpoints.sections.UpdateSectionEndpoint
@@ -73,6 +75,9 @@ private val secureEndpoints: List<SecureEndpoint> = listOf(
     ConfirmUserEndpoint,
     DeleteUserEndpoint,
     UpdateFCMTokenEndpoint,
+
+    NotificationsEndpoint,
+    MarkNotificationAsViewedEndpoint,
 
     ListTypesEndpoint,
     CreateTypesEndpoint,

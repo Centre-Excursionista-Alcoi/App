@@ -20,6 +20,7 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.R
+import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
 import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.notifications.NotificationChannels
 import org.centrexcursionistalcoi.app.push.payload.BookingPayload

@@ -7,8 +7,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.Message
 import java.io.File
-import kotlinx.serialization.KSerializer
+import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.SessionsDatabase
+import org.centrexcursionistalcoi.app.database.entity.notification.Notification
+import org.centrexcursionistalcoi.app.push.payload.PushPayload
 import org.centrexcursionistalcoi.app.serverJson
 import org.slf4j.LoggerFactory
 
@@ -37,25 +39,18 @@ object FCM {
 
     /**
      * Send a notification to a user.
-     * It will include [data] serialized as Json using [serializer] in the `data` field.
-     *
-     * @param email The email of the user to send the notification to
-     * @param type The type of notification
-     * @param data The data to send
-     * @param serializer The serializer to use for the data
      *
      * @return The message IDs of the notifications sent
      *
      * @throws FirebaseMessagingException If an error occurs while sending the message
      */
-    suspend fun <DataType> notify(
-        email: String,
-        type: NotificationType,
-        data: DataType,
-        serializer: KSerializer<DataType>
-    ): List<String> {
+    suspend fun notify(notification: Notification): List<String> {
+        val data = ServerDatabase { notification.serializable() }
+        val email = data.userId
         val tokens = SessionsDatabase.getTokensForEmail(email)
-        val json = serverJson.encodeToString(serializer, data)
+        val type = data.type
+        val payload = data.payload
+        val json = serverJson.encodeToString(PushPayload.serializer(), payload)
 
         val messages = tokens.map { token ->
             Message.builder()

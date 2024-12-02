@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.push
+package org.centrexcursionistalcoi.app.data.enumeration
 
 enum class NotificationType {
     BookingConfirmed,
