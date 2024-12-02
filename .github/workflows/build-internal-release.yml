@@ -1,14 +1,13 @@
-name: Release Internal Android Client
+name: Release Internal Client version
 
 on:
   push:
     branches:
       - master
     paths:
-      - '.github/workflows/build-android-client.yml'
+      - '.github/workflows/build-internal-release.yml'
       - '**/*.gradle.kts'
-      - 'composeApp/src/androidMain/**'
-      - 'composeApp/src/commonMain/**'
+      - 'composeApp/**'
       - 'shared/**'
       - 'gradle/**'
 
@@ -109,3 +108,34 @@ jobs:
           track: qa
           status: completed
           inAppUpdatePriority: 1
+
+  build-ios:
+    name: Build for Android
+    runs-on: ubuntu-latest
+
+    needs: update-version-code
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import Google Services JSON
+        env:
+          GOOGLE_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_BASE64" > google-services.base64
+          base64 --decode google-services.base64 > ./composeApp/google-services.json
+
+      - name: Import Google Service Account Key JSON
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICE_ACCOUNT_KEY_BASE64" > serviceAccountKey.base64
+          base64 --decode serviceAccountKey.base64 > ./server/serviceAccountKey.json
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: appdistribution:distribute --app 1:1000901057714:ios:75c1cba02a409504d47dab --groups "cea-app"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
