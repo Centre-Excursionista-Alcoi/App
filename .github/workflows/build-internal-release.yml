@@ -110,7 +110,7 @@ jobs:
           inAppUpdatePriority: 1
 
   build-ios:
-    name: Build for Android
+    name: Build for iOS
     runs-on: ubuntu-latest
 
     needs: update-version-code
