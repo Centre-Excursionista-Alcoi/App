@@ -42,6 +42,7 @@ import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.pages.home.admin.CreationDialog
+import org.centrexcursionistalcoi.app.platform.ui.Action
 import org.centrexcursionistalcoi.app.platform.ui.PlatformButton
 import org.centrexcursionistalcoi.app.platform.ui.PlatformCard
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
@@ -112,7 +113,7 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
             onBack = navigator::navigateUp,
             title = itemType?.title,
             actions = listOf(
-                Triple(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() }
+                Action(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() }
             )
         ) {
             if (itemType == null || items == null) {

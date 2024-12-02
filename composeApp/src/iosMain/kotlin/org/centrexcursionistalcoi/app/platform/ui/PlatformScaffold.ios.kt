@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import io.github.alexzhirkevich.cupertino.CupertinoIcon
@@ -23,7 +22,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 actual fun PlatformScaffold(
     title: String?,
-    actions: List<Triple<ImageVector, String, () -> Unit>>,
+    actions: List<Action>,
     navigationBar: @Composable (() -> Unit)?,
     onBack: (() -> Unit)?,
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
@@ -34,7 +33,7 @@ actual fun PlatformScaffold(
                 CupertinoTopAppBar(
                     title = { CupertinoText(title) },
                     actions = {
-                        for ((icon, description, onClick) in actions) {
+                        for ((icon, description, _, _, onClick) in actions) {
                             CupertinoIconButton(
                                 onClick = onClick
                             ) {

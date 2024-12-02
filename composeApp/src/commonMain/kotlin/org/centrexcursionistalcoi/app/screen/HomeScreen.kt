@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,11 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
 import org.centrexcursionistalcoi.app.pages.home.HomePage
 import org.centrexcursionistalcoi.app.pages.home.ReservationPage
 import org.centrexcursionistalcoi.app.pages.home.SettingsPage
+import org.centrexcursionistalcoi.app.platform.ui.Action
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.route.Home
@@ -80,7 +83,16 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         PlatformScaffold(
             title = user?.let { stringResource(Res.string.home_welcome, it.name) } ?: "",
             actions = listOf(
-                Triple(
+                Action(
+                    Icons.Default.Notifications,
+                    stringResource(Res.string.home_notifications),
+                    isPrimary = false,
+                    popupContent = {
+                        AppText("Popup")
+                    },
+                    onClick = {}
+                ),
+                Action(
                     Icons.AutoMirrored.Rounded.Logout,
                     stringResource(Res.string.logout)
                 ) { viewModel.logout() }

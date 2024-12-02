@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import ceaapp.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -25,7 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 actual fun PlatformScaffold(
     title: String?,
-    actions: List<Triple<ImageVector, String, () -> Unit>>,
+    actions: List<Action>,
     navigationBar: @Composable (() -> Unit)?,
     onBack: (() -> Unit)?,
     content: @Composable ColumnScope.(paddingValues: PaddingValues) -> Unit
@@ -50,7 +49,7 @@ actual fun PlatformScaffold(
                         }
                     },
                     actions = {
-                        for ((icon, contentDescription, onClick) in actions) {
+                        for ((icon, contentDescription, _, _, onClick) in actions) {
                             IconButton(onClick) { Icon(icon, contentDescription) }
                         }
                     }

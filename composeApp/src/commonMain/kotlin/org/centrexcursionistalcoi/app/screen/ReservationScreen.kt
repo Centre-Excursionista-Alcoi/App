@@ -34,6 +34,7 @@ import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
+import org.centrexcursionistalcoi.app.platform.ui.Action
 import org.centrexcursionistalcoi.app.platform.ui.PlatformDialog
 import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
@@ -95,7 +96,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                 if (route.isDraft()) Res.string.reservation_draft_title else Res.string.reservation_title
             ),
             actions = listOfNotNull(
-                Triple(Icons.AutoMirrored.Filled.ArrowForward, stringResource(Res.string.confirm)) {
+                Action(Icons.AutoMirrored.Filled.ArrowForward, stringResource(Res.string.confirm)) {
                     viewModel.confirm(
                         route.fromDate()!!,
                         route.toDate()!!,
@@ -105,7 +106,7 @@ object ReservationScreen : Screen<Reservation, ReservationViewModel>(::Reservati
                         navController.popBackStack()
                     }
                 }.takeIf { route.isDraft() },
-                Triple(Icons.Default.EventBusy, stringResource(Res.string.cancel)) {
+                Action(Icons.Default.EventBusy, stringResource(Res.string.cancel)) {
                     cancellingReservation = true
                 }.takeIf {
                     !route.isDraft() && (itemLending ?: spaceBooking)?.run { takenAt == null } == true
