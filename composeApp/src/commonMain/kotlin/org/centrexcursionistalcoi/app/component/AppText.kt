@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 
@@ -18,12 +19,13 @@ fun AppText(
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
+    textAlign: TextAlign = TextAlign.Start,
     color: ColorProducer? = null
 ) {
     BasicText(
         text,
         modifier,
-        style,
+        style.copy(textAlign = textAlign),
         onTextLayout,
         overflow,
         softWrap,

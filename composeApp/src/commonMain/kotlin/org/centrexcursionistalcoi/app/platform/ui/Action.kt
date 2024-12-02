@@ -18,5 +18,9 @@ data class Action(
      * Only used in desktop.
      */
     val popupContent: (@Composable ColumnScope.() -> Unit)? = null,
+    /**
+     * If not null, a badge will appear next to the icon or label.
+     */
+    val badge: String? = null,
     val onClick: () -> Unit
 )

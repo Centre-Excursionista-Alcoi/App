@@ -45,6 +45,7 @@
     <string name="home_select_date_range">Please, select a date range</string>
     <string name="home_items_selection">Items Selection</string>
     <string name="home_notifications">Notifications</string>
+    <string name="home_notifications_empty">No notifications</string>
 
     <string name="register_title">Register</string>
     <string name="register_email">Email</string>

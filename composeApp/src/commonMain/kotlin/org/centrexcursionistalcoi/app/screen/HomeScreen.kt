@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,10 +22,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
+import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
+import org.centrexcursionistalcoi.app.database.entity.Notification
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
 import org.centrexcursionistalcoi.app.pages.home.HomePage
 import org.centrexcursionistalcoi.app.pages.home.ReservationPage
@@ -32,6 +42,7 @@ import org.centrexcursionistalcoi.app.pages.home.SettingsPage
 import org.centrexcursionistalcoi.app.platform.ui.Action
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
+import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Loading
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
@@ -50,6 +61,10 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val user by viewModel.userData.collectAsState(null)
         val itemBookings by viewModel.itemBookings.collectAsState(null)
         val spaceBookings by viewModel.spaceBookings.collectAsState(null)
+
+        val notifications by viewModel.notifications.collectAsState(null)
+        val notViewedNotifications = notifications.orEmpty().filter { !it.viewed }
+        val updatingNotification by viewModel.updatingNotification.collectAsState()
 
         val usersList by viewModel.usersList.collectAsState(null)
         val updatingUser by viewModel.updatingUser.collectAsState()
@@ -87,8 +102,19 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     Icons.Default.Notifications,
                     stringResource(Res.string.home_notifications),
                     isPrimary = false,
+                    badge = notViewedNotifications.size.takeIf { it > 0 }?.toString(),
                     popupContent = {
-                        AppText("Popup")
+                        for (notification in notifications.orEmpty()) {
+                            NotificationContent(notification) {
+                                viewModel.markAsViewed(notification)
+                            }
+                        }
+                        if (notifications.isNullOrEmpty()) {
+                            AppText(
+                                text = stringResource(Res.string.home_notifications_empty),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     },
                     onClick = {}
                 ),
@@ -128,6 +154,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             availableSpaces,
                             viewModel::availability
                         )
+
                         IDX_SETTINGS -> SettingsPage()
                         IDX_ADMIN -> AdminPage(
                             updatingUser = updatingUser,
@@ -155,6 +182,50 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    fun NotificationContent(
+        notification: Notification,
+        onMarkAsViewed: () -> Unit
+    ) {
+        val createdAt = notification.createdAt.toLocalDateTime(TimeZone.currentSystemDefault())
+
+        Column(
+            modifier = Modifier.clickable(enabled = !notification.viewed) { onMarkAsViewed() }
+        ) {
+            AppText(
+                text = when (notification.type) {
+                    NotificationType.BookingConfirmed -> stringResource(Res.string.notification_booking_confirmed_title)
+                    NotificationType.BookingCancelled -> stringResource(Res.string.notification_booking_cancelled_title)
+
+                    else -> "Unsupported notification type: ${notification.type}"
+                },
+                modifier = Modifier.padding(top = 8.dp),
+                style = getPlatformTextStyles().label.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    fontStyle = if (notification.viewed) FontStyle.Italic else FontStyle.Normal
+                )
+            )
+            AppText(
+                text = when (notification.type) {
+                    NotificationType.BookingConfirmed -> stringResource(Res.string.notification_booking_confirmed_message)
+                    NotificationType.BookingCancelled -> stringResource(Res.string.notification_booking_cancelled_message)
+
+                    else -> "Unsupported notification type: ${notification.type}"
+                },
+                style = getPlatformTextStyles().label.copy(
+                    fontSize = 12.sp,
+                    fontStyle = if (notification.viewed) FontStyle.Italic else FontStyle.Normal
+                )
+            )
+            AppText(
+                text = "${createdAt.date} ${createdAt.time.hour}:${createdAt.time.minute}",
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = getPlatformTextStyles().label.copy(fontSize = 12.sp)
+            )
         }
     }
 }

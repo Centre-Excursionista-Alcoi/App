@@ -13,11 +13,13 @@ import org.centrexcursionistalcoi.app.database.entity.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
 import org.centrexcursionistalcoi.app.database.entity.ItemType
+import org.centrexcursionistalcoi.app.database.entity.Notification
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
 import org.centrexcursionistalcoi.app.database.entity.SpaceBooking
 import org.centrexcursionistalcoi.app.database.entity.admin.User
 import org.centrexcursionistalcoi.app.network.InventoryBackend
+import org.centrexcursionistalcoi.app.network.NotificationsBackend
 import org.centrexcursionistalcoi.app.network.SectionsBackend
 import org.centrexcursionistalcoi.app.network.SpacesBackend
 import org.centrexcursionistalcoi.app.network.Sync
@@ -32,6 +34,7 @@ class HomeViewModel : AdminViewModel() {
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
+    private val notificationsDao = appDatabase.notificationsDao()
     private val adminDao = appDatabase.adminDao()
 
     val userData
@@ -46,6 +49,11 @@ class HomeViewModel : AdminViewModel() {
         get() = combine(userData, bookingsDao.getAllSpaceBookingsAsFlow()) { user, bookings ->
             bookings.filter { it.userId == user?.email }
         }
+
+    val notifications get() = notificationsDao.getAllNotificationsAsFlow()
+
+    private val _updatingNotification = MutableStateFlow(false)
+    val updatingNotification get() = _updatingNotification.asStateFlow()
 
 
     private val _availableItems = MutableStateFlow<List<Item>?>(null)
@@ -238,6 +246,18 @@ class HomeViewModel : AdminViewModel() {
                 uiThread { onDelete() }
             } finally {
                 _updatingUser.emit(false)
+            }
+        }
+    }
+
+    fun markAsViewed(notification: Notification) {
+        launch {
+            try {
+                _updatingNotification.emit(true)
+                NotificationsBackend.markAsViewed(notification)
+                Sync.syncBasics()
+            } finally {
+                _updatingNotification.emit(false)
             }
         }
     }

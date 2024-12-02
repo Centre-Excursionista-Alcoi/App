@@ -10,8 +10,6 @@ import java.io.File
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.SessionsDatabase
 import org.centrexcursionistalcoi.app.database.entity.notification.Notification
-import org.centrexcursionistalcoi.app.push.payload.PushPayload
-import org.centrexcursionistalcoi.app.serverJson
 import org.slf4j.LoggerFactory
 
 object FCM {
@@ -50,11 +48,15 @@ object FCM {
         val tokens = SessionsDatabase.getTokensForEmail(email)
         val type = data.type
         val payload = data.payload
-        val json = serverJson.encodeToString(PushPayload.serializer(), payload)
+
+        if (tokens.isEmpty()) {
+            logger.debug("No devices found for $email")
+            return emptyList()
+        }
 
         val messages = tokens.map { token ->
             Message.builder()
-                .putData("data", json)
+                .putData("data", payload)
                 .putData("type", type.name)
                 .setToken(token)
                 .build()

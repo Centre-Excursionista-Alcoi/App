@@ -1,9 +1,15 @@
 package org.centrexcursionistalcoi.app.database.entity.notification
 
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.data.NotificationD
+import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
 import org.centrexcursionistalcoi.app.database.common.SerializableEntity
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.database.table.NotificationsTable
+import org.centrexcursionistalcoi.app.push.payload.BookingPayload
+import org.centrexcursionistalcoi.app.push.payload.PushPayload
+import org.centrexcursionistalcoi.app.serverJson
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
@@ -21,10 +27,17 @@ class Notification(id: EntityID<Int>) : SerializableEntity<NotificationD>(id) {
     override fun serializable(): NotificationD {
         return NotificationD(
             id = id.value,
-            createdAt = createdAt.toEpochMilli(),
+            createdAt = createdAt.toKotlinInstant(),
             viewed = viewed,
             type = type,
-            payload = payload,
+            payload = serverJson.encodeToString(
+                if (type == NotificationType.BookingConfirmed || type == NotificationType.BookingCancelled) {
+                    BookingPayload.serializer() as SerializationStrategy<PushPayload>
+                } else {
+                    throw UnsupportedOperationException("Unsupported notification type: $type")
+                },
+                payload
+            ),
             userId = userId.id.value
         )
     }

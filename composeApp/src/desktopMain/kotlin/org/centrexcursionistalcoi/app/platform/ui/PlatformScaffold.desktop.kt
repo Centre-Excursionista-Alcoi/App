@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,7 +74,7 @@ actual fun PlatformScaffold(
                     )
                 }
             }
-            for ((_, text, isPrimary, popupContent, action) in actions) {
+            for (action in actions) {
                 Box {
                     var showingPopup by remember { mutableStateOf(false) }
                     if (showingPopup) {
@@ -87,16 +87,12 @@ actual fun PlatformScaffold(
                                     popupContentSize: IntSize
                                 ): IntOffset {
                                     val (anchorX, anchorY) = anchorBounds.left to anchorBounds.top
-                                    val (width, height) = popupContentSize
+                                    val (width) = popupContentSize
 
-                                    // The popup should be centered horizontally and below the anchor, but if it doesn't
-                                    // fit to the window's width, it should be moved to the left.
-                                    val x = (anchorX + anchorBounds.width / 2) - width / 2
+                                    // The popup should be aligned to the right of the anchor
+                                    val x = anchorX + anchorBounds.width - width
                                     val y = anchorY + anchorBounds.height
-                                    return IntOffset(
-                                        x = x.coerceIn(0, windowSize.width - width),
-                                        y = y.coerceIn(0, windowSize.height - height)
-                                    )
+                                    return IntOffset(x, y)
                                 }
                             },
                             onDismissRequest = { showingPopup = false }
@@ -104,24 +100,24 @@ actual fun PlatformScaffold(
                             CarbonLayer {
                                 Column(
                                     modifier = Modifier
-                                        .widthIn(min = 240.dp)
+                                        .width(240.dp)
                                         .containerBackground()
                                         .padding(horizontal = 16.dp, vertical = 12.dp)
                                 ) {
-                                    popupContent?.invoke(this)
+                                    action.popupContent?.invoke(this)
                                 }
                             }
                         }
                     }
 
                     CarbonButton(
-                        text = text,
-                        buttonType = if (isPrimary) ButtonType.Primary else ButtonType.Secondary,
+                        text = action.label + (action.badge?.let { " ($it)" } ?: ""),
+                        buttonType = if (action.isPrimary) ButtonType.Primary else ButtonType.Secondary,
                         onClick = {
-                            if (popupContent != null) {
+                            if (action.popupContent != null) {
                                 showingPopup = true
                             } else {
-                                action()
+                                action.onClick()
                             }
                         }
                     )
