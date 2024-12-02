@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.entity.notification.Notification
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkReturnedEndpoint.respondFailure
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingMarkReturnedEndpoint.respondSuccess
 import org.centrexcursionistalcoi.app.push.FCM
+import org.centrexcursionistalcoi.app.push.NotificationUtils.bookingType
 import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.server.response.Errors
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -53,7 +54,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
                 this.type = NotificationType.BookingCancelled
                 this.payload = BookingPayload(
                     bookingId = bookingId,
-                    bookingType = entityClass::class.simpleName!!
+                    bookingType = entityClass.bookingType()
                 )
                 this.userId = booking.user
             }

@@ -21,6 +21,7 @@
     <string name="dismiss">Dismiss</string>
     <string name="cancel">Cancel</string>
     <string name="edit">Edit</string>
+    <string name="mark_as_read">Mark as Read</string>
 
     <string name="address_address">Address</string>
     <string name="address_city">City</string>
@@ -46,6 +47,7 @@
     <string name="home_items_selection">Items Selection</string>
     <string name="home_notifications">Notifications</string>
     <string name="home_notifications_empty">No notifications</string>
+    <string name="home_notifications_all">View all notifications</string>
 
     <string name="register_title">Register</string>
     <string name="register_email">Email</string>
@@ -178,6 +180,8 @@
     <string name="settings_website">Website</string>
     <string name="settings_source_code">Source Code</string>
     <string name="settings_server_status">Server Status</string>
+
+    <string name="notifications_title">Notifications</string>
 
     <string name="error_wrong_credentials">Wrong credentials</string>
     <string name="error_nif_invalid">NIF is not valid.</string>

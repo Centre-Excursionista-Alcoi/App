@@ -52,9 +52,6 @@ class HomeViewModel : AdminViewModel() {
 
     val notifications get() = notificationsDao.getAllNotificationsAsFlow()
 
-    private val _updatingNotification = MutableStateFlow(false)
-    val updatingNotification get() = _updatingNotification.asStateFlow()
-
 
     private val _availableItems = MutableStateFlow<List<Item>?>(null)
     val availableItems get() = _availableItems.asStateFlow()
@@ -252,13 +249,8 @@ class HomeViewModel : AdminViewModel() {
 
     fun markAsViewed(notification: Notification) {
         launch {
-            try {
-                _updatingNotification.emit(true)
-                NotificationsBackend.markAsViewed(notification)
-                Sync.syncBasics()
-            } finally {
-                _updatingNotification.emit(false)
-            }
+            NotificationsBackend.markAsViewed(notification)
+            Sync.syncBasics()
         }
     }
 

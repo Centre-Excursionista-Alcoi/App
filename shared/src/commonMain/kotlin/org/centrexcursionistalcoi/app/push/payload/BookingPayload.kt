@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BookingPayload(
     val bookingId: Int,
-    val bookingType: String
+    val bookingType: BookingType
 ): PushPayload

@@ -24,20 +24,21 @@ class Notification(id: EntityID<Int>) : SerializableEntity<NotificationD>(id) {
 
     var userId by User referencedOn NotificationsTable.userId
 
+    @Suppress("UNCHECKED_CAST")
     override fun serializable(): NotificationD {
         return NotificationD(
             id = id.value,
             createdAt = createdAt.toKotlinInstant(),
             viewed = viewed,
             type = type,
-            payload = serverJson.encodeToString(
-                if (type == NotificationType.BookingConfirmed || type == NotificationType.BookingCancelled) {
-                    BookingPayload.serializer() as SerializationStrategy<PushPayload>
-                } else {
-                    throw UnsupportedOperationException("Unsupported notification type: $type")
-                },
-                payload
-            ),
+            payload = if (type == NotificationType.BookingConfirmed || type == NotificationType.BookingCancelled) {
+                serverJson.encodeToString(
+                    BookingPayload.serializer() as SerializationStrategy<PushPayload>,
+                    payload
+                )
+            } else {
+                throw UnsupportedOperationException("Unsupported notification type: $type")
+            },
             userId = userId.id.value
         )
     }
