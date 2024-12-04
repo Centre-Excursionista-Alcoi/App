@@ -22,5 +22,6 @@ data class Action(
      * If not null, a badge will appear next to the icon or label.
      */
     val badge: String? = null,
+    val enabled: Boolean = true,
     val onClick: () -> Unit
 )

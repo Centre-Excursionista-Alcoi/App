@@ -112,6 +112,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                     stringResource(Res.string.home_notifications),
                     isPrimary = false,
                     badge = notViewedNotifications.size.takeIf { it > 0 }?.toString(),
+                    enabled = !notifications.isNullOrEmpty(),
                     popupContent = {
                         for (notification in notifications.orEmpty().takeLast(4)) {
                             NotificationContent(
@@ -138,7 +139,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                                 .padding(vertical = 4.dp)
                         )
                     },
-                    onClick = {}
+                    onClick = { navigator.navigate(NotificationsRoute) }
                 ),
                 Action(
                     Icons.AutoMirrored.Rounded.Logout,

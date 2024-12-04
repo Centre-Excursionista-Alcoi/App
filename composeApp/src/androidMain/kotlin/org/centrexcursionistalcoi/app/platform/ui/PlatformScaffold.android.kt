@@ -58,10 +58,16 @@ actual fun PlatformScaffold(
                                         Badge { Text(action.badge) }
                                     }
                                 ) {
-                                    IconButton(action.onClick) { Icon(action.icon, action.label) }
+                                    IconButton(
+                                        enabled = action.enabled,
+                                        onClick = action.onClick
+                                    ) { Icon(action.icon, action.label) }
                                 }
                             } else {
-                                IconButton(action.onClick) { Icon(action.icon, action.label) }
+                                IconButton(
+                                    enabled = action.enabled,
+                                    onClick = action.onClick
+                                ) { Icon(action.icon, action.label) }
                             }
                         }
                     }

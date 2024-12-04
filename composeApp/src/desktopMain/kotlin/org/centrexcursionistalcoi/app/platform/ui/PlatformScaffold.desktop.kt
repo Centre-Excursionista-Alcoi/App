@@ -113,6 +113,7 @@ actual fun PlatformScaffold(
                     CarbonButton(
                         text = action.label + (action.badge?.let { " ($it)" } ?: ""),
                         buttonType = if (action.isPrimary) ButtonType.Primary else ButtonType.Secondary,
+                        enabled = action.enabled,
                         onClick = {
                             if (action.popupContent != null) {
                                 showingPopup = true

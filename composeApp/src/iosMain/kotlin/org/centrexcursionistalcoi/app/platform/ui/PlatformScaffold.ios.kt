@@ -33,11 +33,12 @@ actual fun PlatformScaffold(
                 CupertinoTopAppBar(
                     title = { CupertinoText(title) },
                     actions = {
-                        for ((icon, description, _, _, onClick) in actions) {
+                        for (action in actions) {
                             CupertinoIconButton(
-                                onClick = onClick
+                                enabled = action.enabled,
+                                onClick = action.onClick
                             ) {
-                                CupertinoIcon(icon, description)
+                                CupertinoIcon(action.icon, action.label)
                             }
                         }
                     },
