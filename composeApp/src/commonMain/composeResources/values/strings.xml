@@ -183,6 +183,10 @@
 
     <string name="notifications_title">Notifications</string>
 
+    <string name="error_dialog_title">There was an error</string>
+    <string name="error_dialog_code">Error Code: %1$d</string>
+    <string name="error_dialog_path">Route (%1$s): %2$s</string>
+    <string name="error_dialog_response">Response: %1$s</string>
     <string name="error_wrong_credentials">Wrong credentials</string>
     <string name="error_nif_invalid">NIF is not valid.</string>
     <string name="error_email_invalid">Email is not valid.</string>
