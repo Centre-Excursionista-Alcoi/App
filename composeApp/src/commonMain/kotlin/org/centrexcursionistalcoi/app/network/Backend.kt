@@ -18,6 +18,8 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
@@ -45,6 +47,13 @@ object Backend {
         }
     }
 
+    private val _error = MutableStateFlow<ServerException?>(null)
+    val error get() = _error.asStateFlow()
+
+    fun clearError() {
+        _error.value = null
+    }
+
     private suspend fun request(
         httpMethod: HttpMethod,
         path: String,
@@ -63,7 +72,9 @@ object Backend {
         }
 
         val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
-        throw ServerException(code, response.bodyAsText(), path, httpMethod)
+        val exception = ServerException(code, response.bodyAsText(), path, httpMethod)
+        _error.emit(exception)
+        throw exception
     }
 
     /**
