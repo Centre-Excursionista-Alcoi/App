@@ -7,7 +7,6 @@ import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.common.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.User
-import org.centrexcursionistalcoi.app.database.entity.notification.Notification
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint.respondFailure
 import org.centrexcursionistalcoi.app.endpoints.space.SpaceBookingConfirmEndpoint.respondSuccess
 import org.centrexcursionistalcoi.app.push.FCM
@@ -46,17 +45,14 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
         booking.confirmed = true
     }
 
-    val notification = ServerDatabase {
-        Notification.new {
-            this.type = NotificationType.BookingConfirmed
-            this.payload = BookingPayload(
-                bookingId = bookingId,
-                bookingType = entityClass.bookingType()
-            )
-            this.userId = booking.user
-        }
-    }
-    FCM.notify(notification)
+    FCM.notify(
+        type = NotificationType.BookingConfirmed,
+        payload = BookingPayload(
+            bookingId = bookingId,
+            bookingType = entityClass.bookingType()
+        ),
+        notifyUser = booking.user
+    )
 
     respondSuccess(HttpStatusCode.Accepted)
 }

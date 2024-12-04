@@ -65,6 +65,9 @@ class HomeViewModel : AdminViewModel() {
     private val _updatingUser = MutableStateFlow(false)
     val updatingUser get() = _updatingUser.asStateFlow()
 
+    private val _confirmingUser = MutableStateFlow<User?>(null)
+    val confirmingUser get() = _confirmingUser.asStateFlow()
+
     val sections get() = inventoryDao.getAllSectionsAsFlow()
 
     private val _creatingSection = MutableStateFlow(false)
@@ -245,6 +248,21 @@ class HomeViewModel : AdminViewModel() {
                 _updatingUser.emit(false)
             }
         }
+    }
+
+    fun startUserConfirmation(user: User) {
+        _confirmingUser.value = user
+    }
+
+    fun startUserConfirmation(userId: String) {
+        launch {
+            val user = adminDao.getUser(userId) ?: return@launch
+            _confirmingUser.emit(user)
+        }
+    }
+
+    fun cancelUserConfirmation() {
+        _confirmingUser.value = null
     }
 
     fun markAsViewed(notification: Notification) {

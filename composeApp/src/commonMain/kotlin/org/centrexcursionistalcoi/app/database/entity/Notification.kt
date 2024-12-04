@@ -7,10 +7,16 @@ import ceaapp.composeapp.generated.resources.*
 import kotlinx.datetime.Instant
 import org.centrexcursionistalcoi.app.data.NotificationD
 import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
+import org.centrexcursionistalcoi.app.push.payload.AdminBookingPayload
+import org.centrexcursionistalcoi.app.push.payload.AdminNotificationType
+import org.centrexcursionistalcoi.app.push.payload.AdminPayload
+import org.centrexcursionistalcoi.app.push.payload.AdminUserPayload
 import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.push.payload.BookingType
 import org.centrexcursionistalcoi.app.push.payload.PushPayload
+import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Reservation
+import org.centrexcursionistalcoi.app.route.Route
 import org.centrexcursionistalcoi.app.serverJson
 import org.jetbrains.compose.resources.stringResource
 
@@ -67,7 +73,7 @@ data class Notification(
         return notificationContents[type]?.second?.let { stringResource(it) } ?: "Unsupported notification type: $type"
     }
 
-    fun route(): Reservation {
+    fun route(): Route {
         return when(
             val payload = payload()
         ) {
@@ -86,6 +92,17 @@ data class Notification(
                             spaceBookingId = payload.bookingId
                         )
                     }
+                }
+            }
+            is AdminPayload -> when (payload) {
+                is AdminBookingPayload -> when (payload.type) {
+                    AdminNotificationType.NewBooking -> Home(showBookingIdString = payload.bookingIdString)
+                    else -> throw UnsupportedOperationException("Unsupported admin notification type: ${payload.type}")
+                }
+
+                is AdminUserPayload -> when (payload.type) {
+                    AdminNotificationType.NewUserRegistered -> Home(showUserId = payload.userId)
+                    else -> throw UnsupportedOperationException("Unsupported admin notification type: ${payload.type}")
                 }
             }
         }

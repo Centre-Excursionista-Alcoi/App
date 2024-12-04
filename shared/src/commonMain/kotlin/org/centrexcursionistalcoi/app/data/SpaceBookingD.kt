@@ -62,4 +62,7 @@ data class SpaceBookingD(
         result = 31 * result + (paymentDocument?.contentHashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String = "#SB$id"
+
 }

@@ -76,6 +76,7 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val notViewedNotifications = notifications.orEmpty().filter { !it.viewed }
 
         val usersList by viewModel.usersList.collectAsState(null)
+        val confirmingUser by viewModel.confirmingUser.collectAsState()
         val updatingUser by viewModel.updatingUser.collectAsState()
         val sections by viewModel.sections.collectAsState(null)
         val creatingSection by viewModel.creatingSection.collectAsState()
@@ -100,6 +101,15 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         }
         LaunchedEffect(Unit) {
             pagerState.scrollToPage(page)
+        }
+        LaunchedEffect(route) {
+            val showBookingIdString = route.showBookingIdString
+            val showUserId = route.showUserId
+            if (showUserId != null) {
+                viewModel.startUserConfirmation(showUserId)
+            } else if (showBookingIdString != null) {
+                // TODO: Show booking
+            }
         }
 
         AccountStateNavigator(onLoggedOut = Loading)
@@ -184,6 +194,9 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             users = usersList,
                             onUserConfirmationRequested = viewModel::confirm,
                             onUserDeleteRequested = viewModel::delete,
+                            confirmingUser = confirmingUser,
+                            onConfirmingUserRequested = viewModel::startUserConfirmation,
+                            onConfirmingUserCancelled = viewModel::cancelUserConfirmation,
                             sections = sections,
                             isCreatingSection = creatingSection,
                             onSectionOperation = viewModel::onCreateOrUpdate,
