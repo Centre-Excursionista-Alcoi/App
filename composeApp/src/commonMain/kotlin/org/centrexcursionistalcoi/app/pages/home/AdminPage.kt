@@ -28,6 +28,9 @@ fun AdminPage(
     users: List<User>?,
     onUserConfirmationRequested: (User, () -> Unit) -> Unit,
     onUserDeleteRequested: (User, () -> Unit) -> Unit,
+    confirmingUser: User?,
+    onConfirmingUserRequested: (User) -> Unit,
+    onConfirmingUserCancelled: () -> Unit,
     isCreatingSection: Boolean,
     sections: List<Section>?,
     onSectionOperation: (Section, onCreate: () -> Unit) -> Unit,
@@ -56,7 +59,15 @@ fun AdminPage(
             ?.filter { !it.isConfirmed }
             ?.takeIf { it.isNotEmpty() }
             ?.let { unconfirmedUsers ->
-                UnconfirmedUsersCard(unconfirmedUsers, updatingUser, onUserConfirmationRequested, onUserDeleteRequested)
+                UnconfirmedUsersCard(
+                    unconfirmedUsers,
+                    updatingUser,
+                    onUserConfirmationRequested,
+                    onUserDeleteRequested,
+                    confirmingUser,
+                    onConfirmingUserRequested,
+                    onConfirmingUserCancelled
+                )
             }
 
         SectionsCard(sections, isCreatingSection, onSectionOperation)

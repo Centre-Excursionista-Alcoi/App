@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.database.table.ItemTypesTable
 import org.centrexcursionistalcoi.app.database.table.ItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingItemsTable
 import org.centrexcursionistalcoi.app.database.table.LendingsTable
+import org.centrexcursionistalcoi.app.database.table.NotificationsTable
 import org.centrexcursionistalcoi.app.database.table.SectionsTable
 import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
 import org.centrexcursionistalcoi.app.database.table.SpaceIncidenceImagesTable
@@ -38,6 +39,7 @@ object ServerDatabase {
 
     private val tables = listOf<Table>(
         UsersTable,
+        NotificationsTable,
         ItemTypesTable,
         ItemsTable,
         LendingsTable,

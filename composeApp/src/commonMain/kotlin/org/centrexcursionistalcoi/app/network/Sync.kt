@@ -13,6 +13,7 @@ object Sync {
     private val bookingsDao = appDatabase.bookingsDao()
     private val inventoryDao = appDatabase.inventoryDao()
     private val spacesDao = appDatabase.spacesDao()
+    private val notificationsDao = appDatabase.notificationsDao()
     private val adminDao = appDatabase.adminDao()
 
     /**
@@ -62,6 +63,15 @@ object Sync {
             spacesDao::insertSpace,
             spacesDao::updateSpace,
             spacesDao::deleteSpace
+        )
+
+        val notifications = NotificationsBackend.listNotifications()
+        updateEntities(
+            list = notifications,
+            notificationsDao::getAllNotifications,
+            notificationsDao::insert,
+            notificationsDao::update,
+            notificationsDao::delete
         )
     }
 

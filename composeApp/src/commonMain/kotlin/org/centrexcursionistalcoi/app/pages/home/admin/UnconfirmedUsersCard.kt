@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,12 +23,14 @@ fun UnconfirmedUsersCard(
     unconfirmedUsers: List<User>,
     isConfirming: Boolean,
     onConfirmRequested: (User, onComplete: () -> Unit) -> Unit,
-    onDeleteRequested: (User, onComplete: () -> Unit) -> Unit
+    onDeleteRequested: (User, onComplete: () -> Unit) -> Unit,
+    confirmingUser: User?,
+    onConfirmingUserRequested: (User) -> Unit,
+    onConfirmingUserCancelled: () -> Unit
 ) {
-    var confirmingUser: User? by remember { mutableStateOf(null) }
     confirmingUser?.let { user ->
         PlatformDialog(
-            onDismissRequest = { confirmingUser = null }
+            onDismissRequest = onConfirmingUserCancelled
         ) {
             AppText(
                 text = stringResource(Res.string.unconfirmed_users_message),
@@ -69,14 +67,14 @@ fun UnconfirmedUsersCard(
                     modifier = Modifier.padding(end = 8.dp).padding(vertical = 8.dp),
                     enabled = !isConfirming
                 ) {
-                    onDeleteRequested(user) { confirmingUser = null }
+                    onDeleteRequested(user, onConfirmingUserCancelled)
                 }
                 PlatformButton(
                     text = stringResource(Res.string.confirm),
                     modifier = Modifier.padding(end = 8.dp).padding(vertical = 8.dp),
                     enabled = !isConfirming
                 ) {
-                    onConfirmRequested(user) { confirmingUser = null }
+                    onConfirmRequested(user, onConfirmingUserCancelled)
                 }
             }
         }
@@ -91,7 +89,7 @@ fun UnconfirmedUsersCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
-                    .clickable { confirmingUser = user }
+                    .clickable { onConfirmingUserRequested(user) }
             ) {
                 AppText(
                     text = user.email,

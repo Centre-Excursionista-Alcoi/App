@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.push.payload
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class BookingPayload(
-    val bookingId: Int,
-    val bookingType: BookingType
-): PushPayload
+sealed interface AdminPayload: PushPayload {
+    val type: AdminNotificationType
+    val rawData: String
+}
