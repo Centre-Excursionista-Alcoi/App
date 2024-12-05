@@ -179,4 +179,8 @@
         <item quantity="many">%1$d socis</item>
         <item quantity="other">%1$d socis</item>
     </plurals>
+    <string name="error_dialog_title">Ha hagut un error</string>
+    <string name="error_dialog_code">Codi d\'Error: %1$d</string>
+    <string name="error_dialog_path">Ruta (%1$s): %2$s</string>
+    <string name="error_dialog_response">Resposta: %1$s</string>
 </resources>
