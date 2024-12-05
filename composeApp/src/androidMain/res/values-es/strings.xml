@@ -1,2 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="group_name_bookings_description">Recibe actualizaciones de tus reservas.</string>
+    <string name="channel_name_confirmation_name">Confirmaciones de Reservas</string>
+    <string name="channel_name_cancellation_name">Cancelaciones de Reservas</string>
+    <string name="channel_name_cancellation_description">Te avisaremos cuando una reserva que hayas hecho sea cancelada.</string>
+    <string name="fcm_token">Token FCM</string>
+    <string name="app_name">CEA App</string>
+    <string name="group_name_bookings_name">Reservas</string>
+    <string name="channel_name_confirmation_description">Te avisaremos cuando una reserva que hayas hecho sea confirmada.</string>
+</resources>
