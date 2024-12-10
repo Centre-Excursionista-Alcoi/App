@@ -97,7 +97,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:appDistributionUploadRelease
+        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:assembleRelease :composeApp:appDistributionUploadRelease
 
       - name: Get current version and code
         id: get_version
