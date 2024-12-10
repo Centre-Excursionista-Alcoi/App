@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
-val languages = arrayOf("en")
+val languages = arrayOf("en", "ca")
 
 expect object PlatformLanguage {
     /**
