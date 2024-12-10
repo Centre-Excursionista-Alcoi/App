@@ -99,16 +99,6 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:appDistributionUploadRelease
 
-      - name: Upload to Google Play
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
-          packageName: org.centrexcursionistalcoi.app
-          releaseFiles: composeApp/build/outputs/**/*.aab
-          track: qa
-          status: completed
-          inAppUpdatePriority: 1
-
   build-ios:
     name: Build for iOS
     runs-on: ubuntu-latest
