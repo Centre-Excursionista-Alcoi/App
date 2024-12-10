@@ -25,6 +25,6 @@ interface AdminDao {
     @Query("SELECT * FROM User")
     fun getAllUsersAsFlow(): Flow<List<User>>
 
-    @Query("SELECT * FROM User WHERE id = :id")
-    suspend fun getUser(id: String): User?
+    @Query("SELECT * FROM User WHERE email = :email")
+    suspend fun getUser(email: String): User?
 }
