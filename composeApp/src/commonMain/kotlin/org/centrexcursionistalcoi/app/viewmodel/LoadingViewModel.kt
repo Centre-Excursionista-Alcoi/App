@@ -40,7 +40,7 @@ class LoadingViewModel : ViewModel() {
 
                     Sync.syncBasics()
 
-                    uiThread { navController.navigate(Home) }
+                    uiThread { navController.navigate(Home()) }
                 } else {
                     uiThread { navController.navigate(Login) }
                 }
