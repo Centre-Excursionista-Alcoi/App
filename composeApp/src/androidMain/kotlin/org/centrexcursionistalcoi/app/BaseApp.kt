@@ -6,7 +6,7 @@ import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.roomDatabaseBuilder
-import org.centrexcursionistalcoi.app.push.PushNotifications
+import org.centrexcursionistalcoi.app.push.AndroidPushNotifications
 import org.centrexcursionistalcoi.app.settings.createDataStore
 import org.centrexcursionistalcoi.app.settings.dataStore
 
@@ -19,7 +19,7 @@ class BaseApp : Application() {
         dataStore = createDataStore(this)
         roomDatabaseBuilder = getDatabaseBuilder(this)
 
-        PushNotifications.initialize(this)
+        AndroidPushNotifications.initialize(this)
 
         AccountManager.initialize(this)
     }

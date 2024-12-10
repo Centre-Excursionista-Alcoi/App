@@ -2,10 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
-import ceaapp.composeapp.generated.resources.Res
-import ceaapp.composeapp.generated.resources.error_unknown
-import ceaapp.composeapp.generated.resources.error_user_not_confirmed
-import ceaapp.composeapp.generated.resources.error_wrong_credentials
+import ceaapp.composeapp.generated.resources.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +12,7 @@ import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.network.AuthBackend
+import org.centrexcursionistalcoi.app.push.PushNotifications
 import org.centrexcursionistalcoi.app.route.Loading
 import org.jetbrains.compose.resources.getString
 
@@ -32,6 +30,7 @@ class LoginViewModel : ViewModel() {
             AuthBackend.login(email, password)
             Napier.i { "Logged in successfully." }
             AccountManager.put(Account(email), password)
+            PushNotifications.refreshTokenOnServer()
             uiThread {
                 navController.navigate(Loading)
             }

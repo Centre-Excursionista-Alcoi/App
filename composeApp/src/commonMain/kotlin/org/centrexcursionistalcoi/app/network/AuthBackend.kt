@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.network
 import io.github.aakira.napier.Napier
 import io.ktor.http.isSuccess
 import kotlinx.serialization.builtins.serializer
+import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
 import org.centrexcursionistalcoi.app.server.request.RegistrationRequest
@@ -61,6 +62,11 @@ object AuthBackend {
      */
     suspend fun notifyToken(token: String): Boolean {
         try {
+            val account = AccountManager.get()
+            if (account == null) {
+                Napier.i { "Won't send FCM token to server since not logged in." }
+                return false
+            }
             val response = Backend.post("/fcm_token", body = token, bodySerializer = String.serializer())
             return response.status.isSuccess()
         } catch (e: ServerException) {
