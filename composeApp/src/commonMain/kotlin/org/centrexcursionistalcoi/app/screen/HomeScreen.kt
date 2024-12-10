@@ -1,7 +1,10 @@
 package org.centrexcursionistalcoi.app.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -9,8 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,18 +26,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ceaapp.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.centrexcursionistalcoi.app.component.AppText
 import org.centrexcursionistalcoi.app.composition.AccountStateNavigator
+import org.centrexcursionistalcoi.app.composition.LocalNavController
+import org.centrexcursionistalcoi.app.database.entity.Notification
 import org.centrexcursionistalcoi.app.pages.home.AdminPage
 import org.centrexcursionistalcoi.app.pages.home.HomePage
 import org.centrexcursionistalcoi.app.pages.home.ReservationPage
 import org.centrexcursionistalcoi.app.pages.home.SettingsPage
+import org.centrexcursionistalcoi.app.platform.ui.Action
 import org.centrexcursionistalcoi.app.platform.ui.PlatformNavigationBar
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
+import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Home
 import org.centrexcursionistalcoi.app.route.Loading
+import org.centrexcursionistalcoi.app.route.NotificationsRoute
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -44,11 +66,17 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
 
     @Composable
     override fun Content(viewModel: HomeViewModel) {
+        val navigator = LocalNavController.current
+
         val user by viewModel.userData.collectAsState(null)
         val itemBookings by viewModel.itemBookings.collectAsState(null)
         val spaceBookings by viewModel.spaceBookings.collectAsState(null)
 
+        val notifications by viewModel.notifications.collectAsState(null)
+        val notViewedNotifications = notifications.orEmpty().filter { !it.viewed }
+
         val usersList by viewModel.usersList.collectAsState(null)
+        val confirmingUser by viewModel.confirmingUser.collectAsState()
         val updatingUser by viewModel.updatingUser.collectAsState()
         val sections by viewModel.sections.collectAsState(null)
         val creatingSection by viewModel.creatingSection.collectAsState()
@@ -74,13 +102,56 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         LaunchedEffect(Unit) {
             pagerState.scrollToPage(page)
         }
+        LaunchedEffect(route) {
+            val showBookingIdString = route.showBookingIdString
+            val showUserId = route.showUserId
+            if (showUserId != null) {
+                viewModel.startUserConfirmation(showUserId)
+            } else if (showBookingIdString != null) {
+                // TODO: Show booking
+            }
+        }
 
         AccountStateNavigator(onLoggedOut = Loading)
 
         PlatformScaffold(
             title = user?.let { stringResource(Res.string.home_welcome, it.name) } ?: "",
             actions = listOf(
-                Triple(
+                Action(
+                    Icons.Default.Notifications,
+                    stringResource(Res.string.home_notifications),
+                    isPrimary = false,
+                    badge = notViewedNotifications.size.takeIf { it > 0 }?.toString(),
+                    enabled = !notifications.isNullOrEmpty(),
+                    popupContent = {
+                        for (notification in notifications.orEmpty().takeLast(4)) {
+                            NotificationContent(
+                                notification,
+                                onMarkAsViewed = { viewModel.markAsViewed(notification) },
+                                onClick = { navigator.navigate(notification.route()) }
+                            )
+                            HorizontalDivider()
+                        }
+                        if (notifications.isNullOrEmpty()) {
+                            AppText(
+                                text = stringResource(Res.string.home_notifications_empty),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        AppText(
+                            text = stringResource(Res.string.home_notifications_all),
+                            textAlign = TextAlign.Center,
+                            color = { Color.Blue },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { navigator.navigate(NotificationsRoute) }
+                                .padding(vertical = 4.dp)
+                        )
+                    },
+                    onClick = { navigator.navigate(NotificationsRoute) }
+                ),
+                Action(
                     Icons.AutoMirrored.Rounded.Logout,
                     stringResource(Res.string.logout)
                 ) { viewModel.logout() }
@@ -116,12 +187,16 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             availableSpaces,
                             viewModel::availability
                         )
+
                         IDX_SETTINGS -> SettingsPage()
                         IDX_ADMIN -> AdminPage(
                             updatingUser = updatingUser,
                             users = usersList,
                             onUserConfirmationRequested = viewModel::confirm,
                             onUserDeleteRequested = viewModel::delete,
+                            confirmingUser = confirmingUser,
+                            onConfirmingUserRequested = viewModel::startUserConfirmation,
+                            onConfirmingUserCancelled = viewModel::cancelUserConfirmation,
                             sections = sections,
                             isCreatingSection = creatingSection,
                             onSectionOperation = viewModel::onCreateOrUpdate,
@@ -142,6 +217,55 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    @Composable
+    fun NotificationContent(
+        notification: Notification,
+        onMarkAsViewed: () -> Unit,
+        onClick: () -> Unit
+    ) {
+        val createdAt = notification.createdAt.toLocalDateTime(TimeZone.currentSystemDefault())
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                AppText(
+                    text = notification.title(),
+                    modifier = Modifier.padding(top = 8.dp),
+                    style = getPlatformTextStyles().label.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        fontStyle = if (notification.viewed) FontStyle.Italic else FontStyle.Normal
+                    )
+                )
+                AppText(
+                    text = notification.message(),
+                    style = getPlatformTextStyles().label.copy(
+                        fontSize = 12.sp,
+                        fontStyle = if (notification.viewed) FontStyle.Italic else FontStyle.Normal
+                    )
+                )
+                AppText(
+                    text = "${createdAt.date} ${createdAt.time.hour}:${createdAt.time.minute}",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = getPlatformTextStyles().label.copy(fontSize = 12.sp)
+                )
+            }
+            if (!notification.viewed) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(Res.string.mark_as_read),
+                    modifier = Modifier.padding(4.dp).clickable(onClick = onMarkAsViewed)
+                )
             }
         }
     }

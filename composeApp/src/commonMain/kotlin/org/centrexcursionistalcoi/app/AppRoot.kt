@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.route.Loading
 import org.centrexcursionistalcoi.app.screen.HomeScreen
 import org.centrexcursionistalcoi.app.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.screen.LoginScreen
+import org.centrexcursionistalcoi.app.screen.NotificationsScreen
 import org.centrexcursionistalcoi.app.screen.RegisterScreen
 import org.centrexcursionistalcoi.app.screen.ReservationScreen
 import org.centrexcursionistalcoi.app.screen.admin.ItemTypeScreen
@@ -69,6 +70,7 @@ fun AppRoot() {
                 composable(RegisterScreen)
                 composable(HomeScreen)
                 composable(ReservationScreen)
+                composable(NotificationsScreen)
 
                 composable(ItemTypeScreen)
             }

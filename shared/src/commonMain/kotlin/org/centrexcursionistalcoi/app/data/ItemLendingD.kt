@@ -15,4 +15,6 @@ data class ItemLendingD(
     override val to: LocalDate? = null,
     override val takenAt: Instant? = null,
     override val returnedAt: Instant? = null
-): IBookingD
+): IBookingD {
+    override fun toString(): String = "#IB$id"
+}
