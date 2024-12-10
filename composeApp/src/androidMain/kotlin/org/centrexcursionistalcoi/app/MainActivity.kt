@@ -51,9 +51,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_BOOKING_ID = "booking_id"
         const val EXTRA_BOOKING_TYPE = "booking_type"
+        const val EXTRA_USER_ID = "user_id"
 
         const val ACTION_BOOKING_CONFIRMED = "org.centrexcursionistalcoi.app.booking_confirmed"
         const val ACTION_BOOKING_CANCELLED = "org.centrexcursionistalcoi.app.booking_cancelled"
+        const val ACTION_USER_CONFIRMED = "org.centrexcursionistalcoi.app.user_confirmed"
     }
 }
 

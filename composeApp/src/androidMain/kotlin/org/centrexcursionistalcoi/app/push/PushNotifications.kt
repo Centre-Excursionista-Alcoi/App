@@ -23,6 +23,7 @@ import org.centrexcursionistalcoi.app.R
 import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
 import org.centrexcursionistalcoi.app.network.AuthBackend
 import org.centrexcursionistalcoi.app.notifications.NotificationChannels
+import org.centrexcursionistalcoi.app.push.payload.AdminUserPayload
 import org.centrexcursionistalcoi.app.push.payload.BookingPayload
 import org.centrexcursionistalcoi.app.serverJson
 import org.jetbrains.compose.resources.getString
@@ -107,6 +108,10 @@ object PushNotifications {
                 val payload = serverJson.decodeFromString(BookingPayload.serializer(), json)
                 showBookingCancelledNotification(context, payload)
             }
+            NotificationType.UserRegistered -> {
+                val payload = serverJson.decodeFromString(AdminUserPayload.serializer(), json)
+                showUserRegisteredNotification(context, payload)
+            }
         }
     }
 
@@ -169,6 +174,23 @@ object PushNotifications {
                 action = MainActivity.ACTION_BOOKING_CANCELLED
                 putExtra(MainActivity.EXTRA_BOOKING_ID, payload.bookingId)
                 putExtra(MainActivity.EXTRA_BOOKING_TYPE, payload.bookingType)
+            }
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun showUserRegisteredNotification(context: Context, payload: AdminUserPayload) {
+        Napier.i { "User registered: ${payload.userId}" }
+
+        showNotification(
+            context,
+            NotificationChannels.CHANNEL_ID_REGISTRATION,
+            payload.hashCode(),
+            getString(Res.string.notification_user_registered_title),
+            getString(Res.string.notification_user_registered_message),
+            MainActivity::class to {
+                action = MainActivity.ACTION_USER_CONFIRMED
+                putExtra(MainActivity.EXTRA_USER_ID, payload.userId)
             }
         )
     }

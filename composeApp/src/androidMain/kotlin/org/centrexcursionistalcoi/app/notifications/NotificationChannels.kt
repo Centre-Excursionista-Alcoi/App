@@ -9,10 +9,12 @@ import androidx.annotation.RequiresApi
 import org.centrexcursionistalcoi.app.R
 
 object NotificationChannels {
-    const val GROUP_ID_BOOKINGS = "bookings"
+    private const val GROUP_ID_BOOKINGS = "bookings"
+    private const val GROUP_ID_ADMIN = "admin"
 
     const val CHANNEL_ID_CONFIRMATION = "confirmation"
     const val CHANNEL_ID_CANCELLATION = "cancellation"
+    const val CHANNEL_ID_REGISTRATION = "registration"
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun Context.bookingsGroup(): NotificationChannelGroup {
@@ -45,6 +47,26 @@ object NotificationChannels {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun Context.adminGroup(): NotificationChannelGroup {
+        return NotificationChannelGroup(GROUP_ID_ADMIN, getString(R.string.group_name_admin_name)).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                description = getString(R.string.group_name_admin_description)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun Context.userRegistrationsChannel(): NotificationChannel {
+        val name = getString(R.string.channel_name_admin_registration_name)
+        val descriptionText = getString(R.string.channel_name_admin_registration_description)
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        return NotificationChannel(CHANNEL_ID_REGISTRATION, name, importance).apply {
+            description = descriptionText
+            group = GROUP_ID_ADMIN
+        }
+    }
+
     fun create(context: Context) {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is not in the Support Library.
@@ -55,14 +77,16 @@ object NotificationChannels {
 
             notificationManager.createNotificationChannelGroups(
                 listOf(
-                    context.bookingsGroup()
+                    context.bookingsGroup(),
+                    context.adminGroup()
                 )
             )
 
             notificationManager.createNotificationChannels(
                 listOf(
                     context.bookingConfirmationsChannel(),
-                    context.bookingCancellationsChannel()
+                    context.bookingCancellationsChannel(),
+                    context.userRegistrationsChannel()
                 )
             )
         }

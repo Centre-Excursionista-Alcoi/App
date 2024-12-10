@@ -203,4 +203,6 @@
     <string name="notification_booking_confirmed_message">Your booking has been confirmed</string>
     <string name="notification_booking_cancelled_title">Booking cancelled</string>
     <string name="notification_booking_cancelled_message">Your booking has been cancelled</string>
+    <string name="notification_user_registered_title">User registered</string>
+    <string name="notification_user_registered_message">A new user has been registered. Please check it out and confirm it.</string>
 </resources>

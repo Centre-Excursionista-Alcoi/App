@@ -9,5 +9,11 @@
     <string name="channel_name_cancellation_name">Booking Cancellations</string>
     <string name="channel_name_cancellation_description">Will notify you whenever a booking you\'ve made is cancelled.</string>
 
+    <string name="group_name_admin_name">Admin</string>
+    <string name="group_name_admin_description">If you are an admin, you will receive some extra kind of notifications.</string>
+
+    <string name="channel_name_admin_registration_name">User Registrations</string>
+    <string name="channel_name_admin_registration_description">Will notify you whenever a new user has registered and needs confirmation.</string>
+
     <string name="fcm_token">FCM Token</string>
 </resources>
