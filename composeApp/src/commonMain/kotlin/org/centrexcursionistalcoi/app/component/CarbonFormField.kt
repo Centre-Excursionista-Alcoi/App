@@ -20,6 +20,8 @@ import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
 import com.gabrieldrn.carbon.textinput.TextInputState
 import org.centrexcursionistalcoi.app.modifier.autofill
+import org.centrexcursionistalcoi.app.utils.applyIf
+import org.centrexcursionistalcoi.app.utils.applyIfNotNull
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -42,33 +44,23 @@ fun CarbonFormField(
     val keyboard = LocalSoftwareKeyboardController.current
 
     val mod = Modifier
-        .let { mod ->
-            thisFocusRequester?.let { mod.focusRequester(it) } ?: mod
-        }
-        .let { mod ->
-            if (nextFocusRequester != null || previousFocusRequester != null) {
-                mod.focusProperties {
-                    previousFocusRequester?.let {
-                        previous = it
-                        left = it
-                        up = it
-                    }
-                    nextFocusRequester?.let {
-                        next = it
-                        right = it
-                        down = it
-                    }
+        .applyIfNotNull(thisFocusRequester, Modifier::focusRequester)
+        .applyIfNotNull(previousFocusRequester, nextFocusRequester, condition = Boolean::or) { (pfr, nfr) ->
+            focusProperties {
+                pfr?.let {
+                    previous = it
+                    left = it
+                    up = it
                 }
-            } else {
-                mod
+                nfr?.let {
+                    next = it
+                    right = it
+                    down = it
+                }
             }
         }
-        .let { mod ->
-            if (autofillTypes.isNullOrEmpty()) {
-                mod
-            } else {
-                mod.autofill(autofillTypes) { onValueChange(it) }
-            }
+        .applyIf({ !autofillTypes.isNullOrEmpty() }) {
+            autofill(autofillTypes!!) { onValueChange(it) }
         }
         .then(modifier)
     val imeAction = if (nextFocusRequester != null) {

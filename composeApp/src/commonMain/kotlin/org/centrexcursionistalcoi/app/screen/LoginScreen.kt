@@ -12,9 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -29,7 +27,6 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformFormField
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
 import org.centrexcursionistalcoi.app.route.Login
 import org.centrexcursionistalcoi.app.route.Register
-import org.centrexcursionistalcoi.app.validation.isValidEmail
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -42,14 +39,12 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
         val isLoading by viewModel.isLoading.collectAsState()
         val error by viewModel.error.collectAsState()
 
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
+        val credentials by viewModel.credentials.collectAsState()
+        val fieldsValid by viewModel.valid.collectAsState()
+        val (email, password) = credentials
 
         val emailFocusRequester = remember { FocusRequester() }
         val passwordFocusRequester = remember { FocusRequester() }
-
-        val fieldsValid =
-            remember(email, password) { email.isNotBlank() && email.isValidEmail && password.isNotBlank() }
 
         Column(
             modifier = Modifier
@@ -65,7 +60,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
 
             PlatformFormField(
                 value = email,
-                onValueChange = { email = it; viewModel.clearError() },
+                onValueChange = viewModel::setEmail,
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,11 +70,11 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 nextFocusRequester = passwordFocusRequester,
                 error = error?.let { "" }, // Do not show any message, just show in red
                 autofillTypes = listOf(AutofillType.EmailAddress),
-                onSubmit = { if (fieldsValid) viewModel.login(navController, email, password) }
+                onSubmit = { viewModel.login(navController) }
             )
             PlatformFormField(
                 value = password,
-                onValueChange = { password = it; viewModel.clearError() },
+                onValueChange = viewModel::setPassword,
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -89,7 +84,7 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                 isPassword = true,
                 error = error,
                 autofillTypes = listOf(AutofillType.Password),
-                onSubmit = { if (fieldsValid) viewModel.login(navController, email, password) }
+                onSubmit = { viewModel.login(navController) }
             )
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -100,17 +95,13 @@ object LoginScreen : Screen<Login, LoginViewModel>(::LoginViewModel) {
                     text = stringResource(Res.string.login_no_account),
                     style = getPlatformTextStyles().label,
                     modifier = Modifier
-                        .clickable {
-                            navController.navigate(Register)
-                        }
+                        .clickable { navController.navigate(Register) }
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
                 PlatformButton(
                     text = stringResource(Res.string.login_button),
                     enabled = !isLoading && fieldsValid,
-                ) {
-                    viewModel.login(navController, email, password)
-                }
+                ) { viewModel.login(navController) }
             }
         }
     }
