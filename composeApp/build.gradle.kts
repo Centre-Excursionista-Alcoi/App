@@ -22,6 +22,7 @@ plugins {
 }
 
 val appVersion = file("version.txt").readText()
+val versionCode = file("code.txt").readText()
 
 fun readPropertiesFile(path: String): Properties? {
     val file = rootProject.file(path)
@@ -137,6 +138,9 @@ kotlin {
             implementation(libs.room.bundledSqlite)
             implementation(libs.room.runtime)
 
+            // QR Code Generation
+            implementation(libs.qrose)
+
             implementation(projects.shared)
         }
         androidMain.dependencies {
@@ -228,6 +232,7 @@ buildkonfig {
 
     defaultConfigs {
         buildConfigField(STRING, "VERSION", appVersion)
+        buildConfigField(STRING, "CODE", versionCode)
 
         buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "app.cea.escalaralcoiaicomtat.org")
         buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "443")
