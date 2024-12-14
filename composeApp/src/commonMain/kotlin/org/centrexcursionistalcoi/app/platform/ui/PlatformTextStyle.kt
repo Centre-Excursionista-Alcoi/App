@@ -13,3 +13,5 @@ class PlatformTextStyles(
 
 @Composable
 expect fun getPlatformTextStyles(): PlatformTextStyles
+
+val LocalTextStyles @Composable get() = getPlatformTextStyles()

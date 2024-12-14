@@ -39,6 +39,7 @@ logback = "1.5.12"
 multiplatform-settings = "1.3.0"
 napier = "2.7.1"
 postgresql = "42.7.4"
+qrose = "1.0.1"
 room = "2.7.0-alpha12"
 
 [libraries]
@@ -99,6 +100,7 @@ multiplatformSettings-makeObservable = { module = "com.russhwolf:multiplatform-s
 multiplatformSettings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "multiplatform-settings" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 room-bundledSqlite = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite-bundled" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

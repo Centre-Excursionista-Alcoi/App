@@ -23,6 +23,7 @@ import org.centrexcursionistalcoi.app.screen.LoginScreen
 import org.centrexcursionistalcoi.app.screen.NotificationsScreen
 import org.centrexcursionistalcoi.app.screen.RegisterScreen
 import org.centrexcursionistalcoi.app.screen.ReservationScreen
+import org.centrexcursionistalcoi.app.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.screen.admin.ItemTypeScreen
 import org.centrexcursionistalcoi.app.screen.composable
 import org.jetbrains.compose.resources.stringResource
@@ -71,6 +72,7 @@ fun AppRoot() {
                 composable(HomeScreen)
                 composable(ReservationScreen)
                 composable(NotificationsScreen)
+                composable(SettingsScreen)
 
                 composable(ItemTypeScreen)
             }
