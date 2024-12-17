@@ -103,3 +103,4 @@ fabric.properties
 
 GoogleService-Info.plist
 secrets.properties
+sentry.txt

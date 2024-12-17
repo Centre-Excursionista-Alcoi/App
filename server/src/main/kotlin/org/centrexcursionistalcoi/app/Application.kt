@@ -19,6 +19,8 @@ fun main() = runBlocking {
 }
 
 private suspend fun start() {
+    Sentry.initializeSentry()
+
     withTimeout(10_000) {
         val databaseUrl = System.getenv("DATABASE_URL") ?: "jdbc:h2:file:./CEA"
         val databaseDriver = System.getenv("DATABASE_DRIVER") ?: "org.h2.Driver"
