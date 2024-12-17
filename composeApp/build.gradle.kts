@@ -13,8 +13,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.firebaseAppDistribution)
-    alias(libs.plugins.firebaseCrashlytics)
-    alias(libs.plugins.firebasePerformance)
     alias(libs.plugins.gms)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
@@ -152,11 +150,6 @@ kotlin {
             implementation(libs.compose.googlefonts)
 
             implementation(libs.ktor.client.okhttp)
-
-            implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.firebase.analytics)
-            implementation(libs.firebase.crashlytics)
-            implementation(libs.firebase.perf)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
