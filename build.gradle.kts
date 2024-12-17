@@ -13,5 +13,6 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.ktor) apply false
     alias(libs.plugins.room) apply false
+    alias(libs.plugins.sentry) apply false
     alias(libs.plugins.serialization) apply false
 }

@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.auth.AccountManager
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.roomDatabaseBuilder
 import org.centrexcursionistalcoi.app.push.AndroidPushNotifications
+import org.centrexcursionistalcoi.app.sentry.initializeSentry
 import org.centrexcursionistalcoi.app.settings.createDataStore
 import org.centrexcursionistalcoi.app.settings.dataStore
 
@@ -15,6 +16,8 @@ class BaseApp : Application() {
         super.onCreate()
 
         Napier.base(DebugAntilog())
+
+        initializeSentry()
 
         dataStore = createDataStore(this)
         roomDatabaseBuilder = getDatabaseBuilder(this)

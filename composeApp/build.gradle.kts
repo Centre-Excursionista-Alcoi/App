@@ -16,6 +16,7 @@ plugins {
     alias(libs.plugins.gms)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.sentry)
     alias(libs.plugins.serialization)
 }
 
@@ -230,6 +231,10 @@ buildkonfig {
         buildConfigField(STRING, "BACKEND_HOST", System.getenv("BACKEND_HOST") ?: "app.cea.escalaralcoiaicomtat.org")
         buildConfigField(INT, "BACKEND_PORT", System.getenv("BACKEND_PORT") ?: "443")
         buildConfigField(BOOLEAN, "BACKEND_HTTPS", System.getenv("BACKEND_HTTPS") ?: "true")
+
+        val secrets = readPropertiesFile("secrets.properties")
+        val sentryDsn = secrets?.get("SENTRY_DSN") as String? ?: error("SENTRY_DSN not found in secrets.properties")
+        buildConfigField(STRING, "SENTRY_DSN", sentryDsn)
     }
 }
 

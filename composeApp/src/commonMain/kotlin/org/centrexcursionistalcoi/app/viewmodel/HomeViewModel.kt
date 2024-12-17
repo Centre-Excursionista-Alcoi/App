@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.auth.AccountManager
+import org.centrexcursionistalcoi.app.auth.AccountRepository
 import org.centrexcursionistalcoi.app.data.UserD
 import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.entity.BookingEntity
@@ -99,7 +99,7 @@ class HomeViewModel : AdminViewModel() {
 
     fun logout() {
         launch {
-            AccountManager.logout()
+            AccountRepository.logout()
         }
     }
 

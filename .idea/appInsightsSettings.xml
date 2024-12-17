@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="org.centrexcursionistalcoi.app" />
+                  <option name="mobileSdkAppId" value="1:1000901057714:android:b52c63233030d4d0d47dab" />
+                  <option name="projectId" value="centre-excursionista-d-alcoi" />
+                  <option name="projectNumber" value="1000901057714" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
