@@ -11,10 +11,13 @@ import io.github.aakira.napier.Napier
 import java.io.File
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.roomDatabaseBuilder
+import org.centrexcursionistalcoi.app.sentry.initializeSentry
 import org.jetbrains.compose.resources.painterResource
 
 fun main() {
     Napier.base(DebugAntilog())
+
+    initializeSentry()
 
     roomDatabaseBuilder = getDatabaseBuilder()
 

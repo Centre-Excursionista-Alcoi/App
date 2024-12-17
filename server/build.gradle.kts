@@ -1,10 +1,12 @@
 import io.ktor.plugin.features.DockerImageRegistry
 import io.ktor.plugin.features.DockerPortMapping
 import io.ktor.plugin.features.DockerPortMappingProtocol
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
+    alias(libs.plugins.sentry.jvm)
     alias(libs.plugins.serialization)
     application
 }
@@ -15,6 +17,16 @@ version = System.getenv("VERSION") ?: "development"
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
     // applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+}
+
+val secretsDir = layout.buildDirectory.dir("secrets")
+
+sourceSets {
+    main {
+        resources {
+            srcDir(secretsDir)
+        }
+    }
 }
 
 dependencies {
@@ -71,3 +83,39 @@ ktor {
         )
     }
 }
+
+fun readPropertiesFile(path: String): Properties? {
+    val file = rootProject.file(path)
+    if (!file.exists()) {
+        return null
+    }
+    val props = Properties()
+    file.inputStream().use { props.load(it) }
+    return props
+}
+
+sentry {
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    includeSourceContext = true
+
+    org = "centre-excursionista-alcoi"
+    projectName = "server"
+
+    val secrets = readPropertiesFile("secrets.properties")
+    val token = secrets?.get("SENTRY_AUTH_TOKEN_SERVER") as String? ?: error("SENTRY_AUTH_TOKEN_SERVER not found in secrets.properties")
+    authToken = token
+}
+
+val copySentryDsnTask = task("copySentryDsn") {
+    val secrets = readPropertiesFile("secrets.properties")
+    val sentryDsn = secrets?.get("SENTRY_DSN_SERVER") as String? ?: error("SENTRY_DSN_SERVER not found in secrets.properties")
+    
+    val secretsDir = secretsDir.get()
+    secretsDir.asFile.mkdirs()
+
+    val dsnFile = secretsDir.file("sentry_dsn.txt").asFile
+    dsnFile.outputStream().bufferedWriter().use { output -> output.write(sentryDsn) }
+}
+tasks.getByName("build").dependsOn += copySentryDsnTask

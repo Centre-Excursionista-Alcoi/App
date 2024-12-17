@@ -11,12 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.centrexcursionistalcoi.app.auth.Account
-import org.centrexcursionistalcoi.app.auth.AccountManager
+import org.centrexcursionistalcoi.app.auth.AccountRepository
 import org.centrexcursionistalcoi.app.error.AuthException
 import org.centrexcursionistalcoi.app.error.ServerException
-import org.centrexcursionistalcoi.app.network.AuthBackend
-import org.centrexcursionistalcoi.app.push.PushNotifications
 import org.centrexcursionistalcoi.app.route.Loading
 import org.centrexcursionistalcoi.app.validation.isValidEmail
 import org.jetbrains.compose.resources.getString
@@ -53,11 +50,8 @@ class LoginViewModel : ViewModel() {
         try {
             _isLoading.emit(true)
             val (email, password) = credentials.value
-            Napier.i { "Logging is as $email..." }
-            AuthBackend.login(email, password)
-            Napier.i { "Logged in successfully." }
-            AccountManager.put(Account(email), password)
-            PushNotifications.refreshTokenOnServer()
+            AccountRepository.login(email, password)
+
             uiThread {
                 navController.navigate(Loading)
             }

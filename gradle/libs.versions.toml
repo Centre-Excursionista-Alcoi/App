@@ -20,9 +20,6 @@ datastore = "1.1.1"
 exposed = "0.57.0"
 firebase-admin = "9.4.2"
 firebase-appdistribution = "5.0.0"
-firebase-bom = "33.7.0"
-firebase-crashlytics = "3.0.2"
-firebase-perf = "1.4.2"
 google-services = "4.4.2"
 h2 = "2.3.232"
 javax-money = "1.1"
@@ -41,6 +38,8 @@ napier = "2.7.1"
 postgresql = "42.7.4"
 qrose = "1.0.1"
 room = "2.7.0-alpha12"
+sentry-jvm = "4.14.1"
+sentry-multiplatform = "0.10.0"
 
 [libraries]
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -66,10 +65,6 @@ exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "e
 exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
-firebase-perf = { module = "com.google.firebase:firebase-perf" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 javax-money-api = { module = "javax.money:money-api", version.ref = "javax-money" }
 javax-money-impl = { module = "org.javamoney:moneta", version.ref = "javamoney" }
@@ -112,12 +107,12 @@ buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig"
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 firebaseAppDistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appdistribution" }
-firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
-firebasePerformance = { id = "com.google.firebase.firebase-perf", version.ref = "firebase-perf" }
 gms = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 room = { id = "androidx.room", version.ref = "room" }
+sentry-jvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry-jvm" }
+sentry-multiplatform = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry-multiplatform" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
