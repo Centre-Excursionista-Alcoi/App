@@ -7,11 +7,11 @@ object Sentry {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun initializeSentry() {
-        val sentryDsn = this::class.java
-            .getResourceAsStream("/sentry_dsn.txt")
-            ?.bufferedReader()
-            ?.use { it.readText() }
-            ?: error("Could not find sentry_dsn.txt resource. Try running the copySentryDsn task.")
+        val sentryDsn = System.getenv("SENTRY_DSN")
+        if (sentryDsn == null) {
+            logger.warn("SENTRY_DSN environment variable not set. Sentry won't be enabled.")
+            return
+        }
 
         Sentry.init { options ->
             options.dsn = sentryDsn

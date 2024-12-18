@@ -19,16 +19,6 @@ application {
     // applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
-val secretsDir = layout.buildDirectory.dir("secrets")
-
-sourceSets {
-    main {
-        resources {
-            srcDir(secretsDir)
-        }
-    }
-}
-
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
@@ -107,15 +97,3 @@ sentry {
     val token = secrets?.get("SENTRY_AUTH_TOKEN_SERVER") as String? ?: error("SENTRY_AUTH_TOKEN_SERVER not found in secrets.properties")
     authToken = token
 }
-
-val copySentryDsnTask = task("copySentryDsn") {
-    val secrets = readPropertiesFile("secrets.properties")
-    val sentryDsn = secrets?.get("SENTRY_DSN_SERVER") as String? ?: error("SENTRY_DSN_SERVER not found in secrets.properties")
-    
-    val secretsDir = secretsDir.get()
-    secretsDir.asFile.mkdirs()
-
-    val dsnFile = secretsDir.file("sentry_dsn.txt").asFile
-    dsnFile.outputStream().bufferedWriter().use { output -> output.write(sentryDsn) }
-}
-tasks.getByName("build").dependsOn += copySentryDsnTask
