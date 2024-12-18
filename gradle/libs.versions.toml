@@ -38,6 +38,7 @@ napier = "2.7.1"
 postgresql = "42.7.4"
 qrose = "1.0.1"
 room = "2.7.0-alpha12"
+sentry-java = "7.19.0"
 sentry-jvm = "4.14.1"
 sentry-multiplatform = "0.10.0"
 
@@ -99,6 +100,7 @@ qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 room-bundledSqlite = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite-bundled" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+sentry-javaIo = { module = "io.sentry:sentry", version.ref = "sentry-java" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
