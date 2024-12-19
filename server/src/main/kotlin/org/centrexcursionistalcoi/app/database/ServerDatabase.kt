@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
+import io.sentry.Sentry
+import io.sentry.SpanStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -20,6 +22,7 @@ import org.centrexcursionistalcoi.app.database.table.UsersTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 
@@ -73,11 +76,18 @@ object ServerDatabase {
         }
     }
 
-    suspend operator fun <R> invoke(block: () -> R): R {
+    suspend operator fun <R> invoke(operation: String? = null, block: Transaction.() -> R): R {
         return withContext(Dispatchers.IO) {
             databaseMutex.withPermit {
-                transaction(instance) {
-                    block()
+                val transaction = if (operation != null) Sentry.startTransaction("Database", operation) else null
+                try {
+                    transaction(instance, block)
+                } catch (e: Exception) {
+                    transaction?.throwable = e
+                    transaction?.status = SpanStatus.INTERNAL_ERROR
+                    throw e
+                } finally {
+                    transaction?.finish()
                 }
             }
         }

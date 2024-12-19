@@ -6,10 +6,14 @@ import org.slf4j.LoggerFactory
 object Sentry {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    var isInitialized: Boolean = false
+        private set
+
     fun initializeSentry() {
         val sentryDsn = System.getenv("SENTRY_DSN")
         if (sentryDsn == null) {
             logger.warn("SENTRY_DSN environment variable not set. Sentry won't be enabled.")
+            isInitialized = false
             return
         }
 
@@ -23,5 +27,6 @@ object Sentry {
         }
 
         logger.info("Sentry is ready")
+        isInitialized = true
     }
 }

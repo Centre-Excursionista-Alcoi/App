@@ -1,6 +1,11 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Start Server" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="SENTRY_DSN" value="https://437eafa8ef760e67649d0b9b440dc926@o4508483970334720.ingest.de.sentry.io/4508484310925392" />
+        </map>
+      </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
