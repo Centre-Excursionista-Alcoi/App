@@ -37,7 +37,7 @@ actual fun PlatformScaffold(
 
     Scaffold(
         topBar = {
-            if (title != null || actions.isNotEmpty()) {
+            if (title != null || actions.isNotEmpty() || onBack != null) {
                 TopAppBar(
                     title = { title?.let { Text(it) } },
                     navigationIcon = {

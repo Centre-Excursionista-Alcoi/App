@@ -35,8 +35,6 @@ fun AdminPage(
     sections: List<Section>?,
     onSectionOperation: (Section, onCreate: () -> Unit) -> Unit,
     itemTypes: List<ItemType>?,
-    isCreatingType: Boolean,
-    onTypeOperation: (ItemType, onCreate: () -> Unit) -> Unit,
     items: List<Item>?,
     allItemBookings: List<ItemBooking>?,
     allSpaceBookings: List<SpaceBooking>?,
@@ -85,7 +83,7 @@ fun AdminPage(
 
         SectionsCard(sections, isCreatingSection, onSectionOperation)
 
-        TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
+        TypesCard(itemTypes)
 
         // ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
 
