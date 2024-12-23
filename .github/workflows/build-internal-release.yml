@@ -138,6 +138,13 @@ jobs:
           echo "$GOOGLE_SERVICE_ACCOUNT_KEY_BASE64" > serviceAccountKey.base64
           base64 --decode serviceAccountKey.base64 > ./server/serviceAccountKey.json
 
+      - name: Import Secrets
+        env:
+          SECRETS_BASE64: ${{ secrets.SECRETS_BASE64 }}
+        run: |
+          echo "$SECRETS_BASE64" > secrets.base64
+          base64 --decode secrets.base64 > ./secrets.properties
+
       - name: Release with Firebase App Distribution
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
