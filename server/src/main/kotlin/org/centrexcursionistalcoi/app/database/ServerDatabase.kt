@@ -76,10 +76,14 @@ object ServerDatabase {
         }
     }
 
-    suspend operator fun <R> invoke(operation: String? = null, block: Transaction.() -> R): R {
+    suspend operator fun <R> invoke(scope: String? = null, operation: String? = null, block: Transaction.() -> R): R {
         return withContext(Dispatchers.IO) {
             databaseMutex.withPermit {
-                val transaction = if (operation != null) Sentry.startTransaction("Database", operation) else null
+                val transaction = if (operation != null) {
+                    Sentry.startTransaction(scope?.let { "Database-$it" } ?: "Database", operation)
+                } else {
+                    null
+                }
                 try {
                     transaction(instance, block)
                 } catch (e: Exception) {

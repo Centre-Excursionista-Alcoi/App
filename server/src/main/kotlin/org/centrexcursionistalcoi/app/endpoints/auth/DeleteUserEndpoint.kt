@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.RoutingContext
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.database.utils.findUserById
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
 
@@ -20,14 +21,14 @@ object DeleteUserEndpoint: SecureEndpoint("/users/{id}", HttpMethod.Delete) {
             respondFailure(Errors.InvalidRequest)
             return
         }
-        val confirmUser = ServerDatabase { User.findById(id) }
+        val confirmUser = findUserById(id)
         if (confirmUser == null) {
             respondFailure(Errors.UserNotFound)
             return
         }
 
         // Confirm it
-        ServerDatabase { user.delete() }
+        ServerDatabase("DeleteUserEndpoint", "deleteUser") { user.delete() }
 
         respondSuccess(HttpStatusCode.Accepted)
     }

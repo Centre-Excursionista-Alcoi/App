@@ -33,7 +33,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     // Verify that the booking is valid
     val bookingId = call.parameters["id"]?.toIntOrNull()
     val booking = bookingId?.let {
-        ServerDatabase { entityClass.findById(it) }
+        ServerDatabase("ConfirmBooking", "find${entityClass::class.simpleName}ById") { entityClass.findById(it) }
     }
     if (booking == null) {
         respondFailure(Errors.ObjectNotFound)
@@ -41,7 +41,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     }
 
     // Confirm the booking
-    ServerDatabase {
+    ServerDatabase("ConfirmBooking", "confirmBooking") {
         booking.confirmed = true
     }
 

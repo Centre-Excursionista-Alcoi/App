@@ -1,3 +1,5 @@
+@file:Suppress("UnusedReceiverParameter")
+
 package org.centrexcursionistalcoi.app.database.utils
 
 import java.time.LocalDate
@@ -17,6 +19,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingsTable
 import org.centrexcursionistalcoi.app.database.table.SpaceBookingsTable
 import org.centrexcursionistalcoi.app.database.table.SpacesTable
 import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 
 /**
@@ -28,7 +31,7 @@ import org.jetbrains.exposed.sql.and
  *
  * **Must be called within a transaction.**
  */
-fun <BookingD : IBookingD, Entity : BookingEntity<BookingD>, EntityClass : IntEntityClass<Entity>, Table : BookingTable> lendingsForDates(
+fun <BookingD : IBookingD, Entity : BookingEntity<BookingD>, EntityClass : IntEntityClass<Entity>, Table : BookingTable> Transaction.lendingsForDates(
     from: LocalDate,
     to: LocalDate,
     entityClass: EntityClass,
@@ -48,7 +51,7 @@ fun <BookingD : IBookingD, Entity : BookingEntity<BookingD>, EntityClass : IntEn
  *
  * **Must be called within a transaction.**
  */
-fun itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
+fun Transaction.itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
     // Fetch all items in the database
     val allItems = Item.all().map(Item::serializable)
     // Fetch the existing lendings that overlap with the requested period
@@ -66,7 +69,7 @@ fun itemsAvailableForDates(from: LocalDate, to: LocalDate): List<ItemD> {
  * **Must be called within a transaction.**
  */
 @OptIn(ExperimentalEncodingApi::class)
-fun spacesAvailableForDates(from: LocalDate, to: LocalDate): List<SpaceD> {
+fun Transaction.spacesAvailableForDates(from: LocalDate, to: LocalDate): List<SpaceD> {
     // Fetch the existing lendings that overlap with the requested period
     val usedSpacesIds = lendingsForDates(from, to, SpaceBooking, SpaceBookingsTable).mapNotNull { it.spaceId }
     // Return all the spaces in the database that are not used

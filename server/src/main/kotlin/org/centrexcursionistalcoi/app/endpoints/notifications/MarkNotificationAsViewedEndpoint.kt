@@ -12,14 +12,14 @@ object MarkNotificationAsViewedEndpoint : SecureEndpoint("/notifications/{id}/ma
     override suspend fun RoutingContext.secureBody(user: User) {
         val notificationId = call.parameters["id"]?.toIntOrNull()
         val notification = notificationId?.let { id ->
-            ServerDatabase { Notification.findById(id) }
+            ServerDatabase("MarkNotificationAsViewedEndpoint", "findById") { Notification.findById(id) }
         }
         if (notification == null) {
             respondFailure(Errors.ObjectNotFound)
             return
         }
 
-        ServerDatabase {
+        ServerDatabase("MarkNotificationAsViewedEndpoint", "markAsViewed") {
             notification.viewed = true
         }
 

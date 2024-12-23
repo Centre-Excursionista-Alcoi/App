@@ -8,8 +8,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import org.centrexcursionistalcoi.app.data.ItemTypeD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.ItemType
-import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.database.utils.findSectionById
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
 
@@ -29,13 +29,13 @@ object CreateTypesEndpoint : SecureEndpoint("/inventory/types", HttpMethod.Post)
             respondFailure(Errors.InvalidRequest)
             return
         }
-        val itemSection = ServerDatabase { Section.findById(sectionId) }
+        val itemSection = findSectionById(sectionId)
         if (itemSection == null) {
             respondFailure(Errors.InvalidRequest)
             return
         }
 
-        ServerDatabase {
+        ServerDatabase("CreateTypesEndpoint", "createItemType") {
             ItemType.new {
                 title = body.title
                 description = body.description

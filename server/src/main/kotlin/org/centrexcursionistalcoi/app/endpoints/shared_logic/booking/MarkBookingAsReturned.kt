@@ -26,7 +26,9 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     val booking = call.parameters["id"]
         ?.toIntOrNull()
         ?.let {
-            ServerDatabase { entityClass.findById(it) }
+            ServerDatabase("MarkBookingAsReturned", "find${entityClass::class.simpleName}ById") {
+                entityClass.findById(it)
+            }
         }
     if (booking == null) {
         respondFailure(Errors.ObjectNotFound)
@@ -52,7 +54,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     }
 
     // Mark the booking as taken
-    ServerDatabase {
+    ServerDatabase("MarkBookingAsReturned", "setReturnedAt") {
         booking.returnedAt = Instant.now()
     }
 

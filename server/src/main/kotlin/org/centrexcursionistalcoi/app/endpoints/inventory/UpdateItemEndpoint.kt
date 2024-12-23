@@ -23,7 +23,7 @@ object UpdateItemEndpoint : SecureEndpoint("/inventory/items", HttpMethod.Patch)
             respondFailure(Errors.MissingId)
             return
         }
-        val result = ServerDatabase {
+        val result = ServerDatabase("UpdateItemEndpoint", "findItemById") {
             val item = Item.findById(id)
             if (item == null) {
                 null

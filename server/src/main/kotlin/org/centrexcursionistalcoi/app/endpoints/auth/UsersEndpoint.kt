@@ -16,7 +16,7 @@ object UsersEndpoint: SecureEndpoint("/users", HttpMethod.Get) {
             return
         }
 
-        val users = ServerDatabase { User.all().map(User::serializable) }
+        val users = ServerDatabase("UsersEndpoint", "getUsers") { User.all().map(User::serializable) }
         respondSuccess(users, ListSerializer(UserD.serializer()))
     }
 }
