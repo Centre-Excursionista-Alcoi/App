@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.data.enumeration.NotificationType
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.User
 import org.centrexcursionistalcoi.app.database.table.UsersTable
+import org.centrexcursionistalcoi.app.database.utils.findUserById
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.push.FCM
 import org.centrexcursionistalcoi.app.push.payload.AdminNotificationType
@@ -32,7 +33,7 @@ object RegisterEndpoint: BasicAuthEndpoint("/register") {
         }
 
         // Make sure the user doesn't exist
-        val userExists = ServerDatabase { User.findById(email) != null }
+        val userExists = findUserById(email) != null
         if (userExists) {
             respondFailure(Errors.UserAlreadyExists)
             return
@@ -49,7 +50,7 @@ object RegisterEndpoint: BasicAuthEndpoint("/register") {
         val passwordSalt = Passwords.generateSalt()
         val passwordHash = Passwords.hash(password, passwordSalt)
 
-        ServerDatabase {
+        ServerDatabase("RegisterEndpoint", "createUser") {
             User.new(email) {
                 name = body.name
                 familyName = body.familyName

@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 
 object NotificationsEndpoint : SecureEndpoint("/notifications", HttpMethod.Get) {
     override suspend fun RoutingContext.secureBody(user: User) {
-        val notifications = ServerDatabase {
+        val notifications = ServerDatabase("NotificationsEndpoint", "findList") {
             Notification.find { NotificationsTable.userId eq user.id }
                 .map(Notification::serializable)
         }

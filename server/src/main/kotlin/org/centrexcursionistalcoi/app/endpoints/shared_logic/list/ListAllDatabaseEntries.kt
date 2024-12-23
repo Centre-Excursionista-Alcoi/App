@@ -22,7 +22,7 @@ suspend fun <Serializable : DatabaseData, Entity : SerializableEntity<Serializab
         return
     }
 
-    val list = ServerDatabase {
+    val list = ServerDatabase("List${entityClass::class.simpleName}sEndpoint", "listAllDatabaseEntries") {
         entityClass.all().map { it.serializable() }
     }
     respondSuccess(list, ListSerializer(elementSerializer))

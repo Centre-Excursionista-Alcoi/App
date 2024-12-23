@@ -22,7 +22,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     // Verify that the booking is valid
     val bookingId = call.parameters["id"]?.toIntOrNull()
     val booking = bookingId?.let {
-        ServerDatabase { entityClass.findById(it) }
+        ServerDatabase("DeleteBooking", "findBookingById") { entityClass.findById(it) }
     }
     if (booking == null) {
         respondFailure(Errors.ObjectNotFound)
@@ -44,12 +44,12 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     }
 
     // Mark the booking as taken
-    ServerDatabase {
+    ServerDatabase("DeleteBooking", "deleteBooking") {
         booking.delete()
     }
 
     if (bookingUserId != userId) {
-        val notification = ServerDatabase {
+        val notification = ServerDatabase("DeleteBooking", "createNotification") {
             Notification.new {
                 this.type = NotificationType.BookingCancelled
                 this.payload = BookingPayload(

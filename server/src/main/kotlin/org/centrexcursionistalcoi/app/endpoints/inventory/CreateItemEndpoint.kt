@@ -7,8 +7,8 @@ import io.ktor.server.routing.RoutingContext
 import org.centrexcursionistalcoi.app.data.ItemD
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.entity.Item
-import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.database.utils.findItemTypeById
 import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 import org.centrexcursionistalcoi.app.server.response.Errors
 
@@ -25,12 +25,12 @@ object CreateItemEndpoint : SecureEndpoint("/inventory/items", HttpMethod.Post) 
             respondFailure(Errors.MissingReferenceId)
             return
         }
-        val itemType = ServerDatabase { ItemType.findById(typeId) }
+        val itemType = findItemTypeById(typeId)
         if (itemType == null) {
             respondFailure(Errors.ReferenceNotFound)
             return
         }
-        ServerDatabase {
+        ServerDatabase("CreateItemEndpoint", "createItem") {
             Item.new {
                 health = body.health
                 notes = body.notes

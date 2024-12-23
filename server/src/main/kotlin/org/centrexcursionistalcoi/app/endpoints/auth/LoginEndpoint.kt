@@ -5,9 +5,8 @@ import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
-import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.SessionsDatabase
-import org.centrexcursionistalcoi.app.database.entity.User
+import org.centrexcursionistalcoi.app.database.utils.findUserById
 import org.centrexcursionistalcoi.app.endpoints.model.BasicAuthEndpoint
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -23,7 +22,7 @@ object LoginEndpoint : BasicAuthEndpoint("/login") {
         }
 
         // Find the user
-        val user = ServerDatabase { User.findById(username.lowercase()) }
+        val user = findUserById(username.lowercase())
         if (user == null) {
             respondFailure(Errors.WrongCredentials)
             return

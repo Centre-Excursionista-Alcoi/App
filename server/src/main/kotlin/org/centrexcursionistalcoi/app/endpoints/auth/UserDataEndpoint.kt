@@ -9,7 +9,7 @@ import org.centrexcursionistalcoi.app.endpoints.model.SecureEndpoint
 
 object UserDataEndpoint: SecureEndpoint("/me", HttpMethod.Get) {
     override suspend fun RoutingContext.secureBody(user: User) {
-        val response = ServerDatabase { user.serializable() }
+        val response = ServerDatabase("UserDataEndpoint", "serializeUser") { user.serializable() }
         respondSuccess(response, UserD.serializer())
     }
 }

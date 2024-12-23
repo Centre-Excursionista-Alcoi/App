@@ -26,7 +26,9 @@ object BookItemEndpoint : SecureEndpoint("/lending", HttpMethod.Post) {
         val body = call.receive<LendingRequest>()
 
         // Verify that the items exist
-        val someItemDoesntExist = ServerDatabase { body.itemIds.any { Item.findById(it) == null } }
+        val someItemDoesntExist = ServerDatabase("BookItemEndpoint", "findItemById") {
+            body.itemIds.any { Item.findById(it) == null }
+        }
         if (someItemDoesntExist) {
             respondFailure(Errors.ObjectNotFound)
             return
@@ -36,7 +38,9 @@ object BookItemEndpoint : SecureEndpoint("/lending", HttpMethod.Post) {
         val from = body.from.toJavaLocalDate()
         val to = body.to.toJavaLocalDate()
         val requestedItemsIds = body.itemIds
-        val availableItemsIds = ServerDatabase { itemsAvailableForDates(from, to) }.map(ItemD::id)
+        val availableItemsIds = ServerDatabase("BookItemEndpoint", "itemsAvailableForDates") {
+            itemsAvailableForDates(from, to)
+        }.map(ItemD::id)
         val someItemNotAvailable = requestedItemsIds.any { it !in availableItemsIds }
         if (someItemNotAvailable) {
             respondFailure(Errors.InvalidRequest)
@@ -44,17 +48,17 @@ object BookItemEndpoint : SecureEndpoint("/lending", HttpMethod.Post) {
         }
 
         // Create the lending
-        ServerDatabase {
-            val newLending = Lending.new {
+        val newLending = ServerDatabase("BookItemEndpoint", "createLending") {
+            Lending.new {
                 this.user = user
                 this.from = from
                 this.to = to
             }
-            for (itemId in body.itemIds) {
-                LendingItem.new {
-                    lending = newLending
-                    item = Item.findById(itemId)!!
-                }
+        }
+        for (itemId in body.itemIds) ServerDatabase("BookItemEndpoint", "createLendingItem") {
+            LendingItem.new {
+                lending = newLending
+                item = Item.findById(itemId)!!
             }
         }
 

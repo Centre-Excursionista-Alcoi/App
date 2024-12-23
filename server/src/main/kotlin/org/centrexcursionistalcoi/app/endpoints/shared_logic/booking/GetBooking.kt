@@ -20,7 +20,9 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Ent
     val booking = call.parameters["id"]
         ?.toIntOrNull()
         ?.let {
-            ServerDatabase { entityClass.findById(it)?.serializable() }
+            ServerDatabase("GetBooking", "find${entityClass::class.simpleName}ById") {
+                entityClass.findById(it)?.serializable()
+            }
         }
     if (booking == null) {
         respondFailure(Errors.ObjectNotFound)

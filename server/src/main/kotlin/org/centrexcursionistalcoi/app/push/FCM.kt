@@ -108,12 +108,12 @@ object FCM {
         payload: PushPayload,
         criteria: SqlExpressionBuilder.() -> Op<Boolean>
     ): List<String> {
-        val users = ServerDatabase { User.find(criteria).toList() }
+        val users = ServerDatabase("FCM", "findUsers") { User.find(criteria).toList() }
         if (users.isEmpty()) {
             logger.debug("No users found for criteria")
             return emptyList()
         }
-        val notifications = ServerDatabase {
+        val notifications = ServerDatabase("FCM", "createNotification") {
             users.map { user ->
                 Notification.new {
                     this.type = type

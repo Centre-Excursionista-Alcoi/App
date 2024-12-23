@@ -27,7 +27,7 @@ suspend fun <Serializable : IBookingD, Entity : BookingEntity<Serializable>, Tab
     val query = call.request.queryParameters
     val all = query["all"]?.toBoolean() ?: false
 
-    val bookings = ServerDatabase {
+    val bookings = ServerDatabase("ListBookings", if (all && user.isAdmin) "getAll" else "findById") {
         if (all && user.isAdmin) {
             entityClass.all()
         } else {

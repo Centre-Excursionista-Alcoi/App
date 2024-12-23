@@ -15,7 +15,10 @@ object ListItemsEndpoint: SecureEndpoint("/inventory/items", HttpMethod.Get) {
         val query = call.request.queryParameters
         val filterItems = query["filterItems"]?.split(',')?.mapNotNull { it.toIntOrNull() } ?: emptyList()
 
-        val items = ServerDatabase {
+        val items = ServerDatabase(
+            "ListItemsEndpoint",
+            "get${ if (filterItems.isEmpty()) "" else "Filtered" }ItemsList"
+        ) {
             if (filterItems.isEmpty()) {
                 Item.all()
             } else {

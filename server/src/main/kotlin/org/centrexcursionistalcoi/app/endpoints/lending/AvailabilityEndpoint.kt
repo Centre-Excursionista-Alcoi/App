@@ -27,7 +27,9 @@ object AvailabilityEndpoint: SecureEndpoint("/availability", HttpMethod.Get) {
         }
 
         // Fetch the existing lendings for the item that overlap with the requested period
-        val availableItems = ServerDatabase { itemsAvailableForDates(from, to) }
+        val availableItems = ServerDatabase("AvailabilityEndpoint", "itemsAvailableForDates") {
+            itemsAvailableForDates(from, to)
+        }
 
         respondSuccess(
             data = availableItems,
