@@ -49,6 +49,8 @@ dependencies {
 
     implementation(libs.kreds)
 
+    implementation(libs.telegram)
+
     implementation(libs.sentry.javaIo)
 
     testImplementation(libs.ktor.server.tests)

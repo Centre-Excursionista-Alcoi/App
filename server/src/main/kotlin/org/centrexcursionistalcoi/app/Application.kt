@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.database.ServerDatabase
 import org.centrexcursionistalcoi.app.database.SessionsDatabase
+import org.centrexcursionistalcoi.app.notifications.Telegram
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.installAuthentication
 import org.centrexcursionistalcoi.app.plugins.installContentNegotiation
@@ -37,6 +38,8 @@ private suspend fun start() {
     FCM.initialize(
         System.getenv("FCM_SERVICE_ACCOUNT_KEY_PATH") ?: "serviceAccountKey.json"
     )
+
+    Telegram.initialize()
 
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)

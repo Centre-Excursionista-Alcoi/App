@@ -4,6 +4,7 @@
       <option name="env">
         <map>
           <entry key="SENTRY_DSN" value="https://437eafa8ef760e67649d0b9b440dc926@o4508483970334720.ingest.de.sentry.io/4508484310925392" />
+          <entry key="TELEGRAM_BOT" value="7801096751:AAGugn8DooZN6QOR2bhlSSxeRs-0ICIqK5g" />
         </map>
       </option>
       <option name="executionName" />
@@ -22,6 +23,18 @@
     </ExternalSystemSettings>
     <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <EXTENSION ID="com.intellij.execution.ExternalSystemRunConfigurationJavaExtension">
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </extension>
+    </EXTENSION>
     <DebugAllEnabled>false</DebugAllEnabled>
     <RunAsTest>false</RunAsTest>
     <method v="2" />

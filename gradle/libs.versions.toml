@@ -41,6 +41,7 @@ room = "2.7.0-alpha12"
 sentry-java = "7.19.0"
 sentry-jvm = "4.14.1"
 sentry-multiplatform = "0.10.0"
+telegram = "22.0.0"
 
 [libraries]
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -101,6 +102,7 @@ room-bundledSqlite = { module = "androidx.sqlite:sqlite-bundled", version.ref = 
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 sentry-javaIo = { module = "io.sentry:sentry", version.ref = "sentry-java" }
+telegram = { module = "dev.inmo:tgbotapi", version.ref = "telegram" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
