@@ -86,6 +86,52 @@ jobs:
           echo "$GOOGLE_SERVICES_BASE64" > google-services.base64
           base64 --decode google-services.base64 > ./composeApp/google-services.json
 
+      - name: Build
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:assembleRelease
+
+      - name: Artifact Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle
+          path: composeApp/build/outputs/**/*.aab
+      - name: Artifact APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: composeApp/build/outputs/**/*.apk
+
+  release-android-firebase:
+    name: Release on Firebase
+    runs-on: ubuntu-latest
+
+    needs: build-android
+
+    permissions:
+      contents: 'read'
+      id-token: 'read'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Load Bundle Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: composeApp/build/outputs/bundle/release
+
       - name: Import Google Service Account Key JSON
         env:
           GOOGLE_SERVICE_ACCOUNT_KEY_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 }}
@@ -93,18 +139,30 @@ jobs:
           echo "$GOOGLE_SERVICE_ACCOUNT_KEY_BASE64" > serviceAccountKey.base64
           base64 --decode serviceAccountKey.base64 > ./server/serviceAccountKey.json
 
-      - name: Sign in with Google Cloud
-        uses: 'google-github-actions/auth@v2'
-        with:
-          project_id: 'centre-excursionista-d-alcoi'
-          workload_identity_provider: 'projects/1000901057714/locations/global/workloadIdentityPools/github-actions/providers/github'
-
       - name: Release with Firebase App Distribution
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:assembleRelease :composeApp:appDistributionUploadRelease
+        run: ./gradlew --no-daemon :composeApp:appDistributionUploadRelease
+
+  release-android-github:
+    name: Release on Github
+    runs-on: ubuntu-latest
+
+    needs: build-android
+
+    permissions:
+      contents: 'write'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: apk
+          path: apk
 
       - name: Get current version and code
         id: get_version
@@ -119,7 +177,39 @@ jobs:
           prerelease: true
           tag_name: ${{ steps.get_version.outputs.version }}
           files: |
-            composeApp/build/outputs/**/*.apk
+            apk/**/*.apk
+
+  release-android-googleplay:
+    name: Release on Google Play
+    runs-on: ubuntu-latest
+
+    needs: build-android
+
+    permissions:
+      contents: 'write'
+      id-token: 'write'
+
+    steps:
+      - name: Load Bundle Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: bundle
+      - name: Sign in with Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        id: auth
+        with:
+          project_id: 'centre-excursionista-d-alcoi'
+          workload_identity_provider: 'projects/1000901057714/locations/global/workloadIdentityPools/github-actions/providers/github'
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: org.centrexcursionistalcoi.app
+          releaseFiles: composeApp/build/outputs/**/*.aab
+          track: internal
+          status: completed
+          inAppUpdatePriority: 1
 
 
   build-ios:
