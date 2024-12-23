@@ -168,7 +168,6 @@ jobs:
 
       - name: Sign in with Google Cloud
         uses: 'google-github-actions/auth@v2'
-        id: auth
         with:
           project_id: 'centre-excursionista-d-alcoi'
           workload_identity_provider: 'projects/1000901057714/locations/global/workloadIdentityPools/github-actions/providers/github'
