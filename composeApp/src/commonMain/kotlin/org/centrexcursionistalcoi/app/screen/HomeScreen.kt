@@ -71,7 +71,6 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
         val sections by viewModel.sections.collectAsState(null)
         val creatingSection by viewModel.creatingSection.collectAsState()
         val itemTypes by viewModel.itemTypes.collectAsState(null)
-        val creatingType by viewModel.creatingType.collectAsState()
         val items by viewModel.items.collectAsState(null)
         val updatingBooking by viewModel.updatingBooking.collectAsState()
         val allItemBookings by viewModel.allItemBookings.collectAsState(null)
@@ -163,8 +162,6 @@ object HomeScreen : Screen<Home, HomeViewModel>(::HomeViewModel) {
                             isCreatingSection = creatingSection,
                             onSectionOperation = viewModel::onCreateOrUpdate,
                             itemTypes = itemTypes,
-                            isCreatingType = creatingType,
-                            onTypeOperation = viewModel::createOrUpdate,
                             items = items,
                             allItemBookings = allItemBookings,
                             allSpaceBookings = allSpaceBookings,

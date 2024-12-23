@@ -24,7 +24,10 @@ abstract class AdminViewModel: ViewModel() {
                 } else {
                     updater(value)
                 }
+
+                Sync.syncBasics()
                 Sync.syncBookings()
+
                 uiThread { onCreate() }
             } finally {
                 creating.emit(false)

@@ -12,7 +12,6 @@ import org.centrexcursionistalcoi.app.database.appDatabase
 import org.centrexcursionistalcoi.app.database.entity.BookingEntity
 import org.centrexcursionistalcoi.app.database.entity.Item
 import org.centrexcursionistalcoi.app.database.entity.ItemBooking
-import org.centrexcursionistalcoi.app.database.entity.ItemType
 import org.centrexcursionistalcoi.app.database.entity.Notification
 import org.centrexcursionistalcoi.app.database.entity.Section
 import org.centrexcursionistalcoi.app.database.entity.Space
@@ -75,9 +74,6 @@ class HomeViewModel : AdminViewModel() {
 
     val itemTypes get() = inventoryDao.getAllItemTypesAsFlow()
 
-    private val _creatingType = MutableStateFlow(false)
-    val creatingType get() = _creatingType.asStateFlow()
-
     val items get() = inventoryDao.getAllItemsAsFlow()
 
     private val _updatingBooking = MutableStateFlow(false)
@@ -122,16 +118,6 @@ class HomeViewModel : AdminViewModel() {
             _creatingSection,
             SectionsBackend::create,
             SectionsBackend::update,
-            onCreate
-        )
-    }
-
-    fun createOrUpdate(itemType: ItemType, onCreate: () -> Unit) {
-        onCreateOrUpdate(
-            itemType,
-            _creatingType,
-            InventoryBackend::create,
-            InventoryBackend::update,
             onCreate
         )
     }

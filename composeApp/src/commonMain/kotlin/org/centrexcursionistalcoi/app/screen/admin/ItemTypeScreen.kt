@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberBasicTooltipState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,6 +52,7 @@ import org.centrexcursionistalcoi.app.platform.ui.PlatformLoadingIndicator
 import org.centrexcursionistalcoi.app.platform.ui.PlatformScaffold
 import org.centrexcursionistalcoi.app.platform.ui.PlatformTextArea
 import org.centrexcursionistalcoi.app.platform.ui.getPlatformTextStyles
+import org.centrexcursionistalcoi.app.route.ItemTypeEditorRoute
 import org.centrexcursionistalcoi.app.route.ItemTypeRoute
 import org.centrexcursionistalcoi.app.screen.Screen
 import org.centrexcursionistalcoi.app.viewmodel.admin.ItemTypeViewModel
@@ -113,6 +115,7 @@ object ItemTypeScreen: Screen<ItemTypeRoute, ItemTypeViewModel>(::ItemTypeViewMo
             onBack = navigator::navigateUp,
             title = itemType?.title,
             actions = listOf(
+                Action(Icons.Default.Edit, stringResource(Res.string.edit)) { navigator.navigate(ItemTypeEditorRoute(route.id)) },
                 Action(Icons.Default.Add, stringResource(Res.string.add)) { showingCreationDialog = Item() }
             )
         ) {

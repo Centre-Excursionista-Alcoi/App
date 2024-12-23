@@ -75,6 +75,7 @@
     <string name="types_title">Item Types</string>
     <string name="types_empty">No types found</string>
     <string name="types_create">Create new Item Type</string>
+    <string name="types_edit">Edit Item Type</string>
     <string name="types_name">Name</string>
     <string name="types_description">Description</string>
     <string name="types_brand">Brand</string>
