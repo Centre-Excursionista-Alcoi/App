@@ -70,12 +70,6 @@ fun AdminPage(
                 )
             }
 
-        SectionsCard(sections, isCreatingSection, onSectionOperation)
-
-        TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
-
-        // ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
-
         BookingsCard(
             allItemBookings,
             items,
@@ -88,6 +82,12 @@ fun AdminPage(
             onMarkAsTakenRequested,
             onMarkAsReturnedRequested
         )
+
+        SectionsCard(sections, isCreatingSection, onSectionOperation)
+
+        TypesCard(itemTypes, sections, isCreatingType, onTypeOperation)
+
+        // ItemsCard(items, itemTypes, isCreatingItem, onItemOperation, allItemBookings)
 
         SpacesCard(spaces, isCreatingSpace, onSpaceOperation)
     }
