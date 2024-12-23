@@ -205,7 +205,7 @@ jobs:
         with:
           serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
           packageName: org.centrexcursionistalcoi.app
-          releaseFiles: composeApp/build/outputs/**/*.aab
+          releaseFiles: bundle/**/*.aab
           track: internal
           status: completed
           inAppUpdatePriority: 1
