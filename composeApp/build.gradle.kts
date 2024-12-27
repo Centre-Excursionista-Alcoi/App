@@ -225,6 +225,8 @@ buildkonfig {
     packageName = "org.centrexcursionistalcoi.app"
 
     defaultConfigs {
+        buildConfigField(BOOLEAN, "DEBUG", "false")
+
         buildConfigField(STRING, "VERSION", appVersion)
         buildConfigField(STRING, "CODE", versionCode)
 
@@ -235,6 +237,9 @@ buildkonfig {
         val secrets = readPropertiesFile("secrets.properties")
         val sentryDsn = secrets?.get("SENTRY_DSN_APP") as String? ?: error("SENTRY_DSN_APP not found in secrets.properties")
         buildConfigField(STRING, "SENTRY_DSN", sentryDsn)
+    }
+    defaultConfigs("dev") {
+        buildConfigField(BOOLEAN, "DEBUG", "true")
     }
 }
 

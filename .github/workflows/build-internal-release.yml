@@ -91,7 +91,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon :composeApp:bundleRelease :composeApp:assembleRelease
+        run: ./gradlew --no-daemon -Pbuildkonfig.flavor=release :composeApp:bundleRelease :composeApp:assembleRelease
 
       - name: Artifact Bundle
         uses: actions/upload-artifact@v4
@@ -157,7 +157,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon :composeApp:appDistributionUploadRelease
+        run: ./gradlew --no-daemon -Pbuildkonfig.flavor=release :composeApp:appDistributionUploadRelease
 
   release-android-github:
     name: Release on Github

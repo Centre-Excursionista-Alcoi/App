@@ -69,7 +69,7 @@ jobs:
           certutil -decode secrets.base64 secrets.properties
 
       - name: Package distribution
-        run: ./gradlew --no-daemon :composeApp:packageDistributionForCurrentOS
+        run: ./gradlew --no-daemon -Pbuildkonfig.flavor=release :composeApp:packageDistributionForCurrentOS
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -113,7 +113,7 @@ jobs:
           base64 --decode secrets.base64 > ./secrets.properties
 
       - name: Package distribution
-        run: ./gradlew --no-daemon :composeApp:packageDistributionForCurrentOS
+        run: ./gradlew --no-daemon -Pbuildkonfig.flavor=release :composeApp:packageDistributionForCurrentOS
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -185,7 +185,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon :composeApp:assembleRelease :composeApp:bundleRelease
+        run: ./gradlew --no-daemon -Pbuildkonfig.flavor=release :composeApp:assembleRelease :composeApp:bundleRelease
 
       - name: Release
         uses: softprops/action-gh-release@v2
