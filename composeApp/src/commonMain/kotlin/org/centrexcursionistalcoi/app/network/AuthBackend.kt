@@ -67,7 +67,12 @@ object AuthBackend {
                 Napier.i { "Won't send FCM token to server since not logged in." }
                 return false
             }
-            val response = Backend.post("/fcm_token", body = token, bodySerializer = String.serializer())
+            val response = Backend.post(
+                "/fcm_token",
+                doNotSendError = true,
+                body = token,
+                bodySerializer = String.serializer()
+            )
             return response.status.isSuccess()
         } catch (e: ServerException) {
             Napier.e(e) { "Could not notify about new FCM token." }

@@ -58,6 +58,7 @@ object Backend {
         httpMethod: HttpMethod,
         path: String,
         basicAuth: Pair<String, String>?,
+        doNotSendError: Boolean,
         block: HttpRequestBuilder.() -> Unit
     ): HttpResponse {
         val response = client.request(path) {
@@ -73,26 +74,29 @@ object Backend {
 
         val code = response.headers["X-Error-Code"]?.toIntOrNull() ?: (response.status.value + 1000)
         val exception = ServerException(code, response.bodyAsText(), path, httpMethod)
-        _error.emit(exception)
+        if (!doNotSendError) _error.emit(exception)
         throw exception
     }
 
     /**
      * Send a GET request to the server
      * @param path The path to send the request to
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @param block Additional configuration for the request
      * @return The response from the server
      * @throws ServerException If the server responds with an error
      */
     suspend fun get(
         path: String,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = request(HttpMethod.Get, path, null, block)
+    ): HttpResponse = request(HttpMethod.Get, path, null, doNotSendError, block)
 
     /**
      * Send a GET request to the server and deserialize the response
      * @param path The path to send the request to
      * @param deserializer The deserializer to use for the response
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @param block Additional configuration for the request
      * @return The deserialized response from the server
      * @throws ServerException If the server responds with an error
@@ -101,9 +105,10 @@ object Backend {
     suspend fun <Type> get(
         path: String,
         deserializer: DeserializationStrategy<Type>,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
     ): Type {
-        val response = get(path, block)
+        val response = get(path, doNotSendError, block)
         val body = response.bodyAsText()
         return serverJson.decodeFromString(deserializer, body)
     }
@@ -111,6 +116,7 @@ object Backend {
     /**
      * Send a POST request to the server
      * @param path The path to send the request to
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @param block Additional configuration for the request
      * @return The response from the server
      * @throws ServerException If the server responds with an error
@@ -118,8 +124,9 @@ object Backend {
     suspend fun post(
         path: String,
         basicAuth: Pair<String, String>? = null,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = request(HttpMethod.Post, path, basicAuth, block)
+    ): HttpResponse = request(HttpMethod.Post, path, basicAuth, doNotSendError, block)
 
     /**
      * Send a POST request to the server
@@ -128,6 +135,7 @@ object Backend {
      * @param body The body to send with the request
      * @param bodySerializer The serializer to use for the body
      * @param basicAuth The basic authentication credentials to use
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @return The response from the server
      * @throws ServerException If the server responds with an error
      */
@@ -136,8 +144,9 @@ object Backend {
         body: Type,
         bodySerializer: SerializationStrategy<Type>,
         basicAuth: Pair<String, String>? = null,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = post(path, basicAuth) {
+    ): HttpResponse = post(path, basicAuth, doNotSendError) {
         val json = serverJson.encodeToString(bodySerializer, body)
         contentType(ContentType.Application.Json)
         setBody(json)
@@ -152,6 +161,7 @@ object Backend {
      * @param body The body to send with the request
      * @param bodySerializer The serializer to use for the body
      * @param basicAuth The basic authentication credentials to use
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @return The response from the server
      * @throws ServerException If the server responds with an error
      */
@@ -160,8 +170,9 @@ object Backend {
         body: Type,
         bodySerializer: SerializationStrategy<Type>,
         basicAuth: Pair<String, String>? = null,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = request(HttpMethod.Patch, path, basicAuth) {
+    ): HttpResponse = request(HttpMethod.Patch, path, basicAuth, doNotSendError) {
         val json = serverJson.encodeToString(bodySerializer, body)
         contentType(ContentType.Application.Json)
         setBody(json)
@@ -172,14 +183,16 @@ object Backend {
     /**
      * Send a DELETE request to the server
      * @param path The path to send the request to
+     * @param doNotSendError If `false`, errors won't be emitted to [error].
      * @param block Additional configuration for the request
      * @return The response from the server
      * @throws ServerException If the server responds with an error
      */
     suspend fun delete(
         path: String,
+        doNotSendError: Boolean = false,
         block: HttpRequestBuilder.() -> Unit = {}
-    ): HttpResponse = request(HttpMethod.Delete, path, null, block)
+    ): HttpResponse = request(HttpMethod.Delete, path, null, doNotSendError, block)
 
     /**
      * Makes a ping request to the server.
