@@ -183,4 +183,13 @@
     <string name="error_dialog_code">Codi d\'Error: %1$d</string>
     <string name="error_dialog_path">Ruta (%1$s): %2$s</string>
     <string name="error_dialog_response">Resposta: %1$s</string>
+    <string name="types_edit">Editar Tipus d\'Element</string>
+    <string name="notifications_title">Notificacions</string>
+    <string name="mark_as_read">Marca com a Llegit</string>
+    <string name="nav_account">Compte</string>
+    <string name="home_notifications">Notificacions</string>
+    <string name="home_notifications_empty">Cap notificació</string>
+    <string name="home_notifications_all">Veure totes les notificacions</string>
+    <string name="notification_user_registered_title">Usuari Registrat</string>
+    <string name="notification_user_registered_message">S\'ha registrat un nou usuari. Per favor, comprova\'l i confirma\'l.</string>
 </resources>
