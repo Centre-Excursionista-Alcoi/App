@@ -36,7 +36,7 @@ object VersionEndpoint : Endpoint("/version") {
         assets: List<JsonObject>,
         condition: (String) -> Boolean
     ): JsonObject? {
-        return assets.find { it["name"]?.jsonPrimitive?.toString()?.let(condition) == true }
+        return assets.find { it["name"]?.jsonPrimitive?.content?.let(condition) == true }
     }
 
     private const val CACHE_DURATION_MINUTES = 4 * 60
@@ -50,7 +50,7 @@ object VersionEndpoint : Endpoint("/version") {
         if (cachedVersionResponse == null || cachedVersionAgeMinutes > CACHE_DURATION_MINUTES) {
             val response = httpClient.get(LATEST_RELEASE_URL)
             val json = serverJson.parseToJsonElement(response.bodyAsText()).jsonObject
-            val tag = json["tag_name"]?.jsonPrimitive?.toString()
+            val tag = json["tag_name"]?.jsonPrimitive?.content
             val assets = json["assets"]?.jsonArray
                 ?.let { arr -> (0 until arr.size).map { arr[it].jsonObject } }
                 ?: emptyList()
@@ -59,15 +59,14 @@ object VersionEndpoint : Endpoint("/version") {
             val dmg = findAssetByName(assets) { it.contains("dmg") }
             val deb = findAssetByName(assets) { it.contains("deb") }
             val urls = VersionResponse.DownloadUrls(
-                apk = apk?.get("url")?.jsonPrimitive?.toString(),
-                exe = exe?.get("url")?.jsonPrimitive?.toString(),
-                dmg = dmg?.get("url")?.jsonPrimitive?.toString(),
-                deb = deb?.get("url")?.jsonPrimitive?.toString()
+                apk = apk?.get("url")?.jsonPrimitive?.content,
+                exe = exe?.get("url")?.jsonPrimitive?.content,
+                dmg = dmg?.get("url")?.jsonPrimitive?.content,
+                deb = deb?.get("url")?.jsonPrimitive?.content,
             )
 
             cachedVersionResponse = VersionResponse(tag, urls)
         }
-
 
         respondSuccess(cachedVersionResponse!!, VersionResponse.serializer())
     }
