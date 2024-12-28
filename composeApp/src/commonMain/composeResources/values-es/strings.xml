@@ -183,4 +183,13 @@
     <string name="error_longitude_not_set">Debes establecer una longitud si introduces una latitud.</string>
     <string name="error_unknown">Error desconocido. Código #%1$d: %2$s</string>
     <string name="error_ping_message">Servidor no disponible. Por favor, vuélvelo a intentar más tarde.</string>
+    <string name="types_edit">Editar Tipo de Elemento</string>
+    <string name="notifications_title">Notificaciones</string>
+    <string name="nav_account">Cuenta</string>
+    <string name="mark_as_read">Marcar como Leído</string>
+    <string name="home_notifications">Notificaciones</string>
+    <string name="home_notifications_empty">Ninguna notificación</string>
+    <string name="home_notifications_all">Ver todas las notificaciones</string>
+    <string name="notification_user_registered_title">Usuario registrado</string>
+    <string name="notification_user_registered_message">Un nuevo usuario ha sido registrado. Por favor, revísalo y confírmalo.</string>
 </resources>

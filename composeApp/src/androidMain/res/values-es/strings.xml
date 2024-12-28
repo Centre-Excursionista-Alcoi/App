@@ -8,4 +8,8 @@
     <string name="app_name">CEA App</string>
     <string name="group_name_bookings_name">Reservas</string>
     <string name="channel_name_confirmation_description">Te avisaremos cuando una reserva que hayas hecho sea confirmada.</string>
+    <string name="group_name_admin_name">Admin</string>
+    <string name="group_name_admin_description">Si eres un administrador, recibirás más notificaciones.</string>
+    <string name="channel_name_admin_registration_name">Registros de Usuarios</string>
+    <string name="channel_name_admin_registration_description">Te avisaremos cuando un nuevo usuario se registre, y necesite confirmación.</string>
 </resources>
