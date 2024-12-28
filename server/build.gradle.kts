@@ -19,12 +19,22 @@ application {
     // applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
+val versionDir = layout.buildDirectory.dir("version")
+
+sourceSets {
+    main {
+        resources.srcDir(versionDir)
+    }
+}
+
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
 
     implementation(libs.kotlinx.serialization.json)
 
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.serialization.kotlinxJson)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.contentNegotiation)
@@ -99,3 +109,16 @@ sentry {
     val token = secrets?.get("SENTRY_AUTH_TOKEN_SERVER") as String? ?: error("SENTRY_AUTH_TOKEN_SERVER not found in secrets.properties")
     authToken = token
 }
+
+val copyVersionInformationTask = task<Copy>("copyVersionInformation") {
+    val versionDir = versionDir.get().asFile
+    if (!versionDir.exists() && !versionDir.mkdirs()) {
+        error("Could not create version dir: $versionDir")
+    }
+    val composeApp = File(rootProject.rootDir, "composeApp")
+    from(composeApp) {
+        include("*.txt")
+    }
+    into(versionDir)
+}
+// tasks.named("build").dependsOn(copyVersionInformationTask.name)
