@@ -38,7 +38,7 @@ napier = "2.7.1"
 postgresql = "42.7.5"
 qrose = "1.0.1"
 room = "2.7.0-alpha12"
-sentry-java = "7.20.1"
+sentry-java = "8.0.0"
 sentry-jvm = "4.14.1"
 sentry-multiplatform = "0.10.0"
 
