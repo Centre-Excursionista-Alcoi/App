@@ -39,7 +39,7 @@ postgresql = "42.7.5"
 qrose = "1.0.1"
 room = "2.7.0-alpha12"
 sentry-java = "8.0.0"
-sentry-jvm = "4.14.1"
+sentry-jvm = "5.0.0"
 sentry-multiplatform = "0.10.0"
 
 [libraries]
