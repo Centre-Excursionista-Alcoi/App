@@ -1,6 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.time.LocalDate
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -267,8 +268,10 @@ compose.desktop {
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = appVersion
 
+            val year = LocalDate.now().year
+
             description = "The official app for the Centre Excursionista d'Alcoi"
-            copyright = "© 2024 Arnau Mora Gras. All rights reserved."
+            copyright = "© $year Arnau Mora Gras. All rights reserved."
             vendor = "Centre Excursionista d'Alcoi"
             licenseFile.set(rootProject.file("LICENSE"))
 
