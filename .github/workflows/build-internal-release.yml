@@ -36,7 +36,7 @@ jobs:
 
       - name: Commit modified version code file
         id: commit_version_code
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: 'Updated Version Code'
           file_pattern: 'composeApp/code.txt'
