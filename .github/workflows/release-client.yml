@@ -15,7 +15,7 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -55,7 +55,7 @@ jobs:
 
       # Refresh version name just in case
       - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
       - name: Update version name
@@ -99,7 +99,7 @@ jobs:
 
       # Refresh version name just in case
       - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
       - name: Update version name
@@ -174,7 +174,7 @@ jobs:
 
       # Refresh version name just in case
       - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
       - name: Update version name
