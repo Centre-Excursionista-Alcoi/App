@@ -1,49 +1,55 @@
 package org.centrexcursionistalcoi.app
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.russhwolf.settings.ExperimentalSettingsApi
+import org.centrexcursionistalcoi.app.nav.Destination
+import org.centrexcursionistalcoi.app.screen.HomeScreen
+import org.centrexcursionistalcoi.app.screen.LoadingScreen
+import org.centrexcursionistalcoi.app.screen.LoginScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.compose_multiplatform
+import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
+import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 
 @Composable
 @Preview
-fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+@OptIn(ExperimentalSettingsApi::class, ExperimentalOpenIdConnect::class)
+fun App(
+    authFlowFactory: CodeAuthFlowFactory,
+    onNavHostReady: suspend (NavController) -> Unit = {}
+) {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = Destination.Loading
+    ) {
+        composable<Destination.Loading> {
+            LoadingScreen(
+                onLoggedIn = { navController.navigate(Destination.Home) },
+                onNotLoggedIn = { navController.navigate(Destination.Login) },
+            )
         }
+        composable<Destination.Login> {
+            LoginScreen(
+                authFlowFactory,
+                onLoginSuccess = {
+                    navController.navigate(Destination.Loading) {
+                        popUpTo(Destination.Login)
+                    }
+                },
+            )
+        }
+        composable<Destination.Home> {
+            HomeScreen()
+        }
+    }
+    LaunchedEffect(navController) {
+        onNavHostReady(navController)
     }
 }

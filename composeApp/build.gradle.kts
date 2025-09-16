@@ -37,6 +37,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
         }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -44,10 +45,34 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            // Compose Navigation
+            implementation(libs.androidx.navigation.compose)
+
+            // Ktor client
+            implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.contentNegotiation)
+            implementation(libs.ktor.client.core)
+
+            // OIDC Support
+            implementation(libs.kmm.oidc.appsupport)
+            implementation(libs.kmm.oidc.ktor)
+            implementation(libs.kmm.oidc.tokenstore)
+
+            // Settings
+            implementation(libs.kmm.settings.core)
+            implementation(libs.kmm.settings.coroutines)
+            implementation(libs.kmm.settings.makeObservable)
+            implementation(libs.kmm.settings.noArg)
+            implementation(libs.kmm.settings.serialization)
+
             implementation(projects.shared)
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -64,6 +89,11 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        // Provide redirect URI for OIDC Auth flow
+        addManifestPlaceholders(
+            mapOf("oidcRedirectScheme" to "cea")
+        )
     }
     packaging {
         resources {
@@ -84,4 +114,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-

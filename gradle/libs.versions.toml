@@ -1,19 +1,21 @@
 [versions]
 # View compatibility in: https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html
-agp = "8.10.1"
+agp = "8.11.1"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 androidx-activity = "1.11.0"
-androidx-lifecycle = "2.9.3"
+androidx-lifecycle = "2.9.4"
+androidx-navigation = "2.9.0"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
-composeMultiplatform = "1.8.2"
+composeMultiplatform = "1.9.0"
 exposed = "1.0.0-rc-1"
-flyway = "11.12.0"
 h2 = "1.0.0.RELEASE"
+kmm-oidc = "0.15.1"
+kmm-settings = "1.3.0"
 kotlin = "2.2.20"
 kotlinx-serialization = "1.9.0"
-ktor = "3.2.3"
+ktor = "3.3.0"
 logback = "1.5.18"
 
 [libraries]
@@ -22,16 +24,25 @@ kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-datetime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
 exposed-migration-core = { module = "org.jetbrains.exposed:exposed-migration-core", version.ref = "exposed" }
 exposed-migration-r2dbc = { module = "org.jetbrains.exposed:exposed-migration-r2dbc", version.ref = "exposed" }
-flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 h2 = { module = "io.r2dbc:r2dbc-h2", version.ref = "h2" }
+kmm-oidc-appsupport = { module = "io.github.kalinjul.kotlin.multiplatform:oidc-appsupport", version.ref = "kmm-oidc" }
+kmm-oidc-ktor = { module = "io.github.kalinjul.kotlin.multiplatform:oidc-ktor", version.ref = "kmm-oidc" }
+kmm-oidc-tokenstore = { module = "io.github.kalinjul.kotlin.multiplatform:oidc-tokenstore", version.ref = "kmm-oidc" }
+kmm-settings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "kmm-settings" }
+kmm-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "kmm-settings" }
+kmm-settings-makeObservable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "kmm-settings" }
+kmm-settings-noArg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "kmm-settings" }
+kmm-settings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "kmm-settings" }
 kotlinx-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
