@@ -12,5 +12,6 @@ class Post(id: EntityID<UUID>) : UUIDEntity(id) {
     var date by Posts.date
     var title by Posts.title
     var content by Posts.content
-    var department by Department referencedOn Posts.department
+    var onlyForMembers by Posts.onlyForMembers
+    var department by Posts.department
 }

@@ -2,8 +2,9 @@ package org.centrexcursionistalcoi.app.database.utils
 
 import java.time.Instant
 import java.util.UUID
-import javax.sound.sampled.BooleanControl
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -23,22 +24,22 @@ import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 
-fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): KSerializer<E> {
+fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): SerializationStrategy<E> {
     val className = if (this::class.isCompanion) this::class.java.enclosingClass.simpleName else this::class.simpleName
     val serialName = "org.centrexcursionistalcoi.app.database.entity.$className"
 
     return object : KSerializer<E> {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
             for (column in table.columns) {
-                when (column.columnType) {
+                when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name) // EntityIDs are serialized as Strings
-                    is StringColumnType -> element<String>(column.name)
-                    is BooleanColumnType -> element<Boolean>(column.name)
-                    is IntegerColumnType -> element<Int>(column.name)
-                    is DoubleColumnType -> element<Double>(column.name)
-                    is LongColumnType -> element<Long>(column.name)
-                    is InstantColumnType<*> -> element<Instant>(column.name)
-                    is UUIDColumnType -> element<String>(column.name) // UUIDs are serialized as Strings
+                    is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
+                    is BooleanColumnType -> element<Boolean>(column.name, isOptional = type.nullable)
+                    is IntegerColumnType -> element<Int>(column.name, isOptional = type.nullable)
+                    is DoubleColumnType -> element<Double>(column.name, isOptional = type.nullable)
+                    is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
+                    is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
+                    is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
@@ -89,4 +90,8 @@ fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): KSer
             throw UnsupportedOperationException("Deserialization of entities is not supported. Data must be fetched from the database")
         }
     }
+}
+
+fun <T> SerializationStrategy<T>.list(): SerializationStrategy<List<T>> {
+    return ListSerializer(this as KSerializer<T>)
 }

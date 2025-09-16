@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
@@ -27,8 +25,12 @@ dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
 
+    // Ktor serialization
+    implementation(libs.ktor.serialization.kotlinxJson)
+
     // Ktor client
     implementation(libs.ktor.client.auth)
+    implementation(libs.ktor.client.contentNegotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.java)
 
@@ -38,7 +40,6 @@ dependencies {
     implementation(libs.ktor.server.contentNegotiation)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.serialization.kotlinxJson)
     implementation(libs.ktor.server.sessions)
 
     // Database

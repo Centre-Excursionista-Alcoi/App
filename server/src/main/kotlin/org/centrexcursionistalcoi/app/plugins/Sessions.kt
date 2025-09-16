@@ -4,6 +4,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.response.header
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
@@ -27,9 +28,16 @@ val secretSignKey = hex("6819b57a326945c1968f45236589")
 data class UserSession(val sub: String, val username: String, val email: String, val groups: List<String>) {
     companion object {
         const val ADMIN_GROUP_NAME = "CEA Admin"
+        const val COOKIE_NAME = "USER_SESSION"
+
+        fun RoutingContext.getUserSession(): UserSession? {
+            val session = call.sessions.get<UserSession>()
+            call.response.header("CEA-LoggedIn", (session != null).toString())
+            return session
+        }
 
         suspend fun RoutingContext.getUserSessionOrRedirect(): UserSession? {
-            val session = call.sessions.get<UserSession>()
+            val session = getUserSession()
             if (session == null) {
                 call.respondRedirect("/login")
                 return null
@@ -39,7 +47,7 @@ data class UserSession(val sub: String, val username: String, val email: String,
         }
 
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
-            val session = call.sessions.get<UserSession>()
+            val session = getUserSession()
             if (session == null) {
                 call.respondText("Not logged in", status = HttpStatusCode.Unauthorized)
                 return null
@@ -52,11 +60,11 @@ data class UserSession(val sub: String, val username: String, val email: String,
     fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
 }
 
-fun Application.configureSessions() {
+fun Application.configureSessions(isTesting: Boolean) {
     install(Sessions) {
-        cookie<UserSession>("USER_SESSION") {
+        cookie<UserSession>(UserSession.COOKIE_NAME) {
             cookie.httpOnly = true      // Prevent JS access
-            cookie.secure = true        // Use HTTPS in production
+            cookie.secure = !isTesting  // Use HTTPS in production
             cookie.extensions["SameSite"] = "lax"
             cookie.path = "/"
             cookie.maxAgeInSeconds = 7 * 24 * 60 * 60 // 1 week
