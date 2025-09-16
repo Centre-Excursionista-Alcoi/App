@@ -35,6 +35,8 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.plugins.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
+import org.centrexcursionistalcoi.app.serialization.getBoolean
+import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.serialization.list
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 
@@ -175,13 +177,5 @@ class ApplicationTest {
         )
         println("Cookies list: " + client.cookies("http://localhost/"))
         System.err.println("Logged in successfully!")
-    }
-
-    private fun JsonObject.getString(key: String): String {
-        return getValue(key).jsonPrimitive.content
-    }
-
-    private fun JsonObject.getBoolean(key: String): Boolean {
-        return getValue(key).jsonPrimitive.boolean
     }
 }

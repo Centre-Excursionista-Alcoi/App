@@ -4,19 +4,46 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.Department
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Departments.displayName
+import org.centrexcursionistalcoi.app.plugins.json
+import org.centrexcursionistalcoi.app.serialization.getString
 
 class TestEntityUtils {
     @Test
+    fun test_encodeListToString() = runTest {
+        Database.init(TEST_URL)
+
+        val department1 = Database {
+            Department.insert {
+                it[displayName] = "department1"
+            }
+        }
+        val department2 = Database {
+            Department.insert {
+                it[displayName] = "department2"
+            }
+        }
+        val departments = listOf(department1, department2)
+
+        val encoded = json.encodeListToString(departments)
+        val array = json.decodeFromString(JsonArray.serializer(), encoded)
+        assertEquals(2, array.size)
+        assertEquals("department1", array[0].jsonObject.getString("displayName"))
+        assertEquals("department2", array[1].jsonObject.getString("displayName"))
+    }
+
+    @Test
     fun test_entity_serializer() = runTest {
-        Database.init("r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;")
+        Database.init(TEST_URL)
 
         val department = Database {
             Department.insert {
