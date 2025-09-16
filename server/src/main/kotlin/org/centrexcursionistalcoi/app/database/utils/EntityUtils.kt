@@ -13,6 +13,7 @@ import kotlinx.serialization.encoding.encodeStructure
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.StringColumnType
@@ -23,12 +24,14 @@ import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 
 fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): KSerializer<E> {
+    val className = if (this::class.isCompanion) this::class.java.enclosingClass.simpleName else this::class.simpleName
+    val serialName = "org.centrexcursionistalcoi.app.database.entity.$className"
+
     return object : KSerializer<E> {
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor(
-            "org.centrexcursionistalcoi.app.database.entity.${this@serializer::class.simpleName}"
-        ) {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
             for (column in table.columns) {
                 when (column.columnType) {
+                    is EntityIDColumnType<*> -> element<String>(column.name) // EntityIDs are serialized as Strings
                     is StringColumnType -> element<String>(column.name)
                     is BooleanColumnType -> element<Boolean>(column.name)
                     is IntegerColumnType -> element<Int>(column.name)
@@ -46,8 +49,15 @@ fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): KSer
                 for (column in table.columns) {
                     val columnName = column.name
                     val idx = descriptor.getElementIndex(columnName)
-                    val typeValue = value.run { this::class.members.first { it.name == columnName }.call(this) }
+                    val typeValue = value.run {
+                        this::class.members.find { it.name == columnName }
+                            ?.call(value)
+                            ?: error("Could not find property or function named \"$columnName\" in ${this::class.simpleName}.\nMembers: ${this::class.members.joinToString { it.name }}")
+                    }
                     when (column.columnType) {
+                        is EntityIDColumnType<*> -> {
+                            encodeStringElement(descriptor, idx, typeValue.toString())
+                        }
                         is StringColumnType -> {
                             encodeStringElement(descriptor, idx, typeValue as String)
                         }
@@ -76,7 +86,7 @@ fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): KSer
         }
 
         override fun deserialize(decoder: Decoder): E {
-            throw UnsupportedOperationException("Deserialization of entities is not supported")
+            throw UnsupportedOperationException("Deserialization of entities is not supported. Data must be fetched from the database")
         }
     }
 }

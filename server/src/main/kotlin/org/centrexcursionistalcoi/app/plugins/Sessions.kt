@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.SessionTransportTransformerEncrypt
 import io.ktor.server.sessions.Sessions
@@ -29,6 +32,16 @@ data class UserSession(val sub: String, val username: String, val email: String,
             val session = call.sessions.get<UserSession>()
             if (session == null) {
                 call.respondRedirect("/login")
+                return null
+            } else {
+                return session
+            }
+        }
+
+        suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
+            val session = call.sessions.get<UserSession>()
+            if (session == null) {
+                call.respondText("Not logged in", status = HttpStatusCode.Unauthorized)
                 return null
             } else {
                 return session

@@ -1,10 +1,10 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import java.util.UUID
 
 class Post(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Post>(Posts)

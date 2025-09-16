@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.database.entity.Post
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.utils.getAll
 import org.centrexcursionistalcoi.app.database.utils.serializer
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrRedirect
 
 fun Application.configureRouting() {
@@ -28,7 +29,7 @@ fun Application.configureRouting() {
         }
 
         get("/posts") {
-            getUserSessionOrRedirect() ?: return@get
+            getUserSessionOrFail() ?: return@get
             val posts = Database { Post.getAll() }
 
             call.respondText(ContentType.Application.Json) {
