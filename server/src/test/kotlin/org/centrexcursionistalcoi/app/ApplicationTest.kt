@@ -51,6 +51,24 @@ class ApplicationTest {
     }
 
     @Test
+    fun testDepartments() = runApplicationTest(
+        databaseInitBlock = {
+            Department.insert {
+                it[Departments.displayName] = "Example Department"
+            }
+        }
+    ) {
+        client.get("/departments").let { response ->
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val departments = response.bodyAsJson(JsonObject.serializer().list())
+            departments[0].apply {
+                assertEquals("Example Department", getString("displayName"))
+            }
+        }
+    }
+
+    @Test
     fun testPosts() = runApplicationTest(
         databaseInitBlock = {
             val department = Department.insert {
