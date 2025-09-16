@@ -27,8 +27,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.Department
+import org.centrexcursionistalcoi.app.database.entity.File
 import org.centrexcursionistalcoi.app.database.entity.Post
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -58,14 +60,28 @@ class ApplicationTest {
             Department.insert {
                 it[Departments.displayName] = "Example Department"
             }
+            val imageFile = File.insert {
+                it[Files.name] = "square.png"
+                it[Files.type] = "image/png"
+                it[Files.data] = this::class.java.getResourceAsStream("/square.png").readBytes()
+            }
+            Department.insert {
+                it[Departments.displayName] = "Image Department"
+                it[Departments.imageFile] = imageFile.id
+            }
         }
     ) {
         client.get("/departments").let { response ->
             assertEquals(HttpStatusCode.OK, response.status)
 
             val departments = response.bodyAsJson(JsonObject.serializer().list())
+            println("Departments: $departments")
             departments[0].apply {
                 assertEquals("Example Department", getString("displayName"))
+            }
+            departments[1].apply {
+                assertEquals("Image Department", getString("displayName"))
+                assertNotNull(getString("imageFile"), "Image file URL should not be null")
             }
         }
     }
@@ -133,37 +149,41 @@ class ApplicationTest {
     ) = runTest {
         Database.init(TEST_URL)
 
-        Database(databaseInitBlock)
+        try {
+            Database(databaseInitBlock)
 
-        testApplication {
-            application {
-                module(isTesting = true)
+            testApplication {
+                application {
+                    module(isTesting = true)
 
-                routing {
-                    get("/test-login") {
-                        // Simulate a user
-                        val fakeUser = UserSession(
-                            sub = "test-user-id-123",
-                            username = "testuser",
-                            email = "test@example.com",
-                            groups = listOf("admins") // or ["users"]
-                        )
+                    routing {
+                        get("/test-login") {
+                            // Simulate a user
+                            val fakeUser = UserSession(
+                                sub = "test-user-id-123",
+                                username = "testuser",
+                                email = "test@example.com",
+                                groups = listOf("admins") // or ["users"]
+                            )
 
-                        call.sessions.set(fakeUser)
-                        getUserSessionOrFail()
+                            call.sessions.set(fakeUser)
+                            getUserSessionOrFail()
 
-                        call.respondText("Logged in as ${fakeUser.username}")
+                            call.respondText("Logged in as ${fakeUser.username}")
+                        }
                     }
                 }
-            }
-            client = createClient {
-                install(ContentNegotiation) {
-                    json(json)
+                client = createClient {
+                    install(ContentNegotiation) {
+                        json(json)
+                    }
+                    install(HttpCookies)
                 }
-                install(HttpCookies)
-            }
 
-            block()
+                block()
+            }
+        } finally {
+            Database.clear()
         }
     }
 

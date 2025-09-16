@@ -60,7 +60,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
             for (column in columns) {
                 when (val type = column.columnType) {
-                    is EntityIDColumnType<*> -> element<String>(column.name) // EntityIDs are serialized as Strings
+                    is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
                     is BooleanColumnType -> element<Boolean>(column.name, isOptional = type.nullable)
                     is IntegerColumnType -> element<Int>(column.name, isOptional = type.nullable)
@@ -81,7 +81,11 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     val typeValue = value.run {
                         this::class.members.find { it.name == columnName }
                             ?.call(value)
-                            ?: error("Could not find property or function named \"$columnName\" in ${this::class.simpleName}.\nMembers: ${this::class.members.joinToString { it.name }}")
+                    }
+                    if (typeValue == null) {
+                        if (!column.columnType.nullable) {
+                            error("Could not find property or function named \"$columnName\" in ${this::class.simpleName}.\nMembers: ${this::class.members.joinToString { it.name }}")
+                        }
                     }
                     when (column.columnType) {
                         is EntityIDColumnType<*> -> {

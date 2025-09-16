@@ -9,4 +9,5 @@ class Department(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Department>(Departments)
 
     var displayName by Departments.displayName
+    var imageFile by Departments.imageFile
 }

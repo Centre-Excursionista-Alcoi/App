@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -9,7 +10,7 @@ import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
 object Database {
-    val tables = arrayOf(Departments, Posts)
+    val tables = arrayOf(Files, Departments, Posts)
     private var database: R2dbcDatabase? = null
 
     private const val URL = "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;" // In-memory H2 database
@@ -23,6 +24,14 @@ object Database {
         database = connect(url)
 
         suspendTransaction(database) {
+            SchemaUtils.create(*tables)
+        }
+    }
+
+    @TestOnly
+    suspend fun clear() {
+        this {
+            SchemaUtils.drop(*tables)
             SchemaUtils.create(*tables)
         }
     }
