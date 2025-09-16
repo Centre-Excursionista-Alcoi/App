@@ -24,7 +24,7 @@ class TestEntityUtils {
             }
         }
 
-        val serializer = Department.serializer(Departments)
+        val serializer = Department.serializer()
         assertEquals("org.centrexcursionistalcoi.app.database.entity.Department", serializer.descriptor.serialName)
 
         val json = Json.encodeToString(serializer, department)

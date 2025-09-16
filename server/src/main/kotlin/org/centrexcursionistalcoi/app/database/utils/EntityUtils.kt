@@ -1,7 +1,11 @@
 package org.centrexcursionistalcoi.app.database.utils
 
+import io.ktor.util.reflect.instanceOf
 import java.time.Instant
 import java.util.UUID
+import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
@@ -11,6 +15,7 @@ import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
+import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
@@ -24,13 +29,36 @@ import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 
-fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): SerializationStrategy<E> {
+fun <ID : Any, E : Entity<ID>> Json.encodeListToString(entities: List<E>, entityClass: EntityClass<ID, E>): String {
+    return encodeToString(entityClass.serializer().list(), entities)
+}
+
+inline fun <ID : Any, reified E : Entity<ID>> Json.encodeListToString(entities: List<E>): String {
+    // If the list is empty, return an empty JSON array
+    if (entities.isEmpty()) return "[]"
+
+    // Companion object must be the EntityClass
+    val companion = E::class.companionObjectInstance
+    requireNotNull(companion) { "Entity class does not have a companion" }
+    require(companion.instanceOf(EntityClass::class)) { "Companion object is not sub-class of EntityClass" }
+
+    @Suppress("UNCHECKED_CAST")
+    companion as EntityClass<ID, E>
+
+    return encodeListToString(entities, companion)
+}
+
+fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(): SerializationStrategy<E> {
     val className = if (this::class.isCompanion) this::class.java.enclosingClass.simpleName else this::class.simpleName
     val serialName = "org.centrexcursionistalcoi.app.database.entity.$className"
 
+    return table.serializer(serialName)
+}
+
+private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): SerializationStrategy<E> {
     return object : KSerializer<E> {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
-            for (column in table.columns) {
+            for (column in columns) {
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name) // EntityIDs are serialized as Strings
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
@@ -47,7 +75,7 @@ fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(table: Table): Seri
 
         override fun serialize(encoder: Encoder, value: E) {
             encoder.encodeStructure(descriptor) {
-                for (column in table.columns) {
+                for (column in columns) {
                     val columnName = column.name
                     val idx = descriptor.getElementIndex(columnName)
                     val typeValue = value.run {

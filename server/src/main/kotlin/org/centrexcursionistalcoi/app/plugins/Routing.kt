@@ -7,17 +7,15 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
-import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.Greeting
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.Department
 import org.centrexcursionistalcoi.app.database.entity.Post
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.utils.encodeListToString
 import org.centrexcursionistalcoi.app.database.utils.get
 import org.centrexcursionistalcoi.app.database.utils.getAll
-import org.centrexcursionistalcoi.app.database.utils.list
-import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrRedirect
 import org.jetbrains.exposed.v1.core.eq
 
@@ -32,10 +30,17 @@ fun Application.configureRouting() {
             call.respondText("Welcome ${session.username}! Email: ${session.email}")
         }
 
+        get("/departments") {
+            val departments = Database { Department.getAll() }
+
+            call.respondText(ContentType.Application.Json) {
+                json.encodeListToString(departments)
+            }
+        }
+
         get("/posts") {
             val session = getUserSession()
             val isLoggedIn = session != null
-            println("isLoggedIn=${isLoggedIn}")
             val posts = Database {
                 if (isLoggedIn)
                     Post.getAll()
@@ -48,7 +53,7 @@ fun Application.configureRouting() {
             }
 
             call.respondText(ContentType.Application.Json) {
-                json.encodeToString(Post.serializer(Posts).list(), posts)
+                json.encodeListToString(posts)
             }
         }
 
