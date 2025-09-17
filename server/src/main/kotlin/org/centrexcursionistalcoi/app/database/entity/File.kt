@@ -12,4 +12,6 @@ class File(id: EntityID<UUID>) : UUIDEntity(id) {
     var data by Files.data
     var type by Files.type
     var name by Files.name
+
+    var rules by Files.rules
 }

@@ -24,6 +24,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
+import kotlinx.coroutines.flow.firstOrNull
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.r2dbc.Query
 
@@ -76,6 +77,13 @@ suspend fun <ID: Any, E: Entity<ID>> EntityClass<ID, E>.getAll(): List<E> {
 context(transaction: R2dbcTransaction)
 suspend fun <ID: Any, E: Entity<ID>> EntityClass<ID, E>.get(predicate: () -> Op<Boolean>): List<E> {
     return table.selectAll().where(predicate).wrap()
+}
+
+context(transaction: R2dbcTransaction)
+suspend fun <ID: Any, E: Entity<ID>> EntityClass<ID, E>.findBy(predicate: () -> Op<Boolean>): E? {
+    return table.selectAll().where(predicate).firstOrNull()?.let { row ->
+        wrapRowR2dbc(row[table.id], row)
+    }
 }
 
 context(transaction: R2dbcTransaction)

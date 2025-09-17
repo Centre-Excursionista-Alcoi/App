@@ -4,8 +4,11 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.cookies.cookies
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.response.respondText
@@ -16,6 +19,7 @@ import io.ktor.server.sessions.set
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -55,6 +59,33 @@ class ApplicationTest {
     }
 
     @Test
+    fun testDownload() = runApplicationTest(
+        databaseInitBlock = {
+            File.insert {
+                it[Files.name] = "square.png"
+                it[Files.type] = "image/png"
+                it[Files.data] = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
+            }.id.value
+        }
+    ) { fileId ->
+        assertNotNull(fileId)
+
+        // unknown is not a valid UUID
+        assertEquals(HttpStatusCode.BadRequest, client.get("/download/unknown").status)
+
+        // non-existing UUID
+        assertEquals(HttpStatusCode.NotFound, client.get("/download/00000000-0000-0000-0000-000000000000").status)
+
+        val rawFile = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
+
+        client.get("/download/$fileId").let { response ->
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(ContentType.Image.PNG, response.contentType())
+            assertContentEquals(rawFile, response.bodyAsBytes())
+        }
+    }
+
+    @Test
     fun testDepartments() = runApplicationTest(
         databaseInitBlock = {
             Department.insert {
@@ -63,14 +94,18 @@ class ApplicationTest {
             val imageFile = File.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
-                it[Files.data] = this::class.java.getResourceAsStream("/square.png").readBytes()
+                it[Files.data] = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
             }
             Department.insert {
                 it[Departments.displayName] = "Image Department"
                 it[Departments.imageFile] = imageFile.id
             }
+
+            imageFile.id.value
         }
-    ) {
+    ) { departmentImageId ->
+        assertNotNull(departmentImageId)
+
         client.get("/departments").let { response ->
             assertEquals(HttpStatusCode.OK, response.status)
 
@@ -81,7 +116,7 @@ class ApplicationTest {
             }
             departments[1].apply {
                 assertEquals("Image Department", getString("displayName"))
-                assertNotNull(getString("imageFile"), "Image file URL should not be null")
+                assertEquals(departmentImageId.toString(), getString("imageFile"))
             }
         }
     }
@@ -143,14 +178,14 @@ class ApplicationTest {
     }
 
 
-    private fun runApplicationTest(
-        databaseInitBlock: suspend R2dbcTransaction.() -> Unit = {},
-        block: suspend ApplicationTestBuilder.() -> Unit
+    private fun <DIB> runApplicationTest(
+        databaseInitBlock: (suspend R2dbcTransaction.() -> DIB)? = null,
+        block: suspend ApplicationTestBuilder.(dibResult: DIB?) -> Unit
     ) = runTest {
         Database.init(TEST_URL)
 
         try {
-            Database(databaseInitBlock)
+            val dib = databaseInitBlock?.let { Database(it) }
 
             testApplication {
                 application {
@@ -180,7 +215,7 @@ class ApplicationTest {
                     install(HttpCookies)
                 }
 
-                block()
+                block(dib)
             }
         } finally {
             Database.clear()

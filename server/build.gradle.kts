@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.datetime)
+    implementation(libs.exposed.json)
     implementation(libs.exposed.r2dbc)
     implementation(libs.exposed.migration.core)
     implementation(libs.exposed.migration.r2dbc)
