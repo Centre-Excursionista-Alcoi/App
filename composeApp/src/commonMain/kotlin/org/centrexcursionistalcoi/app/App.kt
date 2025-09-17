@@ -1,10 +1,9 @@
 package org.centrexcursionistalcoi.app
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
-import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,12 +12,20 @@ import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.screen.HomeScreen
 import org.centrexcursionistalcoi.app.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.screen.LoginScreen
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 
 @Composable
-@Preview
+fun MainApp(
+    authFlowFactory: CodeAuthFlowFactory,
+    onNavHostReady: suspend (NavController) -> Unit = {}
+) {
+    MaterialTheme {
+        App(authFlowFactory, onNavHostReady)
+    }
+}
+
+@Composable
 @OptIn(ExperimentalSettingsApi::class, ExperimentalOpenIdConnect::class)
 fun App(
     authFlowFactory: CodeAuthFlowFactory,

@@ -2,35 +2,87 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.auth.oidcConnectClient
+import org.centrexcursionistalcoi.app.auth.createOidcConnectClient
+import org.centrexcursionistalcoi.app.auth.getOidcConnectClient
+import org.centrexcursionistalcoi.app.auth.setOidcConnectClient
 import org.centrexcursionistalcoi.app.auth.tokenStore
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
+import org.publicvalue.multiplatform.oidc.OpenIdConnectException
 import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 import org.publicvalue.multiplatform.oidc.tokenstore.saveTokens
 
 class LoginViewModel(private val authFlowFactory: CodeAuthFlowFactory): ViewModel() {
+    private val oidcConnectClient get() = getOidcConnectClient()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
 
+    private val _discoveryComplete = MutableStateFlow(false)
+    val discoveryComplete get() = _discoveryComplete.asStateFlow()
+
+    private val _error = MutableStateFlow<OpenIdConnectException?>(null)
+    val error get() = _error.asStateFlow()
+
     fun load() = viewModelScope.launch {
-        oidcConnectClient.discover()
+        try {
+            _discoveryComplete.tryEmit(false)
+            if (oidcConnectClient.config.discoveryUri != null) {
+                Napier.i { "Running discovery for OIDC..." }
+                oidcConnectClient.discover()
+            } else {
+                Napier.i { "No discovery URI configured, skipping discovery." }
+            }
+        } catch (e: OpenIdConnectException) {
+            Napier.e("Error during OIDC discovery", e)
+            Napier.i { "Using default OIDC endpoints" }
+            setOidcConnectClient(
+                createOidcConnectClient(includeDiscoveryUri = false)
+            )
+        } finally {
+            Napier.i { "Discovery complete." }
+            _discoveryComplete.tryEmit(true)
+        }
     }
 
     @OptIn(ExperimentalOpenIdConnect::class)
     fun login() = viewModelScope.launch {
         try {
-            _isLoading.emit(true)
+            if (isLoading.value) {
+                Napier.d { "Already loading." }
+                return@launch
+            }
 
+            _isLoading.emit(true)
+            _error.emit(null)
+
+            Napier.i { "Creating auth flow..." }
             val flow = authFlowFactory.createAuthFlow(oidcConnectClient)
-            println("Auth flow complete. Getting access token...")
+            Napier.i { "Auth flow creation complete. Getting access token..." }
             val token = flow.getAccessToken()
-            println("Access token obtained, saving token...")
+            Napier.i { "Access token obtained, saving token..." }
             tokenStore.saveTokens(token)
+        } catch (e: OpenIdConnectException.AuthenticationCancelled) {
+            // TODO: Handle auth cancelled by user
+            _error.tryEmit(e)
+            Napier.i("Authentication cancelled by user", e)
+        } catch (e: OpenIdConnectException.AuthenticationFailure) {
+            // TODO: Handle auth failure
+            _error.tryEmit(e)
+            Napier.e("Authentication failed", e)
+        } catch (e: OpenIdConnectException.TechnicalFailure) {
+            // TODO: Handle auth failure
+            _error.tryEmit(e)
+            Napier.e("Technical failure", e)
+        } catch (e: OpenIdConnectException) {
+            // TODO: Handle auth failure
+            _error.tryEmit(e)
+            Napier.e("OIDC error", e)
         } finally {
-            _isLoading.emit(false)
+            _isLoading.tryEmit(false)
         }
     }
 }

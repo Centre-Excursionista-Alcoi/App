@@ -41,7 +41,7 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -57,6 +57,7 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.logging)
 
             // OIDC Support
             implementation(libs.kmm.oidc.appsupport)
@@ -69,6 +70,9 @@ kotlin {
             implementation(libs.kmm.settings.makeObservable)
             implementation(libs.kmm.settings.noArg)
             implementation(libs.kmm.settings.serialization)
+
+            // Logging
+            implementation(libs.napier)
 
             implementation(projects.shared)
         }

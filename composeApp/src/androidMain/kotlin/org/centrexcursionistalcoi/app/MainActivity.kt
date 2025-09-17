@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.auth.tokenStore
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.AndroidCodeAuthFlowFactory
@@ -21,12 +23,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        Napier.base(DebugAntilog())
+
         codeAuthFlowFactory.registerActivity(this)
 
         tokenStore = AndroidSettingsTokenStore(this)
 
         setContent {
-            App(codeAuthFlowFactory)
+            MainApp(codeAuthFlowFactory)
         }
     }
 }

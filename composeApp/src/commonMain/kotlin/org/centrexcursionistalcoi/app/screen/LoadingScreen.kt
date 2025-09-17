@@ -16,7 +16,7 @@ import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 fun LoadingScreen(
     onLoggedIn: () -> Unit,
     onNotLoggedIn: () -> Unit,
-    model: LoadingViewModel = viewModel()
+    model: LoadingViewModel = viewModel { LoadingViewModel() }
 ) {
     LaunchedEffect(Unit) {
         model.load(
