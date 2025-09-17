@@ -9,7 +9,9 @@ import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.auth.tokenStore
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.AndroidCodeAuthFlowFactory
+import org.publicvalue.multiplatform.oidc.tokenstore.AndroidDataStoreSettingsStore
 import org.publicvalue.multiplatform.oidc.tokenstore.AndroidSettingsTokenStore
+import org.publicvalue.multiplatform.oidc.tokenstore.SettingsTokenStore
 
 @OptIn(ExperimentalOpenIdConnect::class)
 class MainActivity : ComponentActivity() {
@@ -27,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         codeAuthFlowFactory.registerActivity(this)
 
-        tokenStore = AndroidSettingsTokenStore(this)
+        tokenStore = SettingsTokenStore(settings = AndroidDataStoreSettingsStore(this))
 
         setContent {
             MainApp(codeAuthFlowFactory)
