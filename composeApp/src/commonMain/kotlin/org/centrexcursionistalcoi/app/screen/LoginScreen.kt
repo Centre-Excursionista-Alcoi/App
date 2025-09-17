@@ -32,6 +32,8 @@ fun LoginScreen(
 ) {
     val discoveryComplete by model.discoveryComplete.collectAsState()
     val isLoading by model.isLoading.collectAsState()
+    val isLoggingIn by model.isLoggingIn.collectAsState()
+    val isStoringToken by model.isStoringToken.collectAsState()
     val error by model.error.collectAsState()
 
     LaunchedEffect(Unit) { model.load() }
@@ -69,7 +71,7 @@ fun LoginScreen(
                         CircularProgressIndicator()
 
                         Text(
-                            text = "Complete the login in the browser",
+                            text = if (isLoggingIn) "Logging in..." else if (isStoringToken) "Storing token..." else "Loading...",
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyLarge

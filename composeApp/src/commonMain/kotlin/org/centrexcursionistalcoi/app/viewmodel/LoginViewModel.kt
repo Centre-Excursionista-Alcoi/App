@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.auth.createOidcConnectClient
 import org.centrexcursionistalcoi.app.auth.getOidcConnectClient
@@ -18,8 +21,15 @@ import org.publicvalue.multiplatform.oidc.tokenstore.saveTokens
 class LoginViewModel(private val authFlowFactory: CodeAuthFlowFactory): ViewModel() {
     private val oidcConnectClient get() = getOidcConnectClient()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading get() = _isLoading.asStateFlow()
+    private val _isLoggingIn = MutableStateFlow(false)
+    val isLoggingIn get() = _isLoggingIn.asStateFlow()
+
+    private val _isStoringToken = MutableStateFlow(false)
+    val isStoringToken get() = _isStoringToken.asStateFlow()
+
+    val isLoading = combine(isLoggingIn, isStoringToken) { loggingIn, storingToken ->
+        loggingIn || storingToken
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _discoveryComplete = MutableStateFlow(false)
     val discoveryComplete get() = _discoveryComplete.asStateFlow()
@@ -56,13 +66,18 @@ class LoginViewModel(private val authFlowFactory: CodeAuthFlowFactory): ViewMode
                 return@launch
             }
 
-            _isLoading.emit(true)
+            _isLoggingIn.emit(true)
+            _isStoringToken.emit(false)
             _error.emit(null)
 
             Napier.i { "Creating auth flow..." }
             val flow = authFlowFactory.createAuthFlow(oidcConnectClient)
             Napier.i { "Auth flow creation complete. Getting access token..." }
             val token = flow.getAccessToken()
+
+            _isLoggingIn.emit(false)
+            _isStoringToken.emit(true)
+
             Napier.i { "Access token obtained, saving token..." }
             tokenStore.saveTokens(token)
         } catch (e: OpenIdConnectException.AuthenticationCancelled) {
@@ -82,7 +97,8 @@ class LoginViewModel(private val authFlowFactory: CodeAuthFlowFactory): ViewMode
             _error.tryEmit(e)
             Napier.e("OIDC error", e)
         } finally {
-            _isLoading.tryEmit(false)
+            _isLoggingIn.emit(false)
+            _isStoringToken.emit(false)
         }
     }
 }

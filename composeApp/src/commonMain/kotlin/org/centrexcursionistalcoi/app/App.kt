@@ -38,8 +38,16 @@ fun App(
     ) {
         composable<Destination.Loading> {
             LoadingScreen(
-                onLoggedIn = { navController.navigate(Destination.Home) },
-                onNotLoggedIn = { navController.navigate(Destination.Login) },
+                onLoggedIn = {
+                    navController.navigate(Destination.Home) {
+                        popUpTo(Destination.Login)
+                    }
+                },
+                onNotLoggedIn = {
+                    navController.navigate(Destination.Login) {
+                        popUpTo(Destination.Login)
+                    }
+                },
             )
         }
         composable<Destination.Login> {
