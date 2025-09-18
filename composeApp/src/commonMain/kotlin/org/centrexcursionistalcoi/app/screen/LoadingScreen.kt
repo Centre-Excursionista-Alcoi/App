@@ -14,7 +14,7 @@ import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 
 @Composable
 fun LoadingScreen(
-    onLoggedIn: () -> Unit,
+    onLoggedIn: (name: String, groups: List<String>) -> Unit,
     onNotLoggedIn: () -> Unit,
     model: LoadingViewModel = viewModel { LoadingViewModel() }
 ) {
@@ -26,11 +26,8 @@ fun LoadingScreen(
     }
 
     Scaffold { paddingValues ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+        LoadingBox(
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
+        )
     }
 }

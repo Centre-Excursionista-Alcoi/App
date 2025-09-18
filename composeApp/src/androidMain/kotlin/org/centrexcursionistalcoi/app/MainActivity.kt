@@ -10,7 +10,6 @@ import org.centrexcursionistalcoi.app.auth.tokenStore
 import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
 import org.publicvalue.multiplatform.oidc.appsupport.AndroidCodeAuthFlowFactory
 import org.publicvalue.multiplatform.oidc.tokenstore.AndroidDataStoreSettingsStore
-import org.publicvalue.multiplatform.oidc.tokenstore.AndroidSettingsTokenStore
 import org.publicvalue.multiplatform.oidc.tokenstore.SettingsTokenStore
 
 @OptIn(ExperimentalOpenIdConnect::class)
