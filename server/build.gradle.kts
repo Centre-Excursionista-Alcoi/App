@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.exposed.migration.core)
     implementation(libs.exposed.migration.r2dbc)
     implementation(libs.h2)
+    implementation(libs.postgresql)
 
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.kotlin.testJunit)
