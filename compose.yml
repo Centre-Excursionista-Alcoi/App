@@ -1,8 +1,9 @@
 services:
-  web:
+  server:
     build:
       context: .
       dockerfile: server/Dockerfile
+    container_name: cea-server
     ports:
       - "8080:8080"
     environment:
@@ -16,6 +17,7 @@ services:
         condition: service_healthy
   db:
     image: postgres:17-alpine
+    container_name: cea-db
     # set shared memory limit when using docker compose
     shm_size: 128mb
     volumes:
