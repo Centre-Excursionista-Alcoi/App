@@ -36,16 +36,6 @@ data class UserSession(val sub: String, val username: String, val email: String,
             return session
         }
 
-        suspend fun RoutingContext.getUserSessionOrRedirect(): UserSession? {
-            val session = getUserSession()
-            if (session == null) {
-                call.respondRedirect("/login")
-                return null
-            } else {
-                return session
-            }
-        }
-
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
             val session = getUserSession()
             if (session == null) {

@@ -7,8 +7,8 @@ import org.jetbrains.exposed.v1.json.json
 
 object Files : UUIDTable("files") {
     val data = binary("data")
-    val type = varchar("type", 255)
-    val name = varchar("name", 255)
+    val type = varchar("type", 255).nullable()
+    val name = varchar("name", 255).nullable()
 
     val rules = json("rules", json, FileReadWriteRules.serializer()).nullable()
 }

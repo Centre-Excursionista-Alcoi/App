@@ -1,29 +1,41 @@
 package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
 import io.ktor.server.application.Application
+import io.ktor.server.request.contentType
+import io.ktor.server.request.receiveMultipart
+import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
+import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.streams.asByteWriteChannel
 import org.centrexcursionistalcoi.app.Greeting
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.Department
 import org.centrexcursionistalcoi.app.database.entity.File
 import org.centrexcursionistalcoi.app.database.entity.Post
+import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.utils.encodeListToString
 import org.centrexcursionistalcoi.app.database.utils.findBy
 import org.centrexcursionistalcoi.app.database.utils.get
 import org.centrexcursionistalcoi.app.database.utils.getAll
+import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrRedirect
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.core.eq
+import java.io.ByteArrayOutputStream
 
 fun Application.configureRouting() {
     routing {
@@ -48,12 +60,12 @@ fun Application.configureRouting() {
             }
 
             call.respondBytes(
-                contentType = ContentType.parse(file.type)
+                contentType = file.type?.let(ContentType::parse)
             ) { file.data }
         }
 
         get("/dashboard") {
-            val session = getUserSessionOrRedirect() ?: return@get
+            val session = getUserSessionOrFail() ?: return@get
             call.respondText("Welcome ${session.username}! Email: ${session.email}")
         }
 
@@ -63,6 +75,63 @@ fun Application.configureRouting() {
             call.respondText(ContentType.Application.Json) {
                 json.encodeListToString(departments)
             }
+        }
+        post("/departments") {
+            val session = getUserSessionOrFail() ?: return@post
+            if (!session.isAdmin()) {
+                call.respondText("You don't have permission to create departments", status = HttpStatusCode.Forbidden)
+                return@post
+            }
+
+            if (!call.request.contentType().match(ContentType.MultiPart.FormData)) {
+                call.respondText("Content-Type must be multipart/form-data", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+
+            var displayName: String? = null
+            var contentType: ContentType? = null
+            var originalFileName: String? = null
+            val imageDataStream = ByteArrayOutputStream()
+
+            val formParameters = call.receiveMultipart()
+            formParameters.forEachPart { partData ->
+                when (partData) {
+                    is PartData.FormItem -> {
+                        if (partData.name == "displayName") {
+                            displayName = partData.value
+                        }
+                    }
+                    is PartData.FileItem -> {
+                        if (partData.name == "image") {
+                            contentType = partData.contentType
+                            originalFileName = partData.originalFileName
+                            partData.provider().copyTo(imageDataStream.asByteWriteChannel())
+                        }
+                    }
+                    else -> { /* nothing */ }
+                }
+            }
+
+            if (displayName == null) {
+                call.respondText("Missing displayName", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+
+            val department = Database {
+                val imageFile = File.insert {
+                    it[Files.name] = originalFileName
+                    it[Files.type] = contentType?.toString() ?: "application/octet-stream"
+                    it[Files.data] = imageDataStream.toByteArray()
+                }
+
+                Department.insert {
+                    it[Departments.displayName] = displayName
+                    it[Departments.imageFile] = imageFile.id
+                }
+            }
+
+            call.response.header(HttpHeaders.Location, "/departments/${department.id.value}")
+            call.respondText("Department created", status = HttpStatusCode.Created)
         }
 
         get("/posts") {

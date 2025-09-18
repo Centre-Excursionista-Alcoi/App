@@ -1,14 +1,22 @@
 package org.centrexcursionistalcoi.app
 
+import io.ktor.client.plugins.cache.storage.FileStorage
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.cookies.cookies
+import io.ktor.client.request.forms.append
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.headersOf
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.response.respondText
@@ -25,6 +33,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.asOutputStream
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonPrimitive
@@ -36,14 +45,17 @@ import org.centrexcursionistalcoi.app.database.entity.Post
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.utils.findBy
 import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.plugins.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.getBoolean
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.serialization.list
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
 
 class ApplicationTest {
@@ -64,10 +76,11 @@ class ApplicationTest {
             File.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
-                it[Files.data] = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
+                it[Files.data] = bytesFromResource("/square.png")
             }.id.value
         }
-    ) { fileId ->
+    ) { context ->
+        val fileId = context.dibResult
         assertNotNull(fileId)
 
         // unknown is not a valid UUID
@@ -76,7 +89,7 @@ class ApplicationTest {
         // non-existing UUID
         assertEquals(HttpStatusCode.NotFound, client.get("/download/00000000-0000-0000-0000-000000000000").status)
 
-        val rawFile = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
+        val rawFile = bytesFromResource("/square.png")
 
         client.get("/download/$fileId").let { response ->
             assertEquals(HttpStatusCode.OK, response.status)
@@ -94,7 +107,7 @@ class ApplicationTest {
             val imageFile = File.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
-                it[Files.data] = this::class.java.getResourceAsStream("/square.png")!!.readBytes()
+                it[Files.data] = bytesFromResource("/square.png")
             }
             Department.insert {
                 it[Departments.displayName] = "Image Department"
@@ -103,7 +116,8 @@ class ApplicationTest {
 
             imageFile.id.value
         }
-    ) { departmentImageId ->
+    ) { context ->
+        val departmentImageId = context.dibResult
         assertNotNull(departmentImageId)
 
         client.get("/departments").let { response ->
@@ -119,6 +133,57 @@ class ApplicationTest {
                 assertEquals(departmentImageId.toString(), getString("imageFile"))
             }
         }
+    }
+
+    @Test
+    fun testDepartmentCreate() = runApplicationTest { context ->
+        // Test non-authorized access
+        assertEquals(HttpStatusCode.Unauthorized, client.post("/departments").status)
+
+        // Log in as fake user
+        loginAsFakeUser()
+
+        // Test authorized access, but not admin
+        assertEquals(HttpStatusCode.Forbidden, client.post("/departments").status)
+
+        // Log in as fake admin user
+        (context.cookiesStorage as AcceptAllCookiesStorage).clear()
+        loginAsFakeAdminUser()
+
+        // Test authorized access as admin, but missing displayName
+        assertEquals(HttpStatusCode.BadRequest, client.post("/departments").status)
+
+        // Test authorized access as admin, with displayName
+        val departmentId = client.submitFormWithBinaryData(
+            url = "/departments",
+            formData = formData {
+                append("displayName", "New Department")
+                append("image", "square.png", ContentType.Image.PNG) {
+                    this::class.java.getResourceAsStream("/square.png")!!.copyTo(asOutputStream())
+                }
+            }
+        ).let { response ->
+            assertEquals(HttpStatusCode.Created, response.status)
+            val location = response.headers[HttpHeaders.Location]
+            assertNotNull(location, "Location header not found in response")
+            val departmentId = location.substringAfterLast('/').toIntOrNull()
+            assertNotNull(departmentId, "Location header is not a valid department ID: $location")
+            departmentId
+        }
+
+        // Make sure the department was created
+        val department = Database { Department.findBy { Departments.id eq departmentId } }
+        assertNotNull(department, "Created department not found in database")
+        assertEquals("New Department", department.displayName)
+
+        val departmentImageId = department.imageFile
+        assertNotNull(departmentImageId, "Created department has no image file")
+
+        val departmentImageFile = Database { File.findBy { Files.id eq departmentImageId } }
+        assertEquals("square.png", departmentImageFile?.name)
+        assertEquals("image/png", departmentImageFile?.type)
+        val rawFile = bytesFromResource("/square.png")
+        assertContentEquals(rawFile, departmentImageFile?.data)
     }
 
     @Test
@@ -178,9 +243,13 @@ class ApplicationTest {
     }
 
 
+    private fun runApplicationTest(
+        block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
+    ) = runApplicationTest({ }) { block(it) }
+
     private fun <DIB> runApplicationTest(
         databaseInitBlock: (suspend R2dbcTransaction.() -> DIB)? = null,
-        block: suspend ApplicationTestBuilder.(dibResult: DIB?) -> Unit
+        block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
         Database.init(TEST_URL)
 
@@ -196,9 +265,23 @@ class ApplicationTest {
                             // Simulate a user
                             val fakeUser = UserSession(
                                 sub = "test-user-id-123",
-                                username = "testuser",
-                                email = "test@example.com",
-                                groups = listOf("admins") // or ["users"]
+                                username = "user",
+                                email = "user@example.com",
+                                groups = listOf("user")
+                            )
+
+                            call.sessions.set(fakeUser)
+                            getUserSessionOrFail()
+
+                            call.respondText("Logged in as ${fakeUser.username}")
+                        }
+                        get("/test-login-admin") {
+                            // Simulate a user
+                            val fakeUser = UserSession(
+                                sub = "test-user-id-456",
+                                username = "admin",
+                                email = "admin@example.com",
+                                groups = listOf(ADMIN_GROUP_NAME, "user")
                             )
 
                             call.sessions.set(fakeUser)
@@ -208,14 +291,18 @@ class ApplicationTest {
                         }
                     }
                 }
+                val cookiesStorage = AcceptAllCookiesStorage()
                 client = createClient {
                     install(ContentNegotiation) {
                         json(json)
                     }
-                    install(HttpCookies)
+                    install(HttpCookies) {
+                        storage = cookiesStorage
+                    }
                 }
 
-                block(dib)
+                val context = ApplicationTestContext(dib, cookiesStorage)
+                block(context)
             }
         } finally {
             Database.clear()
@@ -230,7 +317,19 @@ class ApplicationTest {
             response.setCookie().find { it.name == UserSession.COOKIE_NAME },
             "Session cookie not found in response"
         )
-        println("Cookies list: " + client.cookies("http://localhost/"))
         System.err.println("Logged in successfully!")
     }
+
+    private suspend fun ApplicationTestBuilder.loginAsFakeAdminUser() {
+        val response = client.get("/test-login-admin")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("true", response.headers["CEA-LoggedIn"])
+        assertNotNull(
+            response.setCookie().find { it.name == UserSession.COOKIE_NAME },
+            "Session cookie not found in response"
+        )
+        System.err.println("Logged in successfully!")
+    }
+    
+    private fun bytesFromResource(path: String) = this::class.java.getResourceAsStream(path)!!.readBytes()
 }
