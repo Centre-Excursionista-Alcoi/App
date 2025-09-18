@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.centrexcursionistalcoi.app"
-version = "1.0.0"
+version = "2.0.0"
 
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
