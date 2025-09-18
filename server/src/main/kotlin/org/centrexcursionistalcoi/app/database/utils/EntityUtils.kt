@@ -3,9 +3,7 @@ package org.centrexcursionistalcoi.app.database.utils
 import io.ktor.util.reflect.instanceOf
 import java.time.Instant
 import java.util.UUID
-import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
-import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
@@ -29,11 +27,27 @@ import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 
-fun <ID : Any, E : Entity<ID>> Json.encodeListToString(entities: List<E>, entityClass: EntityClass<ID, E>): String {
+fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
+    return encodeToString(entityClass.serializer(), entity)
+}
+
+inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityToString(entity: E): String {
+    // Companion object must be the EntityClass
+    val companion = E::class.companionObjectInstance
+    requireNotNull(companion) { "Entity class does not have a companion" }
+    require(companion.instanceOf(EntityClass::class)) { "Companion object is not sub-class of EntityClass" }
+
+    @Suppress("UNCHECKED_CAST")
+    companion as EntityClass<ID, E>
+
+    return encodeEntityToString(entity, companion)
+}
+
+fun <ID : Any, E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer().list(), entities)
 }
 
-inline fun <ID : Any, reified E : Entity<ID>> Json.encodeListToString(entities: List<E>): String {
+inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>): String {
     // If the list is empty, return an empty JSON array
     if (entities.isEmpty()) return "[]"
 
@@ -45,7 +59,7 @@ inline fun <ID : Any, reified E : Entity<ID>> Json.encodeListToString(entities: 
     @Suppress("UNCHECKED_CAST")
     companion as EntityClass<ID, E>
 
-    return encodeListToString(entities, companion)
+    return encodeEntityListToString(entities, companion)
 }
 
 fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(): SerializationStrategy<E> {

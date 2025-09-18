@@ -12,7 +12,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.Department
-import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Departments.displayName
 import org.centrexcursionistalcoi.app.plugins.json
 import org.centrexcursionistalcoi.app.serialization.getString
@@ -34,7 +33,7 @@ class TestEntityUtils {
         }
         val departments = listOf(department1, department2)
 
-        val encoded = json.encodeListToString(departments)
+        val encoded = json.encodeEntityListToString(departments)
         val array = json.decodeFromString(JsonArray.serializer(), encoded)
         assertEquals(2, array.size)
         assertEquals("department1", array[0].jsonObject.getString("displayName"))

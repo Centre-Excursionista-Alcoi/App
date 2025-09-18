@@ -26,7 +26,8 @@ import org.centrexcursionistalcoi.app.database.entity.Post
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
-import org.centrexcursionistalcoi.app.database.utils.encodeListToString
+import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
+import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.database.utils.findBy
 import org.centrexcursionistalcoi.app.database.utils.get
 import org.centrexcursionistalcoi.app.database.utils.getAll
@@ -73,7 +74,22 @@ fun Application.configureRouting() {
             val departments = Database { Department.getAll() }
 
             call.respondText(ContentType.Application.Json) {
-                json.encodeListToString(departments)
+                json.encodeEntityListToString(departments)
+            }
+        }
+        get("/departments/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull()
+            if (id == null) {
+                return@get call.respondText("Malformed id", status = HttpStatusCode.BadRequest)
+            }
+
+            val department = Database { Department.findBy { Departments.id eq id } }
+            if (department == null) {
+                return@get call.respondText("Department #$id not found", status = HttpStatusCode.NotFound)
+            }
+
+            call.respondText(ContentType.Application.Json) {
+                json.encodeEntityToString(department)
             }
         }
         post("/departments") {
@@ -149,7 +165,7 @@ fun Application.configureRouting() {
             }
 
             call.respondText(ContentType.Application.Json) {
-                json.encodeListToString(posts)
+                json.encodeEntityListToString(posts)
             }
         }
 

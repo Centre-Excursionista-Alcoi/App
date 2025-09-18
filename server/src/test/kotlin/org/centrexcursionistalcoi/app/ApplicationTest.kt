@@ -1,12 +1,9 @@
 package org.centrexcursionistalcoi.app
 
-import io.ktor.client.plugins.cache.storage.FileStorage
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
-import io.ktor.client.plugins.cookies.cookies
 import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -16,7 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.headersOf
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.response.respondText
@@ -35,8 +31,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.asOutputStream
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.Department
@@ -124,7 +118,6 @@ class ApplicationTest {
             assertEquals(HttpStatusCode.OK, response.status)
 
             val departments = response.bodyAsJson(JsonObject.serializer().list())
-            println("Departments: $departments")
             departments[0].apply {
                 assertEquals("Example Department", getString("displayName"))
             }
@@ -132,6 +125,34 @@ class ApplicationTest {
                 assertEquals("Image Department", getString("displayName"))
                 assertEquals(departmentImageId.toString(), getString("imageFile"))
             }
+        }
+    }
+
+    @Test
+    fun testDepartment() = runApplicationTest(
+        databaseInitBlock = {
+            val imageFile = File.insert {
+                it[Files.name] = "square.png"
+                it[Files.type] = "image/png"
+                it[Files.data] = bytesFromResource("/square.png")
+            }
+            Department.insert {
+                it[Departments.displayName] = "Image Department"
+                it[Departments.imageFile] = imageFile.id
+            }
+        }
+    ) { context ->
+        val department = context.dibResult
+        assertNotNull(department)
+
+        assertEquals(HttpStatusCode.NotFound, client.get("/departments/123").status)
+
+        client.get("/departments/${department.id.value}").let { response ->
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val departmentResponse = response.bodyAsJson(JsonObject.serializer())
+            assertEquals("Image Department", departmentResponse.getString("displayName"))
+            assertEquals(department.imageFile.toString(), departmentResponse.getString("imageFile"))
         }
     }
 
