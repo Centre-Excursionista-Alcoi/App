@@ -22,12 +22,6 @@ import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.asOutputStream
 import kotlinx.serialization.json.JsonObject
@@ -44,13 +38,18 @@ import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.centrexcursionistalcoi.app.plugins.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.getBoolean
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.serialization.list
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ApplicationTest {
 

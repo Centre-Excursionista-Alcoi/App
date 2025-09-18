@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import org.centrexcursionistalcoi.app.plugins.json
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.json.json

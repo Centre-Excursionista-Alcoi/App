@@ -13,7 +13,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.Department
 import org.centrexcursionistalcoi.app.database.table.Departments.displayName
-import org.centrexcursionistalcoi.app.plugins.json
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.getString
 
 class TestEntityUtils {
