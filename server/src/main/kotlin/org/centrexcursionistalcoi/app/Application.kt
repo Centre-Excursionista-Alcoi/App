@@ -11,7 +11,13 @@ import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 
 fun main() {
-    runBlocking { Database.init() }
+    runBlocking {
+        Database.init(
+            url = System.getenv("DB_URL") ?: Database.URL,
+            username = System.getenv("DB_USER") ?: "",
+            password = System.getenv("DB_PASS") ?: "",
+        )
+    }
 
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
         .start(wait = true)

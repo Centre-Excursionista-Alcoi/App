@@ -13,15 +13,19 @@ object Database {
     val tables = arrayOf(Files, Departments, Posts)
     private var database: R2dbcDatabase? = null
 
-    private const val URL = "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;" // In-memory H2 database
+    const val URL = "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;" // In-memory H2 database
 
     @TestOnly
     const val TEST_URL = "r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;"
 
-    private fun connect(url: String = URL) = R2dbcDatabase.connect(url)
+    private fun connect(
+        url: String = URL,
+        user: String = "",
+        password: String = ""
+    ) = R2dbcDatabase.connect(url, user = user, password = password)
 
-    suspend fun init(url: String = URL) {
-        database = connect(url)
+    suspend fun init(url: String = URL, username: String = "", password: String = "") {
+        database = connect(url, username, password)
 
         suspendTransaction(database) {
             SchemaUtils.create(*tables)
