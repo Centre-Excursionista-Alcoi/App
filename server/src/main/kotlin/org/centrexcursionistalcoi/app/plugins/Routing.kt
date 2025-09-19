@@ -19,20 +19,14 @@ import io.ktor.server.sessions.sessions
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
 import org.centrexcursionistalcoi.app.Greeting
-import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
-import org.centrexcursionistalcoi.app.database.table.Departments
-import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
-import org.centrexcursionistalcoi.app.database.utils.findBy
-import org.centrexcursionistalcoi.app.database.utils.get
-import org.centrexcursionistalcoi.app.database.utils.getAll
-import org.centrexcursionistalcoi.app.database.utils.insert
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.utils.toUUID
@@ -51,7 +45,7 @@ fun Application.configureRouting() {
                 return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
             }
 
-            val file = Database { FileEntity.findBy { Files.id eq uuid } }
+            val file = Database { FileEntity.findById(uuid) }
             if (file == null) {
                 return@get call.respondText("File not found", status = HttpStatusCode.NotFound)
             }
@@ -72,7 +66,7 @@ fun Application.configureRouting() {
         }
 
         get("/departments") {
-            val departments = Database { DepartmentEntity.getAll() }
+            val departments = Database { DepartmentEntity.all().toList() }
 
             call.respondText(ContentType.Application.Json) {
                 json.encodeEntityListToString(departments)
@@ -84,7 +78,7 @@ fun Application.configureRouting() {
                 return@get call.respondText("Malformed id", status = HttpStatusCode.BadRequest)
             }
 
-            val department = Database { DepartmentEntity.findBy { Departments.id eq id } }
+            val department = Database { DepartmentEntity.findById(id) }
             if (department == null) {
                 return@get call.respondText("Department #$id not found", status = HttpStatusCode.NotFound)
             }
@@ -135,15 +129,15 @@ fun Application.configureRouting() {
             }
 
             val department = Database {
-                val imageFile = FileEntity.insert {
-                    it[Files.name] = originalFileName
-                    it[Files.type] = contentType?.toString() ?: "application/octet-stream"
-                    it[Files.data] = imageDataStream.toByteArray()
+                val imageFile = FileEntity.new {
+                    name = originalFileName ?: "unknown"
+                    type = contentType?.toString() ?: "application/octet-stream"
+                    data = imageDataStream.toByteArray()
                 }
 
-                DepartmentEntity.insert {
-                    it[Departments.displayName] = displayName
-                    it[Departments.imageFile] = imageFile.id
+                DepartmentEntity.new {
+                    this.displayName = displayName
+                    this.imageFile = imageFile.id
                 }
             }
 
@@ -156,9 +150,9 @@ fun Application.configureRouting() {
             val isLoggedIn = session != null
             val posts = Database {
                 if (isLoggedIn)
-                    PostEntity.getAll()
+                    PostEntity.all().toList()
                 else
-                    PostEntity.get { Posts.onlyForMembers eq false }
+                    PostEntity.find { Posts.onlyForMembers eq false }.toList()
             }.toMutableList()
             if (session == null) {
                 // Not logged in, filter out members-only posts

@@ -8,7 +8,6 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
-import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.json
 import java.util.UUID
 import kotlin.test.Test
@@ -20,15 +19,15 @@ class TestDepartment {
 
         var imageFileId: UUID? = null
         val departmentEntity = Database {
-            val imageFile = FileEntity.insert {
-                it[Files.name] = "test_image.png"
-                it[Files.type] = "image/png"
-                it[Files.data] = byteArrayOf(1, 2, 3)
+            val imageFileEntity = FileEntity.new {
+                name = "test_image.png"
+                type = "image/png"
+                data = byteArrayOf(1, 2, 3)
             }
-            imageFileId = imageFile.id.value
-            DepartmentEntity.insert {
-                it[Departments.displayName] = "Test Department"
-                it[Departments.imageFile] = imageFile.id
+            imageFileId = imageFileEntity.id.value
+            DepartmentEntity.new {
+                displayName = "Test Department"
+                imageFile = imageFileEntity.id
             }
         }
         val departmentClass = Department(

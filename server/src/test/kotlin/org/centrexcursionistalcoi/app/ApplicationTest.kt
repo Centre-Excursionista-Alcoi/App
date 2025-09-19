@@ -33,8 +33,6 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
-import org.centrexcursionistalcoi.app.database.utils.findBy
-import org.centrexcursionistalcoi.app.database.utils.insert
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
@@ -43,7 +41,7 @@ import org.centrexcursionistalcoi.app.serialization.getBoolean
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.serialization.list
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -66,10 +64,10 @@ class ApplicationTest {
     @Test
     fun testDownload() = runApplicationTest(
         databaseInitBlock = {
-            FileEntity.insert {
-                it[Files.name] = "square.png"
-                it[Files.type] = "image/png"
-                it[Files.data] = bytesFromResource("/square.png")
+            FileEntity.new {
+                name = "square.png"
+                type = "image/png"
+                data = bytesFromResource("/square.png")
             }.id.value
         }
     ) { context ->
@@ -94,20 +92,20 @@ class ApplicationTest {
     @Test
     fun testDepartments() = runApplicationTest(
         databaseInitBlock = {
-            DepartmentEntity.insert {
-                it[Departments.displayName] = "Example Department"
+            DepartmentEntity.new {
+                displayName = "Example Department"
             }
-            val imageFile = FileEntity.insert {
-                it[Files.name] = "square.png"
-                it[Files.type] = "image/png"
-                it[Files.data] = bytesFromResource("/square.png")
+            val imageFileEntity = FileEntity.new {
+                name = "square.png"
+                type = "image/png"
+                data = bytesFromResource("/square.png")
             }
-            DepartmentEntity.insert {
-                it[Departments.displayName] = "Image Department"
-                it[Departments.imageFile] = imageFile.id
+            DepartmentEntity.new {
+                displayName = "Image Department"
+                imageFile = imageFileEntity.id
             }
 
-            imageFile.id.value
+            imageFileEntity.id.value
         }
     ) { context ->
         val departmentImageId = context.dibResult
@@ -130,14 +128,14 @@ class ApplicationTest {
     @Test
     fun testDepartment() = runApplicationTest(
         databaseInitBlock = {
-            val imageFile = FileEntity.insert {
-                it[Files.name] = "square.png"
-                it[Files.type] = "image/png"
-                it[Files.data] = bytesFromResource("/square.png")
+            val imageFileEntity = FileEntity.new {
+                name = "square.png"
+                type = "image/png"
+                data = bytesFromResource("/square.png")
             }
-            DepartmentEntity.insert {
-                it[Departments.displayName] = "Image Department"
-                it[Departments.imageFile] = imageFile.id
+            DepartmentEntity.new {
+                displayName = "Image Department"
+                imageFile = imageFileEntity.id
             }
         }
     ) { context ->
@@ -151,7 +149,7 @@ class ApplicationTest {
 
             val departmentResponse = response.bodyAsJson(JsonObject.serializer())
             assertEquals("Image Department", departmentResponse.getString("displayName"))
-            assertEquals(department.imageFile.toString(), departmentResponse.getString("imageFile"))
+            assertEquals(department.imageFile?.toString(), departmentResponse.getString("imageFile"))
         }
     }
 
@@ -192,14 +190,14 @@ class ApplicationTest {
         }
 
         // Make sure the department was created
-        val department = Database { DepartmentEntity.findBy { Departments.id eq departmentId } }
+        val department = Database { DepartmentEntity.findById(departmentId) }
         assertNotNull(department, "Created department not found in database")
         assertEquals("New Department", department.displayName)
 
-        val departmentImageId = department.imageFile
+        val departmentImageId = Database { department.imageFile }
         assertNotNull(departmentImageId, "Created department has no image file")
 
-        val departmentImageFile = Database { FileEntity.findBy { Files.id eq departmentImageId } }
+        val departmentImageFile = Database { FileEntity.findById(departmentImageId) }
         assertEquals("square.png", departmentImageFile?.name)
         assertEquals("image/png", departmentImageFile?.type)
         val rawFile = bytesFromResource("/square.png")
@@ -209,20 +207,20 @@ class ApplicationTest {
     @Test
     fun testPosts() = runApplicationTest(
         databaseInitBlock = {
-            val department = DepartmentEntity.insert {
-                it[Departments.displayName] = "Example Department"
+            val departmentEntity = DepartmentEntity.new {
+                displayName = "Example Department"
             }
-            PostEntity.insert {
-                it[Posts.title] = "Members Post"
-                it[Posts.content] = "This is a members-only post."
-                it[Posts.onlyForMembers] = true
-                it[Posts.department] = department.id
+            PostEntity.new {
+                title = "Members Post"
+                content = "This is a members-only post."
+                onlyForMembers = true
+                department = departmentEntity.id
             }
-            PostEntity.insert {
-                it[Posts.title] = "Public Post"
-                it[Posts.content] = "This is a public post."
-                it[Posts.onlyForMembers] = false
-                it[Posts.department] = department.id
+            PostEntity.new {
+                title = "Public Post"
+                content = "This is a public post."
+                onlyForMembers = false
+                department = departmentEntity.id
             }
         }
     ) {
@@ -268,7 +266,7 @@ class ApplicationTest {
     ) = runApplicationTest({ }) { block(it) }
 
     private fun <DIB> runApplicationTest(
-        databaseInitBlock: (suspend R2dbcTransaction.() -> DIB)? = null,
+        databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
         Database.init(TEST_URL)

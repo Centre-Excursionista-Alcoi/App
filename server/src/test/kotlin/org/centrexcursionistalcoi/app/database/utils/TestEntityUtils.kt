@@ -22,13 +22,13 @@ class TestEntityUtils {
         Database.init(TEST_URL)
 
         val department1 = Database {
-            DepartmentEntity.insert {
-                it[displayName] = "department1"
+            DepartmentEntity.new {
+                displayName = "department1"
             }
         }
         val department2 = Database {
-            DepartmentEntity.insert {
-                it[displayName] = "department2"
+            DepartmentEntity.new {
+                displayName = "department2"
             }
         }
         val departments = listOf(department1, department2)
@@ -45,8 +45,8 @@ class TestEntityUtils {
         Database.init(TEST_URL)
 
         val department = Database {
-            DepartmentEntity.insert {
-                it[displayName] = "test"
+            DepartmentEntity.new {
+                displayName = "test"
             }
         }
 

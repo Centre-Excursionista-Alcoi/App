@@ -14,6 +14,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
@@ -87,7 +88,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
             }
         }
 
-        override fun serialize(encoder: Encoder, value: E) {
+        override fun serialize(encoder: Encoder, value: E) = Database {
             encoder.encodeStructure(descriptor) {
                 for (column in columns) {
                     val columnName = column.name
