@@ -5,8 +5,6 @@ import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
-import org.centrexcursionistalcoi.app.database.table.Departments
-import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import java.util.UUID

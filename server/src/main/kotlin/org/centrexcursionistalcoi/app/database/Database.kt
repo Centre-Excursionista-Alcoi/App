@@ -7,6 +7,7 @@ import org.jetbrains.annotations.TestOnly
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.sql.DriverManager
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
@@ -19,14 +20,17 @@ object Database {
     const val TEST_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;"
 
     private fun connect(
-        url: String = URL,
-        user: String = "",
-        password: String = ""
-    ) = JdbcDatabase.connect(url, user = user, password = password)
+        url: String,
+        driver: String,
+        user: String,
+        password: String
+    ) = JdbcDatabase.connect(url, driver, user, password)
 
     fun init(url: String = URL, username: String = "", password: String = "") {
         println("Initializing database with url: $url")
-        database = connect(url, username, password)
+        val driver = DriverManager.getDriver(url).javaClass.name
+        println("Using driver: $driver")
+        database = connect(url, driver, username, password)
 
         transaction(database) {
             SchemaUtils.create(*tables)
