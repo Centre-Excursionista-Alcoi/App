@@ -27,9 +27,9 @@ import kotlinx.io.asOutputStream
 import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
-import org.centrexcursionistalcoi.app.database.entity.Department
-import org.centrexcursionistalcoi.app.database.entity.File
-import org.centrexcursionistalcoi.app.database.entity.Post
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
@@ -66,7 +66,7 @@ class ApplicationTest {
     @Test
     fun testDownload() = runApplicationTest(
         databaseInitBlock = {
-            File.insert {
+            FileEntity.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
                 it[Files.data] = bytesFromResource("/square.png")
@@ -94,15 +94,15 @@ class ApplicationTest {
     @Test
     fun testDepartments() = runApplicationTest(
         databaseInitBlock = {
-            Department.insert {
+            DepartmentEntity.insert {
                 it[Departments.displayName] = "Example Department"
             }
-            val imageFile = File.insert {
+            val imageFile = FileEntity.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
                 it[Files.data] = bytesFromResource("/square.png")
             }
-            Department.insert {
+            DepartmentEntity.insert {
                 it[Departments.displayName] = "Image Department"
                 it[Departments.imageFile] = imageFile.id
             }
@@ -130,12 +130,12 @@ class ApplicationTest {
     @Test
     fun testDepartment() = runApplicationTest(
         databaseInitBlock = {
-            val imageFile = File.insert {
+            val imageFile = FileEntity.insert {
                 it[Files.name] = "square.png"
                 it[Files.type] = "image/png"
                 it[Files.data] = bytesFromResource("/square.png")
             }
-            Department.insert {
+            DepartmentEntity.insert {
                 it[Departments.displayName] = "Image Department"
                 it[Departments.imageFile] = imageFile.id
             }
@@ -192,14 +192,14 @@ class ApplicationTest {
         }
 
         // Make sure the department was created
-        val department = Database { Department.findBy { Departments.id eq departmentId } }
+        val department = Database { DepartmentEntity.findBy { Departments.id eq departmentId } }
         assertNotNull(department, "Created department not found in database")
         assertEquals("New Department", department.displayName)
 
         val departmentImageId = department.imageFile
         assertNotNull(departmentImageId, "Created department has no image file")
 
-        val departmentImageFile = Database { File.findBy { Files.id eq departmentImageId } }
+        val departmentImageFile = Database { FileEntity.findBy { Files.id eq departmentImageId } }
         assertEquals("square.png", departmentImageFile?.name)
         assertEquals("image/png", departmentImageFile?.type)
         val rawFile = bytesFromResource("/square.png")
@@ -209,16 +209,16 @@ class ApplicationTest {
     @Test
     fun testPosts() = runApplicationTest(
         databaseInitBlock = {
-            val department = Department.insert {
+            val department = DepartmentEntity.insert {
                 it[Departments.displayName] = "Example Department"
             }
-            Post.insert {
+            PostEntity.insert {
                 it[Posts.title] = "Members Post"
                 it[Posts.content] = "This is a members-only post."
                 it[Posts.onlyForMembers] = true
                 it[Posts.department] = department.id
             }
-            Post.insert {
+            PostEntity.insert {
                 it[Posts.title] = "Public Post"
                 it[Posts.content] = "This is a public post."
                 it[Posts.onlyForMembers] = false

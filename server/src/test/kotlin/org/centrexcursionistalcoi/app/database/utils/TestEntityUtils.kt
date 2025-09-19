@@ -11,7 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
-import org.centrexcursionistalcoi.app.database.entity.Department
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.table.Departments.displayName
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.getString
@@ -22,12 +22,12 @@ class TestEntityUtils {
         Database.init(TEST_URL)
 
         val department1 = Database {
-            Department.insert {
+            DepartmentEntity.insert {
                 it[displayName] = "department1"
             }
         }
         val department2 = Database {
-            Department.insert {
+            DepartmentEntity.insert {
                 it[displayName] = "department2"
             }
         }
@@ -45,13 +45,13 @@ class TestEntityUtils {
         Database.init(TEST_URL)
 
         val department = Database {
-            Department.insert {
+            DepartmentEntity.insert {
                 it[displayName] = "test"
             }
         }
 
-        val serializer = Department.serializer()
-        assertEquals("org.centrexcursionistalcoi.app.database.entity.Department", serializer.descriptor.serialName)
+        val serializer = DepartmentEntity.serializer()
+        assertEquals("org.centrexcursionistalcoi.app.database.entity.DepartmentEntity", serializer.descriptor.serialName)
 
         val json = Json.encodeToString(serializer, department)
         val element = Json.decodeFromString(JsonElement.serializer(), json).jsonObject

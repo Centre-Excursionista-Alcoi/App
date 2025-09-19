@@ -6,8 +6,8 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
-class Post(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Post>(Posts)
+class PostEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<PostEntity>(Posts)
 
     var date by Posts.date
     var title by Posts.title

@@ -21,9 +21,9 @@ import io.ktor.utils.io.streams.asByteWriteChannel
 import org.centrexcursionistalcoi.app.Greeting
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.Department
-import org.centrexcursionistalcoi.app.database.entity.File
-import org.centrexcursionistalcoi.app.database.entity.Post
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.Posts
@@ -51,7 +51,7 @@ fun Application.configureRouting() {
                 return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
             }
 
-            val file = Database { File.findBy { Files.id eq uuid } }
+            val file = Database { FileEntity.findBy { Files.id eq uuid } }
             if (file == null) {
                 return@get call.respondText("File not found", status = HttpStatusCode.NotFound)
             }
@@ -72,7 +72,7 @@ fun Application.configureRouting() {
         }
 
         get("/departments") {
-            val departments = Database { Department.getAll() }
+            val departments = Database { DepartmentEntity.getAll() }
 
             call.respondText(ContentType.Application.Json) {
                 json.encodeEntityListToString(departments)
@@ -84,7 +84,7 @@ fun Application.configureRouting() {
                 return@get call.respondText("Malformed id", status = HttpStatusCode.BadRequest)
             }
 
-            val department = Database { Department.findBy { Departments.id eq id } }
+            val department = Database { DepartmentEntity.findBy { Departments.id eq id } }
             if (department == null) {
                 return@get call.respondText("Department #$id not found", status = HttpStatusCode.NotFound)
             }
@@ -135,13 +135,13 @@ fun Application.configureRouting() {
             }
 
             val department = Database {
-                val imageFile = File.insert {
+                val imageFile = FileEntity.insert {
                     it[Files.name] = originalFileName
                     it[Files.type] = contentType?.toString() ?: "application/octet-stream"
                     it[Files.data] = imageDataStream.toByteArray()
                 }
 
-                Department.insert {
+                DepartmentEntity.insert {
                     it[Departments.displayName] = displayName
                     it[Departments.imageFile] = imageFile.id
                 }
@@ -156,9 +156,9 @@ fun Application.configureRouting() {
             val isLoggedIn = session != null
             val posts = Database {
                 if (isLoggedIn)
-                    Post.getAll()
+                    PostEntity.getAll()
                 else
-                    Post.get { Posts.onlyForMembers eq false }
+                    PostEntity.get { Posts.onlyForMembers eq false }
             }.toMutableList()
             if (session == null) {
                 // Not logged in, filter out members-only posts

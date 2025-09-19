@@ -5,8 +5,8 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 
-class Department(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Department>(Departments)
+class DepartmentEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<DepartmentEntity>(Departments)
 
     var displayName by Departments.displayName
     var imageFile by Departments.imageFile
