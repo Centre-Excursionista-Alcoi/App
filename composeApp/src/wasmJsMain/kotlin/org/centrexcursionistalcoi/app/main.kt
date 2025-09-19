@@ -20,6 +20,8 @@ import org.publicvalue.multiplatform.oidc.appsupport.WasmCodeAuthFlowFactory
 fun main() {
     Napier.base(DebugAntilog())
 
+    secretsBinaryLoaded = true
+
     redirectOrigin = window.location.origin
 
     tokenStore = WasmSettingsTokenStore()

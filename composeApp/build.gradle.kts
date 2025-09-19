@@ -1,12 +1,15 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.sekret)
 }
 
 kotlin {
@@ -120,6 +123,28 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+sekret {
+    properties {
+        enabled.set(true)
+
+        packageName.set("org.centrexcursionistalcoi.app")
+        encryptionKey.set(System.getenv("SEKRET_KEY") ?: "0123456789ABCDEF") // Use a secure key in production!
+    }
+}
+
+buildkonfig {
+    packageName = "org.centrexcursionistalcoi.app"
+
+    defaultConfigs {
+        buildConfigField(
+            type = STRING,
+            name = "SERVER_URL",
+            value = "https://server.cea.arnaumora.com",
+            const = true,
+        )
     }
 }
 

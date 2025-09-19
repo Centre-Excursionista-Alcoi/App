@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import dev.datlag.sekret.NativeLoader
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.auth.tokenStore
@@ -25,6 +26,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         Napier.base(DebugAntilog())
+
+        secretsBinaryLoaded = NativeLoader.loadLibrary("sekret")
 
         codeAuthFlowFactory.registerActivity(this)
 
