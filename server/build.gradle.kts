@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
@@ -62,4 +64,9 @@ tasks.register<JavaExec>("generateMigrationScript") {
     description = "Generate a migration script in the path src/main/kotlin/org/centrexcursionistalcoi/app/database/migrations"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass = "org.centrexcursionistalcoi.app.database.GenerateMigrationScriptKt"
+}
+
+tasks.withType<ShadowJar> {
+    // Make sure all drivers are included in the fat jar
+    mergeServiceFiles()
 }
