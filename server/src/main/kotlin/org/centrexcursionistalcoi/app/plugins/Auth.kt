@@ -16,11 +16,16 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.digestAuthenticationCredentials
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.parseAuthorizationHeader
+import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.sessions
@@ -145,9 +150,43 @@ fun Claim.asDisplayString(): String {
     return "N/A"
 }
 
+private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: String) {
+    try {
+        val kid = JWT.decode(token).keyId
+        val jwk = jwkProvider.get(kid)
+        val decodedToken = JWT.require(Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null))
+            .withAudience(OAUTH_CLIENT_ID)
+            .withIssuer(ISSUER)
+            .build()
+            .verify(token)
+
+        val sub: String? = decodedToken.getClaim("sub").asString() // Subject Identifier
+        val username: String? = decodedToken.getClaim("preferred_username").asString()
+        val email: String? = decodedToken.getClaim("email").asString()
+        val groups = decodedToken.getClaim("groups")?.asList(String::class.java)
+
+        if (sub != null && username != null && email != null && groups != null) {
+            call.sessions.set(UserSession(sub, username, email, groups))
+            call.respondRedirect("/dashboard")
+        } else {
+            call.respond(HttpStatusCode.NotAcceptable, "Missing required user info in token")
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        call.respond(HttpStatusCode.Unauthorized, "Invalid id_token: ${e.message}")
+    }
+}
+
 fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
     // Step 1: Start login - redirect to Authentik authorize endpoint with PKCE + state
     get("/login") {
+        val bearerToken = call.request.parseAuthorizationHeader()
+            ?.takeIf { it.authScheme.equals("Bearer", true) }
+            ?.render()
+        if (bearerToken != null) {
+            return@get processJWT(jwkProvider, bearerToken)
+        }
+
         val state = UUID.randomUUID().toString()
         val codeVerifier = generateCodeVerifier()
         val codeChallenge = generateCodeChallenge(codeVerifier)
@@ -211,29 +250,6 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             return@get
         }
 
-        try {
-            val kid = JWT.decode(tokenResp.id_token).keyId
-            val jwk = jwkProvider.get(kid)
-            val decodedToken = JWT.require(Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null))
-                .withAudience(OAUTH_CLIENT_ID)
-                .withIssuer(ISSUER)
-                .build()
-                .verify(tokenResp.id_token)
-
-            val sub: String? = decodedToken.getClaim("sub").asString() // Subject Identifier
-            val username: String? = decodedToken.getClaim("preferred_username").asString()
-            val email: String? = decodedToken.getClaim("email").asString()
-            val groups = decodedToken.getClaim("groups")?.asList(String::class.java)
-
-            if (sub != null && username != null && email != null && groups != null) {
-                call.sessions.set(UserSession(sub, username, email, groups))
-                call.respondRedirect("/dashboard")
-            } else {
-                call.respond(HttpStatusCode.NotAcceptable, "Missing required user info in token")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            call.respond(HttpStatusCode.Unauthorized, "Invalid id_token: ${e.message}")
-        }
+        processJWT(jwkProvider, tokenResp.id_token)
     }
 }
