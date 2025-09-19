@@ -4,6 +4,7 @@ import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTDecodeException
 import com.auth0.jwt.interfaces.Claim
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.java.Java
@@ -22,8 +23,10 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.auth.principal
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
@@ -167,10 +170,19 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
 
         if (sub != null && username != null && email != null && groups != null) {
             call.sessions.set(UserSession(sub, username, email, groups))
-            call.respondRedirect("/dashboard")
+            call.respondText("OK")
         } else {
+            call.response.header(
+                "X-Debug-JWT-Claims",
+                decodedToken.claims
+                    .mapValues { (_, claim) -> claim.asDisplayString() }
+                    .toList()
+                    .joinToString(", ") { (key, claim) -> "$key=$claim" }
+            )
             call.respond(HttpStatusCode.NotAcceptable, "Missing required user info in token")
         }
+    } catch (e: JWTDecodeException) {
+        call.respond(HttpStatusCode.BadRequest, "JWT token is not valid: ${e.message}")
     } catch (e: Exception) {
         e.printStackTrace()
         call.respond(HttpStatusCode.Unauthorized, "Invalid id_token: ${e.message}")
@@ -183,6 +195,8 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
         val bearerToken = call.request.parseAuthorizationHeader()
             ?.takeIf { it.authScheme.equals("Bearer", true) }
             ?.render()
+            ?.removePrefix("Bearer")
+            ?.trim()
         if (bearerToken != null) {
             return@get processJWT(jwkProvider, bearerToken)
         }

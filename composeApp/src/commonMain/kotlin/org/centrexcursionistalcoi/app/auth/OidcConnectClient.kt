@@ -40,7 +40,7 @@ fun createOidcConnectClient(includeDiscoveryUri: Boolean = true) = DefaultOpenId
         endpoints = defaultEndpoints,
         clientId = "ZvPaQu8nsU1fpaSkt3c4MPDFKue2RrpGrEdEbiTU",
         clientSecret = "pcG8cxsh80dN77jHTViyK6uanyEAtgOemtGgvWP8Jpva1PJqZGsLbGNp4d1tZPAzfWbgTcjnyS7BEqPeoftAgaQMO0ZDvFcYp8eMDxemVywVlLeDrbJEzWIYuGNUFjf0",
-        scope = "openid profile",
+        scope = "openid profile email groups",
         codeChallengeMethod = CodeChallengeMethod.S256,
         redirectUri = redirectUri.also { Napier.i { "Redirect URI: $it" } },
         postLogoutRedirectUri = postLogoutRedirectUri,
