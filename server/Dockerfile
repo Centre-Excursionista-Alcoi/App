@@ -45,5 +45,5 @@ RUN gradle buildFatJar --no-daemon
 FROM amazoncorretto:22-alpine AS runtime
 EXPOSE 8080
 RUN mkdir /app
-COPY --from=build /home/gradle/src/server/build/libs/*.jar /app/server.jar
+COPY --from=build /home/gradle/src/server/build/libs/server-all.jar /app/server.jar
 ENTRYPOINT ["java","-jar","/app/server.jar"]
