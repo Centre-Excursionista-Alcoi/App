@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.plugins.configureSessions
 fun main() {
     Database.init(
         url = System.getenv("DB_URL") ?: Database.URL,
+        driver = System.getenv("DB_DRIVER"),
         username = System.getenv("DB_USER") ?: "",
         password = System.getenv("DB_PASS") ?: "",
     )

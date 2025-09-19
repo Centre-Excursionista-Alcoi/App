@@ -26,9 +26,14 @@ object Database {
         password: String
     ) = JdbcDatabase.connect(url, driver, user, password)
 
-    fun init(url: String = URL, username: String = "", password: String = "") {
+    fun init(
+        url: String = URL,
+        driver: String? = null,
+        username: String = "",
+        password: String = ""
+    ) {
         println("Initializing database with url: $url")
-        val driver = DriverManager.getDriver(url).javaClass.name
+        val driver = driver ?: DriverManager.getDriver(url).javaClass.name
         println("Using driver: $driver")
         database = connect(url, driver, username, password)
 
