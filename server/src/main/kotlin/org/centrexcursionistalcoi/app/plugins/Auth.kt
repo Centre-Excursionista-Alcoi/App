@@ -18,14 +18,10 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.digestAuthenticationCredentials
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
-import io.ktor.server.auth.principal
 import io.ktor.server.plugins.origin
-import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
@@ -37,8 +33,6 @@ import io.ktor.server.routing.routing
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.jsonObject
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -48,6 +42,9 @@ import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.jsonObject
+import org.centrexcursionistalcoi.app.auth.TokenResponse
 import org.centrexcursionistalcoi.app.json
 
 const val AUTH_PROVIDER_NAME = "authentik-oauth"
@@ -70,16 +67,6 @@ val authHttpClient = HttpClient(Java)
 
 // Simple in-memory store mapping state -> code_verifier (use Redis/DB for prod + TTL)
 val pkceStore = ConcurrentHashMap<String, String>()
-
-// Token response data class (partial)
-@Serializable
-data class TokenResponse(
-    val access_token: String? = null,
-    val token_type: String? = null,
-    val expires_in: Int? = null,
-    val refresh_token: String? = null,
-    val id_token: String? = null
-)
 
 fun generateCodeVerifier(): String {
     // 32 random bytes -> base64url -> ~43 chars (within 43..128 required)
@@ -211,24 +198,30 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             return@get processJWT(jwkProvider, bearerToken)
         }
 
+        val query = call.request.queryParameters
+
         // Redirection address, processed by the server. Will pass a Cookie session.
-        val redirectTo = call.request.queryParameters["redirect_to"]
+        val redirectTo = query["redirect_to"]
         call.sessions.set(LoginSession(redirectTo))
 
         // Redirect URI to pass to Authentik (must match one of the allowed URIs in the client config)
-        val redirectUri = call.request.queryParameters["redirect_uri"] ?: run {
+        val redirectUri = query["redirect_uri"] ?: run {
             val origin = call.request.origin
             URLBuilder(origin.scheme + "://" + origin.serverHost + ":" + origin.serverPort)
                 .appendPathSegments("callback")
                 .buildString()
         }
 
-        val state = UUID.randomUUID().toString()
-        val codeVerifier = generateCodeVerifier()
-        val codeChallenge = generateCodeChallenge(codeVerifier)
+        var state = query["state"]
+        var codeChallenge = query["code_challenge"]
+        if (state == null || codeChallenge == null) {
+            state = UUID.randomUUID().toString()
+            val codeVerifier = generateCodeVerifier()
+            codeChallenge = generateCodeChallenge(codeVerifier)
 
-        // Store verifier server-side mapped by "state"
-        pkceStore[state] = codeVerifier
+            // Store verifier server-side mapped by "state"
+            pkceStore[state] = codeVerifier
+        }
 
         val authorizeUrl = URLBuilder(AUTH_ENDPOINT).apply {
             parameters.append("client_id", OAUTH_CLIENT_ID)
@@ -247,15 +240,21 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
     get("/callback") {
         val query = call.request.queryParameters
         val code = query["code"]
-        val state = query["state"]
 
-        if (code.isNullOrBlank() || state.isNullOrBlank()) {
-            call.respond(HttpStatusCode.BadRequest, "Missing code or state")
+        if (code.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, "Missing code")
             return@get
         }
 
         // Retrieve and remove the stored code_verifier
-        val codeVerifier = pkceStore.remove(state)
+        val codeVerifier = query["code_verifier"] ?: run {
+            val state = query["state"]
+            if (state.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "Missing state")
+                return@get
+            }
+            pkceStore.remove(state)
+        }
         if (codeVerifier == null) {
             call.respond(HttpStatusCode.Unauthorized, "Invalid or expired state")
             return@get
@@ -281,11 +280,12 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
 
         val tokenResp: TokenResponse = json.decodeFromJsonElement(TokenResponse.serializer(), tokenJson)
 
-        if (tokenResp.id_token == null) {
+        val idToken = tokenResp.id_token
+        if (idToken == null) {
             call.respond(HttpStatusCode.InternalServerError, "No id_token returned")
             return@get
         }
 
-        processJWT(jwkProvider, tokenResp.id_token)
+        processJWT(jwkProvider, idToken)
     }
 }
