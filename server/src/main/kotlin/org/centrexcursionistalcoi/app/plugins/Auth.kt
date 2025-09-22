@@ -211,13 +211,17 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             return@get processJWT(jwkProvider, bearerToken)
         }
 
+        // Redirection address, processed by the server. Will pass a Cookie session.
         val redirectTo = call.request.queryParameters["redirect_to"]
         call.sessions.set(LoginSession(redirectTo))
 
-        val origin = call.request.origin
-        val redirectUri = URLBuilder(origin.scheme + "://" + origin.serverHost + ":" + origin.serverPort)
-            .appendPathSegments("callback")
-            .buildString()
+        // Redirect URI to pass to Authentik (must match one of the allowed URIs in the client config)
+        val redirectUri = call.request.queryParameters["redirect_uri"] ?: run {
+            val origin = call.request.origin
+            URLBuilder(origin.scheme + "://" + origin.serverHost + ":" + origin.serverPort)
+                .appendPathSegments("callback")
+                .buildString()
+        }
 
         val state = UUID.randomUUID().toString()
         val codeVerifier = generateCodeVerifier()
