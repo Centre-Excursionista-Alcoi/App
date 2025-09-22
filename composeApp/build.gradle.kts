@@ -40,6 +40,9 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.android)
+
+            // Custom Tabs support
+            implementation(libs.androidx.browser)
         }
 
         commonMain.dependencies {
@@ -61,11 +64,6 @@ kotlin {
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
-
-            // OIDC Support
-            implementation(libs.kmm.oidc.appsupport)
-            implementation(libs.kmm.oidc.ktor)
-            implementation(libs.kmm.oidc.tokenstore)
 
             // Settings
             implementation(libs.kmm.settings.core)

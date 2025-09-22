@@ -17,23 +17,19 @@ import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.screen.HomeScreen
 import org.centrexcursionistalcoi.app.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.screen.LoginScreen
-import org.publicvalue.multiplatform.oidc.ExperimentalOpenIdConnect
-import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 
 @Composable
 fun MainApp(
-    authFlowFactory: CodeAuthFlowFactory,
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     MaterialTheme {
-        App(authFlowFactory, onNavHostReady)
+        App(onNavHostReady)
     }
 }
 
 @Composable
-@OptIn(ExperimentalSettingsApi::class, ExperimentalOpenIdConnect::class)
+@OptIn(ExperimentalSettingsApi::class)
 fun App(
-    authFlowFactory: CodeAuthFlowFactory,
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -61,7 +57,6 @@ fun App(
         }
         composable<Destination.Login> {
             LoginScreen(
-                authFlowFactory,
                 onLoginSuccess = {
                     navController.navigate(Destination.Loading) {
                         popUpTo(Destination.Login)

@@ -21,22 +21,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
-import org.publicvalue.multiplatform.oidc.OpenIdConnectException
-import org.publicvalue.multiplatform.oidc.appsupport.CodeAuthFlowFactory
 
 @Composable
 fun LoginScreen(
-    authFlowFactory: CodeAuthFlowFactory,
-    model: LoginViewModel = viewModel { LoginViewModel(authFlowFactory) },
+    model: LoginViewModel = viewModel { LoginViewModel() },
     onLoginSuccess: () -> Unit,
 ) {
-    val discoveryComplete by model.discoveryComplete.collectAsState()
-    val isLoading by model.isLoading.collectAsState()
     val isLoggingIn by model.isLoggingIn.collectAsState()
-    val isStoringToken by model.isStoringToken.collectAsState()
-    val error by model.error.collectAsState()
-
-    LaunchedEffect(Unit) { model.load() }
 
     Scaffold { paddingValues ->
         Column(
@@ -47,74 +38,22 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
                 contentAlignment = Alignment.Center
             ) {
-                /*LaunchedEffect(discoveryComplete) {
-                    if (discoveryComplete) {
-                        model.login().invokeOnCompletion {
-                            onLoginSuccess()
-                        }
-                    }
-                }*/
-
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (!discoveryComplete) {
+                    if (isLoggingIn) {
                         CircularProgressIndicator()
 
                         Text(
-                            text = "Running discovery...",
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    } else if (isLoading) {
-                        CircularProgressIndicator()
-
-                        Text(
-                            text = if (isLoggingIn) "Logging in..." else if (isStoringToken) "Storing token..." else "Loading...",
+                            text = "Logging in...",
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     } else {
-                        error?.let { err ->
-                            when (err) {
-                                is OpenIdConnectException.AuthenticationCancelled -> {
-                                    Text(
-                                        text = "Login cancelled",
-                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-
-                                is OpenIdConnectException.TechnicalFailure -> {
-                                    Text(
-                                        text = "Technical failure! Please check your network connection and try again.",
-                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-
-                                else -> {
-                                    Text(
-                                        text = "Error: ${err.message}",
-                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = { model.login().invokeOnCompletion { onLoginSuccess() } }
-                            ) { Text("Try again") }
-                        } ?: run {
-                            Button(
-                                onClick = { model.login().invokeOnCompletion { onLoginSuccess() } }
-                            ) { Text("Login") }
-                        }
+                        Button(
+                            onClick = { model.login().invokeOnCompletion { onLoginSuccess() } }
+                        ) { Text("Login") }
                     }
                 }
             }

@@ -17,7 +17,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        maven("https://maven.arnyminerz.com/repository/maven-public/")
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")

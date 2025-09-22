@@ -28,6 +28,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.serializationJson)
+            implementation(libs.kotlin.crypto.sha2)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
