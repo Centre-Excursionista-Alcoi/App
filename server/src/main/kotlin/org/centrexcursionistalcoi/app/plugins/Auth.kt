@@ -13,6 +13,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
+import io.ktor.http.appendPathSegments
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -23,6 +24,8 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.origin
+import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
@@ -31,6 +34,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import kotlinx.serialization.Serializable
@@ -170,7 +174,13 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
 
         if (sub != null && username != null && email != null && groups != null) {
             call.sessions.set(UserSession(sub, username, email, groups))
-            call.respondText("OK")
+
+            val loginSession = call.sessions.get<LoginSession>()
+            val redirectUrl = loginSession?.redirectUrl
+            if (redirectUrl != null)
+                call.respondRedirect(redirectUrl)
+            else
+                call.respondText("OK")
         } else {
             call.response.header(
                 "X-Debug-JWT-Claims",
@@ -201,6 +211,14 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             return@get processJWT(jwkProvider, bearerToken)
         }
 
+        val redirectTo = call.request.queryParameters["redirect_to"]
+        call.sessions.set(LoginSession(redirectTo))
+
+        val origin = call.request.origin
+        val redirectUri = URLBuilder(origin.scheme + "://" + origin.serverHost + ":" + origin.serverPort)
+            .appendPathSegments("callback")
+            .buildString()
+
         val state = UUID.randomUUID().toString()
         val codeVerifier = generateCodeVerifier()
         val codeChallenge = generateCodeChallenge(codeVerifier)
@@ -212,7 +230,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             parameters.append("client_id", OAUTH_CLIENT_ID)
             parameters.append("response_type", "code")
             parameters.append("scope", SCOPES)
-            parameters.append("redirect_uri", REDIRECT_URI)
+            parameters.append("redirect_uri", redirectUri)
             parameters.append("state", state)
             parameters.append("code_challenge", codeChallenge)
             parameters.append("code_challenge_method", "S256")

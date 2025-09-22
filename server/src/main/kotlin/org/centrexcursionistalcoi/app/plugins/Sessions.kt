@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.response.header
@@ -50,6 +51,13 @@ data class UserSession(val sub: String, val username: String, val email: String,
     fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
 }
 
+@Serializable
+data class LoginSession(val redirectUrl: String?) {
+    companion object {
+        const val COOKIE_NAME = "LOGIN_SESSION"
+    }
+}
+
 fun Application.configureSessions(isTesting: Boolean) {
     install(Sessions) {
         cookie<UserSession>(UserSession.COOKIE_NAME) {
@@ -61,6 +69,13 @@ fun Application.configureSessions(isTesting: Boolean) {
 
             // Encrypt and sign the cookie to prevent tampering
             transform(SessionTransportTransformerEncrypt(secretEncryptKey, secretSignKey))
+        }
+        cookie<LoginSession>(LoginSession.COOKIE_NAME) {
+            cookie.httpOnly = true      // Prevent JS access
+            cookie.secure = !isTesting  // Use HTTPS in production
+            cookie.extensions["SameSite"] = "lax"
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = 5 * 60 // 5 minutes
         }
     }
 }
