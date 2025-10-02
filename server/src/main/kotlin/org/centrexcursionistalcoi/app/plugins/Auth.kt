@@ -30,19 +30,15 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import java.net.URI
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.security.SecureRandom
 import java.security.interfaces.RSAPublicKey
-import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.jsonObject
 import org.centrexcursionistalcoi.app.auth.TokenResponse
 import org.centrexcursionistalcoi.app.auth.generateCodeChallenge
@@ -143,6 +139,8 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
             call.sessions.set(UserSession(sub, username, email, groups))
 
             val loginSession = call.sessions.get<LoginSession>()
+            call.sessions.clear<LoginSession>()
+
             val redirectUrl = loginSession?.redirectUrl
             if (redirectUrl != null)
                 call.respondRedirect(redirectUrl)

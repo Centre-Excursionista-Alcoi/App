@@ -101,6 +101,8 @@ kotlin {
 
             // SQLDelight for WASM
             implementation(libs.sqldelight.wasm)
+            implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
+            implementation(npm("sql.js", "1.6.2"))
             implementation(devNpm("copy-webpack-plugin", "9.1.0"))
         }
     }
@@ -115,8 +117,8 @@ kotlin {
 sqldelight {
     databases {
         create("Database") {
-            packageName.set("org.centrexcursionistalcoi.app.database")
             generateAsync.set(true)
+            packageName.set("org.centrexcursionistalcoi.app.database")
         }
     }
 }

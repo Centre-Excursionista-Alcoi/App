@@ -6,7 +6,7 @@ import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import org.centrexcursionistalcoi.app.database.Database
 
 actual class DriverFactory {
-    actual fun createDriver(): SqlDriver {
+    actual suspend fun createDriver(): SqlDriver {
         return NativeSqliteDriver(Database.Schema.synchronous(), "centrexcursionistalcoi.db")
     }
 }

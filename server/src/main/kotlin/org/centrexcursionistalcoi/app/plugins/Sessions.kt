@@ -1,12 +1,9 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.Url
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.response.header
-import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.SessionTransportTransformerEncrypt
@@ -63,7 +60,7 @@ fun Application.configureSessions(isTesting: Boolean, isDevelopment: Boolean) {
         cookie<UserSession>(UserSession.COOKIE_NAME) {
             cookie.httpOnly = true                        // Prevent JS access
             cookie.secure = !isTesting && !isDevelopment  // Use HTTPS in production
-            cookie.extensions["SameSite"] = if (isDevelopment) "none" else "lax"
+            if (!isDevelopment) cookie.extensions["SameSite"] = "lax"
             cookie.path = "/"
             cookie.maxAgeInSeconds = 7 * 24 * 60 * 60 // 1 week
 

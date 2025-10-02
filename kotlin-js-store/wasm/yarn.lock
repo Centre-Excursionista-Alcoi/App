@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@cashapp/sqldelight-sqljs-worker@2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@cashapp/sqldelight-sqljs-worker/-/sqldelight-sqljs-worker-2.0.2.tgz#5503bbac49dd8c0d6e6c7bf5c8e59795475ba566"
+  integrity sha512-jmk1Tnkwknu4eG/6hbetWf4Z+s/bPfvC9GWdW+uMXPsHNWSxX4ZyPMVdJnH0Jzi4Qrohc7Pby01HX+UdTIevow==
+
 "@js-joda/core@3.2.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@js-joda/core/-/core-3.2.0.tgz#3e61e21b7b2b8a6be746df1335cf91d70db2a273"
@@ -249,6 +254,11 @@ slash@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/slash/-/slash-3.0.0.tgz#6539be870c165adbd5240220dbe361f1bc4d4634"
   integrity sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==
+
+sql.js@1.6.2:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/sql.js/-/sql.js-1.6.2.tgz#7fb70ff68089434826a39b8f5afb2170d682eb3f"
+  integrity sha512-9iucI5fXQa+Gspeqf/BNB20PxJIn5LhXDt4mjXoFPqXdR+NqtFs15SdKpSIJ6s529aGL9zFR9p2eSCIEiMsNGA==
 
 to-regex-range@^5.0.1:
   version "5.0.1"

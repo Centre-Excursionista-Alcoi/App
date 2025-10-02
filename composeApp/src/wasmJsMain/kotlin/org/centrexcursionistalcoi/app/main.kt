@@ -18,7 +18,6 @@ import io.github.aakira.napier.Napier
 import io.ktor.http.Url
 import kotlinx.browser.document
 import kotlinx.browser.window
-import org.centrexcursionistalcoi.app.auth.AuthCallbackProcessor
 import org.centrexcursionistalcoi.app.auth.redirectOrigin
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.AuthCallbackModel

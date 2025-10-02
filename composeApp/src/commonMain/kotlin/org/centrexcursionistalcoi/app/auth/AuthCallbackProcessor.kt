@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.auth
 
-import io.github.aakira.napier.Napier
 import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
@@ -11,11 +9,12 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.network.getHttpClient
-import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
-import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalUuidApi::class)
 object AuthCallbackProcessor {
+
+    private val client by lazy { getHttpClient() }
+
     suspend fun processCallbackUrl(url: Url) {
         val query = url.parameters
         val code = query["code"]
@@ -36,7 +35,7 @@ object AuthCallbackProcessor {
             throw IllegalStateException("No code verifier found for state: $state")
         }
 
-        val response = getHttpClient().get(
+        val response = client.get(
             URLBuilder(BuildKonfig.SERVER_URL)
                 .appendPathSegments("callback")
                 .apply {
@@ -49,7 +48,10 @@ object AuthCallbackProcessor {
         if (!response.status.isSuccess()) {
             throw IllegalStateException("Authentication failed: ${response.status}")
         }
-        if (!SettingsCookiesStorage.Default.contains("USER_SESSION")) {
+
+        // Verify that the login was successful by fetching the profile endpoint
+        val profileResponse = client.get("/profile")
+        if (!profileResponse.status.isSuccess()) {
             throw IllegalStateException("Authentication failed: USER_SESSION cookie not found")
         }
     }

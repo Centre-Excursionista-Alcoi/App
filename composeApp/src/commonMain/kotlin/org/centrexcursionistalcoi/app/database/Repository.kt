@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface Repository<T : Any, IdType: Any> {
     fun selectAllAsFlow(dispatcher: CoroutineDispatcher = Dispatchers.Default): Flow<List<T>>
 
-    fun selectAll(): List<T>
+    suspend fun selectAll(): List<T>
 
     suspend fun insert(item: T): Long
 

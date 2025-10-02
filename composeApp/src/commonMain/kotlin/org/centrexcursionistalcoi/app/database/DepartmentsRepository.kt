@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,7 +21,7 @@ object DepartmentsRepository: Repository<Department, Long> {
             departments.map { it.toDepartment() }
         }
 
-    override fun selectAll() = queries.selectAll().executeAsList().map { it.toDepartment() }
+    override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toDepartment() }
 
     override suspend fun insert(item: Department) = queries.insert(
         id = item.id,

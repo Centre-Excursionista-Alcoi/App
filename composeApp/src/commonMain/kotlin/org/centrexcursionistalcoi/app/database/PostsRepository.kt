@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.database
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.storage.databaseInstance
-import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 object PostsRepository : Repository<Post, Uuid> {
     private val queries = databaseInstance.postsQueries
@@ -20,7 +19,7 @@ object PostsRepository : Repository<Post, Uuid> {
         .mapToList(dispatcher)
         .map { list -> list.map { it.toPost() } }
 
-    override fun selectAll(): List<Post> = queries.selectAll().executeAsList()
+    override suspend fun selectAll(): List<Post> = queries.selectAll().awaitAsList()
         .map { it.toPost() }
 
     override suspend fun insert(item: Post) = queries.insert(
