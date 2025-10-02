@@ -282,6 +282,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
 
         val idToken = tokenResp.id_token
         if (idToken == null) {
+            call.response.header("X-Debug-Token-Response", bodyText)
             call.respond(HttpStatusCode.InternalServerError, "No id_token returned")
             return@get
         }
