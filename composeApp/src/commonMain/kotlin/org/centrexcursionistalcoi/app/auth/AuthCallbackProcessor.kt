@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.auth
 
+import io.github.aakira.napier.Napier
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.URLBuilder
@@ -17,6 +18,8 @@ object AuthCallbackProcessor {
         val code = query["code"]
         val state = query["state"]
 
+        Napier.d { "Processing callback URL. code=$code, state=$state" }
+
         if (code.isNullOrBlank() || state.isNullOrBlank()) {
             throw IllegalArgumentException("Invalid callback URL: missing code or state")
         }
@@ -27,17 +30,22 @@ object AuthCallbackProcessor {
             throw IllegalArgumentException("Invalid callback URL: state is not a valid UUID", e)
         }
 
+        Napier.d { "State UUID: $stateUuid" }
+
         val codeVerifier = retrieveAndRemoveCodeVerifier(stateUuid)
         if (codeVerifier == null) {
             throw IllegalStateException("No code verifier found for state: $state")
         }
 
+        Napier.d { "Code verifier: $codeVerifier" }
+
         val response = getHttpClient().get(
             URLBuilder(BuildKonfig.SERVER_URL)
-                .appendPathSegments("login")
+                .appendPathSegments("callback")
                 .apply {
                     parameters["code"] = code
                     parameters["code_verifier"] = codeVerifier
+                    parameters["redirect_uri"] = BuildKonfig.REDIRECT_URI ?: error("REDIRECT_URI is not set")
                 }
                 .build()
         )

@@ -32,6 +32,6 @@ fun HttpClientConfig<*>.configureLogging() {
                 Napier.v(message)
             }
         }
-        level = LogLevel.ALL
+        level = LogLevel.HEADERS
     }
 }

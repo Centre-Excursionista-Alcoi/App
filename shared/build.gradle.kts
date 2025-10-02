@@ -27,8 +27,10 @@ kotlin {
     
     sourceSets {
         commonMain.dependencies {
+            // When adding dependencies here, also add them to Dockerfile in /server
             implementation(libs.kotlinx.serializationJson)
-            implementation(libs.kotlin.crypto.sha2)
+            api(libs.kotlin.crypto.random)
+            api(libs.kotlin.crypto.sha2)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

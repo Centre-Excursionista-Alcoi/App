@@ -23,7 +23,7 @@ actual object AuthFlowLogic {
             URLBuilder(BuildKonfig.SERVER_URL)
                 .appendPathSegments("login")
                 .apply {
-                    parameters["redirect_uri"] = "cea://redirect"
+                    parameters["redirect_uri"] = BuildKonfig.REDIRECT_URI ?: error("REDIRECT_URI is not set")
                     parameters["state"] = state.toString()
                     parameters["code_challenge"] = codeChallenge
                 }

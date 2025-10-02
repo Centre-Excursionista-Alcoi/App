@@ -14,8 +14,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         instance = this
 
-        Napier.base(DebugAntilog())
-
         secretsBinaryLoaded = NativeLoader.loadLibrary("sekret")
 
         setContent {

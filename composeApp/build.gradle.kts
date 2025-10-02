@@ -75,6 +75,8 @@ kotlin {
             // Logging
             implementation(libs.napier)
 
+            implementation(libs.kotlinx.serializationJson)
+
             implementation(projects.shared)
         }
 
@@ -90,6 +92,10 @@ kotlin {
             implementation(libs.ktor.client.js)
         }
     }
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 }
 
 android {
@@ -100,8 +106,8 @@ android {
         applicationId = "org.centrexcursionistalcoi.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2_00_00_000
+        versionName = "2.0.0"
 
         // Provide redirect URI for OIDC Auth flow
         addManifestPlaceholders(
@@ -143,6 +149,22 @@ buildkonfig {
             value = "https://server.cea.arnaumora.com",
             const = true,
         )
+        buildConfigField(
+            type = STRING,
+            name = "REDIRECT_URI",
+            value = null,
+            nullable = true,
+        )
+    }
+    targetConfigs {
+        create("android") {
+            buildConfigField(
+                type = STRING,
+                name = "REDIRECT_URI",
+                value = "cea://redirect",
+                nullable = true,
+            )
+        }
     }
 }
 

@@ -45,6 +45,8 @@ import java.util.concurrent.TimeUnit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.jsonObject
 import org.centrexcursionistalcoi.app.auth.TokenResponse
+import org.centrexcursionistalcoi.app.auth.generateCodeChallenge
+import org.centrexcursionistalcoi.app.auth.generateCodeVerifier
 import org.centrexcursionistalcoi.app.json
 
 const val AUTH_PROVIDER_NAME = "authentik-oauth"
@@ -67,28 +69,6 @@ val authHttpClient = HttpClient(Java)
 
 // Simple in-memory store mapping state -> code_verifier (use Redis/DB for prod + TTL)
 val pkceStore = ConcurrentHashMap<String, String>()
-
-fun generateCodeVerifier(): String {
-    // 32 random bytes -> base64url -> ~43 chars (within 43..128 required)
-    val random = SecureRandom()
-    val bytes = ByteArray(32)
-    random.nextBytes(bytes)
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
-}
-
-fun generateCodeChallenge(verifier: String): String {
-    val md = MessageDigest.getInstance("SHA-256")
-    val digest = md.digest(verifier.toByteArray(StandardCharsets.US_ASCII))
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
-}
-
-fun decodeJwtPayload(jwt: String): String {
-    val parts = jwt.split(".")
-    if (parts.size < 2) return "{}"
-    val payload = parts[1]
-    val decoded = Base64.getUrlDecoder().decode(payload)
-    return String(decoded, StandardCharsets.UTF_8)
-}
 
 fun Application.configureAuth() {
     // Fetch JWKS from Authentik to verify tokens
@@ -240,6 +220,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
     get("/callback") {
         val query = call.request.queryParameters
         val code = query["code"]
+        val redirectUri = query["redirect_uri"] ?: REDIRECT_URI
 
         if (code.isNullOrBlank()) {
             call.respond(HttpStatusCode.BadRequest, "Missing code")
@@ -266,7 +247,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             formParameters = Parameters.build {
                 append("grant_type", "authorization_code")
                 append("code", code)
-                append("redirect_uri", REDIRECT_URI)
+                append("redirect_uri", redirectUri)
                 append("client_id", OAUTH_CLIENT_ID)
                 // If your client is confidential (server-side), include secret:
                 append("client_secret", OAUTH_CLIENT_SECRET)
@@ -283,6 +264,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
         val idToken = tokenResp.id_token
         if (idToken == null) {
             call.response.header("X-Debug-Token-Response", bodyText)
+            call.response.header("X-Debug-RedirectUri", redirectUri)
             call.respond(HttpStatusCode.InternalServerError, "No id_token returned")
             return@get
         }
