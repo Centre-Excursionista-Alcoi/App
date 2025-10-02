@@ -1,0 +1,25 @@
+import kotlin.Boolean;
+import kotlin.uuid.Uuid;
+import kotlin.time.Instant;
+
+CREATE TABLE Posts (
+    id TEXT AS Uuid PRIMARY KEY NOT NULL,
+    date INTEGER AS Instant NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    imageFile TEXT DEFAULT NULL,
+    onlyForMembers INTEGER AS Boolean NOT NULL DEFAULT 0,
+    department INTEGER REFERENCES Departments(id)
+);
+
+insert:
+INSERT INTO Posts (id, date, title, content, imageFile, onlyForMembers, department) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+selectAll:
+SELECT * FROM Posts ORDER BY date DESC;
+
+deleteById:
+DELETE FROM Posts WHERE id = ?;
+
+update:
+UPDATE Posts SET date = ?, title = ?, content = ?, imageFile = ?, onlyForMembers = ?, department = ? WHERE id = ?;

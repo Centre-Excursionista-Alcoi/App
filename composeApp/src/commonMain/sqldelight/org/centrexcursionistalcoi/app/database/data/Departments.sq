@@ -1,0 +1,19 @@
+CREATE TABLE Departments (
+  id INTEGER PRIMARY KEY NOT NULL,
+  displayName TEXT NOT NULL,
+  imageFile TEXT DEFAULT NULL
+);
+
+CREATE INDEX idx_Departments_displayName ON Departments(displayName);
+
+insert:
+INSERT INTO Departments (id, displayName, imageFile) VALUES (?, ?, ?);
+
+selectAll:
+SELECT * FROM Departments ORDER BY id;
+
+deleteById:
+DELETE FROM Departments WHERE id = ?;
+
+update:
+UPDATE Departments SET displayName = ?, imageFile = ? WHERE id = ?;

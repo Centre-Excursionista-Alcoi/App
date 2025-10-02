@@ -69,6 +69,8 @@ kotlin {
 
             implementation(libs.kotlinx.serializationJson)
 
+            // SQLDelight extensions
+            implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
 
             implementation(projects.shared)
@@ -105,6 +107,8 @@ kotlin {
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        optIn.add("kotlin.time.ExperimentalTime")
+        optIn.add("kotlin.uuid.ExperimentalUuidApi")
     }
 }
 

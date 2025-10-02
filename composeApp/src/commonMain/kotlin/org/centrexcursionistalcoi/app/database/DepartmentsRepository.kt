@@ -3,16 +3,15 @@ package org.centrexcursionistalcoi.app.database
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.database.data.Department as DbDepartment
+import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object DepartmentsRepository {
-    private val queries = databaseInstance.departmentQueries
+object DepartmentsRepository: Repository<Department, Long> {
+    private val queries = databaseInstance.departmentsQueries
 
-    fun selectAllAsFlow(dispatcher: CoroutineDispatcher = Dispatchers.Default) = queries
+    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
         .asFlow()
         .mapToList(dispatcher)
@@ -21,27 +20,25 @@ object DepartmentsRepository {
             departments.map { it.toDepartment() }
         }
 
-    fun selectAll() = queries.selectAll().executeAsList()
+    override fun selectAll() = queries.selectAll().executeAsList().map { it.toDepartment() }
 
-    suspend fun insert(department: Department) = queries.insert(
-        id = department.id,
-        displayName = department.displayName,
-        imageFile = department.imageFile
+    override suspend fun insert(item: Department) = queries.insert(
+        id = item.id,
+        displayName = item.displayName,
+        imageFile = item.imageFile
     )
 
-    suspend fun update(department: Department) = queries.update(
-        id = department.id,
-        displayName = department.displayName,
-        imageFile = department.imageFile
+    override suspend fun update(item: Department) = queries.update(
+        id = item.id,
+        displayName = item.displayName,
+        imageFile = item.imageFile
     )
 
-    suspend fun deleteByIdList(ids: List<Long>) {
-        for (id in ids) {
-            queries.deleteById(id)
-        }
+    override suspend fun delete(id: Long) {
+        queries.deleteById(id)
     }
 
-    private fun DbDepartment.toDepartment() = Department(
+    private fun Departments.toDepartment() = Department(
         id = id,
         displayName = displayName,
         imageFile = imageFile
