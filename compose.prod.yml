@@ -1,3 +1,5 @@
 services:
   server:
     image: arnyminerz/cea-app:development
+    environment:
+      ENV: production

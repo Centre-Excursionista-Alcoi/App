@@ -58,11 +58,11 @@ data class LoginSession(val redirectUrl: String?) {
     }
 }
 
-fun Application.configureSessions(isTesting: Boolean) {
+fun Application.configureSessions(isTesting: Boolean, isDevelopment: Boolean) {
     install(Sessions) {
         cookie<UserSession>(UserSession.COOKIE_NAME) {
-            cookie.httpOnly = true      // Prevent JS access
-            cookie.secure = !isTesting  // Use HTTPS in production
+            cookie.httpOnly = true                        // Prevent JS access
+            cookie.secure = !isTesting && !isDevelopment  // Use HTTPS in production
             cookie.extensions["SameSite"] = "lax"
             cookie.path = "/"
             cookie.maxAgeInSeconds = 7 * 24 * 60 * 60 // 1 week
