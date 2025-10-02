@@ -1,5 +1,5 @@
 # Stage 1: Cache Gradle dependencies
-FROM gradle:latest AS cache
+FROM gradle:jdk21 AS cache
 RUN mkdir -p /home/gradle/cache_home
 ENV GRADLE_USER_HOME=/home/gradle/cache_home
 
@@ -31,7 +31,7 @@ WORKDIR /home/gradle/app
 RUN gradle clean build -i --stacktrace
 
 # Stage 2: Build Application
-FROM gradle:latest AS build
+FROM gradle:jdk21 AS build
 
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
 COPY --chown=gradle:gradle . /home/gradle/src
