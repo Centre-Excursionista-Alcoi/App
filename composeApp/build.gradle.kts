@@ -188,6 +188,14 @@ buildkonfig {
                 nullable = true,
             )
         }
+        create("wasmJs") {
+            buildConfigField(
+                type = STRING,
+                name = "REDIRECT_URI",
+                value = "http://localhost:8080#redirect",
+                nullable = true,
+            )
+        }
     }
 }
 

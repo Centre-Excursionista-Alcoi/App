@@ -16,14 +16,19 @@ fun main() {
         username = System.getenv("DB_USER") ?: "",
         password = System.getenv("DB_PASS") ?: "",
     )
+    val isDevelopment = System.getenv("ENV") == "development"
 
-    embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+    embeddedServer(
+        Netty,
+        port = SERVER_PORT,
+        host = "0.0.0.0",
+        module = { module(isDevelopment = isDevelopment) }
+    ).start(wait = true)
 }
 
-fun Application.module(isTesting: Boolean = false) {
+fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
     configureAuth()
     configureContentNegotiation()
     configureRouting()
-    configureSessions(isTesting)
+    configureSessions(isTesting, isDevelopment)
 }

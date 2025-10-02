@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CEA-App</title>
     <link type="text/css" rel="stylesheet" href="styles.css">
+    <script>
+        // Workaround to include cookies in fetch requests
+        window.originalFetch = window.fetch;
+        window.fetch = function (resource, init) {
+            return window.originalFetch(resource, Object.assign({ credentials: 'include' }, init || {}));
+        };
+    </script>
     <script type="application/javascript" src="composeApp.js"></script>
 </head>
 <body>
