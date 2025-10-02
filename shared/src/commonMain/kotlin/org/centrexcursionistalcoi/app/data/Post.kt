@@ -18,16 +18,13 @@ data class Post(
     val date: Instant,
     val title: String,
     val content: String,
-    val imageFile: String?,
     val onlyForMembers: Boolean,
     val departmentId: Long,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> {
-        check(imageFile != null) { "File uploading is still not supported" }
-
         return mapOf(
             "id" to id.takeIf { it.isZero() },
-            "date" to date.toString(),
+            "date" to date.toEpochMilliseconds(),
             "title" to title,
             "content" to content,
             "onlyForMembers" to onlyForMembers,

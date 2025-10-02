@@ -27,7 +27,6 @@ object PostsRepository : Repository<Post, Uuid> {
         date = item.date,
         title = item.title,
         content = item.content,
-        imageFile = item.imageFile,
         onlyForMembers = item.onlyForMembers,
         department = item.departmentId
     )
@@ -37,7 +36,6 @@ object PostsRepository : Repository<Post, Uuid> {
         date = item.date,
         title = item.title,
         content = item.content,
-        imageFile = item.imageFile,
         onlyForMembers = item.onlyForMembers,
         department = item.departmentId
     )
@@ -51,9 +49,7 @@ object PostsRepository : Repository<Post, Uuid> {
         date = date,
         title = title,
         content = content,
-        imageFile = imageFile,
         onlyForMembers = onlyForMembers,
-        departmentId = department
-            ?: throw IllegalStateException("Post with id $id has no department ID")
+        departmentId = department ?: throw IllegalStateException("Post with id $id has no department ID")
     )
 }

@@ -7,4 +7,8 @@ object DepartmentsRemoteRepository: RemoteRepository<Long, Department>(
     "/departments",
     Department.serializer(),
     DepartmentsRepository
-)
+) {
+    suspend fun create(name: String) = create(
+        Department(0L, name)
+    )
+}
