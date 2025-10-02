@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -19,7 +20,14 @@ application {
 
 kotlin {
     compilerOptions {
+        jvmTarget = JvmTarget.JVM_21 // Use JVM target 21
         freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21)) // Use Java 21
     }
 }
 
