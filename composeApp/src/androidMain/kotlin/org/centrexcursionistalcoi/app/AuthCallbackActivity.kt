@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
@@ -19,6 +20,12 @@ class AuthCallbackActivity: ComponentActivity() {
 
         val data = intent.dataString ?: return finish()
         val url = Url(data)
-        model.processCallbackUrl(url)
+        model.processCallbackUrl(url) {
+            startActivity(
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
+        }
     }
 }

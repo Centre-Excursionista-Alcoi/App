@@ -9,6 +9,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.header
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -29,6 +30,7 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.core.eq
 import java.io.ByteArrayOutputStream
@@ -63,6 +65,13 @@ fun Application.configureRouting() {
         get("/dashboard") {
             val session = getUserSessionOrFail() ?: return@get
             call.respondText("Welcome ${session.username}! Email: ${session.email}")
+        }
+
+        get("/profile") {
+            val session = getUserSessionOrFail() ?: return@get
+            call.respond(
+                ProfileResponse(session.username, session.email, session.groups)
+            )
         }
 
         get("/departments") {

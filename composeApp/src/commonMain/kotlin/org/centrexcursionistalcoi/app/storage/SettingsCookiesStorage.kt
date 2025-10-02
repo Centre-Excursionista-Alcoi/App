@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.storage
 
+import com.russhwolf.settings.Settings
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.fillDefaults
 import io.ktor.client.plugins.cookies.matches
@@ -16,15 +17,20 @@ import kotlin.math.min
 
 @OptIn(ExperimentalAtomicApi::class)
 class SettingsCookiesStorage(
+    private val settings: Settings,
     private val clock: () -> Long = { getTimeMillis() }
 ) : CookiesStorage {
+    companion object {
+        val Default = SettingsCookiesStorage(settings)
+    }
+
     @Serializable
-    private data class CookieWithTimestamp(val cookie: Cookie, val createdAt: Long)
+    data class CookieWithTimestamp(val cookie: Cookie, val createdAt: Long)
 
     private val oldestCookie: AtomicLong = AtomicLong(0L)
     private val mutex = Mutex()
 
-    private fun getCookies(): Map<String, CookieWithTimestamp> {
+    fun getCookies(): Map<String, CookieWithTimestamp> {
         return settings.keys
             .filter { it.startsWith("cookie.") }
             .mapNotNull { settings.getStringOrNull(it) }
@@ -73,6 +79,10 @@ class SettingsCookiesStorage(
     }
 
     override fun close() {
+    }
+
+    suspend fun contains(name: String): Boolean = mutex.withLock {
+        getCookies().any { it.value.cookie.name.equals(name, true) }
     }
 
     private fun cleanup(timestamp: Long) {

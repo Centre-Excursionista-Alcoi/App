@@ -17,7 +17,7 @@ private fun createHttpClient(): HttpClient = HttpClient {
         url(BuildKonfig.SERVER_URL)
     }
     install(HttpCookies) {
-        storage = SettingsCookiesStorage()
+        storage = SettingsCookiesStorage.Default
     }
     configureLogging()
 }

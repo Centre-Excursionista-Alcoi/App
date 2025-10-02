@@ -6,10 +6,13 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
+import io.ktor.http.isSuccess
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
+import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalUuidApi::class)
 object AuthCallbackProcessor {
@@ -17,8 +20,6 @@ object AuthCallbackProcessor {
         val query = url.parameters
         val code = query["code"]
         val state = query["state"]
-
-        Napier.d { "Processing callback URL. code=$code, state=$state" }
 
         if (code.isNullOrBlank() || state.isNullOrBlank()) {
             throw IllegalArgumentException("Invalid callback URL: missing code or state")
@@ -30,14 +31,10 @@ object AuthCallbackProcessor {
             throw IllegalArgumentException("Invalid callback URL: state is not a valid UUID", e)
         }
 
-        Napier.d { "State UUID: $stateUuid" }
-
         val codeVerifier = retrieveAndRemoveCodeVerifier(stateUuid)
         if (codeVerifier == null) {
             throw IllegalStateException("No code verifier found for state: $state")
         }
-
-        Napier.d { "Code verifier: $codeVerifier" }
 
         val response = getHttpClient().get(
             URLBuilder(BuildKonfig.SERVER_URL)
@@ -49,6 +46,11 @@ object AuthCallbackProcessor {
                 }
                 .build()
         )
-        println(response.bodyAsText())
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException("Authentication failed: ${response.status}")
+        }
+        if (!SettingsCookiesStorage.Default.contains("USER_SESSION")) {
+            throw IllegalStateException("Authentication failed: USER_SESSION cookie not found")
+        }
     }
 }
