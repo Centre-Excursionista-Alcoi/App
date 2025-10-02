@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.test.Test
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
@@ -7,8 +9,6 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
-import java.util.UUID
-import kotlin.test.Test
 
 class TestDepartment {
     @Test
@@ -29,7 +29,7 @@ class TestDepartment {
             }
         }
         val departmentClass = Department(
-            id = departmentEntity.id.value,
+            id = departmentEntity.id.value.toLong(),
             displayName = "Test Department",
             imageFile = imageFileId.toString()
         )
