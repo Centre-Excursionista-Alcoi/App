@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.sekret)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -36,15 +37,6 @@ kotlin {
     }
     
     sourceSets {
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.android)
-
-            // Custom Tabs support
-            implementation(libs.androidx.browser)
-        }
-
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -77,6 +69,8 @@ kotlin {
 
             implementation(libs.kotlinx.serializationJson)
 
+            implementation(libs.sqldelight.coroutines)
+
             implementation(projects.shared)
         }
 
@@ -84,17 +78,42 @@ kotlin {
             implementation(libs.kotlin.test)
         }
 
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.android)
+
+            // Custom Tabs support
+            implementation(libs.androidx.browser)
+
+            implementation(libs.sqldelight.android)
+        }
+
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native)
         }
 
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+
+            // SQLDelight for WASM
+            implementation(libs.sqldelight.wasm)
+            implementation(devNpm("copy-webpack-plugin", "9.1.0"))
         }
     }
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("org.centrexcursionistalcoi.app.database")
+            generateAsync.set(true)
+        }
     }
 }
 

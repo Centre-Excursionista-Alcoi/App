@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -26,6 +27,8 @@ import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(userData: UserData, model: HomeViewModel = viewModel { HomeViewModel() }) {
+    val departments by model.departments.collectAsState()
+
     LaunchedEffect(Unit) { model.loadDepartments() }
 
     Scaffold(
@@ -70,6 +73,12 @@ fun HomeScreen(userData: UserData, model: HomeViewModel = viewModel { HomeViewMo
                     )
                 }
             )
+
+            for (department in departments.orEmpty()) {
+                ListItem(
+                    headlineContent = { Text(department.displayName) },
+                )
+            }
         }
     }
 }

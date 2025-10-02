@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Department(
-    val id: Int,
+    val id: Long,
     val displayName: String,
     val imageFile: String?
 )
