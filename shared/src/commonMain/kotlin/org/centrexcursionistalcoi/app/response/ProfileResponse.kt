@@ -8,5 +8,6 @@ data class ProfileResponse(
     val username: String,
     val email: String,
     val groups: List<String>,
+    val departments: List<Int>,
     val lendingUser: LendingUser?
 )

@@ -1,8 +1,14 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import org.centrexcursionistalcoi.app.network.getHttpClient
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 abstract class ViewModelBase: ViewModel() {
-    protected val client by lazy { getHttpClient() }
+    fun <T> Flow<T>.stateInViewModel(
+        started: SharingStarted = SharingStarted.WhileSubscribed(5_000),
+        initialValue: T? = null,
+    ) = stateIn(viewModelScope, started, initialValue)
 }

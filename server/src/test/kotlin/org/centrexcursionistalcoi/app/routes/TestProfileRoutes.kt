@@ -10,6 +10,8 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.assertBadRequest
+import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -17,24 +19,17 @@ import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 
 class TestProfileRoutes : ApplicationTestBase() {
     @Test
-    fun test_notLoggedIn() = runApplicationTest {
-        client.get("/profile").apply {
-            assertStatusCode(HttpStatusCode.Unauthorized)
-        }
-    }
+    fun test_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile")
 
     @Test
-    fun test_loggedIn() = runApplicationTest {
-        loginAsFakeUser()
-
-        client.get("/profile").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            val response = bodyAsJson(ProfileResponse.serializer())
-            assertEquals("user", response.username)
-            assertEquals("user@example.com", response.email)
-            assertContentEquals(listOf("user"), response.groups)
-            assertNull(response.lendingUser)
-        }
+    fun test_loggedIn() = ProvidedRouteTests.test_loggedIn(
+        "/profile",
+        ProfileResponse.serializer()
+    ) { response ->
+        assertEquals("user", response.username)
+        assertEquals("user@example.com", response.email)
+        assertContentEquals(listOf("user"), response.groups)
+        assertNull(response.lendingUser)
     }
 
     @Test
@@ -45,18 +40,18 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_lendingSignUp_invalidContentType() = runApplicationTest {
-        loginAsFakeUser()
-
+    fun test_lendingSignUp_invalidContentType() = runApplicationTest(
+        shouldLogIn = LoginType.USER
+    ) {
         client.post("/profile/lendingSignUp").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
 
     @Test
-    fun test_lendingSignUp_missingFields() = runApplicationTest {
-        loginAsFakeUser()
-
+    fun test_lendingSignUp_missingFields() = runApplicationTest(
+        shouldLogIn = LoginType.USER
+    ) {
         // Missing all fields
         client.submitForm("/profile/lendingSignUp").assertBadRequest()
 
@@ -78,17 +73,16 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_lendingSignUp_alreadySignedUp() = runApplicationTest {
-        Database {
+    fun test_lendingSignUp_alreadySignedUp() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
             LendingUserEntity.new {
                 userSub = FakeUser.SUB
                 nif = "12345678A"
                 phoneNumber = "123456789"
             }
         }
-
-        loginAsFakeUser()
-
+    )  {
         client.submitForm(
             "/profile/lendingSignUp",
             parameters {
@@ -101,9 +95,9 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_lendingSignUp_success() = runApplicationTest {
-        loginAsFakeUser()
-
+    fun test_lendingSignUp_success() = runApplicationTest(
+        shouldLogIn = LoginType.USER
+    ) {
         client.submitForm(
             "/profile/lendingSignUp",
             parameters {

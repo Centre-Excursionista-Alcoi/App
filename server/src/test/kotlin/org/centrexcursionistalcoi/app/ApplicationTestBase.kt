@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
@@ -41,11 +39,19 @@ abstract class ApplicationTestBase {
         val GROUPS = listOf(ADMIN_GROUP_NAME, "user")
     }
 
-    protected fun runApplicationTest(
+    enum class LoginType {
+        NONE,
+        USER,
+        ADMIN
+    }
+
+    fun runApplicationTest(
+        shouldLogIn: LoginType = LoginType.NONE,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
-    ) = runApplicationTest({ }) { block(it) }
+    ) = runApplicationTest(shouldLogIn, { }) { block(it) }
 
     protected fun <DIB> runApplicationTest(
+        shouldLogIn: LoginType = LoginType.NONE,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
@@ -99,6 +105,9 @@ abstract class ApplicationTestBase {
                     }
                 }
 
+                if (shouldLogIn == LoginType.USER) loginAsFakeUser()
+                else if (shouldLogIn == LoginType.ADMIN) loginAsFakeAdminUser()
+
                 val context = ApplicationTestContext(dib, cookiesStorage)
                 block(context)
             }
@@ -107,7 +116,7 @@ abstract class ApplicationTestBase {
         }
     }
 
-    protected suspend fun ApplicationTestBuilder.loginAsFakeUser() {
+    suspend fun ApplicationTestBuilder.loginAsFakeUser() {
         val response = client.get("/test-login")
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("true", response.headers["CEA-LoggedIn"])
@@ -118,7 +127,7 @@ abstract class ApplicationTestBase {
         System.err.println("Logged in successfully!")
     }
 
-    protected suspend fun ApplicationTestBuilder.loginAsFakeAdminUser() {
+    suspend fun ApplicationTestBuilder.loginAsFakeAdminUser() {
         val response = client.get("/test-login-admin")
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("true", response.headers["CEA-LoggedIn"])
@@ -127,15 +136,5 @@ abstract class ApplicationTestBase {
             "Session cookie not found in response"
         )
         System.err.println("Logged in successfully!")
-    }
-
-    protected suspend fun HttpResponse.assertStatusCode(expected: HttpStatusCode) {
-        assert(expected == status) {
-            "Expected $expected response. Got: $status. Body: ${bodyAsText()}"
-        }
-    }
-
-    protected suspend fun HttpResponse.assertBadRequest() {
-        assertStatusCode(HttpStatusCode.BadRequest)
     }
 }

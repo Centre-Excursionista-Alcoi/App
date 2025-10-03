@@ -3,20 +3,18 @@ package org.centrexcursionistalcoi.app
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.russhwolf.settings.ExperimentalSettingsApi
-import org.centrexcursionistalcoi.app.auth.UserData
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.nav.Destination
-import org.centrexcursionistalcoi.app.screen.HomeScreen
-import org.centrexcursionistalcoi.app.screen.LoadingScreen
-import org.centrexcursionistalcoi.app.screen.LoginScreen
+import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
+import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
+import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 
 @Composable
 fun MainApp(
@@ -33,7 +31,7 @@ fun App(
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     val navController = rememberNavController()
-    var userData by remember { mutableStateOf<UserData?>(null) }
+    val profile by ProfileRepository.profile.collectAsState(null)
 
     NavHost(
         navController = navController,
@@ -41,9 +39,7 @@ fun App(
     ) {
         composable<Destination.Loading> {
             LoadingScreen(
-                onLoggedIn = { name, groups ->
-                    userData = UserData(name, groups)
-
+                onLoggedIn = {
                     navController.navigate(Destination.Home) {
                         popUpTo(Destination.Loading)
                     }
@@ -65,15 +61,7 @@ fun App(
             )
         }
         composable<Destination.Home> {
-            userData?.let {
-                HomeScreen(it)
-            } ?: run {
-                LaunchedEffect(Unit) {
-                    navController.navigate(Destination.Loading) {
-                        popUpTo(Destination.Home)
-                    }
-                }
-            }
+            HomeScreen()
         }
     }
     LaunchedEffect(navController) {

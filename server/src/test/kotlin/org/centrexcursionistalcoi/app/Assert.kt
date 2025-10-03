@@ -1,9 +1,12 @@
 package org.centrexcursionistalcoi.app
 
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import kotlin.test.assertEquals
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.test.assertEquals
 
 /**
  * Asserts that two JSON strings are equivalent, ignoring formatting and key order.
@@ -54,4 +57,19 @@ fun assertJsonEquals(expected: String, actual: String) {
     }
 
     throw AssertionError("Could not compare JSON elements: $expectedJson and $actualJson")
+}
+
+suspend fun HttpResponse.assertStatusCode(expected: HttpStatusCode) {
+    assert(expected == status) {
+        "Expected $expected response. Got: $status. Body: ${bodyAsText()}"
+    }
+}
+
+suspend fun HttpResponse.assertBadRequest() {
+    assertStatusCode(HttpStatusCode.BadRequest)
+}
+
+suspend fun HttpResponse.assertBody(block: suspend (body: String) -> Unit) {
+    val body = bodyAsText()
+    block(body)
 }
