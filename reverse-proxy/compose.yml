@@ -1,0 +1,41 @@
+services:
+  traefik:
+    image: traefik:v2
+    container_name: traefik
+    command:
+      - "--api.insecure=true"                        # Traefik dashboard (optional)
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=your-email@example.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8082:8080"  # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
+  auth-proxy:
+    image: nginx:latest
+    container_name: cea_proxy_auth
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth_proxy.rule=Host(`auth_proxy.localhost`)"
+      - "traefik.http.routers.auth_proxy.entrypoints=websecure"
+      - "traefik.http.routers.auth_proxy.tls.certresolver=myresolver"
+    volumes:
+      - ./nginx/auth-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+
+  server-proxy:
+    image: nginx:latest
+    container_name: cea_proxy_server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server_proxy.rule=Host(`server_proxy.localhost`)"
+      - "traefik.http.routers.server_proxy.entrypoints=websecure"
+      - "traefik.http.routers.server_proxy.tls.certresolver=myresolver"
+    volumes:
+      - ./nginx/server-proxy.conf:/etc/nginx/conf.d/default.conf:ro
