@@ -1,7 +1,9 @@
+import kotlin.uuid.Uuid;
+
 CREATE TABLE Departments (
   id INTEGER PRIMARY KEY NOT NULL,
   displayName TEXT NOT NULL,
-  imageFile TEXT DEFAULT NULL
+  imageFile TEXT AS Uuid DEFAULT NULL
 );
 
 CREATE INDEX idx_Departments_displayName ON Departments(displayName);

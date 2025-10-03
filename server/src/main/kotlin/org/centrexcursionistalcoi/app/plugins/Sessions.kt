@@ -6,13 +6,10 @@ import io.ktor.server.application.install
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.sessions.SessionTransportTransformerEncrypt
-import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.cookie
-import io.ktor.server.sessions.get
-import io.ktor.server.sessions.sessions
+import io.ktor.server.sessions.*
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 
 // TODO: Set in environment variables and load from there
 val secretEncryptKey = hex("00112233445566778899aabbccddeeff")
@@ -26,7 +23,6 @@ val secretSignKey = hex("6819b57a326945c1968f45236589")
 @Serializable
 data class UserSession(val sub: String, val username: String, val email: String, val groups: List<String>) {
     companion object {
-        const val ADMIN_GROUP_NAME = "CEA Admin"
         const val COOKIE_NAME = "USER_SESSION"
 
         fun RoutingContext.getUserSession(): UserSession? {

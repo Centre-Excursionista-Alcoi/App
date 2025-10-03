@@ -2,5 +2,9 @@
 <resources>
     <string name="app_name">ComposeApp</string>
 
+    <string name="admin">Admin</string>
+
+    <string name="nav_home">Home</string>
     <string name="nav_lending">Lending</string>
+    <string name="nav_management">Management</string>
 </resources>
