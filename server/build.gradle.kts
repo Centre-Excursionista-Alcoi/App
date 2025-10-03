@@ -22,6 +22,7 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21 // Use JVM target 21
         freeCompilerArgs.add("-Xcontext-parameters")
+        optIn.add("kotlin.uuid.ExperimentalUuidApi")
     }
 }
 

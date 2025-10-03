@@ -7,12 +7,23 @@ import java.util.UUID
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.table.Posts
+import org.jetbrains.exposed.v1.core.eq
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
         base = "posts",
         entityClass = PostEntity,
         idTypeConverter = { UUID.fromString(it) },
+        listProvider = { session ->
+            if (session == null) {
+                // Not logged in, only show public posts
+                PostEntity.find { Posts.onlyForMembers eq false }
+            } else {
+                // Logged in, show all posts
+                PostEntity.all()
+            }
+        },
         creator = { formParameters ->
             var title: String? = null
             var content: String? = null

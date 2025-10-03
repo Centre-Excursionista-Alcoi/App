@@ -16,24 +16,30 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 fun <ID : Any, E : Entity<ID>> Route.provideEntityRoutes(
     base: String,
     entityClass: EntityClass<ID, E>,
     idTypeConverter: (String) -> ID?,
-    creator: suspend (MultiPartData) -> E
+    creator: suspend (MultiPartData) -> E,
+    listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
 
     get("/$base") {
-        val departments = Database { entityClass.all().toList() }
+        val session = getUserSession()
+        val list = Database { listProvider(session).toList() }
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(departments, entityClass)
+            json.encodeEntityListToString(list, entityClass)
         }
     }
 

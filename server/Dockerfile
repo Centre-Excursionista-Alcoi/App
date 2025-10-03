@@ -24,6 +24,11 @@ RUN echo '            implementation(libs.kotlin.crypto.random)' >> /home/gradle
 RUN echo '            implementation(libs.kotlin.crypto.sha2)' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '        }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '    }' >> /home/gradle/app/shared/build.gradle.kts
+RUN echo '    kotlin {' >> /home/gradle/app/shared/build.gradle.kts
+RUN echo '        compilerOptions {' >> /home/gradle/app/shared/build.gradle.kts
+RUN echo '            optIn.add("kotlin.uuid.ExperimentalUuidApi")' >> /home/gradle/app/shared/build.gradle.kts
+RUN echo '        }' >> /home/gradle/app/shared/build.gradle.kts
+RUN echo '    }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '} ' >> /home/gradle/app/shared/build.gradle.kts
 
 # Since we are not copying the composeApp source folder, we have to remove it from settings.gradle.kts

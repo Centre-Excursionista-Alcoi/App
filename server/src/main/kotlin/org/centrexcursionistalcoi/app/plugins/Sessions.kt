@@ -14,6 +14,7 @@ import io.ktor.server.sessions.sessions
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 
+// TODO: Set in environment variables and load from there
 val secretEncryptKey = hex("00112233445566778899aabbccddeeff")
 val secretSignKey = hex("6819b57a326945c1968f45236589")
 
