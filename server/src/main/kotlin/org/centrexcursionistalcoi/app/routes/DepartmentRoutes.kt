@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
@@ -13,6 +14,7 @@ import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
 import java.io.ByteArrayOutputStream
+import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -147,5 +149,38 @@ fun Route.departmentsRoutes() {
             json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),
             ContentType.Application.Json,
         )
+    }
+
+    // Allows an admin to confirm a join request
+    post("/departments/{id}/confirm/{requestId}") {
+        val (_, department) = departmentRequest(true) ?: return@post
+
+        val requestId = call.parameters["requestId"]?.toIntOrNull()
+        if (requestId == null) {
+            call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.id eq requestId) and (DepartmentMembers.departmentId eq department.id) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respondText("Join request not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (member.confirmed) {
+            call.response.header(HttpHeaders.CEAInfo, "member")
+            call.respondText("Join request already confirmed", status = HttpStatusCode.OK)
+            return@post
+        }
+
+        Database {
+            member.confirmed = true
+        }
+        call.respondText("Join request confirmed", status = HttpStatusCode.OK)
+
     }
 }

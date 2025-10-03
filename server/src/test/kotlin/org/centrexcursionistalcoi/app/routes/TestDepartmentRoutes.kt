@@ -8,11 +8,13 @@ import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 
@@ -174,5 +176,109 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 assert(request.requestId > 0)
             }
         }
+    }
+
+
+    @Test
+    fun test_confirm_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/abc/confirm/abc", HttpMethod.Post)
+
+    @Test
+    fun test_confirm_notAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.USER
+    ) {
+        client.post("/departments/abc/confirm/abc").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    @Test
+    fun test_confirm_malformedDepartmentId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/abc/confirm/abc").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_confirm_departmentNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/123/confirm/abc").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_confirm_malformedRequestId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/123/confirm/abc").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_confirm_requestNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/123/confirm/123").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_confirm_alreadyConfirmed() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(123) {
+                userSub = FakeUser.SUB
+                department = mockDepartment
+                confirmed = true
+            }
+        }
+    ) {
+        client.post("/departments/123/confirm/123").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            headers[HttpHeaders.CEAInfo]?.let { ceaInfo ->
+                assertEquals("member", ceaInfo)
+            } ?: throw AssertionError("Missing CEA-Info header")
+        }
+    }
+
+    @Test
+    fun test_confirm_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(123) {
+                userSub = FakeUser.SUB
+                department = mockDepartment
+                confirmed = false
+            }
+        }
+    ) {
+        client.post("/departments/123/confirm/123").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        val entity = Database { DepartmentMemberEntity.findById(123) }
+        assertNotNull(entity)
+        assertTrue { entity.confirmed }
     }
 }
