@@ -1,12 +1,13 @@
 package org.centrexcursionistalcoi.app.data
 
+import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Department(
     override val id: Long = 0L,
     val displayName: String,
-    val imageFile: String? = null
+    val imageFile: Uuid? = null
 ): Entity<Long> {
     override fun toMap(): Map<String, Any?> {
         check(imageFile != null) { "File uploading is still not supported" }

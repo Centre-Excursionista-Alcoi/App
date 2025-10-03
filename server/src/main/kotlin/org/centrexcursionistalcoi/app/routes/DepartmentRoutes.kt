@@ -7,18 +7,45 @@ import io.ktor.http.content.forEachPart
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
 import java.io.ByteArrayOutputStream
+import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+
+private suspend fun RoutingContext.departmentRequest(mustBeAdmin: Boolean = false): Pair<UserSession, DepartmentEntity>? {
+    val session = getUserSessionOrFail() ?: return null
+    if (mustBeAdmin && !session.isAdmin()) {
+        call.respondText("Admin access required", status = HttpStatusCode.Forbidden)
+        return null
+    }
+
+    val departmentId = call.parameters["id"]?.toIntOrNull()
+    if (departmentId == null) {
+        call.respondText("Missing or malformed department id", status = HttpStatusCode.BadRequest)
+        return null
+    }
+
+    val department = Database { DepartmentEntity.findById(departmentId) }
+    if (department == null) {
+        call.respondText("Department not found", status = HttpStatusCode.NotFound)
+        return null
+    }
+
+    return session to department
+}
 
 fun Route.departmentsRoutes() {
     provideEntityRoutes(
@@ -72,23 +99,11 @@ fun Route.departmentsRoutes() {
 
     // Allows a user to join a department
     post("/departments/{id}/join") {
-        val session = getUserSessionOrFail() ?: return@post
-
-        val departmentId = call.parameters["id"]?.toIntOrNull()
-        if (departmentId == null) {
-            call.respondText("Missing or malformed department id", status = HttpStatusCode.BadRequest)
-            return@post
-        }
-
-        val department = Database { DepartmentEntity.findById(departmentId) }
-        if (department == null) {
-            call.respondText("Department not found", status = HttpStatusCode.NotFound)
-            return@post
-        }
+        val (session, department) = departmentRequest() ?: return@post
 
         val member = Database {
             DepartmentMemberEntity
-                .find { (DepartmentMembers.departmentId eq departmentId) and (DepartmentMembers.userSub eq session.sub) }
+                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq session.sub) }
                 .firstOrNull()
         }
         if (member != null) {
@@ -100,14 +115,37 @@ fun Route.departmentsRoutes() {
                 call.respondText("You are already a member of this department.", status = HttpStatusCode.Conflict)
             }
         } else {
+            val confirmed = session.isAdmin() // Auto-confirm if the user is an admin
+
             Database {
                 DepartmentMemberEntity.new {
                     this.department = department
                     this.userSub = session.sub
+                    this.confirmed = confirmed
                 }
             }
-            call.response.header("CEA-Info", "pending")
-            call.respondText("Join request sent. Please wait for confirmation.", status = HttpStatusCode.Created)
+            if (confirmed) {
+                call.response.header("CEA-Info", "member")
+                call.respondText("You have joined the department.", status = HttpStatusCode.OK)
+            } else {
+                call.response.header("CEA-Info", "pending")
+                call.respondText("Join request sent. Please wait for confirmation.", status = HttpStatusCode.Created)
+            }
         }
+    }
+
+    // Allows an admin to view pending join requests
+    get("/departments/{id}/requests") {
+        val (_, department) = departmentRequest(true) ?: return@get
+
+        val pendingRequests = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.confirmed eq false) }
+                .map { DepartmentJoinRequestsResponse.Request(it.userSub, it.id.value) }
+        }
+        call.respondText(
+            json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),
+            ContentType.Application.Json,
+        )
     }
 }

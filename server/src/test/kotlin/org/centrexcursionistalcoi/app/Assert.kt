@@ -4,6 +4,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlin.test.assertEquals
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -72,4 +73,10 @@ suspend fun HttpResponse.assertBadRequest() {
 suspend fun HttpResponse.assertBody(block: suspend (body: String) -> Unit) {
     val body = bodyAsText()
     block(body)
+}
+
+suspend fun <T> HttpResponse.assertBody(serializer: DeserializationStrategy<T>, block: suspend (body: T) -> Unit) {
+    val body = bodyAsText()
+    val json = json.decodeFromString(serializer, body)
+    block(json)
 }
