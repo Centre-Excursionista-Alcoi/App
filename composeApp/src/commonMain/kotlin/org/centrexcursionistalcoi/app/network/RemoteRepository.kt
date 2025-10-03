@@ -57,6 +57,9 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
         repository.update(toUpdate)
         // Delete removed items
         repository.deleteByIdList(toDelete)
+
+        val all = repository.selectAll()
+        Napier.i { "There are ${all.size} $name" }
     }
 
     suspend fun create(item: T) {

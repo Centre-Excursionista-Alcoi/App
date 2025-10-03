@@ -1,16 +1,9 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.database.data.Departments
-import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object DepartmentsRepository: Repository<Department, Long>() {
-    override val queries by lazy { databaseInstance.departmentsQueries }
+object DepartmentsRepository : SettingsRepository<Department, Long>("departments", Department.serializer()) { // DatabaseRepository<Department, Long>()
+    /*override val queries by lazy { databaseInstance.departmentsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
@@ -43,5 +36,5 @@ object DepartmentsRepository: Repository<Department, Long>() {
         id = id,
         displayName = displayName,
         imageFile = imageFile
-    )
+    )*/
 }

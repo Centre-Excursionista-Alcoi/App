@@ -1,54 +1,24 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.SuspendingTransacterImpl
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 
-abstract class Repository<T : Any, IdType: Any> {
-    protected abstract val queries: SuspendingTransacterImpl
+interface Repository<T : Entity<IdType>, IdType: Any> {
+    fun selectAllAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<T>>
 
-    abstract fun selectAllAsFlow(dispatcher: CoroutineDispatcher = Dispatchers.Default): Flow<List<T>>
+    suspend fun selectAll(): List<T>
 
-    abstract suspend fun selectAll(): List<T>
+    suspend fun insert(item: T): Long
 
-    abstract suspend fun insert(item: T): Long
+    suspend fun insert(items: List<T>)
 
-    suspend fun insert(items: List<T>) {
-        queries.transaction {
-            afterRollback { Napier.w { "No entities were inserted." } }
-            afterCommit { Napier.v { "${items.size} entities were inserted." } }
+    suspend fun update(item: T): Long
 
-            for (item in items) {
-                insert(item)
-            }
-        }
-    }
+    suspend fun update(items: List<T>)
 
-    abstract suspend fun update(item: T): Long
+    suspend fun delete(id: IdType)
 
-    suspend fun update(items: List<T>) {
-        queries.transaction {
-            afterRollback { Napier.w { "No entities were updated." } }
-            afterCommit { Napier.v { "${items.size} entities were updated." } }
-
-            for (item in items) {
-                update(item)
-            }
-        }
-    }
-
-    abstract suspend fun delete(id: IdType)
-
-    suspend fun deleteByIdList(ids: List<IdType>) {
-        queries.transaction {
-            afterRollback { Napier.w { "No entities were deleted" } }
-            afterCommit { Napier.v { "${ids.size} entities were deleted." } }
-
-            for (id in ids) {
-                delete(id)
-            }
-        }
-    }
+    suspend fun deleteByIdList(ids: List<IdType>)
 }
