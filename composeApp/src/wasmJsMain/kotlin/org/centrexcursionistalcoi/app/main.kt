@@ -1,14 +1,9 @@
 package org.centrexcursionistalcoi.app
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeViewport
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.ExperimentalBrowserHistoryApi
@@ -19,6 +14,7 @@ import io.ktor.http.Url
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.centrexcursionistalcoi.app.auth.redirectOrigin
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.AuthCallbackModel
 
@@ -49,9 +45,7 @@ fun main() {
                 }
 
                 AppTheme {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    LoadingBox()
                 }
             }
             else -> {

@@ -9,8 +9,8 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object DepartmentsRepository: Repository<Department, Long> {
-    private val queries = databaseInstance.departmentsQueries
+object DepartmentsRepository: Repository<Department, Long>() {
+    override val queries by lazy { databaseInstance.departmentsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()

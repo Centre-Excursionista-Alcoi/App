@@ -1,23 +1,54 @@
 package org.centrexcursionistalcoi.app.database
 
+import app.cash.sqldelight.SuspendingTransacterImpl
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
-interface Repository<T : Any, IdType: Any> {
-    fun selectAllAsFlow(dispatcher: CoroutineDispatcher = Dispatchers.Default): Flow<List<T>>
+abstract class Repository<T : Any, IdType: Any> {
+    protected abstract val queries: SuspendingTransacterImpl
 
-    suspend fun selectAll(): List<T>
+    abstract fun selectAllAsFlow(dispatcher: CoroutineDispatcher = Dispatchers.Default): Flow<List<T>>
 
-    suspend fun insert(item: T): Long
+    abstract suspend fun selectAll(): List<T>
 
-    suspend fun update(item: T): Long
+    abstract suspend fun insert(item: T): Long
 
-    suspend fun delete(id: IdType)
+    suspend fun insert(items: List<T>) {
+        queries.transaction {
+            afterRollback { Napier.w { "No entities were inserted." } }
+            afterCommit { Napier.v { "${items.size} entities were inserted." } }
+
+            for (item in items) {
+                insert(item)
+            }
+        }
+    }
+
+    abstract suspend fun update(item: T): Long
+
+    suspend fun update(items: List<T>) {
+        queries.transaction {
+            afterRollback { Napier.w { "No entities were updated." } }
+            afterCommit { Napier.v { "${items.size} entities were updated." } }
+
+            for (item in items) {
+                update(item)
+            }
+        }
+    }
+
+    abstract suspend fun delete(id: IdType)
 
     suspend fun deleteByIdList(ids: List<IdType>) {
-        for (id in ids) {
-            delete(id)
+        queries.transaction {
+            afterRollback { Napier.w { "No entities were deleted" } }
+            afterCommit { Napier.v { "${ids.size} entities were deleted." } }
+
+            for (id in ids) {
+                delete(id)
+            }
         }
     }
 }

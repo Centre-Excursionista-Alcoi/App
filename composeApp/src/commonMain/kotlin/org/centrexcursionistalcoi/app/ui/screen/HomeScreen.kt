@@ -21,8 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.page.home.LendingPage
+import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
@@ -31,9 +33,10 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val profile by model.profile.collectAsState()
+    val departments by model.departments.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it)
+        HomeScreenContent(it, departments)
     } ?: LoadingBox()
 }
 
@@ -49,12 +52,12 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun HomeScreenContent(profile: ProfileResponse) {
-    val scope = rememberCoroutineScope()
-    val pager = rememberPagerState { 2 }
-    val windowSizeClass = calculateWindowSizeClass()
-
+private fun HomeScreenContent(profile: ProfileResponse, departments: List<Department>?) {
     val navigationItems = navigationItems(profile.isAdmin)
+
+    val scope = rememberCoroutineScope()
+    val pager = rememberPagerState { navigationItems.size }
+    val windowSizeClass = calculateWindowSizeClass()
 
     Scaffold(
         topBar = {
@@ -133,6 +136,8 @@ private fun HomeScreenContent(profile: ProfileResponse) {
                             )
 
                             1 -> LendingPage(profile)
+
+                            2 -> ManagementPage(windowSizeClass, departments)
                         }
                     }
                 }
@@ -153,6 +158,8 @@ private fun HomeScreenContent(profile: ProfileResponse) {
                             )
 
                             1 -> LendingPage(profile)
+
+                            2 -> ManagementPage(windowSizeClass, departments)
                         }
                     }
                 }

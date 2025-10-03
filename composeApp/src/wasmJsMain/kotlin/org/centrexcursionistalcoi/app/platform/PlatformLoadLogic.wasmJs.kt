@@ -11,6 +11,7 @@ actual object PlatformLoadLogic {
     }
 
     actual suspend fun load() {
+        if (isReady()) return
         databaseInstance = createDatabase(DriverFactory())
     }
 }

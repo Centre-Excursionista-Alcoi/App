@@ -3,25 +3,34 @@ package org.centrexcursionistalcoi.app
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.russhwolf.settings.ExperimentalSettingsApi
 import org.centrexcursionistalcoi.app.nav.Destination
-import org.centrexcursionistalcoi.app.platform.PlatformLoadLogic
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
+import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
 @Composable
 fun MainApp(
+    model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel() },
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     MaterialTheme {
-        App(onNavHostReady)
+        val isReady by model.isReady.collectAsState()
+
+        if (isReady) {
+            App(onNavHostReady)
+        } else {
+            LoadingBox()
+        }
     }
 }
 
@@ -34,13 +43,12 @@ fun App(
 
     NavHost(
         navController = navController,
-        startDestination = Destination.Loading()
+        startDestination = Destination.Loading
     ) {
-        composable<Destination.Loading> { entry ->
-            val route = entry.toRoute<Destination.Loading>()
+        composable<Destination.Loading> {
             LoadingScreen(
                 onLoggedIn = {
-                    navController.navigate(route.redirectTo ?: Destination.Home) {
+                    navController.navigate(Destination.Home) {
                         popUpTo<Destination.Loading>()
                     }
                 },
@@ -54,22 +62,14 @@ fun App(
         composable<Destination.Login> {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Destination.Loading()) {
+                    navController.navigate(Destination.Loading) {
                         popUpTo<Destination.Login>()
                     }
                 },
             )
         }
         composable<Destination.Home> {
-            if (!PlatformLoadLogic.isReady()) {
-                SideEffect {
-                    navController.navigate(Destination.Loading(Destination.Home)) {
-                        popUpTo<Destination.Home>()
-                    }
-                }
-            } else {
-                HomeScreen()
-            }
+            HomeScreen()
         }
     }
     LaunchedEffect(navController) {

@@ -18,6 +18,8 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
     private val repository: Repository<T, IdType>,
     private val isCreationSupported: Boolean = true
 ) {
+    private val name = endpoint.trim(' ', '/')
+
     protected val httpClient = getHttpClient()
 
     suspend fun getAll(): List<T> {
@@ -29,20 +31,32 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
 
     suspend fun synchronizeWithDatabase() {
         val list = getAll()
-        val dbList = repository.selectAll()
-        val addedIds = mutableListOf<IdType>()
+        val toUpdate = mutableListOf<T>()
+        val toInsert = mutableListOf<T>()
         for (item in list) {
             if (list.find { it.id == item.id } != null) {
-                repository.update(item)
+                toUpdate += item
             } else {
-                repository.insert(item)
+                toInsert += item
             }
-            addedIds += item.id
         }
+        // IDs of items that should remain in the database
+        val existingIds = toUpdate.map { it.id } + toInsert.map { it.id }
+
         // Delete items that are not in the server response
-        repository.deleteByIdList(
-            dbList.filter { it.id !in addedIds }.map { it.id }
-        )
+        val dbList = repository.selectAll()
+        val toDelete = dbList.filter { it.id !in existingIds }.map { it.id }
+
+        Napier.d {
+            "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
+        }
+
+        // Insert new items
+        repository.insert(toInsert)
+        // Update existing items
+        repository.update(toUpdate)
+        // Delete removed items
+        repository.deleteByIdList(toDelete)
     }
 
     suspend fun create(item: T) {

@@ -10,8 +10,8 @@ import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object PostsRepository : Repository<Post, Uuid> {
-    private val queries = databaseInstance.postsQueries
+object PostsRepository : Repository<Post, Uuid>() {
+    override val queries by lazy { databaseInstance.postsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
