@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -36,7 +37,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val departments by model.departments.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it, departments)
+        HomeScreenContent(it, departments, model::delete)
     } ?: LoadingBox()
 }
 
@@ -52,7 +53,11 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun HomeScreenContent(profile: ProfileResponse, departments: List<Department>?) {
+private fun HomeScreenContent(
+    profile: ProfileResponse,
+    departments: List<Department>?,
+    onDeleteDepartment: (Department) -> Job
+) {
     val navigationItems = navigationItems(profile.isAdmin)
 
     val scope = rememberCoroutineScope()
@@ -137,7 +142,7 @@ private fun HomeScreenContent(profile: ProfileResponse, departments: List<Depart
 
                             1 -> LendingPage(profile)
 
-                            2 -> ManagementPage(windowSizeClass, departments)
+                            2 -> ManagementPage(windowSizeClass, departments, onDeleteDepartment)
                         }
                     }
                 }
@@ -159,7 +164,7 @@ private fun HomeScreenContent(profile: ProfileResponse, departments: List<Depart
 
                             1 -> LendingPage(profile)
 
-                            2 -> ManagementPage(windowSizeClass, departments)
+                            2 -> ManagementPage(windowSizeClass, departments, onDeleteDepartment)
                         }
                     }
                 }

@@ -1,11 +1,13 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Entity
@@ -80,5 +82,16 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
         )
         val location = response.headers[HttpHeaders.Location]
         Napier.i { "Created: $location" }
+    }
+
+    suspend fun delete(id: IdType) {
+        val response = httpClient.delete("$endpoint/$id")
+        if (response.status == HttpStatusCode.NoContent) {
+            Napier.i { "Deleted $name with ID $id" }
+            repository.delete(id)
+        } else {
+            Napier.e { "Failed to delete $name with ID $id. Status: ${response.status}" }
+            throw IllegalStateException("Failed to delete $name with ID $id. Status: ${response.status}. Body: ${response.bodyAsText()}")
+        }
     }
 }

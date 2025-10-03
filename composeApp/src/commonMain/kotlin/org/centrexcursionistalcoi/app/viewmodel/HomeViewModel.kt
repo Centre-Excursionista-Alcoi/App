@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 
 class HomeViewModel: ViewModel() {
     val profile = ProfileRepository.profile.stateInViewModel()
@@ -20,5 +23,9 @@ class HomeViewModel: ViewModel() {
             val departments = DepartmentsRepository.selectAll()
             Napier.i { "Departments: $departments" }
         }
+    }
+
+    fun delete(department: Department) = viewModelScope.launch(defaultAsyncDispatcher) {
+        DepartmentsRemoteRepository.delete(department.id)
     }
 }
