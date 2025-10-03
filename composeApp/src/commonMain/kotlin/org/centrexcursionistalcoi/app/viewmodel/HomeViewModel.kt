@@ -25,6 +25,10 @@ class HomeViewModel: ViewModel() {
         }
     }
 
+    fun createDepartment(displayName: String) = viewModelScope.launch(defaultAsyncDispatcher) {
+        DepartmentsRemoteRepository.create(displayName)
+    }
+
     fun delete(department: Department) = viewModelScope.launch(defaultAsyncDispatcher) {
         DepartmentsRemoteRepository.delete(department.id)
     }

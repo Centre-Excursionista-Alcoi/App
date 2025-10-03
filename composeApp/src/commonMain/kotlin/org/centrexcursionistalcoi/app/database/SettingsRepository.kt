@@ -5,8 +5,8 @@ import com.russhwolf.settings.coroutines.getStringOrNullFlow
 import com.russhwolf.settings.observable.makeObservable
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -25,37 +25,55 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     private val serializer: KSerializer<T>,
     private val json: Json = defaultJson
 ) : Repository<T, IdType> {
+    private val _keysFlow = MutableStateFlow(settings.keys)
+
+    private fun decode(raw: String) = try {
+        json.decodeFromString(serializer, raw)
+    } catch (e: SerializationException) {
+        Napier.e("Could not parse item from settings: $raw", e)
+        null
+    }
+
     override suspend fun selectAll(): List<T> {
         return settings.keys
             .filter { it.startsWith("$namespace.") }
             .mapNotNull { key ->
-                settings.getStringOrNull(key)?.let { json.decodeFromString(serializer, it) }
+                settings.getStringOrNull(key)?.let { decode(it) }
             }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<T>> {
         val settings = settings.makeObservable()
-        val flows = settings.keys
-            .filter { it.startsWith("$namespace.") }
-            .map { settings.getStringOrNullFlow(it) }
-        return combine(flows) { values ->
-            values
-                .filterNotNull()
-                .filter { it.isNotEmpty() }
-                .mapNotNull {
-                    try {
-                        json.decodeFromString(serializer, it)
-                    } catch (e: SerializationException) {
-                        Napier.e("Could not parse item from settings: $it", e)
-                        null
-                    }
+        return _keysFlow
+            // Only keys that match the namespace
+            .map { keys -> keys.filter { it.startsWith("$namespace.") } }
+            .flatMapConcat { keys ->
+                if (keys.isEmpty()) {
+                    Napier.v { "There are no keys for the current flow. Returning empty state flow list." }
+                    return@flatMapConcat MutableStateFlow(emptyList())
                 }
-        }
+                val flows = keys
+                    .filter { it.startsWith("$namespace.") }
+                    .map { settings.getStringOrNullFlow(it) }
+                combine(flows) { values ->
+                    values
+                        .filterNotNull()
+                        .filter { it.isNotEmpty() }
+                        .mapNotNull { decode(it) }
+                }
+            }
+    }
+
+    private fun put(item: T) {
+        val key = "${namespace}.${item.id}"
+        val data = json.encodeToString(serializer, item)
+        settings.putString(key, data)
+        _keysFlow.value += key
     }
 
     override suspend fun insert(item: T): Long {
-        val data = json.encodeToString(serializer, item)
-        settings.putString("${namespace}.${item.id}", data)
+        put(item)
         return 1L
     }
 
@@ -66,8 +84,7 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     }
 
     override suspend fun update(item: T): Long {
-        val data = json.encodeToString(serializer, item)
-        settings.putString("${namespace}.${item.id}", data)
+        put(item)
         return 1L
     }
 
@@ -78,7 +95,9 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     }
 
     override suspend fun delete(id: IdType) {
-        settings.remove("${namespace}.$id")
+        val key = "${namespace}.$id"
+        settings.remove(key)
+        _keysFlow.value -= key
     }
 
     override suspend fun deleteByIdList(ids: List<IdType>) {

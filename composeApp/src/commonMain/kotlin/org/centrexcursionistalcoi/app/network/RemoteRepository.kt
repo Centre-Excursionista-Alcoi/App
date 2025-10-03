@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Entity
@@ -30,6 +31,19 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
             json.decodeFromString(ListSerializer(serializer), raw)
         }
     }
+
+    private suspend fun getUrl(url: String): T? {
+        val response = httpClient.get(url)
+        if (response.status.isSuccess()) {
+            val raw = response.bodyAsText()
+            return json.decodeFromString(serializer, raw)
+        } else {
+            Napier.e { "Failed to get $name with ID ${url.substringAfterLast('/')}. Status: ${response.status}" }
+            return null
+        }
+    }
+
+    suspend fun get(id: IdType): T? = getUrl("$endpoint/$id")
 
     suspend fun synchronizeWithDatabase() {
         val list = getAll()
@@ -72,16 +86,21 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
             formData = formData {
                 item.toMap().forEach { (key, value) ->
                     when(value) {
+                        null -> { /* ignore null values */ }
                         is String -> append(key, value)
                         is Number -> append(key, value)
                         is Boolean -> append(key, value)
-                        else -> Napier.e { "Unsupported type: ${value?.let { it::class.simpleName } ?: "null"}" }
+                        else -> Napier.e { "Unsupported type: ${value::class.simpleName ?: "N/A"}" }
                     }
                 }
             }
         )
         val location = response.headers[HttpHeaders.Location]
-        Napier.i { "Created: $location" }
+        checkNotNull(location) { "Creation didn't return any location for the new item." }
+
+        val item = getUrl(location)
+        checkNotNull(item) { "Could not retrieve the created item from the server." }
+        repository.insert(item)
     }
 
     suspend fun delete(id: IdType) {

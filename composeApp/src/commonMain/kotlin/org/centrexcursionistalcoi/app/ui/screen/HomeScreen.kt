@@ -37,7 +37,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val departments by model.departments.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it, departments, model::delete)
+        HomeScreenContent(it, departments, model::createDepartment, model::delete)
     } ?: LoadingBox()
 }
 
@@ -56,7 +56,8 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 private fun HomeScreenContent(
     profile: ProfileResponse,
     departments: List<Department>?,
-    onDeleteDepartment: (Department) -> Job
+    onCreateDepartment: (displayName: String) -> Job,
+    onDeleteDepartment: (Department) -> Job,
 ) {
     val navigationItems = navigationItems(profile.isAdmin)
 
@@ -142,7 +143,7 @@ private fun HomeScreenContent(
 
                             1 -> LendingPage(profile)
 
-                            2 -> ManagementPage(windowSizeClass, departments, onDeleteDepartment)
+                            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
                         }
                     }
                 }
@@ -164,7 +165,7 @@ private fun HomeScreenContent(
 
                             1 -> LendingPage(profile)
 
-                            2 -> ManagementPage(windowSizeClass, departments, onDeleteDepartment)
+                            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
                         }
                     }
                 }

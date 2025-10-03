@@ -10,7 +10,7 @@ data class Department(
     val imageFile: Uuid? = null
 ): Entity<Long> {
     override fun toMap(): Map<String, Any?> {
-        check(imageFile != null) { "File uploading is still not supported" }
+        check(imageFile == null) { "File uploading is still not supported" }
 
         return mapOf(
             "id" to id.takeIf { it != 0L },
