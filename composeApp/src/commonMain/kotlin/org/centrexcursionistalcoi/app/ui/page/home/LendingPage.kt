@@ -1,10 +1,12 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -14,26 +16,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
 
+typealias LendingPageOnCreate = (fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) -> Job
+
 @Composable
-fun LendingPage(profile: ProfileResponse) {
+fun LendingPage(profile: ProfileResponse, onCreate: LendingPageOnCreate) {
     val lendingUser = profile.lendingUser
     if (lendingUser != null) {
 
     } else {
-        LendingUserSignUpPage()
+        LendingUserSignUpPage(onCreate)
     }
 }
 
 @Composable
-fun LendingUserSignUpPage() {
+fun LendingUserSignUpPage(
+    onCreate: LendingPageOnCreate
+) {
     ColumnWidthWrapper(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)
     ) {
@@ -61,6 +69,9 @@ fun LendingUserSignUpPage() {
         var city by remember { mutableStateOf("") }
         var province by remember { mutableStateOf("") }
         var country by remember { mutableStateOf("") }
+        var conditionsAccepted by remember { mutableStateOf(false) }
+
+        var isLoading by remember { mutableStateOf(false) }
 
         OutlinedTextField(
             value = fullName,
@@ -68,6 +79,7 @@ fun LendingUserSignUpPage() {
             label = { Text("Full Name") },
             placeholder = { Text("Jordi Ferrandis i Carbonell") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -76,6 +88,7 @@ fun LendingUserSignUpPage() {
             label = { Text("NIF") },
             placeholder = { Text("12345678A") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -84,6 +97,7 @@ fun LendingUserSignUpPage() {
             label = { Text("Phone Number") },
             placeholder = { Text("+34123456789") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         DropdownSelector(
@@ -91,6 +105,7 @@ fun LendingUserSignUpPage() {
             options = Sports.entries,
             onSelectionChange = { sports = it },
             label = "Sports",
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth(),
             itemToString = { it.displayName }
         )
@@ -100,6 +115,7 @@ fun LendingUserSignUpPage() {
             label = { Text("Address") },
             placeholder = { Text("Carrer de l'Exemple, 1") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -108,6 +124,7 @@ fun LendingUserSignUpPage() {
             label = { Text("Postal Code") },
             placeholder = { Text("03801") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -116,6 +133,7 @@ fun LendingUserSignUpPage() {
             label = { Text("City") },
             placeholder = { Text("Alcoi") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -124,6 +142,7 @@ fun LendingUserSignUpPage() {
             label = { Text("Province") },
             placeholder = { Text("Alacant") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -132,14 +151,28 @@ fun LendingUserSignUpPage() {
             label = { Text("Country") },
             placeholder = { Text("Spain") },
             singleLine = true,
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
 
-        val valid = fullName.isNotBlank() && nif.isNotBlank() && phoneNumber.isNotBlank() && sports.isNotEmpty() && address.isNotBlank() && postalCode.isNotBlank() && city.isNotBlank() && province.isNotBlank() && country.isNotBlank()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(conditionsAccepted, onCheckedChange = { conditionsAccepted = it }, enabled = !isLoading)
+            Text("I accept the terms and conditions", Modifier.weight(1f).padding(start = 8.dp))
+        }
+
+        val valid = conditionsAccepted && fullName.isNotBlank() && nif.isNotBlank() && phoneNumber.isNotBlank() && sports.isNotEmpty() && address.isNotBlank() && postalCode.isNotBlank() && city.isNotBlank() && province.isNotBlank() && country.isNotBlank()
 
         OutlinedButton(
-            onClick = { /* TODO: Submit the form */ },
-            enabled = valid,
+            onClick = {
+                isLoading = true
+                onCreate(fullName, nif, phoneNumber, sports, address, postalCode, city, province, country).invokeOnCompletion {
+                    isLoading = false
+                }
+            },
+            enabled = valid && !isLoading,
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         ) {
             Text("Submit")

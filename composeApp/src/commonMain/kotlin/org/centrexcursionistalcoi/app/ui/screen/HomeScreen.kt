@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.page.home.LendingPage
+import org.centrexcursionistalcoi.app.ui.page.home.LendingPageOnCreate
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
@@ -37,7 +39,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val departments by model.departments.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it, departments, model::createDepartment, model::delete)
+        HomeScreenContent(it, departments, model::createDepartment, model::delete, model::signUpForLending)
     } ?: LoadingBox()
 }
 
@@ -58,6 +60,7 @@ private fun HomeScreenContent(
     departments: List<Department>?,
     onCreateDepartment: (displayName: String) -> Job,
     onDeleteDepartment: (Department) -> Job,
+    onLendingSignUp: LendingPageOnCreate,
 ) {
     val navigationItems = navigationItems(profile.isAdmin)
 
@@ -131,46 +134,60 @@ private fun HomeScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     userScrollEnabled = false
                 ) { page ->
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        when (page) {
-                            0 -> Text(
-                                text = "Welcome back ${profile.username}!",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 24.dp)
-                            )
-
-                            1 -> LendingPage(profile)
-
-                            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
-                        }
-                    }
+                    HomeScreenPagerContent(
+                        page,
+                        profile,
+                        windowSizeClass,
+                        departments,
+                        onCreateDepartment,
+                        onDeleteDepartment,
+                        onLendingSignUp,
+                    )
                 }
             } else {
                 HorizontalPager(
                     state = pager,
                     modifier = Modifier.fillMaxSize()
                 ) { page ->
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        when (page) {
-                            0 -> Text(
-                                text = "Welcome back ${profile.username}!",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 24.dp)
-                            )
-
-                            1 -> LendingPage(profile)
-
-                            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
-                        }
-                    }
+                    HomeScreenPagerContent(
+                        page,
+                        profile,
+                        windowSizeClass,
+                        departments,
+                        onCreateDepartment,
+                        onDeleteDepartment,
+                        onLendingSignUp,
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HomeScreenPagerContent(
+    page: Int,
+    profile: ProfileResponse,
+    windowSizeClass: WindowSizeClass,
+    departments: List<Department>?,
+    onCreateDepartment: (displayName: String) -> Job,
+    onDeleteDepartment: (Department) -> Job,
+    onLendingSignUp: LendingPageOnCreate,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        when (page) {
+            0 -> Text(
+                text = "Welcome back ${profile.username}!",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 24.dp)
+            )
+
+            1 -> LendingPage(profile, onLendingSignUp)
+
+            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
         }
     }
 }

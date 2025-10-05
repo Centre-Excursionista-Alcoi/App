@@ -10,8 +10,9 @@ import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalSettingsApi::class)
 object ProfileRepository {
+    private val settings = org.centrexcursionistalcoi.app.storage.settings.makeObservable()
+
     val profile = settings
-        .makeObservable()
         .getStringOrNullFlow("profile")
         .map { data -> data?.let { json.decodeFromString(ProfileResponse.serializer(), it) } }
 

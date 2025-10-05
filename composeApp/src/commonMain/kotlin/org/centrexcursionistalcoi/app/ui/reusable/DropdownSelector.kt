@@ -27,31 +27,34 @@ fun <T> DropdownSelector(
     onSelectionChange: (List<T>) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     itemToString: @Composable (T) -> String = { it.toString() },
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
-        expanded = expanded,
+        expanded = expanded && enabled,
         onExpandedChange = { expanded = it },
-        modifier = modifier
     ) {
         @Suppress("SimplifiableCallChain") // cannot be used because itemToString is Composable
         OutlinedTextField(
             readOnly = true,
+            singleLine = true,
+            enabled = enabled,
             value = selection.map { itemToString(it) }.joinToString(", "),
             onValueChange = {},
             label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled) },
+            modifier = modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
         )
         ExposedDropdownMenu(
-            expanded = expanded,
+            expanded = expanded && enabled,
             onDismissRequest = { expanded = false },
         ) {
             options.forEach { option ->
                 val isSelected = selection.contains(option)
                 DropdownMenuItem(
+                    enabled = enabled,
                     text = { Text(itemToString(option)) },
                     onClick = {
                         val newSelection = if (isSelected) {
