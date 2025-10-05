@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import java.time.format.DateTimeParseException
 
 fun Route.profileRoutes() {
     get("/profile") {
@@ -98,5 +99,48 @@ fun Route.profileRoutes() {
 
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
         call.respond(insurances)
+    }
+    post("/profile/insurances") {
+        val session = getUserSessionOrFail() ?: return@post
+
+        val contentType = call.request.contentType()
+        if (!contentType.match(ContentType.Application.FormUrlEncoded)) {
+            call.respondText("Content-Type must be form url-encoded. It was: $contentType", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val parameters = call.receiveParameters()
+        val insuranceCompany = parameters["insuranceCompany"]
+        val policyNumber = parameters["policyNumber"]
+        val validFrom = parameters["validFrom"]
+        val validTo = parameters["validTo"]
+
+        if (insuranceCompany.isNullOrBlank()) return@post call.respondText("Insurance company is required", status = HttpStatusCode.BadRequest)
+        if (policyNumber.isNullOrBlank()) return@post call.respondText("Policy number is required", status = HttpStatusCode.BadRequest)
+        if (validFrom.isNullOrBlank()) return@post call.respondText("Valid until date is required", status = HttpStatusCode.BadRequest)
+        if (validTo.isNullOrBlank()) return@post call.respondText("Valid from date is required", status = HttpStatusCode.BadRequest)
+
+        val validFromDate = try {
+            java.time.LocalDate.parse(validFrom)
+        } catch (_: DateTimeParseException) {
+            return@post call.respondText("Valid from date is not valid", status = HttpStatusCode.BadRequest)
+        }
+        val validToDate = try {
+            java.time.LocalDate.parse(validTo)
+        } catch (_: DateTimeParseException) {
+            return@post call.respondText("Valid until date is not valid", status = HttpStatusCode.BadRequest)
+        }
+
+        Database {
+            UserInsuranceEntity.new {
+                userSub = session.sub
+                this.insuranceCompany = insuranceCompany
+                this.policyNumber = policyNumber
+                this.validFrom = validFromDate
+                this.validTo = validToDate
+            }
+        }
+
+        call.respondText("OK", status = HttpStatusCode.Created)
     }
 }

@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.http.parametersOf
@@ -20,8 +21,10 @@ import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
+import org.jetbrains.exposed.v1.core.eq
 import java.time.LocalDate
 import kotlin.test.assertNotNull
 
@@ -235,6 +238,115 @@ class TestProfileRoutes : ApplicationTestBase() {
             assertEquals("POL123", insurance.policyNumber)
             assertEquals(LocalDate.of(2025, 1, 1).toKotlinLocalDate(), insurance.validFrom)
             assertEquals(LocalDate.of(2025, 12, 31).toKotlinLocalDate(), insurance.validTo)
+        }
+    }
+
+
+    @Test
+    fun test_insurances_post_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances", HttpMethod.Post)
+
+    @Test
+    fun test_insurances_post_missingFields() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        // Missing all fields
+        client.submitForm("/profile/insurances").assertBadRequest()
+
+        // Missing insuranceCompany
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+            }
+        ).assertBadRequest()
+
+        // Missing policyNumber
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+            }
+        ).assertBadRequest()
+
+        // Missing validFrom
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validTo", "2025-12-31")
+            }
+        ).assertBadRequest()
+
+        // Missing validTo
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+            }
+        ).assertBadRequest()
+    }
+
+    @Test
+    fun test_insurances_post_invalidDates() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        // Invalid validFrom
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "invalid-date")
+                append("validTo", "2025-12-31")
+            }
+        ).assertBadRequest()
+
+        // Invalid validTo
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "invalid-date")
+            }
+        ).assertBadRequest()
+    }
+
+
+    @Test
+    fun test_insurances_post_correct() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        client.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Created)
+        }
+
+        // Check it is in the database
+        Database {
+            val insurances = UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.toList()
+            assertEquals(1, insurances.size)
+            val insurance = insurances[0]
+            assertEquals(FakeUser.SUB, insurance.userSub)
+            assertEquals("FEMECV", insurance.insuranceCompany)
+            assertEquals("POL123", insurance.policyNumber)
+            assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom)
+            assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo)
         }
     }
 }
