@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,10 +30,12 @@ import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.ui.dialog.InsuranceDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
@@ -69,6 +72,14 @@ private fun LendingUserPage(
         onDismissRequest = { addingInsurance = false }
     )
 
+    var displayingInsurance by remember { mutableStateOf<UserInsurance?>(null) }
+    displayingInsurance?.let {
+        InsuranceDialog(
+            insurance = it,
+            onDismissRequest = { displayingInsurance = null }
+        )
+    }
+
     AdaptiveVerticalGrid(
         windowSizeClass,
         contentPadding = PaddingValues(8.dp),
@@ -78,15 +89,43 @@ private fun LendingUserPage(
             OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(Res.string.lending_no_active_insurances_title),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                 )
                 Text(
                     text = stringResource(Res.string.lending_no_active_insurances_message),
                     style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
                 )
                 TextButton(
-                    onClick = { addingInsurance = true }
+                    onClick = { addingInsurance = true },
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
                 ) { Text(stringResource(Res.string.lending_no_active_insurances_action)) }
+            }
+        } else item("insurances_list") {
+            OutlinedCard {
+                Text(
+                    text = stringResource(Res.string.active_insurances_title),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                for (insurance in activeInsurances) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).clickable { displayingInsurance = insurance },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = insurance.insuranceCompany,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = insurance.policyNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }
