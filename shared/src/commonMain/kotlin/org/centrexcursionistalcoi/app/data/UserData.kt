@@ -11,4 +11,10 @@ data class UserData(
     val departments: List<DepartmentMemberInfo>,
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>
-)
+): Entity<String> {
+    override val id: String = sub
+
+    override fun toMap(): Map<String, Any?> {
+        throw UnsupportedOperationException("UserData cannot be converted to a Map. This is a read-only entity.")
+    }
+}

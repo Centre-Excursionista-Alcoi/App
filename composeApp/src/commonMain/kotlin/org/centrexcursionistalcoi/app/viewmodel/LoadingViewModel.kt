@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 
 @OptIn(ExperimentalTime::class)
 class LoadingViewModel(
@@ -34,6 +35,10 @@ class LoadingViewModel(
             Napier.d { "Synchronizing local data with remote..." }
             DepartmentsRemoteRepository.synchronizeWithDatabase()
             PostsRemoteRepository.synchronizeWithDatabase()
+            if (profile.isAdmin) {
+                Napier.d { "Synchronizing admin local data with remote..." }
+                UsersRemoteRepository.synchronizeWithDatabase()
+            }
 
             Napier.d { "Load finished!" }
             withContext(Dispatchers.Main) { onLoggedIn() }

@@ -46,11 +46,12 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
     suspend fun get(id: IdType): T? = getUrl("$endpoint/$id")
 
     suspend fun synchronizeWithDatabase() {
-        val list = getAll()
+        val remoteList = getAll() // all entries from the remote server
+        val localList = repository.selectAll() // all entries from the local database
         val toUpdate = mutableListOf<T>()
         val toInsert = mutableListOf<T>()
-        for (item in list) {
-            if (list.find { it.id == item.id } != null) {
+        for (item in remoteList) {
+            if (localList.find { it.id == item.id } != null) {
                 toUpdate += item
             } else {
                 toInsert += item
@@ -60,8 +61,7 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
         val existingIds = toUpdate.map { it.id } + toInsert.map { it.id }
 
         // Delete items that are not in the server response
-        val dbList = repository.selectAll()
-        val toDelete = dbList.filter { it.id !in existingIds }.map { it.id }
+        val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
 
         Napier.d {
             "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"

@@ -1,0 +1,27 @@
+import kotlin.String;
+import kotlin.collections.List;
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo;
+import org.centrexcursionistalcoi.app.data.LendingUser;
+import org.centrexcursionistalcoi.app.data.UserInsurance;
+
+CREATE TABLE Users(
+    sub TEXT NOT NULL PRIMARY KEY,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    groups TEXT AS List<String> NOT NULL,
+    departments TEXT AS List<DepartmentMemberInfo> NOT NULL,
+    lendingUser TEXT AS LendingUser DEFAULT NULL,
+    insurances TEXT AS List<UserInsurance> NOT NULL
+);
+
+insert:
+INSERT INTO Users(sub, username, email, groups, departments, lendingUser, insurances) VALUES(?, ?, ?, ?, ?, ?, ?);
+
+selectAll:
+SELECT * FROM Users;
+
+deleteById:
+DELETE FROM Users WHERE sub = ?;
+
+update:
+UPDATE Users SET username = ?, email = ?, groups = ?, departments = ?, lendingUser = ?, insurances = ? WHERE sub = ?;
