@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.jetbrains.exposed.v1.core.eq
 import java.time.LocalDate
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class TestProfileRoutes : ApplicationTestBase() {
     @Test
@@ -41,6 +42,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         assertEquals("user@example.com", response.email)
         assertContentEquals(listOf("user"), response.groups)
         assertNull(response.lendingUser)
+        assertTrue(response.insurances.isEmpty())
     }
 
     private val lendingAllParameters = mapOf(
