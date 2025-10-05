@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import org.centrexcursionistalcoi.app.data.Sports
+import org.jetbrains.exposed.v1.core.EnumerationNameColumnType
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 
 /**
@@ -9,6 +11,16 @@ object LendingUsers : UUIDTable("lendingUsers") {
     /** The Subject Identifier of the user */
     val userSub = text("sub").uniqueIndex()
 
+    val fullName = text("fullName")
     val nif = text("nif")
+
     val phoneNumber = text("phoneNumber")
+
+    val sports = array("sports", EnumerationNameColumnType(Sports::class, 32))
+
+    val address = text("address")
+    val postalCode = text("postalCode")
+    val city = text("city")
+    val province = text("province")
+    val country = text("country")
 }
