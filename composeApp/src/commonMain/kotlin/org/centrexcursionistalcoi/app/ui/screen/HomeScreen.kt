@@ -128,7 +128,8 @@ private fun HomeScreenContent(
 
                 VerticalPager(
                     state = pager,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    userScrollEnabled = false
                 ) { page ->
                     Column(modifier = Modifier.fillMaxSize()) {
                         when (page) {

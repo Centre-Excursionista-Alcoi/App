@@ -9,4 +9,12 @@
     <string name="nav_management">Management</string>
 
     <string name="management_departments">Departments</string>
+
+    <string name="sport_climbing">Climbing</string>
+    <string name="sport_climbing_without_belay">Climbing without Belay</string>
+    <string name="sport_via_ferrata">Via Ferrata</string>
+    <string name="sport_canyoning">Canyoning</string>
+    <string name="sport_hiking">Hiking</string>
+    <string name="sport_alpinism">Alpinism</string>
+
 </resources>
