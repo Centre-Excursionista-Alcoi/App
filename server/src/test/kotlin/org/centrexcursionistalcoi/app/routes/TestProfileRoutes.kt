@@ -6,6 +6,8 @@ import io.ktor.client.request.post
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.http.parametersOf
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.serialization.builtins.ListSerializer
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -14,10 +16,13 @@ import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBadRequest
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
+import java.time.LocalDate
 import kotlin.test.assertNotNull
 
 class TestProfileRoutes : ApplicationTestBase() {
@@ -191,6 +196,45 @@ class TestProfileRoutes : ApplicationTestBase() {
                 assertEquals("Anyprovince", lendingUser.province)
                 assertEquals("Anycountry", lendingUser.country)
             }
+        }
+    }
+
+
+    @Test
+    fun test_insurances_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances")
+
+    @Test
+    fun test_insurances_loggedIn() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            // Add some insurances for the user
+            Database {
+                UserInsuranceEntity.new {
+                    userSub = FakeUser.SUB
+                    insuranceCompany = "FEMECV"
+                    policyNumber = "POL123"
+                    validFrom = LocalDate.of(2025, 1, 1)
+                    validTo = LocalDate.of(2025, 12, 31)
+                }
+                UserInsuranceEntity.new {
+                    userSub = FakeAdminUser.SUB
+                    insuranceCompany = "FEMECV"
+                    policyNumber = "POL456"
+                    validFrom = LocalDate.of(2025, 1, 1)
+                    validTo = LocalDate.of(2025, 12, 31)
+                }
+            }
+        }
+    ) {
+        client.get("/profile/insurances").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            val response = bodyAsJson(ListSerializer(UserInsurance.serializer()))
+            assertEquals(1, response.size)
+            val insurance = response[0]
+            assertEquals("FEMECV", insurance.insuranceCompany)
+            assertEquals("POL123", insurance.policyNumber)
+            assertEquals(LocalDate.of(2025, 1, 1).toKotlinLocalDate(), insurance.validFrom)
+            assertEquals(LocalDate.of(2025, 12, 31).toKotlinLocalDate(), insurance.validTo)
         }
     }
 }

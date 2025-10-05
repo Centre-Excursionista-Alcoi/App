@@ -28,6 +28,7 @@ kotlin {
         commonMain.dependencies {
             // When adding dependencies here, also add them to Dockerfile in /server
             implementation(libs.kotlinx.serializationJson)
+            api(libs.kotlinx.datetime)
             api(libs.kotlin.crypto.random)
             api(libs.kotlin.crypto.sha2)
         }

@@ -13,8 +13,10 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
@@ -90,5 +92,11 @@ fun Route.profileRoutes() {
         }
 
         call.respondText("OK", status = HttpStatusCode.Created)
+    }
+    get("/profile/insurances") {
+        val session = getUserSessionOrFail() ?: return@get
+
+        val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
+        call.respond(insurances)
     }
 }

@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
-    val tables = arrayOf(Files, Departments, Posts, LendingUsers, DepartmentMembers)
+    val tables = arrayOf(Files, Departments, Posts, LendingUsers, DepartmentMembers, UserInsurances)
     private var database: JdbcDatabase? = null
 
     const val URL = "jdbc:sqlite:file:test?mode=memory&cache=shared" // In-memory SQLite database
