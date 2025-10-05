@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +12,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +31,9 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
+import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
 import org.jetbrains.compose.resources.stringResource
@@ -34,17 +41,59 @@ import org.jetbrains.compose.resources.stringResource
 typealias LendingPageOnCreate = (fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) -> Job
 
 @Composable
-fun LendingPage(profile: ProfileResponse, onCreate: LendingPageOnCreate) {
+fun LendingPage(
+    windowSizeClass: WindowSizeClass,
+    profile: ProfileResponse,
+    onCreateLendingAccount: LendingPageOnCreate,
+    onCreateInsurance: CreateInsuranceRequest,
+) {
     val lendingUser = profile.lendingUser
     if (lendingUser != null) {
-        Text("TODO")
+        LendingUserPage(windowSizeClass, profile, onCreateInsurance)
     } else {
-        LendingUserSignUpPage(onCreate)
+        LendingUserSignUpPage(onCreateLendingAccount)
     }
 }
 
 @Composable
-fun LendingUserSignUpPage(
+private fun LendingUserPage(
+    windowSizeClass: WindowSizeClass,
+    profile: ProfileResponse,
+    onCreateInsurance: CreateInsuranceRequest,
+) {
+    val activeInsurances = remember(profile) { profile.activeInsurances() }
+
+    var addingInsurance by remember { mutableStateOf(false) }
+    if (addingInsurance) AddInsuranceDialog(
+        onCreate = onCreateInsurance,
+        onDismissRequest = { addingInsurance = false }
+    )
+
+    AdaptiveVerticalGrid(
+        windowSizeClass,
+        contentPadding = PaddingValues(8.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        if (activeInsurances.isEmpty()) item("no_insurances") {
+            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(Res.string.lending_no_active_insurances_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = stringResource(Res.string.lending_no_active_insurances_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                TextButton(
+                    onClick = { addingInsurance = true }
+                ) { Text(stringResource(Res.string.lending_no_active_insurances_action)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LendingUserSignUpPage(
     onCreate: LendingPageOnCreate
 ) {
     ColumnWidthWrapper(

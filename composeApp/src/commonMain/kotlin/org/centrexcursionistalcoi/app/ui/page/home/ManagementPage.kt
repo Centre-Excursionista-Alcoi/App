@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -28,16 +29,9 @@ fun ManagementPage(
     onCreateDepartment: (displayName: String) -> Job,
     onDeleteDepartment: (Department) -> Job
 ) {
-    val columns = if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-        // Desktop and large tablets
-        GridCells.Adaptive(minSize = 300.dp)
-    } else {
-        // Phones and small tablets
-        GridCells.Fixed(1)
-    }
-    LazyVerticalGrid(
-        columns = columns,
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+    AdaptiveVerticalGrid(
+        windowSizeClass,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
         item(key = "departments") {
             DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)

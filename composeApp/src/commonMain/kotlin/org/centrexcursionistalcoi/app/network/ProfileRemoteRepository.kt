@@ -5,6 +5,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -51,6 +52,26 @@ object ProfileRemoteRepository {
         )
         if (!response.status.isSuccess()) {
             throw ServerException("Failed to sign up for lending", response.status.value, response.bodyAsText())
+        }
+    }
+
+    suspend fun createInsurance(
+        company: String,
+        policyNumber: String,
+        validFrom: LocalDate,
+        validTo: LocalDate
+    ) {
+        val response = httpClient.submitForm(
+            "/profile/insurances",
+            formParameters = parameters {
+                append("insuranceCompany", company)
+                append("policyNumber", policyNumber)
+                append("validFrom", validFrom.toString())
+                append("validTo", validTo.toString())
+            }
+        )
+        if (!response.status.isSuccess()) {
+            throw ServerException("Failed to add insurance", response.status.value, response.bodyAsText())
         }
     }
 

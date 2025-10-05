@@ -25,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.page.home.LendingPage
 import org.centrexcursionistalcoi.app.ui.page.home.LendingPageOnCreate
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
@@ -39,7 +40,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val departments by model.departments.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it, departments, model::createDepartment, model::delete, model::signUpForLending)
+        HomeScreenContent(it, departments, model::createDepartment, model::delete, model::signUpForLending, model::createInsurance)
     } ?: LoadingBox()
 }
 
@@ -61,6 +62,7 @@ private fun HomeScreenContent(
     onCreateDepartment: (displayName: String) -> Job,
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
+    onCreateInsurance: CreateInsuranceRequest,
 ) {
     val navigationItems = navigationItems(profile.isAdmin)
 
@@ -142,6 +144,7 @@ private fun HomeScreenContent(
                         onCreateDepartment,
                         onDeleteDepartment,
                         onLendingSignUp,
+                        onCreateInsurance,
                     )
                 }
             } else {
@@ -157,6 +160,7 @@ private fun HomeScreenContent(
                         onCreateDepartment,
                         onDeleteDepartment,
                         onLendingSignUp,
+                        onCreateInsurance,
                     )
                 }
             }
@@ -173,6 +177,7 @@ fun HomeScreenPagerContent(
     onCreateDepartment: (displayName: String) -> Job,
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
+    onCreateInsurance: CreateInsuranceRequest,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -185,7 +190,7 @@ fun HomeScreenPagerContent(
                     .padding(top = 24.dp)
             )
 
-            1 -> LendingPage(profile, onLendingSignUp)
+            1 -> LendingPage(windowSizeClass, profile, onLendingSignUp, onCreateInsurance)
 
             2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
         }

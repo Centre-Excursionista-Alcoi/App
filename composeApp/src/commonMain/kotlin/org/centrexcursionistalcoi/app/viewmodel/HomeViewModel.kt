@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -37,6 +38,11 @@ class HomeViewModel: ViewModel() {
 
     fun signUpForLending(fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.signUpForLending(fullName, nif, phoneNumber, sports, address, postalCode, city, province, country)
+        ProfileRemoteRepository.synchronize()
+    }
+
+    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
+        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
     }
 }

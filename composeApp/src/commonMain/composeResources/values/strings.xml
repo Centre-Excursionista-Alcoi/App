@@ -10,6 +10,9 @@
 
     <string name="management_departments">Departments</string>
 
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+
     <string name="sport_climbing">Climbing</string>
     <string name="sport_climbing_without_belay">Climbing without Belay</string>
     <string name="sport_via_ferrata">Via Ferrata</string>
@@ -30,5 +33,15 @@
     <string name="lending_signup_province">Province</string>
     <string name="lending_signup_accept">I accept the terms and conditions</string>
     <string name="lending_signup_submit">Submit</string>
+
+    <string name="lending_no_active_insurances_title">No active insurances</string>
+    <string name="lending_no_active_insurances_message">You won't be able to make any lending until you have a valid insurance.</string>
+    <string name="lending_no_active_insurances_action">Add Insurance</string>
+
+    <string name="insurance_add_title">Add Insurance</string>
+    <string name="insurance_company">Insurance Company</string>
+    <string name="insurance_policy_number">Policy Number</string>
+    <string name="insurance_start_date">Start Date</string>
+    <string name="insurance_end_date">End Date</string>
 
 </resources>
