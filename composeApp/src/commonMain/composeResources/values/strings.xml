@@ -17,4 +17,18 @@
     <string name="sport_hiking">Hiking</string>
     <string name="sport_alpinism">Alpinism</string>
 
+    <string name="lending_signup_title">Registration Required</string>
+    <string name="lending_signup_message">With this form, the member certifies that he/she is aware of the internal rules of the Climbing and Mountaineering Sections for the use of technical equipment owned by the CEA. That he/she has the necessary training and knowledge for the use of this type of equipment, being the member solely responsible for the correct use and maintenance, as well as the obligation to notify the Sections' managers of any damage or misuse of this equipment.</string>
+    <string name="lending_signup_full_name">Full Name</string>
+    <string name="lending_signup_nif">NIF</string>
+    <string name="lending_signup_phone">Phone Number</string>
+    <string name="lending_signup_sports">Sports</string>
+    <string name="lending_signup_address">Address</string>
+    <string name="lending_signup_city">City</string>
+    <string name="lending_signup_postal_code">Postal Code</string>
+    <string name="lending_signup_country">Country</string>
+    <string name="lending_signup_province">Province</string>
+    <string name="lending_signup_accept">I accept the terms and conditions</string>
+    <string name="lending_signup_submit">Submit</string>
+
 </resources>
