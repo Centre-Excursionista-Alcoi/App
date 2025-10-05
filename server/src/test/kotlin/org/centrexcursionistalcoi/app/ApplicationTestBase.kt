@@ -18,9 +18,11 @@ import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 abstract class ApplicationTestBase {
 
@@ -29,6 +31,13 @@ abstract class ApplicationTestBase {
         const val USERNAME = "user"
         const val EMAIL = "user@example.com"
         val GROUPS = listOf("user")
+
+        context(_: JdbcTransaction)
+        fun provideEntity(): UserReferenceEntity = UserReferenceEntity.new(SUB) {
+            username = USERNAME
+            email = EMAIL
+            groups = GROUPS
+        }
     }
 
     object FakeAdminUser {
@@ -36,6 +45,15 @@ abstract class ApplicationTestBase {
         const val USERNAME = "admin"
         const val EMAIL = "admin@example.com"
         val GROUPS = listOf(ADMIN_GROUP_NAME, "user")
+
+        context(_: JdbcTransaction)
+        fun provideEntity(): UserReferenceEntity = transaction {
+            UserReferenceEntity.new(SUB) {
+                username = USERNAME
+                email = EMAIL
+                groups = GROUPS
+            }
+        }
     }
 
     enum class LoginType {

@@ -1,11 +1,12 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.javatime.date
 
 object UserInsurances : UUIDTable("UserInsurances") {
     /** The Subject Identifier of the user */
-    val userSub = text("sub")
+    val userSub = reference("sub", UserReferences, ReferenceOption.CASCADE, ReferenceOption.RESTRICT)
     val insuranceCompany = varchar("insuranceCompany", 255)
     val policyNumber = varchar("policyNumber", 255)
     val validFrom = date("validFrom")

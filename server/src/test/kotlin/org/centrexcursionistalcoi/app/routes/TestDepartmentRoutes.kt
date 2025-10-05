@@ -45,7 +45,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             DepartmentMemberEntity.new {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 department = DepartmentEntity.new(123) {
                     displayName = "Test Department"
                 }
@@ -66,7 +66,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             DepartmentMemberEntity.new {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 department = DepartmentEntity.new(123) {
                     displayName = "Test Department"
                 }
@@ -155,12 +155,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 department = mockDepartment
                 confirmed = false
             }
             DepartmentMemberEntity.new {
-                userSub = FakeAdminUser.SUB
+                userSub = FakeAdminUser.provideEntity().id
                 department = mockDepartment
                 confirmed = true
             }
@@ -245,7 +245,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(123) {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 department = mockDepartment
                 confirmed = true
             }
@@ -267,7 +267,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(123) {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 department = mockDepartment
                 confirmed = false
             }

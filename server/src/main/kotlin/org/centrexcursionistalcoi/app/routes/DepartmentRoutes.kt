@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -122,7 +123,7 @@ fun Route.departmentsRoutes() {
             Database {
                 DepartmentMemberEntity.new {
                     this.department = department
-                    this.userSub = session.sub
+                    this.userSub = Database { UserReferenceEntity.getOrProvide(session).id }
                     this.confirmed = confirmed
                 }
             }
@@ -143,7 +144,7 @@ fun Route.departmentsRoutes() {
         val pendingRequests = Database {
             DepartmentMemberEntity
                 .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.confirmed eq false) }
-                .map { DepartmentJoinRequestsResponse.Request(it.userSub, it.id.value) }
+                .map { DepartmentJoinRequestsResponse.Request(it.userSub.value, it.id.value) }
         }
         call.respondText(
             json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),

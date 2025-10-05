@@ -23,6 +23,17 @@ object ProvidedRouteTests {
     }
 
     context(base: ApplicationTestBase)
+    fun test_loggedIn_notAdmin(baseUrl: String) = base.runApplicationTest {
+        assertTrue { baseUrl.startsWith('/') }
+
+        with(base) { loginAsFakeUser() }
+
+        client.get(baseUrl).apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    context(base: ApplicationTestBase)
     fun <T> test_loggedIn(
         baseUrl: String,
         deserializer: DeserializationStrategy<T>,

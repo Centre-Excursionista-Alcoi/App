@@ -32,7 +32,7 @@ class LendingUserEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     context(_: JdbcTransaction)
     fun toData(): LendingUser = LendingUser(
         id = id.value.toKotlinUuid(),
-        sub = userSub,
+        sub = userSub.value,
         fullName = fullName,
         nif = nif,
         phoneNumber = phoneNumber,

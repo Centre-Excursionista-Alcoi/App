@@ -43,6 +43,8 @@ import kotlinx.serialization.json.jsonObject
 import org.centrexcursionistalcoi.app.auth.TokenResponse
 import org.centrexcursionistalcoi.app.auth.generateCodeChallenge
 import org.centrexcursionistalcoi.app.auth.generateCodeVerifier
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
 
 const val AUTH_PROVIDER_NAME = "authentik-oauth"
@@ -136,7 +138,10 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
         val groups = decodedToken.getClaim("groups")?.asList(String::class.java)
 
         if (sub != null && username != null && email != null && groups != null) {
-            call.sessions.set(UserSession(sub, username, email, groups))
+            val session = UserSession(sub, username, email, groups)
+            call.sessions.set(session)
+
+            Database { UserReferenceEntity.getOrProvide(session) }
 
             val loginSession = call.sessions.get<LoginSession>()
             call.sessions.clear<LoginSession>()

@@ -9,11 +9,13 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.time.format.DateTimeParseException
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
@@ -21,8 +23,6 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import java.time.format.DateTimeParseException
 
 fun Route.profileRoutes() {
     get("/profile") {
@@ -80,7 +80,7 @@ fun Route.profileRoutes() {
 
         Database {
             LendingUserEntity.new {
-                userSub = session.sub
+                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
                 this.fullName = fullName
                 this.nif = nif
                 this.phoneNumber = phoneNumber
@@ -134,7 +134,7 @@ fun Route.profileRoutes() {
 
         Database {
             UserInsuranceEntity.new {
-                userSub = session.sub
+                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate

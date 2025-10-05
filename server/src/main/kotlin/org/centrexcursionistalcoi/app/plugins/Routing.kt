@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
+import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.utils.toUUID
 
 fun Application.configureRouting() {
@@ -57,6 +58,7 @@ fun Application.configureRouting() {
         profileRoutes()
         departmentsRoutes()
         postsRoutes()
+        usersRoutes()
 
         get("/logout") {
             call.sessions.clear<UserSession>()

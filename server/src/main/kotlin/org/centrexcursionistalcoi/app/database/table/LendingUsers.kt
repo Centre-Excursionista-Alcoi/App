@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database.table
 
 import org.centrexcursionistalcoi.app.data.Sports
 import org.jetbrains.exposed.v1.core.EnumerationNameColumnType
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 
 /**
@@ -9,7 +10,7 @@ import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
  */
 object LendingUsers : UUIDTable("lendingUsers") {
     /** The Subject Identifier of the user */
-    val userSub = text("sub").uniqueIndex()
+    val userSub = reference("sub", UserReferences, ReferenceOption.CASCADE, ReferenceOption.RESTRICT).uniqueIndex()
 
     val fullName = text("fullName")
     val nif = text("nif")

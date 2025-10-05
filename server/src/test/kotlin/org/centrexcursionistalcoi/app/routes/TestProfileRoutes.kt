@@ -7,12 +7,15 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.http.parametersOf
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.serialization.builtins.ListSerializer
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBadRequest
 import org.centrexcursionistalcoi.app.assertStatusCode
@@ -25,9 +28,6 @@ import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.jetbrains.exposed.v1.core.eq
-import java.time.LocalDate
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class TestProfileRoutes : ApplicationTestBase() {
     @Test
@@ -140,7 +140,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             LendingUserEntity.new {
-                userSub = FakeUser.SUB
+                userSub = FakeUser.provideEntity().id
                 fullName = "John Doe"
                 nif = "12345678A"
                 phoneNumber = "123456789"
@@ -175,7 +175,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         Database {
             val lendingUser = LendingUserEntity.all().firstOrNull()
             assertNotNull(lendingUser)
-            assertEquals(FakeUser.SUB, lendingUser.userSub)
+            assertEquals(FakeUser.SUB, lendingUser.userSub.value)
             assertEquals("John Doe", lendingUser.fullName)
             assertEquals("12345678A", lendingUser.nif)
             assertEquals("123456789", lendingUser.phoneNumber)
@@ -215,14 +215,14 @@ class TestProfileRoutes : ApplicationTestBase() {
             // Add some insurances for the user
             Database {
                 UserInsuranceEntity.new {
-                    userSub = FakeUser.SUB
+                    userSub = FakeUser.provideEntity().id
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL123"
                     validFrom = LocalDate.of(2025, 1, 1)
                     validTo = LocalDate.of(2025, 12, 31)
                 }
                 UserInsuranceEntity.new {
-                    userSub = FakeAdminUser.SUB
+                    userSub = FakeAdminUser.provideEntity().id
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL456"
                     validFrom = LocalDate.of(2025, 1, 1)
@@ -344,7 +344,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             val insurances = UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.toList()
             assertEquals(1, insurances.size)
             val insurance = insurances[0]
-            assertEquals(FakeUser.SUB, insurance.userSub)
+            assertEquals(FakeUser.SUB, insurance.userSub.value)
             assertEquals("FEMECV", insurance.insuranceCompany)
             assertEquals("POL123", insurance.policyNumber)
             assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom)
