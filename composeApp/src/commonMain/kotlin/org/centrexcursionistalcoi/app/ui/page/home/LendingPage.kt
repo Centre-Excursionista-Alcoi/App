@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
@@ -111,7 +110,7 @@ private fun LendingUserPage(
                 for (insurance in activeInsurances) {
                     Spacer(Modifier.height(8.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).clickable { displayingInsurance = insurance },
+                        modifier = Modifier.fillMaxWidth().clickable { displayingInsurance = insurance }.padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -126,6 +125,7 @@ private fun LendingUserPage(
                         )
                     }
                 }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
