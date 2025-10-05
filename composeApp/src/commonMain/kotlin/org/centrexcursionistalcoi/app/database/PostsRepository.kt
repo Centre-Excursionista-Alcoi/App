@@ -1,11 +1,21 @@
 package org.centrexcursionistalcoi.app.database
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.data.Posts
+import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object PostsRepository : SettingsRepository<Post, Uuid>("posts", Post.serializer()) { // DatabaseRepository<Post, Uuid>()
-    /*override val queries by lazy { databaseInstance.postsQueries }
+expect val PostsRepository : Repository<Post, Uuid>
+
+object PostsSettingsRepository : SettingsRepository<Post, Uuid>("posts", Post.serializer())
+
+object PostsDatabaseRepository : DatabaseRepository<Post, Uuid>() {
+    override val queries by lazy { databaseInstance.postsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
@@ -36,7 +46,7 @@ object PostsRepository : SettingsRepository<Post, Uuid>("posts", Post.serializer
 
     override suspend fun delete(id: Uuid) {
         queries.deleteById(id)
-    }*/
+    }
 
     private fun Posts.toPost() = Post(
         id = id,
