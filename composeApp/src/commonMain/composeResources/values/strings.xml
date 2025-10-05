@@ -40,6 +40,8 @@
     <string name="lending_no_active_insurances_action">Add Insurance</string>
 
     <string name="insurance_add_title">Add Insurance</string>
+    <string name="insurance">
+    <string name="insurance_add_title">Add Insurance</string>Insurance</string>
     <string name="insurance_company">Insurance Company</string>
     <string name="insurance_policy_number">Policy Number</string>
     <string name="insurance_start_date">Start Date</string>

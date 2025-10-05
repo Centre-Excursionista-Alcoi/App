@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -108,22 +112,14 @@ private fun LendingUserPage(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 for (insurance in activeInsurances) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { displayingInsurance = insurance }.padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = insurance.insuranceCompany,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = insurance.policyNumber,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    ListItem(
+                        leadingContent = {
+                            Icon(Icons.Default.HealthAndSafety, stringResource(Res.string.insurance))
+                        },
+                        headlineContent = { Text(insurance.insuranceCompany, style = MaterialTheme.typography.bodyLarge) },
+                        supportingContent = { Text(insurance.policyNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        modifier = Modifier.fillMaxWidth().clickable { displayingInsurance = insurance }
+                    )
                 }
                 Spacer(Modifier.height(8.dp))
             }
