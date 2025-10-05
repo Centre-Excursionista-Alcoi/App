@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -34,10 +36,10 @@ class LoadingViewModel(
             PostsRemoteRepository.synchronizeWithDatabase()
 
             Napier.d { "Load finished!" }
-            onLoggedIn()
+            withContext(Dispatchers.Main) { onLoggedIn() }
         } else {
             Napier.i { "User is not logged in" }
-            onNotLoggedIn()
+            withContext(Dispatchers.Main) { onNotLoggedIn() }
         }
     }
 

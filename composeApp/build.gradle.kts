@@ -82,30 +82,46 @@ kotlin {
             implementation(libs.kotlin.test)
         }
 
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.ktor.client.android)
-
-            // Custom Tabs support
-            implementation(libs.androidx.browser)
-
-            implementation(libs.sqldelight.android)
+        val phonesMain by creating {
+            dependsOn(commonMain.get())
         }
 
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native)
+        androidMain {
+            dependsOn(phonesMain)
+            dependencies {
+                implementation(compose.preview)
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.ktor.client.android)
+
+                // Custom Tabs support
+                implementation(libs.androidx.browser)
+
+                implementation(libs.sqldelight.android)
+            }
         }
 
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
+        iosMain {
+            dependsOn(phonesMain)
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+                implementation(libs.sqldelight.native)
+            }
+        }
+        iosArm64Main { dependsOn(iosMain.get()) }
+        iosSimulatorArm64Main { dependsOn(iosMain.get()) }
 
-            // SQLDelight for WASM
-            implementation(libs.sqldelight.wasm)
-            implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
-            implementation(npm("sql.js", "1.6.2"))
-            implementation(devNpm("copy-webpack-plugin", "9.1.0"))
+        webMain { dependsOn(commonMain.get()) }
+        wasmJsMain {
+            dependsOn(webMain.get())
+            dependencies {
+                implementation(libs.ktor.client.js)
+
+                // SQLDelight for WASM
+                implementation(libs.sqldelight.wasm)
+                implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
+                implementation(npm("sql.js", "1.6.2"))
+                implementation(devNpm("copy-webpack-plugin", "9.1.0"))
+            }
         }
     }
 
