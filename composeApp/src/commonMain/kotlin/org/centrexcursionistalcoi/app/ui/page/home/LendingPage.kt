@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -121,7 +122,8 @@ private fun LendingUserPage(
                                     BrandIcons.FEMECV
                                 else
                                     Icons.Default.HealthAndSafety,
-                                stringResource(Res.string.insurance)
+                                stringResource(Res.string.insurance),
+                                modifier = Modifier.size(32.dp)
                             )
                         },
                         headlineContent = { Text(insurance.insuranceCompany, style = MaterialTheme.typography.bodyLarge) },

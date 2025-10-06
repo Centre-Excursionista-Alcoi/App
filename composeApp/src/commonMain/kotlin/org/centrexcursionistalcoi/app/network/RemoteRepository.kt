@@ -5,6 +5,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -12,10 +13,12 @@ import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.data.FileContainer
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
-abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
+abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
     val endpoint: String,
     private val serializer: KSerializer<T>,
     private val repository: Repository<T, IdType>,
@@ -76,6 +79,29 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
 
         val all = repository.selectAll()
         Napier.i { "There are ${all.size} $name" }
+
+        Napier.d { "Synchronizing files..." }
+        val base = endpoint.trim('/')
+        for (item in all) {
+            if (item is FileContainer) {
+                for (file in item.files) {
+                    if (file.value == null) {
+                        // No file associated
+                        continue
+                    }
+                    val bytes = httpClient.get("/download/${file.value}").let {
+                        if (!it.status.isSuccess()) {
+                            Napier.e { "Failed to download file with ID ${file.value} for $name with ID ${item.id}. Status: ${it.status}" }
+                            continue
+                        }
+                        it.bodyAsBytes()
+                    }
+
+                    Napier.d { "Writing file..." }
+                    PlatformFileSystem.write("$base/${item.id}/${file.key}", bytes)
+                }
+            }
+        }
     }
 
     suspend fun create(item: T) {
@@ -85,7 +111,7 @@ abstract class RemoteRepository<IdType: Any, T: Entity<IdType>>(
             url = endpoint,
             formData = formData {
                 item.toMap().forEach { (key, value) ->
-                    when(value) {
+                    when (value) {
                         null -> { /* ignore null values */ }
                         is String -> append(key, value)
                         is Number -> append(key, value)

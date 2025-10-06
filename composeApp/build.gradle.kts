@@ -75,8 +75,6 @@ kotlin {
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
 
-            implementation(libs.kotlinx.io.core)
-
             implementation(projects.shared)
         }
 
@@ -86,6 +84,9 @@ kotlin {
 
         val phonesMain by creating {
             dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.kotlinx.io.core)
+            }
         }
 
         androidMain {
