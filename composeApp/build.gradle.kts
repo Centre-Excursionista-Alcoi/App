@@ -75,6 +75,8 @@ kotlin {
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
 
+            implementation(libs.kotlinx.io.core)
+
             implementation(projects.shared)
         }
 
@@ -115,12 +117,19 @@ kotlin {
             dependsOn(webMain.get())
             dependencies {
                 implementation(libs.ktor.client.js)
+                implementation(libs.kotlinx.browser)
 
                 // SQLDelight for WASM
                 implementation(libs.sqldelight.wasm)
                 implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
                 implementation(npm("sql.js", "1.6.2"))
                 implementation(devNpm("copy-webpack-plugin", "9.1.0"))
+            }
+        }
+        wasmJsTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
