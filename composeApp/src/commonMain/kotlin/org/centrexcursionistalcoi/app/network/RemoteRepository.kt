@@ -98,7 +98,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
                     }
 
                     Napier.d { "Writing file..." }
-                    PlatformFileSystem.write("$base/${item.id}/${file.key}", bytes)
+                    PlatformFileSystem.write(file.key, bytes)
                 }
             }
         }
