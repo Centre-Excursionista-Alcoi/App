@@ -30,7 +30,7 @@ class TestDepartment {
             }
         }
         val departmentClass = Department(
-            id = departmentEntity.id.value.toLong(),
+            id = departmentEntity.id.value,
             displayName = "Test Department",
             imageFile = imageFileId?.toKotlinUuid()
         )

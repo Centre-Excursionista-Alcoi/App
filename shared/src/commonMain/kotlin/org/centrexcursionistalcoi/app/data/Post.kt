@@ -19,7 +19,7 @@ data class Post(
     val title: String,
     val content: String,
     val onlyForMembers: Boolean,
-    val departmentId: Long,
+    val departmentId: Int,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> {
         return mapOf(

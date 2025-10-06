@@ -68,8 +68,8 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             assertTrue { location.matches("/departments/\\d+".toRegex()) }
             location
         }
-        val departmentId = departmentLocation.substringAfterLast('/').toLong()
-        Database { DepartmentEntity.findById(departmentId.toInt()) }.let { department ->
+        val departmentId = departmentLocation.substringAfterLast('/').toInt()
+        Database { DepartmentEntity.findById(departmentId) }.let { department ->
             assertNotNull(department)
             assertEquals("Test Department", department.displayName)
             assertNull(Database { department.imageFile })
@@ -105,8 +105,8 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             assertTrue { location.matches("/departments/\\d+".toRegex()) }
             location
         }
-        val departmentId = departmentLocation.substringAfterLast('/').toLong()
-        Database { DepartmentEntity.findById(departmentId.toInt()) }.let { department ->
+        val departmentId = departmentLocation.substringAfterLast('/').toInt()
+        Database { DepartmentEntity.findById(departmentId) }.let { department ->
             assertNotNull(department)
             assertEquals("Test Department", department.displayName)
             Database { department.imageFile }.let { imageFile ->

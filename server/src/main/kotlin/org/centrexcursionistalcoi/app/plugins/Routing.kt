@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
+import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
@@ -58,6 +59,7 @@ fun Application.configureRouting() {
         departmentsRoutes()
         postsRoutes()
         usersRoutes()
+        inventoryRoutes()
 
         get("/logout") {
             call.sessions.clear<UserSession>()

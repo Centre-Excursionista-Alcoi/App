@@ -8,15 +8,15 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-class DepartmentEntity(id: EntityID<Int>) : IntEntity(id) {
+class DepartmentEntity(id: EntityID<Int>) : IntEntity(id), EntityDataConverter<Department, Int> {
     companion object : IntEntityClass<DepartmentEntity>(Departments)
 
     var displayName by Departments.displayName
     var imageFile by FileEntity optionalReferencedOn Departments.imageFile
 
     context(_: JdbcTransaction)
-    fun toData(): Department = Department(
-        id = id.value.toLong(),
+    override fun toData(): Department = Department(
+        id = id.value,
         displayName = displayName,
         imageFile = imageFile?.id?.value?.toKotlinUuid()
     )

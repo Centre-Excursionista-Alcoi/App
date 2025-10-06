@@ -80,6 +80,9 @@ fun <ID : Any, E : Entity<ID>> Route.provideEntityRoutes(
         } catch (e: IllegalArgumentException) {
             call.respondText(e.message ?: "Malformed Request", status = HttpStatusCode.BadRequest)
             return@post
+        } catch (e: NoSuchElementException) {
+            call.respondText(e.message ?: "Not found", status = HttpStatusCode.NotFound)
+            return@post
         }
 
         call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")

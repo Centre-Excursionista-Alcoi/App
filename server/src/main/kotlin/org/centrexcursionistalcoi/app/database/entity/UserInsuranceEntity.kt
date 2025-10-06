@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.UserInsurance
@@ -10,7 +11,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id) {
+class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConverter<UserInsurance, Uuid> {
     companion object : UUIDEntityClass<UserInsuranceEntity>(UserInsurances)
 
     var userSub by UserInsurances.userSub
@@ -21,7 +22,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var document by UserInsurances.document
 
     context(_: JdbcTransaction)
-    fun toData(): UserInsurance = UserInsurance(
+    override fun toData(): UserInsurance = UserInsurance(
         id = id.value.toKotlinUuid(),
         userSub = userSub.value,
         insuranceCompany = insuranceCompany,
