@@ -14,6 +14,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
+import org.centrexcursionistalcoi.app.data.FileReference
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
@@ -107,15 +108,23 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
     suspend fun create(item: T) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
 
+        val dataMap = item.toMap().mapValues { (_, value) ->
+            when (value) {
+                is FileReference -> PlatformFileSystem.read(value.uuid.toString())
+                else -> value
+            }
+        }
+
         val response = httpClient.submitFormWithBinaryData(
             url = endpoint,
             formData = formData {
-                item.toMap().forEach { (key, value) ->
+                dataMap.forEach { (key, value) ->
                     when (value) {
                         null -> { /* ignore null values */ }
                         is String -> append(key, value)
                         is Number -> append(key, value)
                         is Boolean -> append(key, value)
+                        is ByteArray -> append(key, value)
                         else -> Napier.e { "Unsupported type: ${value::class.simpleName ?: "N/A"}" }
                     }
                 }

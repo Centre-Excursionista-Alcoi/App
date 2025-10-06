@@ -28,7 +28,7 @@ data class UserInsurance(
         "policyNumber" to policyNumber,
         "validFrom" to validFrom.toString(),
         "validTo" to validTo.toString(),
-        "documentId" to documentId
+        "documentId" to documentId?.let { FileReference(it) }
     )
 
     fun isActive(clock: Clock = Clock.System): Boolean {

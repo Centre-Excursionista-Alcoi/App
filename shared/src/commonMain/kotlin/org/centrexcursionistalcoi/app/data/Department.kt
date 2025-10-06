@@ -12,11 +12,10 @@ data class Department(
     override val files: Map<String, Uuid?> = mapOf("imageFile" to imageFile)
 
     override fun toMap(): Map<String, Any?> {
-        check(imageFile == null) { "File uploading is still not supported" }
-
         return mapOf(
             "id" to id.takeIf { it != 0L },
-            "displayName" to displayName
+            "displayName" to displayName,
+            "imageFile" to imageFile?.let { FileReference(it) }
         )
     }
 }
