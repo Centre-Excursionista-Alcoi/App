@@ -12,6 +12,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.io.asOutputStream
 import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ResourcesUtils.bytesFromResource
@@ -23,12 +29,6 @@ import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.getBoolean
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.serialization.list
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class ApplicationTest: ApplicationTestBase() {
 
@@ -39,7 +39,7 @@ class ApplicationTest: ApplicationTestBase() {
         }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Ktor: ${Greeting().greet()}", response.bodyAsText())
+        assertEquals("Hello! The Centre Excursionista d'Alcoi API is running.", response.bodyAsText())
     }
 
     @Test
@@ -83,7 +83,7 @@ class ApplicationTest: ApplicationTestBase() {
             }
             DepartmentEntity.new {
                 displayName = "Image Department"
-                imageFile = imageFileEntity.id
+                imageFile = imageFileEntity
             }
 
             imageFileEntity.id.value
@@ -116,7 +116,7 @@ class ApplicationTest: ApplicationTestBase() {
             }
             DepartmentEntity.new {
                 displayName = "Image Department"
-                imageFile = imageFileEntity.id
+                imageFile = imageFileEntity
             }
         }
     ) { context ->
@@ -130,7 +130,7 @@ class ApplicationTest: ApplicationTestBase() {
 
             val departmentResponse = response.bodyAsJson(JsonObject.serializer())
             assertEquals("Image Department", departmentResponse.getString("displayName"))
-            assertEquals(department.imageFile?.toString(), departmentResponse.getString("imageFile"))
+            assertEquals(Database { department.imageFile?.id?.value?.toString() }, departmentResponse.getString("imageFile"))
         }
     }
 
@@ -178,7 +178,7 @@ class ApplicationTest: ApplicationTestBase() {
         val departmentImageId = Database { department.imageFile }
         assertNotNull(departmentImageId, "Created department has no image file")
 
-        val departmentImageFile = Database { FileEntity.findById(departmentImageId) }
+        val departmentImageFile = Database { FileEntity.findById(departmentImageId.id) }
         assertEquals("square.png", departmentImageFile?.name)
         assertEquals("image/png", departmentImageFile?.type)
         val rawFile = bytesFromResource("/square.png")

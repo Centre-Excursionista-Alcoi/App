@@ -25,8 +25,14 @@ import org.jetbrains.exposed.v1.core.StringColumnType
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.UUIDColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
+import org.jetbrains.exposed.v1.dao.DaoEntityID
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.UIntEntity
+import org.jetbrains.exposed.v1.dao.ULongEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntity
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer(), entity)
@@ -101,10 +107,20 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         if (!column.columnType.nullable) {
                             error("Could not find property or function named \"$columnName\" in ${this::class.simpleName}.\nMembers: ${this::class.members.joinToString { it.name }}")
                         }
+                        // Skip null values
+                        continue
                     }
                     when (column.columnType) {
                         is EntityIDColumnType<*> -> {
-                            encodeStringElement(descriptor, idx, typeValue.toString())
+                            when (typeValue) {
+                                is DaoEntityID<*> -> encodeStringElement(descriptor, idx, typeValue.value.toString())
+                                is IntEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                is LongEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                is UIntEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                is ULongEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                is UUIDEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                else -> error("Unsupported column type: ${column.columnType::class.simpleName}")
+                            }
                         }
                         is StringColumnType -> {
                             encodeStringElement(descriptor, idx, typeValue as String)

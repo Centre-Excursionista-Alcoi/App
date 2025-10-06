@@ -12,12 +12,12 @@ class DepartmentEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<DepartmentEntity>(Departments)
 
     var displayName by Departments.displayName
-    var imageFile by Departments.imageFile
+    var imageFile by FileEntity optionalReferencedOn Departments.imageFile
 
     context(_: JdbcTransaction)
     fun toData(): Department = Department(
         id = id.value.toLong(),
         displayName = displayName,
-        imageFile = imageFile?.value?.toKotlinUuid()
+        imageFile = imageFile?.id?.value?.toKotlinUuid()
     )
 }

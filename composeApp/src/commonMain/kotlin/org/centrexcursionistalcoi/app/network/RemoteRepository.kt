@@ -88,20 +88,18 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         for (item in all) {
             if (item is FileContainer) {
                 for (file in item.files) {
-                    if (file.value == null) {
-                        // No file associated
-                        continue
-                    }
-                    val bytes = httpClient.get("/download/${file.value}").let {
+                    val uuid = file.value ?: continue
+                    Napier.d { "Downloading $uuid..." }
+                    val bytes = httpClient.get("/download/$uuid").let {
                         if (!it.status.isSuccess()) {
-                            Napier.e { "Failed to download file with ID ${file.value} for $name with ID ${item.id}. Status: ${it.status}" }
+                            Napier.e { "Failed to download file with ID $uuid for $name with ID ${item.id}. Status: ${it.status}" }
                             continue
                         }
                         it.bodyAsBytes()
                     }
 
-                    Napier.d { "Writing file..." }
-                    PlatformFileSystem.write(file.key, bytes)
+                    Napier.v { "Writing file..." }
+                    PlatformFileSystem.write(file.key + uuid.toString(), bytes)
                 }
             }
         }

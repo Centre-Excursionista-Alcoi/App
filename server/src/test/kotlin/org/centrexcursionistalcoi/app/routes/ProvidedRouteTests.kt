@@ -23,12 +23,14 @@ object ProvidedRouteTests {
     }
 
     context(base: ApplicationTestBase)
-    fun test_loggedIn_notAdmin(baseUrl: String) = base.runApplicationTest {
+    fun test_loggedIn_notAdmin(baseUrl: String, method: HttpMethod = HttpMethod.Get) = base.runApplicationTest {
         assertTrue { baseUrl.startsWith('/') }
 
         with(base) { loginAsFakeUser() }
 
-        client.get(baseUrl).apply {
+        client.request(baseUrl) {
+            this.method = method
+        }.apply {
             assertStatusCode(HttpStatusCode.Forbidden)
         }
     }

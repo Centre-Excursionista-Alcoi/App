@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.storage
 
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
+import com.russhwolf.settings.observable.makeObservable
 
-val settings: Settings = Settings()
-val authSettings: Settings = Settings()
+@OptIn(ExperimentalSettingsApi::class)
+val settings: ObservableSettings = Settings().makeObservable()

@@ -22,7 +22,7 @@ import org.centrexcursionistalcoi.app.utils.toUUID
 fun Application.configureRouting() {
     routing {
         get("/") {
-            call.respondText("Ktor: ${Greeting().greet()}")
+            call.respondText("Hello! The Centre Excursionista d'Alcoi API is running.")
         }
 
         get("/download/{uuid}") {

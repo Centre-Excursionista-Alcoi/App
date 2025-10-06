@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.database
 
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getStringOrNullFlow
-import com.russhwolf.settings.observable.makeObservable
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,6 +14,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.json as defaultJson
 
 /**
@@ -28,7 +28,6 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     private val serializer: KSerializer<T>,
     private val json: Json = defaultJson
 ) : Repository<T, IdType> {
-    private val settings = org.centrexcursionistalcoi.app.storage.settings.makeObservable()
     private val _keysFlow = MutableStateFlow(settings.keys)
 
     private fun decode(raw: String) = try {

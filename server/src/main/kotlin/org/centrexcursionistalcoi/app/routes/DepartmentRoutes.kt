@@ -94,7 +94,7 @@ fun Route.departmentsRoutes() {
 
                 DepartmentEntity.new {
                     this.displayName = displayName
-                    this.imageFile = imageFile?.id
+                    this.imageFile = imageFile
                 }
             }
         }

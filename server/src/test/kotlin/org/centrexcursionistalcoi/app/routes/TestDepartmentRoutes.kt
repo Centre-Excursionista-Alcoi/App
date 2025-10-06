@@ -1,24 +1,135 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.uuid.toJavaUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 
 class TestDepartmentRoutes : ApplicationTestBase() {
+    @Test
+    fun test_create_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments", HttpMethod.Post)
+
+    @Test
+    fun test_create_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/departments", HttpMethod.Post)
+
+    @Test
+    fun test_create_invalidContentType() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_create_missingDisplayName() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.submitFormWithBinaryData("/departments", formData = listOf()).apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_create_withDisplayName() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        val departmentLocation = client.submitFormWithBinaryData(
+            url = "/departments",
+            formData = formData {
+                append("displayName", "Test Department")
+            }
+        ).run {
+            assertStatusCode(HttpStatusCode.Created)
+            val location = headers[HttpHeaders.Location]
+            assertNotNull(location)
+            assertTrue { location.matches("/departments/\\d+".toRegex()) }
+            location
+        }
+        val departmentId = departmentLocation.substringAfterLast('/').toLong()
+        Database { DepartmentEntity.findById(departmentId.toInt()) }.let { department ->
+            assertNotNull(department)
+            assertEquals("Test Department", department.displayName)
+            assertNull(Database { department.imageFile })
+        }
+        client.get(departmentLocation).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Department.serializer()) { department ->
+                assertEquals(departmentId, department.id)
+                assertEquals("Test Department", department.displayName)
+                assertNull(Database { department.imageFile })
+            }
+        }
+    }
+
+    @Test
+    fun test_create_withImage() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        val imageBytes = ResourcesUtils.bytesFromResource("/square.png")
+        val departmentLocation = client.submitFormWithBinaryData(
+            url = "/departments",
+            formData = formData {
+                append("displayName", "Test Department")
+                append("image", imageBytes, Headers.build {
+                    append(HttpHeaders.ContentType, "image/png")
+                    append(HttpHeaders.ContentDisposition, "filename=\"square.png\"")
+                })
+            }
+        ).run {
+            assertStatusCode(HttpStatusCode.Created)
+            val location = headers[HttpHeaders.Location]
+            assertNotNull(location)
+            assertTrue { location.matches("/departments/\\d+".toRegex()) }
+            location
+        }
+        val departmentId = departmentLocation.substringAfterLast('/').toLong()
+        Database { DepartmentEntity.findById(departmentId.toInt()) }.let { department ->
+            assertNotNull(department)
+            assertEquals("Test Department", department.displayName)
+            Database { department.imageFile }.let { imageFile ->
+                assertNotNull(imageFile)
+                assertContentEquals(imageBytes, imageFile.data)
+            }
+        }
+        client.get(departmentLocation).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Department.serializer()) { department ->
+                assertEquals(departmentId, department.id)
+                assertEquals("Test Department", department.displayName)
+                val imageFile = department.imageFile?.toJavaUuid()
+                assertNotNull(imageFile)
+                Database { FileEntity[imageFile] }.let { imageFile ->
+                    assertNotNull(imageFile)
+                    assertContentEquals(imageBytes, imageFile.data)
+                }
+            }
+        }
+    }
+
+
     @Test
     fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/123/join", HttpMethod.Post)
 

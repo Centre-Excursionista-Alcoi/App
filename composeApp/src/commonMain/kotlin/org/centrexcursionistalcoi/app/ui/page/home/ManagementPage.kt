@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -35,6 +36,7 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.jetbrains.compose.resources.StringResource
@@ -71,6 +73,17 @@ private fun <T> ListCard(
     onCreate: (() -> Unit)? = null,
     onDelete: ((T) -> Job)? = null,
 ) {
+    var deleting by remember { mutableStateOf<T?>(null) }
+    if (onDelete != null) {
+        deleting?.let { item ->
+            DeleteDialog(
+                item,
+                { it.toString() },
+                { onDelete(item) }
+            ) { deleting = null }
+        }
+    }
+
     OutlinedCard(modifier) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -97,17 +110,23 @@ private fun <T> ListCard(
                     headlineContent = { Text(displayName(item)) },
                     trailingContent = if (onDelete != null) {
                         {
-                            var isLoading by remember { mutableStateOf(false) }
                             IconButton(
-                                onClick = {
-                                    isLoading = true
-                                    onDelete(item).invokeOnCompletion { isLoading = false }
-                                }
+                                onClick = { deleting = item }
                             ) {
                                 Icon(Icons.Default.Delete, stringResource(Res.string.delete))
                             }
                         }
                     } else null,
+                    leadingContent = {
+                        if (item is Department && item.imageFile != null) {
+                            val imageFile by item.rememberImageFile()
+                            AsyncImage(
+                                model = imageFile,
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
