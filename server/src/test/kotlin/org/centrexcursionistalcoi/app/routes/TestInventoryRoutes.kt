@@ -200,7 +200,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_create_item_withDisplayName() = runApplicationTest(
+    fun test_create_item_withType() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
             InventoryItemTypeEntity.new {
@@ -235,6 +235,48 @@ class TestInventoryRoutes : ApplicationTestBase() {
             assertBody(InventoryItem.serializer()) { item ->
                 assertEquals(itemId, item.id.toJavaUuid())
                 assertNull(item.variation)
+                assertEquals(type.id.value, item.type.toJavaUuid())
+            }
+        }
+    }
+
+    @Test
+    fun test_create_item_withVariant() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            InventoryItemTypeEntity.new {
+                displayName = "Item Type 1"
+                description = "Description 1"
+                image = null
+            }
+        }
+    ) { context ->
+        val type = context.dibResult
+        assertNotNull(type)
+        val location = client.submitFormWithBinaryData(
+            url = "/inventory/items",
+            formData = formData {
+                append("type", type.id.value.toString())
+                append("variation", "Variant A")
+            }
+        ).run {
+            assertStatusCode(HttpStatusCode.Created)
+            val location = headers[HttpHeaders.Location]
+            assertNotNull(location)
+            assertTrue(location.matches("/inventory/items/[a-z0-9-]+".toRegex()), "Location '$location' does not match expected format")
+            location
+        }
+        val itemId = location.substringAfterLast('/').let { UUID.fromString(it) }
+        Database { InventoryItemEntity.findById(itemId) }.let { item ->
+            assertNotNull(item)
+            assertEquals("Variant A", item.variation)
+            assertEquals(type.id.value, Database { item.type.id.value })
+        }
+        client.get(location).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(InventoryItem.serializer()) { item ->
+                assertEquals(itemId, item.id.toJavaUuid())
+                assertEquals("Variant A", item.variation)
                 assertEquals(type.id.value, item.type.toJavaUuid())
             }
         }
