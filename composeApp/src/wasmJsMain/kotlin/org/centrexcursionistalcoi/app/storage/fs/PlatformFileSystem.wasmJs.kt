@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.storage.fs
 
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.await
 
 @OptIn(ExperimentalWasmJsInterop::class, ExperimentalUnsignedTypes::class)
@@ -10,10 +11,10 @@ actual object PlatformFileSystem {
         val root = OPFS.root()
         // If the path doesn't contain '/', it's in the root directory
         if (!cleanPath.contains('/')) return root
-        val parts = cleanPath.split('/')
+        val parts = cleanPath.split('/').filter { it.isNotBlank() }
         var currentDir = root
-        for (i in 0 until parts.size - 1) {
-            val part = parts[i]
+        for (part in (parts - parts.last())) {
+            Napier.v { "Getting or creating directory: $part" }
             currentDir = currentDir.getDirectoryHandle(part, createFSFHGetOptions(true)).await()
         }
         return currentDir

@@ -29,7 +29,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
@@ -71,6 +71,12 @@ kotlin {
 
             implementation(libs.kotlinx.serializationJson)
 
+            // File picker dialogs
+            implementation(libs.filekit.coil)
+            implementation(libs.filekit.dialogs.compose)
+
+            implementation(libs.coil.compose)
+
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
@@ -80,6 +86,8 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
 
         val phonesMain by creating {

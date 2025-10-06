@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import coil3.compose.AsyncImage
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
@@ -38,7 +44,7 @@ import org.jetbrains.compose.resources.stringResource
 fun ManagementPage(
     windowSizeClass: WindowSizeClass,
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String) -> Job,
+    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
     users: List<UserData>?,
 ) {
@@ -112,7 +118,7 @@ private fun <T> ListCard(
 @Composable
 fun DepartmentsCard(
     departments: List<Department>?,
-    onCreate: (displayName: String) -> Job,
+    onCreate: (displayName: String, image: PlatformFile?) -> Job,
     onDelete: (Department) -> Job,
 ) {
     var deleting by remember { mutableStateOf<Department?>(null) }
@@ -149,29 +155,52 @@ fun UsersCard(users: List<UserData>?) {
 
 @Composable
 fun CreateDepartmentDialog(
-    onCreate: (displayName: String) -> Job,
+    onCreate: (displayName: String, image: PlatformFile?) -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
     var displayName by remember { mutableStateOf("") }
+    var image by remember { mutableStateOf<PlatformFile?>(null) }
+    val imagePicker = rememberFilePickerLauncher(
+        type = FileKitType.Image
+    ) { file -> image = file }
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },
         title = { Text("Create department") },
         text = {
-            OutlinedTextField(
-                value = displayName,
-                onValueChange = { displayName = it },
-                label = { Text("Display name") },
-                singleLine = true,
-                enabled = !isLoading
-            )
+            Column {
+                OutlinedTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    label = { Text("Display name") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    enabled = !isLoading,
+                    onClick = { imagePicker.launch() }
+                ) {
+                    image?.let {
+                        AsyncImage(
+                            model = it,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    } ?: Text(
+                        "Select image (optional)",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
         },
         confirmButton = {
             TextButton(
                 enabled = !isLoading && displayName.isNotBlank(),
                 onClick = {
                     isLoading = true
-                    onCreate(displayName).invokeOnCompletion { onDismissRequested() }
+                    onCreate(displayName, image).invokeOnCompletion { onDismissRequested() }
                 }
             ) { Text("Create") }
         },

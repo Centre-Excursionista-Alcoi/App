@@ -10,7 +10,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
+import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
@@ -23,6 +26,14 @@ fun MainApp(
     model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel() },
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                addPlatformFileSupport()
+            }
+            .build()
+    }
+
     MaterialTheme {
         val isReady by model.isReady.collectAsState()
 

@@ -3,6 +3,10 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
@@ -16,6 +20,9 @@ import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class HomeViewModel: ViewModel() {
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing = _isSyncing.asStateFlow()
+
     val profile = ProfileRepository.profile.stateInViewModel()
 
     val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
@@ -31,8 +38,9 @@ class HomeViewModel: ViewModel() {
         }
     }
 
-    fun createDepartment(displayName: String) = viewModelScope.launch(defaultAsyncDispatcher) {
-        DepartmentsRemoteRepository.create(displayName)
+    fun createDepartment(displayName: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
+        val image = imageFile?.readBytes()
+        DepartmentsRemoteRepository.create(displayName, image)
     }
 
     fun delete(department: Department) = viewModelScope.launch(defaultAsyncDispatcher) {
@@ -47,5 +55,14 @@ class HomeViewModel: ViewModel() {
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
+    }
+
+    fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
+        try {
+            _isSyncing.emit(true)
+            LoadingViewModel.syncAll()
+        } finally {
+            _isSyncing.emit(false)
+        }
     }
 }

@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
 import io.ktor.client.request.delete
-import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsBytes
@@ -14,7 +13,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
-import org.centrexcursionistalcoi.app.data.FileReference
+import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
@@ -29,9 +28,12 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
 
     protected val httpClient = getHttpClient()
 
+    // Remove null fields to avoid issues with missing fields in the local model
+    private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
+
     suspend fun getAll(): List<T> {
         return httpClient.get(endpoint).let {
-            val raw = it.bodyAsText()
+            val raw = it.bodyAsText().cleanNullFields()
             json.decodeFromString(ListSerializer(serializer), raw)
         }
     }
@@ -39,7 +41,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
     private suspend fun getUrl(url: String): T? {
         val response = httpClient.get(url)
         if (response.status.isSuccess()) {
-            val raw = response.bodyAsText()
+            val raw = response.bodyAsText().cleanNullFields()
             return json.decodeFromString(serializer, raw)
         } else {
             Napier.e { "Failed to get $name with ID ${url.substringAfterLast('/')}. Status: ${response.status}" }
@@ -108,27 +110,9 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
     suspend fun create(item: T) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
 
-        val dataMap = item.toMap().mapValues { (_, value) ->
-            when (value) {
-                is FileReference -> PlatformFileSystem.read(value.uuid.toString())
-                else -> value
-            }
-        }
-
         val response = httpClient.submitFormWithBinaryData(
             url = endpoint,
-            formData = formData {
-                dataMap.forEach { (key, value) ->
-                    when (value) {
-                        null -> { /* ignore null values */ }
-                        is String -> append(key, value)
-                        is Number -> append(key, value)
-                        is Boolean -> append(key, value)
-                        is ByteArray -> append(key, value)
-                        else -> Napier.e { "Unsupported type: ${value::class.simpleName ?: "N/A"}" }
-                    }
-                }
-            }
+            formData = item.toFormData()
         )
         val location = response.headers[HttpHeaders.Location]
         checkNotNull(location) { "Creation didn't return any location for the new item." }

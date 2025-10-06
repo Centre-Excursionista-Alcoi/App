@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.network
 
+import androidx.annotation.VisibleForTesting
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -22,8 +22,10 @@ private fun createHttpClient(): HttpClient = HttpClient {
     configureLogging()
 }
 
-private var httpClient: HttpClient? = null
-fun getHttpClient(): HttpClient = httpClient ?: createHttpClient().also { httpClient = it }
+@Suppress("ObjectPropertyName")
+@VisibleForTesting
+var _httpClient: HttpClient? = null
+fun getHttpClient(): HttpClient = _httpClient ?: createHttpClient().also { _httpClient = it }
 
 fun HttpClientConfig<*>.configureLogging() {
     install(Logging) {

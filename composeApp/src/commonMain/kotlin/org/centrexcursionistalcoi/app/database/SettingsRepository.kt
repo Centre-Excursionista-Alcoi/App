@@ -6,12 +6,15 @@ import com.russhwolf.settings.observable.makeObservable
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.data.Entity
-import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.json as defaultJson
 
 /**
@@ -25,6 +28,7 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     private val serializer: KSerializer<T>,
     private val json: Json = defaultJson
 ) : Repository<T, IdType> {
+    private val settings = org.centrexcursionistalcoi.app.storage.settings.makeObservable()
     private val _keysFlow = MutableStateFlow(settings.keys)
 
     private fun decode(raw: String) = try {
@@ -44,7 +48,6 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<T>> {
-        val settings = settings.makeObservable()
         return _keysFlow
             // Only keys that match the namespace
             .map { keys -> keys.filter { it.startsWith("$namespace.") } }

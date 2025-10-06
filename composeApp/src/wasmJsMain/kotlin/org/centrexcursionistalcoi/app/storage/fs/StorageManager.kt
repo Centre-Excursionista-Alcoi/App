@@ -191,7 +191,7 @@ external interface FileSystemSyncAccessHandle : JsAny {
     fun write(buffer: ArrayBuffer, options: FSSAHOptions = definedExternally): Int
 }
 
-external interface FileSystemHandle: JsAny {
+external interface FileSystemHandle : JsAny {
     /**
      * Returns the type of entry. This is `'file'` if the associated entry is a file or `'directory'`.
      */
@@ -209,7 +209,7 @@ external interface FileSystemHandle: JsAny {
     fun isSameEntry(fileSystemHandle: FileSystemHandle): Promise<JsBoolean>
 }
 
-external interface FileSystemFileHandle: FileSystemHandle {
+external interface FileSystemFileHandle : FileSystemHandle {
     /**
      * Returns a [Promise] which resolves to a [File] object representing the state on disk of the entry represented by the handle.
      */
@@ -225,6 +225,15 @@ external interface FileSystemFileHandle: FileSystemHandle {
      * Returns a [Promise] which resolves to a newly created [FileSystemWritableFileStream] object that can be used to write to a file.
      */
     fun createWritable(options: WritableOptions = definedExternally): Promise<FileSystemWritableFileStream>
+}
+
+external interface AsyncIteratorEntry<T : JsAny> : JsAny {
+    val done: Boolean
+    val value: T
+}
+
+external interface AsyncIterator<T : JsAny> : JsAny {
+    fun next(): Promise<AsyncIteratorEntry<T>>
 }
 
 external interface FileSystemDirectoryHandle : FileSystemHandle {
@@ -251,20 +260,20 @@ external interface FileSystemDirectoryHandle : FileSystemHandle {
      */
     fun resolve(possibleDescendant: FileSystemFileHandle): Promise<JsArray<JsString>?>
 
-    fun entries(): JsArray<JsArray<JsAny>>
+    fun entries(): AsyncIterator<JsArray<JsAny>>
 
     /**
      * Returns a new async iterator containing the keys for each item in [FileSystemDirectoryHandle].
      */
-    fun keys(): JsArray<JsString>
+    fun keys(): AsyncIterator<JsString>
 
     /**
      * Returns a new async iterator containing the values for each index in the [FileSystemDirectoryHandle] object.
      */
-    fun values(): JsArray<FileSystemDirectoryHandle>
+    fun values(): AsyncIterator<FileSystemDirectoryHandle>
 }
 
-external interface StorageManagerEstimate: JsAny {
+external interface StorageManagerEstimate : JsAny {
     var quota: Double
     var usage: Double
 }

@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.SupervisorAccount
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
@@ -55,6 +58,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val users by model.users.collectAsState()
+    val isSyncing by model.isSyncing.collectAsState()
 
     profile?.let {
         HomeScreenContent(
@@ -65,6 +69,8 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
             onLendingSignUp = model::signUpForLending,
             onCreateInsurance = model::createInsurance,
             users = users,
+            isSyncing = isSyncing,
+            onSyncRequested = model::sync,
         )
     } ?: LoadingBox()
 }
@@ -84,11 +90,13 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 private fun HomeScreenContent(
     profile: ProfileResponse,
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String) -> Job,
+    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
     users: List<UserData>?,
+    isSyncing: Boolean,
+    onSyncRequested: () -> Unit
 ) {
     val navigationItems = navigationItems(profile.isAdmin)
 
@@ -155,6 +163,13 @@ private fun HomeScreenContent(
                             icon = { Icon(icon, label()) }
                         )
                     }
+                    Spacer(Modifier.weight(1f))
+                    NavigationRailItem(
+                        selected = false,
+                        enabled = !isSyncing,
+                        onClick = onSyncRequested,
+                        icon = { Icon(Icons.Default.Sync, null) }
+                    )
                 }
 
                 VerticalPager(
@@ -202,7 +217,7 @@ fun HomeScreenPagerContent(
     profile: ProfileResponse,
     windowSizeClass: WindowSizeClass,
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String) -> Job,
+    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
