@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -18,6 +19,8 @@ class HomeViewModel: ViewModel() {
     val profile = ProfileRepository.profile.stateInViewModel()
 
     val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
+
+    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
 
     val posts = PostsRepository.selectAllAsFlow().stateInViewModel()
 

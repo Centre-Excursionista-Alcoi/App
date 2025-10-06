@@ -39,6 +39,8 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.InsuranceDialog
+import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
+import org.centrexcursionistalcoi.app.ui.icons.FEMECV
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
@@ -114,7 +116,13 @@ private fun LendingUserPage(
                 for (insurance in activeInsurances) {
                     ListItem(
                         leadingContent = {
-                            Icon(Icons.Default.HealthAndSafety, stringResource(Res.string.insurance))
+                            Icon(
+                                if (insurance.insuranceCompany == "FEMECV")
+                                    BrandIcons.FEMECV
+                                else
+                                    Icons.Default.HealthAndSafety,
+                                stringResource(Res.string.insurance)
+                            )
                         },
                         headlineContent = { Text(insurance.insuranceCompany, style = MaterialTheme.typography.bodyLarge) },
                         supportingContent = { Text(insurance.policyNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },

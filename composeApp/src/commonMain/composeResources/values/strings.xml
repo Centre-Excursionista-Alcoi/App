@@ -9,10 +9,15 @@
     <string name="nav_management">Management</string>
 
     <string name="management_departments">Departments</string>
+    <string name="management_users">Users</string>
 
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
+    <string name="create">Create</string>
+    <string name="delete">Delete</string>
+
+    <string name="status_loading">Loading...</string>
 
     <string name="sport_climbing">Climbing</string>
     <string name="sport_climbing_without_belay">Climbing without Belay</string>
@@ -48,5 +53,11 @@
     <string name="insurance_end_date">End Date</string>
 
     <string name="active_insurances_title">Active Insurances</string>
+
+    <string name="management_no_departments">No departments</string>
+    <string name="management_no_users">No users</string>
+
+    <string name="delete_dialog_title">Delete %1$s</string>
+    <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
 
 </resources>

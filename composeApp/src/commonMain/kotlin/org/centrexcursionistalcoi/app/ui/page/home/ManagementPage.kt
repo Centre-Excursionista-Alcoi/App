@@ -4,22 +4,34 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -27,7 +39,8 @@ fun ManagementPage(
     windowSizeClass: WindowSizeClass,
     departments: List<Department>?,
     onCreateDepartment: (displayName: String) -> Job,
-    onDeleteDepartment: (Department) -> Job
+    onDeleteDepartment: (Department) -> Job,
+    users: List<UserData>?,
 ) {
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -35,6 +48,63 @@ fun ManagementPage(
     ) {
         item(key = "departments") {
             DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)
+        }
+        item(key = "users") {
+            UsersCard(users)
+        }
+    }
+}
+
+@Composable
+private fun <T> ListCard(
+    list: List<T>?,
+    titleResource: StringResource,
+    emptyTextResource: StringResource,
+    displayName: (T) -> String,
+    modifier: Modifier = Modifier,
+    onCreate: (() -> Unit)? = null,
+    onDelete: ((T) -> Job)? = null,
+) {
+    OutlinedCard(modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(titleResource),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            onCreate?.let { create ->
+                IconButton(
+                    onClick = create
+                ) { Icon(Icons.Default.Add, stringResource(Res.string.create)) }
+            }
+        }
+        if (list == null) {
+            Text(stringResource(Res.string.status_loading))
+        } else if (list.isEmpty()) {
+            Text(stringResource(emptyTextResource))
+        } else {
+            for (item in list) {
+                ListItem(
+                    headlineContent = { Text(displayName(item)) },
+                    trailingContent = if (onDelete != null) {
+                        {
+                            var isLoading by remember { mutableStateOf(false) }
+                            IconButton(
+                                onClick = {
+                                    isLoading = true
+                                    onDelete(item).invokeOnCompletion { isLoading = false }
+                                }
+                            ) {
+                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                            }
+                        }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -55,69 +125,25 @@ fun DepartmentsCard(
         CreateDepartmentDialog(onCreate) { creating = false }
     }
 
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(Res.string.management_departments),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(
-                onClick = { creating = true }
-            ) { Icon(Icons.Default.Add, null) }
-        }
-        if (departments == null) {
-            Text("Loading...")
-        } else if (departments.isEmpty()) {
-            Text("No departments")
-        } else {
-            for (department in departments) {
-                ListItem(
-                    headlineContent = { Text(department.displayName) },
-                    trailingContent = {
-                        IconButton(
-                            onClick = { deleting = department }
-                        ) {
-                            Icon(Icons.Default.Delete, "Delete")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
+    ListCard(
+        list = departments,
+        titleResource = Res.string.management_departments,
+        emptyTextResource = Res.string.management_no_departments,
+        displayName = { it.displayName },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        onCreate = { creating = true },
+        onDelete = onDelete
+    )
 }
 
 @Composable
-fun <T> DeleteDialog(
-    item: T,
-    displayName: (T) -> String,
-    onDelete: () -> Job,
-    onDismissRequested: () -> Unit
-) {
-    var isLoading by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismissRequested() },
-        title = { Text("Delete ${displayName(item)}") },
-        text = { Text("Are you sure you want to delete \"${displayName(item)}\"? This action cannot be undone.") },
-        confirmButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = {
-                    isLoading = true
-                    onDelete().invokeOnCompletion { onDismissRequested() }
-                }
-            ) { Text("Delete") }
-        },
-        dismissButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = { onDismissRequested() }
-            ) { Text("Cancel") }
-        },
+fun UsersCard(users: List<UserData>?) {
+    ListCard(
+        list = users,
+        titleResource = Res.string.management_users,
+        emptyTextResource = Res.string.management_no_departments,
+        displayName = { it.username },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
     )
 }
 

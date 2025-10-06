@@ -1,6 +1,10 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -9,7 +13,18 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.SupervisorAccount
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -24,6 +39,7 @@ import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.page.home.LendingPage
@@ -38,9 +54,18 @@ import org.jetbrains.compose.resources.stringResource
 fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
+    val users by model.users.collectAsState()
 
     profile?.let {
-        HomeScreenContent(it, departments, model::createDepartment, model::delete, model::signUpForLending, model::createInsurance)
+        HomeScreenContent(
+            profile = it,
+            departments = departments,
+            onCreateDepartment = model::createDepartment,
+            onDeleteDepartment = model::delete,
+            onLendingSignUp = model::signUpForLending,
+            onCreateInsurance = model::createInsurance,
+            users = users,
+        )
     } ?: LoadingBox()
 }
 
@@ -63,6 +88,7 @@ private fun HomeScreenContent(
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
+    users: List<UserData>?,
 ) {
     val navigationItems = navigationItems(profile.isAdmin)
 
@@ -145,6 +171,7 @@ private fun HomeScreenContent(
                         onDeleteDepartment,
                         onLendingSignUp,
                         onCreateInsurance,
+                        users,
                     )
                 }
             } else {
@@ -161,6 +188,7 @@ private fun HomeScreenContent(
                         onDeleteDepartment,
                         onLendingSignUp,
                         onCreateInsurance,
+                        users,
                     )
                 }
             }
@@ -178,6 +206,7 @@ fun HomeScreenPagerContent(
     onDeleteDepartment: (Department) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
+    users: List<UserData>?,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -192,7 +221,7 @@ fun HomeScreenPagerContent(
 
             1 -> LendingPage(windowSizeClass, profile, onLendingSignUp, onCreateInsurance)
 
-            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment)
+            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment, users)
         }
     }
 }
