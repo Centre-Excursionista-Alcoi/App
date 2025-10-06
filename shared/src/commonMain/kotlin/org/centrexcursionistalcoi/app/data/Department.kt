@@ -10,7 +10,7 @@ data class Department(
     val displayName: String,
     @Serializable(NullableUUIDSerializer::class) val imageFile: Uuid? = null
 ): Entity<Long>, FileContainer {
-    override val files: Map<String, Uuid?> = mapOf("imageFile" to imageFile)
+    override val files: Map<String, Uuid?> = mapOf("image" to imageFile)
 
     override fun toMap(): Map<String, Any?> {
         return mapOf(
@@ -18,5 +18,9 @@ data class Department(
             "displayName" to displayName,
             "image" to imageFile?.let { FileReference(it) }
         )
+    }
+
+    override fun toString(): String {
+        return displayName
     }
 }

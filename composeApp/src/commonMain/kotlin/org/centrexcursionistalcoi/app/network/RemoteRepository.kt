@@ -112,12 +112,17 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             url = endpoint,
             formData = item.toFormData()
         )
-        val location = response.headers[HttpHeaders.Location]
-        checkNotNull(location) { "Creation didn't return any location for the new item." }
+        try {
+            val location = response.headers[HttpHeaders.Location]
+            checkNotNull(location) { "Creation didn't return any location for the new item." }
 
-        val item = getUrl(location)
-        checkNotNull(item) { "Could not retrieve the created item from the server." }
-        repository.insert(item)
+            val item = getUrl(location)
+            checkNotNull(item) { "Could not retrieve the created item from the server." }
+            repository.insert(item)
+        } catch (e: IllegalArgumentException) {
+            Napier.e { "${e.message} Synchronizing completely with server..." }
+            synchronizeWithDatabase()
+        }
     }
 
     suspend fun delete(id: IdType) {
