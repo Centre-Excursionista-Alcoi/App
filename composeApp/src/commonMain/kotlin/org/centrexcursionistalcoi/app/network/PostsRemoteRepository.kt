@@ -15,7 +15,7 @@ object PostsRemoteRepository: RemoteRepository<Uuid, Post>(
         title: String,
         content: String,
         onlyForMembers: Boolean,
-        departmentId: Long
+        departmentId: Int
     ) = create(
         Post(Uuid.Zero, Clock.System.now(), title, content, onlyForMembers, departmentId)
     )

@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.database.adapters.InstantAdapter
 import org.centrexcursionistalcoi.app.database.adapters.JsonAdapter
 import org.centrexcursionistalcoi.app.database.adapters.UUIDAdapter
 import org.centrexcursionistalcoi.app.database.data.Departments
+import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.database.data.Users
 
@@ -31,6 +32,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
     return Database(
         driver,
         Departments.Adapter(UUIDAdapter),
+        InventoryItemTypes.Adapter(UUIDAdapter, UUIDAdapter),
         Posts.Adapter(UUIDAdapter, InstantAdapter),
         Users.Adapter(
             JsonAdapter(ListSerializer(String.serializer())),

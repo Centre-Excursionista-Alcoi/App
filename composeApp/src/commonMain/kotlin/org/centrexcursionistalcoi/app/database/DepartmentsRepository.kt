@@ -9,11 +9,11 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val DepartmentsRepository : Repository<Department, Long>
+expect val DepartmentsRepository : Repository<Department, Int>
 
-object DepartmentsSettingsRepository : SettingsRepository<Department, Long>("departments", Department.serializer())
+object DepartmentsSettingsRepository : SettingsRepository<Department, Int>("departments", Department.serializer())
 
-object DepartmentsDatabaseRepository : DatabaseRepository<Department, Long>() {
+object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
     override val queries by lazy { databaseInstance.departmentsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
@@ -28,23 +28,23 @@ object DepartmentsDatabaseRepository : DatabaseRepository<Department, Long>() {
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toDepartment() }
 
     override suspend fun insert(item: Department) = queries.insert(
-        id = item.id,
+        id = item.id.toLong(),
         displayName = item.displayName,
         imageFile = item.imageFile
     )
 
     override suspend fun update(item: Department) = queries.update(
-        id = item.id,
+        id = item.id.toLong(),
         displayName = item.displayName,
         imageFile = item.imageFile
     )
 
-    override suspend fun delete(id: Long) {
-        queries.deleteById(id)
+    override suspend fun delete(id: Int) {
+        queries.deleteById(id.toLong())
     }
 
     private fun Departments.toDepartment() = Department(
-        id = id,
+        id = id.toInt(),
         displayName = displayName,
         imageFile = imageFile
     )

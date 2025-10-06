@@ -1,0 +1,20 @@
+import kotlin.uuid.Uuid;
+
+CREATE TABLE InventoryItems (
+    id TEXT AS Uuid PRIMARY KEY NOT NULL,
+    variation TEXT DEFAULT NULL,
+    type TEXT AS Uuid NOT NULL,
+    FOREIGN KEY (type) REFERENCES InventoryItemTypes(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT INTO InventoryItems (id, variation, type) VALUES (?, ?, ?);
+
+selectAll:
+SELECT * FROM InventoryItems ORDER BY id;
+
+deleteById:
+DELETE FROM InventoryItems WHERE id = ?;
+
+update:
+UPDATE InventoryItems SET variation = ?, type = ? WHERE id = ?;

@@ -5,7 +5,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
-object DepartmentsRemoteRepository : RemoteRepository<Long, Department>(
+object DepartmentsRemoteRepository : RemoteRepository<Int, Department>(
     "/departments",
     Department.serializer(),
     DepartmentsRepository
@@ -17,6 +17,6 @@ object DepartmentsRemoteRepository : RemoteRepository<Long, Department>(
             uuid
         }
 
-        create(Department(0L, name, imageUuid))
+        create(Department(0, name, imageUuid))
     }
 }
