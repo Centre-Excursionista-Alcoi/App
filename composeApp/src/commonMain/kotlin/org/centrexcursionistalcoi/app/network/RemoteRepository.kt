@@ -119,7 +119,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             val item = getUrl(location)
             checkNotNull(item) { "Could not retrieve the created item from the server." }
             repository.insert(item)
-        } catch (e: IllegalArgumentException) {
+        } catch (e: IllegalStateException) {
             Napier.e { "${e.message} Synchronizing completely with server..." }
             synchronizeWithDatabase()
         }

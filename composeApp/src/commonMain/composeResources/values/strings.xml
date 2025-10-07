@@ -18,6 +18,7 @@
     <string name="close">Close</string>
     <string name="create">Create</string>
     <string name="delete">Delete</string>
+    <string name="qrcode">QR Code</string>
 
     <string name="status_loading">Loading...</string>
 

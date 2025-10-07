@@ -35,7 +35,7 @@ class LoadingViewModel(
 
                 val lastSync = settings.getLongOrNull("lastSync")?.let { Instant.fromEpochSeconds(it) }
                 val now = Clock.System.now()
-                if (force || lastSync == null || lastSync.until(now, DateTimeUnit.SECOND) > 3600) {
+                if (force || lastSync == null || lastSync.until(now, DateTimeUnit.SECOND) > 60 * 60) {
                     Napier.d { "Last sync was more than an hour ago, synchronizing data..." }
 
                     // Synchronize the local database with the remote data

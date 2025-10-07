@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +47,7 @@ import cea_app.composeapp.generated.resources.management_no_departments
 import cea_app.composeapp.generated.resources.management_no_item_types
 import cea_app.composeapp.generated.resources.management_no_items
 import cea_app.composeapp.generated.resources.management_users
+import cea_app.composeapp.generated.resources.qrcode
 import cea_app.composeapp.generated.resources.status_loading
 import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
@@ -273,7 +275,10 @@ fun InventoryItemsCard(
             if (type == null) {
                 Text(stringResource(Res.string.inventory_item_type_not_found))
             } else {
-                Text(stringResource(Res.string.inventory_item_type), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(Res.string.inventory_item_type, type.displayName),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 val description = type.description
                 if (!description.isNullOrBlank()) {
                     Text(
@@ -299,13 +304,19 @@ fun InventoryItemsCard(
                         headlineContent = { Text(item.id.toString().uppercase()) },
                         supportingContent = { Text(item.variation ?: "(No variation)") },
                         trailingContent = {
-                            IconButton(
-                                onClick = { onDelete(item) }
-                            ) {
-                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                            Row {
+                                IconButton(
+                                    onClick = { showingItemDetails = item }
+                                ) {
+                                    Icon(Icons.Default.QrCode, stringResource(Res.string.qrcode))
+                                }
+                                IconButton(
+                                    onClick = { onDelete(item) }
+                                ) {
+                                    Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                                }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().clickable { showingItemDetails = item }
                     )
                 }
             }
@@ -439,7 +450,7 @@ fun CreateInventoryItemDialog(
         },
         confirmButton = {
             TextButton(
-                enabled = !isLoading && type != null,
+                enabled = !isLoading && isValid,
                 onClick = {
                     isLoading = true
                     onCreate(variation, type!!, amount.toInt()).invokeOnCompletion { onDismissRequested() }

@@ -19,4 +19,6 @@ data class InventoryItemType(
         "description" to description,
         "image" to image,
     )
+
+    override fun toString(): String = displayName
 }
