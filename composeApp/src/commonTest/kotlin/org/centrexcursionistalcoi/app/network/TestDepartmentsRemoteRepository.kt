@@ -46,12 +46,12 @@ class TestDepartmentsRemoteRepository: ServerTestEnvironment() {
         val departments = DepartmentsRemoteRepository.getAll()
         assertEquals(2, departments.size)
         departments[0].let {
-            assertEquals(1L, it.id)
+            assertEquals(1, it.id)
             assertEquals("Department 1", it.displayName)
             assertEquals(null, it.image)
         }
         departments[1].let {
-            assertEquals(2L, it.id)
+            assertEquals(2, it.id)
             assertEquals("Department 2", it.displayName)
             assertEquals(null, it.image)
         }
