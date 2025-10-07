@@ -30,13 +30,13 @@ object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
     override suspend fun insert(item: Department) = queries.insert(
         id = item.id.toLong(),
         displayName = item.displayName,
-        imageFile = item.imageFile
+        imageFile = item.image
     )
 
     override suspend fun update(item: Department) = queries.update(
         id = item.id.toLong(),
         displayName = item.displayName,
-        imageFile = item.imageFile
+        imageFile = item.image
     )
 
     override suspend fun delete(id: Int) {
@@ -46,6 +46,6 @@ object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
     private fun Departments.toDepartment() = Department(
         id = id.toInt(),
         displayName = displayName,
-        imageFile = imageFile
+        image = imageFile
     )
 }

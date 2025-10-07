@@ -32,7 +32,7 @@ class TestDepartment {
         val departmentClass = Department(
             id = departmentEntity.id.value,
             displayName = "Test Department",
-            imageFile = imageFileId?.toKotlinUuid()
+            image = imageFileId?.toKotlinUuid()
         )
 
         assertJsonEquals(

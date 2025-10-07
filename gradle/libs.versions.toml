@@ -30,6 +30,7 @@ ktor = "3.3.0"
 logback = "1.5.19"
 napier = "2.7.1"
 postgresql = "42.7.8"
+qrose = "1.0.1"
 sekret = "2.2.10"
 sqldelight = "2.1.0"
 sqlite = "3.50.3.0"
@@ -89,6 +90,8 @@ ktor-server-testHost = { module = "io.ktor:ktor-server-test-host-jvm", version.r
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+qrose-twod = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
+qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qrose" }
 sqldelight-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqldelight" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }

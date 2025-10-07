@@ -79,7 +79,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             assertBody(Department.serializer()) { department ->
                 assertEquals(departmentId, department.id)
                 assertEquals("Test Department", department.displayName)
-                assertNull(Database { department.imageFile })
+                assertNull(Database { department.image })
             }
         }
     }
@@ -119,7 +119,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             assertBody(Department.serializer()) { department ->
                 assertEquals(departmentId, department.id)
                 assertEquals("Test Department", department.displayName)
-                val imageFile = department.imageFile?.toJavaUuid()
+                val imageFile = department.image?.toJavaUuid()
                 assertNotNull(imageFile)
                 Database { FileEntity[imageFile] }.let { imageFile ->
                     assertNotNull(imageFile)

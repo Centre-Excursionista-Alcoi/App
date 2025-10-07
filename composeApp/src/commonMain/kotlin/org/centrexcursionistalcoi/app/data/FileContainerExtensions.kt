@@ -12,11 +12,14 @@ import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
-suspend fun Department.imageFile(): ByteArray = PlatformFileSystem.read("imageFile$id")
+suspend fun ImageFileContainer.imageFile(): ByteArray? = image?.let {
+    val clName = this::class.simpleName
+    PlatformFileSystem.read("image$clName$it")
+}
 
 @Composable
 @OptIn(DelicateCoroutinesApi::class)
-fun Department.rememberImageFile(): State<ByteArray?> {
+fun ImageFileContainer.rememberImageFile(): State<ByteArray?> {
     val state = remember { mutableStateOf<ByteArray?>(null) }
     GlobalScope.launch(defaultAsyncDispatcher) {
         val bytes = imageFile()

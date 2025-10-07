@@ -8,15 +8,15 @@ import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
 data class Department(
     override val id: Int = 0,
     val displayName: String,
-    @Serializable(NullableUUIDSerializer::class) val imageFile: Uuid? = null
-): Entity<Int>, FileContainer {
-    override val files: Map<String, Uuid?> = mapOf("image" to imageFile)
+    @Serializable(NullableUUIDSerializer::class) override val image: Uuid? = null
+): Entity<Int>, ImageFileContainer {
+    override val files: Map<String, Uuid?> = mapOf("image" to image)
 
     override fun toMap(): Map<String, Any?> {
         return mapOf(
             "id" to id.takeIf { it != 0 },
             "displayName" to displayName,
-            "image" to imageFile?.let { FileReference(it) }
+            "image" to image?.let { FileReference(it) }
         )
     }
 

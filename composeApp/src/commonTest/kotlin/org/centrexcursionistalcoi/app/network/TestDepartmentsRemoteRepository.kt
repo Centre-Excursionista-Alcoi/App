@@ -48,12 +48,12 @@ class TestDepartmentsRemoteRepository: ServerTestEnvironment() {
         departments[0].let {
             assertEquals(1L, it.id)
             assertEquals("Department 1", it.displayName)
-            assertEquals(null, it.imageFile)
+            assertEquals(null, it.image)
         }
         departments[1].let {
             assertEquals(2L, it.id)
             assertEquals("Department 2", it.displayName)
-            assertEquals(null, it.imageFile)
+            assertEquals(null, it.image)
         }
     }
 }

@@ -77,6 +77,10 @@ kotlin {
 
             implementation(libs.coil.compose)
 
+            // QR Code Generation
+            implementation(libs.qrose.oned)
+            implementation(libs.qrose.twod)
+
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)

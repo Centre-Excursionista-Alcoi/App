@@ -18,6 +18,6 @@ class DepartmentEntity(id: EntityID<Int>) : IntEntity(id), EntityDataConverter<D
     override fun toData(): Department = Department(
         id = id.value,
         displayName = displayName,
-        imageFile = imageFile?.id?.value?.toKotlinUuid()
+        image = imageFile?.id?.value?.toKotlinUuid()
     )
 }

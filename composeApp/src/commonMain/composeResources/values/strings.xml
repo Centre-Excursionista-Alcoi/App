@@ -64,4 +64,8 @@
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
 
+    <string name="inventory_item_type_not_found">Type not found</string>
+    <string name="inventory_item_type">Type: %1$s</string>
+    <string name="inventory_item_amount">Amount: %1$d</string>
+
 </resources>

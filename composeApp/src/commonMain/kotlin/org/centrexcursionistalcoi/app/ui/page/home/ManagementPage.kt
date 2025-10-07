@@ -32,7 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.create
+import cea_app.composeapp.generated.resources.delete
+import cea_app.composeapp.generated.resources.inventory_item_amount
+import cea_app.composeapp.generated.resources.inventory_item_type
+import cea_app.composeapp.generated.resources.inventory_item_type_not_found
+import cea_app.composeapp.generated.resources.management_departments
+import cea_app.composeapp.generated.resources.management_inventory_item_types
+import cea_app.composeapp.generated.resources.management_inventory_items
+import cea_app.composeapp.generated.resources.management_no_departments
+import cea_app.composeapp.generated.resources.management_no_item_types
+import cea_app.composeapp.generated.resources.management_no_items
+import cea_app.composeapp.generated.resources.management_users
+import cea_app.composeapp.generated.resources.status_loading
 import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -44,6 +58,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.jetbrains.compose.resources.StringResource
@@ -162,7 +177,7 @@ private fun <T> ListCard(
                         }
                     } else null,
                     leadingContent = {
-                        if (item is Department && item.imageFile != null) {
+                        if (item is Department && item.image != null) {
                             val imageFile by item.rememberImageFile()
                             AsyncImage(
                                 model = imageFile,
@@ -236,6 +251,11 @@ fun InventoryItemsCard(
         CreateInventoryItemDialog(types.orEmpty(), onCreate) { creating = false }
     }
 
+    var showingItemDetails by remember { mutableStateOf<InventoryItem?>(null) }
+    showingItemDetails?.let { item ->
+        QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
+    }
+
     val groupedItems = remember(items, types) {
         items?.groupBy { it.type }?.toList()
     }
@@ -251,17 +271,32 @@ fun InventoryItemsCard(
         detailsDialogContent = { (typeId, items) ->
             val type = types?.find { it.id == typeId }
             if (type == null) {
-                Text("Type not found")
+                Text(stringResource(Res.string.inventory_item_type_not_found))
             } else {
-                Text("Type: ${type.displayName}", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(Res.string.inventory_item_type), style = MaterialTheme.typography.titleMedium)
                 val description = type.description
                 if (!description.isNullOrBlank()) {
-                    Text(description, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
-                Text("Amount: ${items.size}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
+                if (type.image != null) {
+                    AsyncImage(
+                        model = type.rememberImageFile(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
+                    )
+                }
+                Text(
+                    text = stringResource(Res.string.inventory_item_amount, items.size),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 for (item in items) {
                     ListItem(
-                        headlineContent = { Text(item.id.toString()) },
+                        headlineContent = { Text(item.id.toString().uppercase()) },
                         supportingContent = { Text(item.variation ?: "(No variation)") },
                         trailingContent = {
                             IconButton(
@@ -270,7 +305,7 @@ fun InventoryItemsCard(
                                 Icon(Icons.Default.Delete, stringResource(Res.string.delete))
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().clickable { showingItemDetails = item }
                     )
                 }
             }
