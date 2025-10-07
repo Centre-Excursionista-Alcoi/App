@@ -72,7 +72,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         Database { DepartmentEntity.findById(departmentId) }.let { department ->
             assertNotNull(department)
             assertEquals("Test Department", department.displayName)
-            assertNull(Database { department.imageFile })
+            assertNull(Database { department.image })
         }
         client.get(departmentLocation).apply {
             assertStatusCode(HttpStatusCode.OK)
@@ -109,7 +109,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         Database { DepartmentEntity.findById(departmentId) }.let { department ->
             assertNotNull(department)
             assertEquals("Test Department", department.displayName)
-            Database { department.imageFile }.let { imageFile ->
+            Database { department.image }.let { imageFile ->
                 assertNotNull(imageFile)
                 assertContentEquals(imageBytes, imageFile.data)
             }

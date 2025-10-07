@@ -83,7 +83,7 @@ class ApplicationTest: ApplicationTestBase() {
             }
             DepartmentEntity.new {
                 displayName = "Image Department"
-                imageFile = imageFileEntity
+                image = imageFileEntity
             }
 
             imageFileEntity.id.value
@@ -101,7 +101,7 @@ class ApplicationTest: ApplicationTestBase() {
             }
             departments[1].apply {
                 assertEquals("Image Department", getString("displayName"))
-                assertEquals(departmentImageId.toString(), getString("imageFile"))
+                assertEquals(departmentImageId.toString(), getString("image"))
             }
         }
     }
@@ -116,7 +116,7 @@ class ApplicationTest: ApplicationTestBase() {
             }
             DepartmentEntity.new {
                 displayName = "Image Department"
-                imageFile = imageFileEntity
+                image = imageFileEntity
             }
         }
     ) { context ->
@@ -130,7 +130,7 @@ class ApplicationTest: ApplicationTestBase() {
 
             val departmentResponse = response.bodyAsJson(JsonObject.serializer())
             assertEquals("Image Department", departmentResponse.getString("displayName"))
-            assertEquals(Database { department.imageFile?.id?.value?.toString() }, departmentResponse.getString("imageFile"))
+            assertEquals(Database { department.image?.id?.value?.toString() }, departmentResponse.getString("image"))
         }
     }
 
@@ -175,7 +175,7 @@ class ApplicationTest: ApplicationTestBase() {
         assertNotNull(department, "Created department not found in database")
         assertEquals("New Department", department.displayName)
 
-        val departmentImageId = Database { department.imageFile }
+        val departmentImageId = Database { department.image }
         assertNotNull(departmentImageId, "Created department has no image file")
 
         val departmentImageFile = Database { FileEntity.findById(departmentImageId.id) }

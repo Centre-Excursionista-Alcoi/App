@@ -26,7 +26,7 @@ class TestDepartment {
             imageFileId = imageFileEntity.id.value
             DepartmentEntity.new {
                 displayName = "Test Department"
-                imageFile = imageFileEntity
+                image = imageFileEntity
             }
         }
         val departmentClass = Department(

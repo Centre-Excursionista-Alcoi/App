@@ -12,12 +12,12 @@ class DepartmentEntity(id: EntityID<Int>) : IntEntity(id), EntityDataConverter<D
     companion object : IntEntityClass<DepartmentEntity>(Departments)
 
     var displayName by Departments.displayName
-    var imageFile by FileEntity optionalReferencedOn Departments.imageFile
+    var image by FileEntity optionalReferencedOn Departments.image
 
     context(_: JdbcTransaction)
     override fun toData(): Department = Department(
         id = id.value,
         displayName = displayName,
-        image = imageFile?.id?.value?.toKotlinUuid()
+        image = image?.id?.value?.toKotlinUuid()
     )
 }

@@ -13,7 +13,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
-import java.io.ByteArrayOutputStream
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
@@ -25,6 +24,7 @@ import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
@@ -57,9 +57,7 @@ fun Route.departmentsRoutes() {
         idTypeConverter = { it.toIntOrNull() },
         creator = { formParameters ->
             var displayName: String? = null
-            var contentType: ContentType? = null
-            var originalFileName: String? = null
-            val imageDataStream = ByteArrayOutputStream()
+            val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
                 when (partData) {
@@ -70,9 +68,9 @@ fun Route.departmentsRoutes() {
                     }
                     is PartData.FileItem -> {
                         if (partData.name == "image") {
-                            contentType = partData.contentType
-                            originalFileName = partData.originalFileName
-                            partData.provider().copyTo(imageDataStream.asByteWriteChannel())
+                            image.contentType = partData.contentType
+                            image.originalFileName = partData.originalFileName
+                            partData.provider().copyTo(image.dataStream.asByteWriteChannel())
                         }
                     }
                     else -> { /* nothing */ }
@@ -84,17 +82,17 @@ fun Route.departmentsRoutes() {
             }
 
             Database {
-                val imageFile = if (imageDataStream.size() > 0) {
+                val imageFile = if (image.isNotEmpty()) {
                     FileEntity.new {
-                        name = originalFileName ?: "unknown"
-                        type = contentType?.toString() ?: "application/octet-stream"
-                        data = imageDataStream.toByteArray()
+                        name = image.originalFileName ?: "unknown"
+                        type = image.contentType?.toString() ?: "application/octet-stream"
+                        data = image.dataStream.toByteArray()
                     }
                 } else null
 
                 DepartmentEntity.new {
                     this.displayName = displayName
-                    this.imageFile = imageFile
+                    this.image = imageFile
                 }
             }
         }
