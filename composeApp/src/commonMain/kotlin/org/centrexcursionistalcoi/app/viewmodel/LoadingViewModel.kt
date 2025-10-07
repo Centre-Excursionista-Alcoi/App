@@ -3,16 +3,23 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalTime::class)
 class LoadingViewModel(
@@ -20,19 +27,31 @@ class LoadingViewModel(
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
     companion object {
-        suspend fun syncAll(): Boolean {
+        suspend fun syncAll(force: Boolean = false): Boolean {
             val profile = ProfileRemoteRepository.getProfile()
             return if (profile != null) {
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
-                // Session is valid, synchronize the local database with the remote data
-                Napier.d { "Synchronizing local data with remote..." }
-                DepartmentsRemoteRepository.synchronizeWithDatabase()
-                PostsRemoteRepository.synchronizeWithDatabase()
-                if (profile.isAdmin) {
-                    Napier.d { "Synchronizing admin local data with remote..." }
-                    UsersRemoteRepository.synchronizeWithDatabase()
+                val lastSync = settings.getLongOrNull("lastSync")?.let { Instant.fromEpochSeconds(it) }
+                val now = Clock.System.now()
+                if (force || lastSync == null || lastSync.until(now, DateTimeUnit.SECOND) > 3600) {
+                    Napier.d { "Last sync was more than an hour ago, synchronizing data..." }
+
+                    // Synchronize the local database with the remote data
+                    DepartmentsRemoteRepository.synchronizeWithDatabase()
+                    PostsRemoteRepository.synchronizeWithDatabase()
+                    InventoryItemTypesRemoteRepository.synchronizeWithDatabase()
+                    InventoryItemsRemoteRepository.synchronizeWithDatabase()
+
+                    if (profile.isAdmin) {
+                        Napier.d { "Synchronizing admin local data with remote..." }
+                        UsersRemoteRepository.synchronizeWithDatabase()
+                    }
+
+                    settings.putLong("lastSync", now.epochSeconds)
+                } else {
+                    Napier.d { "Last sync was less than an hour ago, skipping synchronization." }
                 }
 
                 Napier.d { "Load finished!" }

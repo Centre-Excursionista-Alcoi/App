@@ -60,7 +60,7 @@ class HomeViewModel: ViewModel() {
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
         try {
             _isSyncing.emit(true)
-            LoadingViewModel.syncAll()
+            LoadingViewModel.syncAll(force = true)
         } finally {
             _isSyncing.emit(false)
         }
