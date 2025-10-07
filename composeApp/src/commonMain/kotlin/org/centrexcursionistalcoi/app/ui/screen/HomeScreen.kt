@@ -42,6 +42,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
@@ -58,6 +60,8 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val users by model.users.collectAsState()
+    val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
+    val inventoryItems by model.inventoryItems.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
 
     profile?.let {
@@ -71,6 +75,12 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
             users = users,
             isSyncing = isSyncing,
             onSyncRequested = model::sync,
+            inventoryItemTypes = inventoryItemTypes,
+            onCreateInventoryItemType = model::createInventoryItemType,
+            onDeleteInventoryItemType = model::delete,
+            inventoryItems = inventoryItems,
+            onCreateInventoryItem = model::createInventoryItem,
+            onDeleteInventoryItem = model::delete,
         )
     } ?: LoadingBox()
 }
@@ -95,6 +105,12 @@ private fun HomeScreenContent(
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
     users: List<UserData>?,
+    inventoryItemTypes: List<InventoryItemType>?,
+    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    inventoryItems: List<InventoryItem>?,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onDeleteInventoryItem: (InventoryItem) -> Job,
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
@@ -187,6 +203,12 @@ private fun HomeScreenContent(
                         onLendingSignUp,
                         onCreateInsurance,
                         users,
+                        inventoryItemTypes,
+                        onCreateInventoryItemType,
+                        onDeleteInventoryItemType,
+                        inventoryItems,
+                        onCreateInventoryItem,
+                        onDeleteInventoryItem,
                     )
                 }
             } else {
@@ -204,6 +226,12 @@ private fun HomeScreenContent(
                         onLendingSignUp,
                         onCreateInsurance,
                         users,
+                        inventoryItemTypes,
+                        onCreateInventoryItemType,
+                        onDeleteInventoryItemType,
+                        inventoryItems,
+                        onCreateInventoryItem,
+                        onDeleteInventoryItem,
                     )
                 }
             }
@@ -222,6 +250,12 @@ fun HomeScreenPagerContent(
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
     users: List<UserData>?,
+    inventoryItemTypes: List<InventoryItemType>?,
+    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    inventoryItems: List<InventoryItem>?,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onDeleteInventoryItem: (InventoryItem) -> Job,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -236,7 +270,19 @@ fun HomeScreenPagerContent(
 
             1 -> LendingPage(windowSizeClass, profile, onLendingSignUp, onCreateInsurance)
 
-            2 -> ManagementPage(windowSizeClass, departments, onCreateDepartment, onDeleteDepartment, users)
+            2 -> ManagementPage(
+                windowSizeClass,
+                departments,
+                onCreateDepartment,
+                onDeleteDepartment,
+                users,
+                inventoryItemTypes,
+                onCreateInventoryItemType,
+                onDeleteInventoryItemType,
+                inventoryItems,
+                onCreateInventoryItem,
+                onDeleteInventoryItem,
+            )
         }
     }
 }

@@ -10,13 +10,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class HomeViewModel: ViewModel() {
@@ -28,6 +34,10 @@ class HomeViewModel: ViewModel() {
     val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
 
     val users = UsersRepository.selectAllAsFlow().stateInViewModel()
+
+    val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
+
+    val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
     val posts = PostsRepository.selectAllAsFlow().stateInViewModel()
 
@@ -45,6 +55,23 @@ class HomeViewModel: ViewModel() {
 
     fun delete(department: Department) = viewModelScope.launch(defaultAsyncDispatcher) {
         DepartmentsRemoteRepository.delete(department.id)
+    }
+
+    fun createInventoryItemType(displayName: String, description: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
+        val image = imageFile?.readBytes()
+        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, image)
+    }
+
+    fun delete(item: InventoryItemType) = viewModelScope.launch(defaultAsyncDispatcher) {
+        InventoryItemTypesRemoteRepository.delete(item.id)
+    }
+
+    fun createInventoryItem(variation: String, type: InventoryItemType) = viewModelScope.launch(defaultAsyncDispatcher) {
+        InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id)
+    }
+
+    fun delete(item: InventoryItem) = viewModelScope.launch(defaultAsyncDispatcher) {
+        InventoryItemsRemoteRepository.delete(item.id)
     }
 
     fun signUpForLending(fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) = viewModelScope.launch(defaultAsyncDispatcher) {

@@ -10,6 +10,8 @@
 
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
+    <string name="management_inventory_item_types">Item Types</string>
+    <string name="management_inventory_items">Items</string>
 
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
@@ -56,6 +58,8 @@
 
     <string name="management_no_departments">No departments</string>
     <string name="management_no_users">No users</string>
+    <string name="management_no_item_types">No item types</string>
+    <string name="management_no_items">No items</string>
 
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>

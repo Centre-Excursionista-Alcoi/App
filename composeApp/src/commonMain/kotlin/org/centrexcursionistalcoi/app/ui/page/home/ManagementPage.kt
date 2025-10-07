@@ -35,10 +35,13 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -49,6 +52,12 @@ fun ManagementPage(
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
     users: List<UserData>?,
+    inventoryItemTypes: List<InventoryItemType>?,
+    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    inventoryItems: List<InventoryItem>?,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onDeleteInventoryItem: (InventoryItem) -> Job,
 ) {
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -59,6 +68,21 @@ fun ManagementPage(
         }
         item(key = "users") {
             UsersCard(users)
+        }
+        item(key = "item_types") {
+            InventoryItemTypesCard(
+                inventoryItemTypes,
+                onCreateInventoryItemType,
+                onDeleteInventoryItemType
+            )
+        }
+        item(key = "items") {
+            InventoryItemsCard(
+                inventoryItemTypes,
+                inventoryItems,
+                onCreateInventoryItem,
+                onDeleteInventoryItem
+            )
         }
     }
 }
@@ -140,11 +164,6 @@ fun DepartmentsCard(
     onCreate: (displayName: String, image: PlatformFile?) -> Job,
     onDelete: (Department) -> Job,
 ) {
-    var deleting by remember { mutableStateOf<Department?>(null) }
-    deleting?.let { department ->
-        DeleteDialog(department, { it.displayName }, { onDelete(department) }) { deleting = null }
-    }
-
     var creating by remember { mutableStateOf(false) }
     if (creating) {
         CreateDepartmentDialog(onCreate) { creating = false }
@@ -162,6 +181,51 @@ fun DepartmentsCard(
 }
 
 @Composable
+fun InventoryItemTypesCard(
+    types: List<InventoryItemType>?,
+    onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onDelete: (InventoryItemType) -> Job,
+) {
+    var creating by remember { mutableStateOf(false) }
+    if (creating) {
+        CreateInventoryItemTypeDialog(onCreate) { creating = false }
+    }
+
+    ListCard(
+        list = types,
+        titleResource = Res.string.management_inventory_item_types,
+        emptyTextResource = Res.string.management_no_item_types,
+        displayName = { it.displayName },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        onCreate = { creating = true },
+        onDelete = onDelete
+    )
+}
+
+@Composable
+fun InventoryItemsCard(
+    types: List<InventoryItemType>?,
+    items: List<InventoryItem>?,
+    onCreate: (variation: String, type: InventoryItemType) -> Job,
+    onDelete: (InventoryItem) -> Job,
+) {
+    var creating by remember { mutableStateOf(false) }
+    if (creating) {
+        CreateInventoryItemDialog(types.orEmpty(), onCreate) { creating = false }
+    }
+
+    ListCard(
+        list = items,
+        titleResource = Res.string.management_inventory_items,
+        emptyTextResource = Res.string.management_no_items,
+        displayName = { item -> types?.find { it.id == item.id }?.displayName ?: "N/A" },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        onCreate = { creating = true },
+        onDelete = onDelete
+    )
+}
+
+@Composable
 fun UsersCard(users: List<UserData>?) {
     ListCard(
         list = users,
@@ -169,6 +233,126 @@ fun UsersCard(users: List<UserData>?) {
         emptyTextResource = Res.string.management_no_departments,
         displayName = { it.username },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
+    )
+}
+
+@Composable
+fun CreateInventoryItemTypeDialog(
+    onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onDismissRequested: () -> Unit
+) {
+    var isLoading by remember { mutableStateOf(false) }
+    var displayName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var image by remember { mutableStateOf<PlatformFile?>(null) }
+    val imagePicker = rememberFilePickerLauncher(
+        type = FileKitType.Image
+    ) { file -> image = file }
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismissRequested() },
+        title = { Text("Create item type") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    label = { Text("Display name") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (optional)") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    enabled = !isLoading,
+                    onClick = { imagePicker.launch() }
+                ) {
+                    image?.let {
+                        AsyncImage(
+                            model = it,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    } ?: Text(
+                        "Select image (optional)",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !isLoading && displayName.isNotBlank(),
+                onClick = {
+                    isLoading = true
+                    onCreate(displayName, description, image).invokeOnCompletion { onDismissRequested() }
+                }
+            ) { Text("Create") }
+        },
+        dismissButton = {
+            TextButton(
+                enabled = !isLoading,
+                onClick = { onDismissRequested() }
+            ) { Text("Cancel") }
+        },
+    )
+}
+
+@Composable
+fun CreateInventoryItemDialog(
+    types: List<InventoryItemType>,
+    onCreate: (variation: String, type: InventoryItemType) -> Job,
+    onDismissRequested: () -> Unit
+) {
+    var isLoading by remember { mutableStateOf(false) }
+    var variation by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf<InventoryItemType?>(null) }
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismissRequested() },
+        title = { Text("Create item") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = variation,
+                    onValueChange = { variation = it },
+                    label = { Text("Variation (optional)") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                DropdownField(
+                    value = type,
+                    onValueChange = { type = it },
+                    options = types,
+                    label = "Type",
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    itemToString = { it?.displayName ?: "" }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !isLoading && type != null,
+                onClick = {
+                    isLoading = true
+                    onCreate(variation, type!!).invokeOnCompletion { onDismissRequested() }
+                }
+            ) { Text("Create") }
+        },
+        dismissButton = {
+            TextButton(
+                enabled = !isLoading,
+                onClick = { onDismissRequested() }
+            ) { Text("Cancel") }
+        },
     )
 }
 
