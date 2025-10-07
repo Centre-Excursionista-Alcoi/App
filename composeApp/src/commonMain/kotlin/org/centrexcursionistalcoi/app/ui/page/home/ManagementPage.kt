@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -98,6 +100,7 @@ private fun <T> ListCard(
     modifier: Modifier = Modifier,
     onCreate: (() -> Unit)? = null,
     onDelete: ((T) -> Job)? = null,
+    detailsDialogContent: (@Composable ColumnScope.(T) -> Unit)? = null,
 ) {
     var deleting by remember { mutableStateOf<T?>(null) }
     if (onDelete != null) {
@@ -108,6 +111,21 @@ private fun <T> ListCard(
                 { onDelete(item) }
             ) { deleting = null }
         }
+    }
+
+    var showingDetails by remember { mutableStateOf<T?>(null) }
+    if (detailsDialogContent != null) showingDetails?.let { item ->
+        AlertDialog(
+            onDismissRequest = { showingDetails = null },
+            confirmButton = {
+                TextButton(onClick = { showingDetails = null }) {
+                    Text(stringResource(Res.string.close))
+                }
+            },
+            text = {
+                Column { detailsDialogContent(item) }
+            }
+        )
     }
 
     OutlinedCard(modifier) {
@@ -153,7 +171,9 @@ private fun <T> ListCard(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = detailsDialogContent != null) { showingDetails = item }
                 )
             }
         }
@@ -216,14 +236,45 @@ fun InventoryItemsCard(
         CreateInventoryItemDialog(types.orEmpty(), onCreate) { creating = false }
     }
 
+    val groupedItems = remember(items, types) {
+        items?.groupBy { it.type }?.toList()
+    }
     ListCard(
-        list = items,
+        list = groupedItems,
         titleResource = Res.string.management_inventory_items,
         emptyTextResource = Res.string.management_no_items,
-        displayName = { item -> types?.find { it.id == item.id }?.displayName ?: "N/A" },
+        displayName = { (typeId, items) ->
+            (types?.find { it.id == typeId }?.displayName ?: "N/A") + " (${items.size})"
+        },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
-        onDelete = onDelete
+        detailsDialogContent = { (typeId, items) ->
+            val type = types?.find { it.id == typeId }
+            if (type == null) {
+                Text("Type not found")
+            } else {
+                Text("Type: ${type.displayName}", style = MaterialTheme.typography.titleMedium)
+                val description = type.description
+                if (!description.isNullOrBlank()) {
+                    Text(description, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
+                }
+                Text("Amount: ${items.size}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
+                for (item in items) {
+                    ListItem(
+                        headlineContent = { Text(item.id.toString()) },
+                        supportingContent = { Text(item.variation ?: "(No variation)") },
+                        trailingContent = {
+                            IconButton(
+                                onClick = { onDelete(item) }
+                            ) {
+                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
     )
 }
 
