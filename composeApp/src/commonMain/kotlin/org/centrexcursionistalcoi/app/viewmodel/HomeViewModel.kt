@@ -66,8 +66,8 @@ class HomeViewModel: ViewModel() {
         InventoryItemTypesRemoteRepository.delete(item.id)
     }
 
-    fun createInventoryItem(variation: String, type: InventoryItemType) = viewModelScope.launch(defaultAsyncDispatcher) {
-        InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id)
+    fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = viewModelScope.launch(defaultAsyncDispatcher) {
+        InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id, amount)
     }
 
     fun delete(item: InventoryItem) = viewModelScope.launch(defaultAsyncDispatcher) {

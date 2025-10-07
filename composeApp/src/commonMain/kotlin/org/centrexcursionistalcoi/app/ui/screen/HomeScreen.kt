@@ -109,7 +109,7 @@ private fun HomeScreenContent(
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
@@ -254,7 +254,7 @@ fun HomeScreenPagerContent(
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {

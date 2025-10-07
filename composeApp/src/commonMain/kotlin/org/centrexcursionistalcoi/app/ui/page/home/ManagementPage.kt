@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
@@ -56,7 +58,7 @@ fun ManagementPage(
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
 ) {
     AdaptiveVerticalGrid(
@@ -206,7 +208,7 @@ fun InventoryItemTypesCard(
 fun InventoryItemsCard(
     types: List<InventoryItemType>?,
     items: List<InventoryItem>?,
-    onCreate: (variation: String, type: InventoryItemType) -> Job,
+    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDelete: (InventoryItem) -> Job,
 ) {
     var creating by remember { mutableStateOf(false) }
@@ -308,12 +310,14 @@ fun CreateInventoryItemTypeDialog(
 @Composable
 fun CreateInventoryItemDialog(
     types: List<InventoryItemType>,
-    onCreate: (variation: String, type: InventoryItemType) -> Job,
+    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
     var variation by remember { mutableStateOf("") }
     var type by remember { mutableStateOf<InventoryItemType?>(null) }
+    var amount by remember { mutableStateOf("") }
+    val isValid = type != null && amount.toUIntOrNull() != null
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },
         title = { Text("Create item") },
@@ -336,6 +340,15 @@ fun CreateInventoryItemDialog(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     itemToString = { it?.displayName ?: "" }
                 )
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = { Text("Amount") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
             }
         },
         confirmButton = {
@@ -343,7 +356,7 @@ fun CreateInventoryItemDialog(
                 enabled = !isLoading && type != null,
                 onClick = {
                     isLoading = true
-                    onCreate(variation, type!!).invokeOnCompletion { onDismissRequested() }
+                    onCreate(variation, type!!, amount.toInt()).invokeOnCompletion { onDismissRequested() }
                 }
             ) { Text("Create") }
         },

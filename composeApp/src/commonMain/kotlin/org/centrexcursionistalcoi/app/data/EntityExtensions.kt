@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.data
 import io.github.aakira.napier.Napier
 import io.ktor.client.request.forms.formData
 import io.ktor.http.content.PartData
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
@@ -26,6 +27,7 @@ suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
             when (value) {
                 null -> { /* ignore null values */ }
                 is String -> append(key, value)
+                is Uuid -> append(key, value.toString())
                 is Number -> append(key, value)
                 is Boolean -> append(key, value)
                 is ByteArray -> append(key, value)
