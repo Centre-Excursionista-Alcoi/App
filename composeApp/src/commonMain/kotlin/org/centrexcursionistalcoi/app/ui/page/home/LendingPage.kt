@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,20 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,7 +23,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.lending_signup_accept
+import cea_app.composeapp.generated.resources.lending_signup_address
+import cea_app.composeapp.generated.resources.lending_signup_city
+import cea_app.composeapp.generated.resources.lending_signup_country
+import cea_app.composeapp.generated.resources.lending_signup_full_name
+import cea_app.composeapp.generated.resources.lending_signup_message
+import cea_app.composeapp.generated.resources.lending_signup_nif
+import cea_app.composeapp.generated.resources.lending_signup_phone
+import cea_app.composeapp.generated.resources.lending_signup_postal_code
+import cea_app.composeapp.generated.resources.lending_signup_province
+import cea_app.composeapp.generated.resources.lending_signup_sports
+import cea_app.composeapp.generated.resources.lending_signup_title
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserInsurance
@@ -40,8 +44,8 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.InsuranceDialog
-import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
-import org.centrexcursionistalcoi.app.ui.icons.FEMECV
+import org.centrexcursionistalcoi.app.ui.page.home.lending.InsurancesListCard
+import org.centrexcursionistalcoi.app.ui.page.home.lending.NoInsurancesCard
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
@@ -92,47 +96,15 @@ private fun LendingUserPage(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
         if (activeInsurances.isEmpty()) item("no_insurances") {
-            OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(Res.string.lending_no_active_insurances_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-                )
-                Text(
-                    text = stringResource(Res.string.lending_no_active_insurances_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-                )
-                TextButton(
-                    onClick = { addingInsurance = true },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                ) { Text(stringResource(Res.string.lending_no_active_insurances_action)) }
-            }
+            NoInsurancesCard(
+                onAddInsuranceRequested = { addingInsurance = true }
+            )
         } else item("insurances_list") {
-            OutlinedCard {
-                Text(
-                    text = stringResource(Res.string.active_insurances_title),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                for (insurance in activeInsurances) {
-                    ListItem(
-                        leadingContent = {
-                            Icon(
-                                if (insurance.insuranceCompany == "FEMECV")
-                                    BrandIcons.FEMECV
-                                else
-                                    Icons.Default.HealthAndSafety,
-                                stringResource(Res.string.insurance),
-                                modifier = Modifier.size(32.dp)
-                            )
-                        },
-                        headlineContent = { Text(insurance.insuranceCompany, style = MaterialTheme.typography.bodyLarge) },
-                        supportingContent = { Text(insurance.policyNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                        modifier = Modifier.fillMaxWidth().clickable { displayingInsurance = insurance }
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-            }
+            InsurancesListCard(
+                activeInsurances = activeInsurances,
+                onAddInsuranceRequested = { addingInsurance = true },
+                onInsuranceRequested = { displayingInsurance = it }
+            )
         }
     }
 }
