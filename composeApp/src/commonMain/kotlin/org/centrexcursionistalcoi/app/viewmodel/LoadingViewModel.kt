@@ -13,12 +13,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
-import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
-import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.network.*
 import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalTime::class)
@@ -43,6 +38,7 @@ class LoadingViewModel(
                     PostsRemoteRepository.synchronizeWithDatabase()
                     InventoryItemTypesRemoteRepository.synchronizeWithDatabase()
                     InventoryItemsRemoteRepository.synchronizeWithDatabase()
+                    LendingsRemoteRepository.synchronizeWithDatabase()
 
                     if (profile.isAdmin) {
                         Napier.d { "Synchronizing admin local data with remote..." }

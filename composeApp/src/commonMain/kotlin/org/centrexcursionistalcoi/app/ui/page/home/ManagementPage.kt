@@ -1,64 +1,26 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.close
-import cea_app.composeapp.generated.resources.create
-import cea_app.composeapp.generated.resources.delete
-import cea_app.composeapp.generated.resources.inventory_item_amount
-import cea_app.composeapp.generated.resources.inventory_item_type
-import cea_app.composeapp.generated.resources.inventory_item_type_not_found
-import cea_app.composeapp.generated.resources.management_departments
-import cea_app.composeapp.generated.resources.management_inventory_item_types
-import cea_app.composeapp.generated.resources.management_inventory_items
-import cea_app.composeapp.generated.resources.management_no_departments
-import cea_app.composeapp.generated.resources.management_no_item_types
-import cea_app.composeapp.generated.resources.management_no_items
-import cea_app.composeapp.generated.resources.management_users
-import cea_app.composeapp.generated.resources.qrcode
-import cea_app.composeapp.generated.resources.status_loading
+import cea_app.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItem
-import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
@@ -79,6 +41,7 @@ fun ManagementPage(
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
+    onManageLendingsRequested: () -> Unit,
 ) {
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -104,6 +67,11 @@ fun ManagementPage(
                 onCreateInventoryItem,
                 onDeleteInventoryItem
             )
+        }
+        item(key = "lendings") {
+            Button(
+                onClick = onManageLendingsRequested
+            ) { Text("Lendings") }
         }
     }
 }

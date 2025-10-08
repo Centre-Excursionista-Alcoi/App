@@ -5,11 +5,7 @@ import com.russhwolf.settings.coroutines.getStringOrNullFlow
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -35,6 +31,12 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     } catch (e: SerializationException) {
         Napier.e("Could not parse item from settings: $raw", e)
         null
+    }
+
+    override suspend fun get(id: IdType): T? {
+        val key = "${namespace}.$id"
+        val raw = settings.getStringOrNull(key) ?: return null
+        return decode(raw)
     }
 
     override suspend fun selectAll(): List<T> {

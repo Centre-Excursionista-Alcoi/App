@@ -1,0 +1,31 @@
+import kotlin.uuid.Uuid;
+
+CREATE TABLE LendingItems (
+    lendingId TEXT AS Uuid NOT NULL,
+    itemId TEXT AS Uuid NOT NULL,
+    PRIMARY KEY (lendingId, itemId),
+    UNIQUE(lendingId, itemId),
+    FOREIGN KEY (lendingId) REFERENCES Lendings(id) ON DELETE CASCADE,
+    FOREIGN KEY (itemId) REFERENCES InventoryItems(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT INTO LendingItems (lendingId, itemId) VALUES (?, ?);
+
+get:
+SELECT * FROM LendingItems WHERE lendingId = ? AND itemId = ?;
+
+getByLendingId:
+SELECT * FROM LendingItems WHERE lendingId = ?;
+
+selectAll:
+SELECT * FROM LendingItems;
+
+deleteById:
+DELETE FROM LendingItems WHERE lendingId = ? AND itemId = ?;
+
+deleteByLendingId:
+DELETE FROM LendingItems WHERE lendingId = ?;
+
+update:
+UPDATE LendingItems SET lendingId = ?, itemId = ? WHERE lendingId = ? AND itemId = ?;

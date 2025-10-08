@@ -17,6 +17,10 @@ object PostsSettingsRepository : SettingsRepository<Post, Uuid>("posts", Post.se
 object PostsDatabaseRepository : DatabaseRepository<Post, Uuid>() {
     override val queries by lazy { databaseInstance.postsQueries }
 
+    override suspend fun get(id: Uuid): Post? {
+        return queries.get(id).awaitAsList().firstOrNull()?.toPost()
+    }
+
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
         .asFlow()
@@ -48,7 +52,7 @@ object PostsDatabaseRepository : DatabaseRepository<Post, Uuid>() {
         queries.deleteById(id)
     }
 
-    private fun Posts.toPost() = Post(
+    fun Posts.toPost() = Post(
         id = id,
         date = date,
         title = title,

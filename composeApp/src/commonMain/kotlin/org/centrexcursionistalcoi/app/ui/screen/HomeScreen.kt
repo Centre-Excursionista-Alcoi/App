@@ -1,32 +1,12 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.SupervisorAccount
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -56,7 +36,10 @@ import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
+fun HomeScreen(
+    onManageLendingsRequested: () -> Unit,
+    model: HomeViewModel = viewModel { HomeViewModel() }
+) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val users by model.users.collectAsState()
@@ -81,6 +64,7 @@ fun HomeScreen(model: HomeViewModel = viewModel { HomeViewModel() }) {
             inventoryItems = inventoryItems,
             onCreateInventoryItem = model::createInventoryItem,
             onDeleteInventoryItem = model::delete,
+            onManageLendingsRequested = onManageLendingsRequested,
         )
     } ?: LoadingBox()
 }
@@ -111,6 +95,7 @@ private fun HomeScreenContent(
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
+    onManageLendingsRequested: () -> Unit,
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
@@ -209,6 +194,7 @@ private fun HomeScreenContent(
                         inventoryItems,
                         onCreateInventoryItem,
                         onDeleteInventoryItem,
+                        onManageLendingsRequested,
                     )
                 }
             } else {
@@ -232,6 +218,7 @@ private fun HomeScreenContent(
                         inventoryItems,
                         onCreateInventoryItem,
                         onDeleteInventoryItem,
+                        onManageLendingsRequested,
                     )
                 }
             }
@@ -256,6 +243,7 @@ fun HomeScreenPagerContent(
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
+    onManageLendingsRequested: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -282,6 +270,7 @@ fun HomeScreenPagerContent(
                 inventoryItems,
                 onCreateInventoryItem,
                 onDeleteInventoryItem,
+                onManageLendingsRequested,
             )
         }
     }

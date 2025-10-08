@@ -14,6 +14,9 @@ CREATE TABLE Posts (
 insert:
 INSERT INTO Posts (id, date, title, content, onlyForMembers, department) VALUES (?, ?, ?, ?, ?, ?);
 
+get:
+SELECT * FROM Posts WHERE id = ?;
+
 selectAll:
 SELECT * FROM Posts ORDER BY date DESC;
 

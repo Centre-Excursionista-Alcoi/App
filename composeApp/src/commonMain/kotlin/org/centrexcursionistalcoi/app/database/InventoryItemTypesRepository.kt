@@ -17,6 +17,10 @@ object InventoryItemTypesSettingsRepository : SettingsRepository<InventoryItemTy
 object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemType, Uuid>() {
     override val queries by lazy { databaseInstance.inventoryItemTypesQueries }
 
+    override suspend fun get(id: Uuid): InventoryItemType? {
+        return queries.get(id).awaitAsList().firstOrNull()?.toInventoryItemType()
+    }
+
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
         .selectAll()
         .asFlow()
@@ -46,7 +50,7 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
         queries.deleteById(id)
     }
 
-    private fun InventoryItemTypes.toInventoryItemType() = InventoryItemType(
+    fun InventoryItemTypes.toInventoryItemType() = InventoryItemType(
         id = id,
         displayName = displayName,
         description = description,

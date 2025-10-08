@@ -10,6 +10,8 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     suspend fun selectAll(): List<T>
 
+    suspend fun get(id: IdType): T?
+
     suspend fun insert(item: T): Long
 
     suspend fun insert(items: List<T>)

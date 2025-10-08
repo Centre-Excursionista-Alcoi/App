@@ -22,6 +22,10 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
         .mapToList(dispatcher)
         .map { list -> list.map { it.toUser() } }
 
+    override suspend fun get(id: String): UserData? {
+        return queries.get(id).awaitAsList().firstOrNull()?.toUser()
+    }
+
     override suspend fun selectAll(): List<UserData> = queries.selectAll().awaitAsList()
         .map { it.toUser() }
 
@@ -49,7 +53,7 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
         queries.deleteById(id)
     }
 
-    private fun Users.toUser() = UserData(
+    fun Users.toUser() = UserData(
         sub = sub,
         username = username,
         email = email,

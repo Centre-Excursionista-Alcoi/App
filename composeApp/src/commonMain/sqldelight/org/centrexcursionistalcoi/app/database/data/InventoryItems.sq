@@ -10,6 +10,9 @@ CREATE TABLE InventoryItems (
 insert:
 INSERT INTO InventoryItems (id, variation, type) VALUES (?, ?, ?);
 
+get:
+SELECT * FROM InventoryItems WHERE id = ?;
+
 selectAll:
 SELECT * FROM InventoryItems ORDER BY id;
 

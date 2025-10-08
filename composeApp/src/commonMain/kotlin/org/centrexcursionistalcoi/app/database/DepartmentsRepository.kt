@@ -27,6 +27,10 @@ object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
 
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toDepartment() }
 
+    override suspend fun get(id: Int): Department? {
+        return queries.get(id.toLong()).awaitAsList().firstOrNull()?.toDepartment()
+    }
+
     override suspend fun insert(item: Department) = queries.insert(
         id = item.id.toLong(),
         displayName = item.displayName,

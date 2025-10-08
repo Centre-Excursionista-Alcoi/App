@@ -17,6 +17,7 @@ import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
@@ -80,7 +81,16 @@ fun App(
             )
         }
         composable<Destination.Home> {
-            HomeScreen()
+            HomeScreen(
+                onManageLendingsRequested = {
+                    navController.navigate(Destination.LendingsManagement)
+                }
+            )
+        }
+        composable<Destination.LendingsManagement> {
+            LendingsManagementScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
     LaunchedEffect(navController) {

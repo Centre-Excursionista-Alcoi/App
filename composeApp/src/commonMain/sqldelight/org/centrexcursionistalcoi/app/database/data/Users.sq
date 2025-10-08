@@ -17,6 +17,9 @@ CREATE TABLE Users(
 insert:
 INSERT INTO Users(sub, username, email, groups, departments, lendingUser, insurances) VALUES(?, ?, ?, ?, ?, ?, ?);
 
+get:
+SELECT * FROM Users WHERE sub = ?;
+
 selectAll:
 SELECT * FROM Users;
 

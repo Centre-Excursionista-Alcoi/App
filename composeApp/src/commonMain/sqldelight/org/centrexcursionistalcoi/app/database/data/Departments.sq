@@ -11,6 +11,9 @@ CREATE INDEX idx_Departments_displayName ON Departments(displayName);
 insert:
 INSERT INTO Departments (id, displayName, imageFile) VALUES (?, ?, ?);
 
+get:
+SELECT * FROM Departments WHERE id = ?;
+
 selectAll:
 SELECT * FROM Departments ORDER BY id;
 

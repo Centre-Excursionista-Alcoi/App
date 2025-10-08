@@ -28,6 +28,10 @@ object InventoryItemsDatabaseRepository : DatabaseRepository<InventoryItem, Uuid
 
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toInventoryItem() }
 
+    override suspend fun get(id: Uuid): InventoryItem? {
+        return queries.get(id).awaitAsList().firstOrNull()?.toInventoryItem()
+    }
+
     override suspend fun insert(item: InventoryItem) = queries.insert(
         id = item.id,
         variation = item.variation,
@@ -44,7 +48,7 @@ object InventoryItemsDatabaseRepository : DatabaseRepository<InventoryItem, Uuid
         queries.deleteById(id)
     }
 
-    private fun InventoryItems.toInventoryItem() = InventoryItem(
+    fun InventoryItems.toInventoryItem() = InventoryItem(
         id = id,
         variation = variation,
         type = type,

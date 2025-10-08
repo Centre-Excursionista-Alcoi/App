@@ -10,6 +10,9 @@ CREATE TABLE InventoryItemTypes (
 insert:
 INSERT INTO InventoryItemTypes (id, displayName, description, image) VALUES (?, ?, ?, ?);
 
+get:
+SELECT * FROM InventoryItemTypes WHERE id = ?;
+
 selectAll:
 SELECT * FROM InventoryItemTypes ORDER BY displayName;
 

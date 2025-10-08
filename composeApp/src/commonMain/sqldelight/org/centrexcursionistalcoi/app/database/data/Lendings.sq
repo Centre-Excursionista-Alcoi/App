@@ -1,0 +1,31 @@
+import kotlin.Boolean;
+import kotlin.time.Instant;
+import kotlin.uuid.Uuid;
+import kotlinx.datetime.LocalDate;
+
+CREATE TABLE Lendings (
+    id TEXT AS Uuid PRIMARY KEY,
+    userSub TEXT NOT NULL,
+    timestamp INTEGER AS Instant NOT NULL,
+    fromDate TEXT AS LocalDate NOT NULL,
+    toDate TEXT AS LocalDate NOT NULL,
+    confirmed INTEGER AS Boolean NOT NULL,
+    taken INTEGER AS Boolean NOT NULL,
+    returned INTEGER AS Boolean NOT NULL,
+    notes TEXT
+);
+
+insert:
+INSERT INTO Lendings (id, userSub, timestamp, fromDate, toDate, confirmed, taken, returned, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM Lendings WHERE id = ?;
+
+selectAll:
+SELECT * FROM Lendings ORDER BY timestamp DESC;
+
+deleteById:
+DELETE FROM Lendings WHERE id = ?;
+
+update:
+UPDATE Lendings SET userSub = ?, timestamp = ?, fromDate = ?, toDate = ?, confirmed = ?, taken = ?, returned = ?, notes = ? WHERE id = ?;
