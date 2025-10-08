@@ -3,11 +3,22 @@ package org.centrexcursionistalcoi.app
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.time.Instant
+import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
+import org.jetbrains.annotations.VisibleForTesting
+
+var now: () -> Instant = { Instant.now() }
+    @VisibleForTesting
+    set
+
+var today: () -> LocalDate = { LocalDate.now() }
+    @VisibleForTesting
+    set
 
 fun main() {
     Database.init(

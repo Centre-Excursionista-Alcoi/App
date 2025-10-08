@@ -70,6 +70,7 @@ abstract class ApplicationTestBase {
     protected fun <DIB> runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
+        finally: suspend () -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
         Database.init(TEST_URL)
@@ -130,6 +131,7 @@ abstract class ApplicationTestBase {
             }
         } finally {
             Database.clear()
+            finally()
         }
     }
 

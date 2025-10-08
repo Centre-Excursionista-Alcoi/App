@@ -30,6 +30,8 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.today
+import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -146,8 +148,8 @@ fun Route.inventoryRoutes() {
             }
         }
     )
-    post("inventory/items/{id}/lendings") {
-        val (session, item) = inventoryItemRequest() ?: return@post
+    post("inventory/lendings") {
+        val session = getUserSessionOrFail() ?: return@post
 
         val contentType = call.request.contentType()
         if (!contentType.match(ContentType.Application.FormUrlEncoded)) {
@@ -184,6 +186,13 @@ fun Route.inventoryRoutes() {
             return@post
         }
 
+        // Make sure dates are in the future
+        val today = today()
+        if (from.isBefore(today) || to.isBefore(today)) {
+            call.respondText("Lending dates must be in the future", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
         if (items == null) {
             call.respondText("Missing 'items' parameter", status = HttpStatusCode.BadRequest)
             return@post
@@ -206,7 +215,12 @@ fun Route.inventoryRoutes() {
             return@post
         }
 
-        // TODO: Make sure there are no conflicts with existing lendings
+        // Make sure there are no conflicts with existing lendings
+        val conflicts = Database { LendingEntity.all().conflictsWith(from, to, itemsList) }
+        if (conflicts) {
+            call.respondText("Lending conflicts with existing lending for one or more items", status = HttpStatusCode.Conflict)
+            return@post
+        }
 
         val lendingEntity = Database {
             transaction {
@@ -228,14 +242,14 @@ fun Route.inventoryRoutes() {
 
         call.response.header(
             HttpHeaders.Location,
-            "/inventory/items/${item.id.value}/lendings/${lendingEntity.id.value}"
+            "/inventory/lendings/${lendingEntity.id.value}"
         )
         call.respondText("Lending created", status = HttpStatusCode.Created)
     }
-    get("inventory/items/{id}/lendings/{lending-id}") {
-        inventoryItemRequest() ?: return@get
+    get("inventory/lendings/{id}") {
+        val session = getUserSessionOrFail() ?: return@get
 
-        val lendingId = call.parameters["lending-id"]?.toUUIDOrNull()
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
             call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
             return@get

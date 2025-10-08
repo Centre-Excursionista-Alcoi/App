@@ -12,10 +12,7 @@ import kotlin.test.*
 import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
-import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.ResourcesUtils
-import org.centrexcursionistalcoi.app.assertBody
-import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.*
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
@@ -283,25 +280,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/items/123/lendings", HttpMethod.Post)
-
-    @Test
-    fun test_create_lending_malformedId() = runApplicationTest(
-        shouldLogIn = LoginType.USER
-    ) {
-        client.post("/inventory/items/invalid-uuid/lendings").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
-        }
-    }
-
-    @Test
-    fun test_create_lending_itemNotFound() = runApplicationTest(
-        shouldLogIn = LoginType.USER
-    ) {
-        client.post("/inventory/items/00000000-0000-0000-0000-000000000000/lendings").apply {
-            assertStatusCode(HttpStatusCode.NotFound)
-        }
-    }
+    fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
 
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
     private fun JdbcTransaction.initializeItem(): InventoryItemEntity {
@@ -321,7 +300,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { initializeItem() },
     ) {
-        client.post("/inventory/items/$exampleItemId/lendings").apply {
+        client.post("/inventory/lendings").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
@@ -332,12 +311,12 @@ class TestInventoryRoutes : ApplicationTestBase() {
         databaseInitBlock = { initializeItem() },
     ) {
         // No parameters
-        client.submitForm("/inventory/items/$exampleItemId/lendings").apply {
+        client.submitForm("/inventory/lendings").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Missing 'from' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 // append("from", "2024-01-01")
                 append("to", "2024-01-10")
@@ -348,7 +327,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Malformed 'from' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "abc")
                 append("to", "2024-01-10")
@@ -359,7 +338,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Missing 'to' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "2024-01-01")
                 // append("to", "2024-01-10")
@@ -370,7 +349,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Malformed 'to' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "2024-01-10")
                 append("to", "abc")
@@ -381,7 +360,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Missing 'items' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "2024-01-01")
                 append("to", "2024-01-10")
@@ -392,7 +371,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Malformed 'items' parameter
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "2024-01-01")
                 append("to", "2024-01-10")
@@ -403,7 +382,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
         // Non-existing single item id
         client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
                 append("from", "2024-01-01")
                 append("to", "2024-01-10")
@@ -415,9 +394,43 @@ class TestInventoryRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_create_lending_datesInPast() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = { initializeItem() },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 8) }
+
+        // Both dates in past
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-04")
+                append("to", "2025-10-05")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+        // 'from' date in past
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-04")
+                append("to", "2025-10-10")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+
+    @Test
     fun test_create_lending_correct() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { initializeItem() },
+        finally = { today = { LocalDate.now() } },
     ) { context ->
         val item = context.dibResult
         assertNotNull(item)
@@ -425,12 +438,14 @@ class TestInventoryRoutes : ApplicationTestBase() {
         // The reference user must exist in the database
         Database { FakeUser.provideEntity() }
 
+        today = { LocalDate.of(2025, 10, 8) }
+
         // Single item
         val location = client.submitForm(
-            "/inventory/items/$exampleItemId/lendings",
+            "/inventory/lendings",
             parameters {
-                append("from", "2024-01-01")
-                append("to", "2024-01-10")
+                append("from", "2025-10-10")
+                append("to", "2025-10-11")
                 append("items", exampleItemId.toString())
                 append("notes", "These are some notes")
             }
@@ -439,7 +454,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
             val location = headers[HttpHeaders.Location]
             assertNotNull(location)
             assertTrue("Unexpected format for location: $location") {
-                location.matches("/inventory/items/$exampleItemId/lendings/[0-9a-f-]+".toRegex())
+                location.matches("/inventory/lendings/[0-9a-f-]+".toRegex())
             }
             location
         }
@@ -455,8 +470,8 @@ class TestInventoryRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer()) { lending ->
                 assertEquals(lendingId, lending.id.toJavaUuid())
                 assertEquals(FakeUser.SUB, lending.userSub)
-                assertEquals(LocalDate.of(2024, 1, 1), lending.from.toJavaLocalDate())
-                assertEquals(LocalDate.of(2024, 1, 10), lending.to.toJavaLocalDate())
+                assertEquals(LocalDate.of(2025, 10, 10), lending.from.toJavaLocalDate())
+                assertEquals(LocalDate.of(2025, 10, 11), lending.to.toJavaLocalDate())
                 assertEquals("These are some notes", lending.notes)
                 assertEquals(1, lending.items.size)
                 assertEquals(item.id.value, lending.items[0].id.toJavaUuid())
