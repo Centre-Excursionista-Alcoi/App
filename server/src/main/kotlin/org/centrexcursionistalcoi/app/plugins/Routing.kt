@@ -13,12 +13,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.centrexcursionistalcoi.app.routes.departmentsRoutes
-import org.centrexcursionistalcoi.app.routes.inventoryRoutes
-import org.centrexcursionistalcoi.app.routes.postsRoutes
-import org.centrexcursionistalcoi.app.routes.profileRoutes
-import org.centrexcursionistalcoi.app.routes.usersRoutes
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.routes.*
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 
 fun Application.configureRouting() {
     routing {
@@ -27,7 +23,7 @@ fun Application.configureRouting() {
         }
 
         get("/download/{uuid}") {
-            val uuid = call.parameters["uuid"]?.toUUID()
+            val uuid = call.parameters["uuid"]?.toUUIDOrNull()
             if (uuid == null) {
                 return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
             }

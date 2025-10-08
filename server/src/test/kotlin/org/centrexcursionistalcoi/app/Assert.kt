@@ -77,6 +77,7 @@ suspend fun HttpResponse.assertBody(block: suspend (body: String) -> Unit) {
 
 suspend fun <T> HttpResponse.assertBody(serializer: DeserializationStrategy<T>, block: suspend (body: T) -> Unit) {
     val body = bodyAsText()
+    println("Decoding JSON: $body")
     val json = json.decodeFromString(serializer, body)
     block(json)
 }

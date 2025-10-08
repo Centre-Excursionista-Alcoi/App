@@ -40,6 +40,7 @@ kotlin {
     kotlin {
         compilerOptions {
             optIn.add("kotlin.uuid.ExperimentalUuidApi")
+            optIn.add("kotlin.time.ExperimentalTime")
         }
     }
 }

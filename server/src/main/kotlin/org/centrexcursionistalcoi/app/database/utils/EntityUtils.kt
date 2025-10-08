@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database.utils
 
 import io.ktor.util.reflect.instanceOf
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.reflect.full.companionObjectInstance
 import kotlinx.serialization.KSerializer
@@ -10,6 +11,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
@@ -19,6 +21,7 @@ import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.dao.*
+import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer(), entity)
@@ -65,8 +68,9 @@ fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(): SerializationStr
 private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): SerializationStrategy<E> {
     return object : KSerializer<E> {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
+            println("Columns for $tableName:")
             for (column in columns) {
-                println("Column: ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
+                println("- ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
@@ -75,24 +79,30 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is DoubleColumnType -> element<Double>(column.name, isOptional = type.nullable)
                     is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
+                    is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
+            if (this@serializer is ViaLink<*, *, *, *>) {
+                val (serializer, nullable) = linkSerializer()
+                println("Link: $linkName, Serializer: ${serializer.descriptor.serialName}, Nullable: $nullable")
+                element(linkName, serializer.descriptor, isOptional = nullable)
+            }
         }
 
         override fun serialize(encoder: Encoder, value: E) = Database {
+            println("Encoding structure of ${value::class.simpleName} (${descriptor.serialName})...")
             encoder.encodeStructure(descriptor) {
                 for (column in columns) {
                     val columnName = column.name
                     val idx = descriptor.getElementIndex(columnName)
-                    val typeValue = value.run {
-                        this::class.members.find { it.name == columnName }
-                            ?.call(value)
-                    }
+                    val className = value::class.simpleName
+                    val members = value::class.members
+                    val typeValue = members.find { it.name == columnName }?.call(value)
                     if (typeValue == null) {
                         if (!column.columnType.nullable) {
-                            error("Could not find property or function named \"$columnName\" in ${value::class.simpleName}.\nMembers: ${value::class.members.joinToString { it.name }}")
+                            error("Could not find property or function named \"$columnName\" in ${className}.\nMembers: ${members.joinToString { it.name }}")
                         }
                         // Skip null values
                         continue
@@ -106,7 +116,8 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                                 is UIntEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 is ULongEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 is UUIDEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
-                                else -> error("Unsupported column type: ${column.columnType::class.simpleName}")
+                                is Entity<*> -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                else -> error("Unsupported entity ID column type: ${typeValue::class.simpleName}")
                             }
                         }
                         is StringColumnType -> {
@@ -127,10 +138,19 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         is InstantColumnType<*> -> {
                             encodeSerializableElement(descriptor, idx, InstantSerializer, typeValue as Instant)
                         }
+                        is JavaLocalDateColumnType -> {
+                            encodeStringElement(descriptor, idx, (typeValue as LocalDate).toString())
+                        }
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())
                         }
                         else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
+                    }
+                }
+                if (this@serializer is ViaLink<*, *, *, *>) { // ViaLink<ID, E, *, *>
+                    @Suppress("UNCHECKED_CAST")
+                    with(this@serializer as ViaLink<ID, E, *, *>) {
+                        encodeViaLink(descriptor, value)
                     }
                 }
             }
@@ -144,4 +164,19 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
 
 fun <T> SerializationStrategy<T>.list(): SerializationStrategy<List<T>> {
     return ListSerializer(this as KSerializer<T>)
+}
+
+context(viaLink: ViaLink<FromID, FromEntity, ToID, ToEntity>)
+private fun <FromID: Any, FromEntity: Entity<FromID>, ToID: Any, ToEntity: Entity<ToID>> CompositeEncoder.encodeViaLink(
+    descriptor: SerialDescriptor,
+    value: FromEntity,
+) {
+    val (serializer, nullable) = viaLink.linkSerializer()
+    val links = viaLink.links(value)
+    val idx = descriptor.getElementIndex(viaLink.linkName)
+    if (links.empty() && nullable) {
+        // Skip empty links if nullable
+        return
+    }
+    encodeSerializableElement(descriptor, idx, serializer.list(), links.toList())
 }

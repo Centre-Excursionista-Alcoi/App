@@ -13,5 +13,11 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var userSub by UserReferenceEntity referencedOn Lendings.userSub
     var timestamp by Lendings.timestamp
     var confirmed by Lendings.confirmed
+    var taken by Lendings.taken
+    var returned by Lendings.returned
+    var from by Lendings.from
+    var to by Lendings.to
+    var notes by Lendings.notes
+
     val items by InventoryItemEntity via LendingItems
 }
