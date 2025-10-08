@@ -16,23 +16,9 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
-import org.jetbrains.exposed.v1.core.BooleanColumnType
-import org.jetbrains.exposed.v1.core.DoubleColumnType
-import org.jetbrains.exposed.v1.core.EntityIDColumnType
-import org.jetbrains.exposed.v1.core.IntegerColumnType
-import org.jetbrains.exposed.v1.core.LongColumnType
-import org.jetbrains.exposed.v1.core.StringColumnType
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.UUIDColumnType
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
-import org.jetbrains.exposed.v1.dao.DaoEntityID
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.LongEntity
-import org.jetbrains.exposed.v1.dao.UIntEntity
-import org.jetbrains.exposed.v1.dao.ULongEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.*
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer(), entity)
@@ -80,6 +66,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
     return object : KSerializer<E> {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor(serialName) {
             for (column in columns) {
+                println("Column: ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
@@ -105,7 +92,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     }
                     if (typeValue == null) {
                         if (!column.columnType.nullable) {
-                            error("Could not find property or function named \"$columnName\" in ${this::class.simpleName}.\nMembers: ${this::class.members.joinToString { it.name }}")
+                            error("Could not find property or function named \"$columnName\" in ${value::class.simpleName}.\nMembers: ${value::class.members.joinToString { it.name }}")
                         }
                         // Skip null values
                         continue
