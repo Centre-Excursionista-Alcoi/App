@@ -21,8 +21,10 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.insert
 
 class TestInventoryRoutes : ApplicationTestBase() {
     @Test
@@ -425,6 +427,86 @@ class TestInventoryRoutes : ApplicationTestBase() {
         }
     }
 
+    @Test
+    fun test_create_lending_conflicts() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            initializeItem()
+
+            // Existing lending from 2025-10-10 to 2025-10-15
+            val user = FakeUser.provideEntity()
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.notes = "Existing lending"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+            }
+        },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 1) }
+
+        // New lending completely before existing one
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-05")
+                append("to", "2025-10-09")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Created)
+        }
+        // New lending starting on the day existing one starts
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-10")
+                append("to", "2025-10-12")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Conflict)
+        }
+        // New lending starting during existing one
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-12")
+                append("to", "2025-10-18")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Conflict)
+        }
+        // New lending ending on the day existing one ends
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-14")
+                append("to", "2025-10-15")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Conflict)
+        }
+        // New lending completely after existing one
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-16")
+                append("to", "2025-10-20")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.Created)
+        }
+    }
 
     @Test
     fun test_create_lending_correct() = runApplicationTest(
