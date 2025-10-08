@@ -233,7 +233,7 @@ fun Route.inventoryRoutes() {
         call.respondText("Lending created", status = HttpStatusCode.Created)
     }
     get("inventory/items/{id}/lendings/{lending-id}") {
-        val (_, item) = inventoryItemRequest() ?: return@get
+        inventoryItemRequest() ?: return@get
 
         val lendingId = call.parameters["lending-id"]?.toUUIDOrNull()
         if (lendingId == null) {
