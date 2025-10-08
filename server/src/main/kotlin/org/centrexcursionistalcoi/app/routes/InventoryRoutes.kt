@@ -25,6 +25,8 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -33,6 +35,7 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -246,6 +249,24 @@ fun Route.inventoryRoutes() {
         )
         call.respondText("Lending created", status = HttpStatusCode.Created)
     }
+    get("inventory/lendings") {
+        val session = getUserSessionOrFail() ?: return@get
+
+        if (session.isAdmin()) {
+            val allLendings = Database { LendingEntity.all().toList() }
+            call.respondText(ContentType.Application.Json) {
+                json.encodeEntityListToString(allLendings, LendingEntity)
+            }
+        } else {
+            val userLendings = Database {
+                val userRef = UserReferenceEntity.findById(session.sub)!!
+                LendingEntity.find { Lendings.userSub eq userRef.id }.toList()
+            }
+            call.respondText(ContentType.Application.Json) {
+                json.encodeEntityListToString(userLendings, LendingEntity)
+            }
+        }
+    }
     get("inventory/lendings/{id}") {
         val session = getUserSessionOrFail() ?: return@get
 
@@ -259,6 +280,15 @@ fun Route.inventoryRoutes() {
         if (lending == null) {
             call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
             return@get
+        }
+
+        if (!session.isAdmin()) {
+            val lendingUserSub = Database { lending.userSub.sub.value }
+            if (lendingUserSub != session.sub) {
+                // Return not found to avoid leaking existence of the lending
+                call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+                return@get
+            }
         }
 
         call.respondText(ContentType.Application.Json) {
