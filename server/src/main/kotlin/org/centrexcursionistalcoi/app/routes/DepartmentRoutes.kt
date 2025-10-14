@@ -25,6 +25,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
@@ -95,7 +96,8 @@ fun Route.departmentsRoutes() {
                     this.image = imageFile
                 }
             }
-        }
+        },
+        updater = UpdateDepartmentRequest.serializer()
     )
 
     // Allows a user to join a department
@@ -180,6 +182,5 @@ fun Route.departmentsRoutes() {
             member.confirmed = true
         }
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
-
     }
 }

@@ -3,11 +3,15 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -26,13 +30,15 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     @Test
-    fun test_create_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments", HttpMethod.Post)
+    fun test_create_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn_form("/departments")
 
     @Test
-    fun test_create_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/departments", HttpMethod.Post)
+    fun test_create_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin_form("/departments")
 
     @Test
     fun test_create_invalidContentType() = runApplicationTest(
@@ -125,6 +131,82 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                     assertNotNull(imageFile)
                     assertContentEquals(imageBytes, imageFile.data)
                 }
+            }
+        }
+    }
+
+
+    @Test
+    fun test_patch_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/123", HttpMethod.Patch, ContentType.Application.Json)
+
+    @Test
+    fun test_patch_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/departments/123", HttpMethod.Patch, ContentType.Application.Json)
+
+    @Test
+    fun test_patch_invalidContentType() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.patch("/departments/123") {
+            contentType(ContentType.Text.Plain)
+        }.apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_patch_empty() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.patch("/departments/123") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(UpdateDepartmentRequest.serializer(), UpdateDepartmentRequest())
+            )
+        }.apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_patch_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(123) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        val imageBytes = ResourcesUtils.bytesFromResource("/square.png")
+        val departmentLocation = client.patch("/departments/123") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(
+                    UpdateDepartmentRequest.serializer(),
+                    UpdateDepartmentRequest(
+                        displayName = "Test Department",
+                        image = imageBytes
+                    )
+                )
+            )
+        }.run {
+            assertStatusCode(HttpStatusCode.OK)
+            val location = headers[HttpHeaders.Location]
+            assertNotNull(location)
+            assertTrue { location.matches("/departments/\\d+".toRegex()) }
+            location
+        }
+        val departmentId = departmentLocation.substringAfterLast('/').toInt()
+        Database { DepartmentEntity.findById(departmentId) }.let { department ->
+            assertNotNull(department)
+            assertEquals("Test Department", department.displayName)
+            Database { department.image }.let { imageFile ->
+                assertNotNull(imageFile)
+                assertContentEquals(imageBytes, imageFile.data)
             }
         }
     }

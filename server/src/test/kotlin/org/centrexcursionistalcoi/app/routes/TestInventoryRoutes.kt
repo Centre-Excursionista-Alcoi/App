@@ -5,14 +5,26 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.http.*
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.parameters
 import java.time.LocalDate
 import java.util.UUID
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
-import org.centrexcursionistalcoi.app.*
+import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.ResourcesUtils
+import org.centrexcursionistalcoi.app.assertBody
+import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
@@ -23,16 +35,17 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.serialization.list
+import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 
 class TestInventoryRoutes : ApplicationTestBase() {
     @Test
-    fun test_create_type_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/types", HttpMethod.Post)
+    fun test_create_type_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn_form("/inventory/types")
 
     @Test
-    fun test_create_type_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/inventory/types", HttpMethod.Post)
+    fun test_create_type_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin_form("/inventory/types")
 
     @Test
     fun test_create_type_invalidContentType() = runApplicationTest(
@@ -175,10 +188,10 @@ class TestInventoryRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_create_item_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/items", HttpMethod.Post)
+    fun test_create_item_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn_form("/inventory/items")
 
     @Test
-    fun test_create_item_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/inventory/items", HttpMethod.Post)
+    fun test_create_item_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin_form("/inventory/items")
 
     @Test
     fun test_create_item_invalidContentType() = runApplicationTest(

@@ -38,7 +38,7 @@ class ApplicationTest: ApplicationTestBase() {
             module()
         }
         val response = client.get("/")
-        assertEquals(HttpStatusCode.OK, response.status)
+        response.assertStatusCode(HttpStatusCode.OK)
         assertEquals("Hello! The Centre Excursionista d'Alcoi API is running.", response.bodyAsText())
     }
 
@@ -56,15 +56,15 @@ class ApplicationTest: ApplicationTestBase() {
         assertNotNull(fileId)
 
         // unknown is not a valid UUID
-        assertEquals(HttpStatusCode.BadRequest, client.get("/download/unknown").status)
+        client.get("/download/unknown").assertStatusCode(HttpStatusCode.BadRequest)
 
         // non-existing UUID
-        assertEquals(HttpStatusCode.NotFound, client.get("/download/00000000-0000-0000-0000-000000000000").status)
+        client.get("/download/00000000-0000-0000-0000-000000000000").assertStatusCode(HttpStatusCode.NotFound)
 
         val rawFile = bytesFromResource("/square.png")
 
         client.get("/download/$fileId").let { response ->
-            assertEquals(HttpStatusCode.OK, response.status)
+            response.assertStatusCode(HttpStatusCode.OK)
             assertEquals(ContentType.Image.PNG, response.contentType())
             assertContentEquals(rawFile, response.bodyAsBytes())
         }
@@ -93,7 +93,7 @@ class ApplicationTest: ApplicationTestBase() {
         assertNotNull(departmentImageId)
 
         client.get("/departments").let { response ->
-            assertEquals(HttpStatusCode.OK, response.status)
+            response.assertStatusCode(HttpStatusCode.OK)
 
             val departments = response.bodyAsJson(JsonObject.serializer().list())
             departments[0].apply {
@@ -123,10 +123,10 @@ class ApplicationTest: ApplicationTestBase() {
         val department = context.dibResult
         assertNotNull(department)
 
-        assertEquals(HttpStatusCode.NotFound, client.get("/departments/123").status)
+        client.get("/departments/123").assertStatusCode(HttpStatusCode.NotFound)
 
         client.get("/departments/${department.id.value}").let { response ->
-            assertEquals(HttpStatusCode.OK, response.status)
+            response.assertStatusCode(HttpStatusCode.OK)
 
             val departmentResponse = response.bodyAsJson(JsonObject.serializer())
             assertEquals("Image Department", departmentResponse.getString("displayName"))
@@ -136,21 +136,24 @@ class ApplicationTest: ApplicationTestBase() {
 
     @Test
     fun testDepartmentCreate() = runApplicationTest { context ->
+        // Test missing content type
+        client.post("/departments").assertStatusCode(HttpStatusCode.BadRequest)
+
         // Test non-authorized access
-        assertEquals(HttpStatusCode.Unauthorized, client.post("/departments").status)
+        client.submitFormWithBinaryData("/departments", emptyList()).assertStatusCode(HttpStatusCode.Unauthorized)
 
         // Log in as fake user
         loginAsFakeUser()
 
         // Test authorized access, but not admin
-        assertEquals(HttpStatusCode.Forbidden, client.post("/departments").status)
+        client.submitFormWithBinaryData("/departments", emptyList()).assertStatusCode(HttpStatusCode.Forbidden)
 
         // Log in as fake admin user
         (context.cookiesStorage as AcceptAllCookiesStorage).clear()
         loginAsFakeAdminUser()
 
         // Test authorized access as admin, but missing displayName
-        assertEquals(HttpStatusCode.BadRequest, client.post("/departments").status)
+        client.submitFormWithBinaryData("/departments", emptyList()).assertStatusCode(HttpStatusCode.BadRequest)
 
         // Test authorized access as admin, with displayName
         val departmentId = client.submitFormWithBinaryData(
@@ -162,7 +165,7 @@ class ApplicationTest: ApplicationTestBase() {
                 }
             }
         ).let { response ->
-            assertEquals(HttpStatusCode.Created, response.status)
+            response.assertStatusCode(HttpStatusCode.Created)
             val location = response.headers[HttpHeaders.Location]
             assertNotNull(location, "Location header not found in response")
             val departmentId = location.substringAfterLast('/').toIntOrNull()
@@ -207,7 +210,7 @@ class ApplicationTest: ApplicationTestBase() {
     ) {
         // Test non-authorized access, with no members-only posts
         client.get("/posts").let { response ->
-            assertEquals(HttpStatusCode.OK, response.status)
+            response.assertStatusCode(HttpStatusCode.OK)
 
             // Entities cannot be deserialized, use JsonObject
             val posts = response.bodyAsJson(JsonObject.serializer().list())
@@ -224,7 +227,7 @@ class ApplicationTest: ApplicationTestBase() {
 
         // Test authorized access
         client.get("/posts").let { response ->
-            assertEquals(HttpStatusCode.OK, response.status)
+            response.assertStatusCode(HttpStatusCode.OK)
 
             val posts = response.bodyAsJson(JsonObject.serializer().list())
             assertEquals(2, posts.size)
