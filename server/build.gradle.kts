@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.ktor.client.contentNegotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.java)
+    implementation(libs.ktor.client.logging)
 
     // Ktor server
     implementation(libs.ktor.server.auth)
@@ -67,8 +68,12 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.sqlite)
 
+    testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
-    testImplementation(libs.kotlin.testJunit)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.register<JavaExec>("generateMigrationScript") {

@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app
 
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.setCookie
@@ -120,6 +122,9 @@ abstract class ApplicationTestBase {
                     }
                     install(HttpCookies) {
                         storage = cookiesStorage
+                    }
+                    install(Logging) {
+                        level = LogLevel.ALL
                     }
                 }
 
