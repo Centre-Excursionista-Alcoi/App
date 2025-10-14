@@ -6,7 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.sessions.*
+import io.ktor.server.sessions.SessionTransportTransformerEncrypt
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.get
+import io.ktor.server.sessions.sessions
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -39,6 +43,15 @@ data class UserSession(val sub: String, val username: String, val email: String,
             } else {
                 return session
             }
+        }
+
+        suspend fun RoutingContext.assertAdmin(): UserSession? {
+            val session = getUserSessionOrFail() ?: return null
+            if (!session.isAdmin()) {
+                call.respondText("You don't have permission to delete", status = HttpStatusCode.Forbidden)
+                return null
+            }
+            return session
         }
     }
 
