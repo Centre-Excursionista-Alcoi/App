@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.kover)
     application
 }
 
