@@ -10,7 +10,6 @@ import kotlin.time.toKotlinInstant
 import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toKotlinLocalDate
-import org.centrexcursionistalcoi.app.ApplicationTestBase.FakeUser
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
@@ -19,6 +18,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert

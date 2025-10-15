@@ -20,56 +20,19 @@ import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
-import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 abstract class ApplicationTestBase {
-
-    object FakeUser {
-        const val SUB = "test-user-id-123"
-        const val USERNAME = "user"
-        const val EMAIL = "user@example.com"
-        val GROUPS = listOf("user")
-
-        context(_: JdbcTransaction)
-        fun provideEntity(): UserReferenceEntity = UserReferenceEntity.new(SUB) {
-            username = USERNAME
-            email = EMAIL
-            groups = GROUPS
-        }
-    }
-
-    object FakeAdminUser {
-        const val SUB = "test-user-id-456"
-        const val USERNAME = "admin"
-        const val EMAIL = "admin@example.com"
-        val GROUPS = listOf(ADMIN_GROUP_NAME, "user")
-
-        context(_: JdbcTransaction)
-        fun provideEntity(): UserReferenceEntity = transaction {
-            UserReferenceEntity.new(SUB) {
-                username = USERNAME
-                email = EMAIL
-                groups = GROUPS
-            }
-        }
-    }
-
-    enum class LoginType {
-        NONE,
-        USER,
-        ADMIN
-    }
 
     fun runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
     ) = runApplicationTest(shouldLogIn, { }) { block(it) }
 
-    protected fun <DIB> runApplicationTest(
+    fun <DIB> runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
         finally: suspend () -> Unit = {},

@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.core.eq
 
 class TestProfileRoutes : ApplicationTestBase() {

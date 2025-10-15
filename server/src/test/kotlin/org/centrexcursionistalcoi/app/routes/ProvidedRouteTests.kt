@@ -4,15 +4,19 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.request
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.testing.ApplicationTestBuilder
 import java.lang.reflect.InvocationTargetException
+import java.util.UUID
 import kotlin.reflect.KCallable
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
@@ -26,16 +30,22 @@ import kotlin.uuid.toJavaUuid
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.ApplicationTestBase.LoginType
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
+import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
+import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
+import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntity
+import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -110,30 +120,6 @@ object ProvidedRouteTests {
         }
     }
 
-    data class TestCase(
-        val name: String,
-        val block: ApplicationTestBase.() -> Unit,
-        val skip: Boolean = false,
-        val before: (() -> Unit)? = null,
-        val after: (() -> Unit)? = null
-    ) {
-        infix fun skipIf(condition: Boolean): TestCase {
-            return this.copy(skip = condition)
-        }
-
-        infix fun before(block: () -> Unit): TestCase {
-            return this.copy(before = block)
-        }
-
-        infix fun after(block: () -> Unit): TestCase {
-            return this.copy(after = block)
-        }
-    }
-
-    infix fun String.runs(block: ApplicationTestBase.() -> Unit): TestCase {
-        return TestCase(this, block)
-    }
-
     private fun Collection<KCallable<*>>.call(name: String, vararg args: Any?): Any? {
         val callable = first { it.name == name }
         return try {
@@ -171,7 +157,7 @@ object ProvidedRouteTests {
     }
 
     context(_: JdbcTransaction)
-    private fun Any.populate(name: String, valueProvider: () -> Any) {
+    private fun Any.populate(name: String, valueProvider: () -> Any, foreignTypesAssociations: Map<String, EntityClass<*, *>>) {
         val memberProperty = this::class.memberProperties.firstOrNull { it.name == name }
         assertNotNull(memberProperty) { "Could not find \"$name\" in properties. List: ${this::class.memberProperties.joinToString()}" }
         assertInstanceOf<KMutableProperty<*>>(memberProperty, "Property $name is not mutable: $memberProperty")
@@ -193,6 +179,18 @@ object ProvidedRouteTests {
                     }
                     member.call(this, fileEntity)
                 }
+                is UUID -> @Suppress("UNCHECKED_CAST") if (this is ExposedEntity<*>) {
+                    this as ExposedEntity<UUID>
+
+                    val foreignEntityClass = foreignTypesAssociations[name] as EntityClass<UUID, ExposedEntity<UUID>>?
+                    checkNotNull(foreignEntityClass) { "Could not find a foreign type association for key $name" }
+
+                    val entity = foreignEntityClass.findById(value)
+                    checkNotNull(entity) { "Could not find a foreign type association for key $name" }
+                    member.call(this, entity)
+                } else {
+                    member.call(this, value)
+                }
                 else -> error("Type of $name not supported: ${value::class}")
             }
         } catch (e: IllegalArgumentException) {
@@ -208,12 +206,12 @@ object ProvidedRouteTests {
     }
 
     @OptIn(InternalSerializationApi::class)
-    context(base: ApplicationTestBase)
+    context(_: ApplicationTestBase)
     fun <EID: Any, EE: ExposedEntity<EID>, TID: Any, ET: Entity<TID>> runTestsOnRoute(
         title: String,
         baseUrl: String,
         listLoginType: LoginType = LoginType.USER,
-        creationLoginType: LoginType = LoginType.ADMIN,
+        modificationsLoginType: LoginType = LoginType.ADMIN,
         requiredCreationValues: Map<String, () -> Any>,
         optionalCreationValues: Map<String, () -> Any> = emptyMap(),
         locationRegex: Regex,
@@ -227,13 +225,165 @@ object ProvidedRouteTests {
          * this function should convert [java.util.UUID] to [kotlin.uuid.Uuid].
          */
         exposedIdTypeConverter: (TID) -> EID,
+
+        /**
+         * A provider that creates an example entity to be used in some endpoints that require an entity instance.
+         *
+         * It's guaranteed that this will only be called once per test run.
+         *
+         * Make sure only the entries in [requiredCreationValues] are populated, as the tests will
+         * check that optional values are not present unless explicitly specified.
+         */
+        stubEntityProvider: JdbcTransaction.() -> EE,
+
+        /**
+         * An ID that is guaranteed to not exist in the database.
+         *
+         * Used in tests that require a non-existing entity ID.
+         */
+        invalidEntityId: EID,
+
+        /**
+         * If this test requires some auxiliary entities (foreign keys, etc.), they can be created here.
+         */
+        auxiliaryEntitiesProvider: JdbcTransaction.() -> Unit = {},
+
+        /**
+         * If the entity being tested has foreign key references to other entities, they must be specified here.
+         *
+         * This is a map that relates the name of the property in the serializable entity to the [EntityClass] of the referenced entity.
+         */
+        foreignTypesAssociations: Map<String, EntityClass<*, *>> = emptyMap(),
+
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> {
+        val creationValues = requiredCreationValues + optionalCreationValues
+
+        fun fetchFromDatabaseAndCheckFields(
+            id: EID,
+            presentValues: Map<String, () -> Any> = emptyMap(),
+            absentValues: Map<String, () -> Any> = emptyMap(),
+            checkSpecificFieldPresent: Pair<String, () -> Any>? = null,
+        ) {
+            Database { entityClass.findById(id) }.let { entity ->
+                assertNotNull(entity)
+
+                // Get a list of all the fields of the entity
+                val members = entity::class.members
+                val names = members.map { it.name }.toSet()
+
+                fun <T> T.assertActual(name: String, expected: T) {
+                    when (this) {
+                        is FileEntity -> {
+                            assertInstanceOf<ByteArray>(expected, "Expected value for $name should be a ByteArray")
+                            val actualBytes = Database { data }
+                            assertContentEquals(expected, actualBytes, "Field $name contents does not match")
+                        }
+
+                        is ExposedEntity<*> -> {
+                            // If the actual value is an ExposedEntity, the expected value is a UUID matching its ID.
+                            assertInstanceOf<UUID>(expected, "Expected value for $name should be a UUID")
+                            val actualId = this.id.value
+                            assertEquals(expected, actualId, "Field $name ID does not match")
+                        }
+
+                        else -> {
+                            assertEquals(expected, this, "Field $name does not match")
+                        }
+                    }
+                }
+
+                // Check that all required fields are present
+                for ((name) in presentValues) {
+                    assertTrue { name in names }
+                    val expected = presentValues[name]?.invoke()
+                    val actual = members.call(name, entity)
+                    actual.assertActual(name, expected)
+                }
+                // Check that all optional fields are not present
+                for ((name) in absentValues) {
+                    assertTrue { name in names }
+                    val actual = members.call(name, entity)
+                    assertNull(actual, "Field $name should not be present")
+                }
+                // Check that the specific field is present
+                checkSpecificFieldPresent?.let { (name, expectedProvider) ->
+                    assertTrue { name in names }
+                    val expected = expectedProvider()
+                    println("Expected value for $name: $expected (${expected::class.simpleName})")
+                    val actual = members.call(name, entity)
+                    assertNotNull(actual, "Field $name should be present")
+                    actual.assertActual(name, expected)
+                }
+            }
+        }
+        suspend fun ApplicationTestBuilder.fetchFromServerAndCheckFields(
+            url: String,
+            id: EID,
+            presentValues: Map<String, () -> Any> = emptyMap(),
+            absentValues: Map<String, () -> Any> = emptyMap(),
+            checkSpecificFieldPresent: Pair<String, () -> Any>? = null,
+        ) {
+            client.get(url).apply {
+                assertStatusCode(HttpStatusCode.OK)
+                assertBody(dataEntitySerializer) { entity ->
+                    assertEquals(id, entity.id.let(exposedIdTypeConverter))
+
+                    // Get a list of all the fields of the entity
+                    val members = entity::class.members
+                    val fields = members.map { it.name }.toSet()
+
+                    fun Any.assertActual(name: String, expected: Any?) {
+                        val actual = this
+                        if (expected is ByteArray) {
+                            // If expected is a ByteArray, actual is a UUID matching a FileEntity.
+                            // Fetch the FileEntity from the database and compare its data.
+                            assertInstanceOf<Uuid>(actual, "Expected value for $name should be a Uuid")
+                            val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
+                            assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
+                            val actualBytes = Database { fileEntity.data }
+                            assertContentEquals(expected, actualBytes, "Field $name contents does not match")
+                        } else if (expected is UUID && actual is Uuid) {
+                            // If expected is a UUID and actual is a Uuid, compare their values
+                            assertEquals(expected, actual.toJavaUuid(), "Field $name ID does not match")
+                        } else {
+                            assertEquals(expected, actual, "Field $name does not match")
+                        }
+                    }
+
+                    // Check that all required fields are present
+                    for ((name, provider) in presentValues) {
+                        assertTrue { name in fields }
+                        val expected = provider()
+                        val actual = members.call(name, entity)
+                        assertNotNull(actual, "Field $name should be present")
+                        actual.assertActual(name, expected)
+                    }
+
+                    // Check that all optional fields are not present
+                    for ((name) in absentValues) {
+                        assertTrue { name in fields }
+                        val actual = members.call(name, entity)
+                        assertNull(actual, "Field $name should not be present")
+                    }
+
+                    // Check that the field is present and correct
+                    checkSpecificFieldPresent?.let { (name, provider) ->
+                        assertTrue { name in fields }
+                        val expected = provider()
+                        val actual = members.call(name, entity)
+                        assertNotNull(actual, "Field $name should be present")
+                        actual.assertActual(name, expected)
+                    }
+                }
+            }
+        }
+
         return listOf(
             "$title - Test fetching list when not logged in" runs {
                 test_notLoggedIn(baseUrl)
             } skipIf (listLoginType != LoginType.ADMIN),
-            "$title - Test fetching list" runs {
+            "$title - Test fetching list" withEntities auxiliaryEntitiesProvider runs {
                 Database.init(TEST_URL) // initialize the database
 
                 // Insert some data into the database to be fetched
@@ -241,7 +391,7 @@ object ProvidedRouteTests {
                 // Insert one without optional values
                 Database {
                     entities += entityClass.new {
-                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider)
+                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
                 // One with each optional value
@@ -249,17 +399,17 @@ object ProvidedRouteTests {
                     Database {
                         entities += entityClass.new {
                             // Fill all required values
-                            for ((rName, rValueProvider) in requiredCreationValues) populate(rName, rValueProvider)
+                            for ((rName, rValueProvider) in requiredCreationValues) populate(rName, rValueProvider, foreignTypesAssociations)
                             // Fill the optional value
-                            populate(name, valueProvider)
+                            populate(name, valueProvider, foreignTypesAssociations)
                         }
                     }
                 }
                 // And one with all optional values
                 Database {
                     entities += entityClass.new {
-                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider)
-                        for ((name, valueProvider) in optionalCreationValues) populate(name, valueProvider)
+                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in optionalCreationValues) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
 
@@ -280,16 +430,16 @@ object ProvidedRouteTests {
             },
             "$title - Test create not admin" runs {
                 test_loggedIn_notAdmin_form(baseUrl)
-            } skipIf (creationLoginType != LoginType.ADMIN),
+            } skipIf (modificationsLoginType != LoginType.ADMIN),
             "$title - Test create with invalid content type" runs {
-                runApplicationTest(shouldLogIn = creationLoginType) {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
                     client.post(baseUrl).apply {
                         assertStatusCode(HttpStatusCode.BadRequest)
                     }
                 }
             },
             "$title - Test create without data" runs {
-                runApplicationTest(shouldLogIn = creationLoginType) {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
                     client.submitFormWithBinaryData(baseUrl, formData = listOf()).apply {
                         assertStatusCode(HttpStatusCode.BadRequest)
                     }
@@ -298,7 +448,7 @@ object ProvidedRouteTests {
             // Generate tests for each required field
             *requiredCreationValues.map { (name) ->
                 "$title - Test create without $name" runs {
-                    runApplicationTest(shouldLogIn = creationLoginType) {
+                    runApplicationTest(shouldLogIn = modificationsLoginType) {
                         val data = formDataOf(requiredCreationValues.toList().filter { it.first != name })
                         client.submitFormWithBinaryData(baseUrl, formData = data).apply {
                             assertStatusCode(HttpStatusCode.BadRequest)
@@ -306,8 +456,8 @@ object ProvidedRouteTests {
                     }
                 }
             }.toTypedArray(),
-            "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" runs {
-                runApplicationTest(shouldLogIn = creationLoginType) {
+            "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider runs {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
                     val data = formDataOf(requiredCreationValues.toList())
                     val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
                         assertStatusCode(HttpStatusCode.Created)
@@ -317,57 +467,18 @@ object ProvidedRouteTests {
                         location
                     }
                     val id = location.substringAfterLast('/').let(idTypeConverter)
-                    Database { entityClass.findById(id) }.let { entity ->
-                        assertNotNull(entity)
-
-                        // Get a list of all the fields of the entity
-                        val members = entity::class.members
-                        val names = members.map { it.name }.toSet()
-
-                        // Check that all required fields are present
-                        for ((name) in requiredCreationValues) {
-                            assertTrue { name in names }
-                            val expected = requiredCreationValues[name]?.invoke()
-                            val actual = members.call(name, entity)
-                            assertEquals(expected, actual, "Field $name does not match")
-                        }
-                        // Check that all optional fields are not present
-                        for ((name) in optionalCreationValues) {
-                            assertTrue { name in names }
-                            val actual = members.call(name, entity)
-                            assertNull(actual, "Field $name should not be present")
-                        }
-                    }
-                    client.get(location).apply {
-                        assertStatusCode(HttpStatusCode.OK)
-                        assertBody(dataEntitySerializer) { entity ->
-                            assertEquals(id, entity.id.let(exposedIdTypeConverter))
-
-                            // Get a list of all the fields of the entity
-                            val members = entity::class.members
-                            val fields = members.map { it.name }.toSet()
-
-                            // Check that all required fields are present
-                            for ((name) in requiredCreationValues) {
-                                assertTrue { name in fields }
-                                val expected = requiredCreationValues[name]?.invoke()
-                                val actual = members.first { it.name == name }.call(entity)
-                                assertEquals(expected, actual, "Field $name does not match")
-                            }
-                            // Check that all optional fields are not present
-                            for ((name) in optionalCreationValues) {
-                                assertNull(
-                                    members.firstOrNull { it.name == name }?.call(entity),
-                                    "Field $name should not be present"
-                                )
-                            }
-                        }
-                    }
+                    fetchFromDatabaseAndCheckFields(id, requiredCreationValues, optionalCreationValues)
+                    fetchFromServerAndCheckFields(
+                        url = location,
+                        id = id,
+                        presentValues = requiredCreationValues,
+                        absentValues = optionalCreationValues
+                    )
                 }
             },
             *optionalCreationValues.map { (name) ->
-                "$title - Test create with optional parameter \"$name\"" runs {
-                    runApplicationTest(shouldLogIn = creationLoginType) {
+                "$title - Test create with optional parameter \"$name\"" withEntities auxiliaryEntitiesProvider runs {
+                    runApplicationTest(shouldLogIn = modificationsLoginType) {
                         val data = formDataOf(
                             requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
                         )
@@ -379,81 +490,129 @@ object ProvidedRouteTests {
                             location
                         }
                         val id = location.substringAfterLast('/').let(idTypeConverter)
-                        Database { entityClass.findById(id) }.let { entity ->
-                            assertNotNull(entity)
+                        fetchFromDatabaseAndCheckFields(
+                            id,
+                            requiredCreationValues,
+                            checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
+                        )
+                        fetchFromServerAndCheckFields(
+                            url = location,
+                            id = id,
+                            presentValues = requiredCreationValues,
+                            checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
+                        )
+                    }
+                }
+            }.toTypedArray(),
 
-                            // Get a list of all the fields of the entity
-                            val members = entity::class.members
-                            val names = members.map { it.name }.toSet()
-
-                            // Check that all required fields are present
-                            for ((name) in requiredCreationValues) {
-                                assertTrue { name in names }
-                                val expected = requiredCreationValues[name]?.invoke()
-                                val actual = members.call(name, entity)
-                                assertEquals(expected, actual, "Field $name does not match")
-                            }
-                            // Check that the field is present
-                            assertTrue { name in names }
-                            val expected = optionalCreationValues[name]!!.invoke()
-                            println("Expected value for $name: $expected (${expected::class.simpleName})")
-                            val actual = members.call(name, entity)
-                            assertNotNull(actual, "Field $name should be present")
-                            if (actual is FileEntity) {
-                                assertInstanceOf<ByteArray>(expected, "Expected value for $name should be a ByteArray")
-                                val actualBytes = Database { actual.data }
-                                assertContentEquals(expected, actualBytes, "Field $name contents does not match")
-                            } else {
-                                assertEquals(expected, actual, "Field $name does not match")
-                            }
-                        }
-                        client.get(location).apply {
-                            assertStatusCode(HttpStatusCode.OK)
-                            assertBody(dataEntitySerializer) { entity ->
-                                assertEquals(id, entity.id.let(exposedIdTypeConverter))
-
-                                // Get a list of all the fields of the entity
-                                val members = entity::class.members
-                                val fields = members.map { it.name }.toSet()
-
-                                // Check that all required fields are present
-                                for ((name) in requiredCreationValues) {
-                                    assertTrue { name in fields }
-                                    val expected = requiredCreationValues[name]?.invoke()
-                                    val actual = members.call(name, entity)
-                                    assertEquals(expected, actual, "Field $name does not match")
-                                }
-
-                                // Check that the field is present and correct
-                                assertTrue { name in fields }
-                                val expected = optionalCreationValues[name]?.invoke()
-                                val actual = members.call(name, entity)
-                                if (expected is ByteArray) {
-                                    // If expected is a ByteArray, actual is an UUID matching a FileEntity.
-                                    // Fetch the FileEntity from the database and compare its data.
-                                    assertInstanceOf<Uuid>(actual, "Expected value for $name should be a Uuid")
-                                    val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
-                                    assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
-                                    val actualBytes = Database { fileEntity.data }
-                                    assertContentEquals(expected, actualBytes, "Field $name contents does not match")
-                                } else {
-                                    assertEquals(expected, actual, "Field $name does not match")
-                                }
-                            }
+            "$title - Test patch when not logged in" runs {
+                test_notLoggedIn("$baseUrl/$invalidEntityId", HttpMethod.Patch, ContentType.Application.Json)
+            },
+            "$title - Test patch not admin" runs {
+                test_loggedIn_notAdmin("$baseUrl/$invalidEntityId", HttpMethod.Patch, ContentType.Application.Json)
+            } skipIf (modificationsLoginType != LoginType.ADMIN),
+            "$title - Test patch with invalid content type" runs {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    client.patch("$baseUrl/$invalidEntityId").apply {
+                        assertStatusCode(HttpStatusCode.BadRequest)
+                    }
+                }
+            },
+            "$title - Test patch on unknown entity" runs {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    client.patch("$baseUrl/$invalidEntityId") {
+                        contentType(ContentType.Application.Json)
+                        setBody("{}")
+                    }.apply {
+                        assertStatusCode(HttpStatusCode.NotFound)
+                    }
+                }
+            },
+            "$title - Test patch without data" withEntity stubEntityProvider runs {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    client.patch(baseUrl.withEntityId()) {
+                        contentType(ContentType.Application.Json)
+                        setBody("{}")
+                    }.apply {
+                        assertStatusCode(HttpStatusCode.BadRequest)
+                    }
+                }
+            },
+            // Generate tests for each required field
+            *requiredCreationValues.map { (name) ->
+                "$title - Test patch without $name" withEntity stubEntityProvider runs {
+                    runApplicationTest(shouldLogIn = modificationsLoginType) {
+                        val obj = JsonObject(
+                            requiredCreationValues
+                                .filter { it.key != name }
+                                .map { (name, provider) -> name to provider().toJsonElement() }
+                                .toMap()
+                        )
+                        client.patch(baseUrl.withEntityId()) {
+                            contentType(ContentType.Application.Json)
+                            setBody(json.encodeToString(obj))
+                        }.apply {
+                            assertStatusCode(HttpStatusCode.BadRequest)
                         }
                     }
                 }
-            }.toTypedArray()
-        ).mapNotNull { (name, block, skip, before, after) ->
-            if (skip) return@mapNotNull null
-            DynamicTest.dynamicTest(name) {
-                try {
-                    before?.invoke()
-                    block(base)
-                } finally {
-                    after?.invoke()
+            }.toTypedArray(),
+            *creationValues.map { entry ->
+                val (name, provider) = entry
+                "$title - Test patch $name" withEntity stubEntityProvider runs {
+                    runApplicationTest(shouldLogIn = modificationsLoginType) {
+                        val data = JsonObject(
+                            mapOf(name to provider().toJsonElement())
+                        )
+                        val location = client.patch(baseUrl.withEntityId()) {
+                            contentType(ContentType.Application.Json)
+                            setBody(json.encodeToString(data))
+                        }.run {
+                            assertStatusCode(HttpStatusCode.OK)
+                            val location = headers[HttpHeaders.Location]
+                            assertNotNull(location)
+                            assertTrue { location.matches(locationRegex) }
+                            location
+                        }
+                        val id = location.substringAfterLast('/').let(idTypeConverter)
+                        fetchFromDatabaseAndCheckFields(
+                            id,
+                            requiredCreationValues + entry.toPair(),
+                            optionalCreationValues - entry.key
+                        )
+                        fetchFromServerAndCheckFields(
+                            url = location,
+                            id = id,
+                            presentValues = requiredCreationValues + entry.toPair(),
+                            absentValues = optionalCreationValues - entry.key
+                        )
+                    }
                 }
-            }
-        }
+            }.toTypedArray(),
+            "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntity stubEntityProvider runs {
+                runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    val data = JsonObject(
+                        creationValues.map { (name, provider) -> name to provider().toJsonElement() }.toMap()
+                    )
+                    val location = client.patch(baseUrl.withEntityId()) {
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString(data))
+                    }.run {
+                        assertStatusCode(HttpStatusCode.OK)
+                        val location = headers[HttpHeaders.Location]
+                        assertNotNull(location)
+                        assertTrue { location.matches(locationRegex) }
+                        location
+                    }
+                    val id = location.substringAfterLast('/').let(idTypeConverter)
+                    fetchFromDatabaseAndCheckFields(id, creationValues)
+                    fetchFromServerAndCheckFields(
+                        url = location,
+                        id = id,
+                        presentValues = creationValues
+                    )
+                }
+            },
+        ).mapNotNull { it.createDynamicTest() }
     }
 }

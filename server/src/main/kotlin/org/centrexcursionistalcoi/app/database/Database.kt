@@ -27,6 +27,8 @@ object Database {
     @TestOnly
     const val TEST_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;"
 
+    fun isInitialized(): Boolean = database != null
+
     private fun connect(
         url: String,
         driver: String,
