@@ -56,6 +56,11 @@ inline fun <ID : Any, reified E : Entity<ID>, UER: UpdateEntityRequest> Route.pr
     entityClass: EntityClass<ID, E>,
     noinline idTypeConverter: (String) -> ID?,
     noinline creator: suspend (MultiPartData) -> E,
+    /**
+     * If null, the PATCH endpoint will not be created.
+     *
+     * Otherwise, the entity class must implement [EntityPatcher].
+     */
     updater: KSerializer<UER>,
     noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
 ) = provideEntityRoutes(base, entityClass, E::class as KClass<E>, idTypeConverter, creator, updater, listProvider)
@@ -67,6 +72,11 @@ fun <ID : Any, E : Entity<ID>, UER: UpdateEntityRequest> Route.provideEntityRout
     entityKClass: KClass<E>,
     idTypeConverter: (String) -> ID?,
     creator: suspend (MultiPartData) -> E,
+    /**
+     * If null, the PATCH endpoint will not be created.
+     *
+     * Otherwise, [entityKClass] must implement [EntityPatcher].
+     */
     updater: KSerializer<UER>? = null,
     listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
 ) {

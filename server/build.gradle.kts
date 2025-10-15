@@ -71,6 +71,7 @@ dependencies {
 
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
+    testImplementation(libs.mockk)
 }
 
 tasks.test {

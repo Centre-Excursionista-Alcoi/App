@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
@@ -107,7 +108,8 @@ fun Route.inventoryRoutes() {
                     this.image = imageFile
                 }
             }
-        }
+        },
+        updater = UpdateInventoryItemTypeRequest.serializer(),
     )
     provideEntityRoutes(
         base = "inventory/items",
