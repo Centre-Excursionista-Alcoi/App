@@ -40,8 +40,17 @@ data class TestCase<EID: Any, EE: ExposedEntity<EID>>(
     /**
      * @see Companion.withEntity
      */
-    infix fun <_EID: Any, _EE: ExposedEntity<_EID>> String.withEntity(provider: JdbcTransaction.() -> _EE): TestCase<_EID, _EE> {
-        return TestCase(this, entityProvider = provider)
+    infix fun <_EID: Any, _EE: ExposedEntity<_EID>> withEntity(entityProvider: JdbcTransaction.() -> _EE): TestCase<_EID, _EE> {
+        @Suppress("UNCHECKED_CAST")
+        return TestCase(
+            name,
+            block as (TestCaseContext<_EID, _EE>.() -> Unit)?,
+            skip,
+            before,
+            after,
+            entityProvider,
+            auxiliaryEntitiesProvider
+        )
     }
 
     infix fun withEntities(provider: JdbcTransaction.() -> Unit): TestCase<EID, EE> {

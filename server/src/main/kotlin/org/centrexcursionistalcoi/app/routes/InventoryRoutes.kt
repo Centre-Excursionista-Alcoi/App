@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
@@ -151,7 +152,8 @@ fun Route.inventoryRoutes() {
                     this.type = itemType
                 }
             }
-        }
+        },
+        updater = UpdateInventoryItemRequest.serializer(),
     )
     post("inventory/lendings") {
         val session = getUserSessionOrFail() ?: return@post

@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.utils
 
+import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonPrimitive
@@ -11,5 +12,6 @@ fun Any?.toJsonElement() = when (this) {
     is Boolean -> JsonPrimitive(this)
     is Number -> JsonPrimitive(this)
     is ByteArray -> JsonPrimitive(Base64.UrlSafe.encode(this))
+    is UUID -> JsonPrimitive(this.toString())
     else -> throw IllegalArgumentException("Cannot convert $this (${this::class.simpleName}) to JsonElement")
 }

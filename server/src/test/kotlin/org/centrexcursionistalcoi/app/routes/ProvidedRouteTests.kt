@@ -44,7 +44,6 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
-import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntity
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -528,7 +527,7 @@ object ProvidedRouteTests {
                     }
                 }
             },
-            "$title - Test patch without data" withEntity stubEntityProvider runs {
+            "$title - Test patch without data" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
                     client.patch(baseUrl.withEntityId()) {
                         contentType(ContentType.Application.Json)
@@ -540,7 +539,7 @@ object ProvidedRouteTests {
             },
             // Generate tests for each required field
             *requiredCreationValues.map { (name) ->
-                "$title - Test patch without $name" withEntity stubEntityProvider runs {
+                "$title - Test patch without $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType) {
                         val obj = JsonObject(
                             requiredCreationValues
@@ -559,7 +558,7 @@ object ProvidedRouteTests {
             }.toTypedArray(),
             *creationValues.map { entry ->
                 val (name, provider) = entry
-                "$title - Test patch $name" withEntity stubEntityProvider runs {
+                "$title - Test patch $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType) {
                         val data = JsonObject(
                             mapOf(name to provider().toJsonElement())
@@ -589,7 +588,7 @@ object ProvidedRouteTests {
                     }
                 }
             }.toTypedArray(),
-            "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntity stubEntityProvider runs {
+            "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
                     val data = JsonObject(
                         creationValues.map { (name, provider) -> name to provider().toJsonElement() }.toMap()
