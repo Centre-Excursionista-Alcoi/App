@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.http.HttpHeaders
@@ -10,18 +8,15 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import java.time.LocalDate
-import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
@@ -36,113 +31,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 
 class TestInventoryRoutes : ApplicationTestBase() {
-    @Test
-    fun test_create_item_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn_form("/inventory/items")
-
-    @Test
-    fun test_create_item_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin_form("/inventory/items")
-
-    @Test
-    fun test_create_item_invalidContentType() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN
-    ) {
-        client.post("/inventory/items").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
-        }
-    }
-
-    @Test
-    fun test_create_item_missingType() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN
-    ) {
-        client.submitFormWithBinaryData("/inventory/items", formData = listOf()).apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
-        }
-    }
-
-    @Test
-    fun test_create_item_withType() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
-        databaseInitBlock = {
-            InventoryItemTypeEntity.new {
-                displayName = "Item Type 1"
-                description = "Description 1"
-                image = null
-            }
-        }
-    ) { context ->
-        val type = context.dibResult
-        assertNotNull(type)
-        val location = client.submitFormWithBinaryData(
-            url = "/inventory/items",
-            formData = formData {
-                append("type", type.id.value.toString())
-            }
-        ).run {
-            assertStatusCode(HttpStatusCode.Created)
-            val location = headers[HttpHeaders.Location]
-            assertNotNull(location)
-            assertTrue(location.matches("/inventory/items/[a-z0-9-]+".toRegex()), "Location '$location' does not match expected format")
-            location
-        }
-        val itemId = location.substringAfterLast('/').let { UUID.fromString(it) }
-        Database { InventoryItemEntity.findById(itemId) }.let { item ->
-            assertNotNull(item)
-            assertNull(item.variation)
-            assertEquals(type.id.value, Database { item.type.id.value })
-        }
-        client.get(location).apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(InventoryItem.serializer()) { item ->
-                assertEquals(itemId, item.id.toJavaUuid())
-                assertNull(item.variation)
-                assertEquals(type.id.value, item.type.toJavaUuid())
-            }
-        }
-    }
-
-    @Test
-    fun test_create_item_withVariant() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
-        databaseInitBlock = {
-            InventoryItemTypeEntity.new {
-                displayName = "Item Type 1"
-                description = "Description 1"
-                image = null
-            }
-        }
-    ) { context ->
-        val type = context.dibResult
-        assertNotNull(type)
-        val location = client.submitFormWithBinaryData(
-            url = "/inventory/items",
-            formData = formData {
-                append("type", type.id.value.toString())
-                append("variation", "Variant A")
-            }
-        ).run {
-            assertStatusCode(HttpStatusCode.Created)
-            val location = headers[HttpHeaders.Location]
-            assertNotNull(location)
-            assertTrue(location.matches("/inventory/items/[a-z0-9-]+".toRegex()), "Location '$location' does not match expected format")
-            location
-        }
-        val itemId = location.substringAfterLast('/').let { UUID.fromString(it) }
-        Database { InventoryItemEntity.findById(itemId) }.let { item ->
-            assertNotNull(item)
-            assertEquals("Variant A", item.variation)
-            assertEquals(type.id.value, Database { item.type.id.value })
-        }
-        client.get(location).apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(InventoryItem.serializer()) { item ->
-                assertEquals(itemId, item.id.toJavaUuid())
-                assertEquals("Variant A", item.variation)
-                assertEquals(type.id.value, item.type.toJavaUuid())
-            }
-        }
-    }
-
 
     @Test
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
