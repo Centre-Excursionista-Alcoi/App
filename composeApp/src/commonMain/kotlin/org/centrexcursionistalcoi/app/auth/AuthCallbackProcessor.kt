@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.auth
 
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
@@ -46,7 +47,8 @@ object AuthCallbackProcessor {
                 .build()
         )
         if (!response.status.isSuccess()) {
-            throw IllegalStateException("Authentication failed: ${response.status}")
+            val body = response.bodyAsText()
+            throw IllegalStateException("Authentication failed (${response.status}): $body")
         }
 
         // Verify that the login was successful by fetching the profile endpoint
