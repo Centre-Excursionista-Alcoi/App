@@ -4,18 +4,28 @@ import io.github.aakira.napier.Napier
 import io.ktor.client.request.forms.formData
 import io.ktor.http.content.PartData
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.utils.isZero
 
 suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
     val dataMap = toMap().mapValues { (_, value) ->
         when (value) {
             is FileReference -> {
-                val id = id
-                if (id is Long && id <= 0L) {
-                    // New item, file is in temp/
-                    PlatformFileSystem.read("temp/${value.uuid}")
-                } else {
-                    PlatformFileSystem.read(value.uuid.toString())
+                when (val id = id) {
+                    is Long if id <= 0L -> {
+                        // New item, file is in memory
+                        InMemoryFileAllocator.delete(value.uuid)
+                    }
+
+                    is Uuid if id.isZero() -> {
+                        // New item, file is in memory
+                        InMemoryFileAllocator.delete(value.uuid)
+                    }
+
+                    else -> {
+                        PlatformFileSystem.read(value.uuid.toString())
+                    }
                 }
             }
             else -> value

@@ -17,7 +17,7 @@ data class InventoryItemType(
         "id" to id,
         "displayName" to displayName,
         "description" to description,
-        "image" to image,
+        "image" to image?.let { FileReference(it) },
     )
 
     override fun toString(): String = displayName
