@@ -5,19 +5,17 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
-import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
+import kotlinx.coroutines.sync.Mutex
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
@@ -29,7 +27,6 @@ import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
@@ -42,27 +39,10 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-private suspend fun RoutingContext.inventoryItemRequest(mustBeAdmin: Boolean = false): Pair<UserSession, InventoryItemEntity>? {
-    val session = getUserSessionOrFail() ?: return null
-    if (mustBeAdmin && !session.isAdmin()) {
-        call.respondText("Admin access required", status = HttpStatusCode.Forbidden)
-        return null
-    }
-
-    val itemId = call.parameters["id"]?.toUUIDOrNull()
-    if (itemId == null) {
-        call.respondText("Missing or malformed item id", status = HttpStatusCode.BadRequest)
-        return null
-    }
-
-    val item = Database { InventoryItemEntity.findById(itemId) }
-    if (item == null) {
-        call.respondText("Inventory item not found", status = HttpStatusCode.NotFound)
-        return null
-    }
-
-    return session to item
-}
+/**
+ * Mutex to ensure that lendings are created one at a time to avoid conflicts.
+ */
+private val lendingsMutex = Mutex()
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
@@ -155,14 +135,10 @@ fun Route.inventoryRoutes() {
         },
         updater = UpdateInventoryItemRequest.serializer(),
     )
-    post("inventory/lendings") {
-        val session = getUserSessionOrFail() ?: return@post
+    postWithLock("inventory/lendings", lendingsMutex) {
+        val session = getUserSessionOrFail() ?: return@postWithLock
 
-        val contentType = call.request.contentType()
-        if (!contentType.match(ContentType.Application.FormUrlEncoded)) {
-            call.respondText("Content-Type must be form url-encoded. It was: $contentType", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@postWithLock
 
         val parameters = call.receiveParameters()
         val fromText = parameters["from"]
@@ -177,7 +153,7 @@ fun Route.inventoryRoutes() {
         }
         if (from == null) {
             call.respondText("Missing or malformed 'from' date", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
         val to = try {
             toText?.let { LocalDate.parse(it) }
@@ -186,47 +162,47 @@ fun Route.inventoryRoutes() {
         }
         if (to == null) {
             call.respondText("Missing or malformed 'to' date", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
         if (to.isBefore(from)) {
             call.respondText("'to' date cannot be before 'from' date", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
 
         // Make sure dates are in the future
         val today = today()
         if (from.isBefore(today) || to.isBefore(today)) {
             call.respondText("Lending dates must be in the future", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
 
         if (items == null) {
             call.respondText("Missing 'items' parameter", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
         val itemsIdList = items.split(',').mapNotNull { it.toUUIDOrNull() }
         if (itemsIdList.isEmpty()) {
             call.respondText("No valid item IDs in 'items' parameter", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
 
         val userReferenceEntity = Database { UserReferenceEntity.findById(session.sub) }
         if (userReferenceEntity == null) {
             call.respondText("User reference not found", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
 
         val itemsList = Database { InventoryItemEntity.find { InventoryItems.id inList itemsIdList }.toList() }
         if (itemsList.isEmpty()) {
             call.respondText("No valid item IDs in 'items' parameter", status = HttpStatusCode.BadRequest)
-            return@post
+            return@postWithLock
         }
 
         // Make sure there are no conflicts with existing lendings
         val conflicts = Database { LendingEntity.all().conflictsWith(from, to, itemsList) }
         if (conflicts) {
             call.respondText("Lending conflicts with existing lending for one or more items", status = HttpStatusCode.Conflict)
-            return@post
+            return@postWithLock
         }
 
         val lendingEntity = Database {
