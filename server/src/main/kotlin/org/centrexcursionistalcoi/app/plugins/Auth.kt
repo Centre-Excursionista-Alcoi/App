@@ -37,7 +37,6 @@ import io.ktor.server.sessions.set
 import java.net.URI
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.jsonObject
 import org.centrexcursionistalcoi.app.auth.TokenResponse
@@ -47,6 +46,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.security.OIDCConfig
+import org.centrexcursionistalcoi.app.storage.InMemoryStoreMap
+import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 
 const val AUTH_PROVIDER_NAME = "oidc"
 
@@ -55,7 +56,7 @@ private val SCOPES = listOf("openid", "profile", "email", "groups").joinToString
 val authHttpClient = HttpClient(Java)
 
 // Simple in-memory store mapping state -> code_verifier (use Redis/DB for prod + TTL)
-val pkceStore = ConcurrentHashMap<String, String>()
+val pkceStore = RedisStoreMap.fromEnvOrNull() ?: InMemoryStoreMap()
 
 fun Application.configureAuth() {
     // Fetch JWKS from Authentik to verify tokens
@@ -82,7 +83,7 @@ fun Application.configureAuth() {
                             .withAudience(OIDCConfig.clientId)
                             .withIssuer(OIDCConfig.issuer)
                             .build()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }
@@ -192,7 +193,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             codeChallenge = generateCodeChallenge(codeVerifier)
 
             // Store verifier server-side mapped by "state"
-            pkceStore[state] = codeVerifier
+            pkceStore.put(state, codeVerifier)
         }
 
         val authorizeUrl = URLBuilder(OIDCConfig.authEndpoint).apply {

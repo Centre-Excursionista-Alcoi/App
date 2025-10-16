@@ -69,6 +69,9 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.sqlite)
 
+    // Redis
+    implementation(libs.kreds)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.mockk)
