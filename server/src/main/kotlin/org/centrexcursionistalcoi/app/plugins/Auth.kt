@@ -46,20 +46,9 @@ import org.centrexcursionistalcoi.app.auth.generateCodeVerifier
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.security.OIDCConfig
 
-const val AUTH_PROVIDER_NAME = "authentik-oauth"
-
-// TODO: Remove credentials from here
-const val OAUTH_CLIENT_ID = "ZvPaQu8nsU1fpaSkt3c4MPDFKue2RrpGrEdEbiTU"
-const val OAUTH_CLIENT_SECRET =
-    "pcG8cxsh80dN77jHTViyK6uanyEAtgOemtGgvWP8Jpva1PJqZGsLbGNp4d1tZPAzfWbgTcjnyS7BEqPeoftAgaQMO0ZDvFcYp8eMDxemVywVlLeDrbJEzWIYuGNUFjf0"
-
-private const val ISSUER = "https://auth.cea.arnaumora.com/application/o/cea-app/"
-private const val AUTH_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/authorize/"
-private const val TOKEN_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/token/"
-private const val USERINFO_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/userinfo/"
-private const val JWKS_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/cea-app/jwks/"
-private const val REDIRECT_URI = "http://localhost:8080/callback"
+const val AUTH_PROVIDER_NAME = "oidc"
 
 private val SCOPES = listOf("openid", "profile", "email", "groups").joinToString(" ")
 
@@ -70,7 +59,7 @@ val pkceStore = ConcurrentHashMap<String, String>()
 
 fun Application.configureAuth() {
     // Fetch JWKS from Authentik to verify tokens
-    val jwkProvider = JwkProviderBuilder(URI(JWKS_ENDPOINT).toURL())
+    val jwkProvider = JwkProviderBuilder(URI(OIDCConfig.jwksEndpoint).toURL())
         .cached(10, 24, TimeUnit.HOURS)
         .build()
 
@@ -90,8 +79,8 @@ fun Application.configureAuth() {
                         // Get the JWK and build verifier
                         val jwk = jwkProvider[kid]
                         JWT.require(Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null))
-                            .withAudience(OAUTH_CLIENT_ID)
-                            .withIssuer(ISSUER)
+                            .withAudience(OIDCConfig.clientId)
+                            .withIssuer(OIDCConfig.issuer)
                             .build()
                     } catch (e: Exception) {
                         null
@@ -99,7 +88,7 @@ fun Application.configureAuth() {
                 }
             }
             validate { credential ->
-                if (credential.payload.audience.contains(OAUTH_CLIENT_ID)) {
+                if (credential.payload.audience.contains(OIDCConfig.clientId)) {
                     JWTPrincipal(credential.payload)
                 } else null
             }
@@ -127,8 +116,8 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
         val kid = JWT.decode(token).keyId
         val jwk = jwkProvider.get(kid)
         val decodedToken = JWT.require(Algorithm.RSA256(jwk.publicKey as RSAPublicKey, null))
-            .withAudience(OAUTH_CLIENT_ID)
-            .withIssuer(ISSUER)
+            .withAudience(OIDCConfig.clientId)
+            .withIssuer(OIDCConfig.issuer)
             .build()
             .verify(token)
 
@@ -206,8 +195,8 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
             pkceStore[state] = codeVerifier
         }
 
-        val authorizeUrl = URLBuilder(AUTH_ENDPOINT).apply {
-            parameters.append("client_id", OAUTH_CLIENT_ID)
+        val authorizeUrl = URLBuilder(OIDCConfig.authEndpoint).apply {
+            parameters.append("client_id", OIDCConfig.clientId)
             parameters.append("response_type", "code")
             parameters.append("scope", SCOPES)
             parameters.append("redirect_uri", redirectUri)
@@ -223,7 +212,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
     get("/callback") {
         val query = call.request.queryParameters
         val code = query["code"]
-        val redirectUri = query["redirect_uri"] ?: REDIRECT_URI
+        val redirectUri = query["redirect_uri"] ?: OIDCConfig.redirectUri
 
         if (code.isNullOrBlank()) {
             call.respond(HttpStatusCode.BadRequest, "Missing code")
@@ -246,14 +235,14 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
 
         // Exchange code for tokens at the token endpoint
         val response = authHttpClient.submitForm(
-            url = TOKEN_ENDPOINT,
+            url = OIDCConfig.tokenEndpoint,
             formParameters = Parameters.build {
                 append("grant_type", "authorization_code")
                 append("code", code)
                 append("redirect_uri", redirectUri)
-                append("client_id", OAUTH_CLIENT_ID)
+                append("client_id", OIDCConfig.clientId)
                 // If your client is confidential (server-side), include secret:
-                append("client_secret", OAUTH_CLIENT_SECRET)
+                append("client_secret", OIDCConfig.clientSecret)
                 // PKCE verifier:
                 append("code_verifier", codeVerifier)
             }
