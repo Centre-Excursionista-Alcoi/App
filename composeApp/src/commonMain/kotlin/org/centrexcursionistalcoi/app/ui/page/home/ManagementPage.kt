@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,16 +32,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
+import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
@@ -194,6 +200,29 @@ fun InventoryItemsCard(
     var showingItemDetails by remember { mutableStateOf<InventoryItem?>(null) }
     showingItemDetails?.let { item ->
         QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
+    }
+
+    var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
+    LaunchedEffect(PlatformNFC.supportsNFC) {
+        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.supportsNFC}" }
+        if (PlatformNFC.supportsNFC) withContext(defaultAsyncDispatcher) {
+            while (true) {
+                val read = PlatformNFC.readNFC() ?: continue
+                try {
+                    highlightInventoryItemId = Uuid.parse(read)
+                    Napier.i { "Highlighting item: $highlightInventoryItemId" }
+                } catch (_: IllegalArgumentException) {
+                    // invalid UUID
+                }
+            }
+        }
+    }
+    // dismiss highlight after 3 seconds
+    LaunchedEffect(highlightInventoryItemId) {
+        if (highlightInventoryItemId != null) {
+            delay(3000)
+            highlightInventoryItemId = null
+        }
     }
 
     val groupedItems = remember(items, types) {

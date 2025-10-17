@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -24,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
@@ -43,6 +46,7 @@ fun <T> ListCard(
     emptyTextResource: StringResource,
     displayName: (T) -> String,
     modifier: Modifier = Modifier,
+    highlight: ((T) -> Boolean)? = null,
     onCreate: (() -> Unit)? = null,
     onEditRequested: ((T) -> Unit)? = null,
     onDelete: ((T) -> Job)? = null,
@@ -107,6 +111,10 @@ fun <T> ListCard(
             Text(stringResource(emptyTextResource))
         } else {
             for (item in list) {
+                val shouldHighlight = highlight?.invoke(item) == true
+                val containerColor by animateColorAsState(
+                    targetValue = if (shouldHighlight) MaterialTheme.colorScheme.primary else Color.Unspecified
+                )
                 ListItem(
                     headlineContent = { Text(displayName(item)) },
                     supportingContent = if (supportingContent != null) {
@@ -133,7 +141,8 @@ fun <T> ListCard(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = detailsDialogContent != null) { showingDetails = item }
+                        .clickable(enabled = detailsDialogContent != null) { showingDetails = item },
+                    colors = ListItemDefaults.colors(containerColor)
                 )
             }
         }

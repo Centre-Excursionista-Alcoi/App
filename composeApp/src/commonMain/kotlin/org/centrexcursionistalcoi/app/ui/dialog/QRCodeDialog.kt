@@ -2,32 +2,46 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.*
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.oned.BarcodeType
 import io.github.alexzhirkevich.qrose.oned.rememberBarcodePainter
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
 import io.ktor.http.ContentType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.jetbrains.compose.resources.stringResource
@@ -37,13 +51,50 @@ private val Code128Regex = Regex("^[\\x00-\\x7F]+$")
 
 @Composable
 fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
+    var writingNFC by remember { mutableStateOf(false) }
+    if (writingNFC) {
+        var job by remember { mutableStateOf<Job?>(null) }
+        LaunchedEffect(Unit) {
+            job = CoroutineScope(defaultAsyncDispatcher).launch {
+                PlatformNFC.writeNFC(value)
+                writingNFC = false
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = {
+                job?.cancel()
+                writingNFC = false
+            },
+            title = { Text("Waiting for NFC tag") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.Nfc, null, modifier = Modifier.size(64.dp).padding(16.dp))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        job?.cancel()
+                        writingNFC = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            },
+        )
+    }
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text("QR Code") },
         text = {
             Column {
                 val qrCodePainter = rememberQrCodePainter(value)
-                ImageDisplay(qrCodePainter, "QR Code")
+                ImageDisplay(qrCodePainter, "QR Code", imageModifier = Modifier.fillMaxWidth().aspectRatio(1f))
 
                 val barcodePainter = if (value.matches(Code39Regex)) {
                     rememberBarcodePainter(value, BarcodeType.Code39)
@@ -53,7 +104,13 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
                     null
                 }
                 if (barcodePainter != null) {
-                    ImageDisplay(barcodePainter, "Bar Code")
+                    ImageDisplay(barcodePainter, "Bar Code", imageModifier = Modifier.fillMaxWidth())
+                }
+
+                if (PlatformNFC.supportsNFC) {
+                    OutlinedButton(
+                        onClick = { writingNFC = true }
+                    ) { Text("Write NFC") }
                 }
             }
         },
@@ -66,14 +123,18 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-private fun ImageDisplay(painter: Painter, contentDescription: String? = null) {
+private fun ImageDisplay(
+    painter: Painter,
+    contentDescription: String? = null,
+    imageModifier: Modifier = Modifier,
+) {
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Image(
             painter,
             contentDescription,
-            modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 8.dp).padding(horizontal = 8.dp),
+            modifier = imageModifier.padding(top = 8.dp).padding(horizontal = 8.dp),
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             if (PlatformPrinter.supportsPrinting) {
