@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.ui.page.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +29,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,28 +60,36 @@ fun HomeMainPage(
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
 ) {
+    var showingDetails by remember { mutableStateOf<InventoryItemType?>(null) }
+    showingDetails?.let { type ->
+        InventoryItemTypeDetailsDialog(type) { showingDetails = null }
+    }
+
     AdaptiveVerticalGrid(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
-        item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                text = "Welcome back ${profile.username}!",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 24.dp)
-            )
+        if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
+            item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = "Welcome back ${profile.username}!",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 24.dp)
+                )
+            }
         }
 
-        if (!lendings.isNullOrEmpty()) {
+        val nonReturnedLendings = lendings?.filter { !it.isReturned() }
+        if (!nonReturnedLendings.isNullOrEmpty()) {
             stickyHeader {
                 Text(
                     text = "Your Lendings"
                 )
             }
-            items(lendings) { lending ->
+            items(nonReturnedLendings) { lending ->
                 OutlinedCard {
                     Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
                     Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
@@ -109,104 +119,237 @@ fun HomeMainPage(
         // TODO: Check whether the user has signed up for lending
         stickyHeader {
             Text(
-                text = "Material Lending"
+                text = "Material Lending",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             )
         }
-        item("lending_items", span = { GridItemSpan(maxLineSpan) }) {
-            var showingDetails by remember { mutableStateOf<InventoryItemType?>(null) }
-            showingDetails?.let { type ->
-                InventoryItemTypeDetailsDialog(type) { showingDetails = null }
+
+        if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
+            item("lending_items", span = { GridItemSpan(maxLineSpan) }) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val groupedItems = inventoryItems?.groupBy { it.type }
+
+                    items(
+                        items = groupedItems?.toList().orEmpty(),
+                        key = { (typeId) -> typeId }
+                    ) { (typeId, items) ->
+                        val type = inventoryItemTypes?.find { type -> type.id == typeId }
+                        val selectedAmount = shoppingList[typeId] ?: 0
+
+                        LendingItem_Large(
+                            type = type,
+                            items = items,
+                            selectedAmount = selectedAmount,
+                            onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
+                            onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+                            onClick = { showingDetails = type }
+                        )
+                    }
+                }
             }
+        } else {
+            val groupedItems = inventoryItems?.groupBy { it.type }?.toList()
 
-            LazyRow(
-                modifier = Modifier.fillMaxWidth()
+            items(
+                items = groupedItems?.toList().orEmpty(),
+                key = { (typeId) -> typeId }
+            ) { (typeId, items) ->
+                val type = inventoryItemTypes?.find { type -> type.id == typeId }
+                val selectedAmount = shoppingList[typeId] ?: 0
+
+                LendingItem_Small(
+                    type = type,
+                    items = items,
+                    selectedAmount = selectedAmount,
+                    onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
+                    onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+                    onClick = { showingDetails = type }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LendingItem_Small(
+    type: InventoryItemType?,
+    items: List<InventoryItem>,
+    selectedAmount: Int,
+    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onClick: () -> Unit
+) {
+    OutlinedCard(
+        enabled = type != null,
+        onClick = onClick,
+        modifier = Modifier.width(300.dp).padding(8.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center,
             ) {
-                val groupedItems = inventoryItems?.groupBy { it.type }
-
-                items(
-                    items = groupedItems?.toList().orEmpty(),
-                    key = { (typeId) -> typeId }
-                ) { (typeId, items) ->
-                    val type = inventoryItemTypes?.find { type -> type.id == typeId }
-                    val selectedAmount = shoppingList[typeId] ?: 0
-
-                    OutlinedCard(
-                        enabled = type != null,
-                        onClick = { showingDetails = type },
-                        modifier = Modifier.width(300.dp).padding(8.dp)
+                if (type == null) CircularProgressIndicator()
+                else {
+                    val imageFile by type.rememberImageFile()
+                    AsyncByteImage(
+                        bytes = imageFile,
+                        contentDescription = type.displayName,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.weight(3f)
+            ) {
+                Text(
+                    text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AnimatedVisibility(
+                        visible = selectedAmount > 0
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
-                                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
-                            contentAlignment = Alignment.Center,
+                        Surface(
+                            modifier = Modifier.padding(4.dp).zIndex(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         ) {
-                            if (selectedAmount > 0) {
-                                Surface(
-                                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp).zIndex(1f),
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                ) {
-                                    Text(
-                                        text = selectedAmount.toString(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                    )
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).zIndex(1f),
-                            ) {
-                                AnimatedVisibility(
-                                    visible = selectedAmount > 0 && type != null,
-                                    modifier = Modifier.padding(end = 4.dp),
-                                ) {
-                                    ElevatedButton(
-                                        contentPadding = PaddingValues(0.dp),
-                                        enabled = type != null,
-                                        onClick = { onRemoveItemFromShoppingListRequest(type!!) }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Remove,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        )
-                                    }
-                                }
-                                ElevatedButton(
-                                    contentPadding = PaddingValues(0.dp),
-                                    enabled = type != null && selectedAmount < items.size,
-                                    onClick = { onAddItemToShoppingListRequest(type!!) }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
-                                }
-                            }
-
-                            if (type == null) CircularProgressIndicator()
-                            else {
-                                val imageFile by type.rememberImageFile()
-                                AsyncByteImage(
-                                    bytes = imageFile,
-                                    contentDescription = type.displayName,
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
+                            Text(
+                                text = selectedAmount.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            )
                         }
-                        Text(
-                            text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(8.dp)
+                    }
+                    AnimatedVisibility(
+                        visible = selectedAmount > 0 && type != null,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        ElevatedButton(
+                            contentPadding = PaddingValues(0.dp),
+                            enabled = type != null,
+                            onClick = { onRemoveItemFromShoppingListRequest(type!!) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
+                    ElevatedButton(
+                        contentPadding = PaddingValues(0.dp),
+                        enabled = type != null && selectedAmount < items.size,
+                        onClick = { onAddItemToShoppingListRequest(type!!) },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LendingItem_Large(
+    type: InventoryItemType?,
+    items: List<InventoryItem>,
+    selectedAmount: Int,
+    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onClick: () -> Unit
+) {
+    OutlinedCard(
+        enabled = type != null,
+        onClick = onClick,
+        modifier = Modifier.width(300.dp).padding(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selectedAmount > 0) {
+                Surface(
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp).zIndex(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ) {
+                    Text(
+                        text = selectedAmount.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).zIndex(1f),
+            ) {
+                AnimatedVisibility(
+                    visible = selectedAmount > 0 && type != null,
+                    modifier = Modifier.padding(end = 4.dp),
+                ) {
+                    ElevatedButton(
+                        contentPadding = PaddingValues(0.dp),
+                        enabled = type != null,
+                        onClick = { onRemoveItemFromShoppingListRequest(type!!) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+                ElevatedButton(
+                    contentPadding = PaddingValues(0.dp),
+                    enabled = type != null && selectedAmount < items.size,
+                    onClick = { onAddItemToShoppingListRequest(type!!) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+
+            if (type == null) CircularProgressIndicator()
+            else {
+                val imageFile by type.rememberImageFile()
+                AsyncByteImage(
+                    bytes = imageFile,
+                    contentDescription = type.displayName,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Text(
+            text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(8.dp)
+        )
     }
 }

@@ -39,4 +39,8 @@ data class Lending(
         "notes" to notes,
         "items" to items,
     )
+
+    fun isTaken(): Boolean = confirmed && taken
+
+    fun isReturned(): Boolean = isTaken() && returned
 }

@@ -69,6 +69,8 @@
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
 
+    <string name="management_lendings">View Lendings</string>
+
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
     <string name="management_pending_pickup_lendings">Lendings pending pickup</string>
     <string name="management_pending_return_lendings">Lendings pending return</string>

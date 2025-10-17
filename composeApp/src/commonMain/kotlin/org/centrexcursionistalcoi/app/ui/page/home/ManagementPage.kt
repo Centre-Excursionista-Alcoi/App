@@ -100,7 +100,7 @@ fun ManagementPage(
         item(key = "lendings") {
             Button(
                 onClick = onManageLendingsRequested
-            ) { Text("Lendings") }
+            ) { Text(stringResource(Res.string.management_lendings)) }
         }
     }
 }

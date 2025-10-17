@@ -208,8 +208,8 @@ fun Route.inventoryRoutes() {
             return@postWithLock
         }
 
-        // Make sure there are no conflicts with existing lendings
-        val conflicts = Database { LendingEntity.all().conflictsWith(from, to, itemsList) }
+        // Make sure there are no conflicts with existing non-returned lendings
+        val conflicts = Database { LendingEntity.find { Lendings.returned eq false }.conflictsWith(from, to, itemsList) }
         if (conflicts) {
             call.respondText("Lending conflicts with existing lending for one or more items", status = HttpStatusCode.Conflict)
             return@postWithLock
