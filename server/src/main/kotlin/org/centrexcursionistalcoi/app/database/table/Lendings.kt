@@ -21,8 +21,14 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
     val to = date("to")
 
     val confirmed = bool("confirmed").default(false)
+
     val taken = bool("taken").default(false)
+    val givenBy = reference("givenBy", UserReferences).nullable()
+    val givenAt = timestamp("givenAt").nullable()
+
     val returned = bool("returned").default(false)
+    val receivedBy = reference("receivedBy", UserReferences).nullable()
+    val receivedAt = timestamp("receivedAt").nullable()
 
     val notes = text("notes").nullable()
 

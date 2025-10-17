@@ -5,13 +5,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +40,7 @@ import androidx.compose.ui.zIndex
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
@@ -49,6 +53,7 @@ fun HomeMainPage(
     profile: ProfileResponse,
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItems: List<InventoryItem>?,
+    lendings: List<Lending>?,
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -67,6 +72,40 @@ fun HomeMainPage(
                     .padding(top = 24.dp)
             )
         }
+
+        if (!lendings.isNullOrEmpty()) {
+            stickyHeader {
+                Text(
+                    text = "Your Lendings"
+                )
+            }
+            items(lendings) { lending ->
+                OutlinedCard {
+                    Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
+                    Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
+                    Text("Items:", style = MaterialTheme.typography.titleMedium)
+                    val items = lending.items.groupBy { it.type }
+                    for ((typeId, items) in items) {
+                        val type = inventoryItemTypes?.find { it.id == typeId }
+                        Text(
+                            text = "- ${type?.displayName ?: "N/A"} x${items.size}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    if (!lending.confirmed) {
+                        Text("Not confirmed")
+                    } else if (!lending.taken) {
+                        Text("Confirmed, not taken yet")
+                    } else if (!lending.returned) {
+                        Text("Not returned")
+                    } else {
+                        Text("Returned")
+                    }
+                }
+            }
+        }
+
         // TODO: Check whether the user has signed up for lending
         stickyHeader {
             Text(

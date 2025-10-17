@@ -10,8 +10,10 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.streams.asByteWriteChannel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
@@ -29,6 +31,7 @@ import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
@@ -281,6 +284,95 @@ fun Route.inventoryRoutes() {
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
         }
+    }
+    post("inventory/lendings/{id}/confirm") {
+        assertAdmin() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        Database {
+            lending.confirmed = true
+        }
+
+        call.respondText("Lending #$lendingId confirmed", status = HttpStatusCode.OK)
+    }
+    post("inventory/lendings/{id}/pickup") {
+        val session = assertAdmin() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (!lending.confirmed) {
+            call.respondText("Lending #$lendingId is not confirmed", status = HttpStatusCode.Conflict)
+            return@post
+        }
+
+        val userReference = Database { UserReferenceEntity.findById(session.sub) }
+        if (userReference == null) {
+            call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
+            return@post
+        }
+
+        Database {
+            lending.taken = true
+            lending.givenBy = userReference.id
+            lending.givenAt = Instant.now()
+        }
+
+        call.respondText("Lending #$lendingId picked up", status = HttpStatusCode.OK)
+    }
+    post("inventory/lendings/{id}/return") {
+        val session = assertAdmin() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (!lending.taken) {
+            call.respondText("Lending #$lendingId is not taken", status = HttpStatusCode.Conflict)
+            return@post
+        }
+
+        val userReference = Database { UserReferenceEntity.findById(session.sub) }
+        if (userReference == null) {
+            call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
+            return@post
+        }
+
+        Database {
+            lending.returned = true
+            lending.receivedBy = userReference.id
+            lending.receivedAt = Instant.now()
+        }
+
+        call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)
     }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
     // TODO: Add tests

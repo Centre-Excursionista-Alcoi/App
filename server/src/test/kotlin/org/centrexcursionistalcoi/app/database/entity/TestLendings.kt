@@ -18,7 +18,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -124,7 +124,11 @@ class TestLendings {
             timestamp = instant.toKotlinInstant(),
             confirmed = false,
             taken = false,
+            givenBy = null,
+            givenAt = null,
             returned = false,
+            receivedBy = null,
+            receivedAt = null,
             from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
             to = LocalDate.of(2025, 10, 9).toKotlinLocalDate(),
             notes = null,

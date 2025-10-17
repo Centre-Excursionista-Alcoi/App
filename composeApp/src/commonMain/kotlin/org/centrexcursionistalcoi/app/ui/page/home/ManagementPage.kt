@@ -1,17 +1,13 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
@@ -30,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -47,29 +42,33 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
-import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
-import org.jetbrains.compose.resources.StringResource
+import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ManagementPage(
     windowSizeClass: WindowSizeClass,
+
     departments: List<Department>?,
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
+
     users: List<UserData>?,
+
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
     onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
+
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (InventoryItem) -> Job,
+
     onManageLendingsRequested: () -> Unit,
 ) {
     AdaptiveVerticalGrid(
@@ -102,103 +101,6 @@ fun ManagementPage(
             Button(
                 onClick = onManageLendingsRequested
             ) { Text("Lendings") }
-        }
-    }
-}
-
-@Composable
-private fun <T> ListCard(
-    list: List<T>?,
-    titleResource: StringResource,
-    emptyTextResource: StringResource,
-    displayName: (T) -> String,
-    modifier: Modifier = Modifier,
-    onCreate: (() -> Unit)? = null,
-    onEditRequested: ((T) -> Unit)? = null,
-    onDelete: ((T) -> Job)? = null,
-    detailsDialogContent: (@Composable ColumnScope.(T) -> Unit)? = null,
-) {
-    var deleting by remember { mutableStateOf<T?>(null) }
-    if (onDelete != null) {
-        deleting?.let { item ->
-            DeleteDialog(
-                item,
-                { it.toString() },
-                { onDelete(item) }
-            ) { deleting = null }
-        }
-    }
-
-    var showingDetails by remember { mutableStateOf<T?>(null) }
-    if (detailsDialogContent != null) showingDetails?.let { item ->
-        AlertDialog(
-            onDismissRequest = { showingDetails = null },
-            dismissButton = if (onEditRequested != null) {
-                {
-                    TextButton(onClick = { onEditRequested(item) }) {
-                        Text(stringResource(Res.string.edit))
-                    }
-                }
-            } else null,
-            confirmButton = {
-                TextButton(onClick = { showingDetails = null }) {
-                    Text(stringResource(Res.string.close))
-                }
-            },
-            text = {
-                Column { detailsDialogContent(item) }
-            }
-        )
-    }
-
-    OutlinedCard(modifier) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(titleResource),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-            onCreate?.let { create ->
-                IconButton(
-                    onClick = create
-                ) { Icon(Icons.Default.Add, stringResource(Res.string.create)) }
-            }
-        }
-        if (list == null) {
-            Text(stringResource(Res.string.status_loading))
-        } else if (list.isEmpty()) {
-            Text(stringResource(emptyTextResource))
-        } else {
-            for (item in list) {
-                ListItem(
-                    headlineContent = { Text(displayName(item)) },
-                    trailingContent = if (onDelete != null) {
-                        {
-                            IconButton(
-                                onClick = { deleting = item }
-                            ) {
-                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
-                            }
-                        }
-                    } else null,
-                    leadingContent = {
-                        if (item is Department && item.image != null) {
-                            val imageFile by item.rememberImageFile()
-                            AsyncImage(
-                                model = imageFile,
-                                contentDescription = null,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = detailsDialogContent != null) { showingDetails = item }
-                )
-            }
         }
     }
 }

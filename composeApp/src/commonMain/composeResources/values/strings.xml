@@ -67,6 +67,11 @@
     <string name="management_no_users">No users</string>
     <string name="management_no_item_types">No item types</string>
     <string name="management_no_items">No items</string>
+    <string name="management_no_lendings">No lendings</string>
+
+    <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
+    <string name="management_pending_pickup_lendings">Lendings pending pickup</string>
+    <string name="management_pending_return_lendings">Lendings pending return</string>
 
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>

@@ -56,6 +56,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
@@ -81,6 +82,7 @@ fun HomeScreen(
     val users by model.users.collectAsState()
     val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
+    val lendings by model.lendings.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
 
@@ -90,6 +92,7 @@ fun HomeScreen(
             departments = departments,
             onCreateDepartment = model::createDepartment,
             onDeleteDepartment = model::delete,
+            lendings = lendings,
             onLendingSignUp = model::signUpForLending,
             onCreateInsurance = model::createInsurance,
             users = users,
@@ -134,6 +137,7 @@ private fun HomeScreenContent(
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
+    lendings: List<Lending>?,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -287,6 +291,7 @@ private fun HomeScreenContent(
                         departments,
                         onCreateDepartment,
                         onDeleteDepartment,
+                        lendings,
                         onLendingSignUp,
                         onCreateInsurance,
                         users,
@@ -315,6 +320,7 @@ private fun HomeScreenContent(
                         departments,
                         onCreateDepartment,
                         onDeleteDepartment,
+                        lendings,
                         onLendingSignUp,
                         onCreateInsurance,
                         users,
@@ -346,6 +352,7 @@ fun HomeScreenPagerContent(
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
+    lendings: List<Lending>?,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -373,6 +380,7 @@ fun HomeScreenPagerContent(
                 profile,
                 inventoryItemTypes,
                 inventoryItems,
+                lendings,
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,

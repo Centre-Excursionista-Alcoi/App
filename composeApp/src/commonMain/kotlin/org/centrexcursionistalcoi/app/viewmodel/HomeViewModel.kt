@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
@@ -37,6 +38,8 @@ class HomeViewModel: ViewModel() {
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
+
+    val lendings = LendingsRepository.selectAllAsFlow().stateInViewModel()
 
     /**
      * A map of InventoryItemType ID to amount in the shopping list.

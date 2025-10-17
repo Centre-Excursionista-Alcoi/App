@@ -11,12 +11,16 @@ CREATE TABLE Lendings (
     toDate TEXT AS LocalDate NOT NULL,
     confirmed INTEGER AS Boolean NOT NULL,
     taken INTEGER AS Boolean NOT NULL,
+    givenBy TEXT,
+    givenAt INTEGER AS Instant,
     returned INTEGER AS Boolean NOT NULL,
+    receivedBy TEXT,
+    receivedAt INTEGER AS Instant,
     notes TEXT
 );
 
 insert:
-INSERT INTO Lendings (id, userSub, timestamp, fromDate, toDate, confirmed, taken, returned, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Lendings (id, userSub, timestamp, fromDate, toDate, confirmed, taken, givenBy, givenAt, returned, receivedBy, receivedAt, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Lendings WHERE id = ?;
@@ -28,4 +32,4 @@ deleteById:
 DELETE FROM Lendings WHERE id = ?;
 
 update:
-UPDATE Lendings SET userSub = ?, timestamp = ?, fromDate = ?, toDate = ?, confirmed = ?, taken = ?, returned = ?, notes = ? WHERE id = ?;
+UPDATE Lendings SET userSub = ?, timestamp = ?, fromDate = ?, toDate = ?, confirmed = ?, taken = ?, givenBy = ?, givenAt = ?, returned = ?, receivedBy = ?, receivedAt = ?, notes = ? WHERE id = ?;

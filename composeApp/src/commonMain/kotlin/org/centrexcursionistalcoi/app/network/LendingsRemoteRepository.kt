@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.network
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
@@ -72,5 +73,53 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
                 }
             }
         }
+    }
+
+    /**
+     * Confirms a lending request by its ID.
+     * The logged-in user must have the necessary permissions to confirm lendings.
+     * @param lendingId The UUID of the lending to confirm.
+     * @throws IllegalArgumentException if the confirmation fails.
+     * @throws NoSuchElementException if the lending is not found after confirmation.
+     */
+    suspend fun confirm(lendingId: Uuid) {
+        val response = httpClient.post("inventory/lendings/$lendingId/confirm")
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to confirm lending (${response.status}): ${response.bodyAsText()}")
+        }
+        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after confirmation")
+        LendingsRepository.update(updatedLending)
+    }
+
+    /**
+     * Marks a lending as picked up by its ID.
+     * The logged-in user must have the necessary permissions to pickup lendings.
+     * @param lendingId The UUID of the lending to pickup.
+     * @throws IllegalArgumentException if the pickup fails.
+     * @throws NoSuchElementException if the lending is not found after pickup.
+     */
+    suspend fun pickup(lendingId: Uuid) {
+        val response = httpClient.post("inventory/lendings/$lendingId/pickup")
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to pickup lending (${response.status}): ${response.bodyAsText()}")
+        }
+        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after pickup")
+        LendingsRepository.update(updatedLending)
+    }
+
+    /**
+     * Marks a lending as returned by its ID.
+     * The logged-in user must have the necessary permissions to receive lendings.
+     * @param lendingId The UUID of the lending to receive.
+     * @throws IllegalArgumentException if the receive fails.
+     * @throws NoSuchElementException if the lending is not found after receive.
+     */
+    suspend fun `return`(lendingId: Uuid) {
+        val response = httpClient.post("inventory/lendings/$lendingId/return")
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to return lending (${response.status}): ${response.bodyAsText()}")
+        }
+        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after return")
+        LendingsRepository.update(updatedLending)
     }
 }
