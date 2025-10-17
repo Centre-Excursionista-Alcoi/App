@@ -14,6 +14,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.json
 
 object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
@@ -48,7 +49,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
      * @param to The end date of the allocation period.
      * @param amount The number of items to allocate.
      * @return A list of UUIDs representing the allocated inventory items.
-     * @throws IllegalStateException if there are not enough items available to allocate.
+     * @throws CannotAllocateEnoughItemsException if there are not enough items available to allocate.
      * @throws IllegalArgumentException for other allocation failures.
      */
     suspend fun allocate(typeId: Uuid, from: LocalDate, to: LocalDate, amount: Int): List<Uuid> {
@@ -66,13 +67,31 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
         } else {
             when (response.status) {
                 HttpStatusCode.Conflict -> {
-                    throw IllegalStateException("Not enough items available to allocate")
+                    val availableItemIds = response.headers["CEA-Available-Items"]
+                        ?.split(',')
+                        ?.map { Uuid.parse(it) }
+                    throw CannotAllocateEnoughItemsException(availableItemIds, amount)
                 }
                 else -> {
                     throw IllegalArgumentException("Failed to allocate items (${response.status}): ${response.bodyAsText()}")
                 }
             }
         }
+    }
+
+    /**
+     * Cancels a lending request by its ID.
+     * The logged-in user must be the owner of the lending.
+     * The lending must not have been picked up yet.
+     * @param lendingId The UUID of the lending to cancel.
+     * @throws IllegalArgumentException if the cancellation fails.
+     */
+    suspend fun cancel(lendingId: Uuid) {
+        val response = httpClient.post("inventory/lendings/$lendingId/cancel")
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to cancel lending (${response.status}): ${response.bodyAsText()}")
+        }
+        LendingsRepository.delete(lendingId)
     }
 
     /**

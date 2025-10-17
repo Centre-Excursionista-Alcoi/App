@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +58,7 @@ fun LendingCreationScreen(
     val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
     val from by model.from.collectAsState()
     val to by model.to.collectAsState()
+    val error by model.error.collectAsState()
 
     LendingCreationScreen(
         shoppingList = shoppingList,
@@ -67,6 +69,7 @@ fun LendingCreationScreen(
         onFromChange = model::setFrom,
         to = to,
         onToChange = model::setTo,
+        error = error,
         onCreateLendingRequest = {
             model.createLending(onLendingCreated)
         },
@@ -85,6 +88,7 @@ private fun LendingCreationScreen(
     onFromChange: (LocalDate) -> Unit,
     to: LocalDate?,
     onToChange: (LocalDate) -> Unit,
+    error: Throwable?,
     allocatedItems: List<InventoryItem>?,
     onCreateLendingRequest: () -> Unit,
     onBackRequested: () -> Unit,
@@ -186,6 +190,24 @@ private fun LendingCreationScreen(
                     Text(
                         text = "Once an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.",
                         modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                    )
+                }
+            }
+            if (error != null) item("error") {
+                OutlinedCard(
+                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                        Icon(Icons.Default.Error, null)
+                        Text("Error", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 8.dp))
+                    }
+                    Text(
+                        text = error.message ?: "An unknown error occurred while allocating items.",
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
             }

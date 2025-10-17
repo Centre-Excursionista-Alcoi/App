@@ -94,6 +94,7 @@ fun HomeScreen(
             onCreateDepartment = model::createDepartment,
             onDeleteDepartment = model::delete,
             lendings = lendings,
+            onCancelLendingRequest = model::cancelLending,
             onLendingSignUp = model::signUpForLending,
             onCreateInsurance = model::createInsurance,
             users = users,
@@ -139,6 +140,7 @@ private fun HomeScreenContent(
     onDeleteDepartment: (Department) -> Job,
 
     lendings: List<Lending>?,
+    onCancelLendingRequest: (Lending) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -293,6 +295,7 @@ private fun HomeScreenContent(
                         onCreateDepartment,
                         onDeleteDepartment,
                         lendings,
+                        onCancelLendingRequest,
                         onLendingSignUp,
                         onCreateInsurance,
                         users,
@@ -326,6 +329,7 @@ private fun HomeScreenContent(
                             onCreateDepartment,
                             onDeleteDepartment,
                             lendings,
+                            onCancelLendingRequest,
                             onLendingSignUp,
                             onCreateInsurance,
                             users,
@@ -359,6 +363,7 @@ fun HomeScreenPagerContent(
     onDeleteDepartment: (Department) -> Job,
 
     lendings: List<Lending>?,
+    onCancelLendingRequest: (Lending) -> Job,
     onLendingSignUp: LendingPageOnCreate,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -390,6 +395,7 @@ fun HomeScreenPagerContent(
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,
+                onCancelLendingRequest,
             )
 
             IDX_MANAGEMENT -> ManagementPage(

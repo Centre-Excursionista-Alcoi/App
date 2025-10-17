@@ -285,6 +285,32 @@ fun Route.inventoryRoutes() {
             json.encodeEntityToString(lending, LendingEntity)
         }
     }
+    post("inventory/lendings/{id}/cancel") {
+        val session = getUserSessionOrFail() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        // Find the lending by id, and make sure it belongs to the user
+        // Otherwise return 404 to avoid leaking existence of the lending
+        val lending = Database { LendingEntity.find { (Lendings.id eq lendingId) and (Lendings.userSub eq session.sub) }.firstOrNull() }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (lending.taken) {
+            call.respondText("Lending #$lendingId has already been picked up and cannot be cancelled", status = HttpStatusCode.Conflict)
+            return@post
+        }
+
+        Database { lending.delete() }
+
+        call.respondText("Lending #$lendingId cancelled", status = HttpStatusCode.NoContent)
+    }
     post("inventory/lendings/{id}/confirm") {
         assertAdmin() ?: return@post
 
@@ -445,6 +471,7 @@ fun Route.inventoryRoutes() {
             }.toList()
         }
         if (availableItems.size < amount) {
+            call.response.header("CEA-Available-Items", availableItems.joinToString(",") { it.id.value.toString() })
             call.respondText("Not enough available items of type #$typeId for the given date range", status = HttpStatusCode.Conflict)
             return@getWithLock
         }

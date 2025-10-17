@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 
@@ -57,8 +58,9 @@ class LendingCreationViewModel(
                 val items = LendingsRemoteRepository.allocate(typeId, from, to, amount)
                 Napier.d { "Items allocated. IDs: $items" }
                 allocatedItemsIds.addAll(items)
-            } catch (e: IllegalStateException) {
+            } catch (e: CannotAllocateEnoughItemsException) {
                 // Not enough items available
+                Napier.e(e) { "Not enough items available for the given date range." }
                 _error.emit(e)
                 _allocatedItems.emit(null)
                 return@launch

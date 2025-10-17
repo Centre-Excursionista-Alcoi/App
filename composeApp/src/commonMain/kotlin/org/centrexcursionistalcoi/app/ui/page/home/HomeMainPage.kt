@@ -41,12 +41,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
+import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 
@@ -60,10 +62,24 @@ fun HomeMainPage(
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onCancelLendingRequest: (Lending) -> Job,
 ) {
-    var showingDetails by remember { mutableStateOf<InventoryItemType?>(null) }
-    showingDetails?.let { type ->
-        InventoryItemTypeDetailsDialog(type) { showingDetails = null }
+    var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
+    showingItemTypeDetails?.let { type ->
+        InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
+    }
+
+    var showingLendingDetails by remember { mutableStateOf<Lending?>(null) }
+    showingLendingDetails?.let { lending ->
+        LendingDetailsDialog(
+            lending,
+            inventoryItemTypes.orEmpty(),
+            onCancelRequest = {
+                onCancelLendingRequest(lending).invokeOnCompletion {
+                    showingLendingDetails = null
+                }
+            }
+        ) { showingItemTypeDetails = null }
     }
 
     AdaptiveVerticalGrid(
@@ -91,7 +107,10 @@ fun HomeMainPage(
                 )
             }
             items(nonReturnedLendings) { lending ->
-                OutlinedCard {
+                OutlinedCard(
+                    onClick = { showingLendingDetails = lending },
+                    modifier = Modifier.padding(8.dp)
+                ) {
                     Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
                     Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
                     Text("Items:", style = MaterialTheme.typography.titleMedium)
@@ -146,7 +165,7 @@ fun HomeMainPage(
                             selectedAmount = selectedAmount,
                             onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
-                            onClick = { showingDetails = type }
+                            onClick = { showingItemTypeDetails = type }
                         )
                     }
                 }
@@ -167,7 +186,7 @@ fun HomeMainPage(
                     selectedAmount = selectedAmount,
                     onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
                     onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
-                    onClick = { showingDetails = type }
+                    onClick = { showingItemTypeDetails = type }
                 )
             }
         }

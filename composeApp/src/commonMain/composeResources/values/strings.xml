@@ -83,6 +83,10 @@
     <string name="inventory_item_type">Type: %1$s</string>
     <string name="inventory_item_amount">Amount: %1$d</string>
 
+    <string name="lending_details_title">Lending Details</string>
+    <string name="lending_details_cancel">Cancel Lending</string>
+    <string name="lending_details_items_title">Items:</string>
+
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_username">Username</string>
     <string name="personal_info_email">Email</string>

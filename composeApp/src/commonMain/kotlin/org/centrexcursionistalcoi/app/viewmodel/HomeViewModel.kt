@@ -12,6 +12,7 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class HomeViewModel: ViewModel() {
@@ -107,6 +109,10 @@ class HomeViewModel: ViewModel() {
             }
             _shoppingList.value = currentList
         }
+    }
+
+    fun cancelLending(lending: Lending) = viewModelScope.launch(defaultAsyncDispatcher) {
+        LendingsRemoteRepository.cancel(lending.id)
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
