@@ -1,15 +1,35 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -19,11 +39,19 @@ import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -37,6 +65,7 @@ fun ManagementPage(
     users: List<UserData>?,
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
@@ -57,6 +86,7 @@ fun ManagementPage(
             InventoryItemTypesCard(
                 inventoryItemTypes,
                 onCreateInventoryItemType,
+                onUpdateInventoryItemType,
                 onDeleteInventoryItemType
             )
         }
@@ -84,6 +114,7 @@ private fun <T> ListCard(
     displayName: (T) -> String,
     modifier: Modifier = Modifier,
     onCreate: (() -> Unit)? = null,
+    onEditRequested: ((T) -> Unit)? = null,
     onDelete: ((T) -> Job)? = null,
     detailsDialogContent: (@Composable ColumnScope.(T) -> Unit)? = null,
 ) {
@@ -102,6 +133,13 @@ private fun <T> ListCard(
     if (detailsDialogContent != null) showingDetails?.let { item ->
         AlertDialog(
             onDismissRequest = { showingDetails = null },
+            dismissButton = if (onEditRequested != null) {
+                {
+                    TextButton(onClick = { onEditRequested(item) }) {
+                        Text(stringResource(Res.string.edit))
+                    }
+                }
+            } else null,
             confirmButton = {
                 TextButton(onClick = { showingDetails = null }) {
                     Text(stringResource(Res.string.close))
@@ -191,11 +229,17 @@ fun DepartmentsCard(
 fun InventoryItemTypesCard(
     types: List<InventoryItemType>?,
     onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDelete: (InventoryItemType) -> Job,
 ) {
     var creating by remember { mutableStateOf(false) }
     if (creating) {
         CreateInventoryItemTypeDialog(onCreate) { creating = false }
+    }
+
+    var editing by remember { mutableStateOf<InventoryItemType?>(null) }
+    editing?.let { item ->
+        EditInventoryItemTypeDialog(item, onUpdate) { editing = null }
     }
 
     ListCard(
@@ -205,7 +249,31 @@ fun InventoryItemTypesCard(
         displayName = { it.displayName },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
-        onDelete = onDelete
+        onEditRequested = { editing = it },
+        onDelete = onDelete,
+        detailsDialogContent = { type ->
+            Text(
+                text = stringResource(Res.string.inventory_item_type, type.displayName),
+                style = MaterialTheme.typography.titleMedium
+            )
+            val description = type.description
+            if (!description.isNullOrBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            if (type.image != null) {
+                val imageFile by type.rememberImageFile()
+
+                AsyncByteImage(
+                    bytes = imageFile,
+                    contentType = type.displayName,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
+                )
+            }
+        },
     )
 }
 
@@ -256,9 +324,10 @@ fun InventoryItemsCard(
                     )
                 }
                 if (type.image != null) {
-                    AsyncImage(
-                        model = type.rememberImageFile(),
-                        contentDescription = null,
+                    val imageFile by type.rememberImageFile()
+                    AsyncByteImage(
+                        bytes = imageFile,
+                        contentType = type.displayName,
                         modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
                     )
                 }
@@ -300,75 +369,6 @@ fun UsersCard(users: List<UserData>?) {
         emptyTextResource = Res.string.management_no_departments,
         displayName = { it.username },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
-    )
-}
-
-@Composable
-fun CreateInventoryItemTypeDialog(
-    onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
-    onDismissRequested: () -> Unit
-) {
-    var isLoading by remember { mutableStateOf(false) }
-    var displayName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var image by remember { mutableStateOf<PlatformFile?>(null) }
-    val imagePicker = rememberFilePickerLauncher(
-        type = FileKitType.File("png", "jpg", "jpeg")
-    ) { file -> image = file }
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismissRequested() },
-        title = { Text("Create item type") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = displayName,
-                    onValueChange = { displayName = it },
-                    label = { Text("Display name") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    enabled = !isLoading,
-                    onClick = { imagePicker.launch() }
-                ) {
-                    image?.let {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                        )
-                    } ?: Text(
-                        "Select image (optional)",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = !isLoading && displayName.isNotBlank(),
-                onClick = {
-                    isLoading = true
-                    onCreate(displayName, description, image).invokeOnCompletion { onDismissRequested() }
-                }
-            ) { Text("Create") }
-        },
-        dismissButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = { onDismissRequested() }
-            ) { Text("Cancel") }
-        },
     )
 }
 

@@ -4,12 +4,15 @@ import androidx.annotation.VisibleForTesting
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 
 private fun createHttpClient(): HttpClient = HttpClient {
@@ -18,6 +21,9 @@ private fun createHttpClient(): HttpClient = HttpClient {
     }
     install(HttpCookies) {
         storage = SettingsCookiesStorage.Default
+    }
+    install(ContentNegotiation) {
+        json(json)
     }
     configureLogging()
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -12,7 +13,12 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.database.*
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
@@ -47,6 +53,11 @@ class HomeViewModel: ViewModel() {
     fun createInventoryItemType(displayName: String, description: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
         InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, image)
+    }
+
+    fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
+        val image = imageFile?.readBytes()
+        InventoryItemTypesRemoteRepository.update(id, displayName, description, image)
     }
 
     fun delete(item: InventoryItemType) = viewModelScope.launch(defaultAsyncDispatcher) {

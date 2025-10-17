@@ -19,6 +19,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
@@ -28,10 +29,10 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
-import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
     if (!call.request.contentType().match(contentType)) {
@@ -42,49 +43,49 @@ suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentT
 }
 
 @Suppress("USELESS_CAST")
-inline fun <ID : Any, reified E : Entity<ID>> Route.provideEntityRoutes(
+inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoutes(
     base: String,
-    entityClass: EntityClass<ID, E>,
-    noinline idTypeConverter: (String) -> ID?,
-    noinline creator: suspend (MultiPartData) -> E,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
-) = provideEntityRoutes<ID, E, UpdateEntityRequest>(base, entityClass, E::class as KClass<E>, idTypeConverter, creator, null, listProvider)
+    entityClass: EntityClass<EID, EE>,
+    noinline idTypeConverter: (String) -> EID?,
+    noinline creator: suspend (MultiPartData) -> EE,
+    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider)
 
 @Suppress("USELESS_CAST")
-inline fun <ID : Any, reified E : Entity<ID>, UER: UpdateEntityRequest> Route.provideEntityRoutes(
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
     base: String,
-    entityClass: EntityClass<ID, E>,
-    noinline idTypeConverter: (String) -> ID?,
-    noinline creator: suspend (MultiPartData) -> E,
+    entityClass: EntityClass<EID, EE>,
+    noinline idTypeConverter: (String) -> EID?,
+    noinline creator: suspend (MultiPartData) -> EE,
     /**
      * If null, the PATCH endpoint will not be created.
      *
      * Otherwise, the entity class must implement [EntityPatcher].
      */
     updater: KSerializer<UER>,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
-) = provideEntityRoutes(base, entityClass, E::class as KClass<E>, idTypeConverter, creator, updater, listProvider)
+    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider)
 
 @OptIn(InternalSerializationApi::class)
-fun <ID : Any, E : Entity<ID>, UER: UpdateEntityRequest> Route.provideEntityRoutes(
+fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
     base: String,
-    entityClass: EntityClass<ID, E>,
-    entityKClass: KClass<E>,
-    idTypeConverter: (String) -> ID?,
-    creator: suspend (MultiPartData) -> E,
+    entityClass: EntityClass<EID, EE>,
+    entityKClass: KClass<EE>,
+    idTypeConverter: (String) -> EID?,
+    creator: suspend (MultiPartData) -> EE,
     /**
      * If null, the PATCH endpoint will not be created.
      *
      * Otherwise, [entityKClass] must implement [EntityPatcher].
      */
     updater: KSerializer<UER>? = null,
-    listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<E> = { entityClass.all() }
+    listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
 
-    suspend fun RoutingContext.getId(): ID? {
+    suspend fun RoutingContext.getId(): EID? {
         val id = call.parameters["id"]?.let(idTypeConverter)
         if (id == null) {
             call.respondText("Malformed id", status = HttpStatusCode.BadRequest)
@@ -92,7 +93,7 @@ fun <ID : Any, E : Entity<ID>, UER: UpdateEntityRequest> Route.provideEntityRout
         }
         return id
     }
-    suspend fun RoutingContext.assertEntity(id: ID): E? {
+    suspend fun RoutingContext.assertEntity(id: EID): EE? {
         val item = Database { entityClass.findById(id) }
         if (item == null) {
             call.respondText("$base #$id not found", status = HttpStatusCode.NotFound)
@@ -164,7 +165,7 @@ fun <ID : Any, E : Entity<ID>, UER: UpdateEntityRequest> Route.provideEntityRout
             return@patch
         }
         @Suppress("UNCHECKED_CAST")
-        val patcher = item as EntityPatcher<UpdateEntityRequest>
+        val patcher = item as EntityPatcher<UER>
         Database { patcher.patch(request) }
 
         call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")

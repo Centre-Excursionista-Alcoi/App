@@ -18,6 +18,8 @@
     <string name="close">Close</string>
     <string name="create">Create</string>
     <string name="delete">Delete</string>
+    <string name="update">Update</string>
+    <string name="edit">Edit</string>
     <string name="qrcode">QR Code</string>
 
     <string name="status_loading">Loading...</string>
@@ -68,5 +70,10 @@
     <string name="inventory_item_type_not_found">Type not found</string>
     <string name="inventory_item_type">Type: %1$s</string>
     <string name="inventory_item_amount">Amount: %1$d</string>
+
+    <string name="form_display_name">Display Name</string>
+    <string name="form_description">Description</string>
+    <string name="form_select_image">Select Image</string>
+    <string name="form_label_optional">(optional)</string>
 
 </resources>

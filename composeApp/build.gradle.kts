@@ -53,6 +53,9 @@ kotlin {
             // Compose Navigation
             implementation(libs.androidx.navigation.compose)
 
+            // Ktor serialization
+            implementation(libs.ktor.serialization.kotlinxJson)
+
             // Ktor client
             implementation(libs.ktor.client.auth)
             implementation(libs.ktor.client.contentNegotiation)

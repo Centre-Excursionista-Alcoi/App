@@ -1,13 +1,14 @@
 package org.centrexcursionistalcoi.app.request
 
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 
 @Serializable
 data class UpdateDepartmentRequest(
     val displayName: String? = null,
     @Serializable(Base64Serializer::class) val image: ByteArray? = null,
-): UpdateEntityRequest {
+): UpdateEntityRequest<Int, Department> {
     override fun isEmpty(): Boolean {
         return displayName.isNullOrEmpty() && (image == null || image.isEmpty())
     }

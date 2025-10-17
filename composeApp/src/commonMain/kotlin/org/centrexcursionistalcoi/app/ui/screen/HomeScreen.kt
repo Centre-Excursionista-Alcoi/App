@@ -1,12 +1,32 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.SupervisorAccount
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -19,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
@@ -60,6 +81,7 @@ fun HomeScreen(
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             onCreateInventoryItemType = model::createInventoryItemType,
+            onUpdateInventoryItemType = model::updateInventoryItemType,
             onDeleteInventoryItemType = model::delete,
             inventoryItems = inventoryItems,
             onCreateInventoryItem = model::createInventoryItem,
@@ -91,6 +113,7 @@ private fun HomeScreenContent(
     users: List<UserData>?,
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
@@ -190,6 +213,7 @@ private fun HomeScreenContent(
                         users,
                         inventoryItemTypes,
                         onCreateInventoryItemType,
+                        onUpdateInventoryItemType,
                         onDeleteInventoryItemType,
                         inventoryItems,
                         onCreateInventoryItem,
@@ -214,6 +238,7 @@ private fun HomeScreenContent(
                         users,
                         inventoryItemTypes,
                         onCreateInventoryItemType,
+                        onUpdateInventoryItemType,
                         onDeleteInventoryItemType,
                         inventoryItems,
                         onCreateInventoryItem,
@@ -239,6 +264,7 @@ fun HomeScreenPagerContent(
     users: List<UserData>?,
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
     inventoryItems: List<InventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
@@ -266,6 +292,7 @@ fun HomeScreenPagerContent(
                 users,
                 inventoryItemTypes,
                 onCreateInventoryItemType,
+                onUpdateInventoryItemType,
                 onDeleteInventoryItemType,
                 inventoryItems,
                 onCreateInventoryItem,
