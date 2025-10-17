@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlin.uuid.Uuid
@@ -202,6 +203,7 @@ fun LendingItem_Small(
                         bytes = imageFile,
                         contentDescription = type.displayName,
                         modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
                     )
                 }
             }
@@ -343,6 +345,7 @@ fun LendingItem_Large(
                     bytes = imageFile,
                     contentDescription = type.displayName,
                     modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
             }
         }

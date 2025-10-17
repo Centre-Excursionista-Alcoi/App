@@ -34,6 +34,7 @@ import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -309,33 +310,38 @@ private fun HomeScreenContent(
                     )
                 }
             } else {
-                HorizontalPager(
-                    state = pager,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    HomeScreenPagerContent(
-                        page,
-                        profile,
-                        windowSizeClass,
-                        departments,
-                        onCreateDepartment,
-                        onDeleteDepartment,
-                        lendings,
-                        onLendingSignUp,
-                        onCreateInsurance,
-                        users,
-                        inventoryItemTypes,
-                        onCreateInventoryItemType,
-                        onUpdateInventoryItemType,
-                        onDeleteInventoryItemType,
-                        inventoryItems,
-                        onCreateInventoryItem,
-                        onDeleteInventoryItem,
-                        shoppingList,
-                        onAddItemToShoppingListRequest,
-                        onRemoveItemFromShoppingListRequest,
-                        onManageLendingsRequested,
-                    )
+                PullToRefreshBox(
+                    isRefreshing = isSyncing,
+                    onRefresh = onSyncRequested,
+                ) {
+                    HorizontalPager(
+                        state = pager,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        HomeScreenPagerContent(
+                            page,
+                            profile,
+                            windowSizeClass,
+                            departments,
+                            onCreateDepartment,
+                            onDeleteDepartment,
+                            lendings,
+                            onLendingSignUp,
+                            onCreateInsurance,
+                            users,
+                            inventoryItemTypes,
+                            onCreateInventoryItemType,
+                            onUpdateInventoryItemType,
+                            onDeleteInventoryItemType,
+                            inventoryItems,
+                            onCreateInventoryItem,
+                            onDeleteInventoryItem,
+                            shoppingList,
+                            onAddItemToShoppingListRequest,
+                            onRemoveItemFromShoppingListRequest,
+                            onManageLendingsRequested,
+                        )
+                    }
                 }
             }
         }

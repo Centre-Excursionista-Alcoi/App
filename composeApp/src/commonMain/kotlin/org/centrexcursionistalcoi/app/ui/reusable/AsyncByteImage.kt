@@ -15,12 +15,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import io.github.aakira.napier.Napier
 
 @Composable
-fun AsyncByteImage(bytes: ByteArray?, contentDescription: String? = null, modifier: Modifier = Modifier) {
+fun AsyncByteImage(
+    bytes: ByteArray?,
+    contentDescription: String? = null,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+) {
     Box(modifier) {
         bytes?.let {
             if (bytes.isEmpty()) {
@@ -64,6 +70,7 @@ fun AsyncByteImage(bytes: ByteArray?, contentDescription: String? = null, modifi
                             painter = painter,
                             contentDescription = contentDescription,
                             modifier = Modifier.fillMaxSize(),
+                            contentScale = contentScale,
                         )
                     }
                 }
