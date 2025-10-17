@@ -109,4 +109,19 @@ object OPFS {
         Napier.v { "Read ${result.byteLength} bytes from ${root.name}/$name" }
         return Int8Array(result).toByteArray()
     }
+
+    suspend fun exists(
+        root: FileSystemDirectoryHandle,
+        name: String
+    ): Boolean {
+        val entries = root.keys()
+        var entry: AsyncIteratorEntry<JsString> = entries.next().await()
+        while (!entry.done) {
+            if (entry.value == name.toJsString()) {
+                return true
+            }
+            entry = entries.next().await()
+        }
+        return false
+    }
 }

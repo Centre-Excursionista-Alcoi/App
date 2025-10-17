@@ -5,14 +5,17 @@
     <string name="admin">Admin</string>
 
     <string name="nav_home">Home</string>
-    <string name="nav_lending">Lending</string>
+    <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
+
+    <string name="force_sync">Force Sync</string>
 
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
     <string name="management_inventory_item_types">Item Types</string>
     <string name="management_inventory_items">Items</string>
 
+    <string name="back">Go Back</string>
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
@@ -20,6 +23,7 @@
     <string name="delete">Delete</string>
     <string name="update">Update</string>
     <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
     <string name="qrcode">QR Code</string>
 
     <string name="status_loading">Loading...</string>
@@ -67,13 +71,23 @@
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
 
+    <string name="inventory_item_type_title">Item Details</string>
     <string name="inventory_item_type_not_found">Type not found</string>
     <string name="inventory_item_type">Type: %1$s</string>
     <string name="inventory_item_amount">Amount: %1$d</string>
+
+    <string name="personal_info">Personal Information</string>
+    <string name="personal_info_username">Username</string>
+    <string name="personal_info_email">Email</string>
 
     <string name="form_display_name">Display Name</string>
     <string name="form_description">Description</string>
     <string name="form_select_image">Select Image</string>
     <string name="form_label_optional">(optional)</string>
+
+    <string name="shopping_list_selected">Selected (%1$d items)</string>
+    <string name="shopping_list_view">View Shopping List</string>
+    <string name="shopping_list_summary">Summary</string>
+    <string name="shopping_list_confirm">Confirm</string>
 
 </resources>

@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,9 +33,19 @@ suspend fun ImageFileContainer.writeImageFile(uuid: Uuid, channel: ByteReadChann
 
 suspend fun ImageFileContainer.imageFile(): ByteArray? = image?.let { uuid ->
     val path = imageFilePath(uuid)
+    if (!PlatformFileSystem.exists(path)) {
+        throw IllegalStateException("Image file not found at path: $path")
+    }
     return PlatformFileSystem.read(path)
 }
 
+/**
+ * A Composable function that loads the image file associated with this ImageFileContainer.
+ *
+ * It returns a State<ByteArray?> that will be updated once the image file is loaded.
+ *
+ * If the image file does not exist, the State will be updated to an empty ByteArray.
+ */
 @Composable
 @OptIn(DelicateCoroutinesApi::class)
 fun ImageFileContainer.rememberImageFile(
@@ -44,8 +55,13 @@ fun ImageFileContainer.rememberImageFile(
     val state = remember { mutableStateOf<ByteArray?>(null) }
     LaunchedEffect(Unit) {
         scope.launch(dispatcher) {
-            val bytes = imageFile()
-            withContext(Dispatchers.Main) { state.value = bytes }
+            try {
+                val bytes = imageFile()
+                withContext(Dispatchers.Main) { state.value = bytes }
+            } catch (e: IllegalStateException) {
+                Napier.w(e) { "Image file not found." }
+                withContext(Dispatchers.Main) { state.value = ByteArray(0) }
+            }
         }
     }
     return state

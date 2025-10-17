@@ -90,16 +90,26 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         val all = repository.selectAll()
         Napier.i { "There are ${all.size} $name" }
 
-        Napier.d { "Synchronizing ${all.size} files..." }
-        for (item in all) {
+        synchronizeFiles(all)
+    }
+
+    private suspend fun synchronizeFiles(entities: List<T>) {
+        Napier.d { "Synchronizing files for ${entities.size} entities..." }
+        for (item in entities) {
             if (item is FileContainer) {
-                Napier.d { "${item::class.simpleName}#${item.id} has ${item.files.size} files." }
-                for (file in item.files) {
-                    val uuid = file.value ?: continue
-                    Napier.d { "Downloading $uuid..." }
+                val itemName = "${item::class.simpleName}#${item.id}"
+                Napier.d { "$itemName has ${item.files.size} files." }
+                val files = item.files.toList()
+                for ((index, file) in files.withIndex()) {
+                    val (fileName, uuid) = file
+                    if (uuid == null) {
+                        Napier.w { "$itemName is not set for $fileName" }
+                        continue
+                    }
+                    Napier.d { "Downloading $uuid ($index / ${files.size})..." }
                     val channel = httpClient.get("/download/$uuid").let {
                         if (!it.status.isSuccess()) {
-                            Napier.e { "Failed to download file with ID $uuid for $name with ID ${item.id}. Status: ${it.status}" }
+                            Napier.e { "Failed to download file with ID $uuid for $itemName with ID ${item.id}. Status: ${it.status}" }
                             continue
                         }
                         it.bodyAsChannel()
@@ -113,8 +123,6 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
                     }
                     Napier.d { "File $uuid stored." }
                 }
-            } else {
-                Napier.w { "${item::class.simpleName} is not a FileContainer." }
             }
         }
     }
@@ -133,6 +141,8 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             val item = getUrl(location)
             checkNotNull(item) { "Could not retrieve the created item from the server." }
             repository.insert(item)
+
+            synchronizeFiles(listOf(item))
         } catch (e: IllegalStateException) {
             Napier.e { "${e.message} Synchronizing completely with server..." }
             synchronizeWithDatabase()
@@ -154,6 +164,8 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             val item = getUrl(location)
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
             repository.update(item)
+
+            synchronizeFiles(listOf(item))
         } else {
             Napier.e { "Failed to update $name with ID $id. Status: ${response.status}" }
             throw IllegalStateException("Failed to update $name with ID $id. Status: ${response.status}. Body: ${response.bodyAsText()}")

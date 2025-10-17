@@ -269,7 +269,7 @@ fun InventoryItemTypesCard(
 
                 AsyncByteImage(
                     bytes = imageFile,
-                    contentType = type.displayName,
+                    contentDescription = type.displayName,
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
                 )
             }
@@ -327,7 +327,7 @@ fun InventoryItemsCard(
                     val imageFile by type.rememberImageFile()
                     AsyncByteImage(
                         bytes = imageFile,
-                        contentType = type.displayName,
+                        contentDescription = type.displayName,
                         modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
                     )
                 }

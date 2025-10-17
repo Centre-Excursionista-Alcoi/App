@@ -32,7 +32,7 @@ fun CreateInventoryItemTypeDialog(
     var description by remember { mutableStateOf("") }
     var image by remember { mutableStateOf<PlatformFile?>(null) }
     val imagePicker = rememberFilePickerLauncher(
-        type = FileKitType.File("png", "jpg", "jpeg")
+        type = FileKitType.File("png", "jpg", "jpeg", "webp")
     ) { file -> image = file }
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },

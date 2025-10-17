@@ -20,9 +20,11 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
@@ -31,11 +33,16 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
+import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
+import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -229,8 +236,8 @@ fun Route.inventoryRoutes() {
         )
         call.respondText("Lending created", status = HttpStatusCode.Created)
     }
-    get("inventory/lendings") {
-        val session = getUserSessionOrFail() ?: return@get
+    getWithLock("inventory/lendings", lendingsMutex) {
+        val session = getUserSessionOrFail() ?: return@getWithLock
 
         if (session.isAdmin()) {
             val allLendings = Database { LendingEntity.all().toList() }
@@ -273,6 +280,86 @@ fun Route.inventoryRoutes() {
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
+        }
+    }
+    // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
+    // TODO: Add tests
+    getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
+        val session = getUserSessionOrFail() ?: return@getWithLock
+
+        val typeId = call.parameters["id"]?.toUUIDOrNull()
+        if (typeId == null) {
+            call.respondText("Malformed item type id", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+
+        val parameters = call.queryParameters
+        val fromText = parameters["from"]
+        val toText = parameters["to"]
+        val amount = parameters["amount"]?.toIntOrNull()
+
+        if (amount == null || amount <= 0) {
+            call.respondText("Missing or invalid 'amount' parameter", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+
+        val from = try {
+            fromText?.let { LocalDate.parse(it) }
+        } catch (_: DateTimeParseException) {
+            null
+        }
+        if (from == null) {
+            call.respondText("Missing or malformed 'from' date", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+        val to = try {
+            toText?.let { LocalDate.parse(it) }
+        } catch (_: DateTimeParseException) {
+            null
+        }
+        if (to == null) {
+            call.respondText("Missing or malformed 'to' date", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+
+        if (to.isBefore(from)) {
+            call.respondText("'to' date cannot be before 'from' date", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+
+        val today = today()
+        if (to.isBefore(today)) {
+            call.respondText("Lending dates must be in the future", status = HttpStatusCode.BadRequest)
+            return@getWithLock
+        }
+
+        // Make sure the user is signed up for lending
+        val userNotSignedUpForLending = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.empty() }
+        if (userNotSignedUpForLending) {
+            call.respondText("User not signed up for lending", status = HttpStatusCode.Forbidden)
+            return@getWithLock
+        }
+
+        val type = Database { InventoryItemTypeEntity.findById(typeId) }
+        if (type == null) {
+            call.respondText("Item type #$typeId not found", status = HttpStatusCode.NotFound)
+            return@getWithLock
+        }
+
+        val lendingEntitiesForRange = Database { LendingEntity.find { (Lendings.from greaterEq from) and (Lendings.to lessEq to) } }
+        val availableItems = Database {
+            InventoryItemEntity.find { InventoryItems.type eq typeId }.filter { item ->
+                !lendingEntitiesForRange.conflictsWith(from, to, listOf(item))
+            }.toList()
+        }
+        if (availableItems.size < amount) {
+            call.respondText("Not enough available items of type #$typeId for the given date range", status = HttpStatusCode.Conflict)
+            return@getWithLock
+        }
+
+        val allocatedItems = availableItems.take(amount).map { it.id.value }
+        call.respondText(ContentType.Application.Json) {
+            json.encodeToString(UUIDSerializer.list(), allocatedItems)
         }
     }
 }

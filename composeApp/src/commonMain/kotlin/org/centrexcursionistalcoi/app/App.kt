@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
@@ -17,6 +18,7 @@ import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
@@ -84,13 +86,36 @@ fun App(
             HomeScreen(
                 onManageLendingsRequested = {
                     navController.navigate(Destination.LendingsManagement)
-                }
+                },
+                onShoppingListConfirmed = {
+                    navController.navigate(Destination.LendingCreation(it))
+                },
             )
         }
+
         composable<Destination.LendingsManagement> {
             LendingsManagementScreen(
                 onBack = { navController.popBackStack() }
             )
+        }
+
+        composable<Destination.LendingCreation> { bse ->
+            val route = bse.toRoute<Destination.LendingCreation>()
+            val items = route.items
+
+            LaunchedEffect(items) {
+                // If there are no items, go back
+                if (items.isEmpty()) navController.popBackStack()
+            }
+
+            LendingCreationScreen(
+                shoppingList = items,
+                onLendingCreated = {
+                    navController.navigate(Destination.Home) {
+                        popUpTo<Destination.Home>()
+                    }
+                }
+            ) { navController.navigateUp() }
         }
     }
     LaunchedEffect(navController) {

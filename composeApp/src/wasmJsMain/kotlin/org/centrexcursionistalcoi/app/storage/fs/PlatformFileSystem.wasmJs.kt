@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.storage.fs
 
 import io.github.aakira.napier.Napier
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.await
 
 @OptIn(ExperimentalWasmJsInterop::class, ExperimentalUnsignedTypes::class)
@@ -25,10 +27,17 @@ actual object PlatformFileSystem {
         OPFS.writeFile(dir, path.split('/').last(), data)
     }
 
+    actual suspend fun write(path: String, channel: ByteReadChannel) = write(path, channel.toByteArray())
+
     actual suspend fun read(path: String): ByteArray {
         val dir = getDirectoryHandle(path)
         val contents = OPFS.readFile(dir, path.split('/').last())
         requireNotNull(contents) { "File $path not found" }
         return contents
+    }
+
+    actual suspend fun exists(path: String): Boolean {
+        val dir = getDirectoryHandle(path)
+        return OPFS.exists(dir, path.split('/').last())
     }
 }

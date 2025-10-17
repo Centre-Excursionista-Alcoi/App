@@ -38,4 +38,8 @@ actual object PlatformFileSystem {
             source.buffered().readByteArray()
         }
     }
+
+    actual suspend fun exists(path: String): Boolean {
+        return fs.exists(SystemDataPath / path)
+    }
 }

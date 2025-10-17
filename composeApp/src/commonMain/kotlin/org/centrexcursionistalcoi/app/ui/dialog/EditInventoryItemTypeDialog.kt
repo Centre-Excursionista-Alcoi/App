@@ -22,6 +22,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
@@ -38,7 +39,7 @@ fun EditInventoryItemTypeDialog(
     val imageBytes by item.rememberImageFile()
     var image by remember { mutableStateOf<PlatformFile?>(null) }
     val imagePicker = rememberFilePickerLauncher(
-        type = FileKitType.File("png", "jpg", "jpeg")
+        type = FileKitType.File("png", "jpg", "jpeg", "webp")
     ) { file -> image = file }
 
     val dirty = displayName != item.displayName || description != (item.description ?: "") || image != null
@@ -80,9 +81,15 @@ fun EditInventoryItemTypeDialog(
             enabled = !isLoading,
             onClick = { imagePicker.launch() }
         ) {
-            (image ?: imageBytes)?.let {
+            image?.let {
                 AsyncImage(
                     model = it,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                )
+            } ?: imageBytes?.let {
+                AsyncByteImage(
+                    bytes = it,
                     contentDescription = null,
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                 )

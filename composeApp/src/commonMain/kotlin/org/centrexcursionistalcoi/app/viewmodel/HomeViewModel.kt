@@ -16,7 +16,6 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
@@ -39,7 +38,11 @@ class HomeViewModel: ViewModel() {
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
-    val posts = PostsRepository.selectAllAsFlow().stateInViewModel()
+    /**
+     * A map of InventoryItemType ID to amount in the shopping list.
+     */
+    private val _shoppingList = MutableStateFlow(emptyMap<Uuid, Int>())
+    val shoppingList = _shoppingList.asStateFlow()
 
     fun createDepartment(displayName: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
@@ -80,6 +83,27 @@ class HomeViewModel: ViewModel() {
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
+    }
+
+    fun addItemToShoppingList(type: InventoryItemType) {
+        val currentList = _shoppingList.value.toMutableMap()
+        val currentAmount = currentList[type.id] ?: 0
+        currentList[type.id] = currentAmount + 1
+        _shoppingList.value = currentList
+    }
+
+    fun removeItemFromShoppingList(type: InventoryItemType) {
+        val currentList = _shoppingList.value.toMutableMap()
+        val currentAmount = currentList[type.id] ?: 0
+        if (currentAmount > 0) {
+            val newAmount = currentAmount - 1
+            if (newAmount <= 0) {
+                currentList.remove(type.id)
+            } else {
+                currentList[type.id] = newAmount
+            }
+            _shoppingList.value = currentList
+        }
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {

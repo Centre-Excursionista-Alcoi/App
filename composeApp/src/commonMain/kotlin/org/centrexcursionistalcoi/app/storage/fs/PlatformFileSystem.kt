@@ -8,4 +8,6 @@ expect object PlatformFileSystem {
     suspend fun write(path: String, channel: ByteReadChannel)
 
     suspend fun read(path: String): ByteArray
+
+    suspend fun exists(path: String): Boolean
 }
