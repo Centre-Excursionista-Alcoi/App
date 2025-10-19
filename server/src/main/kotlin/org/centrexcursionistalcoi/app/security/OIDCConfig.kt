@@ -2,17 +2,6 @@ package org.centrexcursionistalcoi.app.security
 
 import org.jetbrains.annotations.VisibleForTesting
 
-/*const val OAUTH_CLIENT_ID = "ZvPaQu8nsU1fpaSkt3c4MPDFKue2RrpGrEdEbiTU"
-const val OAUTH_CLIENT_SECRET =
-    "pcG8cxsh80dN77jHTViyK6uanyEAtgOemtGgvWP8Jpva1PJqZGsLbGNp4d1tZPAzfWbgTcjnyS7BEqPeoftAgaQMO0ZDvFcYp8eMDxemVywVlLeDrbJEzWIYuGNUFjf0"
-
-private const val ISSUER = "https://auth.cea.arnaumora.com/application/o/cea-app/"
-private const val AUTH_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/authorize/"
-private const val TOKEN_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/token/"
-private const val USERINFO_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/userinfo/"
-private const val JWKS_ENDPOINT = "https://auth.cea.arnaumora.com/application/o/cea-app/jwks/"
-private const val REDIRECT_URI = "http://localhost:8080/callback"*/
-
 object OIDCConfig {
     private val override = mutableMapOf<String, String>()
 
@@ -29,6 +18,9 @@ object OIDCConfig {
 
     val clientId get() = getenv("OAUTH_CLIENT_ID") ?: error("OAUTH_CLIENT_ID env var not set")
     val clientSecret get() = getenv("OAUTH_CLIENT_SECRET") ?: error("OAUTH_CLIENT_SECRET env var not set")
+
+    val authentikBase get() = getenv("OAUTH_AUTHENTIK_BASE") ?: error("OAUTH_AUTHENTIK_BASE env var not set")
+    val authentikToken get() = getenv("OAUTH_AUTHENTIK_TOKEN")
 
     val issuer get() = getenv("OAUTH_ISSUER") ?: error("OAUTH_ISSUER env var not set")
     val authEndpoint get() = getenv("OAUTH_AUTH_ENDPOINT") ?: error("OAUTH_AUTH_ENDPOINT env var not set")

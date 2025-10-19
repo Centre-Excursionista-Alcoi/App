@@ -23,9 +23,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.OIDCConfig
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 abstract class ApplicationTestBase {
@@ -42,6 +40,9 @@ abstract class ApplicationTestBase {
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
         Database.init(TEST_URL)
+
+        OIDCConfig.override("OAUTH_AUTHENTIK_BASE", "https://auth.example.com/")
+        OIDCConfig.override("OAUTH_AUTHENTIK_TOKEN", "test-token")
 
         OIDCConfig.override("OAUTH_CLIENT_ID", "ZvPaQu8nsU1fpaSkt3c4MPDFKue2RrpGrEdEbiTU")
         OIDCConfig.override("OAUTH_CLIENT_SECRET", "pcG88eMDxemVywVlLeDrbJEzWIYuGNUFjf0jf85d")

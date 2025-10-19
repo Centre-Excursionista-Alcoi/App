@@ -8,13 +8,24 @@ import com.auth0.jwt.exceptions.JWTDecodeException
 import com.auth0.jwt.interfaces.Claim
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.java.Java
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.accept
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.appendPathSegments
 import io.ktor.http.auth.HttpAuthHeader
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
@@ -22,6 +33,7 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.plugins.origin
+import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
@@ -29,6 +41,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.get
@@ -38,14 +51,20 @@ import java.net.URI
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import org.centrexcursionistalcoi.app.auth.TokenResponse
 import org.centrexcursionistalcoi.app.auth.generateCodeChallenge
 import org.centrexcursionistalcoi.app.auth.generateCodeVerifier
+import org.centrexcursionistalcoi.app.authentik.AuthentikUser
+import org.centrexcursionistalcoi.app.authentik.errors.AuthentikError
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.OIDCConfig
+import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.storage.InMemoryStoreMap
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 
@@ -53,10 +72,21 @@ const val AUTH_PROVIDER_NAME = "oidc"
 
 private val SCOPES = listOf("openid", "profile", "email", "groups").joinToString(" ")
 
-val authHttpClient = HttpClient(Java)
+private val httpClient = HttpClient(Java) {
+    install(ContentNegotiation) {
+        json(json)
+    }
+    install(Logging) {
+        level = LogLevel.HEADERS
+    }
+}
+
+fun getAuthHttpClient(): HttpClient = httpClient
 
 // Simple in-memory store mapping state -> code_verifier (use Redis/DB for prod + TTL)
 val pkceStore = RedisStoreMap.fromEnvOrNull() ?: InMemoryStoreMap()
+
+private val emailRegex = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$".toRegex()
 
 fun Application.configureAuth() {
     // Fetch JWKS from Authentik to verify tokens
@@ -235,7 +265,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
         }
 
         // Exchange code for tokens at the token endpoint
-        val response = authHttpClient.submitForm(
+        val response = getAuthHttpClient().submitForm(
             url = OIDCConfig.tokenEndpoint,
             formParameters = Parameters.build {
                 append("grant_type", "authorization_code")
@@ -263,5 +293,106 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
         }
 
         processJWT(jwkProvider, idToken)
+    }
+
+    // Allow user registration
+    post("/register") {
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+
+        val authentikToken = OIDCConfig.authentikToken
+        if (authentikToken == null) {
+            call.respondText("Authentik token not configured", status = HttpStatusCode.InternalServerError)
+            return@post
+        }
+
+        val parameters = call.receiveParameters()
+        val username = parameters["username"]?.trim()
+        val name = parameters["name"]?.trim()
+        val email = parameters["email"]?.trim()
+        val password = parameters["password"]?.trim()
+
+        if (username == null) return@post call.respondText("Missing username", status = HttpStatusCode.BadRequest)
+        if (name == null) return@post call.respondText("Missing name", status = HttpStatusCode.BadRequest)
+        if (email == null) return@post call.respondText("Missing email", status = HttpStatusCode.BadRequest)
+        if (password == null) return@post call.respondText("Missing password", status = HttpStatusCode.BadRequest)
+
+        // validate email
+        if (!emailRegex.matches(email)) {
+            call.respondText("Invalid email format", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        // validate username: length 3-30, only alphanumeric, underscores, hyphens
+        if (username.length !in 3..30 || !username.all { it.isLetterOrDigit() || it == '_' || it == '-' }) {
+            call.respondText("Invalid username format", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        // validate name: length 1-100
+        if (name.length !in 1..100) {
+            call.respondText("Invalid name format", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        // validate password
+        val hasLowerCase = password.find { it.isLowerCase() } != null
+        val hasUpperCase = password.find { it.isUpperCase() } != null
+        val hasNumber = password.find { it.isDigit() } != null
+        val hasMinLength = password.length >= 8
+        if (!hasLowerCase || !hasUpperCase || !hasNumber || !hasMinLength) {
+            call.respondText("Password must be at least 8 characters long and contain at least one letter and one number", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        // Create user in Authentik via API
+        val createUserUrl = URLBuilder(OIDCConfig.authentikBase)
+            .appendPathSegments("/api/v3/core/users/")
+            .build()
+        val response = getAuthHttpClient().post(createUserUrl) {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+            bearerAuth(authentikToken)
+            setBody(
+                JsonObject(
+                    mapOf(
+                        "username" to JsonPrimitive(username),
+                        "name" to JsonPrimitive(name),
+                        "email" to JsonPrimitive(email),
+                        "is_active" to JsonPrimitive(true),
+                        "path" to JsonPrimitive("users"),
+                        "type" to JsonPrimitive("internal"),
+                    )
+                )
+            )
+        }
+        if (!response.status.isSuccess()) {
+            val error = response.bodyAsJson(AuthentikError.serializer())
+            throw error.asThrowable()
+        }
+        val user = response.bodyAsJson(AuthentikUser.serializer())
+
+        // Set the password for the created user
+        val setPasswordUrl = URLBuilder(OIDCConfig.authentikBase)
+            .appendPathSegments("/api/v3/core/users", user.pk.toString(), "set_password/")
+            .build()
+        val pwdResponse = getAuthHttpClient().post(setPasswordUrl) {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
+            bearerAuth(authentikToken)
+            setBody(
+                JsonObject(
+                    mapOf(
+                        "password" to JsonPrimitive(password)
+                    )
+                )
+            )
+        }
+        if (!pwdResponse.status.isSuccess()) {
+            val error = pwdResponse.bodyAsJson(AuthentikError.serializer())
+            throw error.asThrowable()
+        }
+
+        // Success, respond accordingly
+        call.respondText("User '$username' created successfully", status = HttpStatusCode.Created)
     }
 }
