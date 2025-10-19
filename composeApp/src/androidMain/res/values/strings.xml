@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CEA-App</string>
+    <string name="app_name">CEA App</string>
 
     <string name="nfc_not_available">NFC is not available</string>
 </resources>

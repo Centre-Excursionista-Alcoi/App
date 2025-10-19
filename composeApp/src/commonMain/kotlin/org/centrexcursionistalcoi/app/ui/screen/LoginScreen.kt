@@ -1,7 +1,17 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,7 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cea_app.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun LoginScreen(
@@ -19,6 +33,17 @@ fun LoginScreen(
 ) {
     val isLoggingIn by model.isLoggingIn.collectAsState()
 
+    LoginScreen(
+        isLoggingIn = isLoggingIn,
+        onLoginRequest = { model.login().invokeOnCompletion { onLoginSuccess() } }
+    )
+}
+
+@Composable
+private fun LoginScreen(
+    isLoggingIn: Boolean,
+    onLoginRequest: () -> Unit,
+) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -41,12 +66,40 @@ fun LoginScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     } else {
+                        Image(
+                            painter = painterResource(resource = Res.drawable.banner),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .widthIn(max = 600.dp)
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+
+                        Text(
+                            text = stringResource(Res.string.login_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            text = stringResource(Res.string.login_message),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 8.dp),
+                            textAlign = TextAlign.Center,
+                        )
+
                         Button(
-                            onClick = { model.login().invokeOnCompletion { onLoginSuccess() } }
-                        ) { Text("Login") }
+                            onClick = onLoginRequest,
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) { Text(stringResource(Res.string.login_action)) }
                     }
                 }
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreen_Preview() {
+    LoginScreen(false, {})
 }

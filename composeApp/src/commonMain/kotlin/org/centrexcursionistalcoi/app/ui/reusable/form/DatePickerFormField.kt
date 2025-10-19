@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.ui.reusable.form
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -21,6 +22,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.clickInteractionSource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun DatePickerFormField(
     value: LocalDate?,
     onValueChange: (LocalDate) -> Unit,

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <resources>
-    <string name="app_name">ComposeApp</string>
+    <string name="app_name">CEA App</string>
 
     <string name="admin">Admin</string>
+
+    <string name="login_title">Welcome to CEA App</string>
+    <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
+    <string name="login_action">Login</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_profile">Profile</string>
