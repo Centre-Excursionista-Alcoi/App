@@ -24,6 +24,12 @@ services:
       OAUTH_REDIRECT_URI: http://localhost:8080/callback
       # Redis Configuration
       REDIS_ENDPOINT: redis:6379
+      # Email Configuration
+      EMAIL_FROM_ADDR: noreply@example.com
+      EMAIL_FROM_NAME: No Reply
+      EMAIL_REPLY_TO_ADDR: info@example.com
+      EMAIL_REPLY_TO_NAME: Support
+      MAILER_SEND_TOKEN: abc
     networks:
       - internal
     depends_on:
