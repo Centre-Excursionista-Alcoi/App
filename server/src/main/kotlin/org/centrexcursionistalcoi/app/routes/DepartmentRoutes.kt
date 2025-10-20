@@ -11,14 +11,11 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.utils.io.copyTo
-import io.ktor.utils.io.streams.asByteWriteChannel
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.json
@@ -71,7 +68,7 @@ fun Route.departmentsRoutes() {
                         if (partData.name == "image") {
                             image.contentType = partData.contentType
                             image.originalFileName = partData.originalFileName
-                            partData.provider().copyTo(image.dataStream.asByteWriteChannel())
+                            image.byteReadChannel = partData.provider()
                         }
                     }
                     else -> { /* nothing */ }
@@ -82,15 +79,10 @@ fun Route.departmentsRoutes() {
                 throw NullPointerException("Missing displayName")
             }
 
+            val imageFile = if (image.isNotEmpty()) {
+                image.newEntity()
+            } else null
             Database {
-                val imageFile = if (image.isNotEmpty()) {
-                    FileEntity.new {
-                        name = image.originalFileName ?: "unknown"
-                        type = image.contentType?.toString() ?: "application/octet-stream"
-                        data = image.dataStream.toByteArray()
-                    }
-                } else null
-
                 DepartmentEntity.new {
                     this.displayName = displayName
                     this.image = imageFile

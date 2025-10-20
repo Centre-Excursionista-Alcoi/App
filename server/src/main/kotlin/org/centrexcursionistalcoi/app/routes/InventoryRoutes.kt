@@ -5,14 +5,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.utils.io.copyTo
-import io.ktor.utils.io.streams.asByteWriteChannel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -77,7 +76,7 @@ fun Route.inventoryRoutes() {
                         if (partData.name == "image") {
                             image.contentType = partData.contentType
                             image.originalFileName = partData.originalFileName
-                            partData.provider().copyTo(image.dataStream.asByteWriteChannel())
+                            image.byteReadChannel = partData.provider()
                         }
                     }
                     else -> { /* nothing */ }
@@ -88,11 +87,10 @@ fun Route.inventoryRoutes() {
                 throw NullPointerException("Missing displayName")
             }
 
+            val imageFile = if (image.isNotEmpty()) {
+                image.newEntity()
+            } else null
             Database {
-                val imageFile = if (image.isNotEmpty()) {
-                    image.newEntity()
-                } else null
-
                 InventoryItemTypeEntity.new {
                     this.displayName = displayName
                     this.description = description
@@ -396,6 +394,63 @@ fun Route.inventoryRoutes() {
             lending.returned = true
             lending.receivedBy = userReference.id
             lending.receivedAt = Instant.now()
+        }
+
+        call.respondText("Lending #$lendingId memory submitted", status = HttpStatusCode.Created)
+    }
+    post("inventory/lendings/{id}/add_memory") {
+        assertContentType(ContentType.MultiPart.FormData)
+        val session = getUserSessionOrFail() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val file = FileRequestData()
+        val multiPartData = call.receiveMultipart()
+        multiPartData.forEachPart { part ->
+            when (part.name) {
+                "file" -> {
+                    if (part is PartData.FileItem) {
+                        file.contentType = part.contentType
+                        file.originalFileName = part.originalFileName
+                        file.byteReadChannel = part.provider()
+                    }
+                }
+                else -> { /* Ignore other parts */ }
+            }
+        }
+
+        if (file.isEmpty()) {
+            call.respondText("No file uploaded", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (!lending.returned) {
+            call.respondText("You cannot submit a memory until the material has been returned.", status = HttpStatusCode.Conflict)
+            return@post
+        }
+
+        val userReference = Database { UserReferenceEntity.findById(session.sub) }
+        if (userReference == null) {
+            call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
+            return@post
+        }
+
+        val documentEntity = file.newEntity()
+
+        Database {
+            lending.memorySubmitted = true
+            lending.memorySubmittedAt = Instant.now()
+            lending.memoryDocument = documentEntity
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)

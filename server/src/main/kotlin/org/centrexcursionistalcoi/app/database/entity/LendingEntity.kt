@@ -22,6 +22,11 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var receivedBy by Lendings.receivedBy
     var receivedAt by Lendings.receivedAt
 
+    var memorySubmitted by Lendings.memorySubmitted
+    var memorySubmittedAt by Lendings.memorySubmittedAt
+    var memoryDocument by FileEntity optionalReferencedOn Lendings.memoryDocument
+    var memoryReviewed by Lendings.memoryReviewed
+
     var from by Lendings.from
     var to by Lendings.to
     var notes by Lendings.notes
