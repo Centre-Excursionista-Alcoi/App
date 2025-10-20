@@ -20,11 +20,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import cea_app.composeapp.generated.resources.*
+import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItem
@@ -51,6 +56,7 @@ import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeMainPage(
@@ -59,6 +65,8 @@ fun HomeMainPage(
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItems: List<InventoryItem>?,
     lendings: List<Lending>?,
+    onLendingSignUpRequested: () -> Unit,
+    onMemorySubmitted: (Lending, PlatformFile) -> Job,
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -74,6 +82,7 @@ fun HomeMainPage(
         LendingDetailsDialog(
             lending,
             inventoryItemTypes.orEmpty(),
+            onMemorySubmitted = { onMemorySubmitted(lending, it) },
             onCancelRequest = {
                 onCancelLendingRequest(lending).invokeOnCompletion {
                     showingLendingDetails = null
@@ -138,6 +147,32 @@ fun HomeMainPage(
             }
         }
 
+        val noMemoryLendings = lendings?.filter { it.isReturned() && !it.memorySubmitted }
+        if (!noMemoryLendings.isNullOrEmpty()) {
+            stickyHeader {
+                Text(
+                    text = stringResource(Res.string.memory_pending),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                )
+            }
+            items(noMemoryLendings) { lending ->
+                OutlinedCard(
+                    onClick = { showingLendingDetails = lending },
+                    modifier = Modifier.padding(8.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+                ) {
+                    Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
+                    Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Memory Pending")
+                }
+            }
+        }
+
         // TODO: Check whether the user has signed up for lending
         stickyHeader {
             Text(
@@ -147,7 +182,26 @@ fun HomeMainPage(
             )
         }
 
-        if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
+        if (profile.lendingUser == null) {
+            item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
+                        Icon(Icons.Default.Badge, null, modifier = Modifier.padding(end = 16.dp))
+                        Text(
+                            text = stringResource(Res.string.lending_signup_required),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onLendingSignUpRequested,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp).padding(horizontal = 16.dp)
+                    ) { Text(stringResource(Res.string.lending_signup_action)) }
+                }
+            }
+        } else if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("lending_items", span = { GridItemSpan(maxLineSpan) }) {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth()

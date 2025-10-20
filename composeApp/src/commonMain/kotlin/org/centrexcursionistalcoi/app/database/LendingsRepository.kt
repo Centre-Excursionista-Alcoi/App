@@ -67,6 +67,10 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
             returned = item.returned,
             receivedBy = item.receivedBy,
             receivedAt = item.receivedAt,
+            memorySubmitted = item.memorySubmitted,
+            memorySubmittedAt = item.memorySubmittedAt,
+            memoryDocumentId = item.memoryDocumentId,
+            memoryReviewed = item.memoryReviewed,
         )
         for (inventoryItem in item.items) {
             lendingItemsQueries.insert(
@@ -92,6 +96,10 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
             returned = item.returned,
             receivedBy = item.receivedBy,
             receivedAt = item.receivedAt,
+            memorySubmitted = item.memorySubmitted,
+            memorySubmittedAt = item.memorySubmittedAt,
+            memoryDocumentId = item.memoryDocumentId,
+            memoryReviewed = item.memoryReviewed,
         )
         lendingItemsQueries.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
@@ -121,6 +129,10 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
         returned = returned,
         receivedBy = receivedBy,
         receivedAt = receivedAt,
+        memorySubmitted = memorySubmitted,
+        memorySubmittedAt = memorySubmittedAt,
+        memoryDocumentId = memoryDocumentId,
+        memoryReviewed = memoryReviewed,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() }
     )
 }

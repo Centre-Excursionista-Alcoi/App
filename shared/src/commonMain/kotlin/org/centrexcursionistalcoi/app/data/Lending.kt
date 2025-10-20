@@ -12,17 +12,25 @@ data class Lending(
     val userSub: String,
     @Serializable(InstantSerializer::class) val timestamp: Instant,
     val confirmed: Boolean,
+
     val taken: Boolean,
     val givenBy: String?,
     @Serializable(InstantSerializer::class) val givenAt: Instant?,
+
     val returned: Boolean,
     val receivedBy: String?,
     @Serializable(InstantSerializer::class) val receivedAt: Instant?,
+
+    val memorySubmitted: Boolean,
+    @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
+    val memoryDocumentId: Uuid?,
+    val memoryReviewed: Boolean,
+
     val from: LocalDate,
     val to: LocalDate,
     val notes: String?,
     val items: List<InventoryItem>,
-): Entity<Uuid> {
+): Entity<Uuid>, DocumentFileContainer {
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "userSub" to userSub,
@@ -34,6 +42,10 @@ data class Lending(
         "returned" to returned,
         "receivedBy" to receivedBy,
         "receivedAt" to receivedAt,
+        "memorySubmitted" to memorySubmitted,
+        "memorySubmittedAt" to memorySubmittedAt,
+        "memoryDocumentId" to memoryDocumentId,
+        "memoryReviewed" to memoryReviewed,
         "from" to from,
         "to" to to,
         "notes" to notes,
@@ -43,4 +55,12 @@ data class Lending(
     fun isTaken(): Boolean = confirmed && taken
 
     fun isReturned(): Boolean = isTaken() && returned
+
+    fun memoryPending(): Boolean = isReturned() && !memorySubmitted
+
+    override val files: Map<String, Uuid?> = mapOf(
+        "memoryDocumentId" to memoryDocumentId
+    )
+
+    override val documentFileId: Uuid? = memoryDocumentId
 }

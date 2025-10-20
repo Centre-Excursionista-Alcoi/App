@@ -46,6 +46,8 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             LocalDateAdapter,
             InstantAdapter,
             InstantAdapter,
+            InstantAdapter,
+            UUIDAdapter,
         ),
         Posts.Adapter(UUIDAdapter, InstantAdapter),
         Users.Adapter(

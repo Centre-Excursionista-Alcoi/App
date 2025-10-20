@@ -15,10 +15,12 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
 import org.centrexcursionistalcoi.app.data.ImageFileContainer
 import org.centrexcursionistalcoi.app.data.toFormData
+import org.centrexcursionistalcoi.app.data.writeFile
 import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.json
@@ -116,10 +118,10 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
                     }
 
                     Napier.v { "Writing file..." }
-                    if (item is ImageFileContainer) {
-                        item.writeImageFile(uuid, channel)
-                    } else {
-                        error("Don't know how to store files for ${item::class.simpleName}. Implementation is missing!")
+                    when (item) {
+                        is ImageFileContainer -> item.writeImageFile(uuid, channel)
+                        is DocumentFileContainer -> item.writeFile(uuid, channel)
+                        else -> error("Don't know how to store files for ${item::class.simpleName}. Implementation is missing!")
                     }
                     Napier.d { "File $uuid stored." }
                 }
@@ -149,7 +151,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         }
     }
 
-    suspend fun <UER: UpdateEntityRequest<IdType, T>> update(id: IdType, request: UER, serializer: KSerializer<UER>) {
+    suspend fun <UER : UpdateEntityRequest<IdType, T>> update(id: IdType, request: UER, serializer: KSerializer<UER>) {
         check(isPatchSupported) { "Patching this entity type is not supported" }
 
         val response = httpClient.patch("$endpoint/$id") {

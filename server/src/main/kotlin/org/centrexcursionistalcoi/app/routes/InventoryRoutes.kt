@@ -445,6 +445,13 @@ fun Route.inventoryRoutes() {
             return@post
         }
 
+        // make sure the lending belongs to the user
+        val lendingUserSub = Database { lending.userSub.sub.value }
+        if (lendingUserSub != session.sub) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
         val documentEntity = file.newEntity()
 
         Database {

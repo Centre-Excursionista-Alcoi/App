@@ -64,7 +64,6 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.ShoppingListDialog
 import org.centrexcursionistalcoi.app.ui.page.home.HomeMainPage
-import org.centrexcursionistalcoi.app.ui.page.home.LendingPageOnCreate
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
@@ -76,6 +75,7 @@ import org.jetbrains.compose.resources.stringResource
 fun HomeScreen(
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
+    onLendingSignUpRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
 ) {
     val profile by model.profile.collectAsState()
@@ -94,8 +94,9 @@ fun HomeScreen(
             onCreateDepartment = model::createDepartment,
             onDeleteDepartment = model::delete,
             lendings = lendings,
+            onLendingSignUpRequested = onLendingSignUpRequested,
             onCancelLendingRequest = model::cancelLending,
-            onLendingSignUp = model::signUpForLending,
+            onMemorySubmitted = model::submitMemory,
             onCreateInsurance = model::createInsurance,
             users = users,
             isSyncing = isSyncing,
@@ -140,8 +141,9 @@ private fun HomeScreenContent(
     onDeleteDepartment: (Department) -> Job,
 
     lendings: List<Lending>?,
+    onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (Lending) -> Job,
-    onLendingSignUp: LendingPageOnCreate,
+    onMemorySubmitted: (Lending, PlatformFile) -> Job,
     onCreateInsurance: CreateInsuranceRequest,
 
     users: List<UserData>?,
@@ -295,8 +297,9 @@ private fun HomeScreenContent(
                         onCreateDepartment,
                         onDeleteDepartment,
                         lendings,
+                        onLendingSignUpRequested,
                         onCancelLendingRequest,
-                        onLendingSignUp,
+                        onMemorySubmitted,
                         onCreateInsurance,
                         users,
                         inventoryItemTypes,
@@ -329,8 +332,9 @@ private fun HomeScreenContent(
                             onCreateDepartment,
                             onDeleteDepartment,
                             lendings,
+                            onLendingSignUpRequested,
                             onCancelLendingRequest,
-                            onLendingSignUp,
+                            onMemorySubmitted,
                             onCreateInsurance,
                             users,
                             inventoryItemTypes,
@@ -363,8 +367,9 @@ fun HomeScreenPagerContent(
     onDeleteDepartment: (Department) -> Job,
 
     lendings: List<Lending>?,
+    onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (Lending) -> Job,
-    onLendingSignUp: LendingPageOnCreate,
+    onMemorySubmitted: (Lending, PlatformFile) -> Job,
     onCreateInsurance: CreateInsuranceRequest,
 
     users: List<UserData>?,
@@ -392,6 +397,8 @@ fun HomeScreenPagerContent(
                 inventoryItemTypes,
                 inventoryItems,
                 lendings,
+                onLendingSignUpRequested,
+                onMemorySubmitted,
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,

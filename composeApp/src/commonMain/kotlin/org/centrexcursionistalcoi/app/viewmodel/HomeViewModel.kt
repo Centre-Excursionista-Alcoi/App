@@ -13,7 +13,6 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -80,11 +79,6 @@ class HomeViewModel: ViewModel() {
         InventoryItemsRemoteRepository.delete(item.id)
     }
 
-    fun signUpForLending(fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) = viewModelScope.launch(defaultAsyncDispatcher) {
-        ProfileRemoteRepository.signUpForLending(fullName, nif, phoneNumber, sports, address, postalCode, city, province, country)
-        ProfileRemoteRepository.synchronize()
-    }
-
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
@@ -113,6 +107,11 @@ class HomeViewModel: ViewModel() {
 
     fun cancelLending(lending: Lending) = viewModelScope.launch(defaultAsyncDispatcher) {
         LendingsRemoteRepository.cancel(lending.id)
+    }
+
+    fun submitMemory(lending: Lending, file: PlatformFile) = viewModelScope.launch(defaultAsyncDispatcher) {
+        val fileBytes = file.readBytes()
+        LendingsRemoteRepository.submitMemory(lending.id, fileBytes)
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {

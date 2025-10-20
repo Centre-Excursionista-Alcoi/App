@@ -1,6 +1,10 @@
 package org.centrexcursionistalcoi.app.network
 
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.readBytes
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -139,6 +143,27 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
             throw IllegalArgumentException("Failed to return lending (${response.status}): ${response.bodyAsText()}")
         }
         val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after return")
+        LendingsRepository.update(updatedLending)
+    }
+
+    /**
+     * Submits a memory file for a lending by its ID.
+     * The logged-in user must be the owner of the lending.
+     * @param lendingId The UUID of the lending to submit the memory for.
+     * @param file The memory file to submit.
+     * @throws IllegalArgumentException if the submission fails.
+     * @throws NoSuchElementException if the lending is not found after submission.
+     */
+    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile) {
+        val fileBytes = file.readBytes()
+        val response = httpClient.submitFormWithBinaryData(
+            "inventory/lendings/$lendingId/add_memory",
+            formData { append("file", fileBytes) }
+        )
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to submit memory for lending (${response.status}): ${response.bodyAsText()}")
+        }
+        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
         LendingsRepository.update(updatedLending)
     }
 }

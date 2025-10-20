@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
@@ -87,6 +88,9 @@ fun App(
                 onManageLendingsRequested = {
                     navController.navigate(Destination.LendingsManagement)
                 },
+                onLendingSignUpRequested = {
+                    navController.navigate(Destination.LendingSignUp)
+                },
                 onShoppingListConfirmed = {
                     navController.navigate(Destination.LendingCreation(it))
                 },
@@ -99,6 +103,11 @@ fun App(
             )
         }
 
+        composable<Destination.LendingSignUp> {
+            LendingSignUpScreen(
+                onBackRequested = { navController.navigateUp() }
+            )
+        }
         composable<Destination.LendingCreation> { bse ->
             val route = bse.toRoute<Destination.LendingCreation>()
             val items = route.items

@@ -50,6 +50,8 @@
     <string name="sport_hiking">Hiking</string>
     <string name="sport_alpinism">Alpinism</string>
 
+    <string name="lending_signup_required">You are not signed up for material lending. Please complete the form by pressing the button below.</string>
+    <string name="lending_signup_action">Sign Up</string>
     <string name="lending_signup_title">Registration Required</string>
     <string name="lending_signup_message">With this form, the member certifies that he/she is aware of the internal rules of the Climbing and Mountaineering Sections for the use of technical equipment owned by the CEA. That he/she has the necessary training and knowledge for the use of this type of equipment, being the member solely responsible for the correct use and maintenance, as well as the obligation to notify the Sections' managers of any damage or misuse of this equipment.</string>
     <string name="lending_signup_full_name">Full Name</string>
@@ -115,5 +117,9 @@
     <string name="shopping_list_view">View Shopping List</string>
     <string name="shopping_list_summary">Summary</string>
     <string name="shopping_list_confirm">Confirm</string>
+
+    <string name="memory_pending">Pending Memories</string>
+    <string name="memory_pending_lending">Memory submission is pending.</string>
+    <string name="memory_pick">Pick memory file</string>
 
 </resources>

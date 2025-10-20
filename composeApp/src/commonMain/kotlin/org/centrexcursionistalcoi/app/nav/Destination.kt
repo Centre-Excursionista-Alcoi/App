@@ -15,6 +15,7 @@ sealed interface Destination {
 
     @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
 
+    @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination
     @Serializable @SerialName("lendingCreation") data class LendingCreation(
         val itemsJson: String
     ) : Destination {
