@@ -188,14 +188,24 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        create("release") {
+            keyAlias = System.getenv("KEYSTORE_ALIAS")
+            keyPassword = System.getenv("KEYSTORE_ALIAS_PASSWORD")
+
+            storeFile = File(rootDir, "keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
