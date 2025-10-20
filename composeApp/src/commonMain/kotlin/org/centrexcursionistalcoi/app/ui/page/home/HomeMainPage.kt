@@ -66,6 +66,7 @@ fun HomeMainPage(
     inventoryItems: List<InventoryItem>?,
     lendings: List<Lending>?,
     onLendingSignUpRequested: () -> Unit,
+    memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (Lending, PlatformFile) -> Job,
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -82,13 +83,14 @@ fun HomeMainPage(
         LendingDetailsDialog(
             lending,
             inventoryItemTypes.orEmpty(),
+            memoryUploadProgress = memoryUploadProgress,
             onMemorySubmitted = { onMemorySubmitted(lending, it) },
             onCancelRequest = {
                 onCancelLendingRequest(lending).invokeOnCompletion {
                     showingLendingDetails = null
                 }
             }
-        ) { showingLendingDetails = null }
+        ) { if (memoryUploadProgress == null) showingLendingDetails = null }
     }
 
     AdaptiveVerticalGrid(

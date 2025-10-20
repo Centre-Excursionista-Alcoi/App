@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
+import io.github.vinceglb.filekit.size
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -47,6 +49,9 @@ class HomeViewModel: ViewModel() {
      */
     private val _shoppingList = MutableStateFlow(emptyMap<Uuid, Int>())
     val shoppingList = _shoppingList.asStateFlow()
+
+    private val _memoryUploadProgress = MutableStateFlow<Pair<Long, Long>?>(null)
+    val memoryUploadProgress = _memoryUploadProgress.asStateFlow()
 
     fun createDepartment(displayName: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
@@ -109,8 +114,15 @@ class HomeViewModel: ViewModel() {
         LendingsRemoteRepository.cancel(lending.id)
     }
 
-    fun submitMemory(lending: Lending, file: PlatformFile) = viewModelScope.launch(defaultAsyncDispatcher) {
-        LendingsRemoteRepository.submitMemory(lending.id, file)
+    fun submitMemory(lending: Lending, file: PlatformFile) = viewModelScope.async(defaultAsyncDispatcher) {
+        try {
+            _memoryUploadProgress.emit(0L to file.size())
+            LendingsRemoteRepository.submitMemory(lending.id, file) { current, max ->
+                _memoryUploadProgress.value = current to (max ?: file.size())
+            }
+        } finally {
+            _memoryUploadProgress.value = null
+        }
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {

@@ -86,6 +86,7 @@ fun HomeScreen(
     val lendings by model.lendings.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
+    val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
 
     profile?.let {
         HomeScreenContent(
@@ -96,6 +97,7 @@ fun HomeScreen(
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onCancelLendingRequest = model::cancelLending,
+            memoryUploadProgress = memoryUploadProgress,
             onMemorySubmitted = model::submitMemory,
             onCreateInsurance = model::createInsurance,
             users = users,
@@ -143,6 +145,7 @@ private fun HomeScreenContent(
     lendings: List<Lending>?,
     onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (Lending) -> Job,
+    memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (Lending, PlatformFile) -> Job,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -299,6 +302,7 @@ private fun HomeScreenContent(
                         lendings,
                         onLendingSignUpRequested,
                         onCancelLendingRequest,
+                        memoryUploadProgress,
                         onMemorySubmitted,
                         onCreateInsurance,
                         users,
@@ -334,6 +338,7 @@ private fun HomeScreenContent(
                             lendings,
                             onLendingSignUpRequested,
                             onCancelLendingRequest,
+                            memoryUploadProgress,
                             onMemorySubmitted,
                             onCreateInsurance,
                             users,
@@ -369,6 +374,7 @@ fun HomeScreenPagerContent(
     lendings: List<Lending>?,
     onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (Lending) -> Job,
+    memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (Lending, PlatformFile) -> Job,
     onCreateInsurance: CreateInsuranceRequest,
 
@@ -398,6 +404,7 @@ fun HomeScreenPagerContent(
                 inventoryItems,
                 lendings,
                 onLendingSignUpRequested,
+                memoryUploadProgress,
                 onMemorySubmitted,
                 shoppingList,
                 onAddItemToShoppingListRequest,

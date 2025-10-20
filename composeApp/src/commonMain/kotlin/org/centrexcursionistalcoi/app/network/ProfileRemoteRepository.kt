@@ -1,10 +1,11 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -51,7 +52,12 @@ object ProfileRemoteRepository {
             }
         )
         if (!response.status.isSuccess()) {
-            throw ServerException("Failed to sign up for lending", response.status.value, response.bodyAsText())
+            throw ServerException(
+                "Failed to sign up for lending",
+                response.status.value,
+                response.bodyAsText(),
+                errorCode = response.headers["CEA-Error-Code"]?.toIntOrNull(),
+            )
         }
     }
 
@@ -71,7 +77,12 @@ object ProfileRemoteRepository {
             }
         )
         if (!response.status.isSuccess()) {
-            throw ServerException("Failed to add insurance", response.status.value, response.bodyAsText())
+            throw ServerException(
+                "Failed to add insurance",
+                response.status.value,
+                response.bodyAsText(),
+                errorCode = response.headers["CEA-Error-Code"]?.toIntOrNull(),
+            )
         }
     }
 

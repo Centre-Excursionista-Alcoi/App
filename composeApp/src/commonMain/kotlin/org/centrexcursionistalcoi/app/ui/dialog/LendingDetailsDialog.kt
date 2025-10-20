@@ -1,10 +1,12 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,6 +31,7 @@ fun LendingDetailsDialog(
     lending: Lending,
     itemTypes: List<InventoryItemType>,
     onCancelRequest: () -> Unit,
+    memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (PlatformFile) -> Job,
     onDismissRequest: () -> Unit,
 ) {
@@ -36,7 +39,10 @@ fun LendingDetailsDialog(
     val filePickLauncher = rememberFilePickerLauncher(FileKitType.File("pdf")) { file ->
         if (file == null) return@rememberFilePickerLauncher
         isSubmittingMemory = true
-        onMemorySubmitted(file).invokeOnCompletion { isSubmittingMemory = false }
+        onMemorySubmitted(file).invokeOnCompletion {
+            isSubmittingMemory = false
+            onDismissRequest()
+        }
     }
 
     AlertDialog(
@@ -65,12 +71,29 @@ fun LendingDetailsDialog(
                     )
                     TextButton(
                         enabled = !isSubmittingMemory,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = { filePickLauncher.launch() }
                     ) { Text(stringResource(Res.string.memory_pick)) }
+                    AnimatedContent(
+                        targetState = memoryUploadProgress to isSubmittingMemory,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { (progress, submittingMemory) ->
+                        if (progress != null) {
+                            val (uploaded, total) = progress
+                            val percentage = uploaded.toDouble() / total.toDouble()
+                            LinearProgressIndicator(
+                                progress = { percentage.toFloat() },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else if (submittingMemory) {
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(Modifier.padding(top = 8.dp))
 
                 val list = lending.items.groupBy { it.type }
                 Text(stringResource(Res.string.lending_details_items_title))
@@ -83,12 +106,14 @@ fun LendingDetailsDialog(
         dismissButton = {
             if (!lending.isTaken()) {
                 TextButton(
+                    enabled = !isSubmittingMemory,
                     onClick = onCancelRequest
                 ) { Text(stringResource(Res.string.lending_details_cancel)) }
             }
         },
         confirmButton = {
             TextButton(
+                enabled = !isSubmittingMemory,
                 onClick = onDismissRequest
             ) { Text(stringResource(Res.string.close)) }
         },

@@ -1,7 +1,10 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
+import io.ktor.client.content.ProgressListener
+import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -9,7 +12,10 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import kotlin.uuid.Uuid
@@ -151,15 +157,27 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
      * The logged-in user must be the owner of the lending.
      * @param lendingId The UUID of the lending to submit the memory for.
      * @param file The memory file to submit.
+     * @param progress An optional progress listener for upload progress.
      * @throws IllegalArgumentException if the submission fails.
      * @throws NoSuchElementException if the lending is not found after submission.
      */
-    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile) {
+    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile, progress: ProgressListener? = null) {
         val fileBytes = file.readBytes()
         val response = httpClient.submitFormWithBinaryData(
             "inventory/lendings/$lendingId/add_memory",
-            formData { append("file", fileBytes) }
-        )
+            formData {
+                append(
+                    key = "file",
+                    value = fileBytes,
+                    headers = headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                        append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"")
+                    }
+                )
+            }
+        ) {
+            progress?.let { onUpload(it) }
+        }
         if (!response.status.isSuccess()) {
             throw IllegalArgumentException("Failed to submit memory for lending (${response.status}): ${response.bodyAsText()}")
         }

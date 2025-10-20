@@ -64,12 +64,16 @@ fun App(
             LoadingScreen(
                 onLoggedIn = {
                     navController.navigate(Destination.Home) {
-                        popUpTo<Destination.Loading>()
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
                     }
                 },
                 onNotLoggedIn = {
                     navController.navigate(Destination.Login) {
-                        popUpTo<Destination.Loading>()
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
                     }
                 },
             )
@@ -78,7 +82,9 @@ fun App(
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Destination.Loading) {
-                        popUpTo<Destination.Login>()
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
                     }
                 },
             )
