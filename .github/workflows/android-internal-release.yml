@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  update_code:
-    name: Update files
+  increase_version_code:
+    name: Increase Version Code
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -34,23 +34,19 @@ jobs:
         id: increase_version_code
         run: python ./scripts/increaseVersionCode.py
 
-      - name: Clean quote backslashes
-        id: clean_backslash
-        run: bash ./scripts/clean-backslash.sh
-
       - name: Commit modified files
         id: commit_files
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: 'Updated Version'
-          file_pattern: 'version.properties composeApp/src/commonMain/composeResources/values-*/strings.xml'
+          commit_message: 'Updated Version Code'
+          file_pattern: 'composeApp/version.properties'
           branch: master
 
   publish_internal_release:
     name: Publish Internal Release
     runs-on: ubuntu-latest
 
-    needs: update_code
+    needs: increase_version_code
 
     steps:
       - name: Checkout code

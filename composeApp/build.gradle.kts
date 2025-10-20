@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -13,10 +14,28 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
+fun readProperties(fileName: String): Properties? {
+    val propsFile = project.file(fileName)
+    if (!propsFile.exists()) {
+        return null
+    }
+    if (!propsFile.canRead()) {
+        throw GradleException("Cannot read $fileName")
+    }
+    return Properties().apply {
+        propsFile.inputStream().use { load(it) }
+    }
+}
+
+val versionProperties = readProperties("version.properties")!!
+
+val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
+val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
+
 kotlin {
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_21)
         }
     }
     
@@ -175,13 +194,8 @@ android {
         applicationId = "org.centrexcursionistalcoi.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 2_00_00_000
-        versionName = "2.0.0"
-
-        // Provide redirect URI for OIDC Auth flow
-        addManifestPlaceholders(
-            mapOf("oidcRedirectScheme" to "cea")
-        )
+        versionName = appVersionName
+        versionCode = appVersionCode.toInt()
     }
     packaging {
         resources {
