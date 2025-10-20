@@ -110,8 +110,7 @@ class HomeViewModel: ViewModel() {
     }
 
     fun submitMemory(lending: Lending, file: PlatformFile) = viewModelScope.launch(defaultAsyncDispatcher) {
-        val fileBytes = file.readBytes()
-        LendingsRemoteRepository.submitMemory(lending.id, fileBytes)
+        LendingsRemoteRepository.submitMemory(lending.id, file)
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
