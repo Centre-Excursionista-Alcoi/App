@@ -1,21 +1,8 @@
 package org.centrexcursionistalcoi.app.security
 
-import org.jetbrains.annotations.VisibleForTesting
+import org.centrexcursionistalcoi.app.ConfigProvider
 
-object OIDCConfig {
-    private val override = mutableMapOf<String, String>()
-
-    @VisibleForTesting
-    fun override(name: String, value: String?) {
-        if (value == null) {
-            override.remove(name)
-        } else {
-            override[name] = value
-        }
-    }
-
-    private fun getenv(name: String): String? = override[name] ?: System.getenv(name)?.ifBlank { null }
-
+object OIDCConfig : ConfigProvider() {
     val clientId get() = getenv("OAUTH_CLIENT_ID") ?: error("OAUTH_CLIENT_ID env var not set")
     val clientSecret get() = getenv("OAUTH_CLIENT_SECRET") ?: error("OAUTH_CLIENT_SECRET env var not set")
 

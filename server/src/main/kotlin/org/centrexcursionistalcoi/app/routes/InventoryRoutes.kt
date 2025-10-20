@@ -16,7 +16,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
@@ -27,11 +31,14 @@ import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Errors
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
+import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -49,6 +56,7 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.json.contains
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -241,6 +249,31 @@ fun Route.inventoryRoutes() {
                     }
                 }
             }
+        }
+
+        // Notify admins asynchronously
+        println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
+        CoroutineScope(Dispatchers.IO).launch {
+            val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
+            val emails = admins.map { MailerSendEmail(it.email, it.username) }
+            println("Sending emails to: $emails")
+            Email.sendEmail(
+                to = emails,
+                subject = "New lending request (#${lendingEntity.id.value})",
+                htmlContent = """
+                    <p>A new lending request has been created by ${userReferenceEntity.username}.</p>
+                    <p>
+                        <strong>From:</strong> ${lendingEntity.from}<br/>
+                        <strong>To:</strong> ${lendingEntity.to}<br/>
+                        <strong>Notes:</strong> ${lendingEntity.notes ?: "None"}<br/>
+                        <strong>Items:</strong>
+                        <ul>
+                            ${itemsList.joinToString("\n") { "<li>${it.type.displayName} (${it.variation ?: "No variation"})</li>" }}
+                        </ul>
+                    </p>
+                    <p>Please review and confirm the lending in the admin panel.</p>
+                """.trimIndent()
+            )
         }
 
         call.response.header(
