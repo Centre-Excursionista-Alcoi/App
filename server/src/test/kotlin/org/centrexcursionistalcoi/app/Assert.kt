@@ -8,6 +8,7 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.centrexcursionistalcoi.app.error.Error
 
 /**
  * Asserts that two JSON strings are equivalent, ignoring formatting and key order.
@@ -64,6 +65,18 @@ suspend fun HttpResponse.assertStatusCode(expected: HttpStatusCode) {
     assert(expected == status) {
         "Expected $expected response. Got: $status. Body: ${bodyAsText()}"
     }
+}
+
+
+suspend fun HttpResponse.assertError(expected: Error) {
+    assert(expected.statusCode == status) {
+        "Expected $expected response. Got: $status. Body: ${bodyAsText()}"
+    }
+    headers["CEA-Error-Code"]?.let { errorCodeHeader ->
+        assert(expected.code.toString() == errorCodeHeader) {
+            "Expected error code ${expected.code}. Got: $errorCodeHeader. Body: ${bodyAsText()}"
+        }
+    } ?: throw AssertionError("Expected error code header not found. Body: ${bodyAsText()}")
 }
 
 suspend fun HttpResponse.assertBadRequest() {

@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
@@ -36,7 +38,7 @@ import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
     if (!call.request.contentType().match(contentType)) {
-        call.respondText("Content-Type must be $contentType", status = HttpStatusCode.BadRequest)
+        respondError(Errors.InvalidContentType(contentType))
         return null
     }
     return Unit
@@ -88,7 +90,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     suspend fun RoutingContext.getId(): EID? {
         val id = call.parameters["id"]?.let(idTypeConverter)
         if (id == null) {
-            call.respondText("Malformed id", status = HttpStatusCode.BadRequest)
+            respondError(Errors.MalformedId)
             return null
         }
         return id
@@ -96,7 +98,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     suspend fun RoutingContext.assertEntity(id: EID): EE? {
         val item = Database { entityClass.findById(id) }
         if (item == null) {
-            call.respondText("$base #$id not found", status = HttpStatusCode.NotFound)
+            respondError(Errors.EntityNotFound(entityKClass, id))
             return null
         }
         return item
@@ -127,14 +129,14 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val multipart = call.receiveMultipart()
         val item = try {
             creator(multipart)
-        } catch (e: NullPointerException) {
-            call.respondText(e.message ?: "Missing argument", status = HttpStatusCode.BadRequest)
+        } catch (_: NullPointerException) {
+            respondError(Errors.MissingArgument)
             return@post
-        } catch (e: IllegalArgumentException) {
-            call.respondText(e.message ?: "Malformed Request", status = HttpStatusCode.BadRequest)
+        } catch (_: IllegalArgumentException) {
+            respondError(Errors.MalformedRequest)
             return@post
-        } catch (e: NoSuchElementException) {
-            call.respondText(e.message ?: "Not found", status = HttpStatusCode.NotFound)
+        } catch (_: NoSuchElementException) {
+            respondError(Errors.EntityNotFound(entityKClass, "N/A"))
             return@post
         }
 
@@ -144,7 +146,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     patch("$base/{id}") {
         if (updater == null) {
-            call.respondText("Operation not supported", status = HttpStatusCode.MethodNotAllowed)
+            respondError(Errors.OperationNotSupported)
             return@patch
         }
 
@@ -156,12 +158,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val body = call.receiveText()
         val request = try {
             json.decodeFromString(updater, body)
-        } catch (e: Exception) {
-            call.respondText(e.message ?: "Malformed request", status = HttpStatusCode.BadRequest)
+        } catch (_: Exception) {
+            respondError(Errors.MalformedRequest)
             return@patch
         }
         if (request.isEmpty()) {
-            call.respondText("Nothing to update", status = HttpStatusCode.BadRequest)
+            respondError(Errors.NothingToUpdate)
             return@patch
         }
         @Suppress("UNCHECKED_CAST")

@@ -31,6 +31,7 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(libs.kotlin.crypto.random)
             api(libs.kotlin.crypto.sha2)
+            api(libs.ktor.client.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

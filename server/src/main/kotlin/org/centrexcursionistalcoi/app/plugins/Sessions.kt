@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.response.header
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.sessions.SessionTransportTransformerEncrypt
 import io.ktor.server.sessions.Sessions
@@ -14,6 +12,8 @@ import io.ktor.server.sessions.sessions
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.respondError
 
 // TODO: Set in environment variables and load from there
 val secretEncryptKey = hex("00112233445566778899aabbccddeeff")
@@ -38,7 +38,7 @@ data class UserSession(val sub: String, val username: String, val email: String,
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
             val session = getUserSession()
             if (session == null) {
-                call.respondText("Not logged in", status = HttpStatusCode.Unauthorized)
+                respondError(Errors.NotLoggedIn)
                 return null
             } else {
                 return session
@@ -48,7 +48,7 @@ data class UserSession(val sub: String, val username: String, val email: String,
         suspend fun RoutingContext.assertAdmin(): UserSession? {
             val session = getUserSessionOrFail() ?: return null
             if (!session.isAdmin()) {
-                call.respondText("You don't have permission to delete", status = HttpStatusCode.Forbidden)
+                respondError(Errors.NotAnAdmin)
                 return null
             }
             return session

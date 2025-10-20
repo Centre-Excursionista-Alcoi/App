@@ -3,11 +3,13 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -27,6 +29,7 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 
@@ -184,8 +187,10 @@ class TestInventoryRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             initializeItem()
 
+            FakeUser.provideEntity()
+
             // Existing lending from 2025-10-10 to 2025-10-15
-            val user = FakeUser.provideEntity()
+            val user = FakeAdminUser.provideEntity()
             LendingEntity.new {
                 this.userSub = user
                 this.from = LocalDate.of(2025, 10, 10)
@@ -202,6 +207,14 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) {
         today = { LocalDate.of(2025, 10, 1) }
 
+        fun HttpResponse.delete() {
+            val location = headers[HttpHeaders.Location]
+            assertNotNull(location, "Missing Location header in response")
+            val id = location.substringAfterLast('/').toUUIDOrNull()
+            assertNotNull(id, "Invalid UUID in Location header: $location")
+            Database { LendingEntity[id].delete() }
+        }
+
         // New lending completely before existing one
         client.submitForm(
             "/inventory/lendings",
@@ -212,6 +225,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
             }
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
+            delete()
         }
         // New lending starting on the day existing one starts
         client.submitForm(
@@ -256,6 +270,52 @@ class TestInventoryRoutes : ApplicationTestBase() {
             }
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
+        }
+    }
+
+    @Test
+    fun test_create_lending_pendingMemory() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            initializeItem()
+
+            // Existing lending from 2025-10-01 to 2025-10-03
+            val user = FakeUser.provideEntity()
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 1)
+                this.to = LocalDate.of(2025, 10, 3)
+
+                this.confirmed = true
+                this.taken = true
+                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenAt = LocalDate.of(2025, 9, 30).atStartOfDay().toInstant(ZoneOffset.UTC)
+                this.returned = true
+                this.receivedBy = FakeAdminUser.provideEntity().sub
+                this.receivedAt = LocalDate.of(2025, 10, 4).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+                this.notes = "Example lending"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+            }
+        },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 5) }
+
+        // New lending without having submitted memory for previous lending
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-10")
+                append("to", "2025-10-12")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.PreconditionFailed)
         }
     }
 

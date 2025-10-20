@@ -74,9 +74,7 @@ fun Route.inventoryRoutes() {
                     }
                     is PartData.FileItem -> {
                         if (partData.name == "image") {
-                            image.contentType = partData.contentType
-                            image.originalFileName = partData.originalFileName
-                            image.byteReadChannel = partData.provider()
+                            image.populate(partData)
                         }
                     }
                     else -> { /* nothing */ }
@@ -203,6 +201,18 @@ fun Route.inventoryRoutes() {
         val itemsList = Database { InventoryItemEntity.find { InventoryItems.id inList itemsIdList }.toList() }
         if (itemsList.isEmpty()) {
             call.respondText("No valid item IDs in 'items' parameter", status = HttpStatusCode.BadRequest)
+            return@postWithLock
+        }
+
+        // Make sure the user has no other lending without a submitted memory
+        val openLendingWithoutMemory = Database {
+            LendingEntity.find {
+                (Lendings.userSub eq session.sub) and
+                (Lendings.memorySubmitted eq false)
+            }.empty().not()
+        }
+        if (openLendingWithoutMemory) {
+            call.respondText("User has an open lending without a submitted memory", status = HttpStatusCode.PreconditionFailed)
             return@postWithLock
         }
 
@@ -414,9 +424,7 @@ fun Route.inventoryRoutes() {
             when (part.name) {
                 "file" -> {
                     if (part is PartData.FileItem) {
-                        file.contentType = part.contentType
-                        file.originalFileName = part.originalFileName
-                        file.byteReadChannel = part.provider()
+                        file.populate(part)
                     }
                 }
                 else -> { /* Ignore other parts */ }

@@ -13,7 +13,7 @@ object FakeAdminUser {
 
     context(_: JdbcTransaction)
     fun provideEntity(): UserReferenceEntity = transaction {
-        UserReferenceEntity.new(SUB) {
+        UserReferenceEntity.findById(SUB) ?: UserReferenceEntity.new(SUB) {
             username = USERNAME
             email = EMAIL
             groups = GROUPS

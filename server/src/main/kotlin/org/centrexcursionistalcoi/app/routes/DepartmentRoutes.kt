@@ -66,9 +66,7 @@ fun Route.departmentsRoutes() {
                     }
                     is PartData.FileItem -> {
                         if (partData.name == "image") {
-                            image.contentType = partData.contentType
-                            image.originalFileName = partData.originalFileName
-                            image.byteReadChannel = partData.provider()
+                            image.populate(partData)
                         }
                     }
                     else -> { /* nothing */ }
