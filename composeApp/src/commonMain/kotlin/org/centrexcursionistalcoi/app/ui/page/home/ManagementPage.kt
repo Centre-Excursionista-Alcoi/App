@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
@@ -285,6 +287,12 @@ fun InventoryItemsCard(
                                 }
                             }
                         },
+                        colors = ListItemDefaults.colors(
+                            containerColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                            headlineColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                            supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                            trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                        ),
                     )
                 }
             }

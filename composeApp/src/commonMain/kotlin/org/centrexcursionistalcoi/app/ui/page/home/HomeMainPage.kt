@@ -79,7 +79,7 @@ fun HomeMainPage(
                     showingLendingDetails = null
                 }
             }
-        ) { showingItemTypeDetails = null }
+        ) { showingLendingDetails = null }
     }
 
     AdaptiveVerticalGrid(
@@ -103,7 +103,9 @@ fun HomeMainPage(
         if (!nonReturnedLendings.isNullOrEmpty()) {
             stickyHeader {
                 Text(
-                    text = "Your Lendings"
+                    text = "Your Lendings",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
             items(nonReturnedLendings) { lending ->
@@ -141,7 +143,7 @@ fun HomeMainPage(
             Text(
                 text = "Material Lending",
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
             )
         }
 
