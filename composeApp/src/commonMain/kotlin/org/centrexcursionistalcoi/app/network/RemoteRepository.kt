@@ -14,6 +14,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.data.writeFile
 import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 
@@ -136,18 +138,32 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             url = endpoint,
             formData = item.toFormData()
         )
-        try {
-            val location = response.headers[HttpHeaders.Location]
-            checkNotNull(location) { "Creation didn't return any location for the new item." }
+        if (response.status.isSuccess()) {
+            try {
+                val location = response.headers[HttpHeaders.Location]
+                checkNotNull(location) { "Creation didn't return any location for the new item." }
 
-            val item = getUrl(location)
-            checkNotNull(item) { "Could not retrieve the created item from the server." }
-            repository.insert(item)
+                val item = getUrl(location)
+                checkNotNull(item) { "Could not retrieve the created item from the server." }
+                repository.insert(item)
 
-            synchronizeFiles(listOf(item))
-        } catch (e: IllegalStateException) {
-            Napier.e { "${e.message} Synchronizing completely with server..." }
-            synchronizeWithDatabase()
+                synchronizeFiles(listOf(item))
+            } catch (e: IllegalStateException) {
+                Napier.e { "${e.message} Synchronizing completely with server..." }
+                synchronizeWithDatabase()
+            }
+        } else {
+            // Try to decode the error
+            try {
+                val body = response.bodyAsText()
+                val error = json.decodeFromString(Error.serializer(), body)
+                Napier.e { "Failed to create $name: $error" }
+                throw error.toThrowable()
+            } catch (e: SerializationException) {
+                val throwable = IllegalStateException("Failed to create $name. Status: ${response.status}. Body: ${response.bodyAsText()}", e)
+                Napier.e(throwable) { "Failed to create $name. Status: ${response.status}" }
+                throw throwable
+            }
         }
     }
 
