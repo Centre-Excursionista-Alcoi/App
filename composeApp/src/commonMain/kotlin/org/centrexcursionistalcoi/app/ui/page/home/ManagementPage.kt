@@ -83,6 +83,11 @@ fun ManagementPage(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
+        item(key = "lendings") {
+            Button(
+                onClick = onManageLendingsRequested
+            ) { Text(stringResource(Res.string.management_lendings)) }
+        }
         item(key = "departments") {
             DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)
         }
@@ -104,11 +109,6 @@ fun ManagementPage(
                 onCreateInventoryItem,
                 onDeleteInventoryItem
             )
-        }
-        item(key = "lendings") {
-            Button(
-                onClick = onManageLendingsRequested
-            ) { Text(stringResource(Res.string.management_lendings)) }
         }
     }
 }

@@ -41,6 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
@@ -56,6 +59,7 @@ import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -100,7 +104,7 @@ fun HomeMainPage(
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
                 Text(
-                    text = "Welcome back ${profile.username}!",
+                    text = stringResource(Res.string.welcome, profile.username),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,16 +114,16 @@ fun HomeMainPage(
             }
         }
 
-        val nonReturnedLendings = lendings?.filter { !it.isReturned() }
-        if (!nonReturnedLendings.isNullOrEmpty()) {
+        val pendingLendings = lendings?.filter { it.status() !in listOf(Lending.Status.RETURNED, Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+        if (!pendingLendings.isNullOrEmpty()) {
             stickyHeader {
                 Text(
-                    text = "Your Lendings",
+                    text = stringResource(Res.string.home_lendings),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(nonReturnedLendings) { lending ->
+            items(pendingLendings) { lending ->
                 OutlinedCard(
                     onClick = { showingLendingDetails = lending },
                     modifier = Modifier.padding(8.dp)
@@ -149,7 +153,7 @@ fun HomeMainPage(
             }
         }
 
-        val noMemoryLendings = lendings?.filter { it.isReturned() && !it.memorySubmitted }
+        val noMemoryLendings = lendings?.filter { it.status() == Lending.Status.RETURNED }
         if (!noMemoryLendings.isNullOrEmpty()) {
             stickyHeader {
                 Text(
@@ -178,7 +182,7 @@ fun HomeMainPage(
         // TODO: Check whether the user has signed up for lending
         stickyHeader {
             Text(
-                text = "Material Lending",
+                text = stringResource(Res.string.home_lending),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
             )
@@ -246,6 +250,20 @@ fun HomeMainPage(
                     onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
                     onClick = { showingItemTypeDetails = type }
                 )
+            }
+        }
+
+        val oldLendings = lendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
+        if (oldLendings.isNotEmpty()) {
+            stickyHeader {
+                Text(
+                    text = stringResource(Res.string.home_past_lendings),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                )
+            }
+            items(oldLendings) { lending ->
+                OldLendingItem(lending, inventoryItemTypes.orEmpty())
             }
         }
     }
@@ -430,6 +448,56 @@ fun LendingItem_Large(
             text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(8.dp)
+        )
+    }
+}
+
+@Composable
+fun OldLendingItem(
+    lending: Lending,
+    itemTypes: List<InventoryItemType>
+) {
+    var showingDialog by remember { mutableStateOf(false) }
+    if (showingDialog) {
+        LendingDetailsDialog(
+            lending = lending,
+            itemTypes = itemTypes,
+            onCancelRequest = {},
+            memoryUploadProgress = null,
+            onMemorySubmitted = null,
+            onDismissRequest = { showingDialog = false },
+        )
+    }
+
+    OutlinedCard(
+        onClick = { showingDialog = true },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+    ) {
+        Text(
+            text = "${lending.from} → ${lending.to}",
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            textAlign = TextAlign.Center,
+        )
+        val groupedItems = lending.items.groupBy { it.type }
+        Text(
+            text = pluralStringResource(
+                Res.plurals.home_past_lending_items,
+                lending.items.size,
+                lending.items.size,
+                groupedItems.mapNotNull { (type, items) ->
+                    val type = itemTypes.find { it.id == type }
+                    type?.displayName?.plus(" (${items.size})")
+                }.joinToString()
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        )
+        Text(
+            text = lending.id.toString(),
+            style = MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            textAlign = TextAlign.Center,
         )
     }
 }

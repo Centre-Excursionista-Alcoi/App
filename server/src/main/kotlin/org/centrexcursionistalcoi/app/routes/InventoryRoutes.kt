@@ -29,6 +29,8 @@ import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
@@ -414,7 +416,7 @@ fun Route.inventoryRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            respondError(Errors.MalformedId)
             return@post
         }
 
@@ -432,31 +434,32 @@ fun Route.inventoryRoutes() {
         }
 
         if (file.isEmpty()) {
-            call.respondText("No file uploaded", status = HttpStatusCode.BadRequest)
+            respondError(Errors.MissingFile)
             return@post
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            respondError(Errors.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 
         if (!lending.returned) {
-            call.respondText("You cannot submit a memory until the material has been returned.", status = HttpStatusCode.Conflict)
+            respondError(Errors.CannotSubmitMemoryUntilMaterialIsReturned)
             return@post
         }
 
         val userReference = Database { UserReferenceEntity.findById(session.sub) }
         if (userReference == null) {
-            call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
+            respondError(Errors.UserReferenceNotFound)
             return@post
         }
 
         // make sure the lending belongs to the user
         val lendingUserSub = Database { lending.userSub.sub.value }
         if (lendingUserSub != session.sub) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            // Return not found to avoid leaking existence of the lending
+            respondError(Errors.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 

@@ -11,3 +11,6 @@ import org.jetbrains.compose.resources.stringResource
 fun String.optional(): String {
     return this + ' ' + stringResource(Res.string.form_label_optional)
 }
+
+@Composable
+fun unknown(): String = stringResource(Res.string.unknown)

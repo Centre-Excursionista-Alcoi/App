@@ -23,7 +23,7 @@ data class Lending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memoryDocumentId: Uuid?,
+    val memoryDocument: Uuid?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -31,6 +31,15 @@ data class Lending(
     val notes: String?,
     val items: List<InventoryItem>,
 ): Entity<Uuid>, DocumentFileContainer {
+    enum class Status {
+        REQUESTED,
+        CONFIRMED,
+        TAKEN,
+        RETURNED,
+        MEMORY_SUBMITTED,
+        COMPLETE,
+    }
+
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "userSub" to userSub,
@@ -44,7 +53,7 @@ data class Lending(
         "receivedAt" to receivedAt,
         "memorySubmitted" to memorySubmitted,
         "memorySubmittedAt" to memorySubmittedAt,
-        "memoryDocumentId" to memoryDocumentId,
+        "memoryDocument" to memoryDocument,
         "memoryReviewed" to memoryReviewed,
         "from" to from,
         "to" to to,
@@ -52,15 +61,18 @@ data class Lending(
         "items" to items,
     )
 
-    fun isTaken(): Boolean = confirmed && taken
-
-    fun isReturned(): Boolean = isTaken() && returned
-
-    fun memoryPending(): Boolean = isReturned() && !memorySubmitted
+    fun status(): Status = when {
+        memoryReviewed -> Status.COMPLETE
+        memorySubmitted && !memoryReviewed -> Status.MEMORY_SUBMITTED
+        returned && !memorySubmitted -> Status.RETURNED
+        taken && !returned -> Status.TAKEN
+        confirmed && !taken -> Status.CONFIRMED
+        else -> Status.REQUESTED
+    }
 
     override val files: Map<String, Uuid?> = mapOf(
-        "memoryDocumentId" to memoryDocumentId
+        "memoryDocument" to memoryDocument
     )
 
-    override val documentFileId: Uuid? = memoryDocumentId
+    override val documentFile: Uuid? = memoryDocument
 }

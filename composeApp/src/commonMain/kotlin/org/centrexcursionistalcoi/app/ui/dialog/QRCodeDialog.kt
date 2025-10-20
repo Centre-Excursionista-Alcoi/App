@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,14 +35,12 @@ import io.github.alexzhirkevich.qrose.oned.BarcodeType
 import io.github.alexzhirkevich.qrose.oned.rememberBarcodePainter
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
-import io.ktor.http.ContentType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.jetbrains.compose.resources.stringResource
 
 private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
@@ -147,7 +144,8 @@ private fun ImageDisplay(
                     Icon(Icons.Default.Print, null)
                 }
             }
-            if (PlatformShareLogic.sharingSupported) {
+            // TODO: Implement sharing QR codes and barcodes
+            /*if (PlatformShareLogic.sharingSupported) {
                 IconButton(
                     onClick = {
                         val imageData = painter.toByteArray(1024, 1024, ImageFormat.PNG)
@@ -156,7 +154,7 @@ private fun ImageDisplay(
                 ) {
                     Icon(Icons.Default.Share, null)
                 }
-            }
+            }*/
         }
     }
 }

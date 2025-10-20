@@ -11,7 +11,7 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 
-class LendingsManagementViewModel: ViewModel() {
+class LendingsManagementViewModel : ViewModel() {
 
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 

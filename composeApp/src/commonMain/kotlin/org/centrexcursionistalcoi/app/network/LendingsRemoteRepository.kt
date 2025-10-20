@@ -25,6 +25,7 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 
 object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
@@ -158,7 +159,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
      * @param lendingId The UUID of the lending to submit the memory for.
      * @param file The memory file to submit.
      * @param progress An optional progress listener for upload progress.
-     * @throws IllegalArgumentException if the submission fails.
+     * @throws ServerException if the submission fails.
      * @throws NoSuchElementException if the lending is not found after submission.
      */
     suspend fun submitMemory(lendingId: Uuid, file: PlatformFile, progress: ProgressListener? = null) {
@@ -179,7 +180,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
             progress?.let { onUpload(it) }
         }
         if (!response.status.isSuccess()) {
-            throw IllegalArgumentException("Failed to submit memory for lending (${response.status}): ${response.bodyAsText()}")
+            throw ServerException.fromResponse(response)
         }
         val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
         LendingsRepository.update(updatedLending)

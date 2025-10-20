@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,15 +22,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import io.ktor.http.ContentType
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.documentFilePath
+import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
+import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.LendingsManagementViewModel
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -63,9 +69,11 @@ private fun LendingsManagementScreen(
     onReturnRequest: (Lending) -> Unit,
     onBack: () -> Unit
 ) {
-    val unconfirmedLendings = remember(lendings) { lendings?.filterNot { it.confirmed }.orEmpty() }
-    val pendingPickupLendings = remember(lendings) { lendings?.filter { it.confirmed && !it.taken }.orEmpty() }
-    val pendingReturnLendings = remember(lendings) { lendings?.filter { it.confirmed && it.taken && !it.returned }.orEmpty() }
+    val unconfirmedLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.REQUESTED }.orEmpty() }
+    val pendingPickupLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.CONFIRMED }.orEmpty() }
+    val pendingReturnLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.TAKEN }.orEmpty() }
+    val pendingMemoryLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.RETURNED }.orEmpty() }
+    val completedLendings = remember(lendings) { lendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty() }
 
     Scaffold(
         topBar = {
@@ -93,8 +101,14 @@ private fun LendingsManagementScreen(
             if (pendingReturnLendings.isNotEmpty()) item(key = "pending_return_lendings") {
                 PendingReturnLendingsCard(inventoryItemTypes, users, pendingReturnLendings, onReturnRequest)
             }
+            if (pendingMemoryLendings.isNotEmpty()) item(key = "pending_memory_lendings") {
+                PendingMemoryLendingsCard(inventoryItemTypes, users, pendingMemoryLendings)
+            }
+            if (completedLendings.isNotEmpty()) item(key = "completed_lendings") {
+                CompleteLendingsCard(inventoryItemTypes, users, completedLendings)
+            }
 
-            if (unconfirmedLendings.isEmpty() && pendingPickupLendings.isEmpty() && pendingReturnLendings.isEmpty()) {
+            if ((unconfirmedLendings + pendingPickupLendings + pendingReturnLendings + pendingMemoryLendings + completedLendings).isEmpty()) {
                 item(key = "no_lendings") {
                     Text(
                         text = stringResource(Res.string.management_no_lendings),
@@ -189,7 +203,6 @@ fun PendingPickupLendingsCard(
     )
 }
 
-
 @Composable
 fun PendingReturnLendingsCard(
     types: List<InventoryItemType>?,
@@ -234,6 +247,99 @@ fun PendingReturnLendingsCard(
                     dismiss()
                 }
             ) { Text("Return") }
+        }
+    )
+}
+
+@Composable
+fun PendingMemoryLendingsCard(
+    types: List<InventoryItemType>?,
+    users: List<UserData>?,
+    lendings: List<Lending>,
+) {
+    ListCard(
+        list = lendings,
+        titleResource = Res.string.management_pending_memory_lendings,
+        emptyTextResource = Res.string.management_no_lendings,
+        displayName = { it.id.toString() },
+        supportingContent = { lending ->
+            val user = users?.find { it.id == lending.userSub }
+            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+        },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        detailsDialogContent = { lending ->
+            val user = users?.find { it.id == lending.userSub }
+            val items = lending.items
+
+            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.lending_details_items_title))
+            for ((typeId, items) in items.groupBy { it.type }) {
+                val type = types?.find { it.id == typeId }
+                Text(
+                    pluralStringResource(
+                        Res.plurals.lending_details_item_row, items.size, type?.displayName ?: unknown(), items.size
+                    )
+                )
+            }
+
+            HorizontalDivider()
+
+            val givenByUser = users?.find { it.id == lending.givenBy }
+            val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
+            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+        }
+    )
+}
+
+@Composable
+fun CompleteLendingsCard(
+    types: List<InventoryItemType>?,
+    users: List<UserData>?,
+    lendings: List<Lending>,
+) {
+    ListCard(
+        list = lendings,
+        titleResource = Res.string.management_completed_lendings,
+        emptyTextResource = Res.string.management_no_lendings,
+        displayName = { it.id.toString() },
+        supportingContent = { lending ->
+            val user = users?.find { it.id == lending.userSub }
+            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+        },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        detailsDialogContent = { lending ->
+            val user = users?.find { it.id == lending.userSub }
+            val items = lending.items
+
+            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.lending_details_items_title))
+            for ((typeId, items) in items.groupBy { it.type }) {
+                val type = types?.find { it.id == typeId }
+                Text(
+                    pluralStringResource(
+                        Res.plurals.lending_details_item_row, items.size, type?.displayName ?: unknown(), items.size
+                    )
+                )
+            }
+
+            HorizontalDivider()
+
+            val givenByUser = users?.find { it.id == lending.givenBy }
+            val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
+            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+
+            val memoryDocument = lending.memoryDocument
+            if (PlatformOpenFileLogic.supported && memoryDocument != null) {
+                HorizontalDivider()
+
+                TextButton(
+                    onClick = {
+                        val path = lending.documentFilePath(memoryDocument)
+                        PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) { Text(stringResource(Res.string.management_view_memory)) }
+            }
         }
     )
 }

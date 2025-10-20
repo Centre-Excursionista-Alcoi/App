@@ -192,7 +192,7 @@ private fun HomeScreenContent(
         topBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 TopAppBar(
-                    title = {},
+                    title = { Text(stringResource(Res.string.app_name)) },
                     actions = {
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }

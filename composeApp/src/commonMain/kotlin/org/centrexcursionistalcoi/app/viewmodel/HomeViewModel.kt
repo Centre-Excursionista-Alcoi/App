@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.size
@@ -9,6 +10,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
@@ -22,6 +25,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
@@ -42,7 +46,9 @@ class HomeViewModel: ViewModel() {
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
-    val lendings = LendingsRepository.selectAllAsFlow().stateInViewModel()
+    val lendings = combine(LendingsRepository.selectAllAsFlow(), ProfileRepository.profile) { lendings, profile ->
+        lendings.filter { lending -> lending.userSub == profile?.sub }
+    }.map { list -> list.sortedBy { it.from } }.stateInViewModel()
 
     /**
      * A map of InventoryItemType ID to amount in the shopping list.
@@ -120,6 +126,8 @@ class HomeViewModel: ViewModel() {
             LendingsRemoteRepository.submitMemory(lending.id, file) { current, max ->
                 _memoryUploadProgress.value = current to (max ?: file.size())
             }
+        } catch (e: ServerException) {
+            Napier.e(e) { "Could not submit memory." }
         } finally {
             _memoryUploadProgress.value = null
         }

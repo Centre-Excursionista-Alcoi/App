@@ -5,5 +5,5 @@ import io.ktor.http.ContentType
 expect object PlatformShareLogic {
     val sharingSupported: Boolean
 
-    fun share(data: ByteArray, contentType: ContentType)
+    fun share(path: String, contentType: ContentType)
 }

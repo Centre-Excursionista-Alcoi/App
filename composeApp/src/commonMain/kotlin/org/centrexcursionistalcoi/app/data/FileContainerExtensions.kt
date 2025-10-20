@@ -21,7 +21,7 @@ import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
-private fun DocumentFileContainer.documentFilePath(uuid: Uuid): String {
+fun DocumentFileContainer.documentFilePath(uuid: Uuid): String {
     val clName = this::class.simpleName ?: "generic"
     return joinPaths("document", clName, uuid.toString())
 }
@@ -29,6 +29,11 @@ private fun DocumentFileContainer.documentFilePath(uuid: Uuid): String {
 suspend fun DocumentFileContainer.writeFile(uuid: Uuid, channel: ByteReadChannel) {
     val path = documentFilePath(uuid)
     PlatformFileSystem.write(path, channel)
+}
+
+suspend fun DocumentFileContainer.readFile(uuid: Uuid): ByteArray {
+    val path = documentFilePath(uuid)
+    return PlatformFileSystem.read(path)
 }
 
 private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {

@@ -69,7 +69,7 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
             receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memoryDocumentId = item.memoryDocumentId,
+            memoryDocumentId = item.memoryDocument,
             memoryReviewed = item.memoryReviewed,
         )
         for (inventoryItem in item.items) {
@@ -98,7 +98,7 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
             receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memoryDocumentId = item.memoryDocumentId,
+            memoryDocumentId = item.memoryDocument,
             memoryReviewed = item.memoryReviewed,
         )
         lendingItemsQueries.deleteByLendingId(item.id)
@@ -131,7 +131,7 @@ object LendingsDatabaseRepository : DatabaseRepository<Lending, Uuid>() {
         receivedAt = receivedAt,
         memorySubmitted = memorySubmitted,
         memorySubmittedAt = memorySubmittedAt,
-        memoryDocumentId = memoryDocumentId,
+        memoryDocument = memoryDocumentId,
         memoryReviewed = memoryReviewed,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() }
     )

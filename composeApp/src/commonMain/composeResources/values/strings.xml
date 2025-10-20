@@ -4,6 +4,8 @@
 
     <string name="admin">Admin</string>
 
+    <string name="welcome">Welcome back %1$s</string>
+
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
     <string name="login_action">Login</string>
@@ -23,6 +25,14 @@
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
 
+    <string name="home_lendings">Your Lendings</string>
+    <string name="home_lending">Material Lending</string>
+    <string name="home_past_lendings">Past Lendings</string>
+    <plurals name="home_past_lending_items">
+        <item quantity="one">%1$d item: %2$s</item>
+        <item quantity="other">%1$d items: %2$s</item>
+    </plurals>
+
     <string name="force_sync">Force Sync</string>
 
     <string name="management_departments">Departments</string>
@@ -40,6 +50,7 @@
     <string name="edit">Edit</string>
     <string name="confirm">Confirm</string>
     <string name="qrcode">QR Code</string>
+    <string name="unknown">Unknown</string>
 
     <string name="status_loading">Loading...</string>
 
@@ -91,6 +102,12 @@
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
     <string name="management_pending_pickup_lendings">Lendings pending pickup</string>
     <string name="management_pending_return_lendings">Lendings pending return</string>
+    <string name="management_pending_memory_lendings">Lendings pending memory</string>
+    <string name="management_completed_lendings">Completed lendings</string>
+
+    <string name="management_lending_user">User: %1$s</string>
+    <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
+    <string name="management_view_memory">View Memory</string>
 
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
@@ -103,6 +120,10 @@
     <string name="lending_details_title">Lending Details</string>
     <string name="lending_details_cancel">Cancel Lending</string>
     <string name="lending_details_items_title">Items:</string>
+    <plurals name="lending_details_item_row">
+        <item quantity="one">- %1$s: %2$d unit</item>
+        <item quantity="other">- %1$s: %2$d units</item>
+    </plurals>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_username">Username</string>

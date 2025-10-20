@@ -55,4 +55,13 @@ object Errors {
     @Serializable
     data object NothingToUpdate : Error(9, "Nothing to update", HttpStatusCode.BadRequest)
 
+    @Serializable
+    data object MissingFile : Error(10, "No file uploaded", HttpStatusCode.BadRequest)
+
+    @Serializable
+    data object CannotSubmitMemoryUntilMaterialIsReturned : Error(11, "You cannot submit a memory until the material has been returned.", HttpStatusCode.Conflict)
+
+    @Serializable
+    data object UserReferenceNotFound : Error(12, "Your user reference was not found.", HttpStatusCode.InternalServerError)
+
 }

@@ -32,14 +32,14 @@ fun LendingDetailsDialog(
     itemTypes: List<InventoryItemType>,
     onCancelRequest: () -> Unit,
     memoryUploadProgress: Pair<Long, Long>?,
-    onMemorySubmitted: (PlatformFile) -> Job,
+    onMemorySubmitted: ((PlatformFile) -> Job)?,
     onDismissRequest: () -> Unit,
 ) {
     var isSubmittingMemory by remember { mutableStateOf(false) }
     val filePickLauncher = rememberFilePickerLauncher(FileKitType.File("pdf")) { file ->
         if (file == null) return@rememberFilePickerLauncher
         isSubmittingMemory = true
-        onMemorySubmitted(file).invokeOnCompletion {
+        onMemorySubmitted?.invoke(file)?.invokeOnCompletion {
             isSubmittingMemory = false
             onDismissRequest()
         }
@@ -54,16 +54,14 @@ fun LendingDetailsDialog(
                 Text("From: ${lending.from}")
                 Text("To: ${lending.to}")
 
-                if (lending.isReturned()) {
-                    Text("Returned on: ${lending.receivedAt}")
-                } else if (lending.isTaken()) {
-                    Text("Taken on: ${lending.givenAt}")
-                } else if (lending.confirmed) {
-                    Text("Status: Confirmed")
-                } else {
-                    Text("Status: Pending")
+                val status = lending.status()
+                when (status) {
+                    Lending.Status.REQUESTED -> Text("Status: Pending")
+                    Lending.Status.TAKEN -> Text("Taken on: ${lending.givenAt}")
+                    Lending.Status.CONFIRMED -> Text("Status: Confirmed")
+                    else -> Text("Returned on: ${lending.receivedAt}")
                 }
-                if (lending.memoryPending()) {
+                if (status == Lending.Status.RETURNED) {
                     Text(
                         text = stringResource(resource = Res.string.memory_pending_lending),
                         color = MaterialTheme.colorScheme.error,
@@ -104,7 +102,7 @@ fun LendingDetailsDialog(
             }
         },
         dismissButton = {
-            if (!lending.isTaken()) {
+            if (lending.status() in listOf(Lending.Status.REQUESTED, Lending.Status.CONFIRMED)) {
                 TextButton(
                     enabled = !isSubmittingMemory,
                     onClick = onCancelRequest

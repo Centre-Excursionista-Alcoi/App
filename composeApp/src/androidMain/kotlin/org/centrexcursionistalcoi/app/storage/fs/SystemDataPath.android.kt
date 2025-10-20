@@ -5,4 +5,4 @@ import kotlinx.io.files.Path
 import org.centrexcursionistalcoi.app.MainActivity
 
 actual val SystemDataPath: Path
-    get() = MainActivity.instance!!.dataDir.toKotlinxPath()
+    get() = MainActivity.instance!!.filesDir.toKotlinxPath()

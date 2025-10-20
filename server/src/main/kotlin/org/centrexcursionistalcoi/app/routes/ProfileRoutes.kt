@@ -39,7 +39,7 @@ fun Route.profileRoutes() {
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
 
         call.respond(
-            ProfileResponse(session.username, session.email, session.groups, departments, lendingUser, insurances)
+            ProfileResponse(session.sub, session.username, session.email, session.groups, departments, lendingUser, insurances)
         )
     }
     post("/profile/lendingSignUp") {
