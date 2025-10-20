@@ -8,6 +8,17 @@
     <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
     <string name="login_action">Login</string>
 
+    <string name="register_title">Register an Account</string>
+    <string name="register_username">Username</string>
+    <string name="register_email">Email</string>
+    <string name="register_name">Name</string>
+    <string name="register_password">Password</string>
+    <string name="register_confirm_password">Confirm Password</string>
+    <string name="register_action">Register</string>
+    <string name="password_show">Show Password</string>
+    <string name="password_hide">Hide Password</string>
+    <string name="register_error_email_format">Introduce a valid email address</string>
+
     <string name="nav_home">Home</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
