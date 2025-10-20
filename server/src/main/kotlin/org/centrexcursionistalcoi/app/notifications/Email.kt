@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.mailersend.SendMailRequest
 
@@ -33,7 +34,7 @@ object Email {
         }
     }
 
-    suspend fun sendEmail(to: List<MailerSendEmail>, subject: String, htmlContent: String) {
+    suspend fun sendEmail(to: List<MailerSendEmail>, subject: String, htmlContent: String, attachments: List<MailerSendAttachment>? = null) {
         val request = SendMailRequest(
             from = MailerSendEmail(
                 email = NotificationsConfig.emailFromAddr,
@@ -45,6 +46,7 @@ object Email {
             replyTo = NotificationsConfig.emailReplyToAddr?.let {
                 MailerSendEmail(it, NotificationsConfig.emailReplyToName ?: "")
             },
+            attachments = attachments,
         )
         val response = httpClient.post("/v1/email") {
             contentType(ContentType.Application.Json)

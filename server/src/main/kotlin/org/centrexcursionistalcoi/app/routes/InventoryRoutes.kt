@@ -37,6 +37,7 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Errors
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
@@ -496,12 +497,35 @@ fun Route.inventoryRoutes() {
             return@post
         }
 
-        val documentEntity = file.newEntity()
+        val documentEntity = file.newEntity(false)
 
         Database {
             lending.memorySubmitted = true
             lending.memorySubmittedAt = Instant.now()
             lending.memoryDocument = documentEntity
+        }
+
+        // Notify administrators that a new memory has been uploaded
+        CoroutineScope(Dispatchers.IO).launch {
+            val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
+            val emails = admins.map { MailerSendEmail(it.email, it.username) }
+            val documentBytes = file.baos.toByteArray().also { file.close() }
+            Email.sendEmail(
+                to = emails,
+                subject = "New lending memory submitted (#${lending.id.value})",
+                htmlContent = """
+                    <p>The lending memory for lending #${lending.id.value} has been submitted by ${userReference.username}.</p>
+                    <p>
+                        <strong>From:</strong> ${lending.from}<br/>
+                        <strong>To:</strong> ${lending.to}<br/>
+                        <strong>Notes:</strong> ${lending.notes ?: "None"}<br/>
+                    </p>
+                    <p>Please review the submitted memory in the admin panel.</p>
+                """.trimIndent(),
+                attachments = listOf(
+                    MailerSendAttachment(documentBytes, file.originalFileName ?: "memory.pdf"),
+                ),
+            )
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)

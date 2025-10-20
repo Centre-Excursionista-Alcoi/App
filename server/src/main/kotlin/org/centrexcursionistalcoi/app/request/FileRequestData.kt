@@ -25,16 +25,17 @@ class FileRequestData: Closeable {
 
     /**
      * Creates a new [FileEntity] in the database with the data from this file and releases resources.
+     * @param close Whether to close this file data after creating the entity. Defaults to true.
      * @return The created [FileEntity].
      */
-    fun newEntity(): FileEntity {
+    fun newEntity(close: Boolean = true): FileEntity {
         return Database {
             FileEntity.new {
                 name = originalFileName ?: "unknown"
                 type = contentType?.toString() ?: "application/octet-stream"
                 data = baos.toByteArray()
             }
-        }.also { close() }
+        }.also { if (close) close() }
     }
 
     /**
