@@ -122,7 +122,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
                     Napier.v { "Writing file..." }
                     when (item) {
                         is ImageFileContainer -> item.writeImageFile(uuid, channel)
-                        is DocumentFileContainer -> item.writeFile(uuid, channel)
+                        is DocumentFileContainer -> item.writeFile(channel)
                         else -> error("Don't know how to store files for ${item::class.simpleName}. Implementation is missing!")
                     }
                     Napier.d { "File $uuid stored." }

@@ -328,13 +328,12 @@ fun CompleteLendingsCard(
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
             Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
 
-            val memoryDocument = lending.memoryDocument
-            if (PlatformOpenFileLogic.supported && memoryDocument != null) {
+            if (PlatformOpenFileLogic.supported && lending.memoryDocument != null) {
                 HorizontalDivider()
 
                 TextButton(
                     onClick = {
-                        val path = lending.documentFilePath(memoryDocument)
+                        val path = lending.documentFilePath()
                         PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)

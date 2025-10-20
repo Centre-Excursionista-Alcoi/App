@@ -21,18 +21,26 @@ import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
-fun DocumentFileContainer.documentFilePath(uuid: Uuid): String {
+/**
+ * Returns the file path for the document file associated with this DocumentFileContainer.
+ * @throws IllegalStateException if there is no document file associated with the container.
+ */
+fun DocumentFileContainer.documentFilePath(): String {
     val clName = this::class.simpleName ?: "generic"
-    return joinPaths("document", clName, uuid.toString())
+    return joinPaths("document", clName, documentFile?.toString() ?: error("No document file for container"))
 }
 
-suspend fun DocumentFileContainer.writeFile(uuid: Uuid, channel: ByteReadChannel) {
-    val path = documentFilePath(uuid)
+/**
+ * Writes the provided ByteReadChannel to the document file associated with this DocumentFileContainer.
+ * @throws IllegalStateException if there is no document file associated with the container.
+ */
+suspend fun DocumentFileContainer.writeFile(channel: ByteReadChannel) {
+    val path = documentFilePath()
     PlatformFileSystem.write(path, channel)
 }
 
-suspend fun DocumentFileContainer.readFile(uuid: Uuid): ByteArray {
-    val path = documentFilePath(uuid)
+suspend fun DocumentFileContainer.readFile(): ByteArray {
+    val path = documentFilePath()
     return PlatformFileSystem.read(path)
 }
 

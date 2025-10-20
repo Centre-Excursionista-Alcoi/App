@@ -8,6 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,9 +22,12 @@ import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.ktor.http.ContentType
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.documentFilePath
+import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -98,6 +102,19 @@ fun LendingDetailsDialog(
                 for ((typeId, items) in list) {
                     val type = itemTypes.find { it.id == typeId }
                     Text("- ${type?.displayName ?: "Unknown"}: ${items.size} items")
+                }
+
+                if (PlatformOpenFileLogic.supported && lending.memoryDocument != null) {
+                    HorizontalDivider()
+
+                    OutlinedButton(
+                        onClick = {
+                            val path = lending.documentFilePath()
+                            PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                        }
+                    ) {
+                        Text(stringResource(Res.string.management_view_memory))
+                    }
                 }
             }
         },
