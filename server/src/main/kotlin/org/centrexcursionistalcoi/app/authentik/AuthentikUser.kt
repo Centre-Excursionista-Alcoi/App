@@ -22,7 +22,7 @@ data class AuthentikUser(
     val isActive: Boolean,
 
     @SerialName("last_login")
-    val lastLogin: String,
+    val lastLogin: String?,
 
     @SerialName("date_joined")
     val dateJoined: String,
@@ -34,7 +34,7 @@ data class AuthentikUser(
     val groupsObj: List<AuthentikGroup>,
 
     @SerialName("password_change_date")
-    val passwordChangeDate: String,
+    val passwordChangeDate: String?,
 
     @SerialName("last_updated")
     val lastUpdated: String
