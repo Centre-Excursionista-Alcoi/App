@@ -43,6 +43,9 @@ object FEMECV {
 
     private fun newClient(cookiesStorage: CookiesStorage = FEMECV.cookiesStorage): HttpClient {
         return HttpClient(engine) {
+            // We want to handle redirects manually to detect login success/failure
+            followRedirects = false
+
             install(ContentNegotiation)
             install(HttpCookies) {
                 storage = cookiesStorage
@@ -78,7 +81,7 @@ object FEMECV {
     }
 
     suspend fun getLicense(client: HttpClient, id: Int): LicenseData {
-        val response = client.get("/FormLlicencia.php?idLlicencia=$id")
+        val response = client.get("/FormLlicencia.php?accio=edit&idLlicencia=$id")
         val body = response.bodyAsText()
         if (response.status.isSuccess()) {
             val document = Ksoup.parse(body)
@@ -123,7 +126,7 @@ object FEMECV {
         val client = newClient()
         login(username, password, client)
 
-        val response = client.get("/PanellControlUsuariFederat.php")
+        val response = client.get("/PanellControlUsuariFederat.php?accio=edit")
         val body = response.bodyAsText()
         if (response.status.isSuccess()) {
             val document = Ksoup.parse(body)
