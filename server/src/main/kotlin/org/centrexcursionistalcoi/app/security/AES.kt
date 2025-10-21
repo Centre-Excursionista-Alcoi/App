@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.security
 
 import java.io.File
 import java.security.SecureRandom
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -21,8 +22,15 @@ object AES {
     var ivParameterSpec: IvParameterSpec? = null
 
     val encryptor = Encryptor(
-        encryptFn = { encrypt(it.encodeToByteArray()).decodeToString() },
-        decryptFn = { decrypt(it.encodeToByteArray()).decodeToString() },
+        encryptFn = { data ->
+            val encrypted = encrypt(data.toByteArray())
+            Base64.getEncoder().encodeToString(encrypted)
+        },
+        decryptFn = { data ->
+            val decoded = Base64.getDecoder().decode(data)
+            val decrypted = decrypt(decoded)
+            String(decrypted)
+        },
         maxColLengthFn = { 512 },
     )
 
