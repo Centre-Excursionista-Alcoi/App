@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
+import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.VisibleForTesting
 
 var today: () -> LocalDate = { LocalDate.now() }
@@ -21,6 +22,8 @@ var now: () -> Instant = { Instant.now() }
     set
 
 fun main() {
+    AES.init()
+
     Database.init(
         url = System.getenv("DB_URL") ?: Database.URL,
         driver = System.getenv("DB_DRIVER"),
