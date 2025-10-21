@@ -14,6 +14,8 @@ class AppBase: Application() {
 
         Napier.base(DebugAntilog())
 
+        initializeSentry()
+
         databaseInstance = runBlocking { createDatabase(DriverFactory(this@AppBase)) }
     }
 }

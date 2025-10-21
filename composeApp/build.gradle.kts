@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
-    alias(libs.plugins.sekret)
+    alias(libs.plugins.sentryMultiplatform)
     alias(libs.plugins.sqldelight)
 }
 
@@ -223,14 +223,7 @@ android {
     }
 }
 
-sekret {
-    properties {
-        enabled.set(true)
-
-        packageName.set("org.centrexcursionistalcoi.app")
-        encryptionKey.set(System.getenv("SEKRET_KEY") ?: "0123456789ABCDEF") // Use a secure key in production!
-    }
-}
+val sentryProperties = readProperties("sentry.properties")!!
 
 buildkonfig {
     packageName = "org.centrexcursionistalcoi.app"
@@ -248,6 +241,12 @@ buildkonfig {
             value = null,
             nullable = true,
         )
+        buildConfigField(
+            type = STRING,
+            name = "SENTRY_DSN",
+            value = null,
+            nullable = true,
+        )
     }
     targetConfigs {
         create("android") {
@@ -257,12 +256,26 @@ buildkonfig {
                 value = "cea://redirect",
                 nullable = true,
             )
+            buildConfigField(
+                type = STRING,
+                name = "SENTRY_DSN",
+                value = sentryProperties.getProperty("SENTRY_DSN_ANDROID"),
+                nullable = true,
+            )
         }
         create("wasmJs") {
             buildConfigField(
                 type = STRING,
                 name = "REDIRECT_URI",
                 value = "http://localhost:8080#redirect",
+                nullable = true,
+            )
+        }
+        create("ios") {
+            buildConfigField(
+                type = STRING,
+                name = "SENTRY_DSN",
+                value = sentryProperties.getProperty("SENTRY_DSN_IOS"),
                 nullable = true,
             )
         }

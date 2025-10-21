@@ -8,6 +8,7 @@ import io.ktor.http.appendPathSegments
 import io.ktor.http.isSuccess
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.network.getHttpClient
 
@@ -50,6 +51,9 @@ object AuthCallbackProcessor {
             val body = response.bodyAsText()
             throw IllegalStateException("Authentication failed (${response.status}): $body")
         }
+
+        // Small delay to ensure cookies are set before proceeding
+        delay(50)
 
         // Verify that the login was successful by fetching the profile endpoint
         val profileResponse = client.get("/profile")

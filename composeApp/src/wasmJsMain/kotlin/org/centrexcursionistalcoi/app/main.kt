@@ -22,8 +22,6 @@ import org.centrexcursionistalcoi.app.viewmodel.AuthCallbackModel
 fun main() {
     Napier.base(DebugAntilog())
 
-    secretsBinaryLoaded = true
-
     redirectOrigin = window.location.origin
 
     ComposeViewport(document.body!!) {

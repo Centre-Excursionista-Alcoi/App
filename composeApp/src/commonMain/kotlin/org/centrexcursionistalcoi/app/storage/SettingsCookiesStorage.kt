@@ -1,19 +1,20 @@
 package org.centrexcursionistalcoi.app.storage
 
 import com.russhwolf.settings.Settings
+import io.github.aakira.napier.Napier
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.fillDefaults
 import io.ktor.client.plugins.cookies.matches
 import io.ktor.http.Cookie
 import io.ktor.http.Url
 import io.ktor.util.date.getTimeMillis
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.math.min
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.json
-import kotlin.concurrent.atomics.AtomicLong
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.math.min
 
 @OptIn(ExperimentalAtomicApi::class)
 class SettingsCookiesStorage(
@@ -54,7 +55,10 @@ class SettingsCookiesStorage(
 
     override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
         with(cookie) {
-            if (name.isBlank()) return
+            if (name.isBlank()) {
+                Napier.w { "Tried to store a cookie without name ($requestUrl): $cookie" }
+                return
+            }
         }
 
         mutex.withLock {
@@ -69,6 +73,7 @@ class SettingsCookiesStorage(
                     CookieWithTimestamp(cookie.fillDefaults(requestUrl), createdAt)
                 )
             )
+            Napier.d { "Stored cookie: ${cookie.name}" }
 
             cookie.maxAgeOrExpires(createdAt)?.let {
                 if (oldestCookie.load() > it) {
