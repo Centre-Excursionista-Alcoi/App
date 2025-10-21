@@ -1,0 +1,1781 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playoff. Aplicaci�n de licencias y competici�n para federaciones deportivas. Federaci� d'Esports de Muntanya i Escalada de la Comunitat Valenciana</title>
+    <!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-WGW74J"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WGW74J');</script>
+<!-- End Google Tag Manager -->    <!-- Tipografia -->
+    <link type="text/css" rel="stylesheet"
+          href="//fonts.googleapis.com/css?family=Open+Sans:400,800italic,800,700italic,700,600italic,600,400italic,300italic,300|Open+Sans+Condensed:300,300italic,700"/>
+    <!-- JQuery -->
+    <script type="text/javascript" src="js/jquery/jquery-1.11.2.min.js?v=1760609375"></script>
+    <!-- UI -->
+    <script type="text/javascript" src="js/jquery/jquery-ui.min.js?v=1760609375"></script>
+    <link rel='stylesheet' type='text/css' href='js/jquery/jquery-ui.min.css?v=1760609375'>
+    <link rel='stylesheet' type='text/css'
+          href='js/jquery/jquery-ui.structure.min.css?v=1760609375'>
+    <link rel='stylesheet' type='text/css'
+          href='js/jquery/jquery-ui.theme.min.css?v=1760609375'>
+    <script type="text/javascript"
+            src="js/jquery/jquery.ui.datepicker-language.js?v=1760609375"></script>
+    <!-- Datepicker -->
+    <script type="text/javascript"
+            src="js/jquery/validate/jquery.validate.js?v=1760609375"></script><!-- Validate -->
+    <script type="text/javascript"
+            src="js/jquery/validate/additional-methods.js?v=1760609375"></script>
+    <script type="text/javascript" src="/js/jquery/validate/messages_es.js?v=1760609375"></script>    <script type="text/javascript"
+            src="js/jquery/plugins/jquery.maskedinput.min.js?v=1760609375"></script>
+    <!-- Input Mask -->
+    <script type="text/javascript"
+            src="js/jquery/plugins/jquery.blockUI.js?v=1760609375"></script>
+    <!-- MSGS BlockUI -->
+    <script type="text/javascript"
+            src="js/jquery/plugins/jquery.selectboxes.js?v=1760609375"></script>
+    <!-- Html select jquery handling -->
+    <!-- Tooltip -->
+    <script type='text/javascript' src="js/tooltip/simple-tooltip.js?v=1760609375"></script>
+    <!-- Tabs -->
+    <script type="text/javascript" src="js/ajaxtabs/ajaxtabs.js?v=1760609375"></script>
+    <link rel="stylesheet" href="estils/ajaxtabs/ajaxtabs.css?v=1760609374" type="text/css"/>
+    <!--  Bootstrap -->
+    <link rel="stylesheet" href="estils/bootstrap/css/bootstrap4.min.css?v=1760609374">
+    <script type="text/javascript"
+            src="estils/bootstrap/js/bootstrap4.min.js?v=1760609374"></script>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css"/>
+    <script src="https://kit.fontawesome.com/fa92068533.js" crossorigin="anonymous"></script>
+    <!--  Autosize textareas -->
+    <script type="text/javascript"
+            src="js/jquery/jquery.autosize-min.js?v=1760609375"></script>
+    <!-- Migrate -->
+    <!-- <script type="text/javascript" src="js/jquery/jquery-migrate-1.2.1.min.js?v=1760609375"></script> -->
+    <!-- PLAYOFF -->
+    <!-- Utils -->
+    <script type="text/javascript" src="js/utils/utils.js?v=1760609375"></script>
+    <script type="text/javascript" src="js/validacio/messages.js?v=1760609375"></script>
+    <!--  Idiomes -->
+    <!-- TrLang -->
+<script type="text/javascript" src="/js/trlang/TrLang.js?v=1760609375"  ></script><script type="text/javascript">/* <![CDATA[ */
+	var traducionsTemp = new Array();
+	traducionsTemp['FLEXIGRID_CONN_ERROR']="Error de connexi�n.";traducionsTemp['FLEXIGRID_DISPLAYING_1']="Mostrando";traducionsTemp['FLEXIGRID_DISPLAYING_2']="a";traducionsTemp['FLEXIGRID_DISPLAYING_3']="de";traducionsTemp['FLEXIGRID_DISPLAYING_4']="registros.";traducionsTemp['FLEXIGRID_PROCESSING']="Procesando, un momento ...";traducionsTemp['FLEXIGRID_NOITEMS']="No hay elementos.";traducionsTemp['FLEXIGRID_CLEAR']="Limpiar";traducionsTemp['FLEXIGRID_SEARCH']="Buscar";traducionsTemp['FLEXIGRID_PAGE']="P�gina ";traducionsTemp['FLEXIGRID_SELECT']="Sel.";traducionsTemp['FLEXIGRID_OF']=" de ";traducionsTemp['FLEXIGRID_QUICKSEARCH']="Campo de B�squeda";traducionsTemp['FLEXIGRID_ERROR_NODATE_PRINT']="No hay elementos por imprimir";traducionsTemp['FLEXIGRID_NODATE_SELECTED']="No hay filas seleccionadas.";traducionsTemp['FLEXIGRID_ERROR_PRINT']="Error al recibir los datos";traducionsTemp['FLEXIGRID_SHOW_SEARCH_OPTION']="+";traducionsTemp['FLEXIGRID_HIDE_SEARCH_OPTION']="-";traducionsTemp['FLEXIGRID_NO_NUM_SELECT1']="Tiene que seleccionar";traducionsTemp['FLEXIGRID_NO_NUM_SELECT2']="elementos.";traducionsTemp['FLEXIGRID_SEARCH_AND']="AND";traducionsTemp['FLEXIGRID_SEARCH_OR']="OR";traducionsTemp['FLEXIGRID_SEARCH_ANDNOT']="AND NOT";traducionsTemp['FLEXIGRID_SEARCH_CONTAIN']="Contiene ";traducionsTemp['FLEXIGRID_SEARCH_IGUAL']="Igual que ";traducionsTemp['FLEXIGRID_SEARCH_MAJOR']="Mayor que ";traducionsTemp['FLEXIGRID_SEARCH_MENOR']="Menor que ";traducionsTemp['FLEXIGRID_SEARCH_SENSEVALOR']="Vac�o (Sin valor) ";traducionsTemp['FLEXIGRID_SEARCH_AMBVALOR']="Con valor ";traducionsTemp['FLEXIGRID_SAVESTATEBD_OK']="Se ha guardado el estado correctamente";traducionsTemp['FLEXIGRID_SAVESTATEBD_INFO']="Guardar la configuracion actual de este listado";traducionsTemp['FLEXIGRID_DELSTATEBD_INFO']="Eliminar y resetear la configuracion de este listado";traducionsTemp['FLEXIGRID_AGRUPACIO_IMPRIMIR']="Imprimir";traducionsTemp['FLEXIGRID_AGRUPACIO_EXPORTAR']="Exportar";traducionsTemp['FLEXIGRID_AGRUPACIO_NOU']="Nuevo";traducionsTemp['FLEXIGRID_ESTENDRE_AMPLADA']="Extender el listado";traducionsTemp['VALIDACIO_CAMP_OBLIGATORI']="Este campo es obligatorio.";traducionsTemp['COMBO_SELECCIONA']="Selecciona opci�n";traducionsTemp['COMBO_MULTISELECT_NOSELECCIONATS']="Selecciona opciones";traducionsTemp['DT_BASE_LENGTHMENU']="_MENU_";traducionsTemp['DT_BASE_ZERORECORDS']="Sin resultados";traducionsTemp['DT_BASE_INFO']="P�gina _PAGE_ de _PAGES_ con _TOTAL_ registros";traducionsTemp['DT_BASE_INFOEMPTY']="Sin resultados";traducionsTemp['DT_BASE_EMPTYTABLE']="No hay registros a mostrar";traducionsTemp['DT_BASE_INFOFILTERED']="(filtrado de un total de _MAX_ registros)";traducionsTemp['DT_BASE_PAGINATE_NEXT']="Siguiente";traducionsTemp['DT_BASE_PAGINATE_PREVIOUS']="Anterior";traducionsTemp['DT_BASE_SEARCH']="Buscar";traducionsTemp['DT_BASE_SEARCHPLACEHOLDER']="Buscar (M�nimo 3 caracteres)";traducionsTemp['DT_BASE_LOADING']="Cargando los registros...";traducionsTemp['DT_BASE_PROCESSING']="<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"24px\" height=\"30px\" viewBox=\"0 0 24 30\" xml:space=\"preserve\"> <rect x=\"0\" y=\"8.79887\" width=\"4\" height=\"12.4023\" fill=\"#2CA100\" opacity=\"0.2\"> <animate attributeName=\"opacity\" attributeType=\"XML\" values=\"0.2; 1; .2\" begin=\"0s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"height\" attributeType=\"XML\" values=\"10; 20; 10\" begin=\"0s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"y\" attributeType=\"XML\" values=\"10; 5; 10\" begin=\"0s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> </rect> <rect x=\"8\" y=\"6.29887\" width=\"4\" height=\"17.4023\" fill=\"#2CA100\" opacity=\"0.2\"> <animate attributeName=\"opacity\" attributeType=\"XML\" values=\"0.2; 1; .2\" begin=\"0.15s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"height\" attributeType=\"XML\" values=\"10; 20; 10\" begin=\"0.15s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"y\" attributeType=\"XML\" values=\"10; 5; 10\" begin=\"0.15s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> </rect> <rect x=\"16\" y=\"6.20113\" width=\"4\" height=\"17.5977\" fill=\"#2CA100\" opacity=\"0.2\"> <animate attributeName=\"opacity\" attributeType=\"XML\" values=\"0.2; 1; .2\" begin=\"0.3s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"height\" attributeType=\"XML\" values=\"10; 20; 10\" begin=\"0.3s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> <animate attributeName=\"y\" attributeType=\"XML\" values=\"10; 5; 10\" begin=\"0.3s\" dur=\"0.6s\" repeatCount=\"indefinite\"></animate> </rect> </svg>";traducionsTemp['DT_BASE_ROWS_SELECTED']="Filas seleccionadas";traducionsTemp['DT_COLVIS']="Visibilidad columnas";traducionsTemp['DT_COLVIS_HEADER']="Selecciona columnas";traducionsTemp['DT_MISSATGE_WARNING']="Atenci�n";traducionsTemp['DT_MISSATGE_WARNING_PARSEESTAT']="No se ha podido cargar correctamente el estado.";traducionsTemp['DT_MISSATGE_ERROR']="Error";traducionsTemp['DT_MISSATGE_ERROR_QUERY']="Hay un error en la consulta";traducionsTemp['DT_BUSQUEDAAVANCADA_BTN']="B�squeda avanzada";traducionsTemp['DT_BUSQUEDAAVANCADA']="B�squeda avanzada";traducionsTemp['DT_BUSQUEDAAVANCADA_CERCA']="Buscar";traducionsTemp['DT_BUSQUEDAAVANCADA_RESET']="Limpiar";traducionsTemp['DT_BUSQUEDAAVANCADA_CAMP']="Selecciona campo";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA']="Tipo B�squeda";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_IGUAL']="Igual";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_CONTE']="Contiene";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_MENOR']="Menor";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_MAJOR']="Mayor";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_NOCONTE']="No contiene";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_DIFERENT']="Diferente";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_SENSEVALOR']="Vac�o (Sin valor)";traducionsTemp['DT_BUSQUEDAAVANCADA_TIPUSBUSQUEDA_AMBVALOR']="Con valor";traducionsTemp['DT_BUSQUEDAAVANCADA_VALOR']="Valor";traducionsTemp['DT_BUSQUEDAAVANCADA_VALORS']="Valores";traducionsTemp['DT_BUSQUEDAAVANCADA_VALOR_DATE']="dd/mm/yyyy";traducionsTemp['DT_BUSQUEDAAVANCADA_FIELDTOKEN_VALOR_DESCR']="Inserta el valor a buscar y presiona intro";traducionsTemp['DT_BUSQUEDAAVANCADA_FIELDTOKEN_DATA_DESCR']="Inserta la fecha a buscar y presiona intro";traducionsTemp['DT_BUSQUEDAAVANCADA_FILA_AFEGIR']="A�adir";traducionsTemp['DT_BUSQUEDAAVANCADA_FILA_ELIMINAR']="Eliminar";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_INICI']="Resultados filtrados en los que ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_EDITAR']="Editar";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_AND']=", ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_ANDFINAL']=" y ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_VALORS_OR']=" o ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_CAMP']="el campo ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_IGUAL']=" es ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_MAJOR']=" es mayor que ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_MAJOR_IGUAL']=" es mayor o igual que ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_MENOR']=" es menor ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_MENOR_IGUAL']=" es menor o igual que ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_DIFERENT']=" es diferente ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_NOCONTE']=" no contiene ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_CONTE']=" contiene ";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_SENSEVALOR']=" sin valor";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_TIPUSCERCA_DT_CERCA_TIPUS_AMBVALOR']=" con valor";traducionsTemp['DT_BUSQUEDAAVANCADA_RESUM_I']=" y ";traducionsTemp['DT_GESTIOPERFIL']="Guardar listado personalizado";traducionsTemp['DT_GESTIOPERFIL_TITLE']="Guardar Listado personalizado";traducionsTemp['DT_GESTIOPERFIL_DELETETITLE']="Eliminar configuraci�n personalizada del Listado";traducionsTemp['DT_GESTIOPERFIL_INPUTPLACEHOLDER']="Nombre del listado";traducionsTemp['DT_GESTIOPERFIL_DESAR']="Guardar listado";traducionsTemp['DT_GESTIOPERFIL_DESARCOM']="Guardar listado como...";traducionsTemp['DT_DESAR_LLISTAT']="Guardar";traducionsTemp['DT_GESTIOPERFIL_DESARCOM_RESULTATOK']="Correcto!";traducionsTemp['DT_GESTIOPERFIL_DESARCOM_RESULTATKO']="Ha habido un error al guardar el listado personalizado!";traducionsTemp['DT_GESTIOPERFIL_MULTIPLESUSUARIS']="Guardar este listado para:";traducionsTemp['DT_GESTIOPERFIL_MULTIPLESUSUARIS_PROPI']="Este usuario";traducionsTemp['DT_GESTIOPERFIL_MULTIPLESUSUARIS_TOTS']="Todos los usuarios";traducionsTemp['DT_GESTIOPERFIL_NETEJAR']="Eliminar";traducionsTemp['DT_GESTIOPERFIL_CANCELAR']="Cancelar";traducionsTemp['DT_GESTIOPERFIL_LOAD']="Cargar listado";traducionsTemp['DT_GESTIOPERFIL_LOADING']="Cargando...";traducionsTemp['DT_GESTIOPERFIL_LOAD_EMPTY']="Sin perfiles";traducionsTemp['DT_EXPORTAR']="Exportar";traducionsTemp['DT_EXPORTAR_EXCEL']="Excel";traducionsTemp['DT_EXPORTAR_PDF']="Pdf";traducionsTemp['DT_SELECCIONAOPCIO_SELTOTS']="Sel. Todos";traducionsTemp['DT_SELECCIONAOPCIO_SELTOTS_TITLE']="Haz clic para seleccionar todos los registros de la p�gina";traducionsTemp['DT_MULTIVALOR_NUMADJUNTS']="Tiene $[1] adjuntos";traducionsTemp['DT_MULTIVALOR_NUMADJUNTS_NORESULTS']="No tiene adjuntos";traducionsTemp['DT_MULTIVALOR_NUMFAMILIARS']="$[1] socio/s relacionados";traducionsTemp['DT_MULTIVALOR_NUMFAMILIARS_NORESULTS']="Sin socios relacionados";traducionsTemp['DT_MULTIVALOR_NUMFAMILIARS_DATANAIXEMENT']="Data naixement: ";traducionsTemp['DT_MULTIVALOR_INSCRIPCIONS_NORESULTS']="No tiene inscripciones";traducionsTemp['DT_MULTIVALOR_INSCRIPCIONS']="$[1] inscripciones";traducionsTemp['DT_MULTIVALOR_CAMPSDINAMICS_NORESULTS']="No tiene ninguno indicado";traducionsTemp['DT_MULTIVALOR_CAMPSDINAMICS']="Mostrar campos";traducionsTemp['DT_MULTIVALOR_ARBITRES']="Tiene $[1] �rbitros";traducionsTemp['DT_MULTIVALOR_TARGETES']="Tiene $[1] tarjetas";traducionsTemp['DT_MULTIVALOR_TARGETESPARTITS_NORESULTS']="Sin sanciones";traducionsTemp['DT_MULTIVALOR_TARGETESPARTITS_PART']="Parte";traducionsTemp['DT_MULTIVALOR_TARGETESPARTITS_MINUT']="Minuto";traducionsTemp['DT_MULTIVALOR_TARGETESPARTITS_MOTIU']="Motivo";traducionsTemp['CALENDARI_CLOSETEXT']="Cerrar";traducionsTemp['CALENDARI_PREVTEXT']="Ant";traducionsTemp['CALENDARI_NEXTTEXT']="Sig;";traducionsTemp['CALENDARI_CURRENTTEXT']="Hoy";traducionsTemp['CALENDARI_MN_GENER']="Enero";traducionsTemp['CALENDARI_MN_FEBRER']="Febrero";traducionsTemp['CALENDARI_MN_MARC']="Marzo";traducionsTemp['CALENDARI_MN_ABRIL']="Abril";traducionsTemp['CALENDARI_MN_MAIG']="Mayo";traducionsTemp['CALENDARI_MN_JUNY']="Junio";traducionsTemp['CALENDARI_MN_JULIOL']="Julio";traducionsTemp['CALENDARI_MN_AGOST']="Agosto";traducionsTemp['CALENDARI_MN_SETEMBRE']="Septiembre";traducionsTemp['CALENDARI_MN_OCTUBRE']="Octubre";traducionsTemp['CALENDARI_MN_NOVEMBRE']="Noviembre";traducionsTemp['CALENDARI_MN_DESEMBRE']="Diciembre";traducionsTemp['CALENDARI_MNSHORT_GENER']="Ene";traducionsTemp['CALENDARI_MNSHORT_FEBRER']="Feb";traducionsTemp['CALENDARI_MNSHORT_MARC']="Mar";traducionsTemp['CALENDARI_MNSHORT_ABRIL']="Abr";traducionsTemp['CALENDARI_MNSHORT_MAIG']="Mai";traducionsTemp['CALENDARI_MNSHORT_JUNY']="Jun";traducionsTemp['CALENDARI_MNSHORT_JULIOL']="Jul";traducionsTemp['CALENDARI_MNSHORT_AGOST']="Ago";traducionsTemp['CALENDARI_MNSHORT_SETEMBRE']="Sep";traducionsTemp['CALENDARI_MNSHORT_OCTUBRE']="Oct";traducionsTemp['CALENDARI_MNSHORT_NOVEMBRE']="Nov";traducionsTemp['CALENDARI_MNSHORT_DESEMBRE']="Dic";traducionsTemp['CALENDARI_DN_DIUMENGE']="Domingo";traducionsTemp['CALENDARI_DN_DILLUNS']="Lunes";traducionsTemp['CALENDARI_DN_DIMARTS']="Martes";traducionsTemp['CALENDARI_DN_DIMECRES']="Miercoles";traducionsTemp['CALENDARI_DN_DIJOUS']="Jueves";traducionsTemp['CALENDARI_DN_DIVENDRES']="Viernes";traducionsTemp['CALENDARI_DN_DISSABTE']="Sabado";traducionsTemp['CALENDARI_DNSHORT_DIUMENGE']="Dom";traducionsTemp['CALENDARI_DNSHORT_DILLUNS']="Lun";traducionsTemp['CALENDARI_DNSHORT_DIMARTS']="Mar";traducionsTemp['CALENDARI_DNSHORT_DIMECRES']="Mie";traducionsTemp['CALENDARI_DNSHORT_DIJOUS']="Jue";traducionsTemp['CALENDARI_DNSHORT_DIVENDRES']="Vie";traducionsTemp['CALENDARI_DNSHORT_DISSABTE']="Sab";traducionsTemp['CALENDARI_DNMIN_DIUMENGE']="Do";traducionsTemp['CALENDARI_DNMIN_DILLUNS']="Lu";traducionsTemp['CALENDARI_DNMIN_DIMARTS']="Ma";traducionsTemp['CALENDARI_DNMIN_DIMECRES']="Mi";traducionsTemp['CALENDARI_DNMIN_DIJOUS']="Ju";traducionsTemp['CALENDARI_DNMIN_DIVENDRES']="Vi";traducionsTemp['CALENDARI_DNMIN_DISSABTE']="Sb";traducionsTemp['CALENDARI_WEEKHEADER']="Sm";traducionsTemp['CALENDARI_DATEFORMAT']="dd/mm/yy";traducionsTemp['CALENDARI_YEARSUFFIX']="";traducionsTemp['ALBESTNOU']="Nuevo";traducionsTemp['ALBESTPEN']="Pendiente";traducionsTemp['ALBESTPEPA']="Pendiente de Pago";traducionsTemp['ALBESTPAG']="Pagado";traducionsTemp['ALBESTANU']="Anulado";traducionsTemp['LLIESTNOV']="Nueva licencia";traducionsTemp['LLIESTPRE']="Preinscrita";traducionsTemp['LLIESTVAL']="Validada";traducionsTemp['LLIESTFAC']="Facturada";traducionsTemp['LLIESTTRA']="Tramitada";traducionsTemp['LLIESTDES']="Descartada";traducionsTemp['LLIESTBCC']="Baja por cambio de entidad";traducionsTemp['LLIESTANU']="Anulada";traducionsTemp['LLIESTANA']="Anulada por ampliaci�n";traducionsTemp['LLIESTBNOF']="Baja pendiente de facturar";traducionsTemp['LLIESTBF']="Baja facturada";traducionsTemp['LLIESTFADE']="Facturada descartada";traducionsTemp['TALLIC']="Licencias";traducionsTemp['TALMAN']="Manual";traducionsTemp['TAARBI']="Arbitrajes";traducionsTemp['TAARBICLUB']="Arbitrajes Club";traducionsTemp['TASANCIO']="Sanci�n";traducionsTemp['TACOMANDA']="Pedido";traducionsTemp['TAEQP']="Equipo";traducionsTemp['TAINS']="Inscripci�n";traducionsTemp['TAPARTICLUB']="Participaci�n de club";traducionsTemp['TAINSEQP']="Inscripci�n equipo";traducionsTemp['TAINSCONJ']="Inscripci�n conjunto";traducionsTemp['TAINSLIC']="Inscripci�n y Licencia";traducionsTemp['TAAJOREVENT']="Aplazamiento eventos";traducionsTemp['TAINFACC']="Informe Accidente";traducionsTemp['ALBTPPESPEQUIP']="Deportes de Equipo";traducionsTemp['ALBTPPENTITATS']="Entidades";traducionsTemp['ALBTPTRANS']="Transferencia";traducionsTemp['ALBTPEF']="Efectivo";traducionsTemp['ALBTTAR']="VISA";traducionsTemp['ALBTPXC']="Cheque";traducionsTemp['ALBTPTL']="Tal�n";traducionsTemp['ALBTSUB']="Subvenci�n";traducionsTemp['ALBTPTPV']="Pago online";traducionsTemp['ALBTPEN']="Pendiente transacci�n";traducionsTemp['ALBTPCC']="Cambio Club";traducionsTemp['ALBTDOM']="Domiciliado";traducionsTemp['ALBTPMAD']="Pagado a Madrid";traducionsTemp['ALBTPRAC']="Pagado RAC";traducionsTemp['ALBTPPARC']="Parcial";traducionsTemp['ALBTPCOSAN']="Compensaci�n sanciones";traducionsTemp['ALBIMPORT0']="Importe 0";traducionsTemp['FACTPTRANS']="Transferencia";traducionsTemp['FACTPEF']="Efectivo";traducionsTemp['FACTTAR']="VISA";traducionsTemp['FACTPXC']="Cheque";traducionsTemp['FACTPTL']="Tal�n";traducionsTemp['FACTSUB']="Subvenci�n";traducionsTemp['FACTPTPV']="Pago online";traducionsTemp['FACTPEN']="Pendiente transacci�n";traducionsTemp['FACTDOM']="Domiciliado";traducionsTemp['FACTPMAD']="Pagado a Madrid";traducionsTemp['FACTPRAC']="Pagado RAC";traducionsTemp['SXMAS']="Masculino";traducionsTemp['SXFEM']="Femenino";traducionsTemp['SXMIX']="Mixto";traducionsTemp['SXBIN']="Binario";traducionsTemp['SXALL']="Todos los G�neros";traducionsTemp['GNHOM']="Hombre";traducionsTemp['GNDON']="Mujer";traducionsTemp['GNBIN']="Binario";traducionsTemp['GNNBI']="Otros";traducionsTemp['F_PAGAMENTENCURSESPERAR_ESPERAR_MISSATGE']="Esperando validaci�n de la entidad bancaria: Tiempo restante aproximado $[1] segundos";traducionsTemp['F_FEDERAT_ERR_NIFOBL']="Obligatorio mayores de $[1] a�os";traducionsTemp['ERR_NIF_VALID']="Introduce un nif v�lido";traducionsTemp['AUTOCOMPLETEPLAYOFF_VERSIOUI']="La version $[0] del UI es insuficiente para usar este autocomplete.";traducionsTemp['AUTOCOMPLETEPLAYOFF_VERSIOJQ']="La version $[0] del JQuery es insuficiente para usar este autocomplete.";traducionsTemp['AUTOCOMPLETEPLAYOFF_NOVERSIO']="No se ha podido determinar la verson� del JQuery/UI";traducionsTemp['GESTOREXCEPTION_DISPONIBILITAT_DADES_OBLIGATORIES']="Faltan datos obligatorios por llenar.";traducionsTemp['GESTOREXCEPTION_DISPONIBILITAT_DADES_DUPLICADES']="Disponibilidad duplicada.";traducionsTemp['GESTOREXCEPTION_ARBITRE_NO_LLICENCIA_ARBITRE']="El arbitro no dispone de una licencia de tipo arbitro.";traducionsTemp['GESTOREXCEPTION_DISPONIBILITAT_DATA_INFERIOR']="No se puede realizar ninguna acci�n, ya que la fecha l�mite es el martes de la misma semana de la fecha de disponibilidad.";traducionsTemp['GESTOREXCEPTION_DISPONIBILITAT_DATAINICIAL_INFERIOR']="No se puede realizar la acci�n por que la fecha de la disponibilidad es inferior a la actual.";traducionsTemp['GESTOREXCEPTION_FEDERAT_NIF_REPETIT']="Este NIF ya existe";traducionsTemp['GESTOREXCEPTION_FEDERAT_CATSALUT_REPETIT']="Este CatSalut ya existe";traducionsTemp['GESTOREXCEPTION_FEDERAT_NIFCATSALUT_REPETIT']="Este Nif y CatSalut ya existe";traducionsTemp['GESTOREXCEPTION_LLICENCIA_SUBCATEGORIA_FEDERAT_NO_ACTIVA']="Este federado no tiene licencia activa en las subcategor�as necesarias y no se puede inscribir en esta competici�n";traducionsTemp['GESTOREXCEPTION_LLICENCIA_SUBCATEGORIA_FEDERAT_REPETIT']="Este federado ya tiene una inscripci�n en esta liga";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_DATALIMIT_INVALID']="A fecha de hoy ya no se permiten m�s inscripciones";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_NUM_MAXIM_PARTICIPANTS']="No se permiten m�s inscripciones, se ha llegado al n�mero m�ximo permitido.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_NUM_MAXIM_PARTICIPANTS_CLUB']="No se permiten m�s inscripciones para este club, se ha llegado al n�mero m�ximo permitido.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_FEDERAT_CLUB_REPETIT']="Este federado ya tiene una inscripci�n en esta liga con este club.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_FEDERAT_TITULACIO_INVALID']="Federado sin titulaci�n necesaria para inscribirse.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_CONDICIO_EDATS_INCORRECTE']="La edad del federado es incorrecta para esta competici�n";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_CLUB_TERRITORIAL_INVALID']="La territorial de este club no permite inscribir en esta competici�n.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_FEDERAT_EXTERN_CLUB']="El usuario club no puede hacer inscripciones a los federados externos.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_INVALID_SENSE_CLUB']="No se pueden crear inscripciones sin club";traducionsTemp['GESTOREXCEPTION_LLICENCIA_SUBCATEGORIA_OK_INSCRIPCIO_INDEPENDENT_INVALID']="Este federado tiene la licencia necesaria pero no se puede inscribir de manera independiente. Lo ha de hacer con el club";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_FEDERAT_NOMES_FEDERACIO']="S�lo el usuario federaci�n puede hacer inscripciones para esta competici�n";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_FEDERAT_NO_USERPERMES']="No se puede realizar la inscripci�n con este usuario.";traducionsTemp['GESTOREXCEPTION_FEDERAT_ISEXTERN']="Este Federado es Externo, por favor marca la casilla.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_ADJUNTSFEDERAT_INCORRECTE']="El federado no tiene todos los adjuntos necesarios para inscrivirse en esta competici�n.";traducionsTemp['GESTOREXCEPTION_INSCRIPCIO_ADJUNTSFEDERAT_TUTOR_INCORRECTE']="El federado no tiene el adjunto de la autorizaci�n del tutor.";traducionsTemp['MSG_YES']="Si";traducionsTemp['MSG_NO']="No";traducionsTemp['DRP_SEPARATOR']=" --- ";traducionsTemp['DRP_FORMAT']="DD/MM/YYYY";traducionsTemp['DRP_USER_FORMAT']="DD-MM-YYYY";traducionsTemp['DRP_APPLY']="Aplicar";traducionsTemp['DRP_CANCEL']="Cancelar";traducionsTemp['DRP_FROM']="Desdel";traducionsTemp['DRP_TO']="Hasta al";traducionsTemp['DRP_CUSTOM']="Propio";traducionsTemp['F_IMPORTACIOAPLICACIOCLUBS_IMPORTACIOREALITZADA']="Importaci�n realizada!";traducionsTemp['F_IMPORTACIOAPLICACIOCLUBS_MISSATGE_IMPORTACIO_1_3']="Se han importado";traducionsTemp['F_IMPORTACIOAPLICACIOCLUBS_MISSATGE_IMPORTACIO_2_3']="registros y han habido";traducionsTemp['F_IMPORTACIOAPLICACIOCLUBS_MISSATGE_IMPORTACIO_3_3']="errores:";traducionsTemp['F_IMPORTACIOAPLICACIOCLUBS_COMPLET']="Completado";traducionsTemp['F_FEDERAT_ERR_NIF_VALID']="Nif no es correcto";traducionsTemp['JORNADA_RECUPERACIO']="Jornada de recuperaci�n";traducionsTemp['JORNADA_ESPORTIVA']="Jornada deportiva";traducionsTemp['DATA_INICI']="Fecha inicio";traducionsTemp['DATA_FI']="Fecha fin";traducionsTemp['DATA']="Fecha";traducionsTemp['HORA']="Hora";traducionsTemp['NOM']="Nombre";traducionsTemp['SELECTALL']="Seleccionar Todos";traducionsTemp['UNSELECTALL']="Desmarcar Todos";traducionsTemp['F_LLICENCIAMULTIPLE_SUBMODALITAT']="Submodalidad";traducionsTemp['F_LLICENCIAMULTIPLE_TIPUSADJUNT']="Tipo adjunto";traducionsTemp['F_LLICENCIAMULTIPLE_FITXER']="Fichero";traducionsTemp['TSCESP']="Deportista";traducionsTemp['TSCDEL']="Delegado/da";traducionsTemp['TSCTEC']="T�cnico";traducionsTemp['TSCARB']="�rbitro";traducionsTemp['TSCDIR']="Directivo";traducionsTemp['TSCACRDIR']="Acreditaci�n Directivo";traducionsTemp['TSCDELCAMP']="Delegado/da de Campo";traducionsTemp['TSCCLUB']="Club";traducionsTemp['TSCCURS']="Cursillista";traducionsTemp['ESPOPN']="Deportista Open";traducionsTemp['ESPXOW']="Deportista Xow";traducionsTemp['TSCAUX']="Auxiliar";traducionsTemp['TSCAUXCLUB']="Auxiliar de club";traducionsTemp['TSCMEDIC']="M�dico";traducionsTemp['LLIC_MEDIC']="M�dico";traducionsTemp['TSCDIRECTTEC']="Director/a T�cnico/ca";traducionsTemp['ARBIBASE']="Derechos Arbitro";traducionsTemp['ARBIBASETERC']="Derechos Arbitro Terciario";traducionsTemp['ARBIPARELLA']="Pareja arbitros";traducionsTemp['ARBIBASEANOTADOR']="Derechos Anotador";traducionsTemp['ARBIBASECRONO']="Derechos Cronometrador";traducionsTemp['ARBIBASEDELE']="Derechos Delegado Federativo";traducionsTemp['ARBIBASETOTSBASEIDESP']="Derechos Fondo";traducionsTemp['ARBIDIETA']="Dieta";traducionsTemp['ARBIDESP']="Desplazamiento";traducionsTemp['ARBIBASETOTSBASEIDIET']="Agrupaci�n Cuotas";traducionsTemp['MES01']="Enero";traducionsTemp['MES02']="Febrero";traducionsTemp['MES03']="Marzo";traducionsTemp['MES04']="Abril";traducionsTemp['MES05']="Mayo";traducionsTemp['MES06']="Junio";traducionsTemp['MES07']="Julio";traducionsTemp['MES08']="Agosto";traducionsTemp['MES09']="Septiembre";traducionsTemp['MES10']="Octubre";traducionsTemp['MES11']="Noviembre";traducionsTemp['MES12']="Diciembre";traducionsTemp['F_GRUPFEDERAT_TITOLTITULACIONS']="Titulaciones";traducionsTemp['F_GRUPFEDERAT_TITOLTITULACIONSEXAMINAR']="Titulaciones a examinar";traducionsTemp['DT_MULTIVALOR_NUMCLUBS']="$[1] club/s relacionados";traducionsTemp['DT_MULTIVALOR_CLUBS_NORESULTS']="Sin clubs relacionados";traducionsTemp['DT_MULTIVALOR_ID_CLUB']="Id Club";traducionsTemp['DT_MULTIVALOR_CODI_EXTERN_CLUB']="C�digo Externo";traducionsTemp['DT_MULTIVALOR_CODI_CURT_CLUB']="C�digo Corto";traducionsTemp['EMAIL_PROGRES']="Enviando $[1] de $[2]";traducionsTemp['EMAIL_PROGRES_FINALITZAT']="Se han enviado correctamente $[1] de $[2] emails.";traducionsTemp['HORA_INICI']="Hora inicio";traducionsTemp['HORA_FI']="Hora fin";traducionsTemp['F_LLIGAFEDERATS_ESDEVENIMENT_DIA']="Este d�a es un evento";traducionsTemp['F_NOTIFICACIO_NOSTRINGIDS']="No hay socios que tengan la aplicaci�n con el filtro seleccionado";traducionsTemp['F_NOTIFICACIO_NOFILTER']="Selecciona un tema o fam�lia";traducionsTemp['MODAL_DADES_CLUB_ERROR_POSEM_CONTACTE']="En estos momentos no es posible crear su demo personalizada, en seguida nos pondremos en contacto para proceder. Disculpe las molestias.";traducionsTemp['F_INFO_ADJUNTS_LLICENCIA']="Ficha Licencia Faltan";traducionsTemp['F_INFO_ADJUNTS_FEDERAT']="Ficha Federado";traducionsTemp['F_INFO_ADJUNTS_NECESSARIS']="Adjuntos necesarios";traducionsTemp['CATEGORIA_COMBO_FEDERAT']="Documentos del federado";traducionsTemp['CATEGORIA_COMBO_LLICENCIA']="Documentos de la licencia";traducionsTemp['DIVTRAMITAR_MISSATGE_COMPTE_1_2']="Realizar la transferencia a la cuenta";traducionsTemp['DIVTRAMITAR_MISSATGE_COMPTE_2_2']="con el concepto";traducionsTemp['DESCRIPCIO_SUBCATEGORIA']="Descripci�n";traducionsTemp['DESCRIPCIO_MODALITAT']="Modalidad";traducionsTemp['DESCRIPCIOINSCRIPCIO_MODALITAT']="Descripci�n";traducionsTemp['ARBIPRIN']="Principal";traducionsTemp['ARBISECU']="Secundario";traducionsTemp['ARBITERC']="Terciario";traducionsTemp['ARBICRONO']="Cronometrador";traducionsTemp['ARBIANOT']="Anotador";traducionsTemp['ARBIDELE']="Delegado";traducionsTemp['ARBIOBSE']="Observador";traducionsTemp['MTFCFREI']="Falta reiterada";traducionsTemp['MTFABUSVERB']="Abuso verbal";traducionsTemp['MTFCAGRE']="Agressi�n";traducionsTemp['MTFCJOCPER']="Juego peligroso";traducionsTemp['MTCDOBEXC']="Doble exclusi�n";traducionsTemp['MTFCALTRES']="Otros";traducionsTemp['MTFCFMALACON']="Mala conducta";traducionsTemp['MTFCFSEGGROGA']="Segunda amarilla";traducionsTemp['MTFCRECOGERROR']="Reconocimiento de errores propios";traducionsTemp['MTFCESPORTIVITAT']="Gesto de deportividad";traducionsTemp['TFCGROGA']="Amarilla";traducionsTemp['TFCVERMELLA']="Roja";traducionsTemp['TFCVERDA']="Verde";traducionsTemp['F_LLICENCIA_ASSEGURANCA_NOM']="Nombre";traducionsTemp['F_LLICENCIA_ASSEGURANCA_POLISSA']="P�liza";traducionsTemp['F_LLICENCIA_ASSEGURANCA_TELEFON']="Tel�fono";traducionsTemp['F_LLICENCIA_ASSEGURANCA_EMAIL']="Email";traducionsTemp['F_LLICENCIA_ASSEGURANCA_CLUB']="Aseguradora del club";traducionsTemp['F_LLICENCIA_TIPUS_ASSEGURANCA']="Tipo aseguradora";traducionsTemp['F_LLICENCIA_TIPUS_ASSEGURANCA_CLUB']="Club";traducionsTemp['F_LLICENCIA_TIPUS_ASSEGURANCA_EXTERNA']="Externa";traducionsTemp['F_LLICENCIA_TIPUS_ASSEGURANCA_TITOL']="Aseguradora";traducionsTemp['F_LLICENCIA_TE_ALTRES_LLICENCIES_ACTIVES']="El federado tiene lic�ncias activas";traducionsTemp['F_TITULACIO_DIESTITULACIORENOVACIO']="D�as m�nimos duraci�n asignaci�n";traducionsTemp['F_TITULACIO_ISFACTURABLE']="Facturable";
+	var trLang = new TrLang(traducionsTemp,'FormLlicencia','es');
+/* ]]> */</script>    <!-- Structure -->
+    <link rel="stylesheet" href="estils/estructura/structure.css?v=1760609374"
+          type="text/css"/>
+    <link rel='stylesheet' href="estils/popupDiv/popupDiv.css?v=1760609375" type="text/css">
+    <link rel="stylesheet" href="estils/form/form.css?v=1760609375" type="text/css" />	<!-- Buttons Navegaci� -->
+        <link rel="stylesheet" href="estils/botonsForm/botonsForm.css?v=1760609374" type="text/css" />    <link rel="stylesheet" href="estils/form/formLlicencia.css?v=1760609375" type="text/css"/>
+
+    <!-- Combos -->
+    <script type="text/javascript" src="js/combo/combos.js?v=1760609375"></script>
+    <!-- Autocomplete -->
+    <script type='text/javascript'
+            src='js/autocomplete/autocomplete_playoff.js?v=1760609375'></script>
+    <link rel="stylesheet" href="estils/autocomplete/jquery.autocomplete.css?v=1760609374"
+          type="text/css"/>
+    <script type="text/javascript"
+            src="js/daterangepicker/daterangepickerPlayoff.js?v=1760609375"></script>
+
+    <!-- Validate Per Funcio Localitzacio Mapa -->
+    <script type='text/javascript' src='js/validacio/funcions.js?v=1760609375'></script>
+    <!--  Multiselect -->
+    <script src="js/multiselect/multiselect.min.js?v=1760609375"></script>
+
+    <link rel='stylesheet' href="estils/form/divAdjunts.css?v=1760609375" type="text/css">
+    <link rel='stylesheet' href="estils/form/formEstils4.css?v=1760609375" type="text/css">
+
+    <!-- JS Formulari -->
+    <script type="text/javascript">/* <![CDATA[ */
+
+        let nomTipusSubCategoria = '';
+
+        function actualitzaPosicioLlicenciesEnBloc() {
+            var searchParams = new URLSearchParams(window.location.search);
+            let etiIds = '';
+            let idFederat = '';
+                        etiIds = searchParams.get('idsNavegacioEnBloc');
+            idFederat = searchParams.get('idFederat');
+            
+            if (!etiIds || !sessionStorage.getItem(etiIds)) {
+                $("#llicenciesEnBlocIndexActual").parent().addClass('hidden');
+                return null;
+            }
+
+            let ids = sessionStorage.getItem(etiIds).split(',');
+            let posicio = ids.indexOf(idFederat);
+            $("#llicenciesEnBlocIndexActual").text(posicio + 1);
+            $("#llicenciesEnBlocTotal").text(ids.length);
+
+            $('#frmEntrar').append(
+                $("<input>")
+                    .attr("type", "hidden")
+                    .attr("name", "idsNavegacioEnBloc")
+                    .val(etiIds)
+            );
+            if (ids[posicio + 1]) {
+                let idFederatSeg = ids[posicio + 1];
+                $("#btnOmetreFederatLlicenciaEnBloc")
+                    .attr('href', $("#btnOmetreFederatLlicenciaEnBloc").attr('href') + '&idFederat=' + idFederatSeg)
+                    .removeClass('hidden');
+                $('#frmEntrar').append(
+                    $("<input>")
+                        .attr("type", "hidden")
+                        .attr("name", "idFederatSeguent")
+                        .val(idFederatSeg)
+                );
+            }
+        }
+
+        $(document).ready(function () {
+
+            
+            actualitzaPosicioLlicenciesEnBloc();
+            if ($('#observacions').val() != "") {
+                $('#observacions').css("display", "block");
+            }
+            if ($('#textValidacio').val() != "") {
+                $('#textValidacio').css("display", "block");
+            }
+
+            $('#afegirDesc').click(function () {
+                if ($('#observacions').is(':visible')) {
+                    $('#observacions').css("display", "none");
+                } else {
+                    $('#observacions').css("display", "block");
+                }
+            });
+
+            $("#afegirInfo").click(function () {
+                $("#info").slideToggle("slow");
+            });
+        });
+
+        
+        
+        
+        function descargaFullPreinscripcio() {
+            OpenNewWindow("print/printFullPreinscripcio.php?accio=prtMultiplesObjectes&stringIds=123456",750,655, "Imprimint");
+        }
+
+        function descargaEtiquetaLlicencia() {
+            OpenNewWindow("print/printMultiplesEtiquetesLlicencia.php?accio=prtMultiplesEtiquetesSeleccionades&stringIds=123456",750,655, "Imprimint");
+        }
+
+        function descargaEtiquetaLlicencia2() {
+            OpenNewWindow("print/printMultiplesEtiquetesLlicencia2.php?accio=prtMultiplesEtiquetesSeleccionades&stringIds=123456",750,655, "Imprimint");
+        }
+
+        
+                function descargaFullAutoritzacioResponsableFemecv() {
+            OpenNewWindow("print/printAutoritzacioLlicencia.php?accio=accio_imprimir_autoritzacio&idLlicencia=123456",750,655, "Imprimint");
+        }
+        
+        function validatTramitacio() {
+            return true;
+        }
+
+        function cridaAssignarTecnicEquipOnly(nomFormulari) {
+                                    createHiddenValue('idEquip', $("#equip").val(), nomFormulari);
+            $("#accio").val('assignTecnicEquip');
+            $("#frmEntrar").submit();
+        }
+
+        function prevalidar() {
+            $("#accio").val('accio_prevalidar');
+                            $('#frmEntrar').submit();
+                    }
+
+        function validarLlicencia(nomFormulari) {
+                                                            $("#accio").val('validateLicence');
+                if(nomTipusSubCategoria === 'TSCESP'){
+                                        $('#frmEntrar').submit();
+                                    } else{
+                    $('#frmEntrar').submit();
+                }
+                    }
+        function devolucioLlicencia() {
+                    }
+
+        function acceptarDevolucioLlicencia(){
+            $("#accio").val('accio_devolucio_llicencia');
+            $('#frmEntrar').submit();
+        }
+
+        function marcarTramitadaLlicencia(nomFormulari) {
+            $("#accio").val('accio_marcar_tramitada');
+            $('#frmEntrar').submit();
+        }
+
+        function validarLlicenciaRolFederat(nomFormulari) {
+            $("#accio").val('desarRolFederat');
+            $('#frmEntrar').submit();
+        }
+
+        function tornarPreinscrita(nomFormulari) {
+            $("#accio").val('tornarPreinscrita');
+            $('#frmEntrar').submit();
+        }
+
+        function descartadaResolta(nomFormulari) {
+            $("#accio").val('descartarResolta');
+            $('#frmEntrar').submit();
+        }
+
+        function tornarFacturada(nomFormulari) {
+            $("#accio").val('tornarFacturada');
+            $('#frmEntrar').submit();
+        }
+
+        function facturarLlicencia(nomFormulari) {
+            $("#accio").val('facturarLlicencia');
+            $('#frmEntrar').submit();
+        }
+
+        
+        function baixaCanviClub(nomFormulari) {
+            $("#divBaixaCanviClub").modal('show');
+        }
+
+        function baixaSenseFacturarLlicencia(nomFormulari) {
+            $("#divAnular").modal('show');
+        }
+
+        function baixaFacturada(nomFormulari) {
+            $("#divAnular").modal('show');
+        }
+
+        function facturadaDescartadaLlicencia(nomFormulari) {
+            $("#accio").val('accio_descartada_facturada');
+            $('#frmEntrar').submit();
+        }
+
+                
+
+        function tramitada(nomFormulari) {
+            $("#accio").val('tornarTramitada');
+            $('#frmEntrar').submit();
+        }
+
+        function crearNouFederat(nomFormulari) {
+            $("#accio").val('saveAndNew');
+            $('#frmEntrar').submit();
+        }
+
+        function crearNovaLlicFederat(nomFormulari) {
+            $("#accio").val('saveAndNewLlicFederat');
+            $('#frmEntrar').submit();
+        }
+
+        function desarieditar(nomFormulari) {
+            $("#accio").val('saveAndAssigEquip');
+            $('#frmEntrar').submit();
+        }
+
+        function desaSubLlicencia(nomFormulari) {
+            $("#accio").val('saveSubLlicencia');
+            $('#frmEntrar').submit();
+        }
+
+        function prellicenciar() {
+            $("#accio").val('savePreLlicencia');
+            $('#frmEntrar').submit();
+        }
+
+        function prellicenciaALlicencia() {
+            $("#accio").val('confirmarPreLlicenciaALlicencia');
+            $('#frmEntrar').submit();
+        }
+
+        function omplaModalitat() {
+            peticioModalitat();
+        }
+
+        function omplaSubModalitat(event) {
+            var element = event.target;
+            if (element.value != '') {
+                checkSubModalitat(element.value);
+            } else {
+                deleteSubModalitat();
+            }
+        }
+
+        function omplaCategoria(event) {
+            var element = event.target;
+            if (element.value != '') {
+                deleteCategoria();
+                peticioCategoria(element.value);
+            } else {
+                deleteCategoria();
+            }
+        }
+
+        function omplaSubCategoria(event) {
+            var element = event.target;
+            if (element.value != '') {
+                deleteSubCategoria();
+                peticioSubCategoria(element.value);
+            } else {
+                deleteSubCategoria();
+            }
+        }
+
+        function peticioClub(idValor) {
+            peticioAutoCompletar(
+                'club_clubTots',
+                'P_club_Club_idFederacio=V_1',
+                'V_1=' + idValor);
+        }
+
+        function peticioFormatDigital() {
+            peticioCombo('defined_formatDigital');
+        }
+
+        function peticioModalitat() {
+            peticioCombo('modalitat_modalitatAmbSubCategoriesIndependents');
+        }
+
+        function peticioSubModalitat(idValor) {
+            peticioCombo(
+                'submodalitat',
+                'P_submodalitat_SubModalitat_idModalitat=V_1',
+                'V_1=' + idValor);
+        }
+
+        function peticioCategoria(value) {
+            peticioCombo(
+                'categoria_categoriaVisible',
+                'P_categoria_Categoria_idModalitat=V_1&P_categoria_SubCategoria_isIndividual=1',
+                'V_1=' + value);
+        }
+
+        function peticioSubCategoria(value) {
+            peticioCombo(
+                'subcategoria_subCategoriaLlicenciaTramitada',
+                'P_subcategoria_SubCategoria_idCategoria=V_1&S_sexe=SXMAS&P_subcategoria_SubCategoria_isIndividual=1&S_anynaixement=2002&P_subcategoria_SubCategoria_isNomesSubLlicencia=0&S_idsubcat=69',
+                'V_1=' + value);
+        }
+
+        function deleteModalitat() {
+            $("#modalitat").removeOption(/./); // remove all options
+            $("#idmodalitat").val('');
+            $("#modalitat").val('');
+            deleteSubModalitat();
+            deleteCategoria();
+        }
+
+        function deleteSubModalitat() {
+            $("#secSubModalitats").empty();
+        }
+
+        function deleteCategoria() {
+            $("#categoria").removeOption(/./); // remove all options
+            $("#idcategoria").val('');
+            $("#categoria").val('');
+            deleteSubCategoria();
+        }
+
+        function deleteSubCategoria() {
+            $("#subcategoria").removeOption(/./); // remove all options
+            $("#idsubcategoria").val('');
+            $("#subcategoria").val('');
+            hideQuotes();
+        }
+
+        function imprimirLlicencia() {
+                            OpenNewWindowScroll("print/fitxaLlicencia.php?accio=prtForm&idLlicencia=123456",750,655, "Imprimint");
+                            return false;
+        }
+
+        function imprimirCertificatLlicencia(){
+            OpenNewWindowScroll("",750,655, "Imprimint");
+        }
+
+        function imprimirLlicenciaTot() {
+            OpenNewWindowScroll("print/printMultiplesLlicenciesTot.php?accio=prtLlicenciesSeleccionades&stringIds=123456",750,655, "Imprimint");
+            return false;
+        }
+
+        
+        
+        function checkSubModalitat(idModalitat) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_is_modalitat_submodalitats&idModalitat=' + idModalitat,
+                success: function (data) {
+                    var resultat = JSON.parse(data);
+                    if (resultat.resultat == 1) {
+                        carregaSubModalitats(idModalitat);
+                    } else {
+                        deleteSubModalitat();
+                    }
+                }
+            });
+        }
+
+        function carregaSubModalitats(idModalitat) {
+            if (idModalitat != 0) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'peticioAjax.php',
+                    data: 'peticioKey=peticio_submodalitats_modalitat&idLlicencia=123456&isSubmodalitatRequired=1&isMissatgeInformatiuVisible=1&idModalitat=' + idModalitat + '&isVisible=1',
+                    success: function (data) {
+                        $("#secSubModalitats").fadeOut("fast", function () {
+                            $("#secSubModalitats").html(data);
+                            $("#secSubModalitats").fadeIn("fast");
+                            $("#secSubModalitats .col-md-4.col-sm-4").removeClass("col-md-4 col-sm-4").addClass("col-lg-6 col-md-12");
+                        });
+                    }
+                });
+            }
+        }
+
+        
+                function checkHCNacional() {
+            var modsCN = "";
+            $('#carnetHomologat').attr('checked', false);
+            if (modsCN.indexOf($("#modalitat").val()) == -1 || $("#modalitat").val() == '') {
+                deshabilitarHCNacional();
+            } else {
+                habilitarHCNacional();
+            }
+        }
+
+        function habilitarHCNacional() {
+            $("#carnetHomologatSpan").css("display", "block");
+                                }
+
+        function deshabilitarHCNacional() {
+            $("#carnetHomologatSpan").css("display", "none");
+            $('#carnetHomologat').attr("disabled", true);
+            $("#carnetHomologat").val(0);
+        }
+
+        function checkFormatDigitalVisible(idSubCat) {
+                        $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_llicencia_tempscompromis&idFederat=37082&idLlicencia=123456&idSubCategoria=' + idSubCat,
+                success: function (data) {
+                    const resultat = JSON.parse(data);
+                    if (resultat.hasTempsCompromis == 1 && resultat.modificable == undefined) {
+                        $("#divFormatDigital:visible").fadeOut("fast");
+                        $("#formatDigital").rules("remove", 'required');
+                    } else {
+                        $("#divFormatDigital").fadeIn("fast");
+                        $("#formatDigital").rules("add", 'required');
+                    }
+                }
+            });
+        }
+
+        function checkTempsCompromisVisible(idSubCat) {
+            if (!idSubCat) {
+                return;
+            }
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_llicencia_tempscompromis&idFederat=37082&idLlicencia=123456&idSubCategoria=' + idSubCat,
+                success: function (data) {
+                    $("#tempsCompromis:visible, #tempsCompromisReadOnly:visible").fadeOut("fast");
+                    $("#tempsCompromisInici").rules("remove", 'required');
+                    var resultat = JSON.parse(data);
+                    if (resultat.hasTempsCompromis == 1) {
+                                                $("#tempsCompromisReadOnly").fadeIn("fast");
+                                            }
+                }
+            });
+        }
+
+        
+        function carregaQuotes(idSubCat, extraParams) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_quotes_subcategoria&idFederat=37082&idLlicencia=123456&idLlicenciaPare=0&llicen_federat_indi=1&idClub=' + $("#idclub").val() + '&formatDigital=' + $("#formatDigital").val() + '&idSubCategoria=' + idSubCat + extraParams,
+                success: function (data) {
+                    $("#secQuotes").fadeOut("fast", function () {
+                        $("#secQuotes").html(data);
+                        $("#secQuotes").fadeIn("fast");
+                    });
+                }
+            });
+        }
+
+        function hideQuotes() {
+            $("#quotes ul:first-child").fadeOut(300, function () {
+                $("#noquotes").fadeIn(300);
+                $("#quotes ul:first-child li").remove();
+            });
+        }
+
+                function showModalSolicitarLlicenciaFisica() {
+            $("#divSolicitarLlicenciaFisica").modal('show');
+        }
+        
+                function showModalConfirmarFormatDigital() {
+            if($("#formatDigital").val() === "FORMAT_DIGITAL"){
+                $("#divConfirmarFormatDigital").modal('show');
+            }
+            else{
+                $('#frmEntrar').submit();
+            }
+        }
+        
+        function omplaTempsCompromisDataFi(dataInici, idSubCat) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_datafi_tempsCompromis&idSubCategoria=' + idSubCat + '&dataInici=' + $('#tempsCompromisInici').val(),
+                success: function (data) {
+                    $("#tempsCompromisFi").val(data);
+                    $("#tempsCompromisFiView").text(data);
+                }
+            });
+        }
+
+        function mostrarAdjuntsObligatoris(idSubCat) {
+            if (idSubCat == "" || idSubCat == null || idSubCat == undefined) {
+                return;
+            }$.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_adjunts_obligatoris_subcategoria&idSubCategoria=' + idSubCat + '&idFederat=37082'+'&idLlicencia=123456',
+                success: function (data) {
+                    data = JSON.parse(data);
+                    $("#infoAdjuntsNecesaris").remove();
+
+                    if (data.federats.length > 0 || data.llicencies.length > 0) {
+                        var divElements = "<div id='infoAdjuntsNecesaris'><p style='text-align: center;'><b>" + trLang.lang("F_INFO_ADJUNTS_NECESSARIS") + ":</b></p>";
+
+                        if (data.federats.length > 0) {
+                            divElements += "<p><b>Ficha Federado Faltan:</b></p><ol> ";
+                            for (var i in data.federats) {
+                                if (data.federats[i].enllacDocument) {
+                                    var enlaceCodificado = encodeURIComponent(data.federats[i].enllacDocument);
+                                    divElements += "<li><a href='#' data-bs-toggle='modal' data-bs-target='#divInformacioTipusAdjunts' onclick='abrirModal(\"" + enlaceCodificado + "\")'>" + data.federats[i].tipus + "</a></li>";
+                                } else {
+                                    divElements += "<li>" + data.federats[i].tipus + "</li>";
+                                }
+                            }
+                            divElements = divElements + "</ol>";
+                        }
+
+                        if (data.llicencies.length > 0) {
+                            divElements += "<p><b>" + trLang.lang("F_INFO_ADJUNTS_LLICENCIA") + ":</b></p><ol>"
+                            for (var i in data.llicencies) {
+                                if (data.llicencies[i].enllacDocument) {
+                                    var enlaceCodificado = encodeURIComponent(data.llicencies[i].enllacDocument);
+                                    divElements += "<li><a href='#' data-bs-toggle='modal' data-bs-target='#divInformacioTipusAdjunts' onclick='abrirModal(\"" + enlaceCodificado + "\")'>" + data.llicencies[i].tipus + "</a></li>";
+                                } else {
+                                    divElements += "<li>" + data.llicencies[i].tipus + "</li>";
+                                }
+                            }
+
+                            divElements = divElements + "</ol></div>";
+                        }
+                        $("div.adjunts").prepend(divElements);
+                    }
+                }
+            });
+        }
+
+        function abrirModal(enlace) {
+            var enlaceDecodificado = decodeURIComponent(enlace);
+            $("#divInformacioTipusAdjunts").modal("show");
+            $("#informacioTipusAdjunt").html(enlaceDecodificado);
+        }
+
+        function peticioNomTipusSubcategoria(idSubCategoria){
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_get_nomtipussubcategoria_by_issubcategoria&idSubCategoria=' + idSubCategoria,
+                success: function (data) {
+                    nomTipusSubCategoria = data;
+                }
+            });
+        }
+
+
+        function construeixSeccioSeleccionarAsseguranca() {
+            if (!$('#divAssegurancaExterna').length) {
+                let divPanel = $("<div>", {id: "divAssegurancaExterna", class: "card"});
+                let divPanelHeading = $("<div>", {class: "card-header"});
+                let iconaPanelHeading = $("<i>", {class: "fa fa-eur"})
+                let spanTitolPanelHeading = $("<span>", {class: "lead"})
+                let spanTextPanelHeading = $("<span>", {
+                    class: "lead",
+                    text: " " + trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA_TITOL')
+                })
+                iconaPanelHeading.appendTo(spanTitolPanelHeading)
+                spanTextPanelHeading.appendTo(spanTitolPanelHeading)
+                spanTitolPanelHeading.appendTo(divPanelHeading)
+                divPanelHeading.appendTo(divPanel)
+
+                let divPanelBody = $("<div>", {class: "card-body"});
+                let divRowBody = $("<div>", {id: "rowTipusAssegurancaExterna", class: "row"});
+                let divColBody = $("<div>", {class: "col-md-4 col-sm-12 col-xs-12 form-group"});
+                let labelAsseguranca = $("<label>", {text: trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA')});
+                let selectAsseguranca = $("<select>", {
+                    id: "tipusAssegurancaExterna",
+                    name: "tipusAssegurancaExterna",
+                    class: "form-control"
+                })
+                selectAsseguranca.append($("<option>").attr('value', '').text(trLang.lang('COMBO_SELECCIONA')));
+                selectAsseguranca.append($("<option>").attr('value', 'ASSEGTIPFEDERACIO').text(trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA_FEDERACIO')));
+                selectAsseguranca.append($("<option>").attr('value', 'ASSEGTIPTERRITORIAL').text(trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA_TERRITORIAL')));
+                selectAsseguranca.append($("<option>").attr('value', 'ASSEGTIPCLUB').text(trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA_CLUB')));
+                selectAsseguranca.append($("<option>").attr('value', 'ASSEGTIPEXTERNA').text(trLang.lang('F_LLICENCIA_TIPUS_ASSEGURANCA_EXTERNA')));
+
+                labelAsseguranca.appendTo(divColBody)
+                selectAsseguranca.appendTo(divColBody)
+
+                divColBody.appendTo(divRowBody)
+                divRowBody.appendTo(divPanelBody)
+
+                divPanelBody.appendTo(divPanel)
+                divPanel.insertAfter($('#secQuotes'));
+            }
+        }
+
+        function initFormulari() {
+            mostrarAdjuntsObligatoris($("#subcategoria").val());
+            
+
+                        $("#formatDigital").bind("change", function (e) {
+                carregaQuotes($("#subcategoria").val(), '');
+            });
+
+                                    checkSubModalitat(5);
+            
+            $('#dataValidesaCertificatMedic').datepicker({dateFormat: 'dd-mm-yy'});
+
+                        $("#subcategoria").bind("change", function (e) {
+                carregaQuotes(e.target.value, '');
+                checkFormatDigitalVisible(e.target.value);
+                checkTempsCompromisVisible(e.target.value);
+                                peticioNomTipusSubcategoria(e.target.value);
+            });
+                            peticioNomTipusSubcategoria(69);
+                                    carregaQuotes(0, '');
+                                                
+            
+            
+            
+                            const dataminima = new Date();
+                                                    $('#tempsCompromisInici').daterangepickerPlayoff({
+                        singleDatePicker: true,
+                        minDate: dataminima
+                    }, function (chosen_date) {
+                        $('#tempsCompromisInici').val(chosen_date.format('DD-MM-YYYY'));
+                        omplaTempsCompromisDataFi(chosen_date.format('DD-MM-YYYY'), $('#subcategoria').val());
+                    });
+                            
+                    }
+
+        function peticioComprovaSancions() {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_comprova_sancions_federat&idFederat=37082',
+                success: function (data) {
+                    var resultat = JSON.parse(data);
+
+                    if (resultat.teSancio != "1") {
+                        return;
+                    }
+
+                    //resultat.dataSancio = resultat.dataSancio ? resultat.dataSancio.split("-").reverse().join("-") : "-";
+                    //$("#ambsancio span").text(resultat.dataSancio);
+                    $("#ambsancio").show();
+                }
+            });
+        }
+
+        function peticioComprovaCanviClubAnyAnterior(idValor) {
+            if (!idValor) {
+                return;
+            }
+            var adjunts = $("select[id^='TIPUSADJ']");
+            var tipusAdjunts = "";
+            for (var i = 0; i < adjunts.length; i++) {
+                if (adjunts[i].value != 0) {
+                    tipusAdjunts += 'tipusAdjunts[]=' + adjunts[i].value + '&';
+                }
+            }
+            tipusAdjunts.slice(0, -1);
+
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_comprova_canvi_club_any_anterior&idSubCategoria=' + idValor + '&idFederat=37082&idClub=' + $("#idclub").val() + '&' + tipusAdjunts,
+                success: function (data) {
+                    var resultat = JSON.parse(data);
+                    if (resultat.resultat == 1) {
+                        $("#errorContingut").text(resultat.missatge);
+                        $("#myModalLabel").text('Aviso');
+                        $("#myModal").modal('show');
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            $("#frmEntrar").validate({
+                rules: {
+                    submodalitat: {
+                        required: false
+                    },
+                    subcategoria:{
+                        packFederats: true
+                    }
+                    
+                                        , dorsal: {
+                        digits: true
+                    }
+                                    }
+            });
+
+            
+                        
+            
+
+                        $('#subcategoria').change(function () {
+                var id = $('#subcategoria option:selected').val();
+                                peticioDescripcioSubCategoria(id);
+                                            });
+            
+            
+            $("#confirmacioAnularLlicencia").click(function () {
+                $("#accio").val('anulada');
+                $("#equip").attr('required', false);
+                $("#equip").removeClass('required');
+                createHiddenValue('motiu', $('#motiu').val(), "frmEntrar");
+                $('#frmEntrar').submit();
+            });
+
+            $("#baixaCanviClub").click(function () {
+                $("#accio").val('baixaCanviClub');
+                createHiddenValue('motiu', $('#motiuBaixaCanviClub').val(), "frmEntrar");
+                $('#frmEntrar').submit();
+            });
+
+                        $("#confirmacioSolicitarLlicenciaFisica").click(function () {
+                $("#accio").val('accio_solicitar_llicencia_fisica');
+                $('#frmEntrar').submit();
+            });
+            
+                        $("#confirmarFormatDigital").click(function () {
+                $('#frmEntrar').submit();
+            });
+            
+            $("#deleteAssociarTecnicLlicenciaEquip").click(function () {
+                $('#modalEliminarRelacio').modal('hide');
+                $.ajax({
+                    type: 'POST',
+                    url: 'peticioAjax.php',
+                    data: 'peticioKey=peticio_eliminar_tecnic_equip_llicencia' + '&idEquip=' + $("#idEquipEliminar").val() + '&idLlicencia=123456',
+                    success: function (data) {
+                        $('#filaEquipAssociat' + $("#idEquipEliminar").val()).remove();
+                        window.location.reload(true);
+                    },
+                    error: function (data) {
+                        alert("Error: " + data.responseText);
+                    }
+                });
+            });
+            
+        });
+
+
+
+        
+        function peticioDescripcioCategoria(idCategoria) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_descripcio_categoria' + '&idCategoria=' + idCategoria,
+                success: function (data) {
+                    mostraDescripcio(data, 'CATEGORIA');
+                },
+                error: function (data) {
+                    try {
+                        errorCombo(data);
+                    } catch (e) {
+                    }
+                }
+            });
+        }
+        function peticioInformacioQuotaPromocio(idEquip) {
+
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_informacio_quota_promocio' + '&idEquip=' + idEquip + '&idFederat=' + '37082',
+                success: function (data) {
+                    console.log("@@ data: " + data);
+                    if(data == 1) {
+                        console.log("@@ show");
+                        $("#divInformacioQuotaPromocio").modal('show');
+                    }
+                }
+            });
+        }
+
+        function peticioDescripcioSubCategoria(idSubCategoria) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_descripcio_subcategoria' + '&idSubCategoria=' + idSubCategoria,
+                success: function (data) {
+                    mostraDescripcio(data, 'SUBCATEGORIA');
+                },
+                error: function (data) {
+                    try {
+                        errorCombo(data);
+                    } catch (e) {
+                    }
+                }
+            });
+        }
+
+        function peticioDescripcioModalitat(idModalitat) {
+            $.ajax({
+                type: 'POST',
+                url: 'peticioAjax.php',
+                data: 'peticioKey=peticio_descripcio_modalitat' + '&idModalitat=' + idModalitat,
+                success: function (data) {
+                    mostraDescripcio(data, 'MODALITAT');
+                },
+                error: function (data) {
+                    try {
+                        errorCombo(data);
+                    } catch (e) {
+                    }
+                }
+            });
+        }
+
+        function mostrarModalEliminarRelacio(idEquip) {
+            $("#idEquipEliminar").val(idEquip);
+            $("#modalEliminarRelacio").modal('show');
+        }
+
+        
+
+        function actualitzaCodiFederacioAutonomica(nomFormulari) {
+            $("#accio").val('saveAndActualitzaCodisFederacioAutonomica');
+            $('#' + nomFormulari).submit();
+        }
+
+        
+                
+        function mostraDescripcio(desc, mcs) {
+            if (desc != "") {
+                var texto = "<span><strong>" + trLang.lang('DESCRIPCIO_' + mcs) + " </strong><i>" + desc + "</i></span>";
+                $("#descripcioMCS:visible").slideToggle('slow', function () {
+                    $(this).html(texto);
+                })
+                $("#descripcioMCS").html(" ").delay(100); //evita que coja mal el tama�o del cuadro al hacer el slideToggle
+                $("#descripcioMCS:hidden").html(texto);
+                $("#descripcioMCS").slideToggle('slow');
+            } else {
+                $("#descripcioMCS:visible").slideToggle('slow');
+            }
+        }
+
+                /* ]]> */</script>
+</head>
+<body onload="initFormulari();">
+
+    <div id="questionDelete" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+             <h4 class="modal-title"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp;&nbsp;Atenci�n</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>Realmente desea eliminar la licencia actual?</p>
+          </div>
+          <div class="modal-footer">
+          	 <button type="button" class="btn btn-danger"  data-dismiss="modal" value="No">No</button>
+       		 <button type="button" class="btn btn-success"   id="delete_questionDelete" value="S�">S�</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<script type="text/javascript">/* <![CDATA[ */
+// ----------------------- POPUP BlockUI ----------------------------
+$(document).ready(function(){
+	$("#delete_questionDelete").click(function() {
+		$("#accio").val('delete');
+		$("#frmEntrar").data("validator", null).unbind();
+		$("#frmEntrar").submit();
+	    return false;
+	});
+});
+/* ]]> */</script><div id="divInformacioTipusAdjunts" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <p id="informacioTipusAdjunt"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="accept">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#divInformacioTipusAdjunts').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Bot�n que abri� el modal
+        var texto = button.data('bs-texto'); // Extraer el texto del atributo data-bs-texto
+        var modal = $(this);
+        modal.find('#informacioTipusAdjunt').html(texto); // Insertar el texto en el elemento del modal como HTML
+    });
+    $("#accept").click(function(){
+        $("#divInformacioTipusAdjunts").modal("hide");
+    });
+</script><div id="divInformacioQuotaPromocio" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">
+                    <i class="fa fa-info-circle text-info"></i>
+                    F_LLIC_INFORMACIO_QUOTA_PROMOCIO_TITLE                </h3>
+            </div>
+            <div class="modal-body">
+                <p id="informacioTipusAdjunt">
+                    F_LLIC_INFORMACIO_QUOTA_PROMOCIO_BODY                </p>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="checkboxAceptarTerminos"> 
+                            F_LLIC_INFORMACIO_QUOTA_PROMOCIO_CHECKBOX                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="acceptPromocio" disabled="true">ACCEPTAR</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#divInformacioQuotaPromocio .modal-title i {
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+#divInformacioQuotaPromocio .close {
+    color: white;
+    opacity: 0.8;
+    text-shadow: none;
+    font-size: 1.5em;
+}
+
+#divInformacioQuotaPromocio .modal-body {
+    padding: 25px;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+</style>
+
+<script>
+// Utilitzar delegaci� d'esdeveniments per assegurar que funcioni quan el modal es carrega din�micament
+$(document).on('change', '#checkboxAceptarTerminos', function() {
+    console.log('Checkbox canviat:', $(this).is(':checked'));
+    if ($(this).is(':checked')) {
+        $('#acceptPromocio').prop('disabled', false);
+        $('#divInformacioQuotaPromocio').attr('data-backdrop', 'true').attr('data-keyboard', 'true');
+    } else {
+        $('#acceptPromocio').prop('disabled', true);
+        $('#divInformacioQuotaPromocio').attr('data-backdrop', 'static').attr('data-keyboard', 'false');
+    }
+});
+
+// Tancar el modal quan es fa clic al bot� Acceptar
+$(document).on('click', '#acceptPromocio', function() {
+    if ($('#checkboxAceptarTerminos').is(':checked')) {
+        $('#divInformacioQuotaPromocio').modal('hide');
+    }
+});
+
+// Prevenir que es tanqui el modal amb la X si el checkbox no est� marcat
+$(document).on('click', '#divInformacioQuotaPromocio .close', function(e) {
+    if (!$('#checkboxAceptarTerminos').is(':checked')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+});
+
+// Prevenir que es tanqui amb ESC si el checkbox no est� marcat
+$(document).on('keydown', function(e) {
+    if (e.keyCode === 27 && $('#divInformacioQuotaPromocio').hasClass('in') && !$('#checkboxAceptarTerminos').is(':checked')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+});
+</script><div class="modal fade" id="questionSubllicencia" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:10%;display:none; overflow: hidden;">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">Ampliaci�n</h4>
+			</div>
+			<div class="modal-body">
+				Al solicitar una ampliaci�n de licencia, hay que tener en cuenta que los suplementos no se amplian. En los cambios de cobertura se cobrar� la diferencia entre las modalidades m�s 10 euros.						</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" id="noCreaSubllicencia" data-dismiss="modal">Cancelar</button>
+	        	<button type="button" class="btn btn-success" id="creaSubllicencia">S�</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">/* <![CDATA[ */		
+// ----------------------- POPUP BlockUI ----------------------------
+$(document).ready(function(){		
+     
+	$("#creaSubllicencia").click(function() {			
+			$("#accio").val('newSubLlicencia');
+			createHiddenValue("idLlicencia",123456,"frmEntrar");
+			createHiddenValue("mainFrom","/FormLlicencia.php?accio=edit&idLlicencia=123456","frmEntrar");
+						$("#frmEntrar").submit();
+	            return false;
+	    }); 
+	        
+        $("#noCreaSubllicencia").click(function() {
+        	$("#questionSubllicencia").modal('hide'); 
+        	return false;
+        });
+});	
+/* ]]> */</script>        <script type="text/javascript" async>/* <![CDATA[ */
+function peticioAjaxJSON(obj){
+	var params = '';
+	if ($(obj).children('input').length > 0)
+		params = $(obj).children('input').val();
+
+		return $.ajax({
+			type: 'POST',
+			url: 'peticioAjax.php',
+			data:'peticioKey=&idObjecte='+$(obj).attr('id')+params,
+			context: obj
+		});
+}
+function peticioAjaxJSON_OK(data){
+	var nomFuncio = eval($(this).attr('id'));
+	if ($.isFunction(nomFuncio)) {
+		nomFuncio(this, jQuery.parseJSON(data));
+	}else{
+		omplaNumResultatJSON(this, jQuery.parseJSON(data));
+	}
+}
+
+function omplaNumResultatJSON(obj, data){
+	$(".layer",$(obj)).text(data.num);
+}
+
+function peticioAjaxHTML(obj){
+	var params = '';
+	if ($(obj).children('input').length > 0) {
+		params = $(obj).children('input').val();
+	}
+	return $.ajax({
+		type: 'POST',
+		url: 'peticioAjax.php',
+		data:'peticioKey=&idObjecte='+$(obj).attr('id')+params,
+		context: obj
+	});
+}
+function peticioAjaxHTML_OK(data){
+	var id = 'info' + $(this).attr('id');
+	if ($("#"+id,$(this)).length != 0) {
+		$("#"+id,$(this)).hide(function() {$("#"+id,$(this)).html(html);$("#"+id,$(this)).show();});
+	} else {
+		$(this).append($('<div></div>',{id:id, style:'display:none', html:data}));
+		$("#"+id,$(this)).show();
+	}
+}
+	function carregaComunicats(){
+		$.ajax({
+				type: 'POST',
+				url: 'peticioAjax.php',
+				data: 'peticioKey=peticio_numero_comunicats&idUsuari='+61405									+'&rol=ROL_UFEDERAT',
+				success: function(data){
+					if(data > 0){
+						$("#divmenuprincipal i.fa-envelope").attr('data-count',data).addClass('notification-icon');
+						if($("#titolUltimsMissatges").length){
+							$("#titolUltimsMissatges").append('<span class="badge">'+data+'</span>');
+						}
+					}
+				}
+		});
+	}
+
+
+$(document).ready(function(){
+	$("#frmEntrar .infoExtraAjax").each(function(){
+		peticioAjaxHTML(this).done(peticioAjaxHTML_OK);
+	});
+		$("#frmEntrar .infoExtraAjaxJSON").each(function(){
+			peticioAjaxJSON(this).done(peticioAjaxJSON_OK);
+		});
+
+				carregaComunicats();
+		        });/* ]]> */</script>
+<script type="text/javascript" src="/js/menu/menu4.js?v=1760609375"  async  ></script><style>@media screen and (max-width:1024px) {#menuprincipal .navbar-nav > li > a,#menuprincipal .navbar-brand{padding-left:5px !important;padding-right:5px !important;}}@media screen and (max-width:1680px) {#menuprincipal .navbar-nav > li > a,#menuprincipal .navbar-brand{padding-left:10px;padding-right:10px;}}@media (max-width:767px) {#menuprincipal .nav-link {width:100%!important;border-right:none!important;border-bottom:1px solid #555!important;}#menuprincipal .navbar-nav > li > a,#menuprincipal .navbar-nav > a {margin-left:15px !important;padding-right:5px !important;}}@media (min-width:768px) {.dropdown:hover > .dropdown-menu,.dropdown-menu:hover,.dropdown-menu:focus-within {display:block;}#menuprincipal.navbar .dropdown-toggle {margin-bottom:-1px;border-bottom:1px solid transparent !important;}#menuprincipal.navbar .dropdown-toggle {margin-top:-1px;border-top:1px solid transparent !important;}}#menuprincipal {background-color:#2CA100;border-color:#2CA100;margin-bottom:0px;border-radius:0 !important;padding:0px;}#menuprincipal .navbar-nav > li > a,#menuprincipal .navbar-brand,#menuprincipal .navbar-nav .nav-link{color:white;padding:17px 15px;}#menuprincipal .navbar-nav > li.active > a,#menuprincipal .navbar-nav > li:hover > a,#menuprincipal .navbar-nav > li.open > a {background-color:#278902;color:white;}#menuprincipal .navbar-brand {height:55px;}#menuprincipal.navbar-light .navbar-toggler {background-color:#2CA100;border-color:transparent !important;}#menuprincipal.navbar-light .navbar-toggler:hover,#menuprincipal.navbar-light .navbar-toggler:focus {background-color:#278902 !important;border-color:transparent !important;}#menuprincipal.navbar-light .navbar-collapse > .nav-form,#menuprincipal.navbar-light .navbar-collapse > a.nav-link,#menuprincipal.navbar-light .navbar-collapse > .nav-text,#menuprincipal.navbar-light .navbar-collapse .navbar-nav > .nav-form,#menuprincipal.navbar-light .navbar-collapse .navbar-nav > li,#menuprincipal.navbar-light .navbar-collapse .navbar-nav > .nav-text,#menuprincipal.navbar-light .navbar-collapse .navbar-nav > a.nav-link{border-bottom-color:#222222 !important;}#menuprincipal .collapse.navbar-collapse {background-color:#2CA100;}#menuprincipal:not(.fixed-bottom) .navbar-nav > .active > a::after {border-top-color:transparent;}#menuprincipal:not(.fixed-bottom):not(.no-border) .navbar-nav > .active > a::before {border-top-color:transparent;}footer .fa, #divmenuprincipal i.fa, #divmenuprincipal i.fa-regular {font-size:1.4em;padding:0 5px;}.menu {background:#2CA100 none repeat scroll 0 0;min-height:40px;}.menu .container nav {border:0;margin-bottom:1px;}.menu h3, .menu h4, .menu h5, .menu h6 {color:#797979;font-weight:bold;white-space:normal;border-color:#797979;border-style:solid;border-width:0 0 1px;padding-bottom:10px;margin:5px;}i.notification-icon::after {background:red;border-radius:10px;color:#fff;content:attr(data-count);font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;font-size:11px;font-weight:600;height:13.8px;line-height:13.8px;margin-left:-7px;margin-top:-5px;min-width:14px;padding:0 4px;position:absolute;text-align:center;vertical-align:middle;}.navbar-toggler-icon {background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;background-color:transparent !important;border-color:white !important;color:white !important;}li.notificationActualitzacio {padding:15px;border-bottom:0.5px solid #eee;}li.notificationActualitzacio > div.media {margin-top:0;}li.notificationActualitzacio:hover {background-color:rgba(66, 202, 124, 0.1);cursor:pointer;}li.notificationActualitzacio div.notification-desc * {width:400px;white-space:nowrap;overflow:hidden !important;text-overflow:ellipsis;}li.notificationActualitzacio div.notification-meta {margin-top:0;}li.notificationActualitzacio .notification-title > a {color:#2ca100;}li.notificationActualitzacio .notification-title > a:hover {color:#33b502;}.notificacionsActualitzacions {width:450px;max-width:450px;padding:0 !important;border:1px solid lightgray;border-radius:3px !important;}.toolbarNotificacionsActualitzacions,.footerNotificacionsActualitzacions {background:#eee;display:flow-root;padding:10px 12px;}.toolbarNotificacionsActualitzacions .dropdown-toolbar-actions > p {float:left;margin:0;}.toolbarNotificacionsActualitzacions .dropdown-toolbar-actions > a {float:right;}.notificacionsActualitzacions > ul {clear:both;}.footerNotificacionsActualitzacions {display:flex;justify-content:center;align-items:center;}#divNotificacio img {max-width:100%;height:auto;display:block;}.navbar-light .navbar-nav .nav-link {display:flex;flex:1;flex-direction:row;align-items:center;}.dropdown-full {position:static !important;}.navbar-nav .dropdown-menu {top:50px;}.dropdown-menu .dropdown-item {font-size:12px;color:#797979;}.dropdown-item.active, .dropdown-item:active {color:#fff;}.columnaMenu {min-width:200px;}.dropdown-menu-right{right:0 !important;margin-right:10px;}@media (max-width:1322px) and (min-width:768px){#menuprincipal a.dropdown-toggle::after {display:none !important;}}@media (max-width:991px){.logogrande {display:none !important;}}@media (min-width:990px){.logopequeno {display:none !important;}}.dropdown-item:active {background-color:#f8f9fa;}</style><script type="text/javascript" src="https://kit.fontawesome.com/fa92068533.js"  ></script><script type="text/javascript" src="/js/autocomplete/autocomplete_playoff.js?v=1760609375"  ></script>
+<div class="menu" style="padding: 0px"><div class="container-fluid" style="padding: 0px">
+<nav id="menuprincipal" class="navbar navbar-expand-md navbar-light" role="navigation"><div class="container-fluid"></a><button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#divmenuprincipal" aria-controls="divmenuprincipal" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="divmenuprincipal" class="collapse navbar-collapse"><ul id="menuesquerra" class="navbar-nav mr-auto"><a class="nav-link" href="javascript:;" data-murl="PanellControlUsuariFederat.php" data-mparams="{&quot;accio&quot;:&quot;edit&quot;,&quot;navMenuOption&quot;:&quot;PanellControlUsuariFederat.php:edit&quot;}"><span class="logogrande"><img alt="homepage" src="images/logoPlayoff.png" width="80px"></span><span class="logopequeno"><img alt="homepage" src="images/logoSmall.png" width="22px"></span>&nbsp;</a><a class="nav-link" href="javascript:;" data-murl="PanellControlUsuariFederat.php" data-mparams="{&quot;accio&quot;:&quot;edit&quot;,&quot;navMenuOption&quot;:&quot;PanellControlUsuariFederat.php:edit:MENU_INICI&quot;}"><span class="reverse ">Inicio</span></a><a class="nav-link" href="javascript:;" data-murl="LlistatDocuments.php" data-mparams="{&quot;NoId&quot;:1,&quot;accio&quot;:&quot;list&quot;,&quot;navMenuOption&quot;:&quot;LlistatDocuments.php:list:MENU_DOCUMENTS&quot;}"><span class="reverse ">Documentos</span></a></ul><ul id="menudreta" class="navbar-nav ml-auto"><a class="nav-link" href="javascript:;" data-murl="LlistatComunicats.php" data-mparams="{&quot;accio&quot;:&quot;list&quot;,&quot;navMenuOption&quot;:&quot;LlistatComunicats.php:list:MENU_COMUNICATS&quot;}"><i class="fa fa-envelope" aria-hidden="true"></i>&nbsp;<span class="reverse d-block d-md-none">Comunicados</span></a><ul class="navbar-nav ml-auto"><li class="nav-item"><a href="FormLogin.php?accio=logout" class="nav-link"><i class="fa fa-sign-out"></i>&nbsp;&nbsp;Cerrar sesi�n</a></li></ul></ul></div></div></nav></div></div>
+<script type="text/javascript" async>/* <![CDATA[ */
+	// $('.dropdown-toggle').dropdown(); // Comentado para Bootstrap 4 - los dropdowns se inicializan autom�ticamente
+	//Next code used to prevent unexpected menu close when using some components (like accordion, tabs, forms, etc), please add the next JavaScript to your page
+	$( window ).on("load", function() {
+	    $(document).on('click', '#menuprincipal .navbar-nav .dropdown-menu', function(e) {e.stopPropagation();});
+	    $('#menuprincipal [data-toggle=tab]').mouseenter(function(e){
+            e.preventDefault();
+            $(this).tab('show');
+            $(this).closest('.dropdown-menu').css({right:0});
+      	});
+	});
+/* ]]> */</script>
+<div class="btnDiv">
+    <div class="container text-right">
+                                                    <button class="btn btn-light"
+                    onClick="showModalSolicitarLlicenciaFisica();">Solicitar formato f�sico</button>
+                                                        
+        
+                                                                    <button class="btn btn-light" onClick="descargaFullAutoritzacioResponsableFemecv();"><i
+                        class="fa fa-download"
+                        aria-hidden="true"></i> Imprimir certificado            </button>
+                                                                                                                                                    <button class="btn btn-light" onClick="subLlicencia();"><i class="fa fa-plus"
+                                                                         aria-hidden="true"></i> Ampliaci�n            </button>
+                                                                                            </div>
+</div>
+<div class="container">
+    <div class="main">
+        <div class="contentMain">
+            <form id="frmEntrar" action="/FormLlicencia.php" enctype="multipart/form-data"
+                  method="post">
+                                <input type="hidden" id="accio" name="accio"
+                       value="save"/>
+                                                <input type="hidden" name="MAX_FILE_SIZE" value="36700160">
+                <input type="hidden" name="toknForms" value="d09fe5dbcc46d391e8656c600a4b01bf"/>                <div class="row" id="firstUl">
+                                            <div class="col-md-1">
+                            <label id="afegirInfo" class="titLabel">+info</label>
+                        </div>
+                        <div class="col-md-11">
+                            <div id="info" style="display:none">
+                                <div class="sectionInfo">
+	<div class="text-info">				
+	Creado el d�a 02-01-2025, modificado por el usuario  arnyminer.z@gmail.com  el d�a 02-01-2025	</div>
+</div>
+                                <div class="sectionInfo">
+	<span>		
+	<label class="sectionInfoForm" >					
+	Impresiones Licencia: 1,  Primera Impresi�n:  2025-01-02 19:04:58,  �ltima Impresi�n:  2025-01-02 19:04:58, 	</label>
+	</span>
+</div>
+                            </div>
+                        </div>
+                                        <div class="col-md-12 text-right">
+                        <span id="llicenciesEnBlocIndexActual"></span> / <span id="llicenciesEnBlocTotal"></span>
+                    </div>
+                    <div class="col-md-12">
+                                            </div>
+                                    </div>
+                                <div class="row">
+                    <div class="col-2xl-3 col-md-4 col-sm-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header card-head">
+                                        <div class="row">
+                                            <div class="col-md-3 col-sm-12 col-xs-12 ">
+                                                <img class="img-responsive"
+                                                     src="images/foto.png"
+                                                     style="max-height: 70px;max-width:60px;margin: auto;">
+                                            </div>
+                                                                                            <div class="col-md-12 col-lg-7 col-sm-10 col-xs-11">
+                                                    <span class="h3"><a
+                                                                href="./FormFederat.php?accio=edit&idFederat=37082&mainFrom=FormLlicencia.php?accio=edit%idLlicencia=123456">NOMBRE</a></span>
+                                                    <br>
+                                                    <span class="h5"><a
+                                                                href="./FormFederat.php?accio=edit&idFederat=37082&mainFrom=FormLlicencia.php?accio=edit%idLlicencia=123456">APELLIDOS</a></span>
+                                                </div>
+                                                                                        <div class="col-md-1 col-xs-1 col-sm-1">
+                                                                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                                                                                                            <div class="row">
+                                                <div class="col-md-12 col-lg-3 col-sm-12 pr-0">
+                                                    <label class="col-form-label font-weight-bold">DNI</label>
+                                                </div>
+                                                <div class="col-md-12 col-lg-9 from-group">
+                                                    <span class="form-control-static">21698565C</span>
+                                                </div>
+                                            </div>
+                                            <hr class="mt10 mb10 ml0 mr0">
+                                                                                                                                                                                                        <div class="row">
+                                            <div class="col-md-12 col-lg-3 col-sm-12 pr-0">
+                                                <label class="col-form-label font-weight-bold">Edad</label>
+                                            </div>
+                                            <div class="col-md-12 col-lg-9 ">
+                                                                                                    <span>22 a�os</span>
+                                                    <br>
+                                                    Nacio el 29-11-2002                                                                                            </div>
+                                        </div>
+                                                                                    <hr class="mt10 mb10 ml0 mr0">
+                                            <div class="row">
+                                                <div class="col-md-12 col-lg-3 col-sm-12 pr-0">
+                                                    <label class="col-form-label font-weight-bold">M�vil</label>
+                                                </div>
+                                                <div class="col-md-12 col-lg-9 ">
+                                                    673910251                                                </div>
+                                            </div>
+                                            <hr class="mt10 mb10 ml0 mr0">
+                                            <div class="row">
+                                                <div class="col-md-12 col-lg-3 col-sm-12 pr-0">
+                                                    <label class="col-form-label font-weight-bold">Email</label>
+                                                </div>
+                                                <div class="col-md-12 col-lg-9 pr0" style="word-wrap: break-word;">
+                                                arnyminer.z@gmail.com                                                                                                    </div>
+                                            </div>
+                                                                                                                                                                                                                                                                                                                            </div>
+                                </div>
+                            </div>
+                                                                                    <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+								<span class="lead">
+									<i class="fa fa-info-circle"
+                                       aria-hidden="true"></i> Informaci�n adicional								</span>
+                                    </div>
+                                    <div class="card-body">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                        <div class="row">
+                                            <div class="col-md-12  form-group">
+                                                <label id=""
+                                                       class="titLabel">Observaciones                                                </label>
+                                                <textarea
+                                                        class="form-control descr_Form  readOnlyClass"
+                                                        rows="3" id="observacions" name="observacions"
+                                                         disabled="1" 										onkeyup="return ismaxlength(this);"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                                            </div>
+                                                    </div>
+                    </div>
+                    <div class="col-2xl-9 col-md-8 col-sm-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header row mx-0">
+                                        <span class="lead col-12 col-md-12 col-lg-6">
+                                            <i class="fa fa-id-card"
+                                            aria-hidden="true"></i> Licencia                                            <span class="ml15 label label-LLIESTTRA">
+                                                <strong>Tramitada</strong>
+                                            </span>
+                                                                                                                                </span>
+                                                                                    <span class="lead col-md-12 col-lg-6 text-lg-right"> Temporada 2025</span>
+                                                                            </div>
+                                    <div class="card-body">
+                                        <div id="ambsancio" class="row mb-3" style="display:none;color:red;">
+                                            <div class="col-md-12 form-group">
+                                                Actualment aquesta persona te una reclamaci� pendent de resoldre interposada per possibles obligacions pendents. <span></span>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                                                                                                                        <div class="col-md-3 col-sm-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label font-weight-bold">C�digo de la licencia</label>
+                                                                                                                    <div class="lead">ABC123456</div>
+                                                            <input type="hidden" id="codiLlicencia" name="codiLlicencia"
+                                                                   class="required" readonly="readonly"
+                                                                   value="ABC123456"/>
+                                                                                                            </div>
+                                                </div>
+                                                                                        
+                                                                                                                                                                                    <div class="col-md-3 col-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label font-weight-bold">Asignada al albar�n</label>
+                                                        <div>
+                                                            <span class="lead">12345</span>
+                                                                                                                        <small class="ml10"><a
+                                                                        href="./FormAlbara.php?accio=edit&idAlbara=67890"><i
+                                                                            class="fa fa-pencil" aria-hidden="true"></i></a></small>
+                                                                                                                    </div>
+                                                    </div>
+                                                </div>
+                                                                                                                                    
+                                        </div>
+                                                                                    <div class="row">
+                                                                                                <div id="tempsCompromisReadOnly" style="display:none">
+                                                    <div class="col-md-12">
+                                            <span>
+                                                <label>Licencia v�lida entre el <font
+                                                            class="tempsCompromisInici"></font> y <font
+                                                            class="tempsCompromisFi"></font></label>
+                                            </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        
+                                        
+                                        <div class="row">
+                                                                                            <input type="hidden" id="idclub" name="idclub"
+                                                       value="675"/>
+                                                                                                    <div class="col-md-8 col-sm-8 form-group">
+                                                        <label class="control-label font-weight-bold">Club</label>
+                                                        <input type="hidden" id="club" data-testid="input-club" name="club" value="CENTRE EXCURSIONISTA D&#039;ALCOI">
+                                                        <div class="form-control-static"><span class="lead">CENTRE EXCURSIONISTA D&#039;ALCOI </span>
+                                                                                                                                                                                </div>
+                                                        
+                                                    </div>
+                                                                                                                                                                                </div>
+                                                                                                                                                                    <hr class="mt0">
+                                            <div class="row" id="mcs">
+                                                                                                    <div class="col-sm-4 form-group">
+                                                        <input type="hidden" id="idmodalitat" name="idmodalitat"
+                                                               value="5"/>
+                                                        <label class="control-label font-weight-bold">Modalidad</label>
+                                                        <div class="form-control-static">FEMECV 2025</div>
+                                                    </div>
+                                                                                                                                                    <div class="col-sm-4 form-group">
+                                                        <input type="hidden" id="idcategoria" name="idcategoria"
+                                                               value="11"/>
+                                                        <label class="control-label font-weight-bold">Categor�a</label>
+                                                        <div class="form-control-static">MAYORES</div>
+                                                    </div>
+                                                                                                                                                    <div class="col-sm-4 form-group">
+                                                        <input type="hidden" id="subcategoria" name="subcategoria"
+                                                               value="69"/>
+                                                        <input type="hidden" id="idsubcategoria" name="idsubcategoria"
+                                                               value="69"/>
+                                                        <label class="control-label font-weight-bold">Sub&shy;Categor�a</label>
+                                                        <div class="form-control-static">A</div>
+                                                    </div>
+                                                                                            </div>
+                                        
+                                        <div id="secSubModalitats"></div>
+                                        <div id='descripcioMCS' class='row section'
+                                             style='display:none;padding:10px;padding-left:20px;'></div>
+
+                                                                            </div>
+                                </div><!-- fi card -->
+
+                                    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <span class="lead">
+                        <i class="fa fa-id-card"></i> Formato digital                    </span> 
+                </div>
+                <div class="card-body">
+                    <div class="row" id="divFormatDigital" style="display:block;">
+                        <div class="col-md-12 col-sm-12 col-12 form-group">
+                            <input type="hidden" id="idformatDigital" name="idformatDigital"
+                                   value="1"/>
+                            <label class="mb-3">NOVEDAD IMPORTANTE: La FEMECV y la FEDME quieren contribuir al cuidado del medio ambiente 
+                                                    reduciendo los residuos pl�sticos que anualmente generamos con nuestras licencias federativas. 
+                                                    Elige a continuaci�n si quieres disponer de tu licencia en formato digital (disponible en la APP 
+                                                    y sin soporte f�sico) o en formato f�sico (impresi�n en pl�stico)                                <span class="req">*</span></label>
+                            <select id="formatDigital" name="formatDigital" class="form-control required" disabled ></select>
+                        </div>
+
+                        <script type="text/javascript">/* <![CDATA[ */ peticioFormatDigital();/* ]]> */</script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+                                <div id="divPackFamiliar" class="divPackFamiliar hidden">
+    <div class="card">
+        <div class="card-header">
+		<span class="lead">
+			<i class="fa fa-users"></i> Pack Familiar</span>
+        </div>
+        <div class="card-body">
+            <p id="msgNoFederatsPack">No hay ning�n federado a�adido</p>
+            <ul id="packfamiliar-federats" class="list-unstyled" style="border: 0px; box-shadow: none;"></ul>
+            <button id="afegirFederatPack" type="button" class="btn btn-primary">A�adir</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" >/* <![CDATA[ */
+
+    function getAgeByDate(date) {
+        const today = new Date();
+        let age = today.getFullYear() - date.getFullYear();
+        const m = today.getMonth() - date.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    jQuery.validator.addMethod("dosMajordEdatMaxim", function (value, element) {
+        let nMajorsEdat = 0;
+        const dataNaixementFederat = "2002-11-29";
+        if (dataNaixementFederat) {
+            const splitDate = dataNaixementFederat.split("-");
+            const date = new Date(splitDate[0], splitDate[1] - 1, splitDate[2]);
+            nMajorsEdat += (getAgeByDate(date) >= 18 ? 1 : 0);
+        }
+        const elements = Array.from(document.querySelectorAll("[id^='dataNaixement']"));
+        for (let el of elements) {
+            if (!el.value) continue;
+            const splitDate = el.value.split("-");
+            const date = new Date(splitDate[2], splitDate[1] - 1, splitDate[0]);
+            nMajorsEdat += (getAgeByDate(date) >= 18 ? 1 : 0);
+        }
+
+        return nMajorsEdat <= 2;
+    }, "ERR_MESDOSMAJORSEDAT");
+
+    jQuery.validator.addMethod("packFederats", function(value, element) {
+        let opcio = $("#subcategoria option:selected").data('valors');
+
+        let numFederats = $("#packfamiliar-federats li").length;
+        numFederats++;
+        if ($("#idLlicencia").val() !== undefined) {
+            return true;
+        }
+
+        if (opcio.packMin && opcio.packMin > numFederats || opcio.packMax && opcio.packMax < numFederats) {
+            return false;
+        }else{
+            $("#subcategoria").removeClass('error');
+            $("#subcategoria-error").hide();
+        }
+        return true;
+    }, "El n�mero de federados al pack no corresponde al que deber�a haber como a m�ximo");
+
+    $.validator.addMethod("packIdentificadorIndicat", function(value, element) {
+        let fila = $(element).closest('.row');
+        let hasValor = false;
+        fila.find('.packIdentificadorIndicat').each(function (index, el) {
+            if ($(el).val() != '') {
+                hasValor = true;
+            }
+        });
+        return hasValor;
+    }, "");
+
+	$(document).ready(function () {
+        $("#afegirFederatPack").click(afegirFederatPack);
+
+	    $("#subcategoria").change(function(e) {
+            let opcio = $("option:selected", $(e.target)).data('valors');
+            if (opcio.packMin && opcio.packMax) {
+                $("#divPackFamiliar").removeClass('hidden');
+                $("#divPackFamiliar").data('valors', opcio);
+            } else {
+                $("#divPackFamiliar").data('valors', null);
+                $("#divPackFamiliar").addClass('hidden');
+            }
+        });
+
+	    function afegirTreureFederatPack()
+        {
+            if ( $('li', $('#packfamiliar-federats')).length) {
+                $("#msgNoFederatsPack").addClass('hidden');
+            } else {
+                $("#msgNoFederatsPack").removeClass('hidden');
+            }
+        }
+
+        function afegirFederatPack(e) {
+            let posicio = null;
+            $('li', $('#packfamiliar-federats')).each(function (index, el) {
+                let posicioEL = intval($(el).data('posicio'));
+                if (posicio < posicioEL || posicio == null) {
+                    posicio = posicioEL;
+                }
+            });
+            if (posicio == null) {
+                posicio = 0;
+            } else {
+                posicio++;
+            }
+            let idDataNaixement = 'dataNaixement' + posicio;
+            let idBtoEliminar = 'btnEliminarFed' + posicio;
+            let formFederat = `<li class="row" data-posicio="${posicio}" style="margin-bottom: 20px">
+						<div class="col-md-4">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">Nombre</label>
+								<input type="text" class="form-control required" name="pack[${posicio}][nom]" placeholder="Nombre" aria-required="true" aria-invalid="false">
+							</div>
+						</div>
+						<div class="col-md-5">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">Apellidos</label>
+								<input type="text" class="form-control required" name="pack[${posicio}][cognoms]" placeholder="Apellidos" aria-required="true">
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">Fecha nacimiento</label>
+								<input id="${idDataNaixement}" type="text" class="form-control required" name="pack[${posicio}][dataNaixement]" aria-required="true">
+							</div>
+						</div>
+						<div class="col-md-2">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">Sexo</label>
+								<select class="form-control required" name="pack[${posicio}][sexePersona]" aria-required="true">
+									<option value="SXMAS">Masculino</option>
+									<option value="SXFEM">Femenino</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">DNI</label>
+								<input type="text" class="form-control packIdentificadorIndicat" name="pack[${posicio}][nif]" placeholder="DNI" aria-required="true">
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">CatSalut</label>
+								<input type="text" class="form-control packIdentificadorIndicat" name="pack[${posicio}][catsalut]" placeholder="CatSalut" aria-required="true">
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="form-group">
+								<label class="control-label font-weight-bold">Pasaporte</label>
+								<input type="text" class="form-control packIdentificadorIndicat" name="pack[${posicio}][residencia]" placeholder="Pasaporte" aria-required="true">
+							</div>
+						</div>
+						<div class="col-md-1">
+							<button id="${idBtoEliminar}" type="button" class="btn btn-link pull-right" style="margin-top: 20px;"><i class="fa fa-trash-o fa-2x" aria-hidden="true" /></button>
+						</div>
+					   </li>`;
+            formFederat = $(formFederat);
+            $("#packfamiliar-federats").append(formFederat);
+            $("#" + idDataNaixement).mask("99-99-9999",{placeholder:" "});
+            $("#" + idBtoEliminar).click((e) => {$(e.target).closest('.row').remove(); afegirTreureFederatPack()});
+            $("#" + idDataNaixement).rules("add", {
+                dosMajordEdatMaxim: true,
+            })
+            afegirTreureFederatPack();
+        }
+    });
+/* ]]> */</script>                                                                    <div id="secQuotes" class="section"></div>
+                                                                <script type="text/javascript">/* <![CDATA[ */
+$(document).ready(function(){
+		$("#modalitat").change(divAtributsLlic_actualitzarAtributsDisponibles);
+});
+function divAtributsLlic_actualitzarAtributsDisponibles(event) {
+	var dades = {
+		peticioKey : 'peticio_atributs_modalitat',
+		idModalitat : $(event.target).val()
+	}
+	$.getJSON('peticioAjax.php', dades, function( data ) {
+		divAtributsLlic_netejaAtributsDisponibles();
+		$.each(data, function(index, element) { $("#divAtributsLlicencia select:first").append( $('<option>' + element.nom + '</option>').val(element.idAtribut) ); });
+		if (data.length == 0) {
+			$("#divAtributsLlicencia").addClass('hidden');
+		} else {
+			$("#divAtributsLlicencia").removeClass('hidden');
+		}
+	});
+}
+function divAtributsLlic_netejaAtributsDisponibles() {
+	$("#divAtributsLlicencia select option").remove();
+	$("#multiselectAtributsLlicencia").removeClass('in');
+}
+/* ]]> */</script>
+
+
+<div id="divAtributsLlicencia" class="card  hidden">
+	<div class="card-header">
+		<span class="lead">
+			<i class="fa fa-star" aria-hidden="true"></i> Atributos <small><button type="button" class="btn btn-link" data-toggle="collapse" data-target="#multiselectAtributsLlicencia">Mostrar <i class="fa fa-angle-down" aria-hidden="true"></i></button></small>
+		</span>								 	
+	</div>
+	<div class="card-body">
+
+	<div id="multiselectAtributsLlicencia" class="col-12 collapse" style="margin-top : 10px">
+		<div class="row">
+			<div class="col-5">
+				<select class="multiselect custom-select form-control" size="8" multiple="multiple" data-right="#multiselect_to_1" data-right-all="#right_All_1" data-right-selected="#right_Selected_1" data-left-all="#left_All_1" data-left-selected="#left_Selected_1">
+									</select>
+			</div>
+			<div class="col-2">
+				<button type="button" id="right_All_1" class="btn btn-block disabled">
+					<i class="fa-solid fa-forward-fast"></i>
+				</button>
+				<button type="button" id="right_Selected_1" class="btn btn-block disabled">
+					<i class="fa-solid fa-forward-step"></i>
+				</button>
+				<button type="button" id="left_Selected_1" class="btn btn-block disabled">
+					<i class="fa-solid fa-backward-step"></i>
+				</button>
+				<button type="button" id="left_All_1" class="btn btn-block disabled">
+					<i class="fa-solid fa-backward-fast"></i>
+				</button>
+			</div>
+			<div class="col-5">
+				<select  id="multiselect_to_1" class="custom-select form-control" size="8" multiple="multiple">
+									</select>
+			</div>
+		</div>
+	</div>
+	</div>
+</div>                                                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 text-center visible-xs mx-auto mt-4 mb-5">
+                                                                    </div>
+                </div>
+            </form>
+                        <!-- Modal Error -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:10%;display:none; overflow: hidden;">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">ERROR</h4>
+			</div>
+			<div id="errorContingut" class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger" data-dismiss="modal">Aceptar</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script async>
+function ajaxError( jqXHR, textStatus, errorThrown ) {
+	$("#errorContingut").text(jqXHR.responseText);
+	$("#myModal").modal('show'); 
+}
+</script>
+            <div id="divAnular" class="modal fade" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Atenci�n</h4>
+			</div>
+			<div class="modal-body" id="contingutMissatge">
+                                    �Seguro que quieres anular licencia?                                                    <br><br><label  class="firstLabel titLabel">Motivo</label>
+                    <textarea class="form-control valid" id="motiu" name="motiu" maxlength="1500" rows="3" cols="128" style="height: 60px;"></textarea>
+           	</div>
+			<div class="modal-footer">
+				<button id="NoAnularLlicencia" class="btn btn-default"
+						data-dismiss="modal">Cancelar</button>
+				<button id="confirmacioAnularLlicencia" class="btn btn-success"
+					data-dismiss="modal">De acuerdo</button>
+			</div>
+		</div>
+	</div>
+</div>            <div id="divBaixaCanviClub" class="modal fade" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Atenci�n</h4>
+            </div>
+            <div class="modal-body" id="contingutMissatge">
+                <br><label  class="firstLabel titLabel">Motivo</label>
+                <input type="hidden" id="idmotiuBaixaCanviClub" name="idmotiuBaixaCanviClub"/>
+                                    <textarea class="form-control valid" id="motiuBaixaCanviClub" name="motiuBaixaCanviClub" maxlength="1500" rows="3" cols="128" style="height: 60px;"></textarea>
+                            </div>
+            <div class="modal-footer">
+                <button id="NoBaixaCanviClub" class="btn btn-default"
+                        data-dismiss="modal">Cancelar</button>
+                <button id="baixaCanviClub" class="btn btn-success"
+                        data-dismiss="modal">De acuerdo</button>
+            </div>
+        </div>
+    </div>
+</div>            <div id="divSolicitarLlicenciaFisica" class="modal fade" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">
+                    ATENCI�N, ACCI�N IRREVERSIBLE.                </h4>
+			</div>
+
+            <div class="modal-body">
+                �Est�s seguro de solicitar esta licencia en formato f�sico?                <br><br>
+                La cuota aplicada ser� de 2 euro.            </div>
+
+			<div class="modal-footer">
+				<button id="noSolicitarLlicenciaFisica" class="btn btn-default" data-dismiss="modal">
+                    Cancelar                </button>
+				<button id="confirmacioSolicitarLlicenciaFisica" class="btn btn-success" data-dismiss="modal">
+                    De acuerdo                </button>
+			</div>
+		</div>
+	</div>
+</div>            <div id="divConfirmarFormatDigital" class="modal fade" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">
+                    ATENCI�N, LICENCIA EN FORMATO DIGITAL                </h4>
+			</div>
+
+            <div class="modal-body">
+                Al crear una licencia en formato digital no dispondr�s de un carn� f�sico de �sta, s�lo estar� disponible en la APP            </div>
+
+			<div class="modal-footer">
+				<button id="noConfirmarFormatDigital" class="btn btn-default" data-dismiss="modal">
+                    Cancelar                </button>
+				<button id="confirmarFormatDigital" class="btn btn-success" data-dismiss="modal">
+                    De acuerdo                </button>
+			</div>
+		</div>
+	</div>
+</div>        </div><!-- div contentMain -->
+    </div><!-- div main -->
+</div><!--container-->
+<!-- Modal HTML -->
+<div id="modalEliminarRelacio" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Confirmar la acci�n</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Esta acci�n eliminar� la relaci�n entre el t�cnico y el equipo</p>
+                <input type="hidden" name="idEquipEliminar" id="idEquipEliminar" value=""/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light"
+                        data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary"
+                        id="deleteAssociarTecnicLlicenciaEquip">Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script type="text/javascript">/* <![CDATA[ */
+/* ]]> */</script>
+</html>
