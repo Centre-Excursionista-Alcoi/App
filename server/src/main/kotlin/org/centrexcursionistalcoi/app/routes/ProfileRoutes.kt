@@ -48,7 +48,16 @@ fun Route.profileRoutes() {
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
 
         call.respond(
-            ProfileResponse(session.sub, session.username, session.email, session.groups, departments, lendingUser, insurances)
+            ProfileResponse(
+                sub = session.sub,
+                username = session.username,
+                email = session.email,
+                groups = session.groups,
+                departments = departments,
+                lendingUser = lendingUser,
+                insurances = insurances,
+                femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
+            )
         )
     }
     post("/profile/lendingSignUp") {

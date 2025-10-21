@@ -16,7 +16,8 @@ data class ProfileResponse(
     val groups: List<String>,
     val departments: List<Int>,
     val lendingUser: LendingUser?,
-    val insurances: List<UserInsurance>
+    val insurances: List<UserInsurance>,
+    val femecvSyncEnabled: Boolean,
 ) {
     val isAdmin: Boolean get() = ADMIN_GROUP_NAME in groups
 
