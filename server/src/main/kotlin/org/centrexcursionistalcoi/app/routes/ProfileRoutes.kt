@@ -6,6 +6,7 @@ import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import java.time.format.DateTimeParseException
@@ -26,6 +27,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.neq
 
 fun Route.profileRoutes() {
     get("/profile") {
@@ -185,5 +187,28 @@ fun Route.profileRoutes() {
         }
 
         call.respondText("FEMECV account linked and data synchronized successfully", status = HttpStatusCode.OK)
+    }
+    delete("/profile/femecvSync") {
+        val session = getUserSessionOrFail() ?: return@delete
+
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@delete
+
+        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+
+        // Delete FEMECV-linked insurances
+        Database {
+            UserInsuranceEntity.find { (UserInsurances.userSub eq session.sub) and (UserInsurances.femecvLicense neq null) }
+                .forEach { entity ->
+                    entity.delete()
+                }
+        }
+
+        // Remove FEMECV credentials
+        Database {
+            userReference.femecvUsername = null
+            userReference.femecvPassword = null
+        }
+
+        call.respond(HttpStatusCode.NoContent)
     }
 }
