@@ -71,8 +71,10 @@ jobs:
           echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} > keystore.txt
           base64 --decode keystore.txt > keystore.jks
       - name: Verify Keystore integrity
+        env:
+          KEYSTORE_SHA256: 6268f9f99a68ab7903a342290ff1762c5ffdebd0fa467d3176c6dac2e0cdde7f
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }} keystore.jks" | sha256sum --check --status || exit 1
+          echo "${{ env.KEYSTORE_SHA256 }} keystore.jks" | sha256sum --check --status || exit 1
       - name: Verify Keystore contents
         run: |
           keytool -list -v -keystore keystore.jks -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
