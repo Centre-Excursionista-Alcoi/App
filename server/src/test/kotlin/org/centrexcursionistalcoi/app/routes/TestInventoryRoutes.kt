@@ -38,16 +38,17 @@ class TestInventoryRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
 
+    private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
-    private fun JdbcTransaction.initializeItem(): InventoryItemEntity {
-        val itemType = InventoryItemTypeEntity.new {
-            displayName = "Item Type 1"
-            description = "Description 1"
-            image = null
-        }
-        return InventoryItemEntity.new(exampleItemId) {
+    context(_: JdbcTransaction)
+    private fun initializeItem(): InventoryItemEntity {
+        return InventoryItemEntity.findById(exampleItemId) ?: InventoryItemEntity.new(exampleItemId) {
             variation = "Variant A"
-            type = itemType
+            type = InventoryItemTypeEntity.findById(exampleItemTypeId) ?: InventoryItemTypeEntity.new(exampleItemTypeId) {
+                displayName = "Item Type 1"
+                description = "Description 1"
+                image = null
+            }
         }
     }
 

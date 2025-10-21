@@ -59,6 +59,7 @@ dependencies {
 
     // Database
     implementation(libs.exposed.core)
+    implementation(libs.exposed.crypt)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.datetime)
     implementation(libs.exposed.json)
@@ -72,8 +73,13 @@ dependencies {
     // Redis
     implementation(libs.kreds)
 
+    // XML Parsing
+    implementation(libs.ksoup.core)
+    implementation(libs.ksoup.network)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.mockk)
 }
 

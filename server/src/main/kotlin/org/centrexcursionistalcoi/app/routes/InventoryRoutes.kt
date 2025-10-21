@@ -55,6 +55,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
@@ -255,8 +256,19 @@ fun Route.inventoryRoutes() {
         // Notify admins asynchronously
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
         CoroutineScope(Dispatchers.IO).launch {
-            val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
-            val emails = admins.map { MailerSendEmail(it.email, it.username) }
+            val emails = try {
+                Database {
+                    UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
+                        .map { MailerSendEmail(it.email, it.username) }
+                }
+            } catch (_: UnsupportedByDialectException) {
+                Database {
+                    UserReferenceEntity.all()
+                        .filter { it.groups.contains(ADMIN_GROUP_NAME) }
+                        .map { MailerSendEmail(it.email, it.username) }
+                }
+            }
+            val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             println("Sending emails to: $emails")
             Email.sendEmail(
                 to = emails,
@@ -264,12 +276,12 @@ fun Route.inventoryRoutes() {
                 htmlContent = """
                     <p>A new lending request has been created by ${userReferenceEntity.username}.</p>
                     <p>
-                        <strong>From:</strong> ${lendingEntity.from}<br/>
-                        <strong>To:</strong> ${lendingEntity.to}<br/>
+                        <strong>From:</strong> $from<br/>
+                        <strong>To:</strong> $to<br/>
                         <strong>Notes:</strong> ${lendingEntity.notes ?: "None"}<br/>
                         <strong>Items:</strong>
                         <ul>
-                            ${itemsList.joinToString("\n") { "<li>${it.type.displayName} (${it.variation ?: "No variation"})</li>" }}
+                            ${itemsList.joinToString("\n") { "<li>${Database { it.type.displayName }} (${it.variation ?: "No variation"})</li>" }}
                         </ul>
                     </p>
                     <p>Please review and confirm the lending in the admin panel.</p>

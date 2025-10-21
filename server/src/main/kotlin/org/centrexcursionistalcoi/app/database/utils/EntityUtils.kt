@@ -18,9 +18,24 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.DoubleColumnType
+import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.IntegerColumnType
+import org.jetbrains.exposed.v1.core.LongColumnType
+import org.jetbrains.exposed.v1.core.StringColumnType
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.UUIDColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
-import org.jetbrains.exposed.v1.dao.*
+import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
+import org.jetbrains.exposed.v1.dao.DaoEntityID
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.UIntEntity
+import org.jetbrains.exposed.v1.dao.ULongEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
@@ -73,6 +88,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                 println("- ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
+                    is EncryptedVarCharColumnType -> continue // Encrypted columns should not be serialized
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
                     is BooleanColumnType -> element<Boolean>(column.name, isOptional = type.nullable)
                     is IntegerColumnType -> element<Int>(column.name, isOptional = type.nullable)
@@ -119,6 +135,10 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                                 is Entity<*> -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 else -> error("Unsupported entity ID column type: ${typeValue::class.simpleName}")
                             }
+                        }
+                        is EncryptedVarCharColumnType -> {
+                            // Encrypted columns should not be serialized
+                            continue
                         }
                         is StringColumnType -> {
                             encodeStringElement(descriptor, idx, typeValue as String)

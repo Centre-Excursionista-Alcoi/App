@@ -30,6 +30,8 @@ services:
       EMAIL_REPLY_TO_ADDR: info@example.com
       EMAIL_REPLY_TO_NAME: Support
       MAILER_SEND_TOKEN: abc
+    volumes:
+      - keys:/keys
     networks:
       - internal
     depends_on:
@@ -71,6 +73,7 @@ services:
 volumes:
   redis:
     driver: local
+  keys:
 
 networks:
   internal:

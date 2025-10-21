@@ -7,6 +7,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
 
 @OptIn(ExperimentalTime::class)
 @Serializable
@@ -17,7 +18,8 @@ data class UserInsurance(
     val policyNumber: String,
     val validFrom: LocalDate,
     val validTo: LocalDate,
-    val documentId: Uuid?
+    val documentId: Uuid?,
+    val femecvLicense: LicenseData? = null
 ): Entity<Uuid>, FileContainer {
     override val files: Map<String, Uuid?> = mapOf("documentId" to documentId)
 

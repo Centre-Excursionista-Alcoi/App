@@ -13,8 +13,16 @@ class RedisStoreMap(endpoint: String) : StoreMap {
 
     private val client = newClient(Endpoint.from(endpoint))
 
+    override suspend fun keys(): Set<String> {
+        return client.keys("*").toSet()
+    }
+
     override suspend fun put(key: String, value: String) {
         client.set(key, value)
+    }
+
+    override suspend fun get(key: String): String? {
+        return client.get(key)
     }
 
     override suspend fun remove(key: String): String? {

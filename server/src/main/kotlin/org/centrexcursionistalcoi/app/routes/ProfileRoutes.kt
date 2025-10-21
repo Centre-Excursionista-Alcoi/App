@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -19,6 +18,10 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.integration.FEMECV
+import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
@@ -36,6 +39,12 @@ fun Route.profileRoutes() {
         val lendingUser = Database {
             LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
         }
+
+        val reference = Database { UserReferenceEntity.getOrProvide(session) }
+        if (reference.femecvUsername != null && reference.femecvPassword != null) {
+            reference.refreshFEMECVData()
+        }
+
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
 
         call.respond(
@@ -45,11 +54,7 @@ fun Route.profileRoutes() {
     post("/profile/lendingSignUp") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val contentType = call.request.contentType()
-        if (!contentType.match(ContentType.Application.FormUrlEncoded)) {
-            call.respondText("Content-Type must be form url-encoded. It was: $contentType", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val existingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull() }
         if (existingUser != null) {
@@ -104,11 +109,7 @@ fun Route.profileRoutes() {
     post("/profile/insurances") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val contentType = call.request.contentType()
-        if (!contentType.match(ContentType.Application.FormUrlEncoded)) {
-            call.respondText("Content-Type must be form url-encoded. It was: $contentType", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
         val insuranceCompany = parameters["insuranceCompany"]
@@ -143,5 +144,37 @@ fun Route.profileRoutes() {
         }
 
         call.respondText("OK", status = HttpStatusCode.Created)
+    }
+    post("/profile/femecvSync") {
+        val session = getUserSessionOrFail() ?: return@post
+
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+
+        val parameters = call.receiveParameters()
+        val username = parameters["username"]
+        val password = parameters["password"]
+
+        if (username.isNullOrBlank() || password.isNullOrBlank()) return@post respondError(Errors.FEMECVMissingCredentials)
+
+        try {
+            FEMECV.login(username, password)
+        } catch (e: FEMECVException) {
+            return@post call.respondText("FEMECV login failed: ${e.message}", status = HttpStatusCode.Unauthorized)
+        }
+
+        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+
+        Database {
+            userReference.femecvUsername = username
+            userReference.femecvPassword = password
+        }
+
+        try {
+            userReference.refreshFEMECVData()
+        } catch (e: FEMECVException) {
+            return@post call.respondText("FEMECV data sync failed: ${e.message}", status = HttpStatusCode.InternalServerError)
+        }
+
+        call.respondText("FEMECV account linked and data synchronized successfully", status = HttpStatusCode.OK)
     }
 }

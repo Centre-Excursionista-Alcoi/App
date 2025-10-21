@@ -1,12 +1,19 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.UserInsurance
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
+import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -31,6 +38,9 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     var email by UserReferences.email
     var groups by UserReferences.groups
 
+    var femecvUsername by UserReferences.femecvUsername
+    var femecvPassword by UserReferences.femecvPassword
+
     context(_: JdbcTransaction)
     fun toData(lendingUser: LendingUser?, insurances: List<UserInsurance>?, departments: List<DepartmentMemberInfo>?) = UserData(
         sub = sub.value,
@@ -41,4 +51,29 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         insurances = insurances.orEmpty(),
         departments = departments.orEmpty(),
     )
+
+    suspend fun refreshFEMECVData() {
+        val username = femecvUsername
+        val password = femecvPassword
+        if (username == null || password == null) return
+        val licenses = FEMECV.getLicenses(username, password)
+        val existingLicenseEntities = Database { UserInsuranceEntity.find { (UserInsurances.userSub eq sub.value) and (UserInsurances.femecvLicense neq null) } }
+        for (license in licenses) {
+            val matchingEntity = existingLicenseEntities.find { it.femecvLicense?.id == license.id }
+            if (matchingEntity != null) {
+                // License already exists, ignore
+            } else {
+                Database {
+                    UserInsuranceEntity.new {
+                        userSub = sub
+                        insuranceCompany = "FEMECV"
+                        policyNumber = license.code
+                        validFrom = license.validFrom.toJavaLocalDate()
+                        validTo = license.validTo.toJavaLocalDate()
+                        femecvLicense = license
+                    }
+                }
+            }
+        }
+    }
 }

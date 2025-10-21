@@ -4,9 +4,14 @@ import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryStoreMap : StoreMap {
     private val map = ConcurrentHashMap<String, String>()
+    override suspend fun keys(): Set<String> = map.keys.toSet()
 
     override suspend fun put(key: String, value: String) {
         map[key] = value
+    }
+
+    override suspend fun get(key: String): String? {
+        return map[key]
     }
 
     override suspend fun remove(key: String): String? {

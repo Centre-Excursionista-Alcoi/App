@@ -35,6 +35,13 @@ object Email {
     }
 
     suspend fun sendEmail(to: List<MailerSendEmail>, subject: String, htmlContent: String, attachments: List<MailerSendAttachment>? = null) {
+        try {
+            NotificationsConfig.mailerSendToken
+        } catch (_: IllegalStateException) {
+            // email not configured
+            return
+        }
+
         val request = SendMailRequest(
             from = MailerSendEmail(
                 email = NotificationsConfig.emailFromAddr,

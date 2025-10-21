@@ -18,6 +18,9 @@ object Errors {
         7 -> MalformedRequest.serializer()
         8 -> OperationNotSupported.serializer()
         9 -> NothingToUpdate.serializer()
+        10 -> MissingFile.serializer()
+        11 -> CannotSubmitMemoryUntilMaterialIsReturned.serializer()
+        12 -> UserReferenceNotFound.serializer()
         else -> null
     }
 
@@ -63,5 +66,8 @@ object Errors {
 
     @Serializable
     data object UserReferenceNotFound : Error(12, "Your user reference was not found.", HttpStatusCode.InternalServerError)
+
+    @Serializable
+    data object FEMECVMissingCredentials : Error(13, "Missing \"username\" or \"password\".", HttpStatusCode.BadRequest)
 
 }
