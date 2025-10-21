@@ -141,4 +141,18 @@ class HomeViewModel: ViewModel() {
             _isSyncing.emit(false)
         }
     }
+
+    fun connectFEMECV(username: String, password: CharArray) = viewModelScope.async<Throwable?>(defaultAsyncDispatcher) {
+        try {
+            ProfileRemoteRepository.connectFEMECV(username, password)
+            null
+        } catch (e: ServerException) {
+            Napier.e(e) { "Could not connect to FEMECV." }
+            e
+        }
+    }
+
+    fun disconnectFEMECV() = viewModelScope.launch(defaultAsyncDispatcher) {
+        ProfileRemoteRepository.disconnectFEMECV()
+    }
 }

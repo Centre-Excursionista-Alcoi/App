@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
@@ -100,6 +101,8 @@ fun HomeScreen(
             memoryUploadProgress = memoryUploadProgress,
             onMemorySubmitted = model::submitMemory,
             onCreateInsurance = model::createInsurance,
+            onFEMECVConnectRequested = model::connectFEMECV,
+            onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
             isSyncing = isSyncing,
             onSyncRequested = model::sync,
@@ -147,7 +150,10 @@ private fun HomeScreenContent(
     onCancelLendingRequest: (Lending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (Lending, PlatformFile) -> Job,
+
     onCreateInsurance: CreateInsuranceRequest,
+    onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
+    onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
 
@@ -305,6 +311,8 @@ private fun HomeScreenContent(
                         memoryUploadProgress,
                         onMemorySubmitted,
                         onCreateInsurance,
+                        onFEMECVConnectRequested,
+                        onFEMECVDisconnectRequested,
                         users,
                         inventoryItemTypes,
                         onCreateInventoryItemType,
@@ -341,6 +349,8 @@ private fun HomeScreenContent(
                             memoryUploadProgress,
                             onMemorySubmitted,
                             onCreateInsurance,
+                            onFEMECVConnectRequested,
+                            onFEMECVDisconnectRequested,
                             users,
                             inventoryItemTypes,
                             onCreateInventoryItemType,
@@ -376,7 +386,10 @@ fun HomeScreenPagerContent(
     onCancelLendingRequest: (Lending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (Lending, PlatformFile) -> Job,
+
     onCreateInsurance: CreateInsuranceRequest,
+    onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
+    onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
 
@@ -428,7 +441,13 @@ fun HomeScreenPagerContent(
                 onManageLendingsRequested,
             )
 
-            IDX_PROFILE -> ProfilePage(windowSizeClass, profile, onCreateInsurance)
+            IDX_PROFILE -> ProfilePage(
+                windowSizeClass,
+                profile,
+                onCreateInsurance,
+                onFEMECVConnectRequested,
+                onFEMECVDisconnectRequested,
+            )
 
             // 1 -> LendingPage(windowSizeClass, profile, onLendingSignUp, onCreateInsurance)
         }

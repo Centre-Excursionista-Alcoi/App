@@ -11,11 +11,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.centrexcursionistalcoi.app.data.UserInsurance
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
-import org.centrexcursionistalcoi.app.ui.dialog.InsuranceDialog
+import org.centrexcursionistalcoi.app.ui.page.home.profile.FEMECVAccountCard
 import org.centrexcursionistalcoi.app.ui.page.home.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.page.home.profile.NoInsurancesCard
 import org.centrexcursionistalcoi.app.ui.page.home.profile.PersonalInformationCard
@@ -26,6 +27,8 @@ fun ProfilePage(
     windowSizeClass: WindowSizeClass,
     profile: ProfileResponse,
     onCreateInsurance: CreateInsuranceRequest,
+    onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
+    onFEMECVDisconnectRequested: () -> Job,
 ) {
     val activeInsurances = remember(profile) { profile.activeInsurances() }
 
@@ -34,14 +37,6 @@ fun ProfilePage(
         onCreate = onCreateInsurance,
         onDismissRequest = { addingInsurance = false }
     )
-
-    var displayingInsurance by remember { mutableStateOf<UserInsurance?>(null) }
-    displayingInsurance?.let {
-        InsuranceDialog(
-            insurance = it,
-            onDismissRequest = { displayingInsurance = null }
-        )
-    }
 
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -59,7 +54,14 @@ fun ProfilePage(
             InsurancesListCard(
                 activeInsurances = activeInsurances,
                 onAddInsuranceRequested = { addingInsurance = true },
-                onInsuranceRequested = { displayingInsurance = it }
+            )
+        }
+
+        item("femecv_sync") {
+            FEMECVAccountCard(
+                profile = profile,
+                onConnectRequested = onFEMECVConnectRequested,
+                onDisconnectRequested = onFEMECVDisconnectRequested,
             )
         }
     }

@@ -20,7 +20,8 @@ class ServerException(
             } catch (_: SerializationException) {
                 null
             }
-            return ServerException(error?.description ?: "Unknown server error", httpResponse.status.value, body, error?.code)
+            val errorCode = error?.code ?: httpResponse.headers["CEA-Error-Code"]?.toIntOrNull()
+            return ServerException(error?.description ?: body, httpResponse.status.value, body, errorCode)
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -76,14 +77,7 @@ object ProfileRemoteRepository {
                 append("validTo", validTo.toString())
             }
         )
-        if (!response.status.isSuccess()) {
-            throw ServerException(
-                "Failed to add insurance",
-                response.status.value,
-                response.bodyAsText(),
-                errorCode = response.headers["CEA-Error-Code"]?.toIntOrNull(),
-            )
-        }
+        if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 
     suspend fun synchronize(): Boolean {
@@ -97,5 +91,24 @@ object ProfileRemoteRepository {
             ProfileRepository.clear()
             return false
         }
+    }
+
+    suspend fun connectFEMECV(username: String, password: CharArray) {
+        val response = httpClient.submitForm(
+            "/profile/femecvSync",
+            formParameters = parameters {
+                append("username", username)
+                append("password", password.concatToString())
+            }
+        )
+        if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
+
+        // After connecting, synchronize the profile to update local data
+        synchronize()
+    }
+
+    suspend fun disconnectFEMECV() {
+        val response = httpClient.delete("/profile/femecvSync")
+        if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 }

@@ -129,6 +129,16 @@
     <string name="personal_info_username">Username</string>
     <string name="personal_info_email">Email</string>
 
+    <string name="femecv_sync_title">FEMECV Sync</string>
+    <string name="femecv_sync_enable">Sign into FEMECV</string>
+    <string name="femecv_sync_connected">Synchronizing with FEMECV</string>
+    <string name="femecv_sync_disable">Disconnect</string>
+    <string name="femecv_sync_login">Login</string>
+    <string name="femecv_username">Username</string>
+    <string name="femecv_password">Password</string>
+    <string name="femecv_logo">FEMECV Logo</string>
+    <string name="femecv_notice">This app is not related to or endorsed by the FEMECV. This connection procedure is just a utility function to simplify your licenses' management. After pressing the login button, you authorize the Centre Excursionista d'Alcoi to manage and process your FEMECV licenses.</string>
+
     <string name="form_display_name">Display Name</string>
     <string name="form_description">Description</string>
     <string name="form_select_image">Select Image</string>
