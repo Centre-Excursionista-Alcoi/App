@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -255,6 +256,11 @@ buildkonfig {
                 name = "REDIRECT_URI",
                 value = "cea://redirect",
                 nullable = true,
+            )
+            buildConfigField(
+                type = BOOLEAN,
+                name = "DEBUG",
+                value = (System.getenv("PRODUCTION") != "true").toString(),
             )
             buildConfigField(
                 type = STRING,

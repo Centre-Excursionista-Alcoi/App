@@ -85,6 +85,7 @@ jobs:
           KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEYSTORE_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          PRODUCTION: true
         run: ./gradlew :composeApp:bundleRelease
       - name: AAB Artifact
         id: aab_artifact
