@@ -58,9 +58,9 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         val password = femecvPassword
         if (username == null || password == null) return
         val licenses = FEMECV.getLicenses(username, password)
-        val existingLicenseEntities = Database { UserInsuranceEntity.find { (UserInsurances.userSub eq sub.value) and (UserInsurances.femecvLicense neq null) } }
+        val existingLicenseEntities = Database { UserInsuranceEntity.find { (UserInsurances.userSub eq sub.value) and (UserInsurances.femecvLicense neq null) }.toList() }
         for (license in licenses) {
-            val matchingEntity = Database { existingLicenseEntities.find { it.femecvLicense?.id == license.id } }
+            val matchingEntity = existingLicenseEntities.find { it.femecvLicense?.id == license.id }
             if (matchingEntity != null) {
                 // License already exists, ignore
             } else {
