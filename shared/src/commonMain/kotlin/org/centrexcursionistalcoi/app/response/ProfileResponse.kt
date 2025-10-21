@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.response
 
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.LendingUser
@@ -18,6 +19,7 @@ data class ProfileResponse(
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>,
     val femecvSyncEnabled: Boolean,
+    val femecvLastSync: Instant?,
 ) {
     val isAdmin: Boolean get() = ADMIN_GROUP_NAME in groups
 

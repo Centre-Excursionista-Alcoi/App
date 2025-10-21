@@ -10,6 +10,8 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
+import kotlin.time.toKotlinInstant
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -23,6 +25,7 @@ import org.centrexcursionistalcoi.app.error.Errors
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.exposed.v1.core.and
@@ -44,7 +47,10 @@ fun Route.profileRoutes() {
 
         val reference = Database { UserReferenceEntity.getOrProvide(session) }
         if (reference.femecvUsername != null && reference.femecvPassword != null) {
-            reference.refreshFEMECVData()
+            val lastSync = reference.femecvLastSync
+            if (lastSync == null || lastSync.until(now(), ChronoUnit.DAYS) >= FEMECV.REFRESH_EVERY_DAYS) {
+                reference.refreshFEMECVData()
+            }
         }
 
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
@@ -59,6 +65,7 @@ fun Route.profileRoutes() {
                 lendingUser = lendingUser,
                 insurances = insurances,
                 femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
+                femecvLastSync = reference.femecvLastSync?.toKotlinInstant(),
             )
         )
     }

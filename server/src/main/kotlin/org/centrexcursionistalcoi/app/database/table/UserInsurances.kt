@@ -5,7 +5,6 @@ import org.centrexcursionistalcoi.app.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.javatime.date
-import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.json.json
 
 object UserInsurances : UUIDTable("UserInsurances") {
@@ -17,6 +16,5 @@ object UserInsurances : UUIDTable("UserInsurances") {
     val validTo = date("validTo")
     val document = optReference("document", Files)
 
-    val femecvLicenseLastUpdate = timestamp("femecv_license_last_update").nullable()
     val femecvLicense = json("femecv_license", json, LicenseData.serializer()).nullable()
 }

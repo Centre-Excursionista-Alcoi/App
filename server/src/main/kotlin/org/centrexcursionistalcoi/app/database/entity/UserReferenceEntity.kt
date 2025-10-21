@@ -40,6 +40,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
 
     var femecvUsername by UserReferences.femecvUsername
     var femecvPassword by UserReferences.femecvPassword
+    var femecvLastSync by UserReferences.femecvLastSync
 
     context(_: JdbcTransaction)
     fun toData(lendingUser: LendingUser?, insurances: List<UserInsurance>?, departments: List<DepartmentMemberInfo>?) = UserData(

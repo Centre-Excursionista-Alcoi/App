@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.crypt.encryptedVarchar
+import org.jetbrains.exposed.v1.javatime.timestamp
 
 object UserReferences : IdTable<String>(name = "user_references") {
     val sub = text("sub").uniqueIndex().entityId()
@@ -18,4 +19,5 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     val femecvUsername = encryptedVarchar("femecv_username", 512, AES.encryptor).nullable()
     val femecvPassword = encryptedVarchar("femecv_password", 512, AES.encryptor).nullable()
+    val femecvLastSync = timestamp("femecv_last_sync").nullable()
 }

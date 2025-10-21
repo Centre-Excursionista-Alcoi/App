@@ -20,6 +20,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
     var validFrom by UserInsurances.validFrom
     var validTo by UserInsurances.validTo
     var document by UserInsurances.document
+
     var femecvLicense by UserInsurances.femecvLicense
 
     context(_: JdbcTransaction)
