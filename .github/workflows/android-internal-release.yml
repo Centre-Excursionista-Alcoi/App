@@ -68,15 +68,21 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo ${{ secrets.KEYSTORE_BASE64 }} > keystore.txt
+          echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} > keystore.txt
           base64 --decode keystore.txt > keystore.jks
+      - name: Verify Keystore integrity
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }} keystore.jks" | sha256sum --check --status || exit 1
+      - name: Verify Keystore contents
+        run: |
+          keytool -list -v -keystore keystore.jks -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
       - name: Build AAB
         id: build_aab
         env:
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_ALIAS_PASSWORD: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEYSTORE_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew :composeApp:bundleRelease
       - name: AAB Artifact
         id: aab_artifact
