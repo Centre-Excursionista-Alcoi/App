@@ -13,6 +13,11 @@ object ProfileRepository {
         .getStringOrNullFlow("profile")
         .map { data -> data?.let { json.decodeFromString(ProfileResponse.serializer(), it) } }
 
+    fun getProfile(): ProfileResponse? {
+        val data = settings.getStringOrNull("profile")
+        return data?.let { json.decodeFromString(ProfileResponse.serializer(), it) }
+    }
+
     fun update(profile: ProfileResponse) {
         settings.putString("profile", json.encodeToString(ProfileResponse.serializer(), profile))
     }

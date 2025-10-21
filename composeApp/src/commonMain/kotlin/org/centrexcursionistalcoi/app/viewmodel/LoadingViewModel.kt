@@ -3,6 +3,8 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.protocol.User
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -13,7 +15,13 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.network.*
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalTime::class)
@@ -67,8 +75,22 @@ class LoadingViewModel(
 
         // Try to fetch the profile to see if the session is still valid
         if (syncAll()) {
+            ProfileRepository.getProfile()?.let { profile ->
+                val sentryUser = User().apply {
+                    id = profile.sub
+                    username = profile.username
+                    email = profile.email
+                }
+                Sentry.setUser(sentryUser)
+            }
+
             withContext(Dispatchers.Main) { onLoggedIn() }
         } else {
+            // Clear Sentry user context
+            Sentry.configureScope { scope ->
+                scope.user = null
+            }
+
             withContext(Dispatchers.Main) { onNotLoggedIn() }
         }
     }

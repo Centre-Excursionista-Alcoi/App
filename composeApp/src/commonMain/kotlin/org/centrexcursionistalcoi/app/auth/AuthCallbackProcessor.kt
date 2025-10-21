@@ -58,7 +58,7 @@ object AuthCallbackProcessor {
         // Verify that the login was successful by fetching the profile endpoint
         val profileResponse = client.get("/profile")
         if (!profileResponse.status.isSuccess()) {
-            throw IllegalStateException("Authentication failed: USER_SESSION cookie not found")
+            throw IllegalStateException("Authentication failed (${profileResponse.status}): ${profileResponse.bodyAsText()}")
         }
     }
 }
