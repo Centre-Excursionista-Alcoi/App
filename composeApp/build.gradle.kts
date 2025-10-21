@@ -47,6 +47,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            linkerOpts += "-lsqlite3"
+            export(libs.sentry.kotlinMultiplatform)
         }
     }
 
@@ -57,6 +59,10 @@ kotlin {
     }
     
     sourceSets {
+        all {
+            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+        }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)

@@ -98,6 +98,7 @@ napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 qrose-twod = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qrose" }
+sentry-kotlinMultiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry-multiplatform" }
 sqldelight-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqldelight" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
