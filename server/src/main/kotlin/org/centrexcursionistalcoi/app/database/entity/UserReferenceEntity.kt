@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import io.ktor.http.ContentType
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.LendingUser
@@ -59,11 +60,19 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         if (username == null || password == null) return
         val licenses = FEMECV.getLicenses(username, password)
         val existingLicenseEntities = Database { UserInsuranceEntity.find { (UserInsurances.userSub eq sub.value) and (UserInsurances.femecvLicense neq null) }.toList() }
-        for (license in licenses) {
+        for ((license, certificate) in licenses) {
             val matchingEntity = existingLicenseEntities.find { it.femecvLicense?.id == license.id }
             if (matchingEntity != null) {
                 // License already exists, ignore
             } else {
+                val certificateEntity = Database {
+                    FileEntity.new {
+                        data = certificate
+                        type = ContentType.Application.Pdf.toString()
+                        name = "certificado.pdf"
+                    }
+                }
+
                 Database {
                     UserInsuranceEntity.new {
                         userSub = sub
@@ -71,6 +80,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
                         policyNumber = license.code
                         validFrom = license.validFrom.toJavaLocalDate()
                         validTo = license.validTo.toJavaLocalDate()
+                        document = certificateEntity.id
                         femecvLicense = license
                     }
                 }

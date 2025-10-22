@@ -10,6 +10,7 @@ import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
@@ -80,7 +81,16 @@ object FEMECV {
         }
     }
 
-    suspend fun getLicense(client: HttpClient, id: Int): LicenseData {
+    suspend fun downloadLicenseCertificate(client: HttpClient, id: Int): ByteArray {
+        val response = client.get("/print/printAutoritzacioLlicencia.php?accio=accio_imprimir_autoritzacio&idLlicencia=$id")
+        return if (response.status.isSuccess()) {
+            response.bodyAsBytes()
+        } else {
+            throw FEMECVException("Failed to retrieve license #$id (status=${response.status}): ${response.bodyAsText()}")
+        }
+    }
+
+    suspend fun getLicense(client: HttpClient, id: Int): Pair<LicenseData, ByteArray> {
         val response = client.get("/FormLlicencia.php?accio=edit&idLlicencia=$id")
         val body = response.bodyAsText()
         if (response.status.isSuccess()) {
@@ -106,6 +116,8 @@ object FEMECV {
                 }
             }
 
+            val certificate = downloadLicenseCertificate(client, id)
+
             return LicenseData(
                 code = code ?: throw FEMECVException("License code not found for license #$id"),
                 id = id,
@@ -116,13 +128,13 @@ object FEMECV {
                 validTo = validTo ?: throw FEMECVException("Valid to date not found for license #$id"),
                 categoryId = categoryId?.toIntOrNull() ?: throw FEMECVException("Category ID not found for license #$id"),
                 subCategoryId = subCategoryId ?: throw FEMECVException("Subcategory ID not found for license #$id"),
-            )
+            ) to certificate
         } else {
             throw FEMECVException("Failed to retrieve license #$id, status code: ${response.status}")
         }
     }
 
-    suspend fun getLicenses(username: String, password: String): List<LicenseData> {
+    suspend fun getLicenses(username: String, password: String): List<Pair<LicenseData, ByteArray>> {
         val client = newClient()
         login(username, password, client)
 
