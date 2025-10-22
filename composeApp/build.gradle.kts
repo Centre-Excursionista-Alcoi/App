@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.googleServices) apply false
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.sentryMultiplatform)
@@ -49,6 +50,7 @@ kotlin {
             isStatic = true
             linkerOpts += "-lsqlite3"
             export(libs.sentry.kotlinMultiplatform)
+            export(libs.kmm.notifier)
         }
     }
 
@@ -111,6 +113,9 @@ kotlin {
 
             // Runtime permission management
             implementation(libs.kmm.permission)
+
+            // Push Notifications
+            implementation(libs.kmm.notifier)
 
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)

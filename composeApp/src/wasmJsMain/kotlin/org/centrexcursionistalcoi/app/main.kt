@@ -8,6 +8,8 @@ import androidx.compose.ui.window.ComposeViewport
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.ExperimentalBrowserHistoryApi
 import androidx.navigation.bindToBrowserNavigation
+import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import io.ktor.http.Url
@@ -23,6 +25,17 @@ fun main() {
     Napier.base(DebugAntilog())
 
     redirectOrigin = window.location.origin
+
+    NotifierManager.initialize(
+        NotificationPlatformConfiguration.Web(
+            askNotificationPermissionOnStart = true,
+            notificationIconPath = "/favicon.png"
+        )
+    )
+
+    NotifierManager.setLogger { message ->
+        Napier.d(message, tag = "NotifierManager")
+    }
 
     ComposeViewport(document.body!!) {
         val currentPath = window.location.hash.removePrefix("#")

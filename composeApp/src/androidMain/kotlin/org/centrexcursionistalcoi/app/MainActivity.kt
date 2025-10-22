@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
+import com.mmk.kmpnotifier.notification.NotifierManager
 import tech.kotlinlang.permission.PermissionInitiation
 
 class MainActivity : NfcIntentHandlerActivity() {
@@ -13,6 +16,8 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         PermissionInitiation.setActivity(this)
 
+        NotifierManager.onCreateOrOnNewIntent(intent)
+
         setContent {
             MainApp()
         }
@@ -21,6 +26,11 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onDestroy() {
         super.onDestroy()
         instance = null
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        NotifierManager.onCreateOrOnNewIntent(intent)
     }
 
     companion object {
