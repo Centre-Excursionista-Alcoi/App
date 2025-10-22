@@ -155,9 +155,8 @@ fun App(
 
             LendingPickupScreen(
                 lendingId = lendingId,
-                onBack = {
-                    navController.navigateUp()
-                }
+                onBack = { navController.navigateUp() },
+                onComplete = { navController.popBackStack() },
             )
         }
     }

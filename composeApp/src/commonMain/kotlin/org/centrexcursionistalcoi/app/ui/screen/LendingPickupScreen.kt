@@ -104,7 +104,8 @@ import tech.kotlinlang.permission.result.CameraPermissionResult
 fun LendingPickupScreen(
     lendingId: Uuid,
     model: LendingPickupViewModel = viewModel { LendingPickupViewModel(lendingId) },
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onComplete: () -> Unit,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -146,7 +147,8 @@ fun LendingPickupScreen(
         onUnMarkItem = model::unmark,
         onCompleteRequest = model::pickup,
         onCancelRequest = model::cancelLending,
-        onBack = onBack
+        onBack = onBack,
+        onComplete = onComplete,
     )
 }
 
@@ -162,6 +164,7 @@ private fun LendingPickupScreen(
     onCompleteRequest: () -> Job,
     onCancelRequest: () -> Job,
     onBack: () -> Unit,
+    onComplete: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -233,7 +236,7 @@ private fun LendingPickupScreen(
                 AnimatedContent(
                     targetState = allItemsScanned
                 ) { areAllItemsScanned ->
-                    LendingFAB(areAllItemsScanned, onCompleteRequest, onBack)
+                    LendingFAB(areAllItemsScanned, onCompleteRequest, onComplete)
                 }
             }
         },
@@ -252,7 +255,7 @@ private fun LendingPickupScreen(
 private fun AnimatedVisibilityScope.LendingFAB(
     allItemsScanned: Boolean,
     onCompleteRequest: () -> Job,
-    onBack: () -> Unit,
+    onComplete: () -> Unit,
 ) {
     var showingSkipWarning by remember { mutableStateOf(false) }
     if (showingSkipWarning) {
@@ -268,7 +271,7 @@ private fun AnimatedVisibilityScope.LendingFAB(
                         onCompleteRequest().invokeOnCompletion {
                             isLoading = false
                             showingSkipWarning = false
-                            onBack()
+                            onComplete()
                         }
                     }
                 ) { Text(stringResource(Res.string.management_pickup_screen_confirm)) }
@@ -300,7 +303,7 @@ private fun AnimatedVisibilityScope.LendingFAB(
                     isLoading = true
                     onCompleteRequest().invokeOnCompletion {
                         isLoading = false
-                        onBack()
+                        onComplete()
                     }
                 }
             ) {
