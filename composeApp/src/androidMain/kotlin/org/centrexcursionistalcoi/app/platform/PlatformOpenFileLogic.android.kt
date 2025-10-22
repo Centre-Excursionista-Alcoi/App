@@ -1,14 +1,12 @@
 package org.centrexcursionistalcoi.app.platform
 
 import android.content.Intent
-import android.system.Os
-import androidx.core.content.FileProvider
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
-import io.ktor.http.fileExtensions
 import java.io.File
 import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
 actual object PlatformOpenFileLogic {
@@ -17,19 +15,10 @@ actual object PlatformOpenFileLogic {
     actual fun open(path: String, contentType: ContentType) {
         val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
 
-        // Store the data into a temporary file and get a content URI using FileProvider
+        // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
         val filePath = SystemDataPath / path
-        var file = File(filePath.toString())
-        val extension = contentType.fileExtensions().firstOrNull()
-        if (extension != null) {
-            val symLinkFilePath = File(file.parentFile, filePath.name + "." + extension)
-            if (!symLinkFilePath.exists()) {
-                Napier.d { "Creating symlink for $file at $symLinkFilePath" }
-                Os.symlink(file.path, symLinkFilePath.path)
-            }
-            file = symLinkFilePath
-        }
-        val uri = FileProvider.getUriForFile(context, "org.centrexcursionistalcoi.app.provider", file)
+        val file = File(filePath.toString())
+        val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 
         val intent = Intent().apply {
             action = Intent.ACTION_VIEW

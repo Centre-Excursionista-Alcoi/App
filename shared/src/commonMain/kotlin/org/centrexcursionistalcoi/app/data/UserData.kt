@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.data
 
+import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 
@@ -12,7 +13,7 @@ data class UserData(
     val departments: List<DepartmentMemberInfo>,
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>
-): Entity<String> {
+): Entity<String>, SubReferencedFileContainer {
     override val id: String = sub
 
     override fun toMap(): Map<String, Any?> {
@@ -32,4 +33,12 @@ data class UserData(
     override fun hashCode(): Int {
         return sub.hashCode()
     }
+
+    override val referencedFiles: List<Triple<String, Uuid?, String>>
+        get() {
+            val insurancesFiles = insurances.flatMap { it.files.entries }
+                .map { Triple(it.key, it.value, UserInsurance::class.simpleName!!) }
+                .toTypedArray()
+            return listOf(*insurancesFiles)
+        }
 }

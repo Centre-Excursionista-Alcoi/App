@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
 import org.centrexcursionistalcoi.app.data.ImageFileContainer
+import org.centrexcursionistalcoi.app.data.SubReferencedFileContainer
 import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.data.writeFile
 import org.centrexcursionistalcoi.app.data.writeImageFile
@@ -119,8 +120,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private suspend fun synchronizeFiles(entities: List<LocalEntity>, progressNotifier: ProgressNotifier? = null) {
         Napier.d { "Synchronizing files for ${entities.size} entities..." }
         for (item in entities) {
+            val itemName = "${item::class.simpleName}#${item.id}"
             if (item is FileContainer) {
-                val itemName = "${item::class.simpleName}#${item.id}"
                 Napier.d { "$itemName has ${item.files.size} files." }
                 val files = item.files.toList()
                 for ((index, file) in files.withIndex()) {
@@ -144,9 +145,35 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                     when (item) {
                         is ImageFileContainer -> item.writeImageFile(uuid, channel, progressNotifier)
                         is DocumentFileContainer -> item.writeFile(channel, progressNotifier)
-                        else -> error("Don't know how to store files for ${item::class.simpleName}. Implementation is missing!")
+                        else -> item.writeFile(channel, uuid, progressNotifier)
                     }
                     Napier.d { "File $uuid stored." }
+                }
+            }
+            if (item is SubReferencedFileContainer) {
+                val files = item.referencedFiles
+                Napier.d { "$itemName has ${files.size} referenced files." }
+                for ((index, file) in files.withIndex()) {
+                    val (fileName, uuid, namespace) = file
+                    if (uuid == null) {
+                        Napier.w { "$itemName is not set for $fileName" }
+                        continue
+                    }
+
+                    Napier.d { "Downloading $uuid ($index / ${files.size})..." }
+                    val channel = httpClient.get("/download/$uuid") {
+                        progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
+                    }.let {
+                        if (!it.status.isSuccess()) {
+                            Napier.e { "Failed to download referenced file with ID $uuid for $itemName with ID ${item.id}. Status: ${it.status}" }
+                            continue
+                        }
+                        it.bodyAsChannel()
+                    }
+
+                    Napier.v { "Writing referenced file..." }
+                    item.writeFile(channel, uuid, progressNotifier)
+                    Napier.d { "Referenced file $uuid stored." }
                 }
             }
         }

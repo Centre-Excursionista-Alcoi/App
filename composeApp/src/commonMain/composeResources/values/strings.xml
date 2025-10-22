@@ -51,6 +51,7 @@
     <string name="confirm">Confirm</string>
     <string name="qrcode">QR Code</string>
     <string name="unknown">Unknown</string>
+    <string name="share">Share</string>
 
     <string name="copied_to_clipboard">Copied to clipboard</string>
 
@@ -90,6 +91,7 @@
     <string name="insurance_policy_number">Policy Number</string>
     <string name="insurance_start_date">Start Date</string>
     <string name="insurance_end_date">End Date</string>
+    <string name="insurance_view_document">View Document</string>
 
     <string name="active_insurances_title">Active Insurances</string>
 

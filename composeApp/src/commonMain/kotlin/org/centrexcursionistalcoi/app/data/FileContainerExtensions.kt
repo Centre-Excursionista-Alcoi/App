@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
+
 /**
  * Returns the file path for the document file associated with this DocumentFileContainer.
  * @throws IllegalStateException if there is no document file associated with the container.
@@ -45,6 +46,7 @@ suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? =
     return PlatformFileSystem.read(path, progressNotifier)
 }
 
+
 private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {
     val clName = this::class.simpleName ?: "generic"
     return joinPaths("image", clName, uuid.toString())
@@ -61,6 +63,68 @@ suspend fun ImageFileContainer.imageFile(): ByteArray? = image?.let { uuid ->
         throw IllegalStateException("Image file not found at path: $path")
     }
     return PlatformFileSystem.read(path)
+}
+
+
+/**
+ * Returns the paths for all document files associated with this FileContainer.
+ */
+fun FileContainer.filePaths(): Map<Uuid, String> {
+    val clName = this::class.simpleName ?: "generic"
+    return files.filter { it.value != null }.map { (_, uuid) ->
+        uuid!!
+        uuid to joinPaths("files", clName, uuid.toString())
+    }.toMap()
+}
+
+/**
+ * Returns the file path for the file associated with the provided UUID in this FileContainer.
+ * @throws IllegalArgumentException if the UUID is not in the container.
+ */
+fun FileContainer.filePath(uuid: Uuid): String {
+    require(files.values.contains(uuid)) { "UUID must be in the container." }
+
+    val clName = this::class.simpleName ?: "generic"
+    return joinPaths("files", clName, uuid.toString())
+}
+
+/**
+ * Writes the provided ByteReadChannel to the document file associated with this FileContainer.
+ * @throws IllegalArgumentException if the UUID is not in the container.
+ */
+suspend fun FileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
+    val path = filePath(uuid)
+    PlatformFileSystem.write(path, channel, progressNotifier)
+}
+
+/**
+ * Reads the file associated with the provided UUID in this FileContainer.
+ * @throws IllegalArgumentException if the UUID is not in the container.
+ */
+suspend fun FileContainer.readFile(uuid: Uuid, progressNotifier: ProgressNotifier? = null): ByteArray {
+    val path = filePath(uuid)
+    return PlatformFileSystem.read(path, progressNotifier)
+}
+
+
+/**
+ * Returns the paths for the file associated with the provided UUIDs in this SubReferencedFileContainer.
+ * @throws IllegalArgumentException if the UUID is not in the container.
+ */
+fun SubReferencedFileContainer.filePath(uuid: Uuid): String {
+    val ref = referencedFiles.find { it.second == uuid }
+    require(ref != null) { "UUID must be in the container." }
+
+    return joinPaths("files", ref.third, uuid.toString())
+}
+
+/**
+ * Writes the provided ByteReadChannel to the document file associated with this FileContainer.
+ * @throws IllegalArgumentException if the UUID is not in the container.
+ */
+suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
+    val path = filePath(uuid)
+    PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
 /**
