@@ -154,7 +154,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val files = item.referencedFiles
                 Napier.d { "$itemName has ${files.size} referenced files." }
                 for ((index, file) in files.withIndex()) {
-                    val (fileName, uuid, namespace) = file
+                    val (fileName, uuid) = file
                     if (uuid == null) {
                         Napier.w { "$itemName is not set for $fileName" }
                         continue
