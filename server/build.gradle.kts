@@ -77,6 +77,9 @@ dependencies {
     implementation(libs.ksoup.core)
     implementation(libs.ksoup.network)
 
+    // Firebase Admin
+    implementation(libs.firebase.admin)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)

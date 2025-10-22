@@ -87,4 +87,11 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
             }
         }
     }
+
+    context(_: JdbcTransaction)
+    fun addFCMRegistrationToken(token: String, deviceId: String? = null) = FCMRegistrationTokenEntity.new {
+        this.user = this@UserReferenceEntity
+        this.token = token
+        this.deviceId = deviceId
+    }
 }

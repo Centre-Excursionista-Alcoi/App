@@ -16,6 +16,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,8 +41,10 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
@@ -287,6 +290,10 @@ fun Route.inventoryRoutes() {
                     <p>Please review and confirm the lending in the admin panel.</p>
                 """.trimIndent()
             )
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val notification = PushNotification.NewLendingRequest(lendingEntity.id.value.toKotlinUuid())
+            Push.sendAdminPushNotification(notification)
         }
 
         call.response.header(
@@ -538,6 +545,10 @@ fun Route.inventoryRoutes() {
                     MailerSendAttachment(documentBytes, file.originalFileName ?: "memory.pdf"),
                 ),
             )
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            val notification = PushNotification.NewLendingRequest(lendingId.toKotlinUuid())
+            Push.sendAdminPushNotification(notification)
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)

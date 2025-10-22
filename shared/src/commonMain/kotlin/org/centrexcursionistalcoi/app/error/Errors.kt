@@ -70,4 +70,13 @@ object Errors {
     @Serializable
     data object FEMECVMissingCredentials : Error(13, "Missing \"username\" or \"password\".", HttpStatusCode.BadRequest)
 
+    @Serializable
+    data object DeviceIdIsRequired : Error(14, "Device ID is required for this operation.", HttpStatusCode.BadRequest)
+
+    @Serializable
+    data object FCMTokenIsRequired : Error(15, "FCM token is required.", HttpStatusCode.BadRequest)
+
+    @Serializable
+    data object InvalidTokenId : Error(16, "The provided token ID is invalid.", HttpStatusCode.BadRequest)
+
 }

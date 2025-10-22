@@ -16,10 +16,12 @@ import kotlin.time.toKotlinInstant
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
+import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Errors
@@ -29,6 +31,7 @@ import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
@@ -219,6 +222,60 @@ fun Route.profileRoutes() {
         Database {
             userReference.femecvUsername = null
             userReference.femecvPassword = null
+        }
+
+        call.respond(HttpStatusCode.NoContent)
+    }
+    post("/profile/fcmToken") {
+        val session = getUserSessionOrFail() ?: return@post
+
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+
+        val parameters = call.receiveParameters()
+        val token = parameters["token"]
+
+        if (token.isNullOrBlank()) return@post respondError(Errors.FCMTokenIsRequired)
+
+        val registrationEntity = Database {
+            val reference = UserReferenceEntity.getOrProvide(session)
+            reference.addFCMRegistrationToken(token)
+        }
+
+        call.respondText(registrationEntity.id.value.toString(), status = HttpStatusCode.Created)
+    }
+    // Delete by device id
+    delete("/profile/fcmToken") {
+        val session = getUserSessionOrFail() ?: return@delete
+
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@delete
+
+        val parameters = call.receiveParameters()
+        val token = parameters["deviceId"]
+
+        if (token.isNullOrBlank()) return@delete respondError(Errors.DeviceIdIsRequired)
+
+        Database {
+            val reference = UserReferenceEntity.getOrProvide(session)
+            FCMRegistrationTokenEntity.find {
+                (FCMRegistrationTokens.deviceId eq token) and (FCMRegistrationTokens.user eq reference.id)
+            }.forEach { it.delete() }
+        }
+
+        call.respond(HttpStatusCode.NoContent)
+    }
+    // Delete by token id
+    delete("/profile/fcmToken/{id}") {
+        val session = getUserSessionOrFail() ?: return@delete
+
+        val tokenId = call.parameters["id"]?.toUUIDOrNull()
+        if (tokenId == null) return@delete respondError(Errors.InvalidTokenId)
+
+        Database {
+            FCMRegistrationTokenEntity.findById(tokenId)
+                // Make sure the token belongs to the user
+                ?.takeIf { it.user.sub.value == session.sub }
+                // Delete the token
+                ?.delete()
         }
 
         call.respond(HttpStatusCode.NoContent)

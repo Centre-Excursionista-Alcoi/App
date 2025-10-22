@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import java.sql.DriverManager
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
@@ -19,7 +20,20 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
-    val tables = arrayOf(Files, Departments, UserReferences, Posts, LendingUsers, DepartmentMembers, UserInsurances, InventoryItemTypes, InventoryItems, Lendings, LendingItems)
+    val tables = arrayOf(
+        Files,
+        Departments,
+        UserReferences,
+        Posts,
+        LendingUsers,
+        DepartmentMembers,
+        UserInsurances,
+        InventoryItemTypes,
+        InventoryItems,
+        Lendings,
+        LendingItems,
+        FCMRegistrationTokens,
+    )
     private var database: JdbcDatabase? = null
 
     const val URL = "jdbc:sqlite:file:test?mode=memory&cache=shared" // In-memory SQLite database

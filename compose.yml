@@ -30,8 +30,11 @@ services:
       EMAIL_REPLY_TO_ADDR: info@example.com
       EMAIL_REPLY_TO_NAME: Support
       MAILER_SEND_TOKEN: abc
+      # Firebase Admin
+      GOOGLE_APPLICATION_CREDENTIALS: /service-account-file.json
     volumes:
       - keys:/keys
+      - ./service-account-file.json:/service-account-file.json:ro
     networks:
       - internal
     depends_on:
