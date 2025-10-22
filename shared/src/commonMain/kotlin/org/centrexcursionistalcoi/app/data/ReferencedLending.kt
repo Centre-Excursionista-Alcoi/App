@@ -11,16 +11,16 @@ import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 @Serializable
 data class ReferencedLending(
     override val id: Uuid,
-    val userSub: String,
+    val user: UserData,
     @Serializable(InstantSerializer::class) val timestamp: Instant,
     val confirmed: Boolean,
 
     val taken: Boolean,
-    val givenBy: String?,
+    val givenBy: UserData?,
     @Serializable(InstantSerializer::class) val givenAt: Instant?,
 
     val returned: Boolean,
-    val receivedBy: String?,
+    val receivedBy: UserData?,
     @Serializable(InstantSerializer::class) val receivedAt: Instant?,
 
     val memorySubmitted: Boolean,
@@ -36,16 +36,16 @@ data class ReferencedLending(
     override val referencedEntity: Lending
 ): ReferencedEntity<Uuid, Lending>(), DocumentFileContainer {
     companion object {
-        fun Lending.referenced(inventoryItemTypes: List<InventoryItemType>) = ReferencedLending(
+        fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<InventoryItemType>) = ReferencedLending(
             id = this.id,
-            userSub = this.userSub,
+            user = users.first { it.sub == this.userSub },
             timestamp = this.timestamp,
             confirmed = this.confirmed,
             taken = this.taken,
-            givenBy = this.givenBy,
+            givenBy = this.givenBy?.let { givenBy -> users.first { it.sub == givenBy } },
             givenAt = this.givenAt,
             returned = this.returned,
-            receivedBy = this.receivedBy,
+            receivedBy = this.receivedBy?.let { receivedBy -> users.first { it.sub == receivedBy } },
             receivedAt = this.receivedAt,
             memorySubmitted = this.memorySubmitted,
             memorySubmittedAt = this.memorySubmittedAt,

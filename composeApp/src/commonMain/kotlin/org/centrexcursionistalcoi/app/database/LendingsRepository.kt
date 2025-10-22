@@ -13,10 +13,12 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesDatabaseRepository.toInventoryItemType
 import org.centrexcursionistalcoi.app.database.InventoryItemsDatabaseRepository.toInventoryItem
+import org.centrexcursionistalcoi.app.database.UsersDatabaseRepository.toUser
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
 import org.centrexcursionistalcoi.app.database.data.Lendings
+import org.centrexcursionistalcoi.app.database.data.Users
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
 expect val LendingsRepository : Repository<ReferencedLending, Uuid>
@@ -28,13 +30,15 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
     private val lendingItemsQueries by lazy { databaseInstance.lendingItemsQueries }
     private val inventoryItemsQueries by lazy { databaseInstance.inventoryItemsQueries }
     private val inventoryItemTypesQueries by lazy { databaseInstance.inventoryItemTypesQueries }
+    private val usersQueries by lazy { databaseInstance.usersQueries }
 
     override suspend fun get(id: Uuid): ReferencedLending? {
         val lending = queries.get(id).executeAsOneOrNull() ?: return null
         val items = lendingItemsQueries.getByLendingId(id).awaitAsList()
         val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
-        return lending.toLending(items, inventoryItems, inventoryItemTypes)
+        val users = usersQueries.selectAll().awaitAsList()
+        return lending.toLending(items, inventoryItems, inventoryItemTypes, users)
     }
 
     override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedLending?> {
@@ -42,8 +46,15 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val lendingItemsFlow = lendingItemsQueries.getByLendingId(id).asFlow().mapToList(dispatcher)
         val inventoryItemsFlow = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
-        return combine(lendingFlow, lendingItemsFlow, inventoryItemsFlow, inventoryItemTypesFlow) { lending, items, inventoryItems, inventoryItemTypes ->
-            lending?.toLending(items, inventoryItems, inventoryItemTypes)
+        val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
+        return combine(
+            lendingFlow,
+            lendingItemsFlow,
+            inventoryItemsFlow,
+            inventoryItemTypesFlow,
+            usersQueries,
+        ) { lending, items, inventoryItems, inventoryItemTypes, users ->
+            lending?.toLending(items, inventoryItems, inventoryItemTypes, users)
         }
     }
 
@@ -52,10 +63,17 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val lendingItemsFlow = lendingItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val inventoryItemsQueries = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
-        return combine(lendingsFlow, lendingItemsFlow, inventoryItemsQueries, inventoryItemTypesFlow) { lendings, items, inventoryItems, inventoryItemTypes ->
+        val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
+        return combine(
+            lendingsFlow,
+            lendingItemsFlow,
+            inventoryItemsQueries,
+            inventoryItemTypesFlow,
+            usersQueries
+        ) { lendings, items, inventoryItems, inventoryItemTypes, users ->
             lendings.map { lending ->
                 val relatedItems = items.filter { it.lendingId == lending.id }
-                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes)
+                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users)
             }
         }
     }
@@ -65,26 +83,27 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val items = lendingItemsQueries.selectAll().awaitAsList()
         val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
+        val users = usersQueries.selectAll().awaitAsList()
         return lendings.map { lending ->
             val relatedItems = items.filter { it.lendingId == lending.id }
-            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes)
+            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users)
         }
     }
 
     override suspend fun insert(item: ReferencedLending): Long {
         queries.insert(
             id = item.id,
-            userSub = item.userSub,
+            userSub = item.user.sub,
             timestamp = item.timestamp,
             fromDate = item.from,
             toDate = item.to,
             notes = item.notes,
             confirmed = item.confirmed,
             taken = item.taken,
-            givenBy = item.givenBy,
+            givenBy = item.givenBy?.sub,
             givenAt = item.givenAt,
             returned = item.returned,
-            receivedBy = item.receivedBy,
+            receivedBy = item.receivedBy?.sub,
             receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
@@ -103,17 +122,17 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
     override suspend fun update(item: ReferencedLending): Long {
         queries.update(
             id = item.id,
-            userSub = item.userSub,
+            userSub = item.user.sub,
             timestamp = item.timestamp,
             fromDate = item.from,
             toDate = item.to,
             notes = item.notes,
             confirmed = item.confirmed,
             taken = item.taken,
-            givenBy = item.givenBy,
+            givenBy = item.givenBy?.sub,
             givenAt = item.givenAt,
             returned = item.returned,
-            receivedBy = item.receivedBy,
+            receivedBy = item.receivedBy?.sub,
             receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
@@ -134,7 +153,7 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         queries.deleteById(id)
     }
 
-    fun Lendings.toLending(items: List<LendingItems>, inventoryItems: List<InventoryItems>, inventoryItemTypes: List<InventoryItemTypes>) = Lending(
+    fun Lendings.toLending(items: List<LendingItems>, inventoryItems: List<InventoryItems>, inventoryItemTypes: List<InventoryItemTypes>, users: List<Users>) = Lending(
         id = id,
         userSub = userSub,
         timestamp = timestamp,
@@ -154,6 +173,7 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         memoryReviewed = memoryReviewed,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() }
     ).referenced(
-        inventoryItemTypes.map { types -> types.toInventoryItemType() }
+        users.map { it.toUser() },
+        inventoryItemTypes.map { it.toInventoryItemType() }
     )
 }

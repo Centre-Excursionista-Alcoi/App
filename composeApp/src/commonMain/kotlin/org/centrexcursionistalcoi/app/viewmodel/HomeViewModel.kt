@@ -47,7 +47,7 @@ class HomeViewModel: ViewModel() {
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
     val lendings = combine(LendingsRepository.selectAllAsFlow(), ProfileRepository.profile) { lendings, profile ->
-        lendings.filter { lending -> lending.userSub == profile?.sub }
+        lendings.filter { lending -> lending.user.sub == profile?.sub }
     }.map { list -> list.sortedBy { it.from } }.stateInViewModel()
 
     /**

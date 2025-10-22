@@ -54,6 +54,7 @@ fun <T> ListCard(
     onDelete: ((T) -> Job)? = null,
     supportingContent: (@Composable (T) -> Unit)? = null,
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
+    onClick: ((T) -> Unit)? = null,
 ) {
     var deleting by remember { mutableStateOf<T?>(null) }
     if (onDelete != null) {
@@ -143,7 +144,13 @@ fun <T> ListCard(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = detailsDialogContent != null) { showingDetails = item },
+                        .clickable(enabled = detailsDialogContent != null || onClick != null) {
+                            if (onClick != null) {
+                                onClick(item)
+                            } else if (detailsDialogContent != null) {
+                                showingDetails = item
+                            }
+                        },
                     colors = ListItemDefaults.colors(containerColor)
                 )
             }

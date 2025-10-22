@@ -52,6 +52,8 @@
     <string name="qrcode">QR Code</string>
     <string name="unknown">Unknown</string>
 
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
     <string name="status_loading">Loading...</string>
 
     <string name="sport_climbing">Climbing</string>
@@ -106,6 +108,10 @@
     <string name="management_completed_lendings">Completed lendings</string>
 
     <string name="management_pickup_screen">Lending Pickup</string>
+    <string name="management_pickup_screen_skip">Skip Inventory Check</string>
+    <string name="management_pickup_screen_confirm">Complete</string>
+    <string name="management_pickup_screen_skip_warning_title">Skipping inventory check</string>
+    <string name="management_pickup_screen_skip_warning_message">Are you sure that you want to skip the inventory check? Make sure all the items have been delivered to the user, and that they match the references assigned.</string>
 
     <string name="management_lending_user">User: %1$s</string>
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
@@ -126,6 +132,18 @@
         <item quantity="one">- %1$s: %2$d unit</item>
         <item quantity="other">- %1$s: %2$d units</item>
     </plurals>
+    <string name="lending_details_call_user">Call User</string>
+    <string name="lending_details_whatsapp">WhatsApp</string>
+    <string name="lending_details_copy_number">Copy Phone</string>
+    <string name="lending_details_email">Send Email</string>
+    <string name="lending_details_notes">Notes:</string>
+    <string name="lending_details_from">From:</string>
+    <string name="lending_details_until">Until:</string>
+    <string name="lending_details_id">Lending ID:</string>
+    <string name="lending_details_user">User:</string>
+    <string name="lending_details_nfc_title">NFC Reader</string>
+    <string name="lending_details_nfc_message">Place your device near the NFC tag to register the item automatically.</string>
+    <string name="lending_details_scan_error_not_found">Item not found in lending</string>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_username">Username</string>

@@ -25,7 +25,9 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
@@ -36,8 +38,9 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     LendingsRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { lending ->
-        val inventoryItemTypes = InventoryItemTypesRemoteRepository.getAll()
-        lending.referenced(inventoryItemTypes)
+        val inventoryItemTypes = InventoryItemTypesRepository.selectAll()
+        val users = UsersRepository.selectAll()
+        lending.referenced(users, inventoryItemTypes)
     },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {

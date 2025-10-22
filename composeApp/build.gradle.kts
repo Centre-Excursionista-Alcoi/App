@@ -109,6 +109,9 @@ kotlin {
             // QR Code Scanner
             implementation(libs.kscan)
 
+            // Runtime permission management
+            implementation(libs.kmm.permission)
+
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)

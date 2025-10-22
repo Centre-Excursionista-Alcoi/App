@@ -130,15 +130,13 @@ fun UnconfirmedLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            Text("User: ${user?.username ?: "Unknown"}")
+            Text("User: ${lending.user.username}")
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
             val items = lending.items
 
-            Text("User: ${user?.username ?: "Unknown"}")
+            Text("User: ${lending.user.username}")
             Text("Items:")
             for ((type, items) in items.groupBy { it.type }) {
                 Text("- ${type.displayName}: ${items.size} unit(s)")
@@ -169,31 +167,10 @@ fun PendingPickupLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            Text("User: ${user?.username ?: "Unknown"}")
+            Text("User: ${lending.user.username}")
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
-        detailsDialogContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            val items = lending.items
-
-            Text("User: ${user?.username ?: "Unknown"}")
-            Text("Items:")
-            for ((type, items) in items.groupBy { it.type }) {
-                Text("- ${type.displayName}: ${items.size} unit(s)")
-            }
-
-            HorizontalDivider()
-
-            Text("When pressing the button above, you are confirming that the user has picked up the items, and making yourself responsible of having handed them over correctly.")
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    onPickupRequest(lending)
-                    dismiss()
-                }
-            ) { Text("Pickup") }
-        }
+        onClick = { onPickupRequest(it) },
     )
 }
 
@@ -209,15 +186,13 @@ fun PendingReturnLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            Text("User: ${user?.username ?: "Unknown"}")
+            Text("User: ${lending.user.username}")
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
             val items = lending.items
 
-            Text("User: ${user?.username ?: "Unknown"}")
+            Text("User: ${lending.user.username}")
             Text("Items:")
             for ((type, items) in items.groupBy { it.type }) {
                 Text("- ${type.displayName}: ${items.size} unit(s)")
@@ -225,9 +200,9 @@ fun PendingReturnLendingsCard(
 
             HorizontalDivider()
 
-            val givenByUser = users?.find { it.id == lending.givenBy }
+            val givenBy = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text("Given by: ${givenByUser?.username ?: "Unknown"} at ${givenAt ?: "Unknown time"}")
+            Text("Given by: ${givenBy?.username ?: "Unknown"} at ${givenAt ?: "Unknown time"}")
 
             HorizontalDivider()
 
@@ -254,15 +229,13 @@ fun PendingMemoryLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.management_lending_user, lending.user.username))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
             val items = lending.items
 
-            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in items.groupBy { it.type }) {
                 Text(
@@ -274,9 +247,9 @@ fun PendingMemoryLendingsCard(
 
             HorizontalDivider()
 
-            val givenByUser = users?.find { it.id == lending.givenBy }
+            val givenBy = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+            Text(stringResource(Res.string.management_lending_returned_to, givenBy?.username ?: unknown(), givenAt?.toString() ?: unknown()))
         }
     )
 }
@@ -292,15 +265,13 @@ fun CompleteLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
-            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.management_lending_user, lending.user.username))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val user = users?.find { it.id == lending.userSub }
             val items = lending.items
 
-            Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
+            Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in items.groupBy { it.type }) {
                 Text(
@@ -312,7 +283,7 @@ fun CompleteLendingsCard(
 
             HorizontalDivider()
 
-            val givenByUser = users?.find { it.id == lending.givenBy }
+            val givenByUser = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
             Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
 

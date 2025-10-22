@@ -7,6 +7,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.MifareClassic
 import android.nfc.tech.Ndef
+import androidx.core.content.IntentCompat
 import java.io.IOException
 
 /**
@@ -24,7 +25,7 @@ object NfcUtils {
             NfcAdapter.ACTION_TECH_DISCOVERED == action ||
             NfcAdapter.ACTION_TAG_DISCOVERED == action) {
 
-            val messages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
+            val messages = IntentCompat.getParcelableArrayExtra(intent, NfcAdapter.EXTRA_NDEF_MESSAGES, NdefMessage::class.java)
             if (messages != null) {
                 return messages.flatMap { parcelable ->
                     val ndefMessage = parcelable as NdefMessage
