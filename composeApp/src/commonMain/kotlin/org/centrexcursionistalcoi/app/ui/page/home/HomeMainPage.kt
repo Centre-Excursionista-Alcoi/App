@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -213,7 +212,7 @@ fun HomeMainPage(
 
                     items(
                         items = groupedItems?.toList().orEmpty(),
-                        key = { (typeId) -> typeId },
+                        key = { (type) -> type.id },
                         contentType = { "lending-item-large" },
                     ) { (type, items) ->
                         val selectedAmount = shoppingList[type.id] ?: 0
@@ -222,8 +221,8 @@ fun HomeMainPage(
                             type = type,
                             items = items,
                             selectedAmount = selectedAmount,
-                            onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
-                            onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+                            onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
+                            onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
                             onClick = { showingItemTypeDetails = type }
                         )
                     }
@@ -243,8 +242,8 @@ fun HomeMainPage(
                     type = type,
                     items = items,
                     selectedAmount = selectedAmount,
-                    onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
-                    onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+                    onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
+                    onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
                     onClick = { showingItemTypeDetails = type }
                 )
             }
@@ -268,15 +267,14 @@ fun HomeMainPage(
 
 @Composable
 fun LendingItem_Small(
-    type: InventoryItemType?,
+    type: InventoryItemType,
     items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
-    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onAddItemToShoppingListRequest: () -> Unit,
+    onRemoveItemFromShoppingListRequest: () -> Unit,
     onClick: () -> Unit
 ) {
     OutlinedCard(
-        enabled = type != null,
         onClick = onClick,
         modifier = Modifier.width(300.dp).padding(8.dp)
     ) {
@@ -288,22 +286,19 @@ fun LendingItem_Small(
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                if (type == null) CircularProgressIndicator()
-                else {
-                    val imageFile by type.rememberImageFile()
-                    AsyncByteImage(
-                        bytes = imageFile,
-                        contentDescription = type.displayName,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
+                val imageFile by type.rememberImageFile()
+                AsyncByteImage(
+                    bytes = imageFile,
+                    contentDescription = type.displayName,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
             }
             Column(
                 modifier = Modifier.weight(3f)
             ) {
                 Text(
-                    text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
+                    text = "${type.displayName} (${items.size})",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(8.dp)
                 )
@@ -328,13 +323,12 @@ fun LendingItem_Small(
                         }
                     }
                     AnimatedVisibility(
-                        visible = selectedAmount > 0 && type != null,
+                        visible = selectedAmount > 0,
                         modifier = Modifier.weight(1f),
                     ) {
                         ElevatedButton(
                             contentPadding = PaddingValues(0.dp),
-                            enabled = type != null,
-                            onClick = { onRemoveItemFromShoppingListRequest(type!!) },
+                            onClick = { onRemoveItemFromShoppingListRequest() },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Icon(
@@ -346,8 +340,8 @@ fun LendingItem_Small(
                     }
                     ElevatedButton(
                         contentPadding = PaddingValues(0.dp),
-                        enabled = type != null && selectedAmount < items.size,
-                        onClick = { onAddItemToShoppingListRequest(type!!) },
+                        enabled = selectedAmount < items.size,
+                        onClick = { onAddItemToShoppingListRequest() },
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(
@@ -364,15 +358,14 @@ fun LendingItem_Small(
 
 @Composable
 fun LendingItem_Large(
-    type: InventoryItemType?,
+    type: InventoryItemType,
     items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
-    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onAddItemToShoppingListRequest: () -> Unit,
+    onRemoveItemFromShoppingListRequest: () -> Unit,
     onClick: () -> Unit
 ) {
     OutlinedCard(
-        enabled = type != null,
         onClick = onClick,
         modifier = Modifier.width(300.dp).padding(8.dp)
     ) {
@@ -402,13 +395,12 @@ fun LendingItem_Large(
                 modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).zIndex(1f),
             ) {
                 AnimatedVisibility(
-                    visible = selectedAmount > 0 && type != null,
+                    visible = selectedAmount > 0,
                     modifier = Modifier.padding(end = 4.dp),
                 ) {
                     ElevatedButton(
                         contentPadding = PaddingValues(0.dp),
-                        enabled = type != null,
-                        onClick = { onRemoveItemFromShoppingListRequest(type!!) }
+                        onClick = { onRemoveItemFromShoppingListRequest() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Remove,
@@ -419,8 +411,8 @@ fun LendingItem_Large(
                 }
                 ElevatedButton(
                     contentPadding = PaddingValues(0.dp),
-                    enabled = type != null && selectedAmount < items.size,
-                    onClick = { onAddItemToShoppingListRequest(type!!) }
+                    enabled = selectedAmount < items.size,
+                    onClick = { onAddItemToShoppingListRequest() }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -430,19 +422,16 @@ fun LendingItem_Large(
                 }
             }
 
-            if (type == null) CircularProgressIndicator()
-            else {
-                val imageFile by type.rememberImageFile()
-                AsyncByteImage(
-                    bytes = imageFile,
-                    contentDescription = type.displayName,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            }
+            val imageFile by type.rememberImageFile()
+            AsyncByteImage(
+                bytes = imageFile,
+                contentDescription = type.displayName,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
         }
         Text(
-            text = type?.displayName?.let { "$it (${items.size})" } ?: "Loading...",
+            text = "${type.displayName} (${items.size})",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(8.dp)
         )

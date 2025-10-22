@@ -28,53 +28,53 @@ fun AsyncByteImage(
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     Box(modifier) {
-        bytes?.let {
-            if (bytes.isEmpty()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Warning, null, modifier = Modifier.align(Alignment.Center))
-                    }
-                }
-            } else {
-                val painter = rememberAsyncImagePainter(bytes)
-                val state by painter.state.collectAsState()
-                when (state) {
-                    is AsyncImagePainter.State.Error -> {
-                        Napier.e((state as AsyncImagePainter.State.Error).result.throwable) {
-                            "Could not load image."
-                        }
-                        Text(
-                            "Could not load image.",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-
-                    is AsyncImagePainter.State.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-
-                    AsyncImagePainter.State.Empty -> {
-                        Text(
-                            "Image is empty",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-
-                    else -> {
-                        // Success
-                        Image(
-                            painter = painter,
-                            contentDescription = contentDescription,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = contentScale,
-                        )
-                    }
+        if (bytes == null) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (bytes.isEmpty()) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Warning, null, modifier = Modifier.align(Alignment.Center))
                 }
             }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else {
+            val painter = rememberAsyncImagePainter(bytes)
+            val state by painter.state.collectAsState()
+            when (state) {
+                is AsyncImagePainter.State.Error -> {
+                    Napier.e((state as AsyncImagePainter.State.Error).result.throwable) {
+                        "Could not load image."
+                    }
+                    Text(
+                        "Could not load image.",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                is AsyncImagePainter.State.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+
+                AsyncImagePainter.State.Empty -> {
+                    Text(
+                        "Image is empty",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                else -> {
+                    // Success
+                    Image(
+                        painter = painter,
+                        contentDescription = contentDescription,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = contentScale,
+                    )
+                }
+            }
+        }
     }
 }
