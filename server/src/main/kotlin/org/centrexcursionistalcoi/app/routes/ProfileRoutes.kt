@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -46,11 +47,15 @@ fun Route.profileRoutes() {
         }
 
         val reference = Database { UserReferenceEntity.getOrProvide(session) }
-        if (reference.femecvUsername != null && reference.femecvPassword != null) {
-            val lastSync = reference.femecvLastSync
-            if (lastSync == null || lastSync.until(now(), ChronoUnit.DAYS) >= FEMECV.REFRESH_EVERY_DAYS) {
-                reference.refreshFEMECVData()
+        try {
+            if (reference.femecvUsername != null && reference.femecvPassword != null) {
+                val lastSync = reference.femecvLastSync
+                if (lastSync == null || lastSync.until(now(), ChronoUnit.DAYS) >= FEMECV.REFRESH_EVERY_DAYS) {
+                    reference.refreshFEMECVData()
+                }
             }
+        } catch (e: FEMECVException) {
+            call.response.header("CEA-FEMECV-Error", e.message ?: "Unknown")
         }
 
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
