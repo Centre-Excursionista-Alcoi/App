@@ -12,7 +12,7 @@ insert:
 INSERT INTO Departments (id, displayName, imageFile) VALUES (?, ?, ?);
 
 get:
-SELECT * FROM Departments WHERE id = ?;
+SELECT * FROM Departments WHERE id = ? LIMIT 1;
 
 selectAll:
 SELECT * FROM Departments ORDER BY id;

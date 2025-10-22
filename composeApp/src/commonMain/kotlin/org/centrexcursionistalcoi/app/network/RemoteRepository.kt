@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
+import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
@@ -26,14 +27,20 @@ import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
+import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 
-abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
+abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
-    private val serializer: KSerializer<T>,
-    private val repository: Repository<T, IdType>,
+    private val serializer: KSerializer<RemoteEntity>,
+    private val repository: Repository<LocalEntity, LocalIdType>,
     private val isCreationSupported: Boolean = true,
     private val isPatchSupported: Boolean = true,
+    private val remoteToLocalIdConverter: (RemoteIdType) -> LocalIdType,
+    private val remoteToLocalEntityConverter: suspend (RemoteEntity) -> LocalEntity,
 ) {
     private val name = endpoint.trim(' ', '/')
 
@@ -42,31 +49,41 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
     // Remove null fields to avoid issues with missing fields in the local model
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
 
-    suspend fun getAll(): List<T> {
-        return httpClient.get(endpoint).let {
+    suspend fun getAll(progress: ProgressNotifier? = null): List<LocalEntity> {
+        val remoteEntity = httpClient.get(endpoint) {
+            progress?.let { monitorDownloadProgress(it) }
+        }.let {
             val raw = it.bodyAsText().cleanNullFields()
             json.decodeFromString(ListSerializer(serializer), raw)
         }
+        return remoteEntity.map { remoteToLocalEntityConverter(it) }
     }
 
-    private suspend fun getUrl(url: String): T? {
-        val response = httpClient.get(url)
+    private suspend fun getUrl(url: String, progress: ProgressNotifier? = null): LocalEntity? {
+        val response = httpClient.get(url) {
+            progress?.let { monitorDownloadProgress(it) }
+        }
         if (response.status.isSuccess()) {
             val raw = response.bodyAsText().cleanNullFields()
-            return json.decodeFromString(serializer, raw)
+            val remoteEntity = json.decodeFromString(serializer, raw)
+            return remoteToLocalEntityConverter(remoteEntity)
         } else {
             Napier.e { "Failed to get $name with ID ${url.substringAfterLast('/')}. Status: ${response.status}" }
             return null
         }
     }
 
-    suspend fun get(id: IdType): T? = getUrl("$endpoint/$id")
+    suspend fun get(id: RemoteIdType, progress: ProgressNotifier? = null): LocalEntity? = getUrl("$endpoint/$id", progress)
 
-    suspend fun synchronizeWithDatabase() {
-        val remoteList = getAll() // all entries from the remote server
+    suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null) {
+        val remoteList = getAll(progress) // all entries from the remote server
+
+        progress?.invoke(Progress.LocalDBRead)
         val localList = repository.selectAll() // all entries from the local database
-        val toUpdate = mutableListOf<T>()
-        val toInsert = mutableListOf<T>()
+
+        progress?.invoke(Progress.DataProcessing)
+        val toUpdate = mutableListOf<LocalEntity>()
+        val toInsert = mutableListOf<LocalEntity>()
         for (item in remoteList) {
             if (localList.find { it.id == item.id } != null) {
                 toUpdate += item
@@ -84,6 +101,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
             "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
         }
 
+        progress?.invoke(Progress.LocalDBWrite)
         // Insert new items
         repository.insert(toInsert)
         // Update existing items
@@ -91,13 +109,14 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         // Delete removed items
         repository.deleteByIdList(toDelete)
 
+        progress?.invoke(Progress.LocalDBRead)
         val all = repository.selectAll()
         Napier.i { "There are ${all.size} $name" }
 
-        synchronizeFiles(all)
+        synchronizeFiles(all, progress)
     }
 
-    private suspend fun synchronizeFiles(entities: List<T>) {
+    private suspend fun synchronizeFiles(entities: List<LocalEntity>, progressNotifier: ProgressNotifier? = null) {
         Napier.d { "Synchronizing files for ${entities.size} entities..." }
         for (item in entities) {
             if (item is FileContainer) {
@@ -111,7 +130,9 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
                         continue
                     }
                     Napier.d { "Downloading $uuid ($index / ${files.size})..." }
-                    val channel = httpClient.get("/download/$uuid").let {
+                    val channel = httpClient.get("/download/$uuid") {
+                        progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
+                    }.let {
                         if (!it.status.isSuccess()) {
                             Napier.e { "Failed to download file with ID $uuid for $itemName with ID ${item.id}. Status: ${it.status}" }
                             continue
@@ -121,8 +142,8 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
 
                     Napier.v { "Writing file..." }
                     when (item) {
-                        is ImageFileContainer -> item.writeImageFile(uuid, channel)
-                        is DocumentFileContainer -> item.writeFile(channel)
+                        is ImageFileContainer -> item.writeImageFile(uuid, channel, progressNotifier)
+                        is DocumentFileContainer -> item.writeFile(channel, progressNotifier)
                         else -> error("Don't know how to store files for ${item::class.simpleName}. Implementation is missing!")
                     }
                     Napier.d { "File $uuid stored." }
@@ -131,26 +152,29 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         }
     }
 
-    suspend fun create(item: T) {
+    suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
 
         val response = httpClient.submitFormWithBinaryData(
             url = endpoint,
             formData = item.toFormData()
-        )
+        ) {
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
         if (response.status.isSuccess()) {
             try {
                 val location = response.headers[HttpHeaders.Location]
                 checkNotNull(location) { "Creation didn't return any location for the new item." }
 
-                val item = getUrl(location)
+                val item = getUrl(location, progressNotifier)
                 checkNotNull(item) { "Could not retrieve the created item from the server." }
+                progressNotifier?.invoke(Progress.LocalDBWrite)
                 repository.insert(item)
 
-                synchronizeFiles(listOf(item))
+                synchronizeFiles(listOf(item), progressNotifier)
             } catch (e: IllegalStateException) {
                 Napier.e { "${e.message} Synchronizing completely with server..." }
-                synchronizeWithDatabase()
+                synchronizeWithDatabase(progressNotifier)
             }
         } else {
             // Try to decode the error
@@ -167,13 +191,21 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         }
     }
 
-    suspend fun <UER : UpdateEntityRequest<IdType, T>> update(id: IdType, request: UER, serializer: KSerializer<UER>) {
+    suspend fun <UER : UpdateEntityRequest<RemoteIdType, RemoteEntity>> update(
+        id: RemoteIdType,
+        request: UER,
+        serializer: KSerializer<UER>,
+        progressNotifier: ProgressNotifier? = null,
+    ) {
         check(isPatchSupported) { "Patching this entity type is not supported" }
 
         val response = httpClient.patch("$endpoint/$id") {
             contentType(ContentType.Application.Json)
             val body = json.encodeToString(serializer, request)
             setBody(body)
+            progressNotifier?.let { notify ->
+                onUpload { current, total -> notify(Progress.NamedUpload(id.toString(), current, total)) }
+            }
         }
         if (response.status.isSuccess()) {
             val location = response.headers[HttpHeaders.Location]
@@ -181,6 +213,7 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
 
             val item = getUrl(location)
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
+            progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.update(item)
 
             synchronizeFiles(listOf(item))
@@ -190,11 +223,12 @@ abstract class RemoteRepository<IdType : Any, T : Entity<IdType>>(
         }
     }
 
-    suspend fun delete(id: IdType) {
+    suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.delete("$endpoint/$id")
         if (response.status == HttpStatusCode.NoContent) {
             Napier.i { "Deleted $name with ID $id" }
-            repository.delete(id)
+            progressNotifier?.invoke(Progress.LocalDBWrite)
+            repository.delete(remoteToLocalIdConverter(id))
         } else {
             Napier.e { "Failed to delete $name with ID $id. Status: ${response.status}" }
             throw IllegalStateException("Failed to delete $name with ID $id. Status: ${response.status}. Body: ${response.bodyAsText()}")

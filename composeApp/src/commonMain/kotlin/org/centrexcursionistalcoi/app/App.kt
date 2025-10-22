@@ -15,10 +15,16 @@ import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
+import kotlin.reflect.typeOf
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
+import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.typing.ShoppingList
+import org.centrexcursionistalcoi.app.typing.ShoppingListNavType
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
@@ -58,7 +64,7 @@ fun App(
 
     NavHost(
         navController = navController,
-        startDestination = Destination.Loading
+        startDestination = Destination.Loading,
     ) {
         composable<Destination.Loading> {
             LoadingScreen(
@@ -105,6 +111,9 @@ fun App(
 
         composable<Destination.LendingsManagement> {
             LendingsManagementScreen(
+                onLendingPickupRequest = {
+                    navController.navigate(Destination.LendingPickup(it.id))
+                },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -114,9 +123,13 @@ fun App(
                 onBackRequested = { navController.navigateUp() }
             )
         }
-        composable<Destination.LendingCreation> { bse ->
+        composable<Destination.LendingCreation>(
+            typeMap = mapOf(
+                typeOf<ShoppingList>() to ShoppingListNavType(),
+            ),
+        ) { bse ->
             val route = bse.toRoute<Destination.LendingCreation>()
-            val items = route.items
+            val items = route.shoppingList
 
             LaunchedEffect(items) {
                 // If there are no items, go back
@@ -131,6 +144,21 @@ fun App(
                     }
                 }
             ) { navController.navigateUp() }
+        }
+        composable<Destination.LendingPickup>(
+            typeMap = mapOf(
+                typeOf<Uuid>() to UuidNavType,
+            ),
+        ) { bse ->
+            val route = bse.toRoute<Destination.LendingPickup>()
+            val lendingId = route.lendingId
+
+            LendingPickupScreen(
+                lendingId = lendingId,
+                onBack = {
+                    navController.navigateUp()
+                }
+            )
         }
     }
     LaunchedEffect(navController) {

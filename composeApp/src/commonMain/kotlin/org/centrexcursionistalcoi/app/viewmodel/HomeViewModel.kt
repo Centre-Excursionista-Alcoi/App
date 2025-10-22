@@ -15,9 +15,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -86,7 +86,7 @@ class HomeViewModel: ViewModel() {
         InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id, amount)
     }
 
-    fun delete(item: InventoryItem) = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun delete(item: ReferencedInventoryItem) = viewModelScope.launch(defaultAsyncDispatcher) {
         InventoryItemsRemoteRepository.delete(item.id)
     }
 
@@ -116,11 +116,11 @@ class HomeViewModel: ViewModel() {
         }
     }
 
-    fun cancelLending(lending: Lending) = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun cancelLending(lending: ReferencedLending) = viewModelScope.launch(defaultAsyncDispatcher) {
         LendingsRemoteRepository.cancel(lending.id)
     }
 
-    fun submitMemory(lending: Lending, file: PlatformFile) = viewModelScope.async(defaultAsyncDispatcher) {
+    fun submitMemory(lending: ReferencedLending, file: PlatformFile) = viewModelScope.async(defaultAsyncDispatcher) {
         try {
             _memoryUploadProgress.emit(0L to file.size())
             LendingsRemoteRepository.submitMemory(lending.id, file) { current, max ->

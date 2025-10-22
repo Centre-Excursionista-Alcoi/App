@@ -1,21 +1,16 @@
 package org.centrexcursionistalcoi.app.network
 
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 
-object DepartmentsRemoteRepository : RemoteRepository<Int, Department>(
+object DepartmentsRemoteRepository : SymmetricRemoteRepository<Int, Department>(
     "/departments",
     Department.serializer(),
     DepartmentsRepository
 ) {
     suspend fun create(name: String, image: ByteArray?) {
-        val imageUuid = image?.let {
-            val uuid = Uuid.random()
-            PlatformFileSystem.write("temp/$uuid", it)
-            uuid
-        }
+        val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
 
         create(Department(0, name, imageUuid))
     }

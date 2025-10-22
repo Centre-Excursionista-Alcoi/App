@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
@@ -19,6 +20,14 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
 
     override suspend fun get(id: Uuid): InventoryItemType? {
         return queries.get(id).awaitAsList().firstOrNull()?.toInventoryItemType()
+    }
+
+    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<InventoryItemType?> {
+        return queries
+            .get(id)
+            .asFlow()
+            .mapToList(dispatcher)
+            .map { it.firstOrNull()?.toInventoryItemType() }
     }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries

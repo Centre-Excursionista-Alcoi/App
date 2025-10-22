@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
@@ -31,7 +31,7 @@ class LendingCreationViewModel(
     private val _to = MutableStateFlow<LocalDate?>(null)
     val to = _to.asStateFlow()
 
-    private val _allocatedItems = MutableStateFlow<List<InventoryItem>?>(null)
+    private val _allocatedItems = MutableStateFlow<List<ReferencedInventoryItem>?>(null)
     val allocatedItems = _allocatedItems.asStateFlow()
 
     private val _error = MutableStateFlow<Throwable?>(null)

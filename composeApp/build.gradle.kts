@@ -59,10 +59,6 @@ kotlin {
     }
     
     sourceSets {
-        all {
-            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        }
-
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -109,6 +105,9 @@ kotlin {
             // QR Code Generation
             implementation(libs.qrose.oned)
             implementation(libs.qrose.twod)
+
+            // QR Code Scanner
+            implementation(libs.kscan)
 
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)
@@ -240,7 +239,6 @@ buildkonfig {
             type = STRING,
             name = "SERVER_URL",
             value = "https://server.cea.arnaumora.com",
-            const = true,
         )
         buildConfigField(
             type = STRING,

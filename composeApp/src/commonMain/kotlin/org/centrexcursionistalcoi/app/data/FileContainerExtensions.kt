@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.SystemPathSeparator
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
@@ -34,14 +35,14 @@ fun DocumentFileContainer.documentFilePath(): String {
  * Writes the provided ByteReadChannel to the document file associated with this DocumentFileContainer.
  * @throws IllegalStateException if there is no document file associated with the container.
  */
-suspend fun DocumentFileContainer.writeFile(channel: ByteReadChannel) {
+suspend fun DocumentFileContainer.writeFile(channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
     val path = documentFilePath()
-    PlatformFileSystem.write(path, channel)
+    PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
-suspend fun DocumentFileContainer.readFile(): ByteArray {
+suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? = null): ByteArray {
     val path = documentFilePath()
-    return PlatformFileSystem.read(path)
+    return PlatformFileSystem.read(path, progressNotifier)
 }
 
 private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {
@@ -49,9 +50,9 @@ private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {
     return joinPaths("image", clName, uuid.toString())
 }
 
-suspend fun ImageFileContainer.writeImageFile(uuid: Uuid, channel: ByteReadChannel) {
+suspend fun ImageFileContainer.writeImageFile(uuid: Uuid, channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
     val path = imageFilePath(uuid)
-    PlatformFileSystem.write(path, channel)
+    PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
 suspend fun ImageFileContainer.imageFile(): ByteArray? = image?.let { uuid ->

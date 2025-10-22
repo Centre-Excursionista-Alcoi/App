@@ -12,13 +12,18 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
+import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 
 object ProfileRemoteRepository {
     private val httpClient by lazy { getHttpClient() }
 
-    suspend fun getProfile(): ProfileResponse? {
-        val response = httpClient.get("/profile")
+    suspend fun getProfile(progressNotifier: ProgressNotifier? = null): ProfileResponse? {
+        val response = httpClient.get("/profile") {
+            progressNotifier?.let { monitorDownloadProgress(it) }
+        }
         if (response.status.isSuccess()) {
             val body = response.bodyAsText()
             return json.decodeFromString(ProfileResponse.serializer(), body)
@@ -36,7 +41,8 @@ object ProfileRemoteRepository {
         postalCode: String,
         city: String,
         province: String,
-        country: String
+        country: String,
+        progressNotifier: ProgressNotifier? = null,
     ) {
         val response = httpClient.submitForm(
             "/profile/lendingSignUp",
@@ -51,7 +57,9 @@ object ProfileRemoteRepository {
                 append("province", province)
                 append("country", country)
             }
-        )
+        ) {
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
         if (!response.status.isSuccess()) {
             throw ServerException(
                 "Failed to sign up for lending",
@@ -66,7 +74,8 @@ object ProfileRemoteRepository {
         company: String,
         policyNumber: String,
         validFrom: LocalDate,
-        validTo: LocalDate
+        validTo: LocalDate,
+        progressNotifier: ProgressNotifier? = null,
     ) {
         val response = httpClient.submitForm(
             "/profile/insurances",
@@ -76,12 +85,14 @@ object ProfileRemoteRepository {
                 append("validFrom", validFrom.toString())
                 append("validTo", validTo.toString())
             }
-        )
+        ) {
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 
-    suspend fun synchronize(): Boolean {
-        val profile = getProfile()
+    suspend fun synchronize(progressNotifier: ProgressNotifier? = null): Boolean {
+        val profile = getProfile(progressNotifier)
         if (profile != null) {
             Napier.d { "User is logged in, updating cached profile data..." }
             ProfileRepository.update(profile)
@@ -93,22 +104,26 @@ object ProfileRemoteRepository {
         }
     }
 
-    suspend fun connectFEMECV(username: String, password: CharArray) {
+    suspend fun connectFEMECV(username: String, password: CharArray, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.submitForm(
             "/profile/femecvSync",
             formParameters = parameters {
                 append("username", username)
                 append("password", password.concatToString())
             }
-        )
+        ) {
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
 
         // After connecting, synchronize the profile to update local data
         synchronize()
     }
 
-    suspend fun disconnectFEMECV() {
-        val response = httpClient.delete("/profile/femecvSync")
+    suspend fun disconnectFEMECV(progressNotifier: ProgressNotifier? = null) {
+        val response = httpClient.delete("/profile/femecvSync") {
+            progressNotifier?.let { monitorDownloadProgress(it) }
+        }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 }

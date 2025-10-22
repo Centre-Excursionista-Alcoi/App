@@ -56,9 +56,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
@@ -145,11 +145,11 @@ private fun HomeScreenContent(
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
-    lendings: List<Lending>?,
+    lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
-    onCancelLendingRequest: (Lending) -> Job,
+    onCancelLendingRequest: (ReferencedLending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
-    onMemorySubmitted: (Lending, PlatformFile) -> Job,
+    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -162,9 +162,9 @@ private fun HomeScreenContent(
     onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
 
-    inventoryItems: List<InventoryItem>?,
+    inventoryItems: List<ReferencedInventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (InventoryItem) -> Job,
+    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     onManageLendingsRequested: () -> Unit,
 
@@ -381,11 +381,11 @@ fun HomeScreenPagerContent(
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
-    lendings: List<Lending>?,
+    lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
-    onCancelLendingRequest: (Lending) -> Job,
+    onCancelLendingRequest: (ReferencedLending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
-    onMemorySubmitted: (Lending, PlatformFile) -> Job,
+    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -398,9 +398,9 @@ fun HomeScreenPagerContent(
     onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
 
-    inventoryItems: List<InventoryItem>?,
+    inventoryItems: List<ReferencedInventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (InventoryItem) -> Job,
+    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -413,7 +413,6 @@ fun HomeScreenPagerContent(
             IDX_HOME -> HomeMainPage(
                 windowSizeClass,
                 profile,
-                inventoryItemTypes,
                 inventoryItems,
                 lendings,
                 onLendingSignUpRequested,

@@ -4,6 +4,7 @@ import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.await
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 
 @OptIn(ExperimentalWasmJsInterop::class, ExperimentalUnsignedTypes::class)
 actual object PlatformFileSystem {
@@ -22,21 +23,20 @@ actual object PlatformFileSystem {
         return currentDir
     }
 
-    actual suspend fun write(path: String, data: ByteArray) {
+    actual suspend fun write(path: String, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
         val dir = getDirectoryHandle(path)
+        val data = channel.toByteArray()
         OPFS.writeFile(dir, path.split('/').last(), data)
     }
 
-    actual suspend fun write(path: String, channel: ByteReadChannel) = write(path, channel.toByteArray())
-
-    actual suspend fun read(path: String): ByteArray {
+    actual suspend fun read(path: String, progress: (ProgressNotifier)?): ByteArray {
         val dir = getDirectoryHandle(path)
         val contents = OPFS.readFile(dir, path.split('/').last())
         requireNotNull(contents) { "File $path not found" }
         return contents
     }
 
-    actual suspend fun exists(path: String): Boolean {
+    actual suspend fun exists(path: String, progress: (ProgressNotifier)?): Boolean {
         val dir = getDirectoryHandle(path)
         return OPFS.exists(dir, path.split('/').last())
     }

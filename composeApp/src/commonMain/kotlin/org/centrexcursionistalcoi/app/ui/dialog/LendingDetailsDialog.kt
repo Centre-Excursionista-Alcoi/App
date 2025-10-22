@@ -24,16 +24,15 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.ktor.http.ContentType
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.documentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LendingDetailsDialog(
-    lending: Lending,
-    itemTypes: List<InventoryItemType>,
+    lending: ReferencedLending,
     onCancelRequest: () -> Unit,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: ((PlatformFile) -> Job)?,
@@ -99,9 +98,8 @@ fun LendingDetailsDialog(
 
                 val list = lending.items.groupBy { it.type }
                 Text(stringResource(Res.string.lending_details_items_title))
-                for ((typeId, items) in list) {
-                    val type = itemTypes.find { it.id == typeId }
-                    Text("- ${type?.displayName ?: "Unknown"}: ${items.size} items")
+                for ((type, items) in list) {
+                    Text("- ${type.displayName}: ${items.size} items")
                 }
 
                 if (PlatformOpenFileLogic.supported && lending.memoryDocument != null) {

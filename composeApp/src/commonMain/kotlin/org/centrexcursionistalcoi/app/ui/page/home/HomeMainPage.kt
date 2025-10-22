@@ -50,9 +50,10 @@ import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
@@ -66,27 +67,25 @@ import org.jetbrains.compose.resources.stringResource
 fun HomeMainPage(
     windowSizeClass: WindowSizeClass,
     profile: ProfileResponse,
-    inventoryItemTypes: List<InventoryItemType>?,
-    inventoryItems: List<InventoryItem>?,
-    lendings: List<Lending>?,
+    inventoryItems: List<ReferencedInventoryItem>?,
+    lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     memoryUploadProgress: Pair<Long, Long>?,
-    onMemorySubmitted: (Lending, PlatformFile) -> Job,
+    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
-    onCancelLendingRequest: (Lending) -> Job,
+    onCancelLendingRequest: (ReferencedLending) -> Job,
 ) {
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
         InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
     }
 
-    var showingLendingDetails by remember { mutableStateOf<Lending?>(null) }
+    var showingLendingDetails by remember { mutableStateOf<ReferencedLending?>(null) }
     showingLendingDetails?.let { lending ->
         LendingDetailsDialog(
             lending,
-            inventoryItemTypes.orEmpty(),
             memoryUploadProgress = memoryUploadProgress,
             onMemorySubmitted = { onMemorySubmitted(lending, it) },
             onCancelRequest = {
@@ -116,14 +115,14 @@ fun HomeMainPage(
 
         val pendingLendings = lendings?.filter { it.status() !in listOf(Lending.Status.RETURNED, Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
         if (!pendingLendings.isNullOrEmpty()) {
-            stickyHeader {
+            stickyHeader("pending_lendings_header") {
                 Text(
                     text = stringResource(Res.string.home_lendings),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(pendingLendings) { lending ->
+            items(pendingLendings, key = { it.id }, contentType = { "pending-lending" }) { lending ->
                 OutlinedCard(
                     onClick = { showingLendingDetails = lending },
                     modifier = Modifier.padding(8.dp)
@@ -132,10 +131,9 @@ fun HomeMainPage(
                     Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
                     Text("Items:", style = MaterialTheme.typography.titleMedium)
                     val items = lending.items.groupBy { it.type }
-                    for ((typeId, items) in items) {
-                        val type = inventoryItemTypes?.find { it.id == typeId }
+                    for ((type, items) in items) {
                         Text(
-                            text = "- ${type?.displayName ?: "N/A"} x${items.size}",
+                            text = "- ${type.displayName} x${items.size}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -155,14 +153,14 @@ fun HomeMainPage(
 
         val noMemoryLendings = lendings?.filter { it.status() == Lending.Status.RETURNED }
         if (!noMemoryLendings.isNullOrEmpty()) {
-            stickyHeader {
+            stickyHeader("no_memory_lendings_header") {
                 Text(
                     text = stringResource(Res.string.memory_pending),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(noMemoryLendings) { lending ->
+            items(noMemoryLendings, key = { it.id }, contentType = { "no-memory-lending" }) { lending ->
                 OutlinedCard(
                     onClick = { showingLendingDetails = lending },
                     modifier = Modifier.padding(8.dp),
@@ -179,8 +177,7 @@ fun HomeMainPage(
             }
         }
 
-        // TODO: Check whether the user has signed up for lending
-        stickyHeader {
+        stickyHeader("lending_header") {
             Text(
                 text = stringResource(Res.string.home_lending),
                 style = MaterialTheme.typography.titleLarge,
@@ -216,10 +213,10 @@ fun HomeMainPage(
 
                     items(
                         items = groupedItems?.toList().orEmpty(),
-                        key = { (typeId) -> typeId }
-                    ) { (typeId, items) ->
-                        val type = inventoryItemTypes?.find { type -> type.id == typeId }
-                        val selectedAmount = shoppingList[typeId] ?: 0
+                        key = { (typeId) -> typeId },
+                        contentType = { "lending-item-large" },
+                    ) { (type, items) ->
+                        val selectedAmount = shoppingList[type.id] ?: 0
 
                         LendingItem_Large(
                             type = type,
@@ -237,10 +234,10 @@ fun HomeMainPage(
 
             items(
                 items = groupedItems?.toList().orEmpty(),
-                key = { (typeId) -> typeId }
-            ) { (typeId, items) ->
-                val type = inventoryItemTypes?.find { type -> type.id == typeId }
-                val selectedAmount = shoppingList[typeId] ?: 0
+                key = { (type) -> type.id },
+                contentType = { "lending-item-small" },
+            ) { (type, items) ->
+                val selectedAmount = shoppingList[type.id] ?: 0
 
                 LendingItem_Small(
                     type = type,
@@ -262,8 +259,8 @@ fun HomeMainPage(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(oldLendings) { lending ->
-                OldLendingItem(lending, inventoryItemTypes.orEmpty())
+            items(items = oldLendings, key = { it.id }, contentType = { "old-lending" }) { lending ->
+                OldLendingItem(lending)
             }
         }
     }
@@ -272,7 +269,7 @@ fun HomeMainPage(
 @Composable
 fun LendingItem_Small(
     type: InventoryItemType?,
-    items: List<InventoryItem>,
+    items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -368,7 +365,7 @@ fun LendingItem_Small(
 @Composable
 fun LendingItem_Large(
     type: InventoryItemType?,
-    items: List<InventoryItem>,
+    items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -453,15 +450,11 @@ fun LendingItem_Large(
 }
 
 @Composable
-fun OldLendingItem(
-    lending: Lending,
-    itemTypes: List<InventoryItemType>
-) {
+fun OldLendingItem(lending: ReferencedLending) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         LendingDetailsDialog(
             lending = lending,
-            itemTypes = itemTypes,
             onCancelRequest = {},
             memoryUploadProgress = null,
             onMemorySubmitted = null,
@@ -485,10 +478,7 @@ fun OldLendingItem(
                 Res.plurals.home_past_lending_items,
                 lending.items.size,
                 lending.items.size,
-                groupedItems.mapNotNull { (type, items) ->
-                    val type = itemTypes.find { it.id == type }
-                    type?.displayName?.plus(" (${items.size})")
-                }.joinToString()
+                groupedItems.map { (type, items) -> "${type.displayName} (${items.size})" }.joinToString()
             ),
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

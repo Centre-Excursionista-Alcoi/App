@@ -105,6 +105,8 @@
     <string name="management_pending_memory_lendings">Lendings pending memory</string>
     <string name="management_completed_lendings">Completed lendings</string>
 
+    <string name="management_pickup_screen">Lending Pickup</string>
+
     <string name="management_lending_user">User: %1$s</string>
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
     <string name="management_view_memory">View Memory</string>
@@ -152,5 +154,21 @@
     <string name="memory_pending">Pending Memories</string>
     <string name="memory_pending_lending">Memory submission is pending.</string>
     <string name="memory_pick">Pick memory file</string>
+
+    <string name="scanner_read">Read code: %1$s</string>
+    <string name="scanner_error">Could not read code</string>
+
+    <string name="progress_download">Downloading...</string>
+    <string name="progress_download_percentage">Downloading... %1$d %</string>
+    <string name="progress_download_name">Downloading %1$s...</string>
+    <string name="progress_download_name_percentage">Downloading %1$s... %2$d %</string>
+    <string name="progress_upload">Uploading...</string>
+    <string name="progress_upload_percentage">Uploading... %1$d %</string>
+    <string name="progress_upload_name">Uploading %1$s...</string>
+    <string name="progress_upload_name_percentage">Uploading %1$s... %2$d %</string>
+    <string name="progress_local_fs_read">Reading file...</string>
+    <string name="progress_local_db_read">Reading database...</string>
+    <string name="progress_local_db_write">Writing database...</string>
+    <string name="progress_data_processing">Processing...</string>
 
 </resources>

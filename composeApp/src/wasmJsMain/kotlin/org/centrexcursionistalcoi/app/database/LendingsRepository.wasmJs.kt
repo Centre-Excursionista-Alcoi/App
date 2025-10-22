@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
 import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 
-actual val LendingsRepository: Repository<Lending, Uuid> = LendingsSettingsRepository
+actual val LendingsRepository: Repository<ReferencedLending, Uuid> = LendingsSettingsRepository

@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.utils.Zero
 
-object InventoryItemTypesRemoteRepository : RemoteRepository<Uuid, InventoryItemType>(
+object InventoryItemTypesRemoteRepository : SymmetricRemoteRepository<Uuid, InventoryItemType>(
     "/inventory/types",
     InventoryItemType.serializer(),
     InventoryItemTypesRepository

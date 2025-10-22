@@ -6,7 +6,7 @@ import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.utils.Zero
 
-object PostsRemoteRepository: RemoteRepository<Uuid, Post>(
+object PostsRemoteRepository: SymmetricRemoteRepository<Uuid, Post>(
     "/posts",
     Post.serializer(),
     PostsRepository

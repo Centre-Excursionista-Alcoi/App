@@ -12,6 +12,8 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     suspend fun get(id: IdType): T?
 
+    fun getAsFlow(id: IdType, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<T?>
+
     suspend fun insert(item: T): Long
 
     suspend fun insert(items: List<T>)

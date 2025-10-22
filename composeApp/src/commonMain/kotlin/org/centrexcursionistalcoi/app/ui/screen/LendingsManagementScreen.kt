@@ -25,8 +25,8 @@ import cea_app.composeapp.generated.resources.*
 import io.ktor.http.ContentType
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.documentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
@@ -41,18 +41,17 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun LendingsManagementScreen(
     model: LendingsManagementViewModel = viewModel { LendingsManagementViewModel() },
+    onLendingPickupRequest: (ReferencedLending) -> Unit,
     onBack: () -> Unit
 ) {
-    val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
     val lendings by model.lendings.collectAsState()
     val users by model.users.collectAsState()
 
     LendingsManagementScreen(
-        inventoryItemTypes = inventoryItemTypes,
         lendings = lendings,
         users = users,
         onConfirmRequest = model::confirm,
-        onPickupRequest = model::pickup,
+        onPickupRequest = onLendingPickupRequest,
         onReturnRequest = model::`return`,
         onBack = onBack
     )
@@ -61,12 +60,11 @@ fun LendingsManagementScreen(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LendingsManagementScreen(
-    inventoryItemTypes: List<InventoryItemType>?,
-    lendings: List<Lending>?,
+    lendings: List<ReferencedLending>?,
     users: List<UserData>?,
-    onConfirmRequest: (Lending) -> Unit,
-    onPickupRequest: (Lending) -> Unit,
-    onReturnRequest: (Lending) -> Unit,
+    onConfirmRequest: (ReferencedLending) -> Unit,
+    onPickupRequest: (ReferencedLending) -> Unit,
+    onReturnRequest: (ReferencedLending) -> Unit,
     onBack: () -> Unit
 ) {
     val unconfirmedLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.REQUESTED }.orEmpty() }
@@ -93,19 +91,19 @@ private fun LendingsManagementScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             if (unconfirmedLendings.isNotEmpty()) item(key = "unconfirmed_lendings") {
-                UnconfirmedLendingsCard(inventoryItemTypes, users, unconfirmedLendings, onConfirmRequest)
+                UnconfirmedLendingsCard(users, unconfirmedLendings, onConfirmRequest)
             }
             if (pendingPickupLendings.isNotEmpty()) item(key = "pending_pickup_lendings") {
-                PendingPickupLendingsCard(inventoryItemTypes, users, pendingPickupLendings, onPickupRequest)
+                PendingPickupLendingsCard(users, pendingPickupLendings, onPickupRequest)
             }
             if (pendingReturnLendings.isNotEmpty()) item(key = "pending_return_lendings") {
-                PendingReturnLendingsCard(inventoryItemTypes, users, pendingReturnLendings, onReturnRequest)
+                PendingReturnLendingsCard(users, pendingReturnLendings, onReturnRequest)
             }
             if (pendingMemoryLendings.isNotEmpty()) item(key = "pending_memory_lendings") {
-                PendingMemoryLendingsCard(inventoryItemTypes, users, pendingMemoryLendings)
+                PendingMemoryLendingsCard(users, pendingMemoryLendings)
             }
             if (completedLendings.isNotEmpty()) item(key = "completed_lendings") {
-                CompleteLendingsCard(inventoryItemTypes, users, completedLendings)
+                CompleteLendingsCard(users, completedLendings)
             }
 
             if ((unconfirmedLendings + pendingPickupLendings + pendingReturnLendings + pendingMemoryLendings + completedLendings).isEmpty()) {
@@ -122,10 +120,9 @@ private fun LendingsManagementScreen(
 
 @Composable
 fun UnconfirmedLendingsCard(
-    types: List<InventoryItemType>?,
     users: List<UserData>?,
-    lendings: List<Lending>,
-    onConfirmRequest: (Lending) -> Unit,
+    lendings: List<ReferencedLending>,
+    onConfirmRequest: (ReferencedLending) -> Unit,
 ) {
     ListCard(
         list = lendings,
@@ -143,9 +140,8 @@ fun UnconfirmedLendingsCard(
 
             Text("User: ${user?.username ?: "Unknown"}")
             Text("Items:")
-            for ((typeId, items) in items.groupBy { it.type }) {
-                val type = types?.find { it.id == typeId }
-                Text("- ${type?.displayName ?: "Unknown Type"}: ${items.size} unit(s)")
+            for ((type, items) in items.groupBy { it.type }) {
+                Text("- ${type.displayName}: ${items.size} unit(s)")
             }
 
             HorizontalDivider()
@@ -163,10 +159,9 @@ fun UnconfirmedLendingsCard(
 
 @Composable
 fun PendingPickupLendingsCard(
-    types: List<InventoryItemType>?,
     users: List<UserData>?,
-    lendings: List<Lending>,
-    onPickupRequest: (Lending) -> Unit,
+    lendings: List<ReferencedLending>,
+    onPickupRequest: (ReferencedLending) -> Unit,
 ) {
     ListCard(
         list = lendings,
@@ -184,9 +179,8 @@ fun PendingPickupLendingsCard(
 
             Text("User: ${user?.username ?: "Unknown"}")
             Text("Items:")
-            for ((typeId, items) in items.groupBy { it.type }) {
-                val type = types?.find { it.id == typeId }
-                Text("- ${type?.displayName ?: "Unknown Type"}: ${items.size} unit(s)")
+            for ((type, items) in items.groupBy { it.type }) {
+                Text("- ${type.displayName}: ${items.size} unit(s)")
             }
 
             HorizontalDivider()
@@ -205,10 +199,9 @@ fun PendingPickupLendingsCard(
 
 @Composable
 fun PendingReturnLendingsCard(
-    types: List<InventoryItemType>?,
     users: List<UserData>?,
-    lendings: List<Lending>,
-    onReturnRequest: (Lending) -> Unit,
+    lendings: List<ReferencedLending>,
+    onReturnRequest: (ReferencedLending) -> Unit,
 ) {
     ListCard(
         list = lendings,
@@ -226,9 +219,8 @@ fun PendingReturnLendingsCard(
 
             Text("User: ${user?.username ?: "Unknown"}")
             Text("Items:")
-            for ((typeId, items) in items.groupBy { it.type }) {
-                val type = types?.find { it.id == typeId }
-                Text("- ${type?.displayName ?: "Unknown Type"}: ${items.size} unit(s)")
+            for ((type, items) in items.groupBy { it.type }) {
+                Text("- ${type.displayName}: ${items.size} unit(s)")
             }
 
             HorizontalDivider()
@@ -253,9 +245,8 @@ fun PendingReturnLendingsCard(
 
 @Composable
 fun PendingMemoryLendingsCard(
-    types: List<InventoryItemType>?,
     users: List<UserData>?,
-    lendings: List<Lending>,
+    lendings: List<ReferencedLending>,
 ) {
     ListCard(
         list = lendings,
@@ -273,11 +264,10 @@ fun PendingMemoryLendingsCard(
 
             Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
             Text(stringResource(Res.string.lending_details_items_title))
-            for ((typeId, items) in items.groupBy { it.type }) {
-                val type = types?.find { it.id == typeId }
+            for ((type, items) in items.groupBy { it.type }) {
                 Text(
                     pluralStringResource(
-                        Res.plurals.lending_details_item_row, items.size, type?.displayName ?: unknown(), items.size
+                        Res.plurals.lending_details_item_row, items.size, type.displayName, items.size
                     )
                 )
             }
@@ -293,9 +283,8 @@ fun PendingMemoryLendingsCard(
 
 @Composable
 fun CompleteLendingsCard(
-    types: List<InventoryItemType>?,
     users: List<UserData>?,
-    lendings: List<Lending>,
+    lendings: List<ReferencedLending>,
 ) {
     ListCard(
         list = lendings,
@@ -313,11 +302,10 @@ fun CompleteLendingsCard(
 
             Text(stringResource(Res.string.management_lending_user, user?.username ?: unknown()))
             Text(stringResource(Res.string.lending_details_items_title))
-            for ((typeId, items) in items.groupBy { it.type }) {
-                val type = types?.find { it.id == typeId }
+            for ((type, items) in items.groupBy { it.type }) {
                 Text(
                     pluralStringResource(
-                        Res.plurals.lending_details_item_row, items.size, type?.displayName ?: unknown(), items.size
+                        Res.plurals.lending_details_item_row, items.size, type.displayName, items.size
                     )
                 )
             }

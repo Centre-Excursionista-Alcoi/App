@@ -5,7 +5,11 @@ import com.russhwolf.settings.coroutines.getStringOrNullFlow
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -37,6 +41,18 @@ abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
         val key = "${namespace}.$id"
         val raw = settings.getStringOrNull(key) ?: return null
         return decode(raw)
+    }
+
+    override fun getAsFlow(id: IdType, dispatcher: CoroutineDispatcher): Flow<T?> {
+        val key = "${namespace}.$id"
+        return settings.getStringOrNullFlow(key)
+            .map { raw ->
+                if (raw == null) {
+                    null
+                } else {
+                    decode(raw)
+                }
+            }
     }
 
     override suspend fun selectAll(): List<T> {

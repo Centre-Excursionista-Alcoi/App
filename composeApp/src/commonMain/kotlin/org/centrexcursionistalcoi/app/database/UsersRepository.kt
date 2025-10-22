@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.data.Users
@@ -24,6 +25,14 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
 
     override suspend fun get(id: String): UserData? {
         return queries.get(id).awaitAsList().firstOrNull()?.toUser()
+    }
+
+    override fun getAsFlow(id: String, dispatcher: CoroutineDispatcher): Flow<UserData?> {
+        return queries
+            .get(id)
+            .asFlow()
+            .mapToList(dispatcher)
+            .map { it.firstOrNull()?.toUser() }
     }
 
     override suspend fun selectAll(): List<UserData> = queries.selectAll().awaitAsList()

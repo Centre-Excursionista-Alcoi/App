@@ -43,8 +43,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
@@ -73,9 +73,9 @@ fun ManagementPage(
     onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (InventoryItemType) -> Job,
 
-    inventoryItems: List<InventoryItem>?,
+    inventoryItems: List<ReferencedInventoryItem>?,
     onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (InventoryItem) -> Job,
+    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     onManageLendingsRequested: () -> Unit,
 ) {
@@ -190,16 +190,16 @@ fun InventoryItemTypesCard(
 @Composable
 fun InventoryItemsCard(
     types: List<InventoryItemType>?,
-    items: List<InventoryItem>?,
+    items: List<ReferencedInventoryItem>?,
     onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDelete: (InventoryItem) -> Job,
+    onDelete: (ReferencedInventoryItem) -> Job,
 ) {
     var creating by remember { mutableStateOf(false) }
     if (creating) {
         CreateInventoryItemDialog(types.orEmpty(), onCreate) { creating = false }
     }
 
-    var showingItemDetails by remember { mutableStateOf<InventoryItem?>(null) }
+    var showingItemDetails by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
     showingItemDetails?.let { item ->
         QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
     }
@@ -234,67 +234,60 @@ fun InventoryItemsCard(
         list = groupedItems,
         titleResource = Res.string.management_inventory_items,
         emptyTextResource = Res.string.management_no_items,
-        displayName = { (typeId, items) ->
-            (types?.find { it.id == typeId }?.displayName ?: "N/A") + " (${items.size})"
-        },
+        displayName = { (type, items) -> "${type.displayName} (${items.size})" },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
-        detailsDialogContent = { (typeId, items) ->
-            val type = types?.find { it.id == typeId }
-            if (type == null) {
-                Text(stringResource(Res.string.inventory_item_type_not_found))
-            } else {
+        detailsDialogContent = { (type, items) ->
+            Text(
+                text = stringResource(Res.string.inventory_item_type, type.displayName),
+                style = MaterialTheme.typography.titleMedium
+            )
+            val description = type.description
+            if (!description.isNullOrBlank()) {
                 Text(
-                    text = stringResource(Res.string.inventory_item_type, type.displayName),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                val description = type.description
-                if (!description.isNullOrBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-                if (type.image != null) {
-                    val imageFile by type.rememberImageFile()
-                    AsyncByteImage(
-                        bytes = imageFile,
-                        contentDescription = type.displayName,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
-                    )
-                }
-                Text(
-                    text = stringResource(Res.string.inventory_item_amount, items.size),
+                    text = description,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                for (item in items) {
-                    ListItem(
-                        headlineContent = { Text(item.id.toString().uppercase()) },
-                        supportingContent = { Text(item.variation ?: "(No variation)") },
-                        trailingContent = {
-                            Row {
-                                IconButton(
-                                    onClick = { showingItemDetails = item }
-                                ) {
-                                    Icon(Icons.Default.QrCode, stringResource(Res.string.qrcode))
-                                }
-                                IconButton(
-                                    onClick = { onDelete(item) }
-                                ) {
-                                    Icon(Icons.Default.Delete, stringResource(Res.string.delete))
-                                }
+            }
+            if (type.image != null) {
+                val imageFile by type.rememberImageFile()
+                AsyncByteImage(
+                    bytes = imageFile,
+                    contentDescription = type.displayName,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
+                )
+            }
+            Text(
+                text = stringResource(Res.string.inventory_item_amount, items.size),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            for (item in items) {
+                ListItem(
+                    headlineContent = { Text(item.id.toString().uppercase()) },
+                    supportingContent = { Text(item.variation ?: "(No variation)") },
+                    trailingContent = {
+                        Row {
+                            IconButton(
+                                onClick = { showingItemDetails = item }
+                            ) {
+                                Icon(Icons.Default.QrCode, stringResource(Res.string.qrcode))
                             }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                            headlineColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                            supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                            trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                        ),
-                    )
-                }
+                            IconButton(
+                                onClick = { onDelete(item) }
+                            ) {
+                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                            }
+                        }
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        headlineColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                        supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                        trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                    ),
+                )
             }
         },
     )

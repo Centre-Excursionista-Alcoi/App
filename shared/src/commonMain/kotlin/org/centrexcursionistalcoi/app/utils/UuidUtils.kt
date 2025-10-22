@@ -10,3 +10,11 @@ fun Uuid.isZero(): Boolean {
 
 @ExperimentalUuidApi
 val Uuid.Companion.Zero get() = Uuid.fromLongs(0, 0)
+
+fun String.toUuid(): Uuid = Uuid.parse(this)
+
+fun String.toUuidOrNull(): Uuid? = try {
+    Uuid.parse(this)
+} catch (_: IllegalArgumentException) {
+    null
+}

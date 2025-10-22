@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.data.Departments
@@ -29,6 +30,16 @@ object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
 
     override suspend fun get(id: Int): Department? {
         return queries.get(id.toLong()).awaitAsList().firstOrNull()?.toDepartment()
+    }
+
+    override fun getAsFlow(id: Int, dispatcher: CoroutineDispatcher): Flow<Department?> {
+        return queries
+            .get(id.toLong())
+            .asFlow()
+            .mapToList(dispatcher)
+            .map { departments ->
+                departments.firstOrNull()?.toDepartment()
+            }
     }
 
     override suspend fun insert(item: Department) = queries.insert(

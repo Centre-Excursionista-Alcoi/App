@@ -23,15 +23,22 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 
-object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
+object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
     Lending.serializer(),
-    LendingsRepository
+    LendingsRepository,
+    remoteToLocalIdConverter = { it },
+    remoteToLocalEntityConverter = { lending ->
+        val inventoryItemTypes = InventoryItemTypesRemoteRepository.getAll()
+        lending.referenced(inventoryItemTypes)
+    },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
         val response = httpClient.submitForm("inventory/lendings", parameters {
@@ -83,6 +90,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, Lending>(
                         ?.map { Uuid.parse(it) }
                     throw CannotAllocateEnoughItemsException(availableItemIds, amount)
                 }
+
                 else -> {
                     throw IllegalArgumentException("Failed to allocate items (${response.status}): ${response.bodyAsText()}")
                 }

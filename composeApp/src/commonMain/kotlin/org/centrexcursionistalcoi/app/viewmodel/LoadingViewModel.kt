@@ -9,6 +9,8 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
@@ -22,6 +24,8 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalTime::class)
@@ -30,8 +34,8 @@ class LoadingViewModel(
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
     companion object {
-        suspend fun syncAll(force: Boolean = false): Boolean {
-            val profile = ProfileRemoteRepository.getProfile()
+        suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
+            val profile = ProfileRemoteRepository.getProfile(progressNotifier)
             return if (profile != null) {
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
@@ -42,15 +46,15 @@ class LoadingViewModel(
                     Napier.d { "Last sync was more than an hour ago, synchronizing data..." }
 
                     // Synchronize the local database with the remote data
-                    DepartmentsRemoteRepository.synchronizeWithDatabase()
-                    PostsRemoteRepository.synchronizeWithDatabase()
-                    InventoryItemTypesRemoteRepository.synchronizeWithDatabase()
-                    InventoryItemsRemoteRepository.synchronizeWithDatabase()
-                    LendingsRemoteRepository.synchronizeWithDatabase()
+                    DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+                    PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+                    InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
+                    InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+                    LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
 
                     if (profile.isAdmin) {
                         Napier.d { "Synchronizing admin local data with remote..." }
-                        UsersRemoteRepository.synchronizeWithDatabase()
+                        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     }
 
                     settings.putLong("lastSync", now.epochSeconds)
@@ -67,6 +71,13 @@ class LoadingViewModel(
         }
     }
 
+    private val _progress = MutableStateFlow<Progress?>(null)
+    val progress = _progress.asStateFlow()
+
+    private val progressNotifier: ProgressNotifier = { progress ->
+        _progress.value = progress
+    }
+
     private fun load(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
@@ -74,7 +85,7 @@ class LoadingViewModel(
         Napier.d { "Checking if user is logged in..." }
 
         // Try to fetch the profile to see if the session is still valid
-        if (syncAll()) {
+        if (syncAll(progressNotifier = progressNotifier)) {
             ProfileRepository.getProfile()?.let { profile ->
                 val sentryUser = User().apply {
                     id = profile.sub
@@ -84,6 +95,7 @@ class LoadingViewModel(
                 Sentry.setUser(sentryUser)
             }
 
+            _progress.value = null
             withContext(Dispatchers.Main) { onLoggedIn() }
         } else {
             // Clear Sentry user context
@@ -91,6 +103,7 @@ class LoadingViewModel(
                 scope.user = null
             }
 
+            _progress.value = null
             withContext(Dispatchers.Main) { onNotLoggedIn() }
         }
     }

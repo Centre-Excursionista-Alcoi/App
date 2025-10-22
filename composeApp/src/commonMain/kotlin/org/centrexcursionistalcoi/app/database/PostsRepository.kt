@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.data.Posts
@@ -19,6 +20,14 @@ object PostsDatabaseRepository : DatabaseRepository<Post, Uuid>() {
 
     override suspend fun get(id: Uuid): Post? {
         return queries.get(id).awaitAsList().firstOrNull()?.toPost()
+    }
+
+    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<Post?> {
+        return queries
+            .get(id)
+            .asFlow()
+            .mapToList(dispatcher)
+            .map { it.firstOrNull()?.toPost() }
     }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries

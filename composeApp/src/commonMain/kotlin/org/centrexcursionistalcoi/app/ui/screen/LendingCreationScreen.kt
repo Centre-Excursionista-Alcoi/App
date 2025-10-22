@@ -39,8 +39,8 @@ import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
@@ -83,14 +83,14 @@ fun LendingCreationScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LendingCreationScreen(
     shoppingList: ShoppingList,
-    inventoryItems: List<InventoryItem>?,
+    inventoryItems: List<ReferencedInventoryItem>?,
     inventoryItemTypes: List<InventoryItemType>?,
     from: LocalDate?,
     onFromChange: (LocalDate) -> Unit,
     to: LocalDate?,
     onToChange: (LocalDate) -> Unit,
     error: Throwable?,
-    allocatedItems: List<InventoryItem>?,
+    allocatedItems: List<ReferencedInventoryItem>?,
     onCreateLendingRequest: () -> Unit,
     onBackRequested: () -> Unit,
 ) {
@@ -174,7 +174,7 @@ private fun LendingCreationScreen(
             }
             item("warning") {
                 OutlinedCard(
-                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp),
+                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
                     colors = CardDefaults.outlinedCardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
