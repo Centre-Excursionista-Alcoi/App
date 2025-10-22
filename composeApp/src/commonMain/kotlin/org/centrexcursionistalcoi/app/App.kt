@@ -19,8 +19,6 @@ import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.UuidNavType
-import org.centrexcursionistalcoi.app.typing.ShoppingList
-import org.centrexcursionistalcoi.app.typing.ShoppingListNavType
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
@@ -123,11 +121,7 @@ fun App(
                 onBackRequested = { navController.navigateUp() }
             )
         }
-        composable<Destination.LendingCreation>(
-            typeMap = mapOf(
-                typeOf<ShoppingList>() to ShoppingListNavType(),
-            ),
-        ) { bse ->
+        composable<Destination.LendingCreation> { bse ->
             val route = bse.toRoute<Destination.LendingCreation>()
             val items = route.shoppingList
 
