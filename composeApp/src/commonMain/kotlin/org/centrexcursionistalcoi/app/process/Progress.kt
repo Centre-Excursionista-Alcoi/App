@@ -83,6 +83,12 @@ sealed class Progress {
 
     companion object {
         fun HttpRequestBuilder.monitorUploadProgress(notifier: ProgressNotifier, name: String? = null) {
+            // Set initial progress value
+            notifier(
+                if (name != null) NamedUpload(name, 0, null)
+                else Upload(0, null)
+            )
+            // Monitor progress updates
             onUpload { current, total ->
                 notifier(
                     if (name != null) NamedUpload(name, current, total)
@@ -92,6 +98,12 @@ sealed class Progress {
         }
 
         fun HttpRequestBuilder.monitorDownloadProgress(notifier: ProgressNotifier, name: String? = null) {
+            // Set initial progress value
+            notifier(
+                if (name != null) NamedDownload(name, 0, null)
+                else Download(0, null)
+            )
+            // Monitor progress updates
             onDownload { current, total ->
                 notifier(
                     if (name != null) NamedDownload(name, current, total)
