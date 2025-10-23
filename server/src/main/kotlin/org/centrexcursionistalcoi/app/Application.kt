@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
+import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.VisibleForTesting
 
@@ -44,5 +45,6 @@ fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = fals
     configureAuth()
     configureContentNegotiation()
     configureRouting()
+    configureStatusPages()
     configureSessions(isTesting, isDevelopment)
 }

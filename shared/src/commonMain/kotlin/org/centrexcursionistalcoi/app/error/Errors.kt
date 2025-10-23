@@ -21,8 +21,15 @@ object Errors {
         10 -> MissingFile.serializer()
         11 -> CannotSubmitMemoryUntilMaterialIsReturned.serializer()
         12 -> UserReferenceNotFound.serializer()
+        13 -> FEMECVMissingCredentials.serializer()
+        14 -> DeviceIdIsRequired.serializer()
+        15 -> FCMTokenIsRequired.serializer()
+        16 -> InvalidTokenId.serializer()
         else -> null
     }
+
+    @Serializable
+    data class Unknown(val message: String) : Error(0, "Internal Server Exception: $message", HttpStatusCode.InternalServerError)
 
     @Serializable
     data object NotLoggedIn : Error(1, "Not logged in", HttpStatusCode.Unauthorized)
