@@ -36,8 +36,8 @@ val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
 val credentialsProperties = readProperties("credentials.properties")
-fun getCredential(key: String): String {
-    return System.getenv(key) ?: credentialsProperties?.getProperty(key) ?: error("Credential $key not found")
+fun getCredential(key: String): String? {
+    return System.getenv(key) ?: credentialsProperties?.getProperty(key)
 }
 
 kotlin {
