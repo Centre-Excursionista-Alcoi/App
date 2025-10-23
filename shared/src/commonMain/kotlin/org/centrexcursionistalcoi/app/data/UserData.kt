@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.data
 
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.exception.UserNotFoundException
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 
 @Serializable
@@ -14,6 +15,14 @@ data class UserData(
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>
 ): Entity<String>, SubReferencedFileContainer {
+    companion object {
+        /**
+         * Gets a [UserData] from a list by its [sub].
+         * @throws UserNotFoundException if no user with the given [sub] is found
+         */
+        fun List<UserData>.getUser(sub: String): UserData = this.firstOrNull { it.sub == sub } ?: throw UserNotFoundException(sub)
+    }
+
     override val id: String = sub
 
     override fun toMap(): Map<String, Any?> {

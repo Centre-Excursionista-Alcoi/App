@@ -4,8 +4,10 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.data.InventoryItemType.Companion.getType
 import org.centrexcursionistalcoi.app.data.Lending.Status
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.UserData.Companion.getUser
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
@@ -38,14 +40,14 @@ data class ReferencedLending(
     companion object {
         fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<InventoryItemType>) = ReferencedLending(
             id = this.id,
-            user = users.first { it.sub == this.userSub },
+            user = users.getUser(userSub),
             timestamp = this.timestamp,
             confirmed = this.confirmed,
             taken = this.taken,
-            givenBy = this.givenBy?.let { givenBy -> users.first { it.sub == givenBy } },
+            givenBy = this.givenBy?.let { givenBy -> users.getUser(givenBy) },
             givenAt = this.givenAt,
             returned = this.returned,
-            receivedBy = this.receivedBy?.let { receivedBy -> users.first { it.sub == receivedBy } },
+            receivedBy = this.receivedBy?.let { receivedBy -> users.getUser(receivedBy) },
             receivedAt = this.receivedAt,
             memorySubmitted = this.memorySubmitted,
             memorySubmittedAt = this.memorySubmittedAt,
@@ -54,7 +56,7 @@ data class ReferencedLending(
             from = this.from,
             to = this.to,
             notes = this.notes,
-            items = this.items.map { item -> item.referenced(inventoryItemTypes.first { it.id == item.type }) },
+            items = this.items.map { item -> item.referenced(inventoryItemTypes.getType(item.type)) },
             referencedEntity = this,
         )
     }
