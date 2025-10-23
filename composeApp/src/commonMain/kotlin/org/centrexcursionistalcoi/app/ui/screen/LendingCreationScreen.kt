@@ -43,6 +43,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
+import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -132,7 +133,7 @@ private fun LendingCreationScreen(
                         onValueChange = onFromChange,
                         label = "Start Date",
                         modifier = Modifier.weight(1f).padding(end = 4.dp),
-                        selectableDates = FutureSelectableDates(today),
+                        selectableDates = RangeSelectableDates(from = today, to = to),
                     )
                     DatePickerFormField(
                         value = to,
