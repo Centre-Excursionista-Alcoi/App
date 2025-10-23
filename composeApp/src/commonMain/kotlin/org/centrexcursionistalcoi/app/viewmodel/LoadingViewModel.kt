@@ -51,11 +51,7 @@ class LoadingViewModel(
                     InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-
-                    if (profile.isAdmin) {
-                        Napier.d { "Synchronizing admin local data with remote..." }
-                        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    }
+                    UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
 
                     settings.putLong("lastSync", now.epochSeconds)
                 } else {
