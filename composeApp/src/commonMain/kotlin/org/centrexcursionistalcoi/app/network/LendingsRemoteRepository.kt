@@ -90,8 +90,9 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
                 HttpStatusCode.Conflict -> {
                     val availableItemIds = response.headers["CEA-Available-Items"]
                         ?.split(',')
+                        ?.filter { it.isNotEmpty() }
                         ?.map { Uuid.parse(it) }
-                    throw CannotAllocateEnoughItemsException(availableItemIds, amount)
+                    throw CannotAllocateEnoughItemsException(typeId, availableItemIds, amount)
                 }
 
                 else -> {

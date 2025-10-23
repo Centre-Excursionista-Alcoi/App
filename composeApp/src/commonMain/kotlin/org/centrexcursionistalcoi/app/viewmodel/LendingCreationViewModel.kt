@@ -19,7 +19,7 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 
 class LendingCreationViewModel(
-    private val shoppingList: ShoppingList
+    private val originalShoppingList: ShoppingList
 ) : ViewModel() {
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 
@@ -30,6 +30,9 @@ class LendingCreationViewModel(
 
     private val _to = MutableStateFlow<LocalDate?>(null)
     val to = _to.asStateFlow()
+
+    private val _shoppingList = MutableStateFlow(originalShoppingList)
+    val shoppingList = _shoppingList.asStateFlow()
 
     private val _allocatedItems = MutableStateFlow<List<ReferencedInventoryItem>?>(null)
     val allocatedItems = _allocatedItems.asStateFlow()
@@ -47,12 +50,60 @@ class LendingCreationViewModel(
         allocateItems()
     }
 
+    fun resetShoppingList() {
+        _shoppingList.value = originalShoppingList
+        allocateItems()
+    }
+
+    fun addItemToShoppingList(typeId: Uuid) {
+        val maxItemAmount = inventoryItems.value?.count { it.type.id == typeId } ?: 0
+        val shoppingList = _shoppingList.value.toMutableMap()
+        val currentAmount = shoppingList[typeId] ?: 0
+        if (currentAmount < maxItemAmount) {
+            shoppingList[typeId] = currentAmount + 1
+            _shoppingList.value = shoppingList
+            allocateItems()
+        } else {
+            Napier.w { "Cannot add more items of type $typeId to shopping list. Reached max available amount: $maxItemAmount" }
+        }
+    }
+
+    fun removeItemFromShoppingList(typeId: Uuid) {
+        val shoppingList = _shoppingList.value.toMutableMap()
+        val currentAmount = shoppingList[typeId] ?: 0
+        if (currentAmount > 0) {
+            if (currentAmount == 1) {
+                shoppingList.remove(typeId)
+            } else {
+                shoppingList[typeId] = currentAmount - 1
+            }
+            _shoppingList.value = shoppingList
+            allocateItems()
+        } else {
+            Napier.w { "Cannot remove items of type $typeId from shopping list. Amount is already zero." }
+        }
+    }
+
+    fun removeItemTypeFromShoppingList(typeId: Uuid) {
+        val shoppingList = _shoppingList.value.toMutableMap()
+        if (shoppingList.containsKey(typeId)) {
+            shoppingList.remove(typeId)
+            _shoppingList.value = shoppingList
+            allocateItems()
+        } else {
+            Napier.w { "Cannot remove items of type $typeId from shopping list. Type not present." }
+        }
+    }
+
     private fun allocateItems() = viewModelScope.launch(defaultAsyncDispatcher) {
         val from = from.value ?: return@launch
         val to = to.value ?: return@launch
 
+        _error.emit(null)
+        _allocatedItems.emit(null)
+
         val allocatedItemsIds = mutableListOf<Uuid>()
-        for ((typeId, amount) in shoppingList) {
+        for ((typeId, amount) in shoppingList.value) {
             try {
                 Napier.i { "Trying to allocate x$amount of $typeId from $from to $to..." }
                 val items = LendingsRemoteRepository.allocate(typeId, from, to, amount)
@@ -62,13 +113,13 @@ class LendingCreationViewModel(
                 // Not enough items available
                 Napier.e(e) { "Not enough items available for the given date range." }
                 _error.emit(e)
-                _allocatedItems.emit(null)
+                _allocatedItems.emit(emptyList())
                 return@launch
             } catch (e: IllegalArgumentException) {
                 // Some other error
                 Napier.e(e) { "Failed to allocate $typeId" }
                 _error.emit(e)
-                _allocatedItems.emit(null)
+                _allocatedItems.emit(emptyList())
                 return@launch
             }
         }
