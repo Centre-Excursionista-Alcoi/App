@@ -260,6 +260,21 @@ buildkonfig {
             value = null,
             nullable = true,
         )
+        buildConfigField(
+            type = BOOLEAN,
+            name = "DEBUG",
+            value = (System.getenv("PRODUCTION") != "true").toString(),
+        )
+        buildConfigField(
+            type = STRING,
+            name = "VERSION_NAME",
+            value = appVersionName,
+        )
+        buildConfigField(
+            type = STRING,
+            name = "VERSION_CODE",
+            value = appVersionCode,
+        )
     }
     targetConfigs {
         create("android") {
@@ -268,11 +283,6 @@ buildkonfig {
                 name = "REDIRECT_URI",
                 value = "cea://redirect",
                 nullable = true,
-            )
-            buildConfigField(
-                type = BOOLEAN,
-                name = "DEBUG",
-                value = (System.getenv("PRODUCTION") != "true").toString(),
             )
             buildConfigField(
                 type = STRING,
