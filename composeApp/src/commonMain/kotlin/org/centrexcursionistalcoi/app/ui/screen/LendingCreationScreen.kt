@@ -158,7 +158,7 @@ private fun LendingCreationScreen(
                     ListItem(
                         headlineContent = { Text("${type?.displayName ?: "N/A"} ($amount)") },
                         supportingContent = {
-                            val items = allocatedItems?.filter { it.type == typeId }
+                            val items = allocatedItems?.filter { it.type.id == typeId }
                             Text(
                                 text = when {
                                     from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)

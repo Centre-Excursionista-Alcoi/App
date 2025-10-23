@@ -77,6 +77,7 @@ class LendingCreationViewModel(
         val allocatedItems = allocatedItemsIds.map { uuid ->
             inventoryItems.first { it.id == uuid }
         }
+        Napier.i { "Allocated ${allocatedItems.size} items successfully." }
         _allocatedItems.emit(allocatedItems)
     }
 
