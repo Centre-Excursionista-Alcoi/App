@@ -79,6 +79,16 @@ jobs:
         run: |
           keytool -list -v -keystore keystore.jks -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
+      - name: Decode google-services.json
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
+          base64 --decode google-services.txt > composeApp/google-services.json
+      - name: Verify google-services.json integrity
+        env:
+          KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
+        run: |
+          echo "${{ env.KEYSTORE_SHA256 }} keystore.jks" | sha256sum --check --status || exit 1
+
       - name: Build AAB
         id: build_aab
         env:
