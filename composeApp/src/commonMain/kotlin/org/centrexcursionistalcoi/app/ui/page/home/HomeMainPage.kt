@@ -303,7 +303,7 @@ fun LendingItem_Small(
                     modifier = Modifier.padding(8.dp)
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AnimatedVisibility(
@@ -329,7 +329,7 @@ fun LendingItem_Small(
                         ElevatedButton(
                             contentPadding = PaddingValues(0.dp),
                             onClick = { onRemoveItemFromShoppingListRequest() },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove,
