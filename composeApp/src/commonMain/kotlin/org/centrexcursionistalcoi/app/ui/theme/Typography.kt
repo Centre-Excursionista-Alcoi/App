@@ -1,26 +1,31 @@
 package org.centrexcursionistalcoi.app.ui.theme
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import org.centrexcursionistalcoi.app.ui.theme.font.Lato
+import org.centrexcursionistalcoi.app.ui.theme.font.Barlow
+import org.centrexcursionistalcoi.app.ui.theme.font.Oswald
 
-val AppTypography: Typography @Composable get() = MaterialTheme.typography.apply {
-    copy(
-        displayLarge = displayLarge.copy(fontFamily = Lato),
-        displayMedium = displayMedium.copy(fontFamily = Lato),
-        displaySmall = displaySmall.copy(fontFamily = Lato),
-        headlineLarge = headlineLarge.copy(fontFamily = Lato),
-        headlineMedium = headlineMedium.copy(fontFamily = Lato),
-        headlineSmall = headlineSmall.copy(fontFamily = Lato),
-        titleLarge = titleLarge.copy(fontFamily = Lato),
-        titleMedium = titleMedium.copy(fontFamily = Lato),
-        titleSmall = titleSmall.copy(fontFamily = Lato),
-        bodyLarge = bodyLarge.copy(fontFamily = Lato),
-        bodyMedium = bodyMedium.copy(fontFamily = Lato),
-        bodySmall = bodySmall.copy(fontFamily = Lato),
-        labelLarge = labelLarge.copy(fontFamily = Lato),
-        labelMedium = labelMedium.copy(fontFamily = Lato),
-        labelSmall = labelSmall.copy(fontFamily = Lato),
-    )
-}
+val bodyFontFamily @Composable get() = Barlow
+
+val displayFontFamily @Composable get() = Oswald
+
+// Default Material 3 typography values
+val baseline = Typography()
+
+val AppTypography @Composable get() = Typography(
+    displayLarge = baseline.displayLarge.copy(fontFamily = displayFontFamily),
+    displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily),
+    displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily),
+    headlineLarge = baseline.headlineLarge.copy(fontFamily = displayFontFamily),
+    headlineMedium = baseline.headlineMedium.copy(fontFamily = displayFontFamily),
+    headlineSmall = baseline.headlineSmall.copy(fontFamily = displayFontFamily),
+    titleLarge = baseline.titleLarge.copy(fontFamily = displayFontFamily),
+    titleMedium = baseline.titleMedium.copy(fontFamily = displayFontFamily),
+    titleSmall = baseline.titleSmall.copy(fontFamily = displayFontFamily),
+    bodyLarge = baseline.bodyLarge.copy(fontFamily = bodyFontFamily),
+    bodyMedium = baseline.bodyMedium.copy(fontFamily = bodyFontFamily),
+    bodySmall = baseline.bodySmall.copy(fontFamily = bodyFontFamily),
+    labelLarge = baseline.labelLarge.copy(fontFamily = bodyFontFamily),
+    labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily),
+    labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily),
+)
