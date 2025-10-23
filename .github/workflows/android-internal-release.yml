@@ -87,7 +87,8 @@ jobs:
         env:
           KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
         run: |
-          echo "${{ env.KEYSTORE_SHA256 }} keystore.jks" | sha256sum --check --status || exit 1
+          cd composeApp
+          echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
       - name: Build AAB
         id: build_aab
