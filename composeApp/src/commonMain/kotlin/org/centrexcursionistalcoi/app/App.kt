@@ -1,10 +1,13 @@
 package org.centrexcursionistalcoi.app
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -63,6 +66,7 @@ fun App(
     NavHost(
         navController = navController,
         startDestination = Destination.Loading,
+        modifier = Modifier.fillMaxSize().imePadding(),
     ) {
         composable<Destination.Loading> {
             LoadingScreen(
