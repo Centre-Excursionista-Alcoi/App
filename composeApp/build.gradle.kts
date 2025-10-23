@@ -35,6 +35,11 @@ val versionProperties = readProperties("version.properties")!!
 val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
+val credentialsProperties = readProperties("credentials.properties")
+fun getCredential(key: String): String {
+    return System.getenv(key) ?: credentialsProperties?.getProperty(key) ?: error("Credential $key not found")
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -219,16 +224,23 @@ android {
     }
     signingConfigs {
         create("release") {
-            keyAlias = System.getenv("KEYSTORE_ALIAS")
-            keyPassword = System.getenv("KEYSTORE_ALIAS_PASSWORD")
+            keyAlias = getCredential("KEYSTORE_ALIAS")
+            keyPassword = getCredential("KEYSTORE_ALIAS_PASSWORD")
 
             storeFile = File(rootDir, "keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            storePassword = getCredential("KEYSTORE_PASSWORD")
         }
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            isShrinkResources = false
+
+            proguardFiles(
+                // Default file with automatically generated optimization rules.
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+            )
+
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -328,5 +340,5 @@ sentry {
     // The authentication token to use for uploading proguard mappings/source contexts.
     // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
     // variable and read it into this property.
-    authToken.set(System.getenv("SENTRY_AUTH_TOKEN"))
+    authToken.set(getCredential("SENTRY_AUTH_TOKEN"))
 }
