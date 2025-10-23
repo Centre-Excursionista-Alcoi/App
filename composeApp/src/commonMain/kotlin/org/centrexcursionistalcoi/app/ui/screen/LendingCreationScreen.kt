@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,6 +42,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
+import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -79,7 +78,6 @@ fun LendingCreationScreen(
     )
 }
 
-// TODO: Localize
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LendingCreationScreen(
@@ -100,7 +98,7 @@ private fun LendingCreationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Lending Confirmation") },
+                title = { Text(stringResource(Res.string.lending_creation_title)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onBackRequested
@@ -117,7 +115,7 @@ private fun LendingCreationScreen(
                 ) {
                     Icon(Icons.Default.AddCircleOutline, null)
                     Spacer(Modifier.width(4.dp))
-                    Text("Create Lending")
+                    Text(stringResource(Res.string.lending_creation_action))
                 }
             }
         }
@@ -131,14 +129,14 @@ private fun LendingCreationScreen(
                     DatePickerFormField(
                         value = from,
                         onValueChange = onFromChange,
-                        label = "Start Date",
+                        label = stringResource(Res.string.lending_creation_from),
                         modifier = Modifier.weight(1f).padding(end = 4.dp),
                         selectableDates = RangeSelectableDates(from = today, to = to),
                     )
                     DatePickerFormField(
                         value = to,
                         onValueChange = onToChange,
-                        label = "End Date",
+                        label = stringResource(Res.string.lending_creation_until),
                         modifier = Modifier.weight(1f).padding(start = 4.dp),
                         selectableDates = FutureSelectableDates(from ?: today),
                     )
@@ -147,7 +145,7 @@ private fun LendingCreationScreen(
             if (inventoryItemTypes == null || inventoryItems == null) {
                 item("loading") {
                     Text(
-                        text = "Loading...",
+                        text = stringResource(Res.string.status_loading),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp)
@@ -163,10 +161,10 @@ private fun LendingCreationScreen(
                             val items = allocatedItems?.filter { it.type == typeId }
                             Text(
                                 text = when {
-                                    from == null || to == null -> "Select dates to allocate items"
-                                    allocatedItems == null -> "Allocating..."
-                                    items.isNullOrEmpty() -> "No items allocated"
-                                    else -> "Allocated items:\n- ${items.joinToString("\n- ") { it.id.toString() }}"
+                                    from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)
+                                    allocatedItems == null -> stringResource(Res.string.lending_creation_allocating)
+                                    items.isNullOrEmpty() -> stringResource(Res.string.lending_creation_no_items_allocated)
+                                    else -> stringResource(Res.string.lending_creation_items_allocated) + "\n- ${items.joinToString("\n- ") { it.id.toString() }}"
                                 }
                             )
                         }
@@ -174,44 +172,30 @@ private fun LendingCreationScreen(
                 }
             }
             item("warning") {
-                OutlinedCard(
+                CardWithIcon(
+                    icon = Icons.Default.Info,
+                    title = stringResource(Res.string.lending_creation_warning_title),
+                    message = stringResource(Res.string.lending_creation_warning_message),
                     modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
                     colors = CardDefaults.outlinedCardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                        Icon(Icons.Default.Info, null)
-                        Text("Attention", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 8.dp))
-                    }
-                    Text(
-                        text = "You will reserve the allocated items for the selected dates, but the request has to be approved by an administrator before the lending is complete.",
-                        modifier = Modifier.padding(8.dp)
-                    )
-                    Text(
-                        text = "Once an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.",
-                        modifier = Modifier.padding(horizontal = 8.dp).padding(bottom = 8.dp)
-                    )
-                }
+                    ),
+                )
             }
             if (error != null) item("error") {
-                OutlinedCard(
-                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp),
+                CardWithIcon(
+                    icon = Icons.Default.Info,
+                    title = stringResource(Res.string.lending_creation_error_title),
+                    message = error.message?.let {
+                        stringResource(Res.string.lending_creation_error_message, it)
+                    } ?: stringResource(Res.string.lending_creation_error_message_unknown),
+                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
                     colors = CardDefaults.outlinedCardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    )
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                        Icon(Icons.Default.Error, null)
-                        Text("Error", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 8.dp))
-                    }
-                    Text(
-                        text = error.message ?: "An unknown error occurred while allocating items.",
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
+                    ),
+                )
             }
             item("spacer") { Spacer(Modifier.height(48.dp)) }
         }

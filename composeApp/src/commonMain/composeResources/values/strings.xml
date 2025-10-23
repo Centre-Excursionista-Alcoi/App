@@ -86,6 +86,20 @@
     <string name="lending_no_active_insurances_message">You won't be able to make any lending until you have a valid insurance.</string>
     <string name="lending_no_active_insurances_action">Add Insurance</string>
 
+    <string name="lending_creation_title">Create Lending</string>
+    <string name="lending_creation_action">Create Lending</string>
+    <string name="lending_creation_from">Start Date</string>
+    <string name="lending_creation_until">End Date</string>
+    <string name="lending_creation_select_dates">Select dates to allocate items</string>
+    <string name="lending_creation_allocating">Allocating...</string>
+    <string name="lending_creation_no_items_allocated">No items allocated</string>
+    <string name="lending_creation_items_allocated">Allocated items:</string>
+    <string name="lending_creation_warning_title">Attention</string>
+    <string name="lending_creation_warning_message">You will reserve the allocated items for the selected dates, but the request has to be approved by an administrator before the lending is complete.\nOnce an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.</string>
+    <string name="lending_creation_error_title">Error</string>
+    <string name="lending_creation_error_message">An error occurred while allocating items:</string>
+    <string name="lending_creation_error_message_unknown">An unknown error occurred while allocating items.</string>
+
     <string name="insurance_add_title">Add Insurance</string>
     <string name="insurance">
     <string name="insurance_add_title">Add Insurance</string>Insurance</string>
