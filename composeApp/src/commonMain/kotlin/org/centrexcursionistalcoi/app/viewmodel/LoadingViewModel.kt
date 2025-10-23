@@ -50,8 +50,8 @@ class LoadingViewModel(
                     PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
                     UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
+                    LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
 
                     settings.putLong("lastSync", now.epochSeconds)
                 } else {

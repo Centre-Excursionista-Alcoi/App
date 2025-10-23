@@ -13,7 +13,7 @@ sealed class Progress {
     abstract val label: @Composable () -> String?
 
     sealed class Transfer(val current: Long, val total: Long?) : Progress() {
-        val isIndeterminate: Boolean = total == 0L
+        val isIndeterminate: Boolean = total == null || total == 0L
 
         @Contextual
         @get:FloatRange(from = 0.0, to = 1.0)
