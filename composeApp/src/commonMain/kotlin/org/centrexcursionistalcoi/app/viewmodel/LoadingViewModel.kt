@@ -70,6 +70,9 @@ class LoadingViewModel(
     private val _progress = MutableStateFlow<Progress?>(null)
     val progress = _progress.asStateFlow()
 
+    private val _error = MutableStateFlow<Throwable?>(null)
+    val error = _error.asStateFlow()
+
     private val progressNotifier: ProgressNotifier = { progress ->
         _progress.value = progress
     }
@@ -79,28 +82,35 @@ class LoadingViewModel(
         onNotLoggedIn: () -> Unit,
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
         Napier.d { "Checking if user is logged in..." }
+        _error.value = null
 
-        // Try to fetch the profile to see if the session is still valid
-        if (syncAll(progressNotifier = progressNotifier)) {
-            ProfileRepository.getProfile()?.let { profile ->
-                val sentryUser = User().apply {
-                    id = profile.sub
-                    username = profile.username
-                    email = profile.email
+        try {
+            // Try to fetch the profile to see if the session is still valid
+            if (syncAll(progressNotifier = progressNotifier)) {
+                ProfileRepository.getProfile()?.let { profile ->
+                    val sentryUser = User().apply {
+                        id = profile.sub
+                        username = profile.username
+                        email = profile.email
+                    }
+                    Sentry.setUser(sentryUser)
                 }
-                Sentry.setUser(sentryUser)
-            }
 
-            _progress.value = null
-            withContext(Dispatchers.Main) { onLoggedIn() }
-        } else {
-            // Clear Sentry user context
-            Sentry.configureScope { scope ->
-                scope.user = null
-            }
+                _progress.value = null
+                withContext(Dispatchers.Main) { onLoggedIn() }
+            } else {
+                // Clear Sentry user context
+                Sentry.configureScope { scope ->
+                    scope.user = null
+                }
 
+                _progress.value = null
+                withContext(Dispatchers.Main) { onNotLoggedIn() }
+            }
+        } catch (e: Exception) {
+            Napier.e("Error while loading.", e)
             _progress.value = null
-            withContext(Dispatchers.Main) { onNotLoggedIn() }
+            _error.value = e
         }
     }
 
