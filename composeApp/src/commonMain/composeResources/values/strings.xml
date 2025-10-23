@@ -9,6 +9,8 @@
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
     <string name="login_action">Login</string>
+    <string name="registration_complete_title">Registration complete!</string>
+    <string name="registration_complete_message">Now you can log into your new account.</string>
 
     <string name="register_title">Register an Account</string>
     <string name="register_username">Username</string>

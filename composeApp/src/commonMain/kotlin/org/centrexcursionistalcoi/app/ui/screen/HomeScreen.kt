@@ -124,7 +124,8 @@ fun HomeScreen(
 
 private const val IDX_HOME = 0
 private const val IDX_MANAGEMENT = 1
-private const val IDX_PROFILE = 2
+private const val IDX_PROFILE_NOT_ADMIN = 1
+private const val IDX_PROFILE_ADMIN = 2
 
 private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composable (() -> String)>> {
     return mutableListOf<Pair<ImageVector, @Composable (() -> String)>>().apply {
@@ -424,7 +425,7 @@ fun HomeScreenPagerContent(
                 onCancelLendingRequest,
             )
 
-            IDX_MANAGEMENT -> ManagementPage(
+            IDX_MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
                 departments,
                 onCreateDepartment,
@@ -440,7 +441,7 @@ fun HomeScreenPagerContent(
                 onManageLendingsRequested,
             )
 
-            IDX_PROFILE -> ProfilePage(
+            IDX_PROFILE_ADMIN if profile.isAdmin -> ProfilePage(
                 windowSizeClass,
                 profile,
                 onCreateInsurance,
@@ -448,7 +449,13 @@ fun HomeScreenPagerContent(
                 onFEMECVDisconnectRequested,
             )
 
-            // 1 -> LendingPage(windowSizeClass, profile, onLendingSignUp, onCreateInsurance)
+            IDX_PROFILE_NOT_ADMIN if profile.isAdmin.not() -> ProfilePage(
+                windowSizeClass,
+                profile,
+                onCreateInsurance,
+                onFEMECVConnectRequested,
+                onFEMECVDisconnectRequested,
+            )
         }
     }
 }

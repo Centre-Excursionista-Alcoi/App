@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +50,7 @@ import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -70,7 +74,7 @@ fun LoginScreen(
         isRegistering = isRegistering,
         registerError = registerError,
         onRegisterRequest = model::register,
-        onClearErrors =  model::clearErrors,
+        onClearErrors = model::clearErrors,
     )
 }
 
@@ -86,6 +90,8 @@ private fun LoginScreen(
 ) {
     val scope = rememberCoroutineScope()
     val state = rememberPagerState { 2 }
+
+    var registrationComplete by remember { mutableStateOf(false) }
 
     Scaffold { paddingValues ->
         HorizontalPager(
@@ -116,7 +122,7 @@ private fun LoginScreen(
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                 } else {
-                                    LoginScreen_Login(onLoginRequest) {
+                                    LoginScreen_Login(registrationComplete, onLoginRequest) {
                                         scope.launch { state.animateScrollToPage(1) }
                                     }
                                 }
@@ -137,6 +143,7 @@ private fun LoginScreen(
                                 if (success) {
                                     // Go back to login page
                                     scope.launch {
+                                        registrationComplete = true
                                         state.animateScrollToPage(0)
                                     }
                                 }
@@ -153,12 +160,20 @@ private fun LoginScreen(
 @Composable
 fun LoginScreen_Login_Preview() {
     Column {
-        LoginScreen_Login({}) {}
+        LoginScreen_Login(false, {}) {}
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreen_Login_RegistrationComplete_Preview() {
+    Column {
+        LoginScreen_Login(true, {}) {}
     }
 }
 
 @Composable
-fun LoginScreen_Login(onLoginRequest: () -> Unit, onRegisterRequest: () -> Unit) {
+fun LoginScreen_Login(registrationComplete: Boolean, onLoginRequest: () -> Unit, onRegisterRequest: () -> Unit) {
     Image(
         painter = painterResource(resource = Res.drawable.banner),
         contentDescription = null,
@@ -181,7 +196,7 @@ fun LoginScreen_Login(onLoginRequest: () -> Unit, onRegisterRequest: () -> Unit)
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 12.dp)
     ) {
         OutlinedButton(
             onClick = onRegisterRequest,
@@ -191,6 +206,23 @@ fun LoginScreen_Login(onLoginRequest: () -> Unit, onRegisterRequest: () -> Unit)
             onClick = onLoginRequest,
             modifier = Modifier.weight(1f).padding(start = 4.dp)
         ) { Text(stringResource(Res.string.login_action)) }
+    }
+
+    AnimatedVisibility(
+        visible = registrationComplete,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        CardWithIcon(
+            title = stringResource(Res.string.registration_complete_title),
+            message = stringResource(Res.string.registration_complete_message),
+            icon = Icons.Default.TipsAndUpdates,
+            modifier = Modifier.fillMaxWidth().widthIn(max = 300.dp).padding(8.dp).padding(top = 8.dp),
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+        )
     }
 }
 
