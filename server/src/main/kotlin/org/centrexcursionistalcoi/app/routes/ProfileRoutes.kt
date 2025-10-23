@@ -233,12 +233,13 @@ fun Route.profileRoutes() {
 
         val parameters = call.receiveParameters()
         val token = parameters["token"]
+        val deviceId = parameters["deviceId"]
 
         if (token.isNullOrBlank()) return@post respondError(Errors.FCMTokenIsRequired)
 
         val registrationEntity = Database {
             val reference = UserReferenceEntity.getOrProvide(session)
-            reference.addFCMRegistrationToken(token)
+            reference.addFCMRegistrationToken(token, deviceId)
         }
 
         call.respondText(registrationEntity.id.value.toString(), status = HttpStatusCode.Created)
