@@ -65,20 +65,21 @@ object Push {
 
         val admins = try {
             Database {
-                UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
+                UserReferenceEntity.find {
+                    UserReferences.groups.contains(ADMIN_GROUP_NAME)
+                }.toList()
             }
         } catch (_: UnsupportedByDialectException) {
             Database {
                 UserReferenceEntity.all()
+                    .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
             }
         }
 
-        val tokens = Database {
-            admins
-                .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
-                .map { it.token.value }
-        }
+        val tokens = admins
+            .flatMap { Database { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } } }
+            .map { it.token.value }
         sendPushNotification(tokens, data)
     }
 
