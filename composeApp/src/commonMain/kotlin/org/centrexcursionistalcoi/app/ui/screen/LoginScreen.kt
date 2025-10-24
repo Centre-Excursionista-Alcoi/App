@@ -7,8 +7,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
@@ -38,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -128,6 +132,17 @@ private fun LoginScreen(
                                 }
                             }
                         }
+
+                        Spacer(Modifier.weight(1f))
+
+                        Image(
+                            painter = painterResource(Res.drawable.people),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                            contentScale = ContentScale.Inside,
+                            alignment = Alignment.BottomCenter,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).padding(bottom = 8.dp).padding(horizontal = 36.dp)
+                        )
                     }
                 }
 
