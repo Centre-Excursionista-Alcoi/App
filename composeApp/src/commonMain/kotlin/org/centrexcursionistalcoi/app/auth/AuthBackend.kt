@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.settings
 
 object AuthBackend {
     suspend fun register(username: String, name: String, email: String, password: String): Throwable? {
@@ -49,6 +50,8 @@ object AuthBackend {
             DepartmentsRepository.deleteAll()
             Napier.d { "Removing all files..." }
             PlatformFileSystem.deleteAll()
+            Napier.d { "Removing all settings..." }
+            settings.clear()
         } else {
             val error = response.bodyAsError()
             Napier.d { "Logout failed (${response.status}): $error" }
