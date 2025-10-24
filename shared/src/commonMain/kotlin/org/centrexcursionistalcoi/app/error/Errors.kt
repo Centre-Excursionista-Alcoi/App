@@ -24,7 +24,6 @@ object Errors {
         13 -> FEMECVMissingCredentials.serializer()
         14 -> DeviceIdIsRequired.serializer()
         15 -> FCMTokenIsRequired.serializer()
-        16 -> InvalidTokenId.serializer()
         else -> null
     }
 
@@ -82,8 +81,5 @@ object Errors {
 
     @Serializable
     data object FCMTokenIsRequired : Error(15, "FCM token is required.", HttpStatusCode.BadRequest)
-
-    @Serializable
-    data object InvalidTokenId : Error(16, "The provided token ID is invalid.", HttpStatusCode.BadRequest)
 
 }

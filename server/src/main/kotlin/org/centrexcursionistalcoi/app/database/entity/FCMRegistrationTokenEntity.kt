@@ -1,15 +1,15 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
 
-class FCMRegistrationTokenEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<FCMRegistrationTokenEntity>(FCMRegistrationTokens)
+class FCMRegistrationTokenEntity(id: EntityID<String>) : Entity<String>(id) {
+    companion object : EntityClass<String, FCMRegistrationTokenEntity>(FCMRegistrationTokens)
 
+    /** Alias for [id]. */
+    val token by FCMRegistrationTokens.token
     var user by UserReferenceEntity referencedOn FCMRegistrationTokens.user
-    var token by FCMRegistrationTokens.token
     var deviceId by FCMRegistrationTokens.deviceId
 }

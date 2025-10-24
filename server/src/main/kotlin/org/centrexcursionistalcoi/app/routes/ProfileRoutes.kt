@@ -31,7 +31,6 @@ import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
@@ -237,12 +236,12 @@ fun Route.profileRoutes() {
 
         if (token.isNullOrBlank()) return@post respondError(Errors.FCMTokenIsRequired)
 
-        val registrationEntity = Database {
+        Database {
             val reference = UserReferenceEntity.getOrProvide(session)
             reference.addFCMRegistrationToken(token, deviceId)
         }
 
-        call.respondText(registrationEntity.id.value.toString(), status = HttpStatusCode.Created)
+        call.respond(HttpStatusCode.Created)
     }
     // Delete by device id
     delete("/profile/fcmToken") {
@@ -265,14 +264,13 @@ fun Route.profileRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     // Delete by token id
-    delete("/profile/fcmToken/{id}") {
+    delete("/profile/fcmToken/{token}") {
         val session = getUserSessionOrFail() ?: return@delete
 
-        val tokenId = call.parameters["id"]?.toUUIDOrNull()
-        if (tokenId == null) return@delete respondError(Errors.InvalidTokenId)
+        val token = call.parameters["token"]!!
 
         Database {
-            FCMRegistrationTokenEntity.findById(tokenId)
+            FCMRegistrationTokenEntity.findById(token)
                 // Make sure the token belongs to the user
                 ?.takeIf { it.user.sub.value == session.sub }
                 // Delete the token
