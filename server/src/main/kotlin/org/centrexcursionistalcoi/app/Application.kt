@@ -6,6 +6,7 @@ import io.ktor.server.netty.Netty
 import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
@@ -32,6 +33,8 @@ fun main() {
         password = System.getenv("DB_PASS") ?: "",
     )
     val isDevelopment = System.getenv("ENV") == "development"
+
+    Push.init()
 
     embeddedServer(
         Netty,
