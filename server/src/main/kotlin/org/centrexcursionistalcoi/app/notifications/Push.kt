@@ -73,7 +73,7 @@ object Push {
         val tokens = Database {
             admins
                 .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
-                .map { it.token }
+                .map { it.token.value }
         }
         sendPushNotification(tokens, data)
     }
