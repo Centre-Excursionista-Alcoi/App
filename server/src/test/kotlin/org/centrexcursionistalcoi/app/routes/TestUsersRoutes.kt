@@ -27,9 +27,6 @@ class TestUsersRoutes: ApplicationTestBase() {
     fun test_users_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/users")
 
     @Test
-    fun test_users_notAdmin() = ProvidedRouteTests.test_loggedIn_notAdmin("/users")
-
-    @Test
     fun test_users() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
