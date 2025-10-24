@@ -259,17 +259,11 @@ fun Route.inventoryRoutes() {
         // Notify admins asynchronously
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
         CoroutineScope(Dispatchers.IO).launch {
-            val emails = try {
-                Database {
-                    UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                        .map { MailerSendEmail(it.email, it.username) }
-                }
-            } catch (_: UnsupportedByDialectException) {
-                Database {
-                    UserReferenceEntity.all()
-                        .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                        .map { MailerSendEmail(it.email, it.username) }
-                }
+            val emails = Database {
+                UserReferenceEntity.all()
+                    .toList()
+                    .filter { it.groups.contains(ADMIN_GROUP_NAME) }
+                    .map { MailerSendEmail(it.email, it.username) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             println("Sending emails to: $emails")
