@@ -111,10 +111,13 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
             memoryReviewed = item.memoryReviewed,
         )
         for (inventoryItem in item.items) {
-            lendingItemsQueries.insert(
-                lendingId = item.id,
-                itemId = inventoryItem.id
-            )
+            val exists = lendingItemsQueries.get(item.id, inventoryItem.id).executeAsOneOrNull() != null
+            if (!exists) {
+                lendingItemsQueries.insert(
+                    lendingId = item.id,
+                    itemId = inventoryItem.id
+                )
+            }
         }
         return 1L
     }
