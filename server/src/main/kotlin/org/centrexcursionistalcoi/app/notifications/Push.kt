@@ -10,11 +10,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
-import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.v1.json.contains
 import org.slf4j.LoggerFactory
 
 
@@ -63,18 +60,8 @@ object Push {
     fun sendAdminPushNotification(data: Map<String, String>) {
         if (!pushConfigured) return
 
-        val admins = try {
-            Database {
-                UserReferenceEntity.find {
-                    UserReferences.groups.contains(ADMIN_GROUP_NAME)
-                }.toList()
-            }
-        } catch (_: UnsupportedByDialectException) {
-            Database {
-                UserReferenceEntity.all()
-                    .toList()
-                    .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-            }
+        val admins = Database {
+            UserReferenceEntity.all().filter { it.groups.contains(ADMIN_GROUP_NAME) }
         }
 
         val tokens = admins
