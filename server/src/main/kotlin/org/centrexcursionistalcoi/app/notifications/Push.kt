@@ -82,11 +82,19 @@ object Push {
         )
     }
 
-    fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification) {
+    fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification, includeAdmins: Boolean = true) {
         if (!pushConfigured) return
 
-        val tokens = Database {
+        var tokens = Database {
             FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq reference.id }.map { it.token.value }
+        }
+        if (includeAdmins) {
+            val adminTokens = Database {
+                UserReferenceEntity.all().filter { it.groups.contains(ADMIN_GROUP_NAME) }
+                    .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
+                    .map { it.token.value }
+            }
+            tokens = tokens + adminTokens
         }
 
         sendPushNotification(
