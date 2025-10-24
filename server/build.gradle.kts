@@ -26,7 +26,8 @@ fun readProperties(fileName: String, root: File = projectDir): Properties? {
 
 val credentialsProperties = readProperties("credentials.properties", rootDir)
 fun getCredential(key: String): String? {
-    return System.getenv(key) ?: credentialsProperties?.getProperty(key)
+    val gradleProperty = providers.gradleProperty(key)
+    return System.getenv(key) ?: gradleProperty.orNull ?: credentialsProperties?.getProperty(key)
 }
 
 group = "org.centrexcursionistalcoi.app"
@@ -130,5 +131,7 @@ sentry {
 
     org = "centre-excursionista-alcoi"
     projectName = "server"
-    authToken = getCredential("SENTRY_AUTH_TOKEN")
+    authToken = getCredential("SENTRY_AUTH_TOKEN").also {
+        if (it == null) System.err.println("SENTRY_AUTH_TOKEN was not given, source code won't be uploaded to Sentry")
+    }
 }

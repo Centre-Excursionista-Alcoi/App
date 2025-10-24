@@ -37,7 +37,8 @@ val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
 val credentialsProperties = readProperties("credentials.properties", rootDir)
 fun getCredential(key: String): String? {
-    return System.getenv(key) ?: credentialsProperties?.getProperty(key)
+    val gradleProperty = providers.gradleProperty(key)
+    return System.getenv(key) ?: gradleProperty.orNull ?: credentialsProperties?.getProperty(key)
 }
 
 kotlin {

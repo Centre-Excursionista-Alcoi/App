@@ -41,13 +41,15 @@ RUN gradle clean build -i --stacktrace
 # Stage 2: Build Application
 FROM gradle:jdk21 AS build
 
+ARG SENTRY_AUTH_TOKEN
+
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
 COPY --chown=gradle:gradle . /home/gradle/src
 
 WORKDIR /home/gradle/src
 
 # Build the fat JAR, Gradle also supports shadow and boot JAR by default.
-RUN gradle buildFatJar --no-daemon
+RUN gradle buildFatJar -PSENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} --no-daemon
 
 # Stage 3: Create the Runtime Image
 FROM amazoncorretto:21-alpine-jdk AS runtime
