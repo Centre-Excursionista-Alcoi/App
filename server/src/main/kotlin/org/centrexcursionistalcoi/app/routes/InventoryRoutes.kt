@@ -58,7 +58,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
-import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
@@ -365,6 +364,13 @@ fun Route.inventoryRoutes() {
         }
 
         Database { lending.delete() }
+
+        // Send push notification to the owner of the lending asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            Push.sendAdminPushNotification(
+                notification = PushNotification.LendingCancelled(lendingId.toKotlinUuid())
+            )
+        }
 
         call.respondText("Lending #$lendingId cancelled", status = HttpStatusCode.NoContent)
     }

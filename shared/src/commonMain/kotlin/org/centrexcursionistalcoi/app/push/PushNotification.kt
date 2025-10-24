@@ -25,6 +25,10 @@ sealed interface PushNotification {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingConfirmed push notification data")
                     LendingConfirmed(lendingId)
                 }
+                LendingCancelled.TYPE -> {
+                    lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingCancelled push notification data")
+                    LendingCancelled(lendingId)
+                }
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
         }
@@ -35,41 +39,53 @@ sealed interface PushNotification {
     fun toMap(): Map<String, String>
 
     @Serializable
-    class NewLendingRequest(
+    sealed interface LendingUpdated : PushNotification {
         val lendingId: Uuid
-    ) : PushNotification {
+
+        override fun toMap(): Map<String, String> = mapOf("lendingId" to lendingId.toString())
+    }
+
+    @Serializable
+    class NewLendingRequest(
+        override val lendingId: Uuid,
+    ) : LendingUpdated {
         companion object {
             const val TYPE = "NewLendingRequest"
         }
 
         override val type: String = TYPE
-
-        override fun toMap(): Map<String, String> = mapOf("lendingId" to lendingId.toString())
     }
 
     @Serializable
     class NewMemoryUpload(
-        val lendingId: Uuid
-    ) : PushNotification {
+        override val lendingId: Uuid
+    ) : LendingUpdated {
         companion object {
             const val TYPE = "NewMemoryUpload"
         }
 
         override val type: String = TYPE
+    }
 
-        override fun toMap(): Map<String, String> = mapOf("lendingId" to lendingId.toString())
+    @Serializable
+    class LendingCancelled(
+        override val lendingId: Uuid
+    ) : LendingUpdated {
+        companion object {
+            const val TYPE = "LendingCancelled"
+        }
+
+        override val type: String = TYPE
     }
 
     @Serializable
     class LendingConfirmed(
-        val lendingId: Uuid
-    ) : PushNotification {
+        override val lendingId: Uuid
+    ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingConfirmed"
         }
 
         override val type: String = TYPE
-
-        override fun toMap(): Map<String, String> = mapOf("lendingId" to lendingId.toString())
     }
 }

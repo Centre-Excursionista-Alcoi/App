@@ -44,12 +44,15 @@ object PushNotifierListener : NotifierManager.Listener {
 
         try {
             val notification = PushNotification.fromData(data.mapValues { it.toString() })
+            if (notification is PushNotification.LendingUpdated) {
+                Napier.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
+                BackgroundJobCoordinator.schedule<SyncLendingBackgroundJob>(
+                    input = mapOf(SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString()),
+                )
+            }
+
             when (notification) {
                 is PushNotification.LendingConfirmed -> {
-                    BackgroundJobCoordinator.schedule<SyncLendingBackgroundJob>(
-                        input = mapOf(SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString()),
-                    )
-
                     showNotification(
                         Res.string.notification_lending_confirmed_title,
                         Res.string.notification_lending_confirmed_message,
@@ -57,19 +60,6 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
 
-                // --- Admin notifications ---
-                is PushNotification.NewLendingRequest -> {
-                    // TODO: Show notification
-                    BackgroundJobCoordinator.schedule<SyncLendingBackgroundJob>(
-                        input = mapOf(SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString()),
-                    )
-                }
-                is PushNotification.NewMemoryUpload -> {
-                    // TODO: Show notification
-                    BackgroundJobCoordinator.schedule<SyncLendingBackgroundJob>(
-                        input = mapOf(SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString()),
-                    )
-                }
                 else -> {
                     Napier.w { "Received an unhandled notification: ${notification.type}" }
                 }
