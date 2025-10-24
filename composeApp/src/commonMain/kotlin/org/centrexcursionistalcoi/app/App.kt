@@ -29,6 +29,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
+import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
@@ -97,6 +98,17 @@ fun App(
                 },
             )
         }
+        composable<Destination.Logout> {
+            LogoutScreen(
+                afterLogout = {
+                    navController.navigate(Destination.Loading) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
         composable<Destination.Home> {
             HomeScreen(
                 onManageLendingsRequested = {
@@ -107,6 +119,13 @@ fun App(
                 },
                 onShoppingListConfirmed = {
                     navController.navigate(Destination.LendingCreation(it))
+                },
+                onLogoutRequested = {
+                    navController.navigate(Destination.Logout) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
+                    }
                 },
             )
         }

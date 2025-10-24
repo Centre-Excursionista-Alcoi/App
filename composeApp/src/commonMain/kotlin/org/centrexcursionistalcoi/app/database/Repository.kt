@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.data.Entity
@@ -25,4 +26,13 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
     suspend fun delete(id: IdType)
 
     suspend fun deleteByIdList(ids: List<IdType>)
+
+    /**
+     * Deletes all entries in the repository.
+     */
+    suspend fun deleteAll() {
+        val entities = selectAll()
+        Napier.d { "Deleting all ${entities.size} items..." }
+        deleteByIdList(entities.map { it.id })
+    }
 }

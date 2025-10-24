@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
@@ -23,6 +24,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -63,6 +65,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.dialog.ShoppingListDialog
 import org.centrexcursionistalcoi.app.ui.page.home.HomeMainPage
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
@@ -77,6 +80,7 @@ fun HomeScreen(
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
+    onLogoutRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
 ) {
     val profile by model.profile.collectAsState()
@@ -92,6 +96,7 @@ fun HomeScreen(
     profile?.let {
         HomeScreenContent(
             profile = it,
+            onLogoutRequested = onLogoutRequested,
             departments = departments,
             onCreateDepartment = model::createDepartment,
             onDeleteDepartment = model::delete,
@@ -141,6 +146,7 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 @OptIn(ExperimentalMaterial3Api::class)
 private fun HomeScreenContent(
     profile: ProfileResponse,
+    onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
     onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
@@ -195,14 +201,33 @@ private fun HomeScreenContent(
         ) { displayingShoppingList = false }
     }
 
+    var showingLogoutDialog by remember { mutableStateOf(false) }
+    if (showingLogoutDialog) {
+        LogoutConfirmationDialog(
+            onLogoutRequested = {
+                showingLogoutDialog = false
+                onLogoutRequested()
+            },
+            onDismissRequested = { showingLogoutDialog = false },
+        )
+    }
+
     Scaffold(
         topBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 TopAppBar(
                     title = { Text(stringResource(Res.string.app_name)) },
                     actions = {
+                        val showLogoutButton = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }
+                        }
+                        if (showLogoutButton) {
+                            IconButton(
+                                onClick = { showingLogoutDialog = true }
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Logout, stringResource(Res.string.logout))
+                            }
                         }
                     }
                 )

@@ -54,6 +54,10 @@
     <string name="qrcode">QR Code</string>
     <string name="unknown">Unknown</string>
     <string name="share">Share</string>
+    <string name="logout">Logout</string>
+
+    <string name="logout_confirmation_title">Confirm Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to logout?</string>
 
     <string name="copied_to_clipboard">Copied to clipboard</string>
 

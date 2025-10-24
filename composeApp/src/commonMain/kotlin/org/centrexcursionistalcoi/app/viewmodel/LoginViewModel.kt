@@ -3,16 +3,13 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.AuthFlowLogic
-import org.centrexcursionistalcoi.app.network.getHttpClient
 
 class LoginViewModel: ViewModel() {
     private val _isLoggingIn = MutableStateFlow(false)
@@ -45,28 +42,17 @@ class LoginViewModel: ViewModel() {
         _registerError.value = null
     }
 
-    fun register(username: String, name: String, email: String, password: String) = viewModelScope.async {
+    fun register(username: String, name: String, email: String, password: String): Deferred<Boolean> = viewModelScope.async {
         try {
             _isRegistering.emit(true)
             _registerError.emit(null)
 
-            val response = getHttpClient().submitForm(
-                url = "/register",
-                formParameters = parameters {
-                    append("username", username)
-                    append("name", name)
-                    append("email", email)
-                    append("password", password)
-                }
-            )
-            if (response.status.isSuccess()) {
-                Napier.d { "Registration successful." }
-                true
-            } else {
-                val body = response.bodyAsText()
-                Napier.d { "Registration failed (${response.status}): $body" }
-                _registerError.value = "Registration failed (${response.status}): $body"
+            val exception = AuthBackend.register(username, name, email, password)
+            if (exception != null) {
+                _registerError.emit(exception.message ?: "Unknown error")
                 false
+            } else {
+                true
             }
         } finally {
             _isRegistering.emit(false)

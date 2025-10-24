@@ -124,4 +124,21 @@ object OPFS {
         }
         return false
     }
+
+    suspend fun deleteAllInDirectory(
+        root: FileSystemDirectoryHandle,
+        name: String,
+    ): Int {
+        val dirHandle: FileSystemDirectoryHandle = root.getDirectoryHandle(name, createFSFHGetOptions(false)).await()
+        val entries = dirHandle.keys()
+        var entry: AsyncIteratorEntry<JsString> = entries.next().await()
+        var deletedFiles = 0
+        while (!entry.done) {
+            Napier.d("Removing entry (done=${entry.done}): ${entry.value}")
+            dirHandle.removeEntry(entry.value.toString(), createFSFHRemoveOptions(true)).await<JsAny>()
+            deletedFiles++
+            entry = entries.next().await()
+        }
+        return deletedFiles
+    }
 }

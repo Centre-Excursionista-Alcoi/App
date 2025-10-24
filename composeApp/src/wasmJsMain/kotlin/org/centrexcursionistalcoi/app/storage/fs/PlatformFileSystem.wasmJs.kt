@@ -4,6 +4,9 @@ import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.await
+import org.centrexcursionistalcoi.app.data.DOCUMENTS_PATH
+import org.centrexcursionistalcoi.app.data.FILES_PATH
+import org.centrexcursionistalcoi.app.data.IMAGES_PATH
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 
 @OptIn(ExperimentalWasmJsInterop::class, ExperimentalUnsignedTypes::class)
@@ -39,5 +42,13 @@ actual object PlatformFileSystem {
     actual suspend fun exists(path: String, progress: (ProgressNotifier)?): Boolean {
         val dir = getDirectoryHandle(path)
         return OPFS.exists(dir, path.split('/').last())
+    }
+
+    actual suspend fun deleteAll(): Int {
+        val root = OPFS.root()
+        var deletedFiles = OPFS.deleteAllInDirectory(root, IMAGES_PATH)
+        deletedFiles += OPFS.deleteAllInDirectory(root, DOCUMENTS_PATH)
+        deletedFiles += OPFS.deleteAllInDirectory(root, FILES_PATH)
+        return deletedFiles
     }
 }

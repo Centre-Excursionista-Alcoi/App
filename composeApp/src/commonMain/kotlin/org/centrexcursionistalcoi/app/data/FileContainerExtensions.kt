@@ -22,6 +22,9 @@ import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
+const val DOCUMENTS_PATH = "documents"
+const val IMAGES_PATH = "images"
+const val FILES_PATH = "files"
 
 /**
  * Returns the file path for the document file associated with this DocumentFileContainer.
@@ -29,7 +32,7 @@ private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemP
  */
 fun DocumentFileContainer.documentFilePath(): String {
     val clName = this::class.simpleName ?: "generic"
-    return joinPaths("document", clName, documentFile?.toString() ?: error("No document file for container"))
+    return joinPaths(DOCUMENTS_PATH, clName, documentFile?.toString() ?: error("No document file for container"))
 }
 
 /**
@@ -49,7 +52,7 @@ suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? =
 
 private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {
     val clName = this::class.simpleName ?: "generic"
-    return joinPaths("image", clName, uuid.toString())
+    return joinPaths(IMAGES_PATH, clName, uuid.toString())
 }
 
 suspend fun ImageFileContainer.writeImageFile(uuid: Uuid, channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
@@ -73,7 +76,7 @@ fun FileContainer.filePaths(): Map<Uuid, String> {
     val clName = this::class.simpleName ?: "generic"
     return files.filter { it.value != null }.map { (_, uuid) ->
         uuid!!
-        uuid to joinPaths("files", clName, uuid.toString())
+        uuid to joinPaths(FILES_PATH, clName, uuid.toString())
     }.toMap()
 }
 
@@ -85,7 +88,7 @@ fun FileContainer.filePath(uuid: Uuid): String {
     require(files.values.contains(uuid)) { "UUID must be in the container." }
 
     val clName = this::class.simpleName ?: "generic"
-    return joinPaths("files", clName, uuid.toString())
+    return joinPaths(FILES_PATH, clName, uuid.toString())
 }
 
 /**
@@ -115,7 +118,7 @@ fun SubReferencedFileContainer.filePath(uuid: Uuid): String {
     val ref = referencedFiles.find { it.second == uuid }
     require(ref != null) { "UUID must be in the container." }
 
-    return joinPaths("files", ref.third, uuid.toString())
+    return joinPaths(FILES_PATH, ref.third, uuid.toString())
 }
 
 /**

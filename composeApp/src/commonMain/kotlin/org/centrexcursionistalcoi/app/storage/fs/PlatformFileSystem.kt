@@ -9,4 +9,9 @@ expect object PlatformFileSystem {
     suspend fun read(path: String, progress: (ProgressNotifier)? = null): ByteArray
 
     suspend fun exists(path: String, progress: (ProgressNotifier)? = null): Boolean
+
+    /**
+     * Deletes all files from the FS.
+     */
+    suspend fun deleteAll(): Int
 }
