@@ -6,7 +6,10 @@ import cea_app.composeapp.generated.resources.*
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.HttpRequestBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.jetbrains.compose.resources.stringResource
 
 sealed class Progress {
@@ -84,10 +87,12 @@ sealed class Progress {
     companion object {
         fun HttpRequestBuilder.monitorUploadProgress(notifier: ProgressNotifier, name: String? = null) {
             // Set initial progress value
-            notifier(
-                if (name != null) NamedUpload(name, 0, null)
-                else Upload(0, null)
-            )
+            CoroutineScope(defaultAsyncDispatcher).launch {
+                notifier(
+                    if (name != null) NamedUpload(name, 0, null)
+                    else Upload(0, null)
+                )
+            }
             // Monitor progress updates
             onUpload { current, total ->
                 notifier(
@@ -99,10 +104,12 @@ sealed class Progress {
 
         fun HttpRequestBuilder.monitorDownloadProgress(notifier: ProgressNotifier, name: String? = null) {
             // Set initial progress value
-            notifier(
-                if (name != null) NamedDownload(name, 0, null)
-                else Download(0, null)
-            )
+            CoroutineScope(defaultAsyncDispatcher).launch {
+                notifier(
+                    if (name != null) NamedDownload(name, 0, null)
+                    else Download(0, null)
+                )
+            }
             // Monitor progress updates
             onDownload { current, total ->
                 notifier(

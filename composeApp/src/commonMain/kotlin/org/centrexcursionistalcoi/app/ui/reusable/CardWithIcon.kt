@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,7 @@ fun CardWithIcon(
     modifier: Modifier = Modifier,
     contentDescription: String? = title,
     colors: CardColors = CardDefaults.outlinedCardColors(),
+    actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     OutlinedCard(
         modifier = modifier,
@@ -50,6 +52,11 @@ fun CardWithIcon(
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.bodyMedium,
                 )
+            }
+        }
+        actions?.let { block ->
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)) {
+                block()
             }
         }
     }

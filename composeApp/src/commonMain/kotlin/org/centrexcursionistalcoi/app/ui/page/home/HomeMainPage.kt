@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,9 +24,13 @@ import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
@@ -68,14 +74,20 @@ import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import tech.kotlinlang.permission.HelperHolder
+import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeMainPage(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
+    notificationPermissionResult: NotificationPermissionResult?,
+    onNotificationPermissionRequest: () -> Unit,
+    onNotificationPermissionDenyRequest: () -> Unit,
     profile: ProfileResponse,
     inventoryItems: List<ReferencedInventoryItem>?,
     lendings: List<ReferencedLending>?,
@@ -88,6 +100,7 @@ fun HomeMainPage(
     onCancelLendingRequest: (ReferencedLending) -> Job,
 ) {
     val scrollState = rememberLazyGridState()
+    val permissionHelper = HelperHolder.getPermissionHelperInstance()
 
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
@@ -114,6 +127,12 @@ fun HomeMainPage(
             scrollState.animateScrollToItem(0)
         }
     }
+    LaunchedEffect(notificationPermissionResult) {
+        if (notificationPermissionResult != NotificationPermissionResult.Granted) {
+            // Scroll to top when permission is required
+            scrollState.animateScrollToItem(0)
+        }
+    }
 
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -133,6 +152,46 @@ fun HomeMainPage(
             }
         }
 
+        if (notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
+            item("notification_permission", contentType = "permission") {
+                CardWithIcon(
+                    title = stringResource(Res.string.permission_notification_title),
+                    message = stringResource(Res.string.permission_notification_message),
+                    icon = Icons.Default.Notifications,
+                    contentDescription = stringResource(Res.string.permission_notification_title),
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f).padding(end = 4.dp),
+                        onClick = onNotificationPermissionDenyRequest,
+                    ) {
+                        Icon(Icons.Default.Close, stringResource(Res.string.permission_deny))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(Res.string.permission_deny))
+                    }
+                    if (notificationPermissionResult == NotificationPermissionResult.NotAllowed) {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            onClick = { permissionHelper.openSettings() },
+                        ) {
+                            Icon(Icons.Default.Settings, stringResource(Res.string.permission_settings))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(Res.string.permission_settings))
+                        }
+                    } else {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            onClick = onNotificationPermissionRequest,
+                        ) {
+                            Icon(Icons.Default.Security, stringResource(Res.string.permission_grant))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(Res.string.permission_grant))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+        }
+
         val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
         if (!activeLendings.isNullOrEmpty()) {
             stickyHeader("active_lendings_header") {
@@ -143,7 +202,7 @@ fun HomeMainPage(
                 )
             }
             items(activeLendings, key = { it.id }, contentType = { "active-lending" }) { lending ->
-                LendingItem(lending, snackbarHostState)
+                LendingItem(lending, snackbarHostState, onCancelLendingRequest = { onCancelLendingRequest(lending) })
             }
         }
 
@@ -453,14 +512,18 @@ fun OldLendingItem(lending: ReferencedLending) {
 }
 
 @Composable
-fun LendingItem(lending: ReferencedLending, snackbarHostState: SnackbarHostState) {
+fun LendingItem(
+    lending: ReferencedLending,
+    snackbarHostState: SnackbarHostState,
+    onCancelLendingRequest: () -> Job,
+) {
     val scope = rememberCoroutineScope()
 
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         LendingDetailsDialog(
             lending = lending,
-            onCancelRequest = {},
+            onCancelRequest = { onCancelLendingRequest().invokeOnCompletion { showingDialog = false } },
             memoryUploadProgress = null,
             onMemorySubmitted = null,
             onDismissRequest = { showingDialog = false },

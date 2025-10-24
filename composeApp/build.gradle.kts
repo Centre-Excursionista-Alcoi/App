@@ -154,6 +154,12 @@ kotlin {
                 implementation(libs.androidx.browser)
 
                 implementation(libs.sqldelight.android)
+
+                // WorkManager
+                implementation(libs.bundles.androidx.work)
+
+                // Reflection support
+                implementation(kotlin("reflect"))
             }
         }
 

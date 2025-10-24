@@ -23,6 +23,15 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     suspend fun update(items: List<T>)
 
+    suspend fun insertOrUpdate(item: T) {
+        val existingItem = get(item.id)
+        if (existingItem == null) {
+            insert(item)
+        } else {
+            update(item)
+        }
+    }
+
     suspend fun delete(id: IdType)
 
     suspend fun deleteByIdList(ids: List<IdType>)

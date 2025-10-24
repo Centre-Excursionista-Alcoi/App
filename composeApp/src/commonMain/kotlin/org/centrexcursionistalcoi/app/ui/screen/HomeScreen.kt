@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
@@ -76,6 +77,7 @@ import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
+import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeScreen(
@@ -94,9 +96,18 @@ fun HomeScreen(
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
     val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
+    val notificationPermissionResult by model.notificationPermissionResult.collectAsState()
+
+    LifecycleResumeEffect(model) {
+        model.refreshPermissions()
+        onPauseOrDispose { /* nothing */ }
+    }
 
     profile?.let {
         HomeScreenContent(
+            notificationPermissionResult = notificationPermissionResult,
+            onNotificationPermissionRequest = model::requestNotificationsPermission,
+            onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
@@ -147,6 +158,10 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun HomeScreenContent(
+    notificationPermissionResult: NotificationPermissionResult?,
+    onNotificationPermissionRequest: () -> Unit,
+    onNotificationPermissionDenyRequest: () -> Unit,
+
     profile: ProfileResponse,
     onLogoutRequested: () -> Unit,
 
@@ -331,6 +346,9 @@ private fun HomeScreenContent(
                     HomeScreenPagerContent(
                         page,
                         snackbarHostState,
+                        notificationPermissionResult,
+                        onNotificationPermissionRequest,
+                        onNotificationPermissionDenyRequest,
                         profile,
                         windowSizeClass,
                         departments,
@@ -370,6 +388,9 @@ private fun HomeScreenContent(
                         HomeScreenPagerContent(
                             page,
                             snackbarHostState,
+                            notificationPermissionResult,
+                            onNotificationPermissionRequest,
+                            onNotificationPermissionDenyRequest,
                             profile,
                             windowSizeClass,
                             departments,
@@ -407,6 +428,9 @@ private fun HomeScreenContent(
 fun HomeScreenPagerContent(
     page: Int,
     snackbarHostState: SnackbarHostState,
+    notificationPermissionResult: NotificationPermissionResult?,
+    onNotificationPermissionRequest: () -> Unit,
+    onNotificationPermissionDenyRequest: () -> Unit,
     profile: ProfileResponse,
     windowSizeClass: WindowSizeClass,
 
@@ -446,6 +470,9 @@ fun HomeScreenPagerContent(
             IDX_HOME -> HomeMainPage(
                 windowSizeClass,
                 snackbarHostState,
+                notificationPermissionResult,
+                onNotificationPermissionRequest,
+                onNotificationPermissionDenyRequest,
                 profile,
                 inventoryItems,
                 lendings,

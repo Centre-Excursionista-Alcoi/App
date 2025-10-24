@@ -23,25 +23,37 @@ object FCMTokenManager {
      */
     suspend fun renovate(newToken: String) {
         val oldToken = settings.getStringOrNull("fcm_token")
-        if (oldToken != null) {
-            if (oldToken == newToken) {
-                Napier.d { "Won't renovate token, already registered: $oldToken" }
-                return
-            }
-            try {
-                FCMTokenRemote.revokeToken(oldToken)
-                settings.remove("fcm_token")
-            } catch (e: ServerException) {
-                Napier.e(e) { "Could not revoke old FCM token. New token won't be registered." }
-                return
-            }
+        if (oldToken == newToken) {
+            Napier.d { "Won't renovate token, already registered: $oldToken" }
+            return
         }
+        revoke()
 
         try {
             FCMTokenRemote.registerNewToken(newToken)
             settings.putString("fcm_token", newToken)
         } catch (e: ServerException) {
             Napier.e(e) { "Could not register FCM token." }
+        }
+    }
+
+    suspend fun revoke(): Boolean {
+        val oldToken = settings.getStringOrNull("fcm_token")
+        return if (oldToken != null) {
+            return revoke(oldToken)
+        } else {
+            true
+        }
+    }
+
+    suspend fun revoke(token: String): Boolean {
+        return try {
+            FCMTokenRemote.revokeToken(token)
+            settings.remove("fcm_token")
+            true
+        } catch (e: ServerException) {
+            Napier.e(e) { "Could not revoke FCM token." }
+            false
         }
     }
 }

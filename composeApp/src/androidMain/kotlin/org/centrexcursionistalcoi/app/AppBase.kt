@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.storage.DriverFactory
 import org.centrexcursionistalcoi.app.storage.createDatabase
 import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 
 class AppBase: Application() {
     override fun onCreate() {
@@ -20,6 +21,8 @@ class AppBase: Application() {
         initializeSentry()
 
         databaseInstance = runBlocking { createDatabase(DriverFactory(this@AppBase)) }
+
+        BackgroundJobCoordinator.initialize(applicationContext)
 
         NotifierManager.initialize(
             configuration = NotificationPlatformConfiguration.Android(

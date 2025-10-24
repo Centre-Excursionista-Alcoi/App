@@ -1,3 +1,3 @@
 package org.centrexcursionistalcoi.app.process
 
-typealias ProgressNotifier = (Progress) -> Unit
+typealias ProgressNotifier = suspend (Progress) -> Unit

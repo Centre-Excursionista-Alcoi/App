@@ -31,6 +31,10 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.storage.settings
+import tech.kotlinlang.permission.HelperHolder
+import tech.kotlinlang.permission.Permission
+import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 class HomeViewModel: ViewModel() {
     private val _isSyncing = MutableStateFlow(false)
@@ -58,6 +62,25 @@ class HomeViewModel: ViewModel() {
 
     private val _memoryUploadProgress = MutableStateFlow<Pair<Long, Long>?>(null)
     val memoryUploadProgress = _memoryUploadProgress.asStateFlow()
+
+    private val permissionHelper = HelperHolder.getPermissionHelperInstance()
+    private val _notificationPermissionResult = MutableStateFlow<NotificationPermissionResult?>(null)
+    val notificationPermissionResult = _notificationPermissionResult.asStateFlow()
+
+    fun refreshPermissions() = launch {
+        val denied = settings.getBooleanOrNull("permission.notifications.denied") == true
+        if (denied) _notificationPermissionResult.value = null
+        else _notificationPermissionResult.value = permissionHelper.checkIsPermissionGranted(Permission.Notification)
+    }
+
+    fun requestNotificationsPermission() = launch {
+        _notificationPermissionResult.value = permissionHelper.requestForPermission(Permission.Notification)
+    }
+
+    fun denyNotificationsPermission() = launch {
+        settings.putBoolean("permission.notifications.denied", true)
+        _notificationPermissionResult.value = null
+    }
 
     fun createDepartment(displayName: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
