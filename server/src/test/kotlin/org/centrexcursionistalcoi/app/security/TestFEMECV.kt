@@ -52,7 +52,7 @@ class TestFEMECV {
 
             val licenses = FEMECV.getLicenses("mail@example.com", "password123")
             assertEquals(1, licenses.size)
-            val license = licenses[0]
+            val (license) = licenses[0]
             assertEquals("ABC123456", license.code)
             assertEquals(123456, license.id)
             assertEquals("CENTRE EXCURSIONISTA D'ALCOI", license.club)
