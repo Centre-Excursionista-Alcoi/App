@@ -7,6 +7,7 @@ import io.github.aakira.napier.Napier
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
@@ -51,9 +52,16 @@ object PushNotifierListener : NotifierManager.Listener {
                 )
             }
 
+            val profile = ProfileRepository.getProfile()
+
             when (notification) {
                 is PushNotification.LendingConfirmed -> {
-                    // FIXME: only show if owner of the lending
+                    // Only show if the notification is for the current user
+                    if (profile?.sub != notification.userSub) {
+                        Napier.d { "Ignoring lending confirmed notification for another user: ${notification.userSub}" }
+                        return
+                    }
+
                     showNotification(
                         Res.string.notification_lending_confirmed_title,
                         Res.string.notification_lending_confirmed_message,
@@ -61,12 +69,51 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
                 is PushNotification.LendingCancelled -> {
-                    // FIXME: only show if owner of the lending
+                    // Only show if the notification is for the current user
+                    if (profile?.sub != notification.userSub) {
+                        Napier.d { "Ignoring lending cancelled notification for another user: ${notification.userSub}" }
+                        return
+                    }
+
                     showNotification(
                         Res.string.notification_lending_cancelled_title,
                         Res.string.notification_lending_cancelled_message,
-                        data.mapValues { it.toString() }
+                        data
                     )
+                }
+                is PushNotification.LendingTaken -> {
+                    if (profile?.sub != notification.userSub) {
+                        // The lending is for another user, the logged-in user is an admin
+                        showNotification(
+                            Res.string.notification_lending_given_title,
+                            Res.string.notification_lending_given_message,
+                            data
+                        )
+                    } else {
+                        // The lending is for the current user
+                        showNotification(
+                            Res.string.notification_lending_taken_title,
+                            Res.string.notification_lending_taken_message,
+                            data
+                        )
+                    }
+                }
+                is PushNotification.LendingReturned -> {
+                    if (profile?.sub != notification.userSub) {
+                        // The lending is for another user, the logged-in user is an admin
+                        showNotification(
+                            Res.string.notification_lending_returned_other_title,
+                            Res.string.notification_lending_returned_other_message,
+                            data
+                        )
+                    } else {
+                        // The lending is for the current user
+                        showNotification(
+                            Res.string.notification_lending_returned_title,
+                            Res.string.notification_lending_returned_message,
+                            data
+                        )
+                    }
                 }
 
                 // --- Admin notifications --
@@ -74,7 +121,7 @@ object PushNotifierListener : NotifierManager.Listener {
                     showNotification(
                         Res.string.notification_lending_created_title,
                         Res.string.notification_lending_created_message,
-                        data.mapValues { it.toString() }
+                        data
                     )
                 }
 

@@ -236,5 +236,13 @@
     <string name="notification_lending_cancelled_message">Your lending has been cancelled.</string>
     <string name="notification_lending_created_title">Lending Request</string>
     <string name="notification_lending_created_message">A new lending request has been created. Please review and confirm it.</string>
+    <string name="notification_lending_taken_title">Lending Taken</string>
+    <string name="notification_lending_taken_message">You have been given the items of your request.</string>
+    <string name="notification_lending_given_title">Lending Given</string>
+    <string name="notification_lending_given_message">A user was given all the items for a lending.</string>
+    <string name="notification_lending_returned_title">Lending Returned</string>
+    <string name="notification_lending_returned_message">You have returned the items of your lending. Please, remember to upload the memory of the activity.</string>
+    <string name="notification_lending_returned_other_title">Lending Returned</string>
+    <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
 
 </resources>
