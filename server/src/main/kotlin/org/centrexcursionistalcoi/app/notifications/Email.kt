@@ -61,7 +61,7 @@ object Email {
         }
         if (!response.status.isSuccess()) {
             if (response.status == HttpStatusCode.UnprocessableEntity) {
-                throw IllegalArgumentException("Email could not be sent")
+                throw IllegalArgumentException("Email could not be sent (UnprocessableEntity): ${response.bodyAsText()}")
             } else {
                 throw IllegalStateException("Failed to send email (${response.status}): ${response.bodyAsText()}")
             }
