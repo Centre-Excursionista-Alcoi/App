@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
@@ -217,23 +219,33 @@ private fun LendingCreationScreen(
                         headlineContent = { Text("${type?.displayName ?: unknown()} ($amount)") },
                         supportingContent = {
                             val items = allocatedItems?.filter { it.type.id == typeId }
-                            Text(
-                                text = when {
-                                    error != null -> {
-                                        val availableAmount = error.availableItems?.size ?: 0
-                                        if (availableAmount > 0) {
-                                            stringResource(Res.string.lending_creation_error_allocation_insufficient, availableAmount)
-                                        } else {
-                                            stringResource(Res.string.lending_creation_error_allocation_none)
+                            Column {
+                                Text(
+                                    text = when {
+                                        error != null -> {
+                                            val availableAmount = error.availableItems?.size ?: 0
+                                            if (availableAmount > 0) {
+                                                stringResource(Res.string.lending_creation_error_allocation_insufficient, availableAmount)
+                                            } else {
+                                                stringResource(Res.string.lending_creation_error_allocation_none)
+                                            }
                                         }
-                                    }
 
-                                    from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)
-                                    allocatedItems == null -> stringResource(Res.string.lending_creation_allocating)
-                                    items.isNullOrEmpty() -> stringResource(Res.string.lending_creation_no_items_allocated)
-                                    else -> stringResource(Res.string.lending_creation_items_allocated) + "\n- ${items.joinToString("\n- ") { it.id.toString() }}"
+                                        from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)
+                                        allocatedItems == null -> stringResource(Res.string.lending_creation_allocating)
+                                        items.isNullOrEmpty() -> stringResource(Res.string.lending_creation_no_items_allocated)
+                                        else -> stringResource(Res.string.lending_creation_items_allocated)
+                                    }
+                                )
+                                if (error != null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()) {
+                                    for (item in items) {
+                                        Text(
+                                            text = "- ${item.id}",
+                                            fontFamily = FontFamily.Monospace,
+                                        )
+                                    }
                                 }
-                            )
+                            }
                         },
                         trailingContent = {
                             val availableAmount = inventoryItems.count { it.type.id == typeId }
