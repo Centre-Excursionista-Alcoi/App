@@ -232,5 +232,9 @@
 
     <string name="notification_lending_confirmed_title">Lending Confirmed</string>
     <string name="notification_lending_confirmed_message">An administrator has confirmed your lending request.</string>
+    <string name="notification_lending_cancelled_title">Lending Cancelled</string>
+    <string name="notification_lending_cancelled_message">Your lending has been cancelled.</string>
+    <string name="notification_lending_created_title">Lending Request</string>
+    <string name="notification_lending_created_message">A new lending request has been created. Please review and confirm it.</string>
 
 </resources>

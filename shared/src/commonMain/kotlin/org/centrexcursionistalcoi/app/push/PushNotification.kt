@@ -7,11 +7,11 @@ import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 @Serializable
 sealed interface PushNotification {
     companion object {
-        fun fromData(data: Map<String, String>): PushNotification {
+        fun fromData(data: Map<String, *>): PushNotification {
             val type = data["type"] ?: throw IllegalArgumentException("Missing type field in push notification data")
 
-            val lendingId = data["lendingId"]?.toUuidOrNull()
-            val userSub = data["userSub"]
+            val lendingId = (data["lendingId"] as? String?)?.toUuidOrNull()
+            val userSub = data["userSub"] as? String?
 
             return when (type) {
                 NewLendingRequest.TYPE -> {

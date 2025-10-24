@@ -15,7 +15,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
 object PushNotifierListener : NotifierManager.Listener {
-    private fun showNotification(notificationTitleRes: StringResource, notificationBodyResource: StringResource, data: Map<String, String>) {
+    private fun showNotification(notificationTitleRes: StringResource, notificationBodyResource: StringResource, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
             val notifier = NotifierManager.getLocalNotifier()
 
@@ -26,7 +26,7 @@ object PushNotifierListener : NotifierManager.Listener {
                 id = Random.nextInt()
                 title = notificationTitle
                 body = notificationBody
-                payloadData = data
+                // TODO - payloadData = data
             }
         }
     }
@@ -43,7 +43,7 @@ object PushNotifierListener : NotifierManager.Listener {
         Napier.d { "Received push notification: $data" }
 
         try {
-            val notification = PushNotification.fromData(data.mapValues { it.toString() })
+            val notification = PushNotification.fromData(data)
             if (notification is PushNotification.LendingUpdated) {
                 Napier.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
                 BackgroundJobCoordinator.schedule<SyncLendingBackgroundJob>(
@@ -53,9 +53,27 @@ object PushNotifierListener : NotifierManager.Listener {
 
             when (notification) {
                 is PushNotification.LendingConfirmed -> {
+                    // FIXME: only show if owner of the lending
                     showNotification(
                         Res.string.notification_lending_confirmed_title,
                         Res.string.notification_lending_confirmed_message,
+                        data
+                    )
+                }
+                is PushNotification.LendingCancelled -> {
+                    // FIXME: only show if owner of the lending
+                    showNotification(
+                        Res.string.notification_lending_cancelled_title,
+                        Res.string.notification_lending_cancelled_message,
+                        data.mapValues { it.toString() }
+                    )
+                }
+
+                // --- Admin notifications --
+                is PushNotification.NewLendingRequest -> {
+                    showNotification(
+                        Res.string.notification_lending_created_title,
+                        Res.string.notification_lending_created_message,
                         data.mapValues { it.toString() }
                     )
                 }
