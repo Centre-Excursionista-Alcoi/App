@@ -16,7 +16,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,7 +43,6 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
@@ -285,8 +283,7 @@ fun Route.inventoryRoutes() {
             )
         }
         CoroutineScope(Dispatchers.IO).launch {
-            val notification = PushNotification.NewLendingRequest(lendingEntity.id.value.toKotlinUuid())
-            Push.sendAdminPushNotification(notification)
+            Push.sendAdminPushNotification(lendingEntity.newNotification())
         }
 
         call.response.header(
@@ -367,8 +364,9 @@ fun Route.inventoryRoutes() {
 
         // Send push notification to the owner of the lending asynchronously
         CoroutineScope(Dispatchers.IO).launch {
-            Push.sendAdminPushNotification(
-                notification = PushNotification.LendingCancelled(lendingId.toKotlinUuid())
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.cancelledNotification()
             )
         }
 
@@ -393,11 +391,11 @@ fun Route.inventoryRoutes() {
             lending.confirmed = true
         }
 
-        // Send push notification to the owner of the lending asynchronously
+        // Send Push Notification asynchronously
         CoroutineScope(Dispatchers.IO).launch {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = PushNotification.LendingConfirmed(lendingId.toKotlinUuid())
+                notification = lending.confirmedNotification()
             )
         }
 
@@ -435,6 +433,14 @@ fun Route.inventoryRoutes() {
             lending.givenAt = Instant.now()
         }
 
+        // Send Push Notification asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.takenNotification()
+            )
+        }
+
         call.respondText("Lending #$lendingId picked up", status = HttpStatusCode.OK)
     }
     post("inventory/lendings/{id}/return") {
@@ -467,6 +473,14 @@ fun Route.inventoryRoutes() {
             lending.returned = true
             lending.receivedBy = userReference.id
             lending.receivedAt = Instant.now()
+        }
+
+        // Send Push Notification asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.returnedNotification()
+            )
         }
 
         call.respondText("Lending #$lendingId memory submitted", status = HttpStatusCode.Created)
@@ -555,8 +569,7 @@ fun Route.inventoryRoutes() {
             )
         }
         CoroutineScope(Dispatchers.IO).launch {
-            val notification = PushNotification.NewLendingRequest(lendingId.toKotlinUuid())
-            Push.sendAdminPushNotification(notification)
+            Push.sendAdminPushNotification(lending.memoryAddedNotification())
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)

@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import java.util.UUID
+import kotlin.uuid.toKotlinUuid
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -32,4 +35,49 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var notes by Lendings.notes
 
     val items by InventoryItemEntity via LendingItems
+
+    /**
+     * Create a new lending request push notification for this lending.
+     */
+    fun newNotification(): PushNotification.NewLendingRequest = Database {
+        PushNotification.NewLendingRequest(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun confirmedNotification(): PushNotification.LendingConfirmed = Database {
+        PushNotification.LendingConfirmed(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun cancelledNotification(): PushNotification.LendingCancelled = Database {
+        PushNotification.LendingCancelled(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun takenNotification(): PushNotification.LendingTaken = Database {
+        PushNotification.LendingTaken(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun returnedNotification(): PushNotification.LendingReturned = Database {
+        PushNotification.LendingReturned(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun memoryAddedNotification(): PushNotification.NewMemoryUpload = Database {
+        PushNotification.NewMemoryUpload(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
 }
