@@ -393,6 +393,14 @@ fun Route.inventoryRoutes() {
             lending.confirmed = true
         }
 
+        // Send push notification to the owner of the lending asynchronously
+        CoroutineScope(Dispatchers.IO).launch {
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = PushNotification.LendingConfirmed(lendingId.toKotlinUuid())
+            )
+        }
+
         call.respondText("Lending #$lendingId confirmed", status = HttpStatusCode.OK)
     }
     post("inventory/lendings/{id}/pickup") {

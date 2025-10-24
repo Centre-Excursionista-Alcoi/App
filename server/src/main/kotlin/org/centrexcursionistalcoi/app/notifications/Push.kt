@@ -41,6 +41,8 @@ object Push {
     private fun sendPushNotification(tokens: List<String>, data: Map<String, String>) {
         if (!pushConfigured) return
 
+        logger.debug("Sending push notification to ${tokens.size} devices with data: $data")
+
         val message = MulticastMessage.builder()
             .putAllData(data)
             .addAllTokens(tokens)
@@ -59,6 +61,8 @@ object Push {
     }
 
     fun sendAdminPushNotification(data: Map<String, String>) {
+        if (!pushConfigured) return
+
         val admins = try {
             Database {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
@@ -79,7 +83,25 @@ object Push {
     }
 
     fun sendAdminPushNotification(notification: PushNotification) {
+        if (!pushConfigured) return
+
         sendAdminPushNotification(
+            mapOf(
+                "type" to notification.type,
+                *notification.toMap().toList().toTypedArray()
+            )
+        )
+    }
+
+    fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification) {
+        if (!pushConfigured) return
+
+        val tokens = Database {
+            FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq reference.id }.map { it.token.value }
+        }
+
+        sendPushNotification(
+            tokens,
             mapOf(
                 "type" to notification.type,
                 *notification.toMap().toList().toTypedArray()
