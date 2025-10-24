@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,6 +87,8 @@ fun HomeMainPage(
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Job,
 ) {
+    val scrollState = rememberLazyGridState()
+
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
         InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
@@ -104,8 +108,16 @@ fun HomeMainPage(
         ) { if (memoryUploadProgress == null) showingLendingDetails = null }
     }
 
+    LaunchedEffect(lendings) {
+        if (!lendings.isNullOrEmpty()) {
+            // Scroll to top when lendings change
+            scrollState.animateScrollToItem(0)
+        }
+    }
+
     AdaptiveVerticalGrid(
         windowSizeClass,
+        state = scrollState,
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
