@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,7 +7,26 @@ plugins {
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.kover)
+    alias(libs.plugins.sentryJvm)
     application
+}
+
+fun readProperties(fileName: String, root: File = projectDir): Properties? {
+    val propsFile = File(root, fileName)
+    if (!propsFile.exists()) {
+        return null
+    }
+    if (!propsFile.canRead()) {
+        throw GradleException("Cannot read $fileName")
+    }
+    return Properties().apply {
+        propsFile.inputStream().use { load(it) }
+    }
+}
+
+val credentialsProperties = readProperties("credentials.properties", rootDir)
+fun getCredential(key: String): String? {
+    return System.getenv(key) ?: credentialsProperties?.getProperty(key)
 }
 
 group = "org.centrexcursionistalcoi.app"
@@ -100,4 +120,15 @@ tasks.register<JavaExec>("generateMigrationScript") {
 tasks.withType<ShadowJar> {
     // Make sure all drivers are included in the fat jar
     mergeServiceFiles()
+}
+
+sentry {
+    // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+    // This enables source context, allowing you to see your source
+    // code as part of your stack traces in Sentry.
+    includeSourceContext = true
+
+    org = "centre-excursionista-alcoi"
+    projectName = "server"
+    authToken = getCredential("SENTRY_AUTH_TOKEN")
 }

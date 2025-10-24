@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
@@ -14,6 +15,9 @@ import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("Application")
 
 var today: () -> LocalDate = { LocalDate.now() }
     @VisibleForTesting
@@ -24,6 +28,12 @@ var now: () -> Instant = { Instant.now() }
     set
 
 fun main() {
+    System.getenv("SENTRY_DSN")?.let { dsn ->
+        Sentry.init { options ->
+            options.dsn = dsn
+        }
+    } ?: logger.warn("SENTRY_DSN environment variable is not set. Sentry error tracking is disabled.")
+
     AES.init()
 
     Database.init(

@@ -18,4 +18,4 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 keystore.jks
 google-services.json
-composeApp/credentials.properties
+credentials.properties

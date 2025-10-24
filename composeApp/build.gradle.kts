@@ -17,8 +17,8 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
-fun readProperties(fileName: String): Properties? {
-    val propsFile = project.file(fileName)
+fun readProperties(fileName: String, root: File = projectDir): Properties? {
+    val propsFile = File(root, fileName)
     if (!propsFile.exists()) {
         return null
     }
@@ -35,7 +35,7 @@ val versionProperties = readProperties("version.properties")!!
 val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
-val credentialsProperties = readProperties("credentials.properties")
+val credentialsProperties = readProperties("credentials.properties", rootDir)
 fun getCredential(key: String): String? {
     return System.getenv(key) ?: credentialsProperties?.getProperty(key)
 }
