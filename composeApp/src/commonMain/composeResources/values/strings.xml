@@ -30,7 +30,7 @@
     <string name="home_lendings">Your Lendings</string>
     <string name="home_lending">Material Lending</string>
     <string name="home_past_lendings">Past Lendings</string>
-    <plurals name="home_past_lending_items">
+    <plurals name="home_lending_items">
         <item quantity="one">%1$d item: %2$s</item>
         <item quantity="other">%1$d items: %2$s</item>
     </plurals>
@@ -107,6 +107,15 @@
     <string name="lending_creation_error_allocation_insufficient">Only %1$d available.</string>
     <string name="lending_creation_error_allocation_none">None available.</string>
     <string name="lending_creation_error_allocation">There aren't enough "%1$s" for the selected dates.\nOnly %2$d available.\nYou have requested %3$d.</string>
+
+    <string name="lending_not_confirmed">Not Confirmed</string>
+    <string name="lending_pending_pickup">Pending Pickup</string>
+    <string name="lending_pending_return">Pending Return</string>
+    <string name="lending_pending_memory">Pending Memory</string>
+    <string name="lending_not_confirmed_message">An admin has to confirm your request before it's effective.</string>
+    <string name="lending_pending_pickup_message">Your request has been confirmed, an admin will get in touch with you to schedule the pickup.</string>
+    <string name="lending_pending_return_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
+    <string name="lending_pending_memory_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
 
     <string name="insurance_add_title">Add Insurance</string>
     <string name="insurance">

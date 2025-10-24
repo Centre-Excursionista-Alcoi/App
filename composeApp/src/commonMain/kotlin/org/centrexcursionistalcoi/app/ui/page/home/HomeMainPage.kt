@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -19,15 +17,20 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -36,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +53,7 @@ import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
@@ -57,14 +62,18 @@ import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
+import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
+import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeMainPage(
     windowSizeClass: WindowSizeClass,
+    snackbarHostState: SnackbarHostState,
     profile: ProfileResponse,
     inventoryItems: List<ReferencedInventoryItem>?,
     lendings: List<ReferencedLending>?,
@@ -112,67 +121,17 @@ fun HomeMainPage(
             }
         }
 
-        val pendingLendings = lendings?.filter { it.status() !in listOf(Lending.Status.RETURNED, Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-        if (!pendingLendings.isNullOrEmpty()) {
-            stickyHeader("pending_lendings_header") {
+        val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+        if (!activeLendings.isNullOrEmpty()) {
+            stickyHeader("active_lendings_header") {
                 Text(
                     text = stringResource(Res.string.home_lendings),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(pendingLendings, key = { it.id }, contentType = { "pending-lending" }) { lending ->
-                OutlinedCard(
-                    onClick = { showingLendingDetails = lending },
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
-                    Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
-                    Text("Items:", style = MaterialTheme.typography.titleMedium)
-                    val items = lending.items.groupBy { it.type }
-                    for ((type, items) in items) {
-                        Text(
-                            text = "- ${type.displayName} x${items.size}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    if (!lending.confirmed) {
-                        Text("Not confirmed")
-                    } else if (!lending.taken) {
-                        Text("Confirmed, not taken yet")
-                    } else if (!lending.returned) {
-                        Text("Not returned")
-                    } else {
-                        Text("Returned")
-                    }
-                }
-            }
-        }
-
-        val noMemoryLendings = lendings?.filter { it.status() == Lending.Status.RETURNED }
-        if (!noMemoryLendings.isNullOrEmpty()) {
-            stickyHeader("no_memory_lendings_header") {
-                Text(
-                    text = stringResource(Res.string.memory_pending),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
-            }
-            items(noMemoryLendings, key = { it.id }, contentType = { "no-memory-lending" }) { lending ->
-                OutlinedCard(
-                    onClick = { showingLendingDetails = lending },
-                    modifier = Modifier.padding(8.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    )
-                ) {
-                    Text("From: ${lending.from}", style = MaterialTheme.typography.titleMedium)
-                    Text("To: ${lending.to}", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Memory Pending")
-                }
+            items(activeLendings, key = { it.id }, contentType = { "active-lending" }) { lending ->
+                LendingItem(lending, snackbarHostState)
             }
         }
 
@@ -464,7 +423,7 @@ fun OldLendingItem(lending: ReferencedLending) {
         val groupedItems = lending.items.groupBy { it.type }
         Text(
             text = pluralStringResource(
-                Res.plurals.home_past_lending_items,
+                Res.plurals.lending_details_item_row,
                 lending.items.size,
                 lending.items.size,
                 groupedItems.map { (type, items) -> "${type.displayName} (${items.size})" }.joinToString()
@@ -478,5 +437,72 @@ fun OldLendingItem(lending: ReferencedLending) {
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+fun LendingItem(lending: ReferencedLending, snackbarHostState: SnackbarHostState) {
+    val scope = rememberCoroutineScope()
+
+    var showingDialog by remember { mutableStateOf(false) }
+    if (showingDialog) {
+        LendingDetailsDialog(
+            lending = lending,
+            onCancelRequest = {},
+            memoryUploadProgress = null,
+            onMemorySubmitted = null,
+            onDismissRequest = { showingDialog = false },
+        )
+    }
+
+    OutlinedCard(
+        onClick = { showingDialog = true },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+        ) {
+            Icon(Icons.Default.CalendarStartOutline, null)
+            Text(
+                text = lending.from.toString(),
+                modifier = Modifier.weight(1f).padding(start = 4.dp, end = 12.dp)
+            )
+            Icon(Icons.Default.CalendarEndOutline, null)
+            Text(
+                text = lending.to.toString(),
+                modifier = Modifier.weight(1f).padding(start = 4.dp)
+            )
+        }
+        val groupedItems = lending.items.groupBy { it.type }
+        Text(
+            text = pluralStringResource(
+                Res.plurals.home_lending_items,
+                lending.items.size,
+                lending.items.size,
+                "\n" + groupedItems.map { (type, items) -> "- ${type.displayName} x${items.size}" }.joinToString("\n")
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        )
+        val badge = when (lending.status()) {
+            Lending.Status.REQUESTED -> Triple(Res.string.lending_not_confirmed, Icons.Default.Pending, Res.string.lending_not_confirmed_message)
+            Lending.Status.CONFIRMED -> Triple(Res.string.lending_pending_pickup, Icons.Default.Inventory2, Res.string.lending_pending_pickup_message)
+            Lending.Status.TAKEN -> Triple(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn, Res.string.lending_pending_return_message)
+            Lending.Status.RETURNED -> Triple(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd, Res.string.lending_pending_memory_message)
+            else -> null
+        }
+        badge?.let { (labelRes, icon, message) ->
+            AssistChip(
+                onClick = {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(getString(message))
+                    }
+                },
+                label = { Text(stringResource(labelRes)) },
+                leadingIcon = { Icon(icon, stringResource(labelRes)) },
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        }
     }
 }

@@ -31,6 +31,8 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -188,6 +190,7 @@ private fun HomeScreenContent(
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
     val windowSizeClass = calculateWindowSizeClass()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var displayingShoppingList by remember { mutableStateOf(false) }
     if (displayingShoppingList) {
@@ -271,6 +274,7 @@ private fun HomeScreenContent(
                 }
             }
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Row(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
@@ -326,6 +330,7 @@ private fun HomeScreenContent(
                 ) { page ->
                     HomeScreenPagerContent(
                         page,
+                        snackbarHostState,
                         profile,
                         windowSizeClass,
                         departments,
@@ -364,6 +369,7 @@ private fun HomeScreenContent(
                     ) { page ->
                         HomeScreenPagerContent(
                             page,
+                            snackbarHostState,
                             profile,
                             windowSizeClass,
                             departments,
@@ -400,6 +406,7 @@ private fun HomeScreenContent(
 @Composable
 fun HomeScreenPagerContent(
     page: Int,
+    snackbarHostState: SnackbarHostState,
     profile: ProfileResponse,
     windowSizeClass: WindowSizeClass,
 
@@ -438,6 +445,7 @@ fun HomeScreenPagerContent(
         when (page) {
             IDX_HOME -> HomeMainPage(
                 windowSizeClass,
+                snackbarHostState,
                 profile,
                 inventoryItems,
                 lendings,
