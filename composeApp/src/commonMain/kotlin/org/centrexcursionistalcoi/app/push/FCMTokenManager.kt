@@ -1,40 +1,47 @@
 package org.centrexcursionistalcoi.app.push
 
+import com.mmk.kmpnotifier.notification.NotifierManager
 import io.github.aakira.napier.Napier
-import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
-import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.storage.settings
 
 object FCMTokenManager {
-    suspend fun registerNewToken(token: String): String? {
-        val client = getHttpClient()
-        val response = client.submitForm(
-            url = "/profile/fcmToken",
-            formParameters = parameters {
-                append("token", token)
-            }
-        )
-        val body = response.bodyAsText()
-        return if (response.status.isSuccess()) {
-            body
-        } else {
-            Napier.e { "Could not register new FCM token (${response.status}): $body" }
-            null
+    /**
+     * Renovate the FCM token if needed.
+     * The token is obtained from the [NotifierManager].
+     */
+    suspend fun renovate() {
+        val token = NotifierManager.getPushNotifier().getToken()
+        if (token != null) {
+            renovate(token)
         }
     }
 
-    suspend fun revokeToken(tokenId: String): Boolean {
-        val client = getHttpClient()
-        val response = client.delete("/profile/fcmToken/$tokenId")
-        val body = response.bodyAsText()
-        return if (!response.status.isSuccess()) {
-            Napier.e { "Could not remove FCM token (${response.status}): $body" }
-            false
-        } else {
-            true
+    /**
+     * Renovate the FCM token if needed.
+     * @param newToken The new FCM token to register.
+     */
+    suspend fun renovate(newToken: String) {
+        val oldToken = settings.getStringOrNull("fcm_token")
+        if (oldToken != null) {
+            if (oldToken == newToken) {
+                Napier.d { "Won't renovate token, already registered: $oldToken" }
+                return
+            }
+            try {
+                FCMTokenRemote.revokeToken(oldToken)
+                settings.remove("fcm_token")
+            } catch (e: ServerException) {
+                Napier.e(e) { "Could not revoke old FCM token. New token won't be registered." }
+                return
+            }
+        }
+
+        try {
+            FCMTokenRemote.registerNewToken(newToken)
+            settings.putString("fcm_token", newToken)
+        } catch (e: ServerException) {
+            Napier.e(e) { "Could not register FCM token." }
         }
     }
 }

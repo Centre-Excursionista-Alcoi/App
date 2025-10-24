@@ -26,6 +26,7 @@ import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalTime::class)
@@ -57,6 +58,9 @@ class LoadingViewModel(
                 } else {
                     Napier.d { "Last sync was less than an hour ago, skipping synchronization." }
                 }
+
+                Napier.d { "Renovating FCM token if required" }
+                FCMTokenManager.renovate()
 
                 Napier.d { "Load finished!" }
                 true
