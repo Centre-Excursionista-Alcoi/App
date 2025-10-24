@@ -230,4 +230,7 @@
     <string name="progress_local_db_write">Writing database...</string>
     <string name="progress_data_processing">Processing...</string>
 
+    <string name="notification_lending_confirmed_title">Lending Confirmed</string>
+    <string name="notification_lending_confirmed_message">An administrator has confirmed your lending request.</string>
+
 </resources>
