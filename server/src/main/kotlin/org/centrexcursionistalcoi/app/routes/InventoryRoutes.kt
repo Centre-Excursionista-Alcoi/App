@@ -496,6 +496,7 @@ fun Route.inventoryRoutes() {
         }
 
         val file = FileRequestData()
+        var plainText: String? = null
         val multiPartData = call.receiveMultipart()
         multiPartData.forEachPart { part ->
             when (part.name) {
@@ -504,12 +505,17 @@ fun Route.inventoryRoutes() {
                         file.populate(part)
                     }
                 }
+                "text" -> {
+                    if (part is PartData.FormItem) {
+                        plainText = part.value.takeIf { it.isNotBlank() }
+                    }
+                }
                 else -> { /* Ignore other parts */ }
             }
         }
 
-        if (file.isEmpty()) {
-            respondError(Error.MissingFile())
+        if (file.isEmpty() && plainText == null) {
+            respondError(Error.MemoryNotGiven())
             return@post
         }
 
@@ -538,19 +544,20 @@ fun Route.inventoryRoutes() {
             return@post
         }
 
-        val documentEntity = file.newEntity(false)
+        val documentEntity = if (file.isNotEmpty()) file.newEntity(false) else null
 
         Database {
             lending.memorySubmitted = true
             lending.memorySubmittedAt = Instant.now()
             lending.memoryDocument = documentEntity
+            lending.memoryPlainText = plainText
         }
 
         // Notify administrators that a new memory has been uploaded
         CoroutineScope(Dispatchers.IO).launch {
             val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
             val emails = admins.map { MailerSendEmail(it.email, it.username) }
-            val documentBytes = file.baos.toByteArray().also { file.close() }
+            val documentBytes = file.takeIf { it.isNotEmpty() }?.baos?.toByteArray()?.also { file.close() }
             Email.sendEmail(
                 to = emails,
                 subject = "New lending memory submitted (#${lending.id.value})",
@@ -563,8 +570,8 @@ fun Route.inventoryRoutes() {
                     </p>
                     <p>Please review the submitted memory in the admin panel.</p>
                 """.trimIndent(),
-                attachments = listOf(
-                    MailerSendAttachment(documentBytes, file.originalFileName ?: "memory.pdf"),
+                attachments = listOfNotNull(
+                    documentBytes?.let { MailerSendAttachment(it, file.originalFileName ?: "memory.pdf") },
                 ),
             )
         }

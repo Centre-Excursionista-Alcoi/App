@@ -25,6 +25,7 @@ data class Lending(
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
     val memoryDocument: Uuid?,
+    val memoryPlainText: String?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -55,6 +56,7 @@ data class Lending(
         "memorySubmitted" to memorySubmitted,
         "memorySubmittedAt" to memorySubmittedAt,
         "memoryDocument" to memoryDocument,
+        "memoryPlainText" to memoryPlainText,
         "memoryReviewed" to memoryReviewed,
         "from" to from,
         "to" to to,

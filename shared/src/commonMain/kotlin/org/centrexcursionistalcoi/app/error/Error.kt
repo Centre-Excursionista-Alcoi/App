@@ -195,6 +195,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
     }
 
+    @Serializable
+    @SerialName("MemoryNotGiven")
+    class MemoryNotGiven() : Error {
+        override val code: Int = 16
+        override val description: String = "Memory not given. Set either \"file\" or \"text\""
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
 
     companion object {
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
@@ -214,6 +224,7 @@ sealed interface Error {
             13 -> FEMECVMissingCredentials.serializer()
             14 -> DeviceIdIsRequired.serializer()
             15 -> FCMTokenIsRequired.serializer()
+            16 -> MemoryNotGiven.serializer()
             else -> null
         }
     }

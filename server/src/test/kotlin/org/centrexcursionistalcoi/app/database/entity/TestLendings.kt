@@ -135,6 +135,7 @@ class TestLendings {
             memorySubmitted = false,
             memorySubmittedAt = null,
             memoryDocument = null,
+            memoryPlainText = null,
             memoryReviewed = false,
             items = listOf(
                 InventoryItem(itemId.toKotlinUuid(), null, itemTypeId.toKotlinUuid())

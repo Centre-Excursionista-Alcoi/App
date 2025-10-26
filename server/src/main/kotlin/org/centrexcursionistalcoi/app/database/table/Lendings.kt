@@ -33,6 +33,7 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
     val memorySubmitted = bool("memorySubmitted").default(false)
     val memorySubmittedAt = timestamp("memorySubmittedAt").nullable()
     val memoryDocument = optReference("memoryDocument", Files)
+    val memoryPlainText = text("memoryPlainText").nullable()
     val memoryReviewed = bool("memoryReviewed").default(false)
 
     val notes = text("notes").nullable()
