@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.CardDefaults
@@ -15,7 +17,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.process.Progress
@@ -52,7 +56,7 @@ fun LoadingScreen(
             },
         ) { (err, pro) ->
             if (err != null) {
-                Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                     CardWithIcon(
                         title = errorTitle,
                         message = errorMessageConverter(err),
@@ -60,7 +64,8 @@ fun LoadingScreen(
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 16.dp),
                     )
                 }
             } else {
