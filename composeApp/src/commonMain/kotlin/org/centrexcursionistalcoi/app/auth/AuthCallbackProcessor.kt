@@ -10,6 +10,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 
 @OptIn(ExperimentalUuidApi::class)
@@ -48,8 +49,8 @@ object AuthCallbackProcessor {
                 .build()
         )
         if (!response.status.isSuccess()) {
-            val body = response.bodyAsText()
-            throw IllegalStateException("Authentication failed (${response.status}): $body")
+            val error = response.bodyAsError()
+            throw error.toThrowable()
         }
 
         // Small delay to ensure cookies are set before proceeding

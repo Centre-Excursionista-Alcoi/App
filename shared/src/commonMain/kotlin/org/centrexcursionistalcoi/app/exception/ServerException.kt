@@ -24,4 +24,6 @@ class ServerException(
             return ServerException(error?.description ?: body, httpResponse.status.value, body, errorCode)
         }
     }
+
+    fun toError(): Error? = responseBody?.let { json.decodeFromString(Error.serializer(), it) }
 }

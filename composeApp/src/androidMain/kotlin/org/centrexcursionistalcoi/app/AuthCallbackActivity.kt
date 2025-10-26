@@ -5,18 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import io.github.aakira.napier.DebugAntilog
-import io.github.aakira.napier.Napier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import cea_app.composeapp.generated.resources.*
 import io.ktor.http.Url
-import kotlinx.coroutines.runBlocking
-import org.centrexcursionistalcoi.app.auth.AuthCallbackProcessor
+import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
+import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.AuthCallbackModel
+import org.jetbrains.compose.resources.stringResource
 
 class AuthCallbackActivity: ComponentActivity() {
 
@@ -36,10 +34,26 @@ class AuthCallbackActivity: ComponentActivity() {
         }
 
         setContent {
+            val error by model.error.collectAsState()
+
             AppTheme {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                LoadingScreen(
+                    error = error,
+                    progress = null,
+                    errorTitle = stringResource(Res.string.auth_callback_error_title),
+                    errorMessageConverter = { error ->
+                        if (error is ServerException) {
+                            if (error.errorCode != null) {
+                                val errorMessage = error.toError()?.description ?: error.message
+                                stringResource(Res.string.auth_callback_error_server_code, error.errorCode ?: 0, errorMessage ?: unknown())
+                            } else {
+                                stringResource(Res.string.auth_callback_error_server_http, error.responseStatusCode ?: -1, error.responseBody ?: "N/A")
+                            }
+                        } else {
+                            error.message ?: stringResource(Res.string.error_unknown, error::class.simpleName!!)
+                        }
+                    }
+                )
             }
         }
     }

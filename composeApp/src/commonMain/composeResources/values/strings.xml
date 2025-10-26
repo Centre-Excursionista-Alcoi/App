@@ -63,11 +63,18 @@
     <string name="logout">Logout</string>
 
     <string name="logout_confirmation_title">Confirm Logout</string>
-    <string name="logout_confirmation_message">Are you sure you want to logout?</string>
+    <string name="logout_confirmation_message">Are you sure you want to log out?</string>
 
     <string name="copied_to_clipboard">Copied to clipboard</string>
 
     <string name="status_loading">Loading...</string>
+
+    <string name="loading_screen_error">Load failed</string>
+    <string name="error_unknown">An unknown error occurred. Type: %1$s</string>
+
+    <string name="auth_callback_error_title">Could not process login</string>
+    <string name="auth_callback_error_server_http">Server responded with exception (%1$d): %1$s</string>
+    <string name="auth_callback_error_server_code">Server responded with exception (#%1$d): %1$s</string>
 
     <string name="sport_climbing">Climbing</string>
     <string name="sport_climbing_without_belay">Climbing without Belay</string>
