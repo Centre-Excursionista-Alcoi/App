@@ -69,5 +69,7 @@ jobs:
           push: true
           tags: arnyminerz/cea-app:development
           file: server/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
