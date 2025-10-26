@@ -27,7 +27,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.documentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
@@ -45,11 +44,9 @@ fun LendingsManagementScreen(
     onBack: () -> Unit
 ) {
     val lendings by model.lendings.collectAsState()
-    val users by model.users.collectAsState()
 
     LendingsManagementScreen(
         lendings = lendings,
-        users = users,
         onConfirmRequest = model::confirm,
         onPickupRequest = onLendingPickupRequest,
         onReturnRequest = model::`return`,
@@ -61,7 +58,6 @@ fun LendingsManagementScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LendingsManagementScreen(
     lendings: List<ReferencedLending>?,
-    users: List<UserData>?,
     onConfirmRequest: (ReferencedLending) -> Unit,
     onPickupRequest: (ReferencedLending) -> Unit,
     onReturnRequest: (ReferencedLending) -> Unit,
@@ -133,11 +129,9 @@ fun UnconfirmedLendingsCard(
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val items = lending.items
-
             Text("User: ${lending.user.username}")
             Text("Items:")
-            for ((type, items) in items.groupBy { it.type }) {
+            for ((type, items) in lending.items.groupBy { it.type }) {
                 Text("- ${type.displayName}: ${items.size} unit(s)")
             }
 
@@ -229,11 +223,9 @@ fun PendingMemoryLendingsCard(
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val items = lending.items
-
             Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
-            for ((type, items) in items.groupBy { it.type }) {
+            for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
                     pluralStringResource(
                         Res.plurals.lending_details_item_row, items.size, type.displayName, items.size
@@ -264,11 +256,9 @@ fun CompleteLendingsCard(
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            val items = lending.items
-
             Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
-            for ((type, items) in items.groupBy { it.type }) {
+            for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
                     pluralStringResource(
                         Res.plurals.lending_details_item_row, items.size, type.displayName, items.size
