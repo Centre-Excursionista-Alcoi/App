@@ -91,19 +91,19 @@ private fun LendingsManagementScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             if (unconfirmedLendings.isNotEmpty()) item(key = "unconfirmed_lendings") {
-                UnconfirmedLendingsCard(users, unconfirmedLendings, onConfirmRequest)
+                UnconfirmedLendingsCard(unconfirmedLendings, onConfirmRequest)
             }
             if (pendingPickupLendings.isNotEmpty()) item(key = "pending_pickup_lendings") {
-                PendingPickupLendingsCard(users, pendingPickupLendings, onPickupRequest)
+                PendingPickupLendingsCard(pendingPickupLendings, onPickupRequest)
             }
             if (pendingReturnLendings.isNotEmpty()) item(key = "pending_return_lendings") {
-                PendingReturnLendingsCard(users, pendingReturnLendings, onReturnRequest)
+                PendingReturnLendingsCard(pendingReturnLendings, onReturnRequest)
             }
             if (pendingMemoryLendings.isNotEmpty()) item(key = "pending_memory_lendings") {
-                PendingMemoryLendingsCard(users, pendingMemoryLendings)
+                PendingMemoryLendingsCard(pendingMemoryLendings)
             }
             if (completedLendings.isNotEmpty()) item(key = "completed_lendings") {
-                CompleteLendingsCard(users, completedLendings)
+                CompleteLendingsCard(completedLendings)
             }
 
             if ((unconfirmedLendings + pendingPickupLendings + pendingReturnLendings + pendingMemoryLendings + completedLendings).isEmpty()) {
@@ -120,7 +120,6 @@ private fun LendingsManagementScreen(
 
 @Composable
 fun UnconfirmedLendingsCard(
-    users: List<UserData>?,
     lendings: List<ReferencedLending>,
     onConfirmRequest: (ReferencedLending) -> Unit,
 ) {
@@ -157,7 +156,6 @@ fun UnconfirmedLendingsCard(
 
 @Composable
 fun PendingPickupLendingsCard(
-    users: List<UserData>?,
     lendings: List<ReferencedLending>,
     onPickupRequest: (ReferencedLending) -> Unit,
 ) {
@@ -176,7 +174,6 @@ fun PendingPickupLendingsCard(
 
 @Composable
 fun PendingReturnLendingsCard(
-    users: List<UserData>?,
     lendings: List<ReferencedLending>,
     onReturnRequest: (ReferencedLending) -> Unit,
 ) {
@@ -220,7 +217,6 @@ fun PendingReturnLendingsCard(
 
 @Composable
 fun PendingMemoryLendingsCard(
-    users: List<UserData>?,
     lendings: List<ReferencedLending>,
 ) {
     ListCard(
@@ -256,7 +252,6 @@ fun PendingMemoryLendingsCard(
 
 @Composable
 fun CompleteLendingsCard(
-    users: List<UserData>?,
     lendings: List<ReferencedLending>,
 ) {
     ListCard(
