@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.error
 
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.json
 
 /**
@@ -11,5 +12,13 @@ import org.centrexcursionistalcoi.app.json
  */
 suspend fun HttpResponse.bodyAsError(): Error {
     val bodyText = bodyAsText()
-    return json.decodeFromString(ErrorPolymorphicSerializer, bodyText)
+    return try {
+        json.decodeFromString(ErrorPolymorphicSerializer, bodyText)
+    } catch (e: IllegalArgumentException) {
+        // error from ErrorPolymorphicSerializer
+        Error.Unknown(e.message ?: "Unknown error")
+    } catch (e: SerializationException) {
+        // error with serialization
+        Error.Unknown(e.message ?: "Unknown error")
+    }
 }
