@@ -84,6 +84,7 @@ fun HomeScreen(
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onLogoutRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
 ) {
@@ -117,6 +118,7 @@ fun HomeScreen(
             onLendingSignUpRequested = onLendingSignUpRequested,
             onCancelLendingRequest = model::cancelLending,
             memoryUploadProgress = memoryUploadProgress,
+            onMemoryEditorRequested = onMemoryEditorRequested,
             onMemorySubmitted = model::submitMemory,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
@@ -174,6 +176,7 @@ private fun HomeScreenContent(
     onCancelLendingRequest: (ReferencedLending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -359,6 +362,7 @@ private fun HomeScreenContent(
                         onCancelLendingRequest,
                         memoryUploadProgress,
                         onMemorySubmitted,
+                        onMemoryEditorRequested,
                         onCreateInsurance,
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
@@ -401,6 +405,7 @@ private fun HomeScreenContent(
                             onCancelLendingRequest,
                             memoryUploadProgress,
                             onMemorySubmitted,
+                            onMemoryEditorRequested,
                             onCreateInsurance,
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
@@ -443,6 +448,7 @@ fun HomeScreenPagerContent(
     onCancelLendingRequest: (ReferencedLending) -> Job,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -479,6 +485,7 @@ fun HomeScreenPagerContent(
                 onLendingSignUpRequested,
                 memoryUploadProgress,
                 onMemorySubmitted,
+                onMemoryEditorRequested,
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,

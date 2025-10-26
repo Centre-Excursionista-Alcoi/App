@@ -22,6 +22,7 @@ import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.UuidNavType
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
@@ -120,6 +121,9 @@ fun App(
                 onShoppingListConfirmed = {
                     navController.navigate(Destination.LendingCreation(it))
                 },
+                onMemoryEditorRequested = {
+                    navController.navigate(Destination.LendingMemoryEditor(it))
+                },
                 onLogoutRequested = {
                     navController.navigate(Destination.Logout) {
                         popUpTo(navController.graph.id) {
@@ -175,6 +179,16 @@ fun App(
                 onBack = { navController.navigateUp() },
                 onComplete = { navController.popBackStack() },
             )
+        }
+        composable<Destination.LendingMemoryEditor>(
+            typeMap = mapOf(
+                typeOf<Uuid>() to UuidNavType,
+            ),
+        ) { bse ->
+            val route = bse.toRoute<Destination.LendingPickup>()
+            val lendingId = route.lendingId
+
+            ActivityMemoryEditor { navController.navigateUp() }
         }
     }
     LaunchedEffect(navController) {

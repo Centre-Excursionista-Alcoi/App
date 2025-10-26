@@ -2,10 +2,16 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -17,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
@@ -36,6 +43,7 @@ fun LendingDetailsDialog(
     onCancelRequest: () -> Unit,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: ((PlatformFile) -> Job)?,
+    onMemoryEditorRequested: (() -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
     var isSubmittingMemory by remember { mutableStateOf(false) }
@@ -70,11 +78,28 @@ fun LendingDetailsDialog(
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     )
-                    TextButton(
+
+                    OutlinedButton(
                         enabled = !isSubmittingMemory,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { filePickLauncher.launch() }
-                    ) { Text(stringResource(Res.string.memory_pick)) }
+                    ) {
+                        Icon(Icons.Default.AttachFile, stringResource(Res.string.memory_pick))
+                        Spacer(Modifier.width(8.dp))
+                        Text(text = stringResource(Res.string.memory_pick), modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    }
+
+                    if (onMemoryEditorRequested != null) {
+                        OutlinedButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = onMemoryEditorRequested
+                        ) {
+                            Icon(Icons.Default.Create, stringResource(Res.string.memory_editor))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.memory_editor), modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                        }
+                    }
+
                     AnimatedContent(
                         targetState = memoryUploadProgress to isSubmittingMemory,
                         modifier = Modifier.fillMaxWidth(),

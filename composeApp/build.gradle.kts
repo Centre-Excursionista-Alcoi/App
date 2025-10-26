@@ -84,6 +84,9 @@ kotlin {
             // Compose Navigation
             implementation(libs.androidx.navigation.compose)
 
+            // Rich Text Editor
+            implementation(libs.richeditor)
+
             // Ktor serialization
             implementation(libs.ktor.serialization.kotlinxJson)
 

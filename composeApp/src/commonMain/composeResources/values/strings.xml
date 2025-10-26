@@ -220,6 +220,8 @@
     <string name="memory_pending">Pending Memories</string>
     <string name="memory_pending_lending">Memory submission is pending.</string>
     <string name="memory_pick">Pick memory file</string>
+    <string name="memory_editor">Open memory editor</string>
+    <string name="memory_editor_title">Activity Memory Editor</string>
 
     <string name="scanner_read">Read code: %1$s</string>
     <string name="scanner_error">Could not read code</string>

@@ -94,6 +94,7 @@ fun HomeMainPage(
     onLendingSignUpRequested: () -> Unit,
     memoryUploadProgress: Pair<Long, Long>?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -105,20 +106,6 @@ fun HomeMainPage(
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
         InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
-    }
-
-    var showingLendingDetails by remember { mutableStateOf<ReferencedLending?>(null) }
-    showingLendingDetails?.let { lending ->
-        LendingDetailsDialog(
-            lending,
-            memoryUploadProgress = memoryUploadProgress,
-            onMemorySubmitted = { onMemorySubmitted(lending, it) },
-            onCancelRequest = {
-                onCancelLendingRequest(lending).invokeOnCompletion {
-                    showingLendingDetails = null
-                }
-            }
-        ) { if (memoryUploadProgress == null) showingLendingDetails = null }
     }
 
     LaunchedEffect(lendings) {
@@ -202,7 +189,14 @@ fun HomeMainPage(
                 )
             }
             items(activeLendings, key = { it.id }, contentType = { "active-lending" }) { lending ->
-                LendingItem(lending, snackbarHostState, onCancelLendingRequest = { onCancelLendingRequest(lending) })
+                LendingItem(
+                    lending,
+                    snackbarHostState,
+                    memoryUploadProgress,
+                    onMemorySubmitted = { onMemorySubmitted(lending, it) },
+                    onMemoryEditorRequested = { onMemoryEditorRequested(lending) },
+                    onCancelLendingRequest = { onCancelLendingRequest(lending) }
+                )
             }
         }
 
@@ -477,6 +471,7 @@ fun OldLendingItem(lending: ReferencedLending) {
             onCancelRequest = {},
             memoryUploadProgress = null,
             onMemorySubmitted = null,
+            onMemoryEditorRequested = null,
             onDismissRequest = { showingDialog = false },
         )
     }
@@ -515,6 +510,9 @@ fun OldLendingItem(lending: ReferencedLending) {
 fun LendingItem(
     lending: ReferencedLending,
     snackbarHostState: SnackbarHostState,
+    memoryUploadProgress: Pair<Long, Long>?,
+    onMemorySubmitted: (PlatformFile) -> Job,
+    onMemoryEditorRequested: () -> Unit,
     onCancelLendingRequest: () -> Job,
 ) {
     val scope = rememberCoroutineScope()
@@ -524,8 +522,12 @@ fun LendingItem(
         LendingDetailsDialog(
             lending = lending,
             onCancelRequest = { onCancelLendingRequest().invokeOnCompletion { showingDialog = false } },
-            memoryUploadProgress = null,
-            onMemorySubmitted = null,
+            memoryUploadProgress = memoryUploadProgress,
+            onMemorySubmitted = onMemorySubmitted,
+            onMemoryEditorRequested = {
+                showingDialog = false
+                onMemoryEditorRequested()
+            },
             onDismissRequest = { showingDialog = false },
         )
     }

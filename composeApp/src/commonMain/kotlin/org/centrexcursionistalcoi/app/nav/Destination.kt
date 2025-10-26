@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.nav
 import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
 
@@ -28,4 +29,8 @@ sealed interface Destination {
     }
 
     @Serializable @SerialName("lendingPickup") data class LendingPickup(val lendingId: Uuid) : Destination
+
+    @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
+        constructor(lending: ReferencedLending): this(lending.id)
+    }
 }
