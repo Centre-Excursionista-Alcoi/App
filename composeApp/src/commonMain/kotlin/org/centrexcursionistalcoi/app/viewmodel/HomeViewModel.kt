@@ -32,13 +32,18 @@ import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.BackgroundJobState
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 import tech.kotlinlang.permission.HelperHolder
 import tech.kotlinlang.permission.Permission
 import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 class HomeViewModel: ViewModel() {
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing = _isSyncing.asStateFlow()
+    val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
+        .stateFlow()
+        .map { it == BackgroundJobState.RUNNING }
+        .stateInViewModel()
 
     val profile = ProfileRepository.profile.stateInViewModel()
 
@@ -157,12 +162,7 @@ class HomeViewModel: ViewModel() {
     }
 
     fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
-        try {
-            _isSyncing.emit(true)
-            LoadingViewModel.syncAll(force = true)
-        } finally {
-            _isSyncing.emit(false)
-        }
+        LoadingViewModel.syncAll(force = true)
     }
 
     fun connectFEMECV(username: String, password: CharArray) = viewModelScope.async<Throwable?>(defaultAsyncDispatcher) {

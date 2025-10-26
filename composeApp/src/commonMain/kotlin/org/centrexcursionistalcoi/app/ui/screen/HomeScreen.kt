@@ -124,7 +124,7 @@ fun HomeScreen(
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
-            isSyncing = isSyncing,
+            isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             onCreateInventoryItemType = model::createInventoryItemType,

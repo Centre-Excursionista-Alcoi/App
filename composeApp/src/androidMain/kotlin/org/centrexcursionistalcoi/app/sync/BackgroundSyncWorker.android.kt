@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.process.Progress
 
 actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
@@ -44,11 +45,35 @@ actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(ap
             }
         )
         @Suppress("UNCHECKED_CAST")
-        val input = inputData.keyValueMap.filterValues { it !is String } as Map<String, String>
+        val input = inputData.keyValueMap.keys
+            .mapNotNull { key ->
+                inputData.getString(key)?.let { key to it }
+            }
+            .toMap()
 
         @Suppress("UNCHECKED_CAST")
         return with(logicInstance) {
-            context.run(input).toWorkerResult()
+            try {
+                Napier.d { "Running ${logicInstance::class.simpleName} with input: $input" }
+                Napier.d { "Input data: ${inputData.keyValueMap.keys}" }
+
+                context.run(input).toWorkerResult()
+            } catch (e: Exception) {
+                Result.failure(
+                    workDataOf(
+                        RESULT_EXCEPTION_TYPE to e::class.simpleName,
+                        RESULT_EXCEPTION_MESSAGE to e.message,
+                        RESULT_EXCEPTION_STACKTRACE to e.stackTraceToString(),
+                    )
+                )
+            }
         }
+    }
+
+
+    companion object {
+        const val RESULT_EXCEPTION_TYPE = "exception.type"
+        const val RESULT_EXCEPTION_MESSAGE = "exception.message"
+        const val RESULT_EXCEPTION_STACKTRACE = "exception.stacktrace"
     }
 }

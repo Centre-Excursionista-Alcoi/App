@@ -5,29 +5,21 @@ import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
-import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
-import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
 @OptIn(ExperimentalTime::class)
 class LoadingViewModel(
@@ -41,23 +33,11 @@ class LoadingViewModel(
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
-                val lastSync = settings.getLongOrNull("lastSync")?.let { Instant.fromEpochSeconds(it) }
-                val now = Clock.System.now()
-                if (force || lastSync == null || lastSync.until(now, DateTimeUnit.SECOND) > 60 * 60) {
-                    Napier.d { "Last sync was more than an hour ago, synchronizing data..." }
-
-                    // Synchronize the local database with the remote data
-                    DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
-                    LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-
-                    settings.putLong("lastSync", now.epochSeconds)
-                } else {
-                    Napier.d { "Last sync was less than an hour ago, skipping synchronization." }
-                }
+                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                    input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
+                    requiresInternet = true,
+                    uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                )
 
                 Napier.d { "Renovating FCM token if required" }
                 FCMTokenManager.renovate()
