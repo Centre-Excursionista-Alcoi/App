@@ -32,9 +32,9 @@ sealed class Progress {
         override val label: @Composable (() -> String?) = {
             val percentage = percentage
             if (percentage != null) {
-                stringResource(Res.string.progress_download, percentage)
+                stringResource(Res.string.progress_download_percentage, percentage)
             } else {
-                stringResource(Res.string.progress_download_percentage)
+                stringResource(Res.string.progress_download)
             }
         }
     }
