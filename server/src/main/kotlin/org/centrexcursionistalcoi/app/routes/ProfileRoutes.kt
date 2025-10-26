@@ -24,7 +24,7 @@ import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
@@ -179,7 +179,7 @@ fun Route.profileRoutes() {
         val username = parameters["username"]
         val password = parameters["password"]
 
-        if (username.isNullOrBlank() || password.isNullOrBlank()) return@post respondError(Errors.FEMECVMissingCredentials)
+        if (username.isNullOrBlank() || password.isNullOrBlank()) return@post respondError(Error.FEMECVMissingCredentials())
 
         try {
             FEMECV.login(username, password)
@@ -234,7 +234,7 @@ fun Route.profileRoutes() {
         val token = parameters["token"]
         val deviceId = parameters["deviceId"]
 
-        if (token.isNullOrBlank()) return@post respondError(Errors.FCMTokenIsRequired)
+        if (token.isNullOrBlank()) return@post respondError(Error.FCMTokenIsRequired())
 
         Database {
             val reference = UserReferenceEntity.getOrProvide(session)
@@ -252,7 +252,7 @@ fun Route.profileRoutes() {
         val parameters = call.receiveParameters()
         val token = parameters["deviceId"]
 
-        if (token.isNullOrBlank()) return@delete respondError(Errors.DeviceIdIsRequired)
+        if (token.isNullOrBlank()) return@delete respondError(Error.DeviceIdIsRequired())
 
         Database {
             val reference = UserReferenceEntity.getOrProvide(session)

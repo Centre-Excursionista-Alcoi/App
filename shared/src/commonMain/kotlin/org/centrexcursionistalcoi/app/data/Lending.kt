@@ -4,6 +4,7 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
@@ -70,9 +71,11 @@ data class Lending(
         else -> Status.REQUESTED
     }
 
+    @Transient
     override val files: Map<String, Uuid?> = mapOf(
         "memoryDocument" to memoryDocument
     )
 
+    @Transient
     override val documentFile: Uuid? = memoryDocument
 }

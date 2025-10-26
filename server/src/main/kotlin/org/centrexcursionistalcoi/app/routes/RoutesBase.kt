@@ -24,7 +24,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
-import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -38,7 +38,7 @@ import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
     if (!call.request.contentType().match(contentType)) {
-        respondError(Errors.InvalidContentType(contentType))
+        respondError(Error.InvalidContentType(contentType))
         return null
     }
     return Unit
@@ -90,7 +90,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     suspend fun RoutingContext.getId(): EID? {
         val id = call.parameters["id"]?.let(idTypeConverter)
         if (id == null) {
-            respondError(Errors.MalformedId)
+            respondError(Error.MalformedId())
             return null
         }
         return id
@@ -98,7 +98,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     suspend fun RoutingContext.assertEntity(id: EID): EE? {
         val item = Database { entityClass.findById(id) }
         if (item == null) {
-            respondError(Errors.EntityNotFound(entityKClass, id))
+            respondError(Error.EntityNotFound(entityKClass, id))
             return null
         }
         return item
@@ -130,13 +130,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val item = try {
             creator(multipart)
         } catch (_: NullPointerException) {
-            respondError(Errors.MissingArgument)
+            respondError(Error.MissingArgument())
             return@post
         } catch (_: IllegalArgumentException) {
-            respondError(Errors.MalformedRequest)
+            respondError(Error.MalformedRequest())
             return@post
         } catch (_: NoSuchElementException) {
-            respondError(Errors.EntityNotFound(entityKClass, "N/A"))
+            respondError(Error.EntityNotFound(entityKClass, "N/A"))
             return@post
         }
 
@@ -146,7 +146,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     patch("$base/{id}") {
         if (updater == null) {
-            respondError(Errors.OperationNotSupported)
+            respondError(Error.OperationNotSupported())
             return@patch
         }
 
@@ -159,11 +159,11 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val request = try {
             json.decodeFromString(updater, body)
         } catch (_: Exception) {
-            respondError(Errors.MalformedRequest)
+            respondError(Error.MalformedRequest())
             return@patch
         }
         if (request.isEmpty()) {
-            respondError(Errors.NothingToUpdate)
+            respondError(Error.NothingToUpdate())
             return@patch
         }
         @Suppress("UNCHECKED_CAST")

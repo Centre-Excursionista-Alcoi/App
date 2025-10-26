@@ -40,6 +40,13 @@ class TestFEMECV {
                             headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
                         )
                     }
+                    "/print/printAutoritzacioLlicencia.php" -> {
+                        respond(
+                            content = ByteArray(16) { it.toByte() },
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                        )
+                    }
                     else -> {
                         respond(
                             content = "Not Found",

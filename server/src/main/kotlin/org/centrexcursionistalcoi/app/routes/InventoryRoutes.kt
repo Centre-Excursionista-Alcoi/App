@@ -34,7 +34,7 @@ import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
-import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
@@ -491,7 +491,7 @@ fun Route.inventoryRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            respondError(Errors.MalformedId)
+            respondError(Error.MalformedId())
             return@post
         }
 
@@ -509,24 +509,24 @@ fun Route.inventoryRoutes() {
         }
 
         if (file.isEmpty()) {
-            respondError(Errors.MissingFile)
+            respondError(Error.MissingFile())
             return@post
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            respondError(Errors.EntityNotFound("Lending", lendingId.toString()))
+            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 
         if (!lending.returned) {
-            respondError(Errors.CannotSubmitMemoryUntilMaterialIsReturned)
+            respondError(Error.CannotSubmitMemoryUntilMaterialIsReturned())
             return@post
         }
 
         val userReference = Database { UserReferenceEntity.findById(session.sub) }
         if (userReference == null) {
-            respondError(Errors.UserReferenceNotFound)
+            respondError(Error.UserReferenceNotFound())
             return@post
         }
 
@@ -534,7 +534,7 @@ fun Route.inventoryRoutes() {
         val lendingUserSub = Database { lending.userSub.sub.value }
         if (lendingUserSub != session.sub) {
             // Return not found to avoid leaking existence of the lending
-            respondError(Errors.EntityNotFound("Lending", lendingId.toString()))
+            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 

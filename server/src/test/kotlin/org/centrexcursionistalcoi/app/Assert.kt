@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.error.Error
  * Also ignores types, so `"1"` is equal to `1`.
  */
 fun assertJsonEquals(expected: String, actual: String) {
+    val suffix = "\n\tActual: $actual\n\tExpected: $expected"
     val expectedJson = json.parseToJsonElement(expected)
     val actualJson = json.parseToJsonElement(actual)
 
@@ -35,10 +36,10 @@ fun assertJsonEquals(expected: String, actual: String) {
     try {
         val expectedObject = expectedJson.jsonObject
         val actualObject = actualJson.jsonObject
-        assertEquals(expectedObject.size, actualObject.size, "JSON objects have different number of keys")
+        assertEquals(expectedObject.size, actualObject.size, "JSON objects have different number of keys.$suffix")
         for ((key, expectedValue) in expectedObject) {
             val actualValue = actualObject[key]
-                ?: throw AssertionError("Expected key '$key' not found in actual JSON object")
+                ?: throw AssertionError("Expected key '$key' not found in actual JSON object.$suffix")
             assertJsonEquals(expectedValue.toString(), actualValue.toString())
         }
         return
@@ -49,7 +50,7 @@ fun assertJsonEquals(expected: String, actual: String) {
     try {
         val expectedArray = expectedJson.jsonArray
         val actualArray = actualJson.jsonArray
-        assertEquals(expectedArray.size, actualArray.size, "JSON arrays have different lengths")
+        assertEquals(expectedArray.size, actualArray.size, "JSON arrays have different lengths.$suffix")
         for (i in expectedArray.indices) {
             assertJsonEquals(expectedArray[i].toString(), actualArray[i].toString())
         }

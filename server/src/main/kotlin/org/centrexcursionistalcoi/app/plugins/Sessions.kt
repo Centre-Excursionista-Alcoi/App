@@ -12,7 +12,7 @@ import io.ktor.server.sessions.sessions
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
-import org.centrexcursionistalcoi.app.error.Errors
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 
 // TODO: Set in environment variables and load from there
@@ -38,7 +38,7 @@ data class UserSession(val sub: String, val username: String, val email: String,
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
             val session = getUserSession()
             if (session == null) {
-                respondError(Errors.NotLoggedIn)
+                respondError(Error.NotLoggedIn())
                 return null
             } else {
                 return session
@@ -48,7 +48,7 @@ data class UserSession(val sub: String, val username: String, val email: String,
         suspend fun RoutingContext.assertAdmin(): UserSession? {
             val session = getUserSessionOrFail() ?: return null
             if (!session.isAdmin()) {
-                respondError(Errors.NotAnAdmin)
+                respondError(Error.NotAnAdmin())
                 return null
             }
             return session
