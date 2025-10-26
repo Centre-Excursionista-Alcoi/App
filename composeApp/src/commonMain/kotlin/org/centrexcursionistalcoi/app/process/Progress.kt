@@ -44,7 +44,7 @@ sealed class Progress {
             if (percentage != null) {
                 stringResource(Res.string.progress_download_name_percentage, name, percentage)
             } else {
-                stringResource(Res.string.progress_download_name, name,)
+                stringResource(Res.string.progress_download_name, name)
             }
         }
     }
@@ -52,9 +52,9 @@ sealed class Progress {
         override val label: @Composable (() -> String?) = {
             val percentage = percentage
             if (percentage != null) {
-                stringResource(Res.string.progress_upload, percentage)
+                stringResource(Res.string.progress_upload_percentage, percentage)
             } else {
-                stringResource(Res.string.progress_upload_percentage)
+                stringResource(Res.string.progress_upload)
             }
         }
     }
@@ -62,9 +62,9 @@ sealed class Progress {
         override val label: @Composable (() -> String?) = {
             val percentage = percentage
             if (percentage != null) {
-                stringResource(Res.string.progress_upload_name, percentage)
+                stringResource(Res.string.progress_upload_name_percentage, percentage)
             } else {
-                stringResource(Res.string.progress_upload_name_percentage)
+                stringResource(Res.string.progress_upload_name)
             }
         }
     }
