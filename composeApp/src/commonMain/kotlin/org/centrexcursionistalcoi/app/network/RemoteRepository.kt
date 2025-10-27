@@ -76,6 +76,24 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
     suspend fun get(id: RemoteIdType, progress: ProgressNotifier? = null): LocalEntity? = getUrl("$endpoint/$id", progress)
 
+    /**
+     * Fetches the entity with the given ID from the remote server and updates or inserts it into the local database.
+     * Returns the fetched entity, or `null` if it could not be retrieved.
+     *
+     * This does not update any associated files; use [synchronizeWithDatabase] for a full sync.
+     * @param id The ID of the remote entity to fetch.
+     * @param progressNotifier An optional progress notifier to report progress.
+     * @return The fetched local entity, or `null` if it could not be retrieved.
+     */
+    suspend fun update(id: RemoteIdType, progressNotifier: ProgressNotifier? = null): LocalEntity? {
+        val item = get(id, progressNotifier)
+        if (item != null) {
+            progressNotifier?.invoke(Progress.LocalDBWrite)
+            repository.insertOrUpdate(item)
+        }
+        return item
+    }
+
     suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null) {
         val remoteList = getAll(progress) // all entries from the remote server
 
