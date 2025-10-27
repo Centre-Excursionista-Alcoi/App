@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonObject
 data class AuthentikGroup(
     val pk: String,
     val name: String,
-    val parent: String,
+    val parent: String?,
     val attributes: JsonObject,
 
     @SerialName("num_pk")
@@ -18,5 +18,5 @@ data class AuthentikGroup(
     val isSuperuser: Boolean,
 
     @SerialName("parent_name")
-    val parentName: String
+    val parentName: String?
 )
