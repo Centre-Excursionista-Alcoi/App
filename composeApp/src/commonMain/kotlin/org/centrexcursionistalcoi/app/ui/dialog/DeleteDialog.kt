@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,7 +32,10 @@ fun <T> DeleteDialog(
                 onClick = {
                     isLoading = true
                     onDelete().invokeOnCompletion { onDismissRequested() }
-                }
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
             ) { Text(stringResource(Res.string.delete)) }
         },
         dismissButton = {

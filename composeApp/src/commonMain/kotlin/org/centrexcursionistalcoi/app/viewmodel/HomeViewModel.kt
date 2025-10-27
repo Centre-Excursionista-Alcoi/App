@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -30,7 +29,6 @@ import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
@@ -102,23 +100,6 @@ class HomeViewModel: ViewModel() {
     fun createInventoryItemType(displayName: String, description: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
         InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, image)
-    }
-
-    fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
-        val image = imageFile?.readBytes()
-        InventoryItemTypesRemoteRepository.update(id, displayName, description, image)
-    }
-
-    fun delete(item: InventoryItemType) = viewModelScope.launch(defaultAsyncDispatcher) {
-        InventoryItemTypesRemoteRepository.delete(item.id)
-    }
-
-    fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = viewModelScope.launch(defaultAsyncDispatcher) {
-        InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id, amount)
-    }
-
-    fun delete(item: ReferencedInventoryItem) = viewModelScope.launch(defaultAsyncDispatcher) {
-        InventoryItemsRemoteRepository.delete(item.id)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {

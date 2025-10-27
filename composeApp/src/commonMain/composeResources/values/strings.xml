@@ -147,6 +147,11 @@
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
 
+    <plurals name="management_items_amount">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+
     <string name="management_lendings">View Lendings</string>
 
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
@@ -176,6 +181,9 @@
     <string name="inventory_item_type_not_found">Type not found</string>
     <string name="inventory_item_type">Type: %1$s</string>
     <string name="inventory_item_amount">Amount: %1$d</string>
+    <string name="create_inventory_item_variation">Variation</string>
+    <string name="create_inventory_item_type">Type</string>
+    <string name="create_inventory_item_amount">Amount</string>
 
     <string name="lending_details_title">Lending Details</string>
     <string name="lending_details_cancel">Cancel Lending</string>

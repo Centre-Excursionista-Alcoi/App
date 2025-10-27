@@ -12,13 +12,24 @@ import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.database.data.InventoryItems
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val InventoryItemsRepository : Repository<ReferencedInventoryItem, Uuid>
+expect val InventoryItemsRepository : InventoryItemsRepositoryBase
 
-object InventoryItemsSettingsRepository : SettingsRepository<ReferencedInventoryItem, Uuid>("inventory_items", ReferencedInventoryItem.serializer())
+interface InventoryItemsRepositoryBase : Repository<ReferencedInventoryItem, Uuid> {
+    fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<ReferencedInventoryItem>>
+}
 
-object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>() {
+object InventoryItemsSettingsRepository : SettingsRepository<ReferencedInventoryItem, Uuid>("inventory_items", ReferencedInventoryItem.serializer()), InventoryItemsRepositoryBase {
+    override fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
+        return selectAllAsFlow(dispatcher).map { items ->
+            items.filter { it.type.id == typeId }
+        }
+    }
+}
+
+object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>(), InventoryItemsRepositoryBase {
     override val queries by lazy { databaseInstance.inventoryItemsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
@@ -37,6 +48,17 @@ object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventory
         return queries.selectAll().awaitAsList().map { item ->
             val type = types.first { it.id == item.type }
             item.toInventoryItem().referenced(type)
+        }
+    }
+
+    override fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
+        val typesFlow = InventoryItemTypesDatabaseRepository.selectAllAsFlow(dispatcher)
+        val itemsFlow = queries.selectAllByType(typeId).asFlow().mapToList(dispatcher)
+        return combine(typesFlow, itemsFlow) { types, items ->
+            items.map { item ->
+                val type = types.first { it.id == item.type }
+                item.toInventoryItem().referenced(type)
+            }
         }
     }
 

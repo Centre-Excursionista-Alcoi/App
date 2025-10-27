@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.nav.UuidNavType
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
+import org.centrexcursionistalcoi.app.ui.screen.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
@@ -112,6 +113,9 @@ fun App(
         }
         composable<Destination.Home> {
             HomeScreen(
+                onClickInventoryItemType = {
+                    navController.navigate(Destination.InventoryItems(it.id))
+                },
                 onManageLendingsRequested = {
                     navController.navigate(Destination.LendingsManagement)
                 },
@@ -131,6 +135,20 @@ fun App(
                         }
                     }
                 },
+            )
+        }
+
+        composable<Destination.InventoryItems>(
+            typeMap = mapOf(
+                typeOf<Uuid>() to UuidNavType,
+            ),
+        ) { bse ->
+            val route = bse.toRoute<Destination.InventoryItems>()
+            val typeId = route.typeId
+
+            InventoryItemsScreen(
+                typeId = typeId,
+                onBack = { navController.navigateUp() }
             )
         }
 

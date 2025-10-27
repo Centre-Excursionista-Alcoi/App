@@ -1,0 +1,35 @@
+package org.centrexcursionistalcoi.app.viewmodel
+
+import androidx.lifecycle.ViewModel
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.readBytes
+import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+
+class InventoryItemModel(private val typeId: Uuid): ViewModel() {
+    val type = InventoryItemTypesRepository.getAsFlow(typeId).stateInViewModel()
+    val items = InventoryItemsRepository.selectAllWithTypeIdFlow(typeId).stateInViewModel()
+
+    /**
+     * Deletes the inventory item type.
+     */
+    fun delete() = launch {
+        doAsync { InventoryItemTypesRemoteRepository.delete(typeId) }
+    }
+
+    fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = launch {
+        doAsync { InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id, amount) }
+    }
+
+    fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, imageFile: PlatformFile?) = launch {
+        doAsync {
+            val image = imageFile?.readBytes()
+            InventoryItemTypesRemoteRepository.update(id, displayName, description, image)
+        }
+    }
+}

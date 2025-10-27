@@ -1,6 +1,3 @@
 package org.centrexcursionistalcoi.app.database
 
-import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-
-actual val InventoryItemsRepository: Repository<ReferencedInventoryItem, Uuid> = InventoryItemsDatabaseRepository
+actual val InventoryItemsRepository: InventoryItemsRepositoryBase = InventoryItemsDatabaseRepository

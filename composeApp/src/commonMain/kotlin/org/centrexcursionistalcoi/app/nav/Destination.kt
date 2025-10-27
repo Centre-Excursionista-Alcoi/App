@@ -13,6 +13,11 @@ sealed interface Destination {
     @Serializable @SerialName("login") data object Login : Destination
     @Serializable @SerialName("home") data object Home : Destination
 
+    /**
+     * Shows all the items of a given inventory type.
+     */
+    @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid) : Destination
+
     @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
 
     @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination

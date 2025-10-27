@@ -81,6 +81,7 @@ import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeScreen(
+    onClickInventoryItemType: (InventoryItemType) -> Unit,
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
@@ -129,11 +130,8 @@ fun HomeScreen(
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             onCreateInventoryItemType = model::createInventoryItemType,
-            onUpdateInventoryItemType = model::updateInventoryItemType,
-            onDeleteInventoryItemType = model::delete,
+            onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
-            onCreateInventoryItem = model::createInventoryItem,
-            onDeleteInventoryItem = model::delete,
             onManageLendingsRequested = onManageLendingsRequested,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
@@ -188,12 +186,9 @@ private fun HomeScreenContent(
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
-    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     onManageLendingsRequested: () -> Unit,
 
@@ -372,11 +367,8 @@ private fun HomeScreenContent(
                         onPromote,
                         inventoryItemTypes,
                         onCreateInventoryItemType,
-                        onUpdateInventoryItemType,
-                        onDeleteInventoryItemType,
+                        onClickInventoryItemType,
                         inventoryItems,
-                        onCreateInventoryItem,
-                        onDeleteInventoryItem,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
@@ -416,11 +408,8 @@ private fun HomeScreenContent(
                             onPromote,
                             inventoryItemTypes,
                             onCreateInventoryItemType,
-                            onUpdateInventoryItemType,
-                            onDeleteInventoryItemType,
+                            onClickInventoryItemType,
                             inventoryItems,
-                            onCreateInventoryItem,
-                            onDeleteInventoryItem,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
@@ -463,12 +452,9 @@ fun HomeScreenPagerContent(
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
-    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -506,11 +492,8 @@ fun HomeScreenPagerContent(
                 onPromote,
                 inventoryItemTypes,
                 onCreateInventoryItemType,
-                onUpdateInventoryItemType,
-                onDeleteInventoryItemType,
+                onClickInventoryItemType,
                 inventoryItems,
-                onCreateInventoryItem,
-                onDeleteInventoryItem,
                 onManageLendingsRequested,
             )
 

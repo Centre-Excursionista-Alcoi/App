@@ -1,63 +1,40 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import coil3.compose.AsyncImage
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
-import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
-import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
-import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
-import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.jetbrains.compose.resources.stringResource
 
@@ -74,12 +51,9 @@ fun ManagementPage(
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
-    onDeleteInventoryItemType: (InventoryItemType) -> Job,
+    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-    onCreateInventoryItem: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     onManageLendingsRequested: () -> Unit,
 ) {
@@ -98,20 +72,12 @@ fun ManagementPage(
         item(key = "users") {
             UsersCard(users, onPromote)
         }
-        item(key = "item_types") {
+        item(key = "items") {
             InventoryItemTypesCard(
                 inventoryItemTypes,
-                onCreateInventoryItemType,
-                onUpdateInventoryItemType,
-                onDeleteInventoryItemType
-            )
-        }
-        item(key = "items") {
-            InventoryItemsCard(
-                inventoryItemTypes,
                 inventoryItems,
-                onCreateInventoryItem,
-                onDeleteInventoryItem
+                onCreateInventoryItemType,
+                onClickInventoryItemType,
             )
         }
     }
@@ -142,93 +108,13 @@ fun DepartmentsCard(
 @Composable
 fun InventoryItemTypesCard(
     types: List<InventoryItemType>?,
+    items: List<ReferencedInventoryItem>?,
     onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
-    onUpdate: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
-    onDelete: (InventoryItemType) -> Job,
+    onClick: (InventoryItemType) -> Unit,
 ) {
     var creating by remember { mutableStateOf(false) }
     if (creating) {
         CreateInventoryItemTypeDialog(onCreate) { creating = false }
-    }
-
-    var editing by remember { mutableStateOf<InventoryItemType?>(null) }
-    editing?.let { item ->
-        EditInventoryItemTypeDialog(item, onUpdate) { editing = null }
-    }
-
-    ListCard(
-        list = types,
-        titleResource = Res.string.management_inventory_item_types,
-        emptyTextResource = Res.string.management_no_item_types,
-        displayName = { it.displayName },
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        onCreate = { creating = true },
-        onEditRequested = { editing = it },
-        onDelete = onDelete,
-        detailsDialogContent = { type ->
-            Text(
-                text = stringResource(Res.string.inventory_item_type, type.displayName),
-                style = MaterialTheme.typography.titleMedium
-            )
-            val description = type.description
-            if (!description.isNullOrBlank()) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-            if (type.image != null) {
-                val imageFile by type.rememberImageFile()
-
-                AsyncByteImage(
-                    bytes = imageFile,
-                    contentDescription = type.displayName,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
-                )
-            }
-        },
-    )
-}
-
-@Composable
-fun InventoryItemsCard(
-    types: List<InventoryItemType>?,
-    items: List<ReferencedInventoryItem>?,
-    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDelete: (ReferencedInventoryItem) -> Job,
-) {
-    var creating by remember { mutableStateOf(false) }
-    if (creating) {
-        CreateInventoryItemDialog(types.orEmpty(), onCreate) { creating = false }
-    }
-
-    var showingItemDetails by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
-    showingItemDetails?.let { item ->
-        QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
-    }
-
-    var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
-    LaunchedEffect(PlatformNFC.supportsNFC) {
-        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.supportsNFC}" }
-        if (PlatformNFC.supportsNFC) withContext(defaultAsyncDispatcher) {
-            while (true) {
-                val read = PlatformNFC.readNFC() ?: continue
-                try {
-                    highlightInventoryItemId = Uuid.parse(read)
-                    Napier.i { "Highlighting item: $highlightInventoryItemId" }
-                } catch (_: IllegalArgumentException) {
-                    // invalid UUID
-                }
-            }
-        }
-    }
-    // dismiss highlight after 3 seconds
-    LaunchedEffect(highlightInventoryItemId) {
-        if (highlightInventoryItemId != null) {
-            delay(3000)
-            highlightInventoryItemId = null
-        }
     }
 
     val groupedItems = remember(items, types) {
@@ -236,64 +122,12 @@ fun InventoryItemsCard(
     }
     ListCard(
         list = groupedItems,
-        titleResource = Res.string.management_inventory_items,
-        emptyTextResource = Res.string.management_no_items,
+        titleResource = Res.string.management_inventory_item_types,
+        emptyTextResource = Res.string.management_no_item_types,
         displayName = { (type, items) -> "${type.displayName} (${items.size})" },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
-        detailsDialogContent = { (type, items) ->
-            Text(
-                text = stringResource(Res.string.inventory_item_type, type.displayName),
-                style = MaterialTheme.typography.titleMedium
-            )
-            val description = type.description
-            if (!description.isNullOrBlank()) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-            if (type.image != null) {
-                val imageFile by type.rememberImageFile()
-                AsyncByteImage(
-                    bytes = imageFile,
-                    contentDescription = type.displayName,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(bottom = 8.dp)
-                )
-            }
-            Text(
-                text = stringResource(Res.string.inventory_item_amount, items.size),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            for (item in items) {
-                ListItem(
-                    headlineContent = { Text(item.id.toString().uppercase()) },
-                    supportingContent = { Text(item.variation ?: "(No variation)") },
-                    trailingContent = {
-                        Row {
-                            IconButton(
-                                onClick = { showingItemDetails = item }
-                            ) {
-                                Icon(Icons.Default.QrCode, stringResource(Res.string.qrcode))
-                            }
-                            IconButton(
-                                onClick = { onDelete(item) }
-                            ) {
-                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
-                            }
-                        }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                        headlineColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                        supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                        trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                    ),
-                )
-            }
-        },
+        onClick = { (type) -> onClick(type) },
     )
 }
 
@@ -343,68 +177,6 @@ fun UsersCard(users: List<UserData>?, onPromote: (UserData) -> Job) {
                 ).takeUnless { user.isAdmin() }
             )
         }
-    )
-}
-
-@Composable
-fun CreateInventoryItemDialog(
-    types: List<InventoryItemType>,
-    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onDismissRequested: () -> Unit
-) {
-    var isLoading by remember { mutableStateOf(false) }
-    var variation by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf<InventoryItemType?>(null) }
-    var amount by remember { mutableStateOf("") }
-    val isValid = type != null && amount.toUIntOrNull() != null
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismissRequested() },
-        title = { Text("Create item") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = variation,
-                    onValueChange = { variation = it },
-                    label = { Text("Variation (optional)") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                DropdownField(
-                    value = type,
-                    onValueChange = { type = it },
-                    options = types,
-                    label = "Type",
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    itemToString = { it?.displayName ?: "" }
-                )
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { amount = it },
-                    label = { Text("Amount") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = !isLoading && isValid,
-                onClick = {
-                    isLoading = true
-                    onCreate(variation, type!!, amount.toInt()).invokeOnCompletion { onDismissRequested() }
-                }
-            ) { Text("Create") }
-        },
-        dismissButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = { onDismissRequested() }
-            ) { Text("Cancel") }
-        },
     )
 }
 

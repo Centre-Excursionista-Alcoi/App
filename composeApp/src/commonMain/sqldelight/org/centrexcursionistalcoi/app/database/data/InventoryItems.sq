@@ -16,6 +16,9 @@ SELECT * FROM InventoryItems WHERE id = ?;
 selectAll:
 SELECT * FROM InventoryItems ORDER BY id;
 
+selectAllByType:
+SELECT * FROM InventoryItems WHERE type = ? ORDER BY id;
+
 deleteById:
 DELETE FROM InventoryItems WHERE id = ?;
 
