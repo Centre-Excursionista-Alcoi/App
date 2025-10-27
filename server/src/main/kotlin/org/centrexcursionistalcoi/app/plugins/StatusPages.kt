@@ -11,7 +11,7 @@ fun Application.configureStatusPages() {
     install(StatusPages) {
         exception<Exception> { call, exception ->
             Sentry.captureException(exception)
-            call.respondError(Error.Unknown(exception.message ?: "No message"))
+            call.respondError(Error.Exception(exception))
         }
     }
 }
