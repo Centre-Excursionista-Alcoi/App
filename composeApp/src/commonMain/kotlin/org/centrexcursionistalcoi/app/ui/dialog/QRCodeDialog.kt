@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.draganddrop.dragAndDropSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
+import org.centrexcursionistalcoi.app.platform.qrImageTransferData
 import org.jetbrains.compose.resources.stringResource
 
 private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
@@ -91,7 +93,14 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
         text = {
             Column {
                 val qrCodePainter = rememberQrCodePainter(value)
-                ImageDisplay(qrCodePainter, "QR Code", imageModifier = Modifier.fillMaxWidth().aspectRatio(1f))
+                ImageDisplay(
+                    qrCodePainter,
+                    "QR Code",
+                    imageModifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .dragAndDropSource { _ -> qrImageTransferData(qrCodePainter) }
+                )
 
                 val barcodePainter = if (value.matches(Code39Regex)) {
                     rememberBarcodePainter(value, BarcodeType.Code39)
