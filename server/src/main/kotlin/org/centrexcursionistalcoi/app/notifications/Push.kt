@@ -38,7 +38,7 @@ object Push {
     private fun sendPushNotification(tokens: List<String>, data: Map<String, String>) {
         if (!pushConfigured) return
 
-        logger.debug("Sending push notification to ${tokens.size} devices with data: $data")
+        logger.debug("Sending push notification to {} devices with data: {}", tokens.size, data)
 
         val message = MulticastMessage.builder()
             .putAllData(data)
@@ -90,7 +90,9 @@ object Push {
         }
         if (includeAdmins) {
             val adminTokens = Database {
-                UserReferenceEntity.all().filter { it.groups.contains(ADMIN_GROUP_NAME) }
+                UserReferenceEntity.all()
+                    // Filter admins, and exclude the given reference
+                    .filter { it.groups.contains(ADMIN_GROUP_NAME) && it.sub != reference.sub }
                     .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
                     .map { it.token.value }
             }
