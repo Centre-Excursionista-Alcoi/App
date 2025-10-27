@@ -72,7 +72,7 @@ import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 
 const val AUTH_PROVIDER_NAME = "oidc"
 
-private val SCOPES = listOf("openid", "profile", "email", "groups").joinToString(" ")
+private val SCOPES = listOf("openid", "profile", "email", "groups", "pk").joinToString(" ")
 
 private val httpClient = HttpClient(Java) {
     install(ContentNegotiation) {
@@ -155,13 +155,12 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
             .verify(token)
 
         val sub: String? = decodedToken.getClaim("sub").asString() // Subject Identifier
-        val pk: Int? = decodedToken.getClaim("pk").asInt()
         val username: String? = decodedToken.getClaim("preferred_username").asString()
         val email: String? = decodedToken.getClaim("email").asString()
         val groups = decodedToken.getClaim("groups")?.asList(String::class.java)
 
-        if (sub != null && pk != null && username != null && email != null && groups != null) {
-            val session = UserSession(sub, pk, username, email, groups)
+        if (sub != null && username != null && email != null && groups != null) {
+            val session = UserSession(sub, username, email, groups)
             call.sessions.set(session)
 
             Database { UserReferenceEntity.getOrProvide(session) }

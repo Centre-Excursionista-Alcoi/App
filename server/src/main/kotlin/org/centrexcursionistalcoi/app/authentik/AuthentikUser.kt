@@ -39,4 +39,4 @@ data class AuthentikUser(
 
     @SerialName("last_updated")
     val lastUpdated: String
-)
+): AuthentikData

@@ -24,12 +24,10 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         context(_: JdbcTransaction)
         fun getOrProvide(session: UserSession): UserReferenceEntity = findById(session.sub)?.apply {
             // Update existing user
-            this.pk = session.pk
             this.username = session.username
             this.email = session.email
             this.groups = session.groups
         } ?: new(session.sub) {
-            this.pk = session.pk
             this.username = session.username
             this.email = session.email
             this.groups = session.groups
@@ -37,7 +35,6 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     }
 
     var sub by UserReferences.sub
-    var pk by UserReferences.pk
     var username by UserReferences.username
     var email by UserReferences.email
     var groups by UserReferences.groups

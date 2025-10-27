@@ -17,6 +17,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_UUID
+import org.centrexcursionistalcoi.app.authentik.AuthentikPaginatedResults
 import org.centrexcursionistalcoi.app.authentik.AuthentikUser
 import org.centrexcursionistalcoi.app.authentik.errors.AuthentikError
 import org.centrexcursionistalcoi.app.database.Database
@@ -88,10 +89,13 @@ fun Route.usersRoutes() {
         }
 
         // Fetch a list of all the groups the user already has
-        val url = URLBuilder(OIDCConfig.authentikBase)
-            .appendPathSegments("/api/v3/core/users/${reference.pk}/")
+        val userUrl = URLBuilder(OIDCConfig.authentikBase)
+            .appendPathSegments("/api/v3/core/users/")
+            .apply {
+                parameters.append("username", reference.username)
+            }
             .build()
-        val response = getAuthHttpClient().get(url) {
+        val response = getAuthHttpClient().get(userUrl) {
             bearerAuth(authentikToken)
             accept(ContentType.Application.Json)
         }
@@ -99,7 +103,12 @@ fun Route.usersRoutes() {
             val error = response.bodyAsJson(AuthentikError.serializer())
             throw error.asThrowable()
         }
-        val user = response.bodyAsJson(AuthentikUser.serializer())
+        val paginatedResults = response.bodyAsJson(AuthentikPaginatedResults.serializer(AuthentikUser.serializer()))
+        val user = paginatedResults.results.firstOrNull()
+        if (user == null) {
+            respondError(Error.UserNotFound())
+            return@post
+        }
         val groups = user.groups.toMutableSet()
 
         // Add the admin group
@@ -107,7 +116,7 @@ fun Route.usersRoutes() {
 
         // Update the user
         val updateUrl = URLBuilder(OIDCConfig.authentikBase)
-            .appendPathSegments("/api/v3/core/users/${reference.pk}/")
+            .appendPathSegments("/api/v3/core/users/${user.pk}/")
             .build()
         val updateResponse = getAuthHttpClient().put(updateUrl) {
             bearerAuth(authentikToken)

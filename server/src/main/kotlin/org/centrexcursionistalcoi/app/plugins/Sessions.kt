@@ -21,12 +21,11 @@ val secretSignKey = hex("6819b57a326945c1968f45236589")
 
 /**
  * @param sub Subject Identifier
- * @param pk Primary Key
  * @param username Preferred Username
  * @param email Email Address
  */
 @Serializable
-data class UserSession(val sub: String, val pk: Int, val username: String, val email: String, val groups: List<String>) {
+data class UserSession(val sub: String, val username: String, val email: String, val groups: List<String>) {
     companion object {
         const val COOKIE_NAME = "USER_SESSION"
 
