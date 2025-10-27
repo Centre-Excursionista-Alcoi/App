@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -37,10 +39,12 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.data.DialogContext
 import org.centrexcursionistalcoi.app.ui.data.DialogContextImpl
+import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> ListCard(
     list: List<T>?,
@@ -52,7 +56,9 @@ fun <T> ListCard(
     onCreate: (() -> Unit)? = null,
     onEditRequested: ((T) -> Unit)? = null,
     onDelete: ((T) -> Job)? = null,
+    actions: @Composable (T) -> List<IconAction> = { emptyList() },
     supportingContent: (@Composable (T) -> Unit)? = null,
+    trailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
     onClick: ((T) -> Unit)? = null,
 ) {
@@ -123,15 +129,21 @@ fun <T> ListCard(
                     supportingContent = if (supportingContent != null) {
                         { supportingContent(item) }
                     } else null,
-                    trailingContent = if (onDelete != null) {
-                        {
-                            IconButton(
-                                onClick = { deleting = item }
-                            ) {
-                                Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                    trailingContent = {
+                        Row {
+                            if (onDelete != null) {
+                                IconButton(
+                                    onClick = { deleting = item }
+                                ) {
+                                    Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                                }
                             }
+                            if (trailingContent != null) {
+                                trailingContent(item)
+                            }
+                            actions(item).forEach { it.IconButton() }
                         }
-                    } else null,
+                    },
                     leadingContent = {
                         if (item is Department && item.image != null) {
                             val imageFile by item.rememberImageFile()

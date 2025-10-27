@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.data
 
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.exception.UserNotFoundException
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 
@@ -24,6 +25,10 @@ data class UserData(
     }
 
     override val id: String = sub
+
+    fun isAdmin(): Boolean {
+        return groups.contains(ADMIN_GROUP_NAME)
+    }
 
     override fun toMap(): Map<String, Any?> {
         throw UnsupportedOperationException("UserData cannot be converted to a Map. This is a read-only entity.")

@@ -124,6 +124,7 @@ fun HomeScreen(
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
+            onPromote = model::promote,
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
@@ -183,6 +184,7 @@ private fun HomeScreenContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
+    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
@@ -367,6 +369,7 @@ private fun HomeScreenContent(
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
                         users,
+                        onPromote,
                         inventoryItemTypes,
                         onCreateInventoryItemType,
                         onUpdateInventoryItemType,
@@ -410,6 +413,7 @@ private fun HomeScreenContent(
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
                             users,
+                            onPromote,
                             inventoryItemTypes,
                             onCreateInventoryItemType,
                             onUpdateInventoryItemType,
@@ -455,6 +459,7 @@ fun HomeScreenPagerContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
+    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
@@ -498,6 +503,7 @@ fun HomeScreenPagerContent(
                 onCreateDepartment,
                 onDeleteDepartment,
                 users,
+                onPromote,
                 inventoryItemTypes,
                 onCreateInventoryItemType,
                 onUpdateInventoryItemType,

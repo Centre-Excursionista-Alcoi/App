@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +51,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
@@ -67,6 +70,7 @@ fun ManagementPage(
     onDeleteDepartment: (Department) -> Job,
 
     users: List<UserData>?,
+    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
@@ -92,7 +96,7 @@ fun ManagementPage(
             DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)
         }
         item(key = "users") {
-            UsersCard(users)
+            UsersCard(users, onPromote)
         }
         item(key = "item_types") {
             InventoryItemTypesCard(
@@ -294,13 +298,51 @@ fun InventoryItemsCard(
 }
 
 @Composable
-fun UsersCard(users: List<UserData>?) {
+fun UsersCard(users: List<UserData>?, onPromote: (UserData) -> Job) {
+    var promotingUser by remember { mutableStateOf<UserData?>(null) }
+    promotingUser?.let { user ->
+        var isPromoting by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isPromoting) promotingUser = null },
+            title = { Text(stringResource(Res.string.management_promote_user_title)) },
+            text = { Text(stringResource(Res.string.management_promote_user_confirmation, user.username)) },
+            confirmButton = {
+                TextButton(
+                    enabled = !isPromoting,
+                    onClick = {
+                        isPromoting = true
+                        onPromote(user).invokeOnCompletion {
+                            isPromoting = false
+                            promotingUser = null
+                        }
+                    }
+                ) { Text(stringResource(Res.string.management_promote_user)) }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !isPromoting,
+                    onClick = { if (!isPromoting) promotingUser = null }
+                ) { Text(stringResource(Res.string.cancel)) }
+            },
+        )
+    }
+
     ListCard(
         list = users,
         titleResource = Res.string.management_users,
         emptyTextResource = Res.string.management_no_departments,
         displayName = { it.username },
+        trailingContent = { if (it.isAdmin()) Badge { Text(stringResource(Res.string.admin)) } },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
+        actions = { user ->
+            listOfNotNull(
+                IconAction(
+                    icon = Icons.Default.AddModerator,
+                    onClick = { promotingUser = user },
+                    contentDescription = stringResource(Res.string.management_promote_user),
+                ).takeUnless { user.isAdmin() }
+            )
+        }
     )
 }
 

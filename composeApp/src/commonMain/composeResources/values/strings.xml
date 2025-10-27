@@ -165,6 +165,10 @@
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
     <string name="management_view_memory">View Memory</string>
 
+    <string name="management_promote_user">Promote</string>
+    <string name="management_promote_user_title">Promote user</string>
+    <string name="management_promote_user_confirmation">Are you sure that you want to promote %1$s to be an administrator?</string>
+
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
 

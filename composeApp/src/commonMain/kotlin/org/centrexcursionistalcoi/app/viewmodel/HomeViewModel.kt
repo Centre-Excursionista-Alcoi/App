@@ -18,6 +18,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -25,12 +26,14 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
@@ -177,5 +180,9 @@ class HomeViewModel: ViewModel() {
 
     fun disconnectFEMECV() = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.disconnectFEMECV()
+    }
+
+    fun promote(user: UserData) = launch {
+        doAsync { UsersRemoteRepository.promote(user.sub) }
     }
 }
