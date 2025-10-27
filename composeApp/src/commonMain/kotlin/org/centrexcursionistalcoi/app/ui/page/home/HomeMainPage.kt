@@ -102,6 +102,7 @@ fun HomeMainPage(
 ) {
     val scrollState = rememberLazyGridState()
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
+    val isRegisteredForLendings = profile.lendingUser != null
 
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
@@ -139,7 +140,8 @@ fun HomeMainPage(
             }
         }
 
-        if (notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
+        // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings
+        if (isRegisteredForLendings && notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
             item("notification_permission", contentType = "permission") {
                 CardWithIcon(
                     title = stringResource(Res.string.permission_notification_title),
