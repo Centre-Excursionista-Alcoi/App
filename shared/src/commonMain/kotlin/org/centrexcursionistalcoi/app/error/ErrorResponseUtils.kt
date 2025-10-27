@@ -16,9 +16,12 @@ suspend fun HttpResponse.bodyAsError(): Error {
         json.decodeFromString(ErrorPolymorphicSerializer, bodyText)
     } catch (e: IllegalArgumentException) {
         // error from ErrorPolymorphicSerializer
-        Error.Unknown(e.message ?: "Unknown error")
+        Error.SerializationError(e.message, bodyText)
     } catch (e: SerializationException) {
         // error with serialization
-        Error.Unknown(e.message ?: "Unknown error")
+        Error.SerializationError(e.message, bodyText)
+    } catch (e: SerializationException) {
+        // error with serialization
+        Error.Exception(e)
     }
 }

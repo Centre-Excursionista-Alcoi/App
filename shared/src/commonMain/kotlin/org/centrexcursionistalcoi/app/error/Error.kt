@@ -29,6 +29,18 @@ sealed interface Error {
 
 
     @Serializable
+    @SerialName("Exception")
+    class Exception(val message: String, val classType: String) : Error {
+        constructor(throwable: Throwable) : this(throwable.message ?: "No message", throwable::class.qualifiedName ?: "Unknown")
+
+        override val code: Int = -1
+        override val description: String = "Unhandled Exception ($classType): $message"
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError
+    }
+
+    @Serializable
     @SerialName("Unknown")
     class Unknown(val message: String) : Error {
         override val code: Int = 0
@@ -216,13 +228,23 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("UserNotFound")
+    @SerialName("AuthentikNotConfigured")
     class AuthentikNotConfigured() : Error {
         override val code: Int = 18
         override val description: String = "Authentik is not configured on the server."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.ServiceUnavailable
+    }
+
+    @Serializable
+    @SerialName("SerializationError")
+    class SerializationError(val message: String?, val content: String?) : Error {
+        override val code: Int = 19
+        override val description: String = "There was a serialization error.\n\tMessage: $message\n\tContent: $content"
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError
     }
 
 
@@ -247,6 +269,7 @@ sealed interface Error {
             16 -> MemoryNotGiven.serializer()
             17 -> UserNotFound.serializer()
             18 -> AuthentikNotConfigured.serializer()
+            19 -> SerializationError.serializer()
             else -> null
         }
     }

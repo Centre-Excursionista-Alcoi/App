@@ -23,6 +23,7 @@ class AuthCallbackModel : ViewModel() {
             AuthCallbackProcessor.processCallbackUrl(url)
             withContext(Dispatchers.Main) { afterLogin() }
         } catch (t: Throwable) {
+            Napier.e(t) { "Could not process callback url." }
             _error.value = t
         }
     }
