@@ -183,6 +183,11 @@ class HomeViewModel: ViewModel() {
     }
 
     fun promote(user: UserData) = launch {
-        doAsync { UsersRemoteRepository.promote(user.sub) }
+        doAsync {
+            UsersRemoteRepository.promote(user.sub)
+
+            val updatedUser = UsersRemoteRepository.get(user.sub) ?: return@doAsync // Should not happen
+            UsersRepository.insertOrUpdate(updatedUser)
+        }
     }
 }
