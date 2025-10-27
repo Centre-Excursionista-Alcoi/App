@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.googleServices)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
-    alias(libs.plugins.sentryAndroid)
     alias(libs.plugins.sentryMultiplatform)
     alias(libs.plugins.sqldelight)
 }
@@ -335,20 +334,4 @@ buildkonfig {
 
 dependencies {
     debugImplementation(compose.uiTooling)
-}
-
-sentry {
-    // Prevent Sentry dependencies from being included in the Android app through the AGP.
-    autoInstallation {
-        enabled.set(false)
-    }
-
-    // The slug of the Sentry organization to use for uploading proguard mappings/source contexts.
-    org.set("centre-excursionista-alcoi")
-    // The slug of the Sentry project to use for uploading proguard mappings/source contexts.
-    projectName.set("app-android")
-    // The authentication token to use for uploading proguard mappings/source contexts.
-    // WARNING: Do not expose this token in your build.gradle files, but rather set an environment
-    // variable and read it into this property.
-    authToken.set(getCredential("SENTRY_AUTH_TOKEN"))
 }

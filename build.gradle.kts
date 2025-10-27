@@ -11,7 +11,6 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinxSerialization) apply false
     alias(libs.plugins.kover) apply false
-    alias(libs.plugins.sentryAndroid) apply false
     alias(libs.plugins.sentryJvm) apply false
     alias(libs.plugins.sentryMultiplatform) apply false
     alias(libs.plugins.sqldelight) apply false
