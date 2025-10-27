@@ -13,6 +13,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     override val id: Column<EntityID<String>> get() = sub
 
+    val pk = integer("pk").uniqueIndex()
     val username = text("username")
     val email = text("email")
     val groups = array("groups", TextColumnType())

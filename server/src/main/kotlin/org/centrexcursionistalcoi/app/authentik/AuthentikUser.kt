@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.authentik
 
+import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -15,7 +16,7 @@ data class AuthentikUser(
     val path: String,
     val type: String,
     val uuid: String,
-    val groups: List<String>,
+    val groups: List<Uuid>,
     val attributes: JsonObject,
 
     @SerialName("is_active")

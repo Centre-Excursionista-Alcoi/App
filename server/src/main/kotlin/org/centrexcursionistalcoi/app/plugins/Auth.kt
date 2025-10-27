@@ -61,6 +61,8 @@ import org.centrexcursionistalcoi.app.authentik.AuthentikUser
 import org.centrexcursionistalcoi.app.authentik.errors.AuthentikError
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.OIDCConfig
@@ -153,12 +155,13 @@ private suspend fun RoutingContext.processJWT(jwkProvider: JwkProvider, token: S
             .verify(token)
 
         val sub: String? = decodedToken.getClaim("sub").asString() // Subject Identifier
+        val pk: Int? = decodedToken.getClaim("pk").asInt()
         val username: String? = decodedToken.getClaim("preferred_username").asString()
         val email: String? = decodedToken.getClaim("email").asString()
         val groups = decodedToken.getClaim("groups")?.asList(String::class.java)
 
-        if (sub != null && username != null && email != null && groups != null) {
-            val session = UserSession(sub, username, email, groups)
+        if (sub != null && pk != null && username != null && email != null && groups != null) {
+            val session = UserSession(sub, pk, username, email, groups)
             call.sessions.set(session)
 
             Database { UserReferenceEntity.getOrProvide(session) }
@@ -301,7 +304,7 @@ fun Route.configureAuthRoutes(jwkProvider: JwkProvider) {
 
         val authentikToken = OIDCConfig.authentikToken
         if (authentikToken == null) {
-            call.respondText("Authentik token not configured", status = HttpStatusCode.InternalServerError)
+            respondError(Error.AuthentikNotConfigured())
             return@post
         }
 

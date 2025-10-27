@@ -205,6 +205,26 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
     }
 
+    @Serializable
+    @SerialName("UserNotFound")
+    class UserNotFound() : Error {
+        override val code: Int = 17
+        override val description: String = "An user was not found with the given sub."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.NotFound
+    }
+
+    @Serializable
+    @SerialName("UserNotFound")
+    class AuthentikNotConfigured() : Error {
+        override val code: Int = 18
+        override val description: String = "Authentik is not configured on the server."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.ServiceUnavailable
+    }
+
 
     companion object {
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
@@ -225,6 +245,8 @@ sealed interface Error {
             14 -> DeviceIdIsRequired.serializer()
             15 -> FCMTokenIsRequired.serializer()
             16 -> MemoryNotGiven.serializer()
+            17 -> UserNotFound.serializer()
+            18 -> AuthentikNotConfigured.serializer()
             else -> null
         }
     }
