@@ -138,6 +138,10 @@ fun Route.usersRoutes() {
             val error = updateResponse.bodyAsJson(AuthentikError.serializer())
             throw error.asThrowable()
         }
+        val updatedUser = updateResponse.bodyAsJson(AuthentikUser.serializer())
+
+        // Update the groups in our local database as well
+        Database { reference.groups = updatedUser.groupsObj.map { it.name } }
 
         call.respond(HttpStatusCode.NoContent)
     }
