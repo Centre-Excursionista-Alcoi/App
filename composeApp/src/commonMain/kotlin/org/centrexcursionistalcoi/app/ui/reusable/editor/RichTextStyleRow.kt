@@ -42,6 +42,7 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 fun RichTextStyleRow(
     modifier: Modifier = Modifier,
     state: RichTextState,
+    enabled: Boolean = true,
 ) {
     LazyRow(
         verticalAlignment = Alignment.CenterVertically,
@@ -56,6 +57,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Left,
                 icon = Icons.AutoMirrored.Outlined.FormatAlignLeft
             )
@@ -70,6 +72,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Center,
                 icon = Icons.Outlined.FormatAlignCenter
             )
@@ -84,6 +87,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Right,
                 icon = Icons.AutoMirrored.Outlined.FormatAlignRight
             )
@@ -98,6 +102,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.fontWeight == FontWeight.Bold,
                 icon = Icons.Outlined.FormatBold
             )
@@ -112,6 +117,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.fontStyle == FontStyle.Italic,
                 icon = Icons.Outlined.FormatItalic
             )
@@ -126,6 +132,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true,
                 icon = Icons.Outlined.FormatUnderlined
             )
@@ -140,6 +147,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true,
                 icon = Icons.Outlined.FormatStrikethrough
             )
@@ -154,6 +162,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.fontSize == 28.sp,
                 icon = Icons.Outlined.FormatSize
             )
@@ -168,6 +177,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.color == Color.Red,
                 icon = Icons.Filled.Circle,
                 tint = Color.Red
@@ -183,6 +193,7 @@ fun RichTextStyleRow(
                         )
                     )
                 },
+                enabled = enabled,
                 isSelected = state.currentSpanStyle.background == Color.Yellow,
                 icon = Icons.Outlined.Circle,
                 tint = Color.Yellow
@@ -203,6 +214,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.toggleUnorderedList()
                 },
+                enabled = enabled,
                 isSelected = state.isUnorderedList,
                 icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
             )
@@ -213,6 +225,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.toggleOrderedList()
                 },
+                enabled = enabled,
                 isSelected = state.isOrderedList,
                 icon = Icons.Outlined.FormatListNumbered,
             )
@@ -223,7 +236,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.increaseListLevel()
                 },
-                enabled = state.canIncreaseListLevel,
+                enabled = enabled && state.canIncreaseListLevel,
                 icon = Icons.Outlined.TextIncrease,
             )
         }
@@ -233,7 +246,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.decreaseListLevel()
                 },
-                enabled = state.canDecreaseListLevel,
+                enabled = enabled && state.canDecreaseListLevel,
                 icon = Icons.Outlined.TextDecrease,
             )
         }
@@ -252,6 +265,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.addRichSpan(SpellCheck)
                 },
+                enabled = enabled,
                 isSelected = state.currentRichSpanStyle is SpellCheck,
                 icon = Icons.Outlined.Spellcheck,
             )
@@ -262,6 +276,7 @@ fun RichTextStyleRow(
                 onClick = {
                     state.toggleCodeSpan()
                 },
+                enabled = enabled,
                 isSelected = state.isCodeSpan,
                 icon = Icons.Outlined.Code,
             )

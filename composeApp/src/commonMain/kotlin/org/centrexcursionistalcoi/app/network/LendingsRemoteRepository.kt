@@ -197,4 +197,29 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
         val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
         LendingsRepository.update(updatedLending)
     }
+
+    /**
+     * Submits a memory file for a lending by its ID.
+     * The logged-in user must be the owner of the lending.
+     * @param lendingId The UUID of the lending to submit the memory for.
+     * @param memoryPlainText The memory content in plain text format.
+     * @param progress An optional progress listener for upload progress.
+     * @throws ServerException if the submission fails.
+     * @throws NoSuchElementException if the lending is not found after submission.
+     */
+    suspend fun submitMemory(lendingId: Uuid, memoryPlainText: String, progress: ProgressListener? = null) {
+        val response = httpClient.submitFormWithBinaryData(
+            "inventory/lendings/$lendingId/add_memory",
+            formData {
+                append("text",  memoryPlainText)
+            }
+        ) {
+            progress?.let { onUpload(it) }
+        }
+        if (!response.status.isSuccess()) {
+            throw ServerException.fromResponse(response)
+        }
+        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
+        LendingsRepository.update(updatedLending)
+    }
 }

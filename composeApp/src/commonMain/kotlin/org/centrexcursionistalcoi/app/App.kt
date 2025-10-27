@@ -188,7 +188,7 @@ fun App(
             val route = bse.toRoute<Destination.LendingPickup>()
             val lendingId = route.lendingId
 
-            ActivityMemoryEditor { navController.navigateUp() }
+            ActivityMemoryEditor(lendingId) { navController.navigateUp() }
         }
     }
     LaunchedEffect(navController) {
