@@ -33,6 +33,7 @@ class LoadingViewModel(
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
+                Napier.d { "Scheduling data sync..." }
                 BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
                     requiresInternet = true,
@@ -79,6 +80,14 @@ class LoadingViewModel(
                     }
                     Sentry.setUser(sentryUser)
                 }
+
+                Napier.d { "Scheduling periodic sync..." }
+                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                    input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
+                    requiresInternet = true,
+                    uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                    repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
+                )
 
                 _progress.value = null
                 withContext(Dispatchers.Main) { onLoggedIn() }

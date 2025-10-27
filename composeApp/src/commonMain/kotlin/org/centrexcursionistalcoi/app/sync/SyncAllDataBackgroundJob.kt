@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.sync
 
 import io.github.aakira.napier.Napier
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
@@ -22,6 +23,11 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     const val SYNC_EVERY_SECONDS = 60 * 60
 
     const val UNIQUE_NAME = "SyncAllDataBackgroundJob"
+
+    /**
+     * The interval at which this job should be periodically scheduled.
+     */
+    val periodicSyncInterval = 4.hours
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val forceSync = input[EXTRA_FORCE_SYNC]?.toBoolean() ?: false
