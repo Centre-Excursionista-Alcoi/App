@@ -312,7 +312,7 @@ compose.desktop {
             vendor = "Centre Excursionista d'Alcoi"
 
             // Add additional modules that are required for your application
-            modules("java.sql")
+            modules("java.net.http", "java.sql")
 
             // val iconsDir = File(rootDir, "icons")
 
