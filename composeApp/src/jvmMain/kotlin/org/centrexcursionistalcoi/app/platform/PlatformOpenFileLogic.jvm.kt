@@ -7,8 +7,7 @@ import java.io.File
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
 actual object PlatformOpenFileLogic {
-    actual val supported: Boolean
-        get() = TODO("Not yet implemented")
+    actual val supported: Boolean = Desktop.isDesktopSupported()
 
     actual fun open(path: String, contentType: ContentType) {
         val filePath = SystemDataPath / path
