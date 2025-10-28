@@ -137,7 +137,7 @@ fun HomeMainPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .padding(top = 24.dp)
+                        .padding(top = 12.dp, bottom = 24.dp)
                 )
             }
         }
