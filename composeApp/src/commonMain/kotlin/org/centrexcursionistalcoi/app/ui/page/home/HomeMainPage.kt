@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -102,6 +103,8 @@ fun HomeMainPage(
     val scrollState = rememberLazyGridState()
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
+
+    var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
 
     var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
     showingItemTypeDetails?.let { type ->
@@ -255,9 +258,41 @@ fun HomeMainPage(
             }
         } else {
             val groupedItems = inventoryItems?.groupBy { it.type }?.toList()
+            val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
+
+            item("categories_chips") {
+                LazyRow(modifier = Modifier.fillMaxWidth()) {
+                    items(
+                        items = categories,
+                        key = { it },
+                        contentType = { "category-chip" },
+                    ) { category ->
+                        val isSelected = selectedCategories.contains(category)
+                        Spacer(Modifier.width(8.dp))
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                selectedCategories = if (isSelected) {
+                                    selectedCategories - category
+                                } else {
+                                    selectedCategories + category
+                                }
+                            },
+                            label = { Text(category) },
+                            modifier = Modifier.padding(end = 4.dp),
+                        )
+                    }
+                }
+            }
 
             items(
-                items = groupedItems?.toList().orEmpty(),
+                items = groupedItems?.toList().orEmpty()
+                    .filter { (type) ->
+                        if (selectedCategories.isNotEmpty())
+                            type.category in selectedCategories
+                        else
+                            true
+                    },
                 key = { (type) -> type.id },
                 contentType = { "lending-item-small" },
             ) { (type, items) ->

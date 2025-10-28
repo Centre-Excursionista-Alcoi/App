@@ -244,6 +244,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     ) {
         check(isPatchSupported) { "Patching this entity type is not supported" }
 
+        Napier.d { "Patching $name#$id: $request" }
         val response = httpClient.patch("$endpoint/$id") {
             contentType(ContentType.Application.Json)
             val body = json.encodeToString(serializer, request)

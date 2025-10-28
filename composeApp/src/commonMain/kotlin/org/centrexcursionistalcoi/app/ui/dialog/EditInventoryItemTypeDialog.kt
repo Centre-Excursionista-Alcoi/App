@@ -47,7 +47,7 @@ fun EditInventoryItemTypeDialog(
         type = FileKitType.File("png", "jpg", "jpeg", "webp")
     ) { file -> image = file }
 
-    val dirty = displayName != item.displayName || description != (item.description ?: "") || image != null
+    val dirty = displayName != item.displayName || description != (item.description ?: "") || category != (item.category ?: "") || image != null
 
     EditDialog(
         enabled = dirty && !isLoading,

@@ -25,10 +25,11 @@ fun AutocompleteFormField(
     enabled: Boolean = true,
     readOnly: Boolean = false,
 ) {
+    val anySuggestion = suggestions.isNotEmpty()
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
-        expanded =expanded,
+        expanded = anySuggestion && expanded,
         onExpandedChange = { expanded = it }
     ) {
         OutlinedTextField(
@@ -39,11 +40,11 @@ fun AutocompleteFormField(
             enabled = enabled,
             modifier = modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
             readOnly = readOnly,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
+            trailingIcon = { if (anySuggestion) ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
         )
 
         ExposedDropdownMenu(
-            expanded = expanded,
+            expanded = anySuggestion && expanded,
             onDismissRequest = { expanded = false }
         ) {
             suggestions.forEach { suggestion ->
