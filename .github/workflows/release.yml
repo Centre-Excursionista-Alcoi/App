@@ -179,7 +179,7 @@ jobs:
 
       - name: Rename deb
         if: startsWith(matrix.os, 'ubuntu')
-        run: mv composeApp/build/compose/binaries/main-release/deb/*.deb composeApp/build/compose/binaries/main-release/deb/escalar-alcoia-i-comtat_${{ matrix.os }}_amd64.deb
+        run: mv composeApp/build/compose/binaries/main-release/deb/*.deb composeApp/build/compose/binaries/main-release/deb/cea-app_${{ matrix.os }}_amd64.deb
 
       - name: Release
         uses: softprops/action-gh-release@v2
