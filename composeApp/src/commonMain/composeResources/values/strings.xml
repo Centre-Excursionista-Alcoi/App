@@ -137,8 +137,7 @@
     <string name="lending_pending_memory_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
 
     <string name="insurance_add_title">Add Insurance</string>
-    <string name="insurance">
-    <string name="insurance_add_title">Add Insurance</string>Insurance</string>
+    <string name="insurance">Insurance</string>
     <string name="insurance_company">Insurance Company</string>
     <string name="insurance_policy_number">Policy Number</string>
     <string name="insurance_start_date">Start Date</string>
