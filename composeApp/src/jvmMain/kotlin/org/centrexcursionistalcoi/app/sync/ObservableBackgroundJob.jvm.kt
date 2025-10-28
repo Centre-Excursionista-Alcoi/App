@@ -26,18 +26,7 @@ actual open class ObservableBackgroundJob(
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            BackgroundJobCoordinator.idJobsList += id to this@ObservableBackgroundJob
-            for (tag in tags) {
-                val currentJobs = BackgroundJobCoordinator.tagsJobsList[tag]?.toMutableList() ?: mutableListOf()
-                currentJobs += this@ObservableBackgroundJob
-                BackgroundJobCoordinator.tagsJobsList += tag to currentJobs
-            }
-            if (uniqueName != null) {
-                BackgroundJobCoordinator.uniqueJobsList[uniqueName] = ObservableUniqueBackgroundJob(
-                    name = uniqueName,
-                    job = this@ObservableBackgroundJob
-                )
-            }
+            BackgroundJobCoordinator.append(id, tags, uniqueName, this@ObservableBackgroundJob)
 
             if (repeatInterval != null) {
                 while (true) {
@@ -48,19 +37,7 @@ actual open class ObservableBackgroundJob(
                 execute()
             }
 
-            BackgroundJobCoordinator.idJobsList -= id
-            for (tag in tags) {
-                val currentJobs = BackgroundJobCoordinator.tagsJobsList[tag]?.toMutableList()
-                currentJobs?.remove(this@ObservableBackgroundJob)
-                if (currentJobs.isNullOrEmpty()) {
-                    BackgroundJobCoordinator.tagsJobsList -= tag
-                } else {
-                    BackgroundJobCoordinator.tagsJobsList += tag to currentJobs
-                }
-            }
-            if (uniqueName != null) {
-                BackgroundJobCoordinator.uniqueJobsList.remove(uniqueName)
-            }
+            BackgroundJobCoordinator.remove(id, tags, uniqueName, this@ObservableBackgroundJob)
         }
     }
 
