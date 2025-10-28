@@ -96,9 +96,9 @@ import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerView
-import tech.kotlinlang.permission.HelperHolder
-import tech.kotlinlang.permission.Permission
-import tech.kotlinlang.permission.result.CameraPermissionResult
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.Permission
+import org.centrexcursionistalcoi.app.permission.result.CameraPermissionResult
 
 @Composable
 fun LendingPickupScreen(

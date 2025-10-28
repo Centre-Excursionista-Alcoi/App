@@ -1,6 +1,8 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.util.Calendar
 import java.util.Properties
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -59,6 +61,8 @@ kotlin {
             export(libs.kmm.notifier)
         }
     }
+
+    jvm()
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -121,7 +125,8 @@ kotlin {
             implementation(libs.kscan)
 
             // Runtime permission management
-            implementation(libs.kmm.permission)
+            // FIXME: Currently not implemented for Desktop: https://github.com/reyazoct/Kmm-Permissions/issues/2
+            // implementation(libs.kmm.permission)
 
             // Push Notifications
             implementation(libs.kmm.notifier)
@@ -139,11 +144,33 @@ kotlin {
             implementation(libs.ktor.client.mock)
         }
 
-        val phonesMain by creating {
+        // Platforms that require granting permissions
+        val permissionsMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.kmm.permission)
+            }
+        }
+
+        // Includes: desktop, android, ios
+        val physicalMain by creating {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.kotlinx.io.core)
             }
+        }
+
+        jvmMain {
+            dependsOn(physicalMain)
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.sqldelight.sqlite)
+            }
+        }
+
+        val phonesMain by creating {
+            dependsOn(physicalMain)
+            dependsOn(permissionsMain)
         }
 
         androidMain {
@@ -179,6 +206,7 @@ kotlin {
         webMain { dependsOn(commonMain.get()) }
         wasmJsMain {
             dependsOn(webMain.get())
+            dependsOn(permissionsMain)
             dependencies {
                 implementation(libs.ktor.client.js)
                 implementation(libs.kotlinx.browser)
@@ -259,6 +287,54 @@ android {
     }
 }
 
+compose.desktop {
+    application {
+        mainClass = "org.centrexcursionistalcoi.app.MainKt"
+
+        buildTypes.release.proguard {
+            isEnabled = false
+        }
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Exe, TargetFormat.Deb)
+
+            packageName = "org.centrexcursionistalcoi.app"
+            packageVersion = appVersionName
+
+            description = "CEA App"
+            val year = Calendar.getInstance().get(Calendar.YEAR)
+            copyright = "© $year Centre Excursionista d'Alcoi. © $year Arnau Mora Gras. All rights reserved."
+            vendor = "Centre Excursionista d'Alcoi"
+
+            // val iconsDir = File(rootDir, "icons")
+
+            windows {
+                // iconFile.set(
+                //     File(iconsDir, "icon.ico")
+                // )
+                dirChooser = true
+                perUserInstall = true
+                menuGroup = "CEA App"
+                packageName = "CEA App"
+                upgradeUuid = "5504905b-d0a6-44a6-acb7-5ddcfbaa4ef8"
+                msiPackageVersion = appVersionName
+                exePackageVersion = appVersionName
+            }
+            linux {
+                // iconFile.set(
+                //     File(iconsDir, "icon.png")
+                // )
+                debMaintainer = "app.linux.cea@arnyminerz.com"
+                menuGroup = "CEA App"
+                appCategory = "Sports"
+                appRelease = appVersionCode
+                debPackageVersion = appVersionName
+                rpmPackageVersion = appVersionName
+            }
+        }
+    }
+}
+
 val sentryProperties = readProperties("sentry.properties")!!
 
 buildkonfig {
@@ -326,6 +402,14 @@ buildkonfig {
                 type = STRING,
                 name = "SENTRY_DSN",
                 value = sentryProperties.getProperty("SENTRY_DSN_IOS"),
+                nullable = true,
+            )
+        }
+        create("jvm") {
+            buildConfigField(
+                type = STRING,
+                name = "SENTRY_DSN",
+                value = sentryProperties.getProperty("SENTRY_DSN_DESKTOP"),
                 nullable = true,
             )
         }
