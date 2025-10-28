@@ -311,6 +311,9 @@ compose.desktop {
             copyright = "© $year Centre Excursionista d'Alcoi. © $year Arnau Mora Gras. All rights reserved."
             vendor = "Centre Excursionista d'Alcoi"
 
+            // Add additional modules that are required for your application
+            modules("java.sql")
+
             // val iconsDir = File(rootDir, "icons")
 
             windows {
