@@ -167,6 +167,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.java)
                 implementation(libs.sqldelight.sqlite)
+                implementation(libs.webview)
             }
         }
 
@@ -339,6 +340,19 @@ compose.desktop {
     }
 }
 
+afterEvaluate {
+    tasks.withType<JavaExec> {
+        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+
+        if (System.getProperty("os.name").contains("Mac")) {
+            jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+        }
+    }
+}
+
 val sentryProperties = readProperties("sentry.properties")!!
 
 buildkonfig {
@@ -410,6 +424,12 @@ buildkonfig {
             )
         }
         create("jvm") {
+            buildConfigField(
+                type = STRING,
+                name = "REDIRECT_URI",
+                value = "cea://redirect",
+                nullable = true,
+            )
             buildConfigField(
                 type = STRING,
                 name = "SENTRY_DSN",

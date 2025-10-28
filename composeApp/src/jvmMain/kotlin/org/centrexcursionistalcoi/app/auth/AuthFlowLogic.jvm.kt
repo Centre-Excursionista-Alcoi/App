@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.auth
 
 actual object AuthFlowLogic {
     actual fun start() {
-        TODO("Not yet implemented")
+        val (state, codeChallenge) = generateAndStorePCKE()
+
+        AuthFlowWindow.start(state, codeChallenge)
     }
 }
