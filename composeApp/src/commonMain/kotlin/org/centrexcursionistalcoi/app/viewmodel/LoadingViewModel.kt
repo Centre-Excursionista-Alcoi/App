@@ -18,7 +18,6 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
 @OptIn(ExperimentalTime::class)
@@ -28,16 +27,18 @@ class LoadingViewModel(
 ) : ViewModel() {
     companion object {
         suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
+            Napier.d { "Getting profile..." }
             val profile = ProfileRemoteRepository.getProfile(progressNotifier)
             return if (profile != null) {
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
                 Napier.d { "Scheduling data sync..." }
-                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                BackgroundJobCoordinator.schedule(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                    logic = SyncAllDataBackgroundJobLogic,
                 )
 
                 Napier.d { "Renovating FCM token if required" }
@@ -82,11 +83,12 @@ class LoadingViewModel(
                 }
 
                 Napier.d { "Scheduling periodic sync..." }
-                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                BackgroundJobCoordinator.scheduleAsync(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
                     repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
+                    logic = SyncAllDataBackgroundJobLogic,
                 )
 
                 _progress.value = null

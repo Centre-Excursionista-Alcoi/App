@@ -1,0 +1,202 @@
+name: Release Binaries
+
+on:
+  release:
+    types:
+      - released
+
+jobs:
+  update-version-name:
+    name: Update version name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Update version name
+        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+
+      - name: Increase version code
+        id: increase_version_code
+        run: python ./scripts/increaseVersionCode.py
+
+      - name: Commit modified version code file
+        id: commit_version_code
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'Updated Version'
+          file_pattern: 'version.properties'
+          branch: master
+
+  clean-resources:
+    name: Clean resource files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Clean quote backslashes
+        id: clean_backslash
+        run: bash ./scripts/clean-backslash.sh
+
+      - name: Commit modified files
+        id: commit_files
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'Updated Version'
+          file_pattern: 'strings.xml'
+          branch: master
+
+  create-sentry-release:
+    name: Create Sentry Release
+    runs-on: ubuntu-latest
+
+    needs: [update-version-name, clean-resources]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.event.release.name }}
+
+  build-android:
+    name: Build for Android
+    runs-on: ubuntu-latest
+
+    needs: [create-sentry-release]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      # Refresh the version name again just in case
+      - name: Update version name
+        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+
+      - name: Decode Keystore
+        run: |
+          echo ${{ secrets.KEYSTORE_BASE64 }} > keystore.txt
+          base64 --decode keystore.txt > keystore.jks
+
+      - name: Decode google-services.json
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.base64
+          base64 --decode google-services.base64 > composeApp/google-services.json
+
+      - name: Write local.properties
+        run: echo '${{ secrets.LOCAL_PROPERTIES }}' > local.properties
+
+      - name: Build AAB
+        id: build_aab
+        env:
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_ALIAS_PASSWORD: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: ./gradlew :composeApp:bundleRelease :composeApp:assembleRelease
+
+      - name: Release AAB & APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ./composeApp/build/outputs/**/*.aab
+            ./composeApp/build/outputs/**/*.apk
+
+      - name: Upload to Play Store
+        id: upload_play_store
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
+          packageName: org.escalaralcoiaicomtat.android
+          releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
+          track: "production"
+          inAppUpdatePriority: 2
+          # mappingFile: ./base/build/outputs/mapping/release/mapping.txt
+          # whatsNewDirectory: ./changelog
+          status: completed
+
+  build-desktop:
+    name: Build for Desktop
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04, windows-latest]
+
+    needs: [create-sentry-release]
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      # Refresh the version name again just in case
+      - name: Update version name
+        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+
+
+      - name: Write local.properties
+        run: echo '${{ secrets.LOCAL_PROPERTIES }}' > local.properties
+
+      - name: Build
+        run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+
+      - name: Rename deb
+        if: startsWith(matrix.os, 'ubuntu')
+        run: mv composeApp/build/compose/binaries/main-release/deb/*.deb composeApp/build/compose/binaries/main-release/deb/escalar-alcoia-i-comtat_${{ matrix.os }}_amd64.deb
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            composeApp/build/compose/binaries/main-release/**/*.exe
+            composeApp/build/compose/binaries/main-release/**/*.deb

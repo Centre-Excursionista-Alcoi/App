@@ -67,6 +67,8 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
@@ -78,8 +80,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import tech.kotlinlang.permission.HelperHolder
-import tech.kotlinlang.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeMainPage(
@@ -137,7 +137,7 @@ fun HomeMainPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .padding(top = 24.dp)
+                        .padding(top = 12.dp, bottom = 24.dp)
                 )
             }
         }
