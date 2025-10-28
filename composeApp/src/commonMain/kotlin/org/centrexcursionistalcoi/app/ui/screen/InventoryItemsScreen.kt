@@ -74,19 +74,21 @@ fun InventoryItemsScreen(
     val items by model.items.collectAsState()
 
     InventoryItemsScreen(
+        typeId = typeId,
         type = type,
         items = items.orEmpty(),
         inventoryItemTypesCategories = categories,
         onCreate = model::createInventoryItem,
         onUpdate = model::updateInventoryItemType,
         onDelete = model::delete,
-        onBack = onBack
+        onBack = onBack,
     )
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 fun InventoryItemsScreen(
+    typeId: Uuid,
     type: InventoryItemType?,
     inventoryItemTypesCategories: Set<String>?,
     items: List<ReferencedInventoryItem>,
@@ -153,7 +155,7 @@ fun InventoryItemsScreen(
                         Text(
                             text = type?.displayName ?: stringResource(Res.string.status_loading),
                             modifier = Modifier.sharedBounds(
-                                sharedContentState = sharedTransitionScope.rememberSharedContentState("inventory_item_type"),
+                                sharedContentState = sharedTransitionScope.rememberSharedContentState("iit_$typeId"),
                                 animatedVisibilityScope = animatedContentScope
                             )
                         )

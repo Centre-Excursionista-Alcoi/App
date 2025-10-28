@@ -54,7 +54,7 @@ fun <T> ListCard(
     emptyTextResource: StringResource,
     displayName: (T) -> String,
     modifier: Modifier = Modifier,
-    sharedContentStateKey: String? = null,
+    sharedContentStateKey: ((T) -> String)? = null,
     highlight: ((T) -> Boolean)? = null,
     onCreate: (() -> Unit)? = null,
     onEditRequested: ((T) -> Unit)? = null,
@@ -137,7 +137,7 @@ fun <T> ListCard(
                                     text = displayName(item),
                                     modifier = Modifier
                                         .sharedBounds(
-                                            sharedContentState = sharedTransitionScope.rememberSharedContentState(sharedContentStateKey),
+                                            sharedContentState = sharedTransitionScope.rememberSharedContentState(sharedContentStateKey(item)),
                                             animatedVisibilityScope = animatedContentScope
                                         )
                                 )
