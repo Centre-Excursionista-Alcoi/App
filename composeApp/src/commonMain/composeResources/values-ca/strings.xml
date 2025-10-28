@@ -122,4 +122,5 @@
     <string name="insurance_end_date">Data de fi</string>
     <string name="insurance_view_document">Veure Document</string>
     <string name="active_insurances_title">Segurs Actius</string>
+    <string name="management_no_departments">Cap secció</string>
 </resources>
