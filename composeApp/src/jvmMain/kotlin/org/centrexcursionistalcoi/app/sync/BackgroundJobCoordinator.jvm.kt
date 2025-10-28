@@ -1,45 +1,109 @@
 package org.centrexcursionistalcoi.app.sync
 
 import androidx.compose.runtime.mutableStateMapOf
+import io.github.aakira.napier.Napier
 import kotlin.time.Duration
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 actual object BackgroundJobCoordinator {
 
-    val idJobsList = mutableStateMapOf<Uuid, ObservableBackgroundJob>()
-    val tagsJobsList = mutableStateMapOf<String, List<ObservableBackgroundJob>>()
-    val uniqueJobsList = mutableStateMapOf<String, ObservableUniqueBackgroundJob>()
+    private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
+    private val jobStateIdMutex = Mutex()
 
-    val mutex = Mutex()
+    private var jobStateUniqueNameFlows = mutableStateMapOf<String, MutableStateFlow<BackgroundJobState>>()
+    private val jobStateUniqueNameMutex = Mutex()
 
-    suspend fun append(id: Uuid, tags: List<String>, uniqueName: String?, job: ObservableBackgroundJob) = mutex.withLock {
-        idJobsList += id to job
-        for (tag in tags) {
-            val currentJobs = tagsJobsList[tag]?.toMutableList() ?: mutableListOf()
-            currentJobs += job
-            tagsJobsList += tag to currentJobs
-        }
-        if (uniqueName != null) {
-            uniqueJobsList[uniqueName] = ObservableUniqueBackgroundJob(uniqueName, job)
+    suspend fun emitStateById(id: Uuid, state: BackgroundJobState) {
+        jobStateIdMutex.withLock {
+            val flow = jobStateIdFlows[id] ?: run {
+                val newFlow = MutableStateFlow(state)
+                jobStateIdFlows = jobStateIdFlows + (id to newFlow)
+                newFlow
+            }
+            flow.emit(state)
         }
     }
 
-    suspend fun remove(id: Uuid, tags: List<String>, uniqueName: String?, job: ObservableBackgroundJob) = mutex.withLock {
-        idJobsList -= id
-        for (tag in tags) {
-            val currentJobs = tagsJobsList[tag]?.toMutableList()
-            currentJobs?.remove(job)
-            if (currentJobs.isNullOrEmpty()) {
-                tagsJobsList -= tag
-            } else {
-                tagsJobsList += tag to currentJobs
+    suspend fun fetchStateFlowById(id: Uuid): MutableStateFlow<BackgroundJobState> {
+        return jobStateIdMutex.withLock {
+            jobStateIdFlows[id] ?: run {
+                val newFlow = MutableStateFlow(BackgroundJobState.ENQUEUED)
+                jobStateIdFlows = jobStateIdFlows + (id to newFlow)
+                newFlow
             }
         }
+    }
+
+    suspend fun emitStateByUniqueName(uniqueName: String, state: BackgroundJobState) {
+        jobStateUniqueNameMutex.withLock {
+            val flow = jobStateUniqueNameFlows[uniqueName] ?: run {
+                val newFlow = MutableStateFlow(state)
+                jobStateUniqueNameFlows[uniqueName] = newFlow
+                newFlow
+            }
+            flow.emit(state)
+        }
+    }
+
+    suspend fun fetchStateFlowByUniqueName(uniqueName: String): MutableStateFlow<BackgroundJobState> {
+        return jobStateUniqueNameMutex.withLock {
+            jobStateUniqueNameFlows[uniqueName] ?: run {
+                val newFlow = MutableStateFlow(BackgroundJobState.ENQUEUED)
+                jobStateUniqueNameFlows[uniqueName] = newFlow
+                newFlow
+            }
+        }
+    }
+
+    suspend fun emitState(id: Uuid, uniqueName: String?, state: BackgroundJobState) {
+        emitStateById(id, state)
         if (uniqueName != null) {
-            uniqueJobsList.remove(uniqueName)
+            emitStateByUniqueName(uniqueName, state)
+        }
+    }
+
+    fun scheduleJob(
+        input: Map<String, String>,
+        id: Uuid,
+        uniqueName: String?,
+        repeatInterval: Duration?,
+        logic: BackgroundSyncWorkerLogic,
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            if (repeatInterval != null) {
+                while (true) {
+                    execute(input, id, uniqueName, logic)
+                    emitState(id, uniqueName, BackgroundJobState.ENQUEUED)
+                    delay(repeatInterval)
+                }
+            } else {
+                execute(input, id, uniqueName, logic)
+            }
+        }
+    }
+
+    private suspend fun execute(
+        input: Map<String, String>,
+        id: Uuid,
+        uniqueName: String?,
+        logic: BackgroundSyncWorkerLogic,
+    ) {
+        try {
+            emitState(id, uniqueName, BackgroundJobState.RUNNING)
+            with(logic) {
+                BackgroundSyncContext().run(input)
+            }
+            emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
+        } catch (e: Throwable) {
+            Napier.e(e) { "Job failed." }
+            emitState(id, uniqueName, BackgroundJobState.FAILED)
         }
     }
 
@@ -52,15 +116,10 @@ actual object BackgroundJobCoordinator {
         repeatInterval: Duration?,
         logic: Logic,
     ): ObservableBackgroundJob {
-        return ObservableBackgroundJob(
-            input = input,
-            requiresInternet = requiresInternet,
-            id = id ?: Uuid.random(),
-            tags = tags,
-            uniqueName = uniqueName,
-            repeatInterval = repeatInterval,
-            logic = logic
-        )
+        val id = id ?: Uuid.random()
+        scheduleJob(input, id, uniqueName, repeatInterval, logic)
+
+        return observe(id)
     }
 
     actual inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
@@ -72,41 +131,18 @@ actual object BackgroundJobCoordinator {
         repeatInterval: Duration?,
         logic: Logic,
     ) {
-        ObservableBackgroundJob(
-            input = input,
-            requiresInternet = requiresInternet,
-            id = id ?: Uuid.random(),
-            tags = tags,
-            uniqueName = uniqueName,
-            repeatInterval = repeatInterval,
-            logic = logic
-        )
+        scheduleJob(input, id ?: Uuid.random(), uniqueName, repeatInterval, logic)
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {
-        return runBlocking {
-            mutex.withLock {
-                idJobsList[id] ?: throw IllegalArgumentException("No job found with id: $id")
-            }
-        }
+        return ObservableBackgroundJob(id)
     }
 
     actual fun observe(tag: String): ObservableBackgroundJobs {
-        return runBlocking {
-            mutex.withLock {
-                val jobs = tagsJobsList[tag] ?: throw IllegalArgumentException("No jobs found with tag: $tag")
-                ObservableBackgroundJobs(tag, jobs)
-            }
-        }
+        throw UnsupportedOperationException("Observing by tag is not supported on JVM.")
     }
 
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
-        return runBlocking {
-            mutex.withLock {
-                uniqueJobsList[name] ?: throw IllegalArgumentException(
-                    "No unique job found with name: $name.\n\tUnique jobs: ${uniqueJobsList.keys.joinToString().ifBlank { "<none>" }}"
-                )
-            }
-        }
+        return ObservableUniqueBackgroundJob(name)
     }
 }
