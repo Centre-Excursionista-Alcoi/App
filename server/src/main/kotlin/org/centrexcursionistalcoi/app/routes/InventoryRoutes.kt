@@ -73,15 +73,16 @@ fun Route.inventoryRoutes() {
         creator = { formParameters ->
             var displayName: String? = null
             var description: String? = null
+            var category: String? = null
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
                 when (partData) {
                     is PartData.FormItem -> {
-                        if (partData.name == "displayName") {
-                            displayName = partData.value
-                        } else if (partData.name == "description") {
-                            description = partData.value
+                        when (partData.name) {
+                            "displayName" -> displayName = partData.value
+                            "description" -> description = partData.value
+                            "category" -> category = partData.value
                         }
                     }
                     is PartData.FileItem -> {
@@ -104,6 +105,7 @@ fun Route.inventoryRoutes() {
                 InventoryItemTypeEntity.new {
                     this.displayName = displayName
                     this.description = description
+                    this.category = category
                     this.image = imageFile
                 }
             }

@@ -18,6 +18,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
 
     var displayName by InventoryItemTypes.displayName
     var description by InventoryItemTypes.description
+    var category by InventoryItemTypes.category
     override var image by FileEntity optionalReferencedOn InventoryItemTypes.image
 
     context(_: JdbcTransaction)
@@ -25,6 +26,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
         id = id.value.toKotlinUuid(),
         displayName = displayName,
         description = description,
+        category = category,
         image = image?.id?.value?.toKotlinUuid()
     )
 
@@ -32,6 +34,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
     override fun patch(request: UpdateInventoryItemTypeRequest) {
         request.displayName?.let { displayName = it }
         request.description?.let { description = it }
+        request.category?.let { category = it }
         updateOrSetImage(request.image, "inventory_${id.value}_image")
     }
 }
