@@ -15,7 +15,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.storage.settings
-import org.centrexcursionistalcoi.app.json as defaultJson
 
 /**
  * The current implementation of SQLite for WASM is broken, and doesn't provide data.
@@ -26,7 +25,13 @@ import org.centrexcursionistalcoi.app.json as defaultJson
 abstract class SettingsRepository<T : Entity<IdType>, IdType : Any>(
     private val namespace: String,
     private val serializer: KSerializer<T>,
-    private val json: Json = defaultJson
+    private val json: Json = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+        explicitNulls = false
+        // to free up some space
+        encodeDefaults = false
+    }
 ) : Repository<T, IdType> {
     private val _keysFlow = MutableStateFlow(settings.keys)
 

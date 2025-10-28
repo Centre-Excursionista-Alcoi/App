@@ -53,6 +53,7 @@ class HomeViewModel: ViewModel() {
     val users = UsersRepository.selectAllAsFlow().stateInViewModel()
 
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
+    val inventoryItemTypesCategories = InventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
@@ -97,9 +98,9 @@ class HomeViewModel: ViewModel() {
         DepartmentsRemoteRepository.delete(department.id)
     }
 
-    fun createInventoryItemType(displayName: String, description: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun createInventoryItemType(displayName: String, description: String, category: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
-        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, image)
+        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, category.takeUnless { it.isEmpty() }, image)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {

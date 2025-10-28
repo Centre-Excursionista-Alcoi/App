@@ -93,6 +93,7 @@ fun HomeScreen(
     val departments by model.departments.collectAsState()
     val users by model.users.collectAsState()
     val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
+    val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
@@ -129,6 +130,7 @@ fun HomeScreen(
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
+            inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onCreateInventoryItemType = model::createInventoryItemType,
             onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
@@ -185,7 +187,8 @@ private fun HomeScreenContent(
     onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
-    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    inventoryItemTypesCategories: Set<String>,
+    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -366,6 +369,7 @@ private fun HomeScreenContent(
                         users,
                         onPromote,
                         inventoryItemTypes,
+                        inventoryItemTypesCategories,
                         onCreateInventoryItemType,
                         onClickInventoryItemType,
                         inventoryItems,
@@ -407,6 +411,7 @@ private fun HomeScreenContent(
                             users,
                             onPromote,
                             inventoryItemTypes,
+                            inventoryItemTypesCategories,
                             onCreateInventoryItemType,
                             onClickInventoryItemType,
                             inventoryItems,
@@ -451,7 +456,8 @@ fun HomeScreenPagerContent(
     onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
-    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    inventoryItemTypesCategories: Set<String>,
+    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -491,6 +497,7 @@ fun HomeScreenPagerContent(
                 users,
                 onPromote,
                 inventoryItemTypes,
+                inventoryItemTypesCategories,
                 onCreateInventoryItemType,
                 onClickInventoryItemType,
                 inventoryItems,

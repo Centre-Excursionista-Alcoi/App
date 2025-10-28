@@ -48,6 +48,12 @@
     <string name="management_inventory_item_types">Item Types</string>
     <string name="management_inventory_items">Items</string>
 
+    <string name="management_inventory_item_type_create">Create Item Type</string>
+    <string name="management_inventory_item_type_display_name">Display Name</string>
+    <string name="management_inventory_item_type_description">Description</string>
+    <string name="management_inventory_item_type_category">Category</string>
+    <string name="management_inventory_item_type_image">Select Image</string>
+
     <string name="back">Go Back</string>
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>

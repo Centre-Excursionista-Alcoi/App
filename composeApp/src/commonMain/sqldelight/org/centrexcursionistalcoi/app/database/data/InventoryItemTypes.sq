@@ -4,11 +4,13 @@ CREATE TABLE InventoryItemTypes (
     id TEXT AS Uuid PRIMARY KEY NOT NULL,
     displayName TEXT NOT NULL,
     description TEXT DEFAULT NULL,
+    category TEXT DEFAULT NULL,
     image TEXT AS Uuid DEFAULT NULL
 );
+CREATE INDEX InventoryItemTypes_category ON InventoryItemTypes(category);
 
 insert:
-INSERT INTO InventoryItemTypes (id, displayName, description, image) VALUES (?, ?, ?, ?);
+INSERT INTO InventoryItemTypes (id, displayName, description, category, image) VALUES (?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM InventoryItemTypes WHERE id = ?;
@@ -16,8 +18,11 @@ SELECT * FROM InventoryItemTypes WHERE id = ?;
 selectAll:
 SELECT * FROM InventoryItemTypes ORDER BY displayName;
 
+categories:
+SELECT DISTINCT category FROM InventoryItemTypes WHERE category IS NOT NULL ORDER BY category;
+
 deleteById:
 DELETE FROM InventoryItemTypes WHERE id = ?;
 
 update:
-UPDATE InventoryItemTypes SET displayName = ?, description = ?, image = ? WHERE id = ?;
+UPDATE InventoryItemTypes SET displayName = ?, description = ?, category = ?, image = ? WHERE id = ?;

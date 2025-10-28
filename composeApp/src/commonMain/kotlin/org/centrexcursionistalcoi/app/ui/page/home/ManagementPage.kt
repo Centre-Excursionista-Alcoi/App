@@ -50,7 +50,8 @@ fun ManagementPage(
     onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
-    onCreateInventoryItemType: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    inventoryItemTypesCategories: Set<String>,
+    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -75,6 +76,7 @@ fun ManagementPage(
         item(key = "items") {
             InventoryItemTypesCard(
                 inventoryItemTypes,
+                inventoryItemTypesCategories,
                 inventoryItems,
                 onCreateInventoryItemType,
                 onClickInventoryItemType,
@@ -108,13 +110,14 @@ fun DepartmentsCard(
 @Composable
 fun InventoryItemTypesCard(
     types: List<InventoryItemType>?,
+    categories: Set<String>,
     items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, image: PlatformFile?) -> Job,
+    onCreate: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClick: (InventoryItemType) -> Unit,
 ) {
     var creating by remember { mutableStateOf(false) }
     if (creating) {
-        CreateInventoryItemTypeDialog(onCreate) { creating = false }
+        CreateInventoryItemTypeDialog(categories, onCreate) { creating = false }
     }
 
     val groupedItems = remember(items, types) {

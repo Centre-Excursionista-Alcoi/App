@@ -9,13 +9,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val InventoryItemTypesRepository : Repository<InventoryItemType, Uuid>
+expect val InventoryItemTypesRepository : InventoryItemTypesRepositoryBase
 
-object InventoryItemTypesSettingsRepository : SettingsRepository<InventoryItemType, Uuid>("inventory_types", InventoryItemType.serializer())
+interface InventoryItemTypesRepositoryBase : Repository<InventoryItemType, Uuid> {
+    fun categoriesAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<Set<String>>
+}
 
-object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemType, Uuid>() {
+object InventoryItemTypesSettingsRepository : SettingsRepository<InventoryItemType, Uuid>("inventory_types", InventoryItemType.serializer()), InventoryItemTypesRepositoryBase {
+    override fun categoriesAsFlow(dispatcher: CoroutineDispatcher): Flow<Set<String>> {
+        return selectAllAsFlow(dispatcher).map { items ->
+            items.mapNotNull { it.category }.toSet()
+        }
+    }
+}
+
+object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemType, Uuid>(), InventoryItemTypesRepositoryBase {
     override val queries by lazy { databaseInstance.inventoryItemTypesQueries }
 
     override suspend fun get(id: Uuid): InventoryItemType? {
@@ -41,10 +52,17 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
 
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toInventoryItemType() }
 
+    override fun categoriesAsFlow(dispatcher: CoroutineDispatcher): Flow<Set<String>> = queries
+        .categories()
+        .asFlow()
+        .mapToList(dispatcher)
+        .map { it.toSet() }
+
     override suspend fun insert(item: InventoryItemType) = queries.insert(
         id = item.id,
         displayName = item.displayName,
         description = item.description,
+        category = item.category,
         image = item.image
     )
 
@@ -52,6 +70,7 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
         id = item.id,
         displayName = item.displayName,
         description = item.description,
+        category = item.category,
         image = item.image
     )
 
@@ -63,6 +82,7 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
         id = id,
         displayName = displayName,
         description = description,
+        category = category,
         image = image
     )
 }
