@@ -54,12 +54,6 @@ expect object BackgroundJobCoordinator {
     fun observe(id: Uuid): ObservableBackgroundJob
 
     /**
-     * Retrieves an [ObservableBackgroundJobs] for all jobs with the given [tag].
-     * @return An [ObservableBackgroundJobs] that allows to watch the status of all matching jobs.
-     */
-    fun observe(tag: String): ObservableBackgroundJobs
-
-    /**
      * Retrieves an [ObservableUniqueBackgroundJob] for a job with a given unique [name].
      * @return An [ObservableUniqueBackgroundJob] that allows to watch the job status.
      */

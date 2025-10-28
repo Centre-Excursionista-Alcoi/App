@@ -138,10 +138,6 @@ actual object BackgroundJobCoordinator {
         return ObservableBackgroundJob(id)
     }
 
-    actual fun observe(tag: String): ObservableBackgroundJobs {
-        throw UnsupportedOperationException("Observing by tag is not supported on JVM.")
-    }
-
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
         return ObservableUniqueBackgroundJob(name)
     }

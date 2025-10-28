@@ -130,13 +130,6 @@ actual object BackgroundJobCoordinator {
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
     }
 
-    actual fun observe(tag: String): ObservableBackgroundJobs {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
-        return ObservableBackgroundJobs(tag, flowProvider = { workManager.getWorkInfosByTagFlow(tag) })
-    }
-
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
         val workManager = workManager
         require(workManager != null) { "Coordinator not initialized." }
