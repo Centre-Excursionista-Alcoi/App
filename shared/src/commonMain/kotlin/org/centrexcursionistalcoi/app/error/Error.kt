@@ -33,7 +33,7 @@ sealed interface Error {
     class Exception(val message: String, val classType: String, val cause: Exception?) : Error {
         constructor(throwable: Throwable) : this(
             throwable.message ?: "No message",
-            throwable::class.qualifiedName ?: "Unknown",
+            throwable::class.simpleName ?: "Unknown",
             throwable.cause?.let { Exception(it) },
         )
 
