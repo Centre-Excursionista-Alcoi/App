@@ -84,6 +84,7 @@ kmm-settings-serialization = { module = "com.russhwolf:multiplatform-settings-se
 kotlin-crypto-random = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "kotlin-crypto-random" }
 kotlin-crypto-sha2 = { module = "org.kotlincrypto.hash:sha2", version.ref = "kotlin-crypto-hash" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinx-browser" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
