@@ -57,33 +57,11 @@ jobs:
           file_pattern: 'strings.xml'
           branch: master
 
-  create-sentry-release:
-    name: Create Sentry Release
-    runs-on: ubuntu-latest
-
-    needs: [update-version-name, clean-resources]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Create Sentry release
-        uses: getsentry/action-release@v3
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-          version: ${{ github.event.release.name }}
-
   build-android:
     name: Build for Android
     runs-on: ubuntu-latest
 
-    needs: [create-sentry-release]
+    needs: [update-version-name, clean-resources]
 
     steps:
       - name: Checkout code
@@ -131,6 +109,16 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: ./gradlew :composeApp:bundleRelease :composeApp:assembleRelease
 
+      - name: Create Sentry release - Android
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: app-android
+        with:
+          environment: production
+          version: ${{ github.event.release.name }}
+
       - name: Release AAB & APK
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -159,7 +147,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, ubuntu-22.04, windows-latest]
 
-    needs: [create-sentry-release]
+    needs: [update-version-name, clean-resources]
 
     steps:
       - uses: actions/checkout@v5
@@ -188,6 +176,16 @@ jobs:
 
       - name: Build
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+
+      - name: Create Sentry release - Desktop
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: app-desktop
+        with:
+          environment: production
+          version: ${{ github.event.release.name }}
 
       - name: Rename deb
         if: startsWith(matrix.os, 'ubuntu')
