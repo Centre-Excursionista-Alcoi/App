@@ -5,11 +5,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,6 +23,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
@@ -41,8 +38,6 @@ fun CreateInventoryItemTypeDialog(
     var isLoading by remember { mutableStateOf(false) }
     var displayName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-
-    var showingCategories by remember { mutableStateOf(false) }
     var category by remember { mutableStateOf("") }
 
     var image by remember { mutableStateOf<PlatformFile?>(null) }
@@ -71,36 +66,14 @@ fun CreateInventoryItemTypeDialog(
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                ExposedDropdownMenuBox(
-                    expanded =showingCategories,
-                    onExpandedChange = { showingCategories = it }
-                ) {
-                    OutlinedTextField(
-                        value = category,
-                        onValueChange = { category = it },
-                        label = { Text(stringResource(Res.string.management_inventory_item_type_category).optional()) },
-                        singleLine = true,
-                        enabled = !isLoading,
-                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                        readOnly = false,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(showingCategories) }
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = showingCategories,
-                        onDismissRequest = { showingCategories = false }
-                    ) {
-                        categories.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    category = option
-                                    showingCategories = false
-                                }
-                            )
-                        }
-                    }
-                }
+                AutocompleteFormField(
+                    value = category,
+                    onValueChange = { category = it },
+                    suggestions = categories,
+                    label = { Text(stringResource(Res.string.management_inventory_item_type_category).optional()) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                )
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     enabled = !isLoading,

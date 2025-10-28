@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 
 class InventoryItemModel(private val typeId: Uuid): ViewModel() {
     val type = InventoryItemTypesRepository.getAsFlow(typeId).stateInViewModel()
+    val categories = InventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
     val items = InventoryItemsRepository.selectAllWithTypeIdFlow(typeId).stateInViewModel()
 
     /**

@@ -70,11 +70,13 @@ fun InventoryItemsScreen(
     onBack: () -> Unit
 ) {
     val type by model.type.collectAsState()
+    val categories by model.categories.collectAsState()
     val items by model.items.collectAsState()
 
     InventoryItemsScreen(
         type = type,
         items = items.orEmpty(),
+        inventoryItemTypesCategories = categories,
         onCreate = model::createInventoryItem,
         onUpdate = model::updateInventoryItemType,
         onDelete = model::delete,
@@ -86,9 +88,10 @@ fun InventoryItemsScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 fun InventoryItemsScreen(
     type: InventoryItemType?,
+    inventoryItemTypesCategories: Set<String>?,
     items: List<ReferencedInventoryItem>,
     onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onUpdate: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
     onDelete: () -> Job,
     onBack: () -> Unit
 ) {
@@ -111,7 +114,7 @@ fun InventoryItemsScreen(
 
     var editing by remember { mutableStateOf(false) }
     if (editing && type != null) {
-        EditInventoryItemTypeDialog(type, onUpdate) { editing = false }
+        EditInventoryItemTypeDialog(type, inventoryItemTypesCategories.orEmpty(), onUpdate) { editing = false }
     }
 
     var deleting by remember { mutableStateOf(false) }

@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.ui.dialog
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,19 +24,23 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun EditInventoryItemTypeDialog(
     item: InventoryItemType,
-    onSubmit: (id: Uuid, displayName: String?, description: String?, image: PlatformFile?) -> Job,
+    categories: Set<String>,
+    onSubmit: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
     onDismissRequest: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
 
     var displayName by remember { mutableStateOf(item.displayName) }
     var description by remember { mutableStateOf(item.description.orEmpty()) }
+    var category by remember { mutableStateOf(item.category.orEmpty()) }
     val imageBytes by item.rememberImageFile()
     var image by remember { mutableStateOf<PlatformFile?>(null) }
     val imagePicker = rememberFilePickerLauncher(
@@ -52,6 +57,7 @@ fun EditInventoryItemTypeDialog(
                 item.id,
                 displayName.takeIf { it != item.displayName && it.isNotEmpty() },
                 description.takeIf { it != item.description && it.isNotEmpty() },
+                category.takeIf { it != item.category && it.isNotEmpty() },
                 image,
             ).invokeOnCompletion {
                 isLoading = false
@@ -75,6 +81,14 @@ fun EditInventoryItemTypeDialog(
             singleLine = true,
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth(),
+        )
+        AutocompleteFormField(
+            value = category,
+            onValueChange = { category = it },
+            suggestions = categories,
+            label = { Text(stringResource(Res.string.management_inventory_item_type_category).optional()) },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
         )
         OutlinedCard(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
