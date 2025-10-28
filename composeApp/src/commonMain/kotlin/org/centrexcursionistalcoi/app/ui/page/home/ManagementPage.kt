@@ -128,6 +128,7 @@ fun InventoryItemTypesCard(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
+        sharedContentStateKey = "inventory_item_type",
     )
 }
 

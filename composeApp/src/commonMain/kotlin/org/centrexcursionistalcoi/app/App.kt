@@ -1,14 +1,18 @@
 package org.centrexcursionistalcoi.app
 
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,6 +24,7 @@ import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
+import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.UuidNavType
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
@@ -66,150 +71,153 @@ fun App(
 ) {
     val navController = rememberNavController()
 
-    NavHost(
-        navController = navController,
-        startDestination = Destination.Loading,
-        modifier = Modifier.fillMaxSize().imePadding(),
-    ) {
-        composable<Destination.Loading> {
-            LoadingScreen(
-                onLoggedIn = {
-                    navController.navigate(Destination.Home) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = Destination.Loading,
+            modifier = Modifier.fillMaxSize().imePadding(),
+        ) {
+            destination<Destination.Loading> {
+                LoadingScreen(
+                    onLoggedIn = {
+                        navController.navigate(Destination.Home) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onNotLoggedIn = {
+                        navController.navigate(Destination.Login) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
+            }
+            destination<Destination.Login> {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(Destination.Loading) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
+            }
+            destination<Destination.Logout> {
+                LogoutScreen(
+                    afterLogout = {
+                        navController.navigate(Destination.Loading) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
                         }
                     }
-                },
-                onNotLoggedIn = {
-                    navController.navigate(Destination.Login) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
+                )
+            }
+            destination<Destination.Home> {
+                HomeScreen(
+                    onClickInventoryItemType = {
+                        navController.navigate(Destination.InventoryItems(it.id))
+                    },
+                    onManageLendingsRequested = {
+                        navController.navigate(Destination.LendingsManagement)
+                    },
+                    onLendingSignUpRequested = {
+                        navController.navigate(Destination.LendingSignUp)
+                    },
+                    onShoppingListConfirmed = {
+                        navController.navigate(Destination.LendingCreation(it))
+                    },
+                    onMemoryEditorRequested = {
+                        navController.navigate(Destination.LendingMemoryEditor(it))
+                    },
+                    onLogoutRequested = {
+                        navController.navigate(Destination.Logout) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
                         }
-                    }
-                },
-            )
-        }
-        composable<Destination.Login> {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Destination.Loading) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
-                        }
-                    }
-                },
-            )
-        }
-        composable<Destination.Logout> {
-            LogoutScreen(
-                afterLogout = {
-                    navController.navigate(Destination.Loading) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
-                        }
-                    }
-                }
-            )
-        }
-        composable<Destination.Home> {
-            HomeScreen(
-                onClickInventoryItemType = {
-                    navController.navigate(Destination.InventoryItems(it.id))
-                },
-                onManageLendingsRequested = {
-                    navController.navigate(Destination.LendingsManagement)
-                },
-                onLendingSignUpRequested = {
-                    navController.navigate(Destination.LendingSignUp)
-                },
-                onShoppingListConfirmed = {
-                    navController.navigate(Destination.LendingCreation(it))
-                },
-                onMemoryEditorRequested = {
-                    navController.navigate(Destination.LendingMemoryEditor(it))
-                },
-                onLogoutRequested = {
-                    navController.navigate(Destination.Logout) {
-                        popUpTo(navController.graph.id) {
-                            inclusive = true
-                        }
-                    }
-                },
-            )
-        }
-
-        composable<Destination.InventoryItems>(
-            typeMap = mapOf(
-                typeOf<Uuid>() to UuidNavType,
-            ),
-        ) { bse ->
-            val route = bse.toRoute<Destination.InventoryItems>()
-            val typeId = route.typeId
-
-            InventoryItemsScreen(
-                typeId = typeId,
-                onBack = { navController.navigateUp() }
-            )
-        }
-
-        composable<Destination.LendingsManagement> {
-            LendingsManagementScreen(
-                onLendingPickupRequest = {
-                    navController.navigate(Destination.LendingPickup(it.id))
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable<Destination.LendingSignUp> {
-            LendingSignUpScreen(
-                onBackRequested = { navController.navigateUp() }
-            )
-        }
-        composable<Destination.LendingCreation> { bse ->
-            val route = bse.toRoute<Destination.LendingCreation>()
-            val items = route.shoppingList
-
-            LaunchedEffect(items) {
-                // If there are no items, go back
-                if (items.isEmpty()) navController.popBackStack()
+                    },
+                )
             }
 
-            LendingCreationScreen(
-                originalShoppingList = items,
-                onLendingCreated = {
-                    navController.navigate(Destination.Home) {
-                        popUpTo<Destination.Home>()
-                    }
+            destination<Destination.InventoryItems> { route ->
+                val typeId = route.typeId
+
+                InventoryItemsScreen(
+                    typeId = typeId,
+                    onBack = { navController.navigateUp() }
+                )
+            }
+
+            destination<Destination.LendingsManagement> {
+                LendingsManagementScreen(
+                    onLendingPickupRequest = {
+                        navController.navigate(Destination.LendingPickup(it.id))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            destination<Destination.LendingSignUp> {
+                LendingSignUpScreen(
+                    onBackRequested = { navController.navigateUp() }
+                )
+            }
+            destination<Destination.LendingCreation> { route ->
+                val items = route.shoppingList
+
+                LaunchedEffect(items) {
+                    // If there are no items, go back
+                    if (items.isEmpty()) navController.popBackStack()
                 }
-            ) { navController.navigateUp() }
-        }
-        composable<Destination.LendingPickup>(
-            typeMap = mapOf(
-                typeOf<Uuid>() to UuidNavType,
-            ),
-        ) { bse ->
-            val route = bse.toRoute<Destination.LendingPickup>()
-            val lendingId = route.lendingId
 
-            LendingPickupScreen(
-                lendingId = lendingId,
-                onBack = { navController.navigateUp() },
-                onComplete = { navController.popBackStack() },
-            )
-        }
-        composable<Destination.LendingMemoryEditor>(
-            typeMap = mapOf(
-                typeOf<Uuid>() to UuidNavType,
-            ),
-        ) { bse ->
-            val route = bse.toRoute<Destination.LendingPickup>()
-            val lendingId = route.lendingId
+                LendingCreationScreen(
+                    originalShoppingList = items,
+                    onLendingCreated = {
+                        navController.navigate(Destination.Home) {
+                            popUpTo<Destination.Home>()
+                        }
+                    }
+                ) { navController.navigateUp() }
+            }
+            destination<Destination.LendingPickup> { route ->
+                val lendingId = route.lendingId
 
-            ActivityMemoryEditor(lendingId) { navController.navigateUp() }
+                LendingPickupScreen(
+                    lendingId = lendingId,
+                    onBack = { navController.navigateUp() },
+                    onComplete = { navController.popBackStack() },
+                )
+            }
+            destination<Destination.LendingMemoryEditor> { route ->
+                val lendingId = route.lendingId
+
+                ActivityMemoryEditor(lendingId) { navController.navigateUp() }
+            }
         }
     }
     LaunchedEffect(navController) {
         onNavHostReady(navController)
+    }
+}
+
+context(scope: SharedTransitionScope)
+inline fun <reified D: Destination> NavGraphBuilder.destination(
+    noinline content: @Composable (D) -> Unit
+) {
+    composable<D>(
+        typeMap = mapOf(
+            typeOf<Uuid>() to UuidNavType,
+        ),
+    ) { bse ->
+        val route = bse.toRoute<D>()
+
+        CompositionLocalProvider(LocalTransitionContext provides (scope to this@composable)) {
+            content(route)
+        }
     }
 }

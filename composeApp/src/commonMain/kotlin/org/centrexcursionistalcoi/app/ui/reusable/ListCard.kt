@@ -37,10 +37,12 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.ui.data.DialogContext
 import org.centrexcursionistalcoi.app.ui.data.DialogContextImpl
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.utils.currentOrThrow
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -52,6 +54,7 @@ fun <T> ListCard(
     emptyTextResource: StringResource,
     displayName: (T) -> String,
     modifier: Modifier = Modifier,
+    sharedContentStateKey: String? = null,
     highlight: ((T) -> Boolean)? = null,
     onCreate: (() -> Unit)? = null,
     onEditRequested: ((T) -> Unit)? = null,
@@ -62,6 +65,8 @@ fun <T> ListCard(
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
     onClick: ((T) -> Unit)? = null,
 ) {
+    val (sharedTransitionScope, animatedContentScope) = LocalTransitionContext.currentOrThrow
+
     var deleting by remember { mutableStateOf<T?>(null) }
     if (onDelete != null) {
         deleting?.let { item ->
@@ -125,7 +130,22 @@ fun <T> ListCard(
                     targetValue = if (shouldHighlight) MaterialTheme.colorScheme.primary else Color.Unspecified
                 )
                 ListItem(
-                    headlineContent = { Text(displayName(item)) },
+                    headlineContent = {
+                        if (sharedContentStateKey != null) {
+                            with(sharedTransitionScope) {
+                                Text(
+                                    text = displayName(item),
+                                    modifier = Modifier
+                                        .sharedBounds(
+                                            sharedContentState = sharedTransitionScope.rememberSharedContentState(sharedContentStateKey),
+                                            animatedVisibilityScope = animatedContentScope
+                                        )
+                                )
+                            }
+                        } else {
+                            Text(displayName(item))
+                        }
+                    },
                     supportingContent = if (supportingContent != null) {
                         { supportingContent(item) }
                     } else null,

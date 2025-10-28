@@ -49,6 +49,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -56,6 +57,7 @@ import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.ui.utils.currentOrThrow
 import org.centrexcursionistalcoi.app.viewmodel.InventoryItemModel
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -90,6 +92,8 @@ fun InventoryItemsScreen(
     onDelete: () -> Job,
     onBack: () -> Unit
 ) {
+    val (sharedTransitionScope, animatedContentScope) = LocalTransitionContext.currentOrThrow
+
     var showingItemDetails by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
     showingItemDetails?.let { item ->
         QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
@@ -141,7 +145,17 @@ fun InventoryItemsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(type?.displayName ?: stringResource(Res.string.status_loading)) },
+                title = {
+                    with(sharedTransitionScope) {
+                        Text(
+                            text = type?.displayName ?: stringResource(Res.string.status_loading),
+                            modifier = Modifier.sharedBounds(
+                                sharedContentState = sharedTransitionScope.rememberSharedContentState("inventory_item_type"),
+                                animatedVisibilityScope = animatedContentScope
+                            )
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
