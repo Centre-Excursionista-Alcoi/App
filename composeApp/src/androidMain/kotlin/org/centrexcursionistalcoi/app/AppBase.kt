@@ -26,7 +26,7 @@ class AppBase: Application() {
 
         NotifierManager.initialize(
             configuration = NotificationPlatformConfiguration.Android(
-                notificationIconResId = R.drawable.ic_launcher_monochrome,
+                notificationIconResId = R.drawable.ic_notification,
                 showPushNotification = false,
             )
         )
