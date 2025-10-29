@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
 import org.ncgroup.kscan.Barcode
@@ -31,7 +32,7 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
     private var nfcReaderJob: Job? = null
 
     fun startNfc() {
-        if (!PlatformNFC.supportsNFC) return
+        if (PlatformNFC.isNotSupported) return
 
         nfcReaderJob = launch {
             while (true) {
@@ -44,7 +45,7 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
     }
 
     fun stopNfc() {
-        if (!PlatformNFC.supportsNFC) return
+        if (PlatformNFC.isNotSupported) return
 
         nfcReaderJob?.cancel()
         nfcReaderJob = null

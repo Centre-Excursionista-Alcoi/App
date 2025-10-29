@@ -7,8 +7,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 
-actual object PlatformNFC {
-    actual val supportsNFC: Boolean = true // TODO: Check actual compatibility
+actual object PlatformNFC : PlatformProvider {
+    actual override val isSupported: Boolean = true // TODO: Check actual compatibility
 
     private val readMutex = Mutex()
     var readContinuation: Continuation<String?>? = null

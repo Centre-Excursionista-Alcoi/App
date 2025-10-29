@@ -6,8 +6,8 @@ import java.awt.Desktop
 import java.io.File
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
-actual object PlatformOpenFileLogic {
-    actual val supported: Boolean = Desktop.isDesktopSupported()
+actual object PlatformOpenFileLogic : PlatformProvider {
+    actual override val isSupported: Boolean = Desktop.isDesktopSupported()
 
     actual fun open(path: String, contentType: ContentType) {
         val filePath = SystemDataPath / path

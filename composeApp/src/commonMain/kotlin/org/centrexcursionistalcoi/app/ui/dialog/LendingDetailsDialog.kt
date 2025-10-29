@@ -127,7 +127,7 @@ fun LendingDetailsDialog(
                     Text("- ${type.displayName}: ${items.size} items")
                 }
 
-                if (PlatformOpenFileLogic.supported && lending.memoryDocument != null) {
+                if (PlatformOpenFileLogic.isSupported && lending.memoryDocument != null) {
                     HorizontalDivider()
 
                     OutlinedButton(

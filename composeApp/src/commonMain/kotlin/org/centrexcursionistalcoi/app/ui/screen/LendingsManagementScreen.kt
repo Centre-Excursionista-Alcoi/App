@@ -272,7 +272,7 @@ fun CompleteLendingsCard(
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
             Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
 
-            if (PlatformOpenFileLogic.supported && lending.memoryDocument != null) {
+            if (PlatformOpenFileLogic.isSupported && lending.memoryDocument != null) {
                 HorizontalDivider()
 
                 TextButton(

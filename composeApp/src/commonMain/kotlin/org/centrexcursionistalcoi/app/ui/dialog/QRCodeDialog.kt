@@ -40,9 +40,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
-import org.centrexcursionistalcoi.app.platform.qrImageTransferData
+import org.centrexcursionistalcoi.app.ui.utils.modIf
 import org.jetbrains.compose.resources.stringResource
 
 private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
@@ -99,7 +100,7 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
                     imageModifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .dragAndDropSource { _ -> qrImageTransferData(qrCodePainter) }
+                        .modIf(PlatformDragAndDrop.isSupported) { dragAndDropSource { _ -> PlatformDragAndDrop.qrImageTransferData(qrCodePainter) } }
                 )
 
                 val barcodePainter = if (value.matches(Code39Regex)) {
@@ -113,7 +114,7 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
                     ImageDisplay(barcodePainter, "Bar Code", imageModifier = Modifier.fillMaxWidth())
                 }
 
-                if (PlatformNFC.supportsNFC) {
+                if (PlatformNFC.isSupported) {
                     OutlinedButton(
                         onClick = { writingNFC = true }
                     ) { Text("Write NFC") }
@@ -143,7 +144,7 @@ private fun ImageDisplay(
             modifier = imageModifier.padding(top = 8.dp).padding(horizontal = 8.dp),
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            if (PlatformPrinter.supportsPrinting) {
+            if (PlatformPrinter.isSupported) {
                 IconButton(
                     onClick = {
                         val imageData = painter.toByteArray(1024, 1024, ImageFormat.PNG)

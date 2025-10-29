@@ -103,8 +103,8 @@ external class NDEFReader() : EventTarget {
 
 val ndefReaderAvailable: Boolean = js("(\"NDEFReader\" in window)")
 
-actual object PlatformNFC {
-    actual val supportsNFC: Boolean
+actual object PlatformNFC : PlatformProvider {
+    actual override val isSupported: Boolean
         get() = ndefReaderAvailable
 
     actual suspend fun readNFC(): String? = suspendCoroutine { cont ->

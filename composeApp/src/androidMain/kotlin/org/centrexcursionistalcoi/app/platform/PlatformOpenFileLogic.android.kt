@@ -9,8 +9,8 @@ import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
-actual object PlatformOpenFileLogic {
-    actual val supported: Boolean = true
+actual object PlatformOpenFileLogic : PlatformProvider {
+    actual override val isSupported: Boolean = true
 
     actual fun open(path: String, contentType: ContentType) {
         val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }

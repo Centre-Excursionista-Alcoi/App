@@ -13,45 +13,53 @@ import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
-actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
-    val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
+actual object PlatformDragAndDrop: PlatformProvider {
+    actual override val isSupported: Boolean = true
 
-    // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
-    val filePath = SystemDataPath / path
-    val file = File(filePath.toString())
-    val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
+    actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
+        val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
 
-    return DragAndDropTransferData(
-        ClipData.newUri(context.contentResolver, "", uri)
-    )
-}
+        // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
+        val filePath = SystemDataPath / path
+        val file = File(filePath.toString())
+        val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 
-actual fun qrImageTransferData(painter: QrCodePainter, value: String, contentType: ContentType): DragAndDropTransferData {
-    val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
+        return DragAndDropTransferData(
+            ClipData.newUri(context.contentResolver, "", uri)
+        )
+    }
 
-    val extension = contentType.fileExtensions().first()
-    val name = value.hashCode()
-    val filePath = SystemDataPath / "qr" / "$name.$extension"
-    val file = File(filePath.toString()).apply {
-        parentFile?.mkdirs()
-        if (!exists()) {
-            outputStream().use { output ->
-                output.write(
-                    painter.toByteArray(
-                        512, 512, when (contentType) {
-                            ContentType.Image.PNG -> ImageFormat.PNG
-                            ContentType.Image.JPEG -> ImageFormat.JPEG
-                            ContentType.Image.WEBP -> ImageFormat.WEBP
-                            else -> error("Unsupported image format: $contentType")
-                        }
+    actual fun qrImageTransferData(
+        painter: QrCodePainter,
+        value: String,
+        contentType: ContentType
+    ): DragAndDropTransferData {
+        val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
+
+        val extension = contentType.fileExtensions().first()
+        val name = value.hashCode()
+        val filePath = SystemDataPath / "qr" / "$name.$extension"
+        val file = File(filePath.toString()).apply {
+            parentFile?.mkdirs()
+            if (!exists()) {
+                outputStream().use { output ->
+                    output.write(
+                        painter.toByteArray(
+                            512, 512, when (contentType) {
+                                ContentType.Image.PNG -> ImageFormat.PNG
+                                ContentType.Image.JPEG -> ImageFormat.JPEG
+                                ContentType.Image.WEBP -> ImageFormat.WEBP
+                                else -> error("Unsupported image format: $contentType")
+                            }
+                        )
                     )
-                )
+                }
             }
         }
-    }
-    val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
+        val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 
-    return DragAndDropTransferData(
-        ClipData.newUri(context.contentResolver, value, uri)
-    )
+        return DragAndDropTransferData(
+            ClipData.newUri(context.contentResolver, value, uri)
+        )
+    }
 }

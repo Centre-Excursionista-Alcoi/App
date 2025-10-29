@@ -13,25 +13,29 @@ import org.centrexcursionistalcoi.app.transfer.ByteArrayTransferable
 import org.centrexcursionistalcoi.app.transfer.FileTransferable
 
 @OptIn(ExperimentalComposeUiApi::class)
-actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
-    return DragAndDropTransferData(
-        DragAndDropTransferable(
-            FileTransferable(File(path)),
-        ),
-        supportedActions = listOf(DragAndDropTransferAction.Move)
-    )
-}
+actual object PlatformDragAndDrop : PlatformProvider {
+    actual override val isSupported: Boolean
+        get() = TODO("Not yet implemented")
 
-@OptIn(ExperimentalComposeUiApi::class)
-actual fun qrImageTransferData(
-    painter: QrCodePainter,
-    value: String,
-    contentType: ContentType
-): DragAndDropTransferData {
-    return DragAndDropTransferData(
-        DragAndDropTransferable(
-            ByteArrayTransferable(painter.toByteArray(512, 512, ImageFormat.PNG)),
-        ),
-        supportedActions = listOf(DragAndDropTransferAction.Move),
-    )
+    actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
+        return DragAndDropTransferData(
+            DragAndDropTransferable(
+                FileTransferable(File(path)),
+            ),
+            supportedActions = listOf(DragAndDropTransferAction.Move)
+        )
+    }
+
+    actual fun qrImageTransferData(
+        painter: QrCodePainter,
+        value: String,
+        contentType: ContentType
+    ): DragAndDropTransferData {
+        return DragAndDropTransferData(
+            DragAndDropTransferable(
+                ByteArrayTransferable(painter.toByteArray(512, 512, ImageFormat.PNG)),
+            ),
+            supportedActions = listOf(DragAndDropTransferAction.Move),
+        )
+    }
 }

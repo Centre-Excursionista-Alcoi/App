@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.platform
 
-actual object PlatformNFC {
-    actual val supportsNFC: Boolean = false
+actual object PlatformNFC : PlatformProvider {
+    actual override val isSupported: Boolean = false
 
     actual suspend fun readNFC(): String? {
         throw UnsupportedOperationException("NFC is not supported on JVM platform")

@@ -9,8 +9,8 @@ import org.centrexcursionistalcoi.app.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
-actual object PlatformShareLogic {
-    actual val sharingSupported: Boolean = true
+actual object PlatformShareLogic : PlatformProvider {
+    actual override val isSupported: Boolean = true
 
     actual fun share(path: String, contentType: ContentType) {
         val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }

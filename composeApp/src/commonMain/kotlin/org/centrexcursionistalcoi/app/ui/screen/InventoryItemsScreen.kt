@@ -125,9 +125,9 @@ fun InventoryItemsScreen(
     }
 
     var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
-    LaunchedEffect(PlatformNFC.supportsNFC) {
-        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.supportsNFC}" }
-        if (PlatformNFC.supportsNFC) withContext(defaultAsyncDispatcher) {
+    LaunchedEffect(PlatformNFC.isSupported) {
+        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.isSupported}" }
+        if (PlatformNFC.isSupported) withContext(defaultAsyncDispatcher) {
             while (true) {
                 val read = PlatformNFC.readNFC() ?: continue
                 try {

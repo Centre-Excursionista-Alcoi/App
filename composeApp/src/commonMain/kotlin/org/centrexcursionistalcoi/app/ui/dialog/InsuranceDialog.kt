@@ -62,7 +62,7 @@ fun InsuranceDialog(
                 val hasDocument = insurance.documentId != null && documentId != null
                 if (hasDocument) {
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                        if (PlatformShareLogic.sharingSupported) {
+                        if (PlatformShareLogic.isSupported) {
                             IconButton(
                                 onClick = {
                                     val path = insurance.filePath(documentId)
@@ -72,7 +72,7 @@ fun InsuranceDialog(
                                 Icon(Icons.Default.Share, stringResource(Res.string.share))
                             }
                         }
-                        if (PlatformOpenFileLogic.supported) {
+                        if (PlatformOpenFileLogic.isSupported) {
                             OutlinedButton(
                                 onClick = {
                                     val path = insurance.filePath(documentId)
