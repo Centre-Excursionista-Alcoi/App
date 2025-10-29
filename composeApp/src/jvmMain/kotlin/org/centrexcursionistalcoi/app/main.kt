@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import cea_app.composeapp.generated.resources.*
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import dev.datlag.kcef.KCEF
@@ -14,6 +15,7 @@ import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.storage.DriverFactory
 import org.centrexcursionistalcoi.app.storage.createDatabase
 import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
@@ -41,6 +43,7 @@ fun main() {
 
         Window(
             title = "Centre Excursionista d'Alcoi",
+            icon = painterResource(Res.drawable.icon),
             onCloseRequest = {
                 KCEF.disposeBlocking()
                 exitApplication()

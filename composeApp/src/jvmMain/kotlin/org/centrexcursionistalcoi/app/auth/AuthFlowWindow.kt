@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import cea_app.composeapp.generated.resources.*
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewState
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
+import org.jetbrains.compose.resources.painterResource
 
 object AuthFlowWindow {
     private val _state = MutableStateFlow<FlowState?>(null)
@@ -114,7 +116,8 @@ object AuthFlowWindow {
         stateFlow?.let { (state, codeChallenge) ->
             Window(
                 title = "Authentication",
-                onCloseRequest = { _state.value = null }
+                icon = painterResource(Res.drawable.icon),
+                onCloseRequest = { _state.value = null },
             ) {
                 var restartRequired by remember { mutableStateOf(false) }
                 var downloading by remember { mutableStateOf(0F) }

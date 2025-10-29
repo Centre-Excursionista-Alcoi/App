@@ -314,12 +314,12 @@ compose.desktop {
             // Add additional modules that are required for your application
             modules("java.net.http", "java.sql")
 
-            // val iconsDir = File(rootDir, "icons")
+            val iconsDir = File(projectDir, "icons")
 
             windows {
-                // iconFile.set(
-                //     File(iconsDir, "icon.ico")
-                // )
+                iconFile.set(
+                    File(iconsDir, "icon.ico")
+                )
                 dirChooser = true
                 perUserInstall = true
                 menuGroup = "CEA App"
@@ -329,9 +329,9 @@ compose.desktop {
                 exePackageVersion = appVersionName
             }
             linux {
-                // iconFile.set(
-                //     File(iconsDir, "icon.png")
-                // )
+                iconFile.set(
+                    File(iconsDir, "icon.png")
+                )
                 debMaintainer = "app.linux.cea@arnyminerz.com"
                 menuGroup = "CEA App"
                 appCategory = "Sports"
