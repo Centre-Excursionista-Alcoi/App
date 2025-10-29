@@ -18,6 +18,7 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
 @OptIn(ExperimentalTime::class)
@@ -34,7 +35,7 @@ class LoadingViewModel(
                 ProfileRepository.update(profile)
 
                 Napier.d { "Scheduling data sync..." }
-                BackgroundJobCoordinator.schedule(
+                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
@@ -83,7 +84,7 @@ class LoadingViewModel(
                 }
 
                 Napier.d { "Scheduling periodic sync..." }
-                BackgroundJobCoordinator.scheduleAsync(
+                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
