@@ -200,6 +200,7 @@ jobs:
     needs: build-desktop
 
     steps:
+      - uses: actions/checkout@v5
       - name: Create Sentry release - Desktop
         uses: getsentry/action-release@v3
         env:
