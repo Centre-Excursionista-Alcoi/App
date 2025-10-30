@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.writeFile
 import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -54,8 +55,12 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         val remoteEntity = httpClient.get(endpoint) {
             progress?.let { monitorDownloadProgress(it) }
         }.let {
-            val raw = it.bodyAsText().cleanNullFields()
-            json.decodeFromString(ListSerializer(serializer), raw)
+            if (it.status.isSuccess()) {
+                val raw = it.bodyAsText().cleanNullFields()
+                json.decodeFromString(ListSerializer(serializer), raw)
+            } else {
+                throw it.bodyAsError().toThrowable()
+            }
         }
         return remoteEntity.map { remoteToLocalEntityConverter(it) }
     }

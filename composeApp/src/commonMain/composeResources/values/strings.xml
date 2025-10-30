@@ -47,6 +47,7 @@
     <string name="management_users">Users</string>
     <string name="management_inventory_item_types">Item Types</string>
     <string name="management_inventory_items">Items</string>
+    <string name="management_spaces">Spaces</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>
@@ -151,6 +152,7 @@
     <string name="management_no_item_types">No item types</string>
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
+    <string name="management_no_spaces">No spaces</string>
 
     <plurals name="management_items_amount">
         <item quantity="one">%1$d item</item>

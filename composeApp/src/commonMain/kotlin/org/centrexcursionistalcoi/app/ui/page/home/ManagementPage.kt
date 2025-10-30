@@ -31,6 +31,7 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
@@ -57,6 +58,8 @@ fun ManagementPage(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     onManageLendingsRequested: () -> Unit,
+
+    spaces: List<Space>?,
 ) {
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -81,6 +84,9 @@ fun ManagementPage(
                 onCreateInventoryItemType,
                 onClickInventoryItemType,
             )
+        }
+        item(key = "spaces") {
+            SpacesCard(spaces)
         }
     }
 }
@@ -137,6 +143,19 @@ fun InventoryItemTypesCard(
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
         sharedContentStateKey = { (type) -> "iit_${type.id}" },
+    )
+}
+
+@Composable
+fun SpacesCard(
+    spaces: List<Space>?,
+) {
+    ListCard(
+        list = spaces,
+        titleResource = Res.string.management_spaces,
+        emptyTextResource = Res.string.management_no_spaces,
+        displayName = { space -> space.name },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
     )
 }
 
