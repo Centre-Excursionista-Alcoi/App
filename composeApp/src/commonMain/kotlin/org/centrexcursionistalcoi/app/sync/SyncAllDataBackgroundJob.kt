@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.storage.settings
 
@@ -44,6 +45,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
             UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
             LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            SpacesRemoteRepository.synchronizeWithDatabase(progressNotifier)
 
             settings.putLong("lastSync", now.epochSeconds)
 
