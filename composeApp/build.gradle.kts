@@ -160,8 +160,15 @@ kotlin {
             }
         }
 
+        // Implements workers with Kotlin Coroutines
+        // Includes: jvm, iOS
+        val coroutinesWorkersMain by creating {
+            dependsOn(commonMain.get())
+        }
+
         jvmMain {
             dependsOn(physicalMain)
+            dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
@@ -198,6 +205,7 @@ kotlin {
 
         iosMain {
             dependsOn(phonesMain)
+            dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqldelight.native)
