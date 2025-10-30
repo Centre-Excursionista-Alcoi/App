@@ -27,13 +27,16 @@ import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import kotlin.time.Duration
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
+import org.centrexcursionistalcoi.app.ui.dialog.CreateSpaceDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.jetbrains.compose.resources.stringResource
@@ -57,6 +60,9 @@ fun ManagementPage(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     onManageLendingsRequested: () -> Unit,
+
+    spaces: List<Space>?,
+    onCreateSpace: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
 ) {
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -81,6 +87,9 @@ fun ManagementPage(
                 onCreateInventoryItemType,
                 onClickInventoryItemType,
             )
+        }
+        item(key = "spaces") {
+            SpacesCard(spaces, onCreateSpace)
         }
     }
 }
@@ -137,6 +146,26 @@ fun InventoryItemTypesCard(
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
         sharedContentStateKey = { (type) -> "iit_${type.id}" },
+    )
+}
+
+@Composable
+fun SpacesCard(
+    spaces: List<Space>?,
+    onCreate: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
+) {
+    var creating by remember { mutableStateOf(false) }
+    if (creating) {
+        CreateSpaceDialog(onCreate) { creating = false }
+    }
+
+    ListCard(
+        list = spaces,
+        titleResource = Res.string.management_spaces,
+        emptyTextResource = Res.string.management_no_spaces,
+        displayName = { space -> space.name },
+        onCreate = { creating = true },
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
     )
 }
 

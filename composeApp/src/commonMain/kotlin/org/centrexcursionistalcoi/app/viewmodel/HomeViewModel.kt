@@ -6,6 +6,7 @@ import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.size
+import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.doAsync
@@ -31,14 +33,15 @@ import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.Permission
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
-import org.centrexcursionistalcoi.app.permission.HelperHolder
-import org.centrexcursionistalcoi.app.permission.Permission
-import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 class HomeViewModel: ViewModel() {
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
@@ -60,6 +63,8 @@ class HomeViewModel: ViewModel() {
     val lendings = combine(LendingsRepository.selectAllAsFlow(), ProfileRepository.profile) { lendings, profile ->
         lendings.filter { lending -> lending.user.sub == profile?.sub }
     }.map { list -> list.sortedBy { it.from } }.stateInViewModel()
+
+    val spaces = SpacesRepository.selectAllAsFlow().stateInViewModel()
 
     /**
      * A map of InventoryItemType ID to amount in the shopping list.
@@ -106,6 +111,12 @@ class HomeViewModel: ViewModel() {
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
+    }
+
+    fun createSpace(name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) = launch {
+        val priceDuration = price?.let { it to priceDuration }
+
+        doAsync { SpacesRemoteRepository.create(name, description, priceDuration, capacity) }
     }
 
     fun addItemToShoppingList(type: InventoryItemType) {

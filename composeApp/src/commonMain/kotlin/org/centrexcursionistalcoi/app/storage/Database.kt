@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.storage
 
 import app.cash.sqldelight.db.SqlDriver
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.serialization.builtins.ListSerializer
@@ -19,6 +20,7 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
 import org.centrexcursionistalcoi.app.database.data.Lendings
 import org.centrexcursionistalcoi.app.database.data.Posts
+import org.centrexcursionistalcoi.app.database.data.Spaces
 import org.centrexcursionistalcoi.app.database.data.Users
 
 expect class DriverFactory {
@@ -50,6 +52,10 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             UUIDAdapter,
         ),
         Posts.Adapter(UUIDAdapter, InstantAdapter),
+        Spaces.Adapter(
+            UUIDAdapter,
+            JsonAdapter(Duration.serializer())
+        ),
         Users.Adapter(
             JsonAdapter(ListSerializer(String.serializer())),
             JsonAdapter(ListSerializer(DepartmentMemberInfo.serializer())),

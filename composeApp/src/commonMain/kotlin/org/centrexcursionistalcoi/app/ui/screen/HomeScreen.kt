@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -64,7 +65,9 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
@@ -77,7 +80,6 @@ import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeScreen(
@@ -96,6 +98,7 @@ fun HomeScreen(
     val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
+    val spaces by model.spaces.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
     val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
@@ -135,6 +138,8 @@ fun HomeScreen(
             onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
             onManageLendingsRequested = onManageLendingsRequested,
+            spaces = spaces,
+            onCreateSpace = model::createSpace,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -194,6 +199,9 @@ private fun HomeScreenContent(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     onManageLendingsRequested: () -> Unit,
+
+    spaces: List<Space>?,
+    onCreateSpace: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -377,6 +385,8 @@ private fun HomeScreenContent(
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
                         onManageLendingsRequested,
+                        spaces,
+                        onCreateSpace,
                     )
                 }
             } else {
@@ -419,6 +429,8 @@ private fun HomeScreenContent(
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
                             onManageLendingsRequested,
+                            spaces,
+                            onCreateSpace,
                         )
                     }
                 }
@@ -467,6 +479,9 @@ fun HomeScreenPagerContent(
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
 
     onManageLendingsRequested: () -> Unit,
+
+    spaces: List<Space>?,
+    onCreateSpace: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -502,6 +517,8 @@ fun HomeScreenPagerContent(
                 onClickInventoryItemType,
                 inventoryItems,
                 onManageLendingsRequested,
+                spaces,
+                onCreateSpace,
             )
 
             IDX_PROFILE_ADMIN if profile.isAdmin -> ProfilePage(

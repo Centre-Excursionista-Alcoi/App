@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.utils
 
 import io.ktor.util.reflect.instanceOf
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -17,8 +18,11 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.serialization.BigDecimalSerializer
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
+import org.centrexcursionistalcoi.app.serialization.JavaDurationSerializer
 import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.DecimalColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
@@ -36,6 +40,7 @@ import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.ULongEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.javatime.JavaDurationColumnType
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
@@ -97,6 +102,8 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
+                    is DecimalColumnType -> element(column.name, BigDecimalSerializer.descriptor, isOptional = type.nullable)
+                    is JavaDurationColumnType -> element(column.name, JavaDurationSerializer.descriptor, isOptional = type.nullable)
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
@@ -163,6 +170,12 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())
+                        }
+                        is DecimalColumnType -> {
+                            encodeSerializableElement(descriptor, idx, BigDecimalSerializer, typeValue as java.math.BigDecimal)
+                        }
+                        is JavaDurationColumnType -> {
+                            encodeSerializableElement(descriptor, idx, JavaDurationSerializer, typeValue as Duration)
                         }
                         else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                     }
