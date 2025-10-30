@@ -1,0 +1,26 @@
+import kotlin.uuid.Uuid;
+import kotlin.time.Duration;
+
+CREATE TABLE Spaces (
+  id TEXT AS Uuid PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  price REAL,
+  priceDuration TEXT AS Duration,
+  capacity INTEGER
+);
+
+insert:
+INSERT INTO Spaces (id, name, description, price, priceDuration, capacity) VALUES (?, ?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM Spaces WHERE id = ? LIMIT 1;
+
+selectAll:
+SELECT * FROM Spaces ORDER BY id;
+
+deleteById:
+DELETE FROM Spaces WHERE id = ?;
+
+update:
+UPDATE Spaces SET name = ?, description = ?, price = ?, priceDuration = ?, capacity = ? WHERE id = ?;
