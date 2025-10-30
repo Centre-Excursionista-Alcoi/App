@@ -17,8 +17,10 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.serialization.BigDecimalSerializer
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.DecimalColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
@@ -97,6 +99,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
+                    is DecimalColumnType -> element(column.name, BigDecimalSerializer.descriptor, isOptional = type.nullable)
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
@@ -163,6 +166,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())
+                        }
+                        is DecimalColumnType -> {
+                            encodeSerializableElement(descriptor, idx, BigDecimalSerializer, typeValue as java.math.BigDecimal)
                         }
                         else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                     }
