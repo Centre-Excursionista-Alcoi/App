@@ -56,6 +56,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -138,6 +139,7 @@ fun HomeScreen(
             inventoryItems = inventoryItems,
             onManageLendingsRequested = onManageLendingsRequested,
             spaces = spaces,
+            onCreateSpace = model::createSpace,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -199,6 +201,7 @@ private fun HomeScreenContent(
     onManageLendingsRequested: () -> Unit,
 
     spaces: List<Space>?,
+    onCreateSpace: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -383,6 +386,7 @@ private fun HomeScreenContent(
                         onRemoveItemFromShoppingListRequest,
                         onManageLendingsRequested,
                         spaces,
+                        onCreateSpace,
                     )
                 }
             } else {
@@ -426,6 +430,7 @@ private fun HomeScreenContent(
                             onRemoveItemFromShoppingListRequest,
                             onManageLendingsRequested,
                             spaces,
+                            onCreateSpace,
                         )
                     }
                 }
@@ -476,6 +481,7 @@ fun HomeScreenPagerContent(
     onManageLendingsRequested: () -> Unit,
 
     spaces: List<Space>?,
+    onCreateSpace: (name: String, description: String?, price: Double?, priceDuration: Duration, capacity: Int?) -> Job,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
@@ -512,6 +518,7 @@ fun HomeScreenPagerContent(
                 inventoryItems,
                 onManageLendingsRequested,
                 spaces,
+                onCreateSpace,
             )
 
             IDX_PROFILE_ADMIN if profile.isAdmin -> ProfilePage(

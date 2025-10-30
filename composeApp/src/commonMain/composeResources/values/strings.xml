@@ -55,6 +55,14 @@
     <string name="management_inventory_item_type_category">Category</string>
     <string name="management_inventory_item_type_image">Select Image</string>
 
+    <string name="management_space_create">Create Space</string>
+    <string name="management_space_name">Name</string>
+    <string name="management_space_description">Description</string>
+    <string name="management_space_price">Price</string>
+    <string name="management_space_price_duration">Period</string>
+    <string name="management_space_price_duration_hourly">Hourly</string>
+    <string name="management_space_price_duration_daily">Daily</string>
+
     <string name="back">Go Back</string>
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
