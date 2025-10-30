@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
@@ -100,7 +100,7 @@ fun HomeMainPage(
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Job,
 ) {
-    val scrollState = rememberLazyGridState()
+    val scrollState = rememberLazyStaggeredGridState()
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
 
@@ -130,7 +130,7 @@ fun HomeMainPage(
         modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
-            item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
+            item("welcome_message", span = StaggeredGridItemSpan.FullLine) {
                 Text(
                     text = stringResource(Res.string.welcome, profile.username),
                     style = MaterialTheme.typography.titleLarge,
@@ -185,7 +185,7 @@ fun HomeMainPage(
 
         val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
         if (!activeLendings.isNullOrEmpty()) {
-            stickyHeader("active_lendings_header") {
+            item("active_lendings_header") {
                 Text(
                     text = stringResource(Res.string.home_lendings),
                     style = MaterialTheme.typography.titleLarge,
@@ -204,7 +204,7 @@ fun HomeMainPage(
             }
         }
 
-        stickyHeader("lending_header") {
+        item("lending_header") {
             Text(
                 text = stringResource(Res.string.home_lending),
                 style = MaterialTheme.typography.titleLarge,
@@ -213,7 +213,7 @@ fun HomeMainPage(
         }
 
         if (profile.lendingUser == null) {
-            item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
+            item("lending_not_signed_up", span = StaggeredGridItemSpan.FullLine) {
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
@@ -232,7 +232,7 @@ fun HomeMainPage(
                 }
             }
         } else if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
-            item("lending_items", span = { GridItemSpan(maxLineSpan) }) {
+            item("lending_items", span = StaggeredGridItemSpan.FullLine) {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -311,7 +311,7 @@ fun HomeMainPage(
 
         val oldLendings = lendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
         if (oldLendings.isNotEmpty()) {
-            stickyHeader {
+            item("past_lendings_header", span = StaggeredGridItemSpan.FullLine) {
                 Text(
                     text = stringResource(Res.string.home_past_lendings),
                     style = MaterialTheme.typography.titleLarge,
