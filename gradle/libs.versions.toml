@@ -12,6 +12,7 @@ androidx-lifecycle = "2.9.5"
 androidx-navigation = "2.9.1"
 androidx-work = "2.11.0"
 buildkonfig = "0.17.1"
+calendar ="2.9.0"
 coil = "3.3.0"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
 composeMultiplatform = "1.9.2"
@@ -60,6 +61,7 @@ androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 androidx-work-gcm = { module = "androidx.work:work-gcm", version.ref ="androidx-work" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+calendar = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "calendar" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-windowSizeClass" }
