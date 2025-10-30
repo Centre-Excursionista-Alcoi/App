@@ -272,4 +272,12 @@
     <string name="notification_lending_returned_other_title">Lending Returned</string>
     <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
 
+    <string name="days_of_week_short_monday">Mon.</string>
+    <string name="days_of_week_short_tuesday">Tue.</string>
+    <string name="days_of_week_short_wednesday">Wed.</string>
+    <string name="days_of_week_short_thursday">Thu.</string>
+    <string name="days_of_week_short_friday">Fri.</string>
+    <string name="days_of_week_short_saturday">Sat.</string>
+    <string name="days_of_week_short_sunday">Sun.</string>
+
 </resources>

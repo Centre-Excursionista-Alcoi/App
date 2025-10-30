@@ -90,6 +90,9 @@ kotlin {
             // Rich Text Editor
             implementation(libs.richeditor)
 
+            // Calendar Viewer
+            implementation(libs.calendar)
+
             // Ktor serialization
             implementation(libs.ktor.serialization.kotlinxJson)
 

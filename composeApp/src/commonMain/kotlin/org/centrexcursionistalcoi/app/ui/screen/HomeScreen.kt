@@ -65,6 +65,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
@@ -77,7 +78,6 @@ import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeScreen(
@@ -501,6 +501,7 @@ fun HomeScreenPagerContent(
                 onCreateInventoryItemType,
                 onClickInventoryItemType,
                 inventoryItems,
+                lendings.orEmpty(),
                 onManageLendingsRequested,
             )
 
