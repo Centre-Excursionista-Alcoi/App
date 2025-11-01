@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.writeFile
 import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -51,13 +52,17 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
 
     suspend fun getAll(progress: ProgressNotifier? = null): List<LocalEntity> {
-        val remoteEntity = httpClient.get(endpoint) {
+        val response = httpClient.get(endpoint) {
             progress?.let { monitorDownloadProgress(it) }
-        }.let {
-            val raw = it.bodyAsText().cleanNullFields()
-            json.decodeFromString(ListSerializer(serializer), raw)
         }
-        return remoteEntity.map { remoteToLocalEntityConverter(it) }
+        if (response.status.isSuccess()) {
+            val raw = response.bodyAsText().cleanNullFields()
+            val remoteEntity = json.decodeFromString(ListSerializer(serializer), raw)
+            return remoteEntity.map { remoteToLocalEntityConverter(it) }
+        } else {
+            val error = response.bodyAsError()
+            throw error.toThrowable()
+        }
     }
 
     private suspend fun getUrl(url: String, progress: ProgressNotifier? = null): LocalEntity? {
@@ -69,8 +74,13 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val remoteEntity = json.decodeFromString(serializer, raw)
             return remoteToLocalEntityConverter(remoteEntity)
         } else {
-            Napier.e { "Failed to get $name with ID ${url.substringAfterLast('/')}. Status: ${response.status}" }
-            return null
+            val error = response.bodyAsError()
+            if (error is Error.EntityNotFound) {
+                Napier.e { "$name #${url.substringAfterLast('/')} was not found." }
+                return null
+            } else {
+                throw error.toThrowable()
+            }
         }
     }
 
