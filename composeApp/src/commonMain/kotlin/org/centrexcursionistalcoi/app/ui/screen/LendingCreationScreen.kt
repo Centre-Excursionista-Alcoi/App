@@ -234,7 +234,8 @@ private fun LendingCreationScreen(
                                         from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)
                                         allocatedItems == null -> stringResource(Res.string.lending_creation_allocating)
                                         items.isNullOrEmpty() -> stringResource(Res.string.lending_creation_no_items_allocated)
-                                        else -> stringResource(Res.string.lending_creation_items_allocated)
+                                        else -> stringResource(Res.string.lending_creation_items_allocated) + "\n" +
+                                                items.joinToString("\n") { "- ${it.id}" }
                                     }
                                 )
                                 if (error != null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()) {
