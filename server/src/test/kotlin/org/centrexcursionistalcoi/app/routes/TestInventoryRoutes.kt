@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -18,6 +19,7 @@ import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
+import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.Database
@@ -25,6 +27,7 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.today
@@ -477,6 +480,34 @@ class TestInventoryRoutes : ApplicationTestBase() {
                 assertNotNull(lending2)
                 assertEquals(FakeAdminUser.SUB, lending2.userSub)
             }
+        }
+    }
+
+    @Test
+    // tests deleting an item that is already referenced on a lending
+    fun test_delete_item_with_ending() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            initializeItem()
+
+            val user = FakeUser.provideEntity()
+
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.notes = "Existing lending"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+            }
+        }
+    ) {
+        // try deleting exampleItemId
+        client.delete("/inventory/items/$exampleItemId").apply {
+            assertError(Error.EntityDeleteReferencesExist())
         }
     }
 }

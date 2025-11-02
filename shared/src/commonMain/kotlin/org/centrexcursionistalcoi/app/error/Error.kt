@@ -251,6 +251,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError
     }
 
+    @Serializable
+    @SerialName("EntityDeleteReferencesExist")
+    class EntityDeleteReferencesExist(): Error {
+        override val code: Int = 20
+        override val description: String = "Cannot delete entity because other entities reference it."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
 
     companion object {
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
@@ -274,6 +284,7 @@ sealed interface Error {
             17 -> UserNotFound.serializer()
             18 -> AuthentikNotConfigured.serializer()
             19 -> SerializationError.serializer()
+            20 -> EntityDeleteReferencesExist.serializer()
             else -> null
         }
     }
