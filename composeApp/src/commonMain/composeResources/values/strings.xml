@@ -71,6 +71,10 @@
     <string name="logout">Logout</string>
     <string name="none">None</string>
 
+    <string name="error_dialog_title">Unhandled exception</string>
+    <string name="error_dialog_type">Type:</string>
+    <string name="error_dialog_stacktrace">Stacktrace:</string>
+
     <string name="logout_confirmation_title">Confirm Logout</string>
     <string name="logout_confirmation_message">Are you sure you want to log out?</string>
 

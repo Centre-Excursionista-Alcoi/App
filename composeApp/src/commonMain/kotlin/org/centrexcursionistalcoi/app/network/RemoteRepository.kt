@@ -11,12 +11,11 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
@@ -61,7 +60,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             return remoteEntity.map { remoteToLocalEntityConverter(it) }
         } else {
             val error = response.bodyAsError()
-            throw error.toThrowable()
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
@@ -79,7 +78,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 Napier.e { "$name #${url.substringAfterLast('/')} was not found." }
                 return null
             } else {
-                throw error.toThrowable()
+                throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
             }
         }
     }
@@ -233,16 +232,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             }
         } else {
             // Try to decode the error
-            try {
-                val body = response.bodyAsText()
-                val error = json.decodeFromString(Error.serializer(), body)
-                Napier.e { "Failed to create $name: $error" }
-                throw error.toThrowable()
-            } catch (e: SerializationException) {
-                val throwable = IllegalStateException("Failed to create $name. Status: ${response.status}. Body: ${response.bodyAsText()}", e)
-                Napier.e(throwable) { "Failed to create $name. Status: ${response.status}" }
-                throw throwable
-            }
+            val error = response.bodyAsError()
+            Napier.e { "Failed to create $name: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
@@ -274,20 +266,22 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             synchronizeFiles(listOf(item))
         } else {
-            Napier.e { "Failed to update $name with ID $id. Status: ${response.status}" }
-            throw IllegalStateException("Failed to update $name with ID $id. Status: ${response.status}. Body: ${response.bodyAsText()}")
+            val error = response.bodyAsError()
+            Napier.e { "Failed to update $name#$id: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
     suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.delete("$endpoint/$id")
-        if (response.status == HttpStatusCode.NoContent) {
+        if (response.status.isSuccess()) {
             Napier.i { "Deleted $name with ID $id" }
             progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.delete(remoteToLocalIdConverter(id))
         } else {
-            Napier.e { "Failed to delete $name with ID $id. Status: ${response.status}" }
-            throw IllegalStateException("Failed to delete $name with ID $id. Status: ${response.status}. Body: ${response.bodyAsText()}")
+            val error = response.bodyAsError()
+            Napier.e { "Failed to delete $name#$id: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 }
