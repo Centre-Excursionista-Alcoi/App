@@ -10,6 +10,14 @@ import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.StateFlow
 import org.centrexcursionistalcoi.app.process.Progress
 
+/**
+ * A linear loading indicator that shows a wavy animation when indeterminate,
+ * and a progress bar when determinate.
+ * @param progress The progress to display. If null, nothing is displayed.
+ * If [Progress.Transfer] with null progress, an indeterminate indicator is shown.
+ * If [Progress.Transfer] with non-null progress, a determinate indicator is shown.
+ * @param modifier The modifier to be applied to the indicator.
+ */
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun LinearLoadingIndicator(progress: Progress?, modifier: Modifier = Modifier.fillMaxWidth()) {
