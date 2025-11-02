@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.doAsync
@@ -21,6 +22,22 @@ class InventoryItemModel(private val typeId: Uuid): ViewModel() {
      */
     fun delete() = launch {
         doAsync { InventoryItemTypesRemoteRepository.delete(typeId) }
+    }
+
+    /**
+     * Deletes the given inventory item.
+     */
+    fun delete(item: ReferencedInventoryItem) = launch {
+        doAsync { InventoryItemsRemoteRepository.delete(item.id) }
+    }
+
+    fun updateInventoryItem(item: ReferencedInventoryItem, variation: String) = launch {
+        doAsync {
+            InventoryItemsRemoteRepository.update(
+                item.id,
+                variation.takeUnless { it.isEmpty() }
+            )
+        }
     }
 
     fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = launch {
