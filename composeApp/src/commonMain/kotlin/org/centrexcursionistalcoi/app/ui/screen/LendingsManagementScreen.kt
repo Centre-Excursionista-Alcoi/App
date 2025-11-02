@@ -22,21 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.ktor.http.ContentType
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.centrexcursionistalcoi.app.ui.utils.unknown
+import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingsManagementViewModel
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -249,6 +246,7 @@ fun PendingMemoryLendingsCard(
 @Composable
 fun CompleteLendingsCard(
     lendings: List<ReferencedLending>,
+    fpm: FileProviderModel = viewModel { FileProviderModel() },
 ) {
     ListCard(
         list = lendings,
@@ -281,16 +279,13 @@ fun CompleteLendingsCard(
 
                 TextButton(
                     onClick = {
-                        GlobalScope.launch {
-                            val path = withContext(defaultAsyncDispatcher) {
-                                lending.fetchDocumentFilePath()
-                            }
-                            PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
-                        }
+                        fpm.openFile { lending.fetchDocumentFilePath() }
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) { Text(stringResource(Res.string.management_view_memory)) }
             }
+
+            fpm.progress.LinearLoadingIndicator()
         }
     )
 }
