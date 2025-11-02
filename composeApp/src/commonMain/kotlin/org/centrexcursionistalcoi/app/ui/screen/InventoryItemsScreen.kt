@@ -82,7 +82,11 @@ fun InventoryItemsScreen(
         inventoryItemTypesCategories = categories,
         onCreate = model::createInventoryItem,
         onUpdate = model::updateInventoryItemType,
-        onDelete = model::delete,
+        onDelete = {
+            model.delete().apply {
+                invokeOnCompletion { onBack() }
+            }
+        },
         onDeleteItem = model::delete,
         onUpdateItem = model::updateInventoryItem,
         onBack = onBack,
@@ -138,6 +142,12 @@ fun InventoryItemsScreen(
             onEdit = { variation -> onUpdateItem(item, variation) },
             onDismissRequest = { displayingItem = null },
         )
+    }
+    LaunchedEffect(items, displayingItem) {
+        if (displayingItem != null && items.find { it.id == displayingItem?.id } == null) {
+            // currently displayed item was deleted, close dialog
+            displayingItem = null
+        }
     }
 
     var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
