@@ -68,6 +68,8 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 fun InventoryItemsScreen(
     typeId: Uuid,
+    /** The display name of the type. Used to display the title before having fully loaded the type data, so that the shared animation is smooth. */
+    typeDisplayName: String,
     model: InventoryItemModel = viewModel { InventoryItemModel(typeId) },
     onBack: () -> Unit
 ) {
@@ -77,6 +79,7 @@ fun InventoryItemsScreen(
 
     InventoryItemsScreen(
         typeId = typeId,
+        typeDisplayName = typeDisplayName,
         type = type,
         items = items.orEmpty(),
         inventoryItemTypesCategories = categories,
@@ -97,6 +100,7 @@ fun InventoryItemsScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 fun InventoryItemsScreen(
     typeId: Uuid,
+    typeDisplayName: String,
     type: InventoryItemType?,
     inventoryItemTypesCategories: Set<String>?,
     items: List<ReferencedInventoryItem>,
@@ -179,7 +183,7 @@ fun InventoryItemsScreen(
                 title = {
                     with(sharedTransitionScope) {
                         Text(
-                            text = type?.displayName ?: stringResource(Res.string.status_loading),
+                            text = typeDisplayName,
                             modifier = Modifier.sharedBounds(
                                 sharedContentState = sharedTransitionScope.rememberSharedContentState("iit_$typeId"),
                                 animatedVisibilityScope = animatedContentScope

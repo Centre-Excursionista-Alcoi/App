@@ -181,8 +181,8 @@ fun App(
             }
             destination<Destination.Home> {
                 HomeScreen(
-                    onClickInventoryItemType = {
-                        navController.navigate(Destination.InventoryItems(it.id))
+                    onClickInventoryItemType = { type ->
+                        navController.navigate(Destination.InventoryItems(type))
                     },
                     onManageLendingsRequested = {
                         navController.navigate(Destination.LendingsManagement)
@@ -208,9 +208,11 @@ fun App(
 
             destination<Destination.InventoryItems> { route ->
                 val typeId = route.typeId
+                val displayName = route.displayName
 
                 InventoryItemsScreen(
                     typeId = typeId,
+                    typeDisplayName = displayName,
                     onBack = { navController.navigateUp() }
                 )
             }
