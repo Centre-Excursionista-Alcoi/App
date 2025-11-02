@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.runtime.Composable
@@ -11,21 +12,23 @@ import org.centrexcursionistalcoi.app.process.Progress
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-fun LinearLoadingIndicator(progress: Progress?, modifier: Modifier = Modifier) {
-    if (progress is Progress.Transfer) {
-        val value = progress.progress
-        if (value == null) {
-            LinearWavyProgressIndicator(modifier)
+fun LinearLoadingIndicator(progress: Progress?, modifier: Modifier = Modifier.fillMaxWidth()) {
+    if (progress != null) {
+        if (progress is Progress.Transfer) {
+            val value = progress.progress
+            if (value == null) {
+                LinearWavyProgressIndicator(modifier)
+            } else {
+                LinearWavyProgressIndicator(progress = { value }, modifier)
+            }
         } else {
-            LinearWavyProgressIndicator(progress = { value }, modifier)
+            LinearWavyProgressIndicator(modifier)
         }
-    } else {
-        LinearWavyProgressIndicator(modifier)
     }
 }
 
 @Composable
-fun StateFlow<Progress?>.LinearLoadingIndicator(modifier: Modifier = Modifier) {
+fun StateFlow<Progress?>.LinearLoadingIndicator(modifier: Modifier = Modifier.fillMaxWidth()) {
     val progress by collectAsState()
     LinearLoadingIndicator(progress, modifier)
 }
