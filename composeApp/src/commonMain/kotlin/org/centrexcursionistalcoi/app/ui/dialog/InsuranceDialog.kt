@@ -22,8 +22,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.ktor.http.ContentType
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.UserInsurance
-import org.centrexcursionistalcoi.app.data.filePath
+import org.centrexcursionistalcoi.app.data.fetchFilePath
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.jetbrains.compose.resources.StringResource
@@ -65,8 +69,12 @@ fun InsuranceDialog(
                         if (PlatformShareLogic.isSupported) {
                             IconButton(
                                 onClick = {
-                                    val path = insurance.filePath(documentId)
-                                    PlatformShareLogic.share(path, ContentType.Application.Pdf)
+                                    GlobalScope.launch {
+                                        val path = withContext(defaultAsyncDispatcher) {
+                                            insurance.fetchFilePath(documentId)
+                                        }
+                                        PlatformShareLogic.share(path, ContentType.Application.Pdf)
+                                    }
                                 },
                             ) {
                                 Icon(Icons.Default.Share, stringResource(Res.string.share))
@@ -75,8 +83,12 @@ fun InsuranceDialog(
                         if (PlatformOpenFileLogic.isSupported) {
                             OutlinedButton(
                                 onClick = {
-                                    val path = insurance.filePath(documentId)
-                                    PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                                    GlobalScope.launch {
+                                        val path = withContext(defaultAsyncDispatcher) {
+                                            insurance.fetchFilePath(documentId)
+                                        }
+                                        PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                                    }
                                 },
                                 modifier = Modifier.weight(1f).padding(start = 8.dp)
                             ) {

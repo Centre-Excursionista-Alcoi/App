@@ -23,11 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.ktor.http.ContentType
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.documentFilePath
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
@@ -277,8 +281,12 @@ fun CompleteLendingsCard(
 
                 TextButton(
                     onClick = {
-                        val path = lending.documentFilePath()
-                        PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                        GlobalScope.launch {
+                            val path = withContext(defaultAsyncDispatcher) {
+                                lending.fetchDocumentFilePath()
+                            }
+                            PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) { Text(stringResource(Res.string.management_view_memory)) }

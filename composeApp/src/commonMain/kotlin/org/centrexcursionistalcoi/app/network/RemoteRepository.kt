@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.aakira.napier.Napier
+import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -13,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
@@ -20,10 +22,10 @@ import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
 import org.centrexcursionistalcoi.app.data.ImageFileContainer
-import org.centrexcursionistalcoi.app.data.SubReferencedFileContainer
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
+import org.centrexcursionistalcoi.app.data.fetchImageFilePath
+import org.centrexcursionistalcoi.app.data.filePaths
 import org.centrexcursionistalcoi.app.data.toFormData
-import org.centrexcursionistalcoi.app.data.writeFile
-import org.centrexcursionistalcoi.app.data.writeImageFile
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -33,6 +35,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
@@ -140,78 +143,59 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         progress?.invoke(Progress.LocalDBRead)
         val all = repository.selectAll()
         Napier.i { "There are ${all.size} $name" }
-
-        synchronizeFiles(all, progress)
     }
 
-    private suspend fun synchronizeFiles(entities: List<LocalEntity>, progressNotifier: ProgressNotifier? = null) {
-        Napier.d { "Synchronizing files for ${entities.size} entities..." }
-        for (item in entities) {
-            val itemName = "${item::class.simpleName}#${item.id}"
-            if (item is FileContainer) {
-                Napier.d { "$itemName has ${item.files.size} files." }
-                val files = item.files.toList()
-                for ((index, file) in files.withIndex()) {
-                    val (fileName, uuid) = file
-                    if (uuid == null) {
-                        Napier.w { "$itemName is not set for $fileName" }
-                        continue
-                    }
-                    Napier.d { "Downloading $uuid ($index / ${files.size})..." }
-                    val channel = httpClient.get("/download/$uuid") {
-                        progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
-                    }.let {
-                        if (!it.status.isSuccess()) {
-                            Napier.e { "Failed to download file with ID $uuid for $itemName with ID ${item.id}. Status: ${it.status}" }
-                            continue
-                        }
-                        it.bodyAsChannel()
-                    }
+    /**
+     * Downloads a file with the given UUID from the remote server and saves it to the specified path.
+     * @param uuid The UUID of the file to download.
+     * @param path The local file path where the downloaded file will be saved.
+     * @param progressNotifier An optional progress notifier to report download progress.
+     */
+    suspend fun downloadFile(
+        uuid: Uuid,
+        path: String,
+        progressNotifier: ProgressNotifier? = null
+    ) {
+        downloadFile(uuid, path, httpClient, progressNotifier)
+    }
 
-                    Napier.v { "Writing file..." }
-                    when (item) {
-                        is ImageFileContainer -> item.writeImageFile(uuid, channel, progressNotifier)
-                        is DocumentFileContainer -> item.writeFile(channel, progressNotifier)
-                        else -> item.writeFile(channel, uuid, progressNotifier)
-                    }
-                    Napier.d { "File $uuid stored." }
+    private suspend fun downloadFileForEntity(item: LocalEntity, progressNotifier: ProgressNotifier? = null) {
+        when (item) {
+            is DocumentFileContainer -> {
+                val path = item.fetchDocumentFilePath(downloadIfNotExists = false)
+                val fileUuid = item.documentFile
+                if (fileUuid != null) {
+                    downloadFile(fileUuid, path, progressNotifier)
+                } else {
+                    Napier.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
-            if (item is SubReferencedFileContainer) {
-                val files = item.referencedFiles
-                Napier.d { "$itemName has ${files.size} referenced files." }
-                for ((index, file) in files.withIndex()) {
-                    val (fileName, uuid) = file
-                    if (uuid == null) {
-                        Napier.w { "$itemName is not set for $fileName" }
-                        continue
-                    }
-
-                    Napier.d { "Downloading $uuid ($index / ${files.size})..." }
-                    val channel = httpClient.get("/download/$uuid") {
-                        progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
-                    }.let {
-                        if (!it.status.isSuccess()) {
-                            Napier.e { "Failed to download referenced file with ID $uuid for $itemName with ID ${item.id}. Status: ${it.status}" }
-                            continue
-                        }
-                        it.bodyAsChannel()
-                    }
-
-                    Napier.v { "Writing referenced file..." }
-                    item.writeFile(channel, uuid, progressNotifier)
-                    Napier.d { "Referenced file $uuid stored." }
+            is ImageFileContainer -> {
+                val path = item.fetchImageFilePath(downloadIfNotExists = false)
+                val fileUuid = item.image
+                if (fileUuid != null) {
+                    downloadFile(fileUuid, path, progressNotifier)
+                } else {
+                    Napier.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
+            is FileContainer -> {
+                val filePaths = item.filePaths()
+                for ((fileUuid, path) in filePaths) {
+                    downloadFile(fileUuid, path, progressNotifier)
+                }
+            }
+            else -> { /* nothing */ }
         }
     }
 
     suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
 
+        val formData = item.toFormData()
         val response = httpClient.submitFormWithBinaryData(
             url = endpoint,
-            formData = item.toFormData()
+            formData = formData
         ) {
             progressNotifier?.let { monitorUploadProgress(it) }
         }
@@ -225,7 +209,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 progressNotifier?.invoke(Progress.LocalDBWrite)
                 repository.insert(item)
 
-                synchronizeFiles(listOf(item), progressNotifier)
+                downloadFileForEntity(item, progressNotifier)
             } catch (e: IllegalStateException) {
                 Napier.e { "${e.message} Synchronizing completely with server..." }
                 synchronizeWithDatabase(progressNotifier)
@@ -264,7 +248,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.update(item)
 
-            synchronizeFiles(listOf(item))
+            downloadFileForEntity(item, progressNotifier)
         } else {
             val error = response.bodyAsError()
             Napier.e { "Failed to update $name#$id: $error" }
@@ -282,6 +266,38 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val error = response.bodyAsError()
             Napier.e { "Failed to delete $name#$id: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+        }
+    }
+
+
+    companion object {
+        /**
+         * Downloads a file with the given UUID from the remote server and saves it to the specified path.
+         * @param uuid The UUID of the file to download.
+         * @param path The local file path where the downloaded file will be saved.
+         * @param httpClient The HTTP client to use for the download. Defaults to the shared client.
+         * @param progressNotifier An optional progress notifier to report download progress.
+         */
+        suspend fun downloadFile(
+            uuid: Uuid,
+            path: String,
+            httpClient: HttpClient = getHttpClient(),
+            progressNotifier: ProgressNotifier? = null
+        ) {
+            Napier.d { "Downloading $uuid..." }
+            val channel = httpClient.get("/download/$uuid") {
+                progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
+            }.let {
+                if (!it.status.isSuccess()) {
+                    val error = it.bodyAsError()
+                    Napier.e { "Failed to download file with ID $uuid: $error" }
+                    throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+                }
+                it.bodyAsChannel()
+            }
+            Napier.v { "Writing file..." }
+            PlatformFileSystem.write(path, channel, progressNotifier)
+            Napier.d { "File $uuid stored." }
         }
     }
 }

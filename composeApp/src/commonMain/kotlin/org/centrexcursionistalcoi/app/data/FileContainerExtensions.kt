@@ -17,8 +17,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.SystemPathSeparator
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.network.RemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
@@ -28,11 +30,24 @@ const val FILES_PATH = "files"
 
 /**
  * Returns the file path for the document file associated with this DocumentFileContainer.
- * @throws IllegalStateException if there is no document file associated with the container.
+ * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param progressNotifier Optional ProgressNotifier to track download progress.
+ * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
+ * @throws IllegalStateException if the document file is not found and uuid cannot be inferred.
  */
-fun DocumentFileContainer.documentFilePath(): String {
-    val clName = this::class.simpleName ?: "generic"
-    return joinPaths(DOCUMENTS_PATH, clName, documentFile?.toString() ?: error("No document file for container"))
+suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
+    val path = joinPaths(
+        DOCUMENTS_PATH,
+        this::class.simpleName ?: "generic",
+        documentFile?.toString() ?: error("No document file for container")
+    )
+    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
+            ?: throw IllegalStateException("Document file not found at path ($path). UUID could not be inferred.")
+        Napier.d { "Tried to read non-existing file. Downloading..." }
+        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
+    }
+    return path
 }
 
 /**
@@ -40,31 +55,36 @@ fun DocumentFileContainer.documentFilePath(): String {
  * @throws IllegalStateException if there is no document file associated with the container.
  */
 suspend fun DocumentFileContainer.writeFile(channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
-    val path = documentFilePath()
+    val path = fetchDocumentFilePath(progressNotifier, downloadIfNotExists = false)
     PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
 suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? = null): ByteArray {
-    val path = documentFilePath()
+    val path = fetchDocumentFilePath(progressNotifier)
     return PlatformFileSystem.read(path, progressNotifier)
 }
 
-
-private fun ImageFileContainer.imageFilePath(uuid: Uuid): String {
-    val clName = this::class.simpleName ?: "generic"
-    return joinPaths(IMAGES_PATH, clName, uuid.toString())
-}
-
-suspend fun ImageFileContainer.writeImageFile(uuid: Uuid, channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
-    val path = imageFilePath(uuid)
-    PlatformFileSystem.write(path, channel, progressNotifier)
-}
-
-suspend fun ImageFileContainer.imageFile(): ByteArray? = image?.let { uuid ->
-    val path = imageFilePath(uuid)
-    if (!PlatformFileSystem.exists(path)) {
-        throw IllegalStateException("Image file not found at path: $path")
+/**
+ * Returns the paths for the image file associated with this ImageFileContainer.
+ * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param progressNotifier Optional ProgressNotifier to track download progress.
+ * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
+ * @throws IllegalStateException if the image file is not found and uuid cannot be inferred.
+ */
+suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
+    val uuid = image ?: throw IllegalStateException("No image associated with this container.")
+    val path = joinPaths(IMAGES_PATH, this::class.simpleName ?: "generic", uuid.toString())
+    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
+            ?: throw IllegalStateException("Image file not found at path ($path). UUID could not be inferred.")
+        Napier.d { "Tried to read non-existing file. Downloading..." }
+        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }
+    return path
+}
+
+suspend fun ImageFileContainer.imageFile(progressNotifier: ProgressNotifier? = null): ByteArray? = image?.let { uuid ->
+    val path = fetchImageFilePath(progressNotifier)
     return PlatformFileSystem.read(path)
 }
 
@@ -81,14 +101,23 @@ fun FileContainer.filePaths(): Map<Uuid, String> {
 }
 
 /**
- * Returns the file path for the file associated with the provided UUID in this FileContainer.
- * @throws IllegalArgumentException if the UUID is not in the container.
+ * Returns the paths for the file associated with the provided UUID in this FileContainer.
+ * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param progressNotifier Optional ProgressNotifier to track download progress.
+ * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
+ * @throws IllegalArgumentException if the file is not found and uuid cannot be inferred.
  */
-fun FileContainer.filePath(uuid: Uuid): String {
+suspend fun FileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
     require(files.values.contains(uuid)) { "UUID must be in the container." }
 
-    val clName = this::class.simpleName ?: "generic"
-    return joinPaths(FILES_PATH, clName, uuid.toString())
+    val path = joinPaths(FILES_PATH, this::class.simpleName ?: "generic", uuid.toString())
+    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
+            ?: throw IllegalStateException("Generic file not found at path ($path). UUID could not be inferred.")
+        Napier.d { "Tried to read non-existing file. Downloading..." }
+        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
+    }
+    return path
 }
 
 /**
@@ -96,7 +125,7 @@ fun FileContainer.filePath(uuid: Uuid): String {
  * @throws IllegalArgumentException if the UUID is not in the container.
  */
 suspend fun FileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
-    val path = filePath(uuid)
+    val path = fetchFilePath(uuid, downloadIfNotExists = false)
     PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
@@ -105,20 +134,30 @@ suspend fun FileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progre
  * @throws IllegalArgumentException if the UUID is not in the container.
  */
 suspend fun FileContainer.readFile(uuid: Uuid, progressNotifier: ProgressNotifier? = null): ByteArray {
-    val path = filePath(uuid)
+    val path = fetchFilePath(uuid)
     return PlatformFileSystem.read(path, progressNotifier)
 }
 
 
 /**
- * Returns the paths for the file associated with the provided UUIDs in this SubReferencedFileContainer.
- * @throws IllegalArgumentException if the UUID is not in the container.
+ * Returns the paths for the file associated with the provided UUID in this SubReferencedFileContainer.
+ * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param progressNotifier Optional ProgressNotifier to track download progress.
+ * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
+ * @throws IllegalArgumentException if the file is not found and uuid cannot be inferred.
  */
-fun SubReferencedFileContainer.filePath(uuid: Uuid): String {
+suspend fun SubReferencedFileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
     val ref = referencedFiles.find { it.second == uuid }
     require(ref != null) { "UUID must be in the container." }
 
-    return joinPaths(FILES_PATH, ref.third, uuid.toString())
+    val path = joinPaths(FILES_PATH, ref.third, uuid.toString())
+    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
+            ?: throw IllegalStateException("Sub-referenced file not found at path ($path). UUID could not be inferred.")
+        Napier.d { "Tried to read non-existing file. Downloading..." }
+        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
+    }
+    return path
 }
 
 /**
@@ -126,7 +165,7 @@ fun SubReferencedFileContainer.filePath(uuid: Uuid): String {
  * @throws IllegalArgumentException if the UUID is not in the container.
  */
 suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
-    val path = filePath(uuid)
+    val path = fetchFilePath(uuid, progressNotifier, downloadIfNotExists = false)
     PlatformFileSystem.write(path, channel, progressNotifier)
 }
 
@@ -135,7 +174,7 @@ suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid:
  *
  * It returns a State<ByteArray?> that will be updated once the image file is loaded.
  *
- * If the image file does not exist, the State will be updated to an empty ByteArray.
+ * If the image file cannot be loaded, the State will be updated to an empty ByteArray.
  */
 @Composable
 @OptIn(DelicateCoroutinesApi::class)

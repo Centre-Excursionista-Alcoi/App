@@ -30,10 +30,14 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.ktor.http.ContentType
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.documentFilePath
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
+import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.jetbrains.compose.resources.stringResource
 
@@ -132,8 +136,12 @@ fun LendingDetailsDialog(
 
                     OutlinedButton(
                         onClick = {
-                            val path = lending.documentFilePath()
-                            PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                            GlobalScope.launch {
+                                val path = withContext(defaultAsyncDispatcher) {
+                                    lending.fetchDocumentFilePath()
+                                }
+                                PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                            }
                         }
                     ) {
                         Text(stringResource(Res.string.management_view_memory))
