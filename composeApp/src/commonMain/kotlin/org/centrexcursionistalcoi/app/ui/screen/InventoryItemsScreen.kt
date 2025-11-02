@@ -55,6 +55,7 @@ import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
+import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
@@ -76,6 +77,11 @@ fun InventoryItemsScreen(
     val type by model.type.collectAsState()
     val categories by model.categories.collectAsState()
     val items by model.items.collectAsState()
+
+    val errorState by model.error.collectAsState()
+    errorState?.let { error ->
+        ErrorDialog(message = error) { model.clearError() }
+    }
 
     InventoryItemsScreen(
         typeId = typeId,

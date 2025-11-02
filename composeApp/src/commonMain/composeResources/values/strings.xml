@@ -72,6 +72,7 @@
     <string name="none">None</string>
 
     <string name="error_dialog_title">Unhandled exception</string>
+    <string name="error_dialog_message">Message:</string>
     <string name="error_dialog_type">Type:</string>
     <string name="error_dialog_stacktrace">Stacktrace:</string>
 

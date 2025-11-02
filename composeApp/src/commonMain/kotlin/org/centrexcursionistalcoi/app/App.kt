@@ -2,25 +2,14 @@ package org.centrexcursionistalcoi.app
 
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -28,7 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import cea_app.composeapp.generated.resources.*
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
@@ -38,7 +26,7 @@ import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.UuidNavType
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
+import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
@@ -51,9 +39,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
-import org.centrexcursionistalcoi.app.ui.utils.orUnknown
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
-import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MainApp(
@@ -88,49 +74,7 @@ fun App(
 
     val errorState by GlobalAsyncErrorHandler.error.collectAsState()
     errorState?.let { error ->
-        AlertDialog(
-            onDismissRequest = { GlobalAsyncErrorHandler.clearError() },
-            title = { Text(stringResource(Res.string.error_dialog_title)) },
-            text = {
-                Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    Text(stringResource(Res.string.error_dialog_type))
-                    SelectionContainer {
-                        Text(error::class.simpleName.orUnknown())
-                    }
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(stringResource(Res.string.error_dialog_stacktrace))
-                    SelectionContainer {
-                        Text(error.stackTraceToString())
-                    }
-                }
-            },
-            confirmButton = {
-                if (PlatformShareLogic.isSupported) {
-                    TextButton(
-                        onClick = { PlatformShareLogic.share(error.toString()) }
-                    ) {
-                        Text(stringResource(Res.string.share))
-                    }
-                } else {
-                    TextButton(
-                        onClick = { GlobalAsyncErrorHandler.clearError() }
-                    ) {
-                        Text(stringResource(Res.string.close))
-                    }
-                }
-            },
-            dismissButton = {
-                if (PlatformShareLogic.isSupported) {
-                    // Only show the dismiss button if sharing is available, because otherwise there would be two identical buttons
-                    TextButton(
-                        onClick = { GlobalAsyncErrorHandler.clearError() }
-                    ) {
-                        Text(stringResource(Res.string.close))
-                    }
-                }
-            },
-        )
+        ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
     }
 
     SharedTransitionLayout {
