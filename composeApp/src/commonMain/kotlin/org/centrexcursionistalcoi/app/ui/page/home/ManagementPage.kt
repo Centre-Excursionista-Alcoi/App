@@ -138,6 +138,7 @@ fun InventoryItemTypesCard(
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
         sharedContentStateKey = { (type) -> "iit_${type.id}" },
+        fileContainerProvider = { (type) -> type },
     )
 }
 
