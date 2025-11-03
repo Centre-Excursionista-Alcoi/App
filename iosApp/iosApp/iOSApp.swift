@@ -21,11 +21,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       )
 
       // TODO: Properly implement this in swift
-      NotifierManager.setLogger { message ->
-          Napier.d(message, tag = "NotifierManager")
-      }
+      // NotifierManager.setLogger { message ->
+      //     Napier.d(message, tag = "NotifierManager")
+      // }
 
-      NotifierManager.addListener(PushNotifierListener)
+      NotifierManager.shared.addListener(listener: PushNotifierListener.shared)
 
     return true
   }
