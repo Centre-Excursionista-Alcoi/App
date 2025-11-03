@@ -90,6 +90,10 @@ jobs:
           cd composeApp
           echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
+      - name: Clean quote backslashes
+        id: clean_backslash
+        run: bash ./scripts/clean-backslash.sh
+
       - name: Build AAB
         id: build_aab
         env:
