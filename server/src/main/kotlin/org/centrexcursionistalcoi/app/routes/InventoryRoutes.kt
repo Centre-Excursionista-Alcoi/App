@@ -8,8 +8,10 @@ import io.ktor.http.content.forEachPart
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import java.time.Instant
@@ -345,6 +347,25 @@ fun Route.inventoryRoutes() {
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
         }
+    }
+    delete("inventory/lendings/{id}") {
+        assertAdmin() ?: return@delete
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@delete
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@delete
+        }
+
+        Database { lending.delete() }
+
+        call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/cancel") {
         val session = getUserSessionOrFail() ?: return@post
