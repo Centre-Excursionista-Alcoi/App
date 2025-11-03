@@ -239,6 +239,10 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xcontext-parameters")
         freeCompilerArgs.add("-Xexpect-actual-classes")
+
+        // Only for WASM
+        freeCompilerArgs.add("-Xwasm-use-new-exception-proposal")
+
         optIn.add("kotlin.time.ExperimentalTime")
         optIn.add("kotlin.uuid.ExperimentalUuidApi")
     }
