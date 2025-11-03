@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -35,6 +34,7 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.jetbrains.compose.resources.stringResource
@@ -43,7 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingDetailsDialog(
     lending: ReferencedLending,
     onCancelRequest: () -> Unit,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: ((PlatformFile) -> Job)?,
     onMemoryEditorRequested: (() -> Unit)?,
     onDismissRequest: () -> Unit,
@@ -108,16 +108,9 @@ fun LendingDetailsDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) { (progress, submittingMemory) ->
                         if (progress != null) {
-                            val (uploaded, total) = progress
-                            val percentage = uploaded.toDouble() / total.toDouble()
-                            LinearProgressIndicator(
-                                progress = { percentage.toFloat() },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            LinearLoadingIndicator(progress)
                         } else if (submittingMemory) {
-                            LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            LinearLoadingIndicator(null)
                         }
                     }
                 }

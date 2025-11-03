@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
-import io.github.vinceglb.filekit.size
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,13 +31,14 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.Permission
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
-import org.centrexcursionistalcoi.app.permission.HelperHolder
-import org.centrexcursionistalcoi.app.permission.Permission
-import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 class HomeViewModel: ViewModel() {
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
@@ -67,7 +67,7 @@ class HomeViewModel: ViewModel() {
     private val _shoppingList = MutableStateFlow(emptyMap<Uuid, Int>())
     val shoppingList = _shoppingList.asStateFlow()
 
-    private val _memoryUploadProgress = MutableStateFlow<Pair<Long, Long>?>(null)
+    private val _memoryUploadProgress = MutableStateFlow<Progress?>(null)
     val memoryUploadProgress = _memoryUploadProgress.asStateFlow()
 
     private val permissionHelper = HelperHolder.getPermissionHelperInstance()
@@ -135,14 +135,9 @@ class HomeViewModel: ViewModel() {
 
     fun submitMemory(lending: ReferencedLending, file: PlatformFile) = viewModelScope.async(defaultAsyncDispatcher) {
         try {
-            _memoryUploadProgress.emit(0L to file.size())
-            LendingsRemoteRepository.submitMemory(lending.id, file) { current, max ->
-                _memoryUploadProgress.value = current to (max ?: file.size())
-            }
+            LendingsRemoteRepository.submitMemory(lending.id, file) { _memoryUploadProgress.value = it }
         } catch (e: ServerException) {
             Napier.e(e) { "Could not submit memory." }
-        } finally {
-            _memoryUploadProgress.value = null
         }
     }
 

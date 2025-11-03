@@ -610,6 +610,29 @@ fun Route.inventoryRoutes() {
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)
     }
+    // Allows admins to skip the memory submission for a lending
+    post("inventory/lendings/{id}/skip_memory") {
+        assertAdmin() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            respondError(Error.MalformedId())
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
+            return@post
+        }
+
+        Database {
+            lending.memorySubmitted = true
+            lending.memorySubmittedAt = Instant.now()
+        }
+
+        call.respond(HttpStatusCode.OK)
+    }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
     // TODO: Add tests
     getWithLock("inventory/types/{id}/allocate", lendingsMutex) {

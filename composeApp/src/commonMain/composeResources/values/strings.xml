@@ -181,8 +181,11 @@
     <string name="management_pickup_screen_skip_warning_message">Are you sure that you want to skip the inventory check? Make sure all the items have been delivered to the user, and that they match the references assigned.</string>
 
     <string name="management_lending_user">User: %1$s</string>
+    <string name="management_lending_given_by">Given by: %1$s at %2$s</string>
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
     <string name="management_view_memory">View Memory</string>
+    <string name="management_return">Return</string>
+    <string name="management_skip_memory">Skip Memory</string>
 
     <string name="management_promote_user">Promote</string>
     <string name="management_promote_user_title">Promote user</string>

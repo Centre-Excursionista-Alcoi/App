@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.network
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
-import io.ktor.client.content.ProgressListener
-import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -31,6 +29,8 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 
 object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
@@ -109,8 +109,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @param lendingId The UUID of the lending to cancel.
      * @throws IllegalArgumentException if the cancellation fails.
      */
-    suspend fun cancel(lendingId: Uuid) {
-        val response = httpClient.post("inventory/lendings/$lendingId/cancel")
+    suspend fun cancel(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post("inventory/lendings/$lendingId/cancel") {
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) {
             throw IllegalArgumentException("Failed to cancel lending (${response.status}): ${response.bodyAsText()}")
         }
@@ -124,12 +126,14 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @throws IllegalArgumentException if the confirmation fails.
      * @throws NoSuchElementException if the lending is not found after confirmation.
      */
-    suspend fun confirm(lendingId: Uuid) {
-        val response = httpClient.post("inventory/lendings/$lendingId/confirm")
+    suspend fun confirm(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post("inventory/lendings/$lendingId/confirm") {
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) {
             throw IllegalArgumentException("Failed to confirm lending (${response.status}): ${response.bodyAsText()}")
         }
-        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after confirmation")
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after confirmation")
         LendingsRepository.update(updatedLending)
     }
 
@@ -140,12 +144,14 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @throws IllegalArgumentException if the pickup fails.
      * @throws NoSuchElementException if the lending is not found after pickup.
      */
-    suspend fun pickup(lendingId: Uuid) {
-        val response = httpClient.post("inventory/lendings/$lendingId/pickup")
+    suspend fun pickup(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post("inventory/lendings/$lendingId/pickup") {
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) {
             throw IllegalArgumentException("Failed to pickup lending (${response.status}): ${response.bodyAsText()}")
         }
-        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after pickup")
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after pickup")
         LendingsRepository.update(updatedLending)
     }
 
@@ -156,12 +162,14 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @throws IllegalArgumentException if the receive fails.
      * @throws NoSuchElementException if the lending is not found after receive.
      */
-    suspend fun `return`(lendingId: Uuid) {
-        val response = httpClient.post("inventory/lendings/$lendingId/return")
+    suspend fun `return`(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post("inventory/lendings/$lendingId/return") {
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) {
             throw IllegalArgumentException("Failed to return lending (${response.status}): ${response.bodyAsText()}")
         }
-        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after return")
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after return")
         LendingsRepository.update(updatedLending)
     }
 
@@ -174,7 +182,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @throws ServerException if the submission fails.
      * @throws NoSuchElementException if the lending is not found after submission.
      */
-    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile, progress: ProgressListener? = null) {
+    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile, progress: ProgressNotifier? = null) {
         val fileBytes = file.readBytes()
         val response = httpClient.submitFormWithBinaryData(
             "inventory/lendings/$lendingId/add_memory",
@@ -189,12 +197,12 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
                 )
             }
         ) {
-            progress?.let { onUpload(it) }
+            monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
             throw ServerException.fromResponse(response)
         }
-        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
         LendingsRepository.update(updatedLending)
     }
 
@@ -207,19 +215,36 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @throws ServerException if the submission fails.
      * @throws NoSuchElementException if the lending is not found after submission.
      */
-    suspend fun submitMemory(lendingId: Uuid, memoryPlainText: String, progress: ProgressListener? = null) {
+    suspend fun submitMemory(lendingId: Uuid, memoryPlainText: String, progress: ProgressNotifier? = null) {
         val response = httpClient.submitFormWithBinaryData(
             "inventory/lendings/$lendingId/add_memory",
             formData {
                 append("text",  memoryPlainText)
             }
         ) {
-            progress?.let { onUpload(it) }
+            monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
             throw ServerException.fromResponse(response)
         }
-        val updatedLending = get(lendingId) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
+        LendingsRepository.update(updatedLending)
+    }
+
+    /**
+     * Skips the memory submission for a lending by its ID.
+     * @param lendingId The UUID of the lending to skip the memory for.
+     * @throws IllegalArgumentException if the skip memory operation fails.
+     * @throws NoSuchElementException if the lending is not found after skipping memory.
+     */
+    suspend fun skipMemory(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post("inventory/lendings/$lendingId/skip_memory") {
+            monitorUploadProgress(progress)
+        }
+        if (!response.status.isSuccess()) {
+            throw IllegalArgumentException("Failed to skip memory for lending (${response.status}): ${response.bodyAsText()}")
+        }
+        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after skipping memory")
         LendingsRepository.update(updatedLending)
     }
 }
