@@ -1,4 +1,5 @@
-config.resolve = {
+// Disabled because we are not using SQL in web version for now
+/*config.resolve = {
     fallback: {
         fs: false,
         path: false,
@@ -13,4 +14,4 @@ config.plugins.push(
             '../../node_modules/sql.js/dist/sql-wasm.wasm'
         ]
     })
-);
+);*/
