@@ -80,7 +80,7 @@ fun InventoryItemsScreen(
 
     val errorState by model.error.collectAsState()
     errorState?.let { error ->
-        ErrorDialog(message = error) { model.clearError() }
+        ErrorDialog(exception = error) { model.clearError() }
     }
 
     InventoryItemsScreen(
