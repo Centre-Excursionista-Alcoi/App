@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.utils.Zero
 
 object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
@@ -46,5 +47,14 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
         Napier.d { "$correctCount were created successfully. There were $failureCount failures." }
         Napier.d { "Synchronizing completely with server..." }
         synchronizeWithDatabase(progressNotifier)
+    }
+
+    suspend fun update(id: Uuid, variation: String?, progressNotifier: ProgressNotifier? = null) {
+        update(
+            id,
+            UpdateInventoryItemRequest(variation),
+            UpdateInventoryItemRequest.serializer(),
+            progressNotifier
+        )
     }
 }

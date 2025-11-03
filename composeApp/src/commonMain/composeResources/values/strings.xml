@@ -54,6 +54,8 @@
     <string name="management_inventory_item_type_category">Category</string>
     <string name="management_inventory_item_type_image">Select Image</string>
 
+    <string name="management_inventory_item_edit">Edit Item</string>
+
     <string name="back">Go Back</string>
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
@@ -67,6 +69,12 @@
     <string name="unknown">Unknown</string>
     <string name="share">Share</string>
     <string name="logout">Logout</string>
+    <string name="none">None</string>
+
+    <string name="error_dialog_title">Unhandled exception</string>
+    <string name="error_dialog_message">Message:</string>
+    <string name="error_dialog_type">Type:</string>
+    <string name="error_dialog_stacktrace">Stacktrace:</string>
 
     <string name="logout_confirmation_title">Confirm Logout</string>
     <string name="logout_confirmation_message">Are you sure you want to log out?</string>
@@ -77,6 +85,7 @@
 
     <string name="loading_screen_error">Load failed</string>
     <string name="error_unknown">An unknown error occurred. Type: %1$s</string>
+    <string name="error_delete_references">This element is referenced by another entity, it cannot be removed.</string>
 
     <string name="auth_callback_error_title">Could not process login</string>
     <string name="auth_callback_error_server_http">Server responded with exception (%1$d): %2$s</string>
@@ -186,6 +195,8 @@
     <string name="inventory_item_type_not_found">Type not found</string>
     <string name="inventory_item_type">Type: %1$s</string>
     <string name="inventory_item_amount">Amount: %1$d</string>
+    <string name="inventory_item_variation">Variation: %1$d</string>
+
     <string name="create_inventory_item_variation">Variation</string>
     <string name="create_inventory_item_type">Type</string>
     <string name="create_inventory_item_amount">Amount</string>

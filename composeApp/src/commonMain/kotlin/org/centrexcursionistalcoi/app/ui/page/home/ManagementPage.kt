@@ -121,17 +121,24 @@ fun InventoryItemTypesCard(
     }
 
     val groupedItems = remember(items, types) {
-        items?.groupBy { it.type }?.toList()
+        items.orEmpty().groupBy { it.type }.toList()
+    }
+    val typesWithoutItems = remember(items, types) {
+        types.orEmpty().filter { type ->
+            items?.none { it.type.id == type.id } ?: true
+        }.map { type -> type to emptyList<ReferencedInventoryItem>() }
     }
     ListCard(
-        list = groupedItems,
+        list = groupedItems + typesWithoutItems,
         titleResource = Res.string.management_inventory_item_types,
         emptyTextResource = Res.string.management_no_item_types,
-        displayName = { (type, items) -> "${type.displayName} (${items.size})" },
+        displayName = { (type) -> type.displayName },
+        trailingContent = { (_, items) -> Badge { Text(items.size.toString()) } },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
         sharedContentStateKey = { (type) -> "iit_${type.id}" },
+        fileContainerProvider = { (type) -> type },
     )
 }
 

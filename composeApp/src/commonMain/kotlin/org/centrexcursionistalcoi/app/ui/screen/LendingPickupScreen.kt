@@ -83,6 +83,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.Permission
+import org.centrexcursionistalcoi.app.permission.result.CameraPermissionResult
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
@@ -96,9 +99,6 @@ import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerView
-import tech.kotlinlang.permission.HelperHolder
-import tech.kotlinlang.permission.Permission
-import tech.kotlinlang.permission.result.CameraPermissionResult
 
 @Composable
 fun LendingPickupScreen(
@@ -347,7 +347,6 @@ private fun LendingPickupContent(
     snackbarHostState: SnackbarHostState,
     onMarkItem: (Uuid) -> Unit,
     onUnMarkItem: (Uuid) -> Unit,
-    supportsNFC: Boolean = PlatformNFC.supportsNFC,
 ) {
     val lendingUser = lending.user.lendingUser
     val items = lending.items
@@ -469,7 +468,7 @@ private fun LendingPickupContent(
         }
     }
 
-    if (supportsNFC) {
+    if (PlatformNFC.isSupported) {
         OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(12.dp)

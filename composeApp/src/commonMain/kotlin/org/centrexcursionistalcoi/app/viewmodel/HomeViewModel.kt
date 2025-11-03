@@ -36,9 +36,9 @@ import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
-import tech.kotlinlang.permission.HelperHolder
-import tech.kotlinlang.permission.Permission
-import tech.kotlinlang.permission.result.NotificationPermissionResult
+import org.centrexcursionistalcoi.app.permission.HelperHolder
+import org.centrexcursionistalcoi.app.permission.Permission
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 class HomeViewModel: ViewModel() {
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)

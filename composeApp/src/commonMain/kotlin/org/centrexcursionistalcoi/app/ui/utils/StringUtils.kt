@@ -14,3 +14,6 @@ fun String.optional(): String {
 
 @Composable
 fun unknown(): String = stringResource(Res.string.unknown)
+
+@Composable
+fun String?.orUnknown(): String = this ?: unknown()

@@ -77,7 +77,7 @@ import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
 import org.jetbrains.compose.resources.stringResource
-import tech.kotlinlang.permission.result.NotificationPermissionResult
+import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 
 @Composable
 fun HomeScreen(

@@ -86,13 +86,14 @@ actual object BackgroundJobCoordinator {
         }
     }
 
-    actual suspend inline fun <reified WorkerType: BackgroundSyncWorker<*>> schedule(
+    actual suspend inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> schedule(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
         tags: List<String>,
         uniqueName: String?,
         repeatInterval: kotlin.time.Duration?,
+        logic: Logic,
     ): ObservableBackgroundJob {
         val workManager = workManager
         require(workManager != null) { "Coordinator not initialized." }
@@ -104,13 +105,14 @@ actual object BackgroundJobCoordinator {
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
     }
 
-    actual inline fun <reified WorkerType : BackgroundSyncWorker<*>> scheduleAsync(
+    actual inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
         tags: List<String>,
         uniqueName: String?,
         repeatInterval: kotlin.time.Duration?,
+        logic: Logic,
     ) {
         val workManager = workManager
         require(workManager != null) { "Coordinator not initialized." }
@@ -126,13 +128,6 @@ actual object BackgroundJobCoordinator {
 
         val id = id.toJavaUuid()
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
-    }
-
-    actual fun observe(tag: String): ObservableBackgroundJobs {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
-        return ObservableBackgroundJobs(tag, flowProvider = { workManager.getWorkInfosByTagFlow(tag) })
     }
 
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {

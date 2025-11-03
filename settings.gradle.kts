@@ -25,6 +25,8 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        // compose-webview-multiplatform: Desktop target has to add this repo
+        maven("https://jogamp.org/deployment/maven")
     }
 }
 

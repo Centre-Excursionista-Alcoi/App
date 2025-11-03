@@ -4,8 +4,8 @@ import io.ktor.http.ContentType
 import kotlin.io.encoding.Base64
 import kotlinx.browser.window
 
-actual object PlatformPrinter {
-    actual val supportsPrinting: Boolean = true
+actual object PlatformPrinter : PlatformProvider {
+    actual override val isSupported: Boolean = true
 
     actual fun printImage(imageData: ByteArray, contentType: ContentType, jobName: String) {
         val imageBase64 = Base64.UrlSafe.encode(imageData)

@@ -57,6 +57,7 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
 
@@ -152,6 +153,11 @@ fun Route.inventoryRoutes() {
                     this.type = itemType
                 }
             }
+        },
+        deleteReferencesCheck = { item ->
+            LendingItems.select(LendingItems.item)
+                .where { LendingItems.item eq item.id }
+                .empty()
         },
         updater = UpdateInventoryItemRequest.serializer(),
     )

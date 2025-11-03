@@ -50,8 +50,14 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
     noinline creator: suspend (MultiPartData) -> EE,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider)
+    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
+    /**
+     * A check to be performed before deleting an entity.
+     * Verifies whether there are references to this entity that would prevent its deletion.
+     * If it returns `false`, the deletion is aborted and an error is returned.
+     */
+    noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -65,8 +71,14 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * Otherwise, the entity class must implement [EntityPatcher].
      */
     updater: KSerializer<UER>,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider)
+    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
+    /**
+     * A check to be performed before deleting an entity.
+     * Verifies whether there are references to this entity that would prevent its deletion.
+     * If it returns `false`, the deletion is aborted and an error is returned.
+     */
+    noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -81,7 +93,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * Otherwise, [entityKClass] must implement [EntityPatcher].
      */
     updater: KSerializer<UER>? = null,
-    listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() }
+    listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
+    /**
+     * A check to be performed before deleting an entity.
+     * Verifies whether there are references to this entity that would prevent its deletion.
+     * If it returns `false`, the deletion is aborted and an error is returned.
+     */
+    deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
@@ -178,6 +196,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val id = getId() ?: return@delete
         assertAdmin() ?: return@delete
         val item = assertEntity(id) ?: return@delete
+
+        val referencesCheck = Database { deleteReferencesCheck(item) }
+        if (!referencesCheck) {
+            respondError(Error.EntityDeleteReferencesExist())
+            return@delete
+        }
 
         Database { item.delete() }
 

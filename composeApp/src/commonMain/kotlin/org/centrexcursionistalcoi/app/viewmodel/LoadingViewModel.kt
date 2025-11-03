@@ -28,16 +28,18 @@ class LoadingViewModel(
 ) : ViewModel() {
     companion object {
         suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
+            Napier.d { "Getting profile..." }
             val profile = ProfileRemoteRepository.getProfile(progressNotifier)
             return if (profile != null) {
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
                 Napier.d { "Scheduling data sync..." }
-                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                    logic = SyncAllDataBackgroundJobLogic,
                 )
 
                 Napier.d { "Renovating FCM token if required" }
@@ -82,11 +84,12 @@ class LoadingViewModel(
                 }
 
                 Napier.d { "Scheduling periodic sync..." }
-                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                     requiresInternet = true,
                     uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
                     repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
+                    logic = SyncAllDataBackgroundJobLogic,
                 )
 
                 _progress.value = null

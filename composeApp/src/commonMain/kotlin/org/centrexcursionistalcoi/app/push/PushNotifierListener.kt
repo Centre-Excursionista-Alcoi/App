@@ -47,8 +47,9 @@ object PushNotifierListener : NotifierManager.Listener {
             val notification = PushNotification.fromData(data)
             if (notification is PushNotification.LendingUpdated) {
                 Napier.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
-                BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJob>(
+                BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
                     input = mapOf(SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString()),
+                    logic = SyncLendingBackgroundJobLogic,
                 )
             }
 

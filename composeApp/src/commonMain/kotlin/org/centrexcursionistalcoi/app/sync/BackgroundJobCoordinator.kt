@@ -13,15 +13,17 @@ expect object BackgroundJobCoordinator {
      * @param uniqueName If not `null`, a unique job will be scheduled. This will force only one instance of this job to be running at any time.
      * If a request is made, and another job is already running or scheduled with this name, it will be overridden.
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
+     * @param logic The logic instance to use for this job.
      * @return An [ObservableBackgroundJob] that allows to watch the job status.
      */
-    suspend inline fun <reified WorkerType: BackgroundSyncWorker<*>> schedule(
+    suspend inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> schedule(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
         tags: List<String> = emptyList(),
         uniqueName: String? = null,
         repeatInterval: kotlin.time.Duration? = null,
+        logic: Logic,
     ): ObservableBackgroundJob
 
     /**
@@ -33,14 +35,16 @@ expect object BackgroundJobCoordinator {
      * @param uniqueName If not `null`, a unique job will be scheduled. This will force only one instance of this job to be running at any time.
      * If a request is made, and another job is already running or scheduled with this name, it will be overridden.
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
+     * @param logic The logic instance to use for this job.
      */
-    inline fun <reified WorkerType: BackgroundSyncWorker<*>> scheduleAsync(
+    inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
         tags: List<String> = emptyList(),
         uniqueName: String? = null,
         repeatInterval: kotlin.time.Duration? = null,
+        logic: Logic,
     )
 
     /**
@@ -48,12 +52,6 @@ expect object BackgroundJobCoordinator {
      * @return An [ObservableBackgroundJob] that allows to watch the job status.
      */
     fun observe(id: Uuid): ObservableBackgroundJob
-
-    /**
-     * Retrieves an [ObservableBackgroundJobs] for all jobs with the given [tag].
-     * @return An [ObservableBackgroundJobs] that allows to watch the status of all matching jobs.
-     */
-    fun observe(tag: String): ObservableBackgroundJobs
 
     /**
      * Retrieves an [ObservableUniqueBackgroundJob] for a job with a given unique [name].
