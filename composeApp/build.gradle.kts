@@ -54,15 +54,7 @@ kotlin {
     listOf(
         iosArm64(),
         iosSimulatorArm64()
-    ) /*.forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = false
-            linkerOpts += "-lsqlite3"
-            export(libs.sentry.kotlinMultiplatform)
-            export(libs.kmm.notifier)
-        }
-    }*/
+    )
 
     jvm()
 
@@ -277,9 +269,6 @@ kotlin {
     }
 }
 
-// Disable task because we are using Cocoapods
-// tasks.getByName("embedAndSignPodAppleFrameworkForXcode").enabled = false
-
 sqldelight {
     databases {
         create("Database") {
@@ -462,6 +451,12 @@ buildkonfig {
             )
         }
         create("ios") {
+            buildConfigField(
+                type = STRING,
+                name = "REDIRECT_URI",
+                value = "cea://redirect",
+                nullable = true,
+            )
             buildConfigField(
                 type = STRING,
                 name = "SENTRY_DSN",
