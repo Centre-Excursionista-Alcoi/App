@@ -21,11 +21,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       )
 
       // TODO: Properly implement this in swift
-      NotifierManager.setLogger { message ->
-          Napier.d(message, tag = "NotifierManager")
-      }
+      // NotifierManager.setLogger { message ->
+      //     Napier.d(message, tag = "NotifierManager")
+      // }
 
-      NotifierManager.addListener(PushNotifierListener)
+      NotifierManager.shared.addListener(listener: PushNotifierListener.shared)
 
     return true
   }
@@ -38,6 +38,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
   func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
   }
+
+    func application(_ app: UIApplication, open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        // Forward URL to shared code
+        return true
+    }
 
 }
 

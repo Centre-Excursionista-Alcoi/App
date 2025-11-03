@@ -3,11 +3,14 @@ import SwiftUI
 import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
+    typealias UIViewControllerType = UIViewController
+    typealias Coordinator = Void
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<ComposeView>) -> UIViewControllerType {
         MainViewControllerKt.MainViewController()
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: UIViewControllerRepresentableContext<ComposeView>) {}
 }
 
 struct ContentView: View {
@@ -16,6 +19,3 @@ struct ContentView: View {
             .ignoresSafeArea()
     }
 }
-
-
-
