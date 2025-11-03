@@ -1,3 +1,3 @@
 package org.centrexcursionistalcoi.app.sync
 
-actual class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgroundJobLogic>()
+actual class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgroundJobLogic>(SyncLendingBackgroundJobLogic)

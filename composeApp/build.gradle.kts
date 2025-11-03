@@ -214,19 +214,18 @@ kotlin {
         iosArm64Main { dependsOn(iosMain.get()) }
         iosSimulatorArm64Main { dependsOn(iosMain.get()) }
 
-        webMain { dependsOn(commonMain.get()) }
         wasmJsMain {
-            dependsOn(webMain.get())
+            dependsOn(commonMain.get())
             dependsOn(permissionsMain)
             dependencies {
                 implementation(libs.ktor.client.js)
                 implementation(libs.kotlinx.browser)
 
                 // SQLDelight for WASM
-                implementation(libs.sqldelight.wasm)
-                implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
-                implementation(npm("sql.js", "1.6.2"))
-                implementation(devNpm("copy-webpack-plugin", "9.1.0"))
+                // implementation(libs.sqldelight.wasm)
+                // implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
+                // implementation(npm("sql.js", "1.6.2"))
+                // implementation(devNpm("copy-webpack-plugin", "9.1.0"))
             }
         }
         wasmJsTest {

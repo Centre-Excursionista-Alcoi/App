@@ -1,103 +1,148 @@
 package org.centrexcursionistalcoi.app.sync
 
+import androidx.compose.runtime.mutableStateMapOf
 import io.github.aakira.napier.Napier
-import kotlin.js.Promise
-import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
+import kotlinx.atomicfu.locks.ReentrantLock
+import kotlinx.atomicfu.locks.withLock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-
-val workerTypes: Map<KClass<out BackgroundSyncWorker<*>>, BackgroundSyncWorkerLogic> = mapOf(
-    SyncAllDataBackgroundJob::class to SyncAllDataBackgroundJobLogic,
-    SyncLendingBackgroundJob::class to SyncLendingBackgroundJobLogic,
-)
 
 @OptIn(ExperimentalWasmJsInterop::class)
 actual object BackgroundJobCoordinator {
-    var jobs = emptyList<ObservableBackgroundJob>()
 
-    actual suspend inline fun <reified WorkerType : BackgroundSyncWorker<*>> schedule(
-        input: Map<String, String>,
-        requiresInternet: Boolean,
-        id: Uuid?,
-        tags: List<String>,
-        uniqueName: String?,
-        repeatInterval: Duration?
-    ): ObservableBackgroundJob {
-        val flow = MutableStateFlow(BackgroundJobState.ENQUEUED)
-        val job = ObservableBackgroundJob(id ?: Uuid.random()) { flow }.also { jobs += it }
-        val logic = workerTypes[WorkerType::class] ?: error("No logic registered for worker type ${WorkerType::class}")
-        coroutineScope {
-            launch {
-                try {
-                    val context = BackgroundSyncContext(
-                        progressNotifier = { Napier.d { "Job progress: $it" } }
-                    )
-                    flow.emit(BackgroundJobState.RUNNING)
-                    with(logic) {
-                        context.run(input)
-                    }
-                    flow.emit(BackgroundJobState.SUCCEEDED)
-                } catch (e: Exception) {
-                    Napier.e(e) { "Job failed." }
-                    flow.emit(BackgroundJobState.FAILED)
-                } finally {
-                    jobs -= job
-                }
+    private val scope = CoroutineScope(Job() + Dispatchers.Default)
+
+    private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
+    private val jobStateIdMutex = ReentrantLock()
+
+    private var jobStateUniqueNameFlows = mutableStateMapOf<String, MutableStateFlow<BackgroundJobState>>()
+    private val jobStateUniqueNameMutex = ReentrantLock()
+
+    fun emitStateById(id: Uuid, state: BackgroundJobState) {
+        jobStateIdMutex.withLock {
+            val flow = jobStateIdFlows[id] ?: run {
+                val newFlow = MutableStateFlow(state)
+                jobStateIdFlows = jobStateIdFlows + (id to newFlow)
+                newFlow
             }
+            flow.tryEmit(state)
         }
-        return job
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    actual inline fun <reified WorkerType : BackgroundSyncWorker<*>> scheduleAsync(
+    fun fetchStateFlowById(id: Uuid): MutableStateFlow<BackgroundJobState> {
+        return jobStateIdMutex.withLock {
+            jobStateIdFlows[id] ?: run {
+                val newFlow = MutableStateFlow(BackgroundJobState.ENQUEUED)
+                jobStateIdFlows = jobStateIdFlows + (id to newFlow)
+                newFlow
+            }
+        }
+    }
+
+    suspend fun emitStateByUniqueName(uniqueName: String, state: BackgroundJobState) {
+        jobStateUniqueNameMutex.withLock {
+            val flow = jobStateUniqueNameFlows[uniqueName] ?: run {
+                val newFlow = MutableStateFlow(state)
+                jobStateUniqueNameFlows[uniqueName] = newFlow
+                newFlow
+            }
+            flow.emit(state)
+        }
+    }
+
+    fun fetchStateFlowByUniqueName(uniqueName: String): MutableStateFlow<BackgroundJobState> {
+        return jobStateUniqueNameMutex.withLock {
+            jobStateUniqueNameFlows[uniqueName] ?: run {
+                val newFlow = MutableStateFlow(BackgroundJobState.ENQUEUED)
+                jobStateUniqueNameFlows[uniqueName] = newFlow
+                newFlow
+            }
+        }
+    }
+
+    suspend fun emitState(id: Uuid, uniqueName: String?, state: BackgroundJobState) {
+        emitStateById(id, state)
+        if (uniqueName != null) {
+            emitStateByUniqueName(uniqueName, state)
+        }
+    }
+
+    fun scheduleJob(
+        input: Map<String, String>,
+        id: Uuid,
+        uniqueName: String?,
+        repeatInterval: Duration?,
+        logic: BackgroundSyncWorkerLogic,
+    ) {
+        scope.launch {
+            if (repeatInterval != null) {
+                while (true) {
+                    execute(input, id, uniqueName, logic)
+                    emitState(id, uniqueName, BackgroundJobState.ENQUEUED)
+                    delay(repeatInterval)
+                }
+            } else {
+                execute(input, id, uniqueName, logic)
+            }
+        }
+    }
+
+    private suspend fun execute(
+        input: Map<String, String>,
+        id: Uuid,
+        uniqueName: String?,
+        logic: BackgroundSyncWorkerLogic,
+    ) {
+        try {
+            emitState(id, uniqueName, BackgroundJobState.RUNNING)
+            with(logic) {
+                BackgroundSyncContext().run(input)
+            }
+            emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
+        } catch (e: Throwable) {
+            Napier.e(e) { "Job failed." }
+            emitState(id, uniqueName, BackgroundJobState.FAILED)
+        }
+    }
+
+    actual suspend inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> schedule(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
         tags: List<String>,
         uniqueName: String?,
-        repeatInterval: Duration?
+        repeatInterval: Duration?,
+        logic: Logic,
+    ): ObservableBackgroundJob {
+        val id = id ?: Uuid.random()
+        scheduleJob(input, id, uniqueName, repeatInterval, logic)
+
+        return observe(id)
+    }
+
+    actual inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
+        input: Map<String, String>,
+        requiresInternet: Boolean,
+        id: Uuid?,
+        tags: List<String>,
+        uniqueName: String?,
+        repeatInterval: Duration?,
+        logic: Logic,
     ) {
-        val flow = MutableStateFlow(BackgroundJobState.ENQUEUED)
-        val job = ObservableBackgroundJob(id ?: Uuid.random()) { flow }.also { jobs += it }
-        val logic = workerTypes[WorkerType::class] ?: error("No logic registered for worker type ${WorkerType::class}")
-        Promise { resolve, reject ->
-            GlobalScope.launch(defaultAsyncDispatcher) {
-                try {
-                    val context = BackgroundSyncContext(
-                        progressNotifier = { Napier.d { "Job progress: $it" } }
-                    )
-                    flow.emit(BackgroundJobState.RUNNING)
-                    with(logic) {
-                        context.run(input)
-                    }
-                    flow.emit(BackgroundJobState.SUCCEEDED)
-                    resolve(null)
-                } catch (e: Exception) {
-                    Napier.e(e) { "Job failed." }
-                    flow.emit(BackgroundJobState.FAILED)
-                    reject("$e".toJsString())
-                } finally {
-                    jobs -= job
-                }
-            }
-        }
+        scheduleJob(input, id ?: Uuid.random(), uniqueName, repeatInterval, logic)
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {
-        return jobs.find { it.id == id } ?: throw IllegalArgumentException("Job with ID $id not found")
-    }
-
-    actual fun observe(tag: String): ObservableBackgroundJobs {
-        TODO("Not yet implemented")
+        return ObservableBackgroundJob(id)
     }
 
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
-        TODO("Not yet implemented")
+        return ObservableUniqueBackgroundJob(name)
     }
 }

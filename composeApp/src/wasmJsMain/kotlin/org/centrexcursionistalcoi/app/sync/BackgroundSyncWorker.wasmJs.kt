@@ -1,9 +1,5 @@
 package org.centrexcursionistalcoi.app.sync
 
-actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic> {
-    companion object {
-        fun create() {
-
-        }
-    }
-}
+actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(
+    val logic: Logic
+)
