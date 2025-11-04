@@ -10,6 +10,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -18,11 +19,12 @@ fun AdaptiveVerticalGrid(
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    gridMinSize: Dp = 300.dp,
     content: LazyGridScope.() -> Unit
 ) {
     val columns = if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
         // Desktop and large tablets
-        GridCells.Adaptive(minSize = 300.dp)
+        GridCells.Adaptive(minSize = gridMinSize)
     } else {
         // Phones and small tablets
         GridCells.Fixed(1)

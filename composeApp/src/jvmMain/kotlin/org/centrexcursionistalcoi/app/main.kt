@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app
 
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import cea_app.composeapp.generated.resources.*
 import dev.datlag.kcef.KCEF
 import io.github.aakira.napier.DebugAntilog
@@ -23,10 +26,13 @@ fun main() {
         Window(
             title = "Centre Excursionista d'Alcoi",
             icon = painterResource(Res.drawable.icon),
+            state = rememberWindowState(
+                size = DpSize(1000.dp, 800.dp),
+            ),
             onCloseRequest = {
                 KCEF.disposeBlocking()
                 exitApplication()
-            }
+            },
         ) {
             MainApp()
         }
