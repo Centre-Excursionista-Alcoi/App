@@ -11,34 +11,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewState
-import dev.datlag.kcef.KCEF
-import dev.datlag.kcef.KCEFBuilder
 import io.github.aakira.napier.Napier
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.appendPathSegments
-import java.io.File
-import kotlin.math.max
 import kotlin.math.round
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
+import org.centrexcursionistalcoi.app.viewmodel.AuthFlowViewModel
 import org.jetbrains.compose.resources.painterResource
 
 object AuthFlowWindow {
@@ -54,6 +48,10 @@ object AuthFlowWindow {
         _state.value = FlowState(state, codeChallenge)
     }
 
+    fun close() {
+        _state.value = null
+    }
+
     fun Float.round(decimals: Int): Float {
         var multiplier = 1f
         repeat(decimals) { multiplier *= 10 }
@@ -62,7 +60,11 @@ object AuthFlowWindow {
 
     @Composable
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-    private fun WebView(state: Uuid, codeChallenge: String, onProfileProcessed: () -> Unit) {
+    private fun WebView(
+        state: Uuid,
+        codeChallenge: String,
+        onProtocolRedirection: (Url) -> Unit
+    ) {
         val webViewState = rememberWebViewState(
             URLBuilder(BuildKonfig.SERVER_URL)
                 .appendPathSegments("login")
@@ -77,8 +79,7 @@ object AuthFlowWindow {
         LaunchedEffect(webViewState.lastLoadedUrl) {
             val url = webViewState.lastLoadedUrl?.let { Url(it) } ?: return@LaunchedEffect
             if (url.protocol.name == "cea") {
-                AuthCallbackProcessor.processCallbackUrl(url)
-                onProfileProcessed()
+                onProtocolRedirection(url)
             } else {
                 Napier.d { "URL (${url.protocol.name}): $url" }
             }
@@ -114,56 +115,32 @@ object AuthFlowWindow {
     operator fun invoke() {
         val stateFlow by state.collectAsState()
         stateFlow?.let { (state, codeChallenge) ->
+            var onCloseRequest: () -> Unit = {}
+
             Window(
                 title = "Authentication",
                 icon = painterResource(Res.drawable.icon),
-                onCloseRequest = { _state.value = null },
+                onCloseRequest = { onCloseRequest() },
             ) {
-                var restartRequired by remember { mutableStateOf(false) }
-                var downloading by remember { mutableStateOf(0F) }
-                var initialized by remember { mutableStateOf(false) }
-                val download: KCEFBuilder.Download = remember { KCEFBuilder.Download.Builder().github().build() }
-
-                LaunchedEffect(Unit) {
-                    withContext(Dispatchers.IO) {
-                        KCEF.init(
-                            builder = {
-                                installDir(File("kcef-bundle"))
-
-                                KCEFBuilder.Download.Builder().github {
-                                    release("jbr-release-17.0.10b1087.23")
-                                }.buffer(download.bufferSize).build()
-
-                                progress {
-                                    onDownloading {
-                                        downloading = max(it, 0F)
-                                    }
-                                    onInitialized {
-                                        initialized = true
-                                    }
-                                }
-                                settings {
-                                    cachePath = File("cache").absolutePath
-                                }
-                            },
-                            onError = {
-                                it?.printStackTrace()
-                            },
-                            onRestartRequired = {
-                                restartRequired = true
-                            }
-                        )
-                    }
+                val model: AuthFlowViewModel = viewModel { AuthFlowViewModel() }
+                LaunchedEffect(model) {
+                    onCloseRequest = { model.close() }
                 }
+
+                val restartRequired by model.restartRequired.collectAsState()
+                val downloadProgress by model.downloadProgress.collectAsState()
+                val initialized by model.isInitialized.collectAsState()
+                val isLoading by model.isLoading.collectAsState()
 
                 AppTheme {
                     if (restartRequired) {
                         Text(text = "Restart required.")
+                    } else if (isLoading) {
+                        LoadingBox()
                     } else {
                         if (initialized) {
-                            WebView(state, codeChallenge) {
-                                KCEF.disposeBlocking()
-                                _state.value = null
+                            WebView(state, codeChallenge) { url ->
+                                model.processUrl(url)
                             }
                         } else {
                             Box(
@@ -174,10 +151,10 @@ object AuthFlowWindow {
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     CircularWavyProgressIndicator(
-                                        progress = { downloading / 100 }
+                                        progress = { downloadProgress / 100 }
                                     )
                                     Text(
-                                        text = "Preparing environment (${downloading.round(2)}%)",
+                                        text = "Preparing environment (${downloadProgress.round(2)}%)",
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(top = 16.dp)
                                     )
