@@ -41,7 +41,7 @@ actual object PlatformNFC : PlatformProvider {
                     writeContinuation = null
                 }
             }.also { writeContinuation = null }
-            NfcUtils.writeTag(message, tag)
+            NfcUtils.writeNdefTag(message, tag)
         }
     }
 }

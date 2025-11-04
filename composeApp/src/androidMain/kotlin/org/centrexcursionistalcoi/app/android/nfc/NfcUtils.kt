@@ -15,6 +15,8 @@ import java.io.IOException
  */
 object NfcUtils {
 
+    private const val MIME_TYPE = "application/vnd.org.centrexcursionistalcoi.nfc"
+
     /**
      * Reads NDEF messages from a standard NFC tag intent.
      * Renamed from readTag for clarity.
@@ -85,8 +87,10 @@ object NfcUtils {
      * @param tag The NFC tag object obtained from the intent.
      * @return A string indicating the result: "Success", "Error: Tag is not NDEF formatable", etc.
      */
-    fun writeTag(message: String, tag: Tag?): String {
-        val ndefMessage = createNdefMessage(message)
+    fun writeNdefTag(message: String, tag: Tag?): String {
+        val ndefMessage = NdefMessage(
+            arrayOf(NdefRecord.createMime(MIME_TYPE, message.toByteArray(Charsets.US_ASCII)))
+        )
         return try {
             val ndef = Ndef.get(tag)
             ndef?.let {
@@ -103,17 +107,5 @@ object NfcUtils {
         } catch (e: Exception) {
             "Error: Failed to write to tag. ${e.message}"
         }
-    }
-
-    /**
-     * Creates an NDEF message with a plain text record.
-     *
-     * @param text The text to be encoded in the NDEF message.
-     * @return The created NdefMessage.
-     */
-    private fun createNdefMessage(text: String): NdefMessage {
-        val mimeType = "application/vnd.org.centrexcursionistalcoi.nfc" // A custom MIME type for your app
-        val mimeRecord = NdefRecord.createMime(mimeType, text.toByteArray(Charsets.US_ASCII))
-        return NdefMessage(arrayOf(mimeRecord))
     }
 }
