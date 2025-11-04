@@ -5,10 +5,12 @@ import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.cocoapods)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.googleServices)
@@ -52,15 +54,7 @@ kotlin {
     listOf(
         iosArm64(),
         iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-            linkerOpts += "-lsqlite3"
-            export(libs.sentry.kotlinMultiplatform)
-            export(libs.kmm.notifier)
-        }
-    }
+    )
 
     jvm()
 
@@ -131,8 +125,8 @@ kotlin {
             // FIXME: Currently not implemented for Desktop: https://github.com/reyazoct/Kmm-Permissions/issues/2
             // implementation(libs.kmm.permission)
 
-            // Push Notifications
-            implementation(libs.kmm.notifier)
+            // Push Notifications (must be API for exporting to iOS)
+            api(libs.kmm.notifier)
 
             // SQLDelight extensions
             implementation(libs.sqldelight.adapters)
@@ -163,8 +157,15 @@ kotlin {
             }
         }
 
+        // Implements workers with Kotlin Coroutines
+        // Includes: jvm, iOS
+        val coroutinesWorkersMain by creating {
+            dependsOn(commonMain.get())
+        }
+
         jvmMain {
             dependsOn(physicalMain)
+            dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
@@ -201,6 +202,7 @@ kotlin {
 
         iosMain {
             dependsOn(phonesMain)
+            dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(libs.ktor.client.darwin)
                 implementation(libs.sqldelight.native)
@@ -237,6 +239,36 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         optIn.add("kotlin.time.ExperimentalTime")
         optIn.add("kotlin.uuid.ExperimentalUuidApi")
+    }
+
+    cocoapods {
+        // rest of configuration
+        summary = "Some description for the Shared Module"
+        homepage = "Link to the Shared Module homepage"
+        ios.deploymentTarget = "18.1"
+        version = appVersionName
+        podfile = project.file("../iosApp/Podfile")
+
+        // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
+        // https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table
+        pod("Sentry") {
+            // Check the version compatibility table for the correct version
+            version = "8.55.1"
+            linkOnly = true
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
+
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+            linkerOpts += "-lsqlite3"
+            export(libs.sentry.kotlinMultiplatform)
+            export(libs.kmm.notifier)
+        }
+
+        // Maps custom Xcode configuration to NativeBuildType
+        xcodeConfigurationToNativeBuildType["CUSTOM_DEBUG"] = NativeBuildType.DEBUG
+        xcodeConfigurationToNativeBuildType["CUSTOM_RELEASE"] = NativeBuildType.RELEASE
     }
 }
 
@@ -422,6 +454,12 @@ buildkonfig {
             )
         }
         create("ios") {
+            buildConfigField(
+                type = STRING,
+                name = "REDIRECT_URI",
+                value = "cea://redirect",
+                nullable = true,
+            )
             buildConfigField(
                 type = STRING,
                 name = "SENTRY_DSN",

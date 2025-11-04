@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -25,26 +24,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.ktor.http.ContentType
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.documentFilePath
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
+import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LendingDetailsDialog(
     lending: ReferencedLending,
     onCancelRequest: () -> Unit,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: ((PlatformFile) -> Job)?,
     onMemoryEditorRequested: (() -> Unit)?,
     onDismissRequest: () -> Unit,
+    fpm: FileProviderModel = viewModel { FileProviderModel() },
 ) {
     var isSubmittingMemory by remember { mutableStateOf(false) }
     val filePickLauncher = rememberFilePickerLauncher(FileKitType.File("pdf")) { file ->
@@ -105,16 +108,9 @@ fun LendingDetailsDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) { (progress, submittingMemory) ->
                         if (progress != null) {
-                            val (uploaded, total) = progress
-                            val percentage = uploaded.toDouble() / total.toDouble()
-                            LinearProgressIndicator(
-                                progress = { percentage.toFloat() },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            LinearLoadingIndicator(progress)
                         } else if (submittingMemory) {
-                            LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            LinearLoadingIndicator(null)
                         }
                     }
                 }
@@ -132,13 +128,14 @@ fun LendingDetailsDialog(
 
                     OutlinedButton(
                         onClick = {
-                            val path = lending.documentFilePath()
-                            PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                            fpm.openFile { lending.fetchDocumentFilePath() }
                         }
                     ) {
                         Text(stringResource(Res.string.management_view_memory))
                     }
                 }
+
+                fpm.progress.LinearLoadingIndicator()
             }
         },
         dismissButton = {

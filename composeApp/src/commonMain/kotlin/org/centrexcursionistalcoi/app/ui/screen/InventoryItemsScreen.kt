@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -54,6 +55,8 @@ import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.EditInventoryItemTypeDialog
+import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
+import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
@@ -66,6 +69,8 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 fun InventoryItemsScreen(
     typeId: Uuid,
+    /** The display name of the type. Used to display the title before having fully loaded the type data, so that the shared animation is smooth. */
+    typeDisplayName: String,
     model: InventoryItemModel = viewModel { InventoryItemModel(typeId) },
     onBack: () -> Unit
 ) {
@@ -73,14 +78,26 @@ fun InventoryItemsScreen(
     val categories by model.categories.collectAsState()
     val items by model.items.collectAsState()
 
+    val errorState by model.error.collectAsState()
+    errorState?.let { error ->
+        ErrorDialog(exception = error) { model.clearError() }
+    }
+
     InventoryItemsScreen(
         typeId = typeId,
+        typeDisplayName = typeDisplayName,
         type = type,
         items = items.orEmpty(),
         inventoryItemTypesCategories = categories,
         onCreate = model::createInventoryItem,
         onUpdate = model::updateInventoryItemType,
-        onDelete = model::delete,
+        onDelete = {
+            model.delete().apply {
+                invokeOnCompletion { onBack() }
+            }
+        },
+        onDeleteItem = model::delete,
+        onUpdateItem = model::updateInventoryItem,
         onBack = onBack,
     )
 }
@@ -89,12 +106,15 @@ fun InventoryItemsScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 fun InventoryItemsScreen(
     typeId: Uuid,
+    typeDisplayName: String,
     type: InventoryItemType?,
     inventoryItemTypesCategories: Set<String>?,
     items: List<ReferencedInventoryItem>,
     onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onUpdate: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
     onDelete: () -> Job,
+    onUpdateItem: (ReferencedInventoryItem, variation: String) -> Job,
+    onDeleteItem: (ReferencedInventoryItem) -> Job,
     onBack: () -> Unit
 ) {
     val (sharedTransitionScope, animatedContentScope) = LocalTransitionContext.currentOrThrow
@@ -122,6 +142,22 @@ fun InventoryItemsScreen(
     var deleting by remember { mutableStateOf(false) }
     if (deleting && type != null) {
         DeleteDialog(type, { it.displayName }, onDelete) { deleting = false }
+    }
+
+    var displayingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
+    displayingItem?.let { item ->
+        InventoryItemDetailsDialog(
+            item = item,
+            onDelete = { onDeleteItem(item) },
+            onEdit = { variation -> onUpdateItem(item, variation) },
+            onDismissRequest = { displayingItem = null },
+        )
+    }
+    LaunchedEffect(items, displayingItem) {
+        if (displayingItem != null && items.find { it.id == displayingItem?.id } == null) {
+            // currently displayed item was deleted, close dialog
+            displayingItem = null
+        }
     }
 
     var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
@@ -153,7 +189,7 @@ fun InventoryItemsScreen(
                 title = {
                     with(sharedTransitionScope) {
                         Text(
-                            text = type?.displayName ?: stringResource(Res.string.status_loading),
+                            text = typeDisplayName,
                             modifier = Modifier.sharedBounds(
                                 sharedContentState = sharedTransitionScope.rememberSharedContentState("iit_$typeId"),
                                 animatedVisibilityScope = animatedContentScope
@@ -239,11 +275,6 @@ fun InventoryItemsScreen(
                                 ) {
                                     Icon(Icons.Default.QrCode, stringResource(Res.string.qrcode))
                                 }
-                                /*IconButton(
-                                    onClick = { onDelete(item) }
-                                ) {
-                                    Icon(Icons.Default.Delete, stringResource(Res.string.delete))
-                                }*/
                             }
                         },
                         colors = ListItemDefaults.colors(
@@ -252,6 +283,7 @@ fun InventoryItemsScreen(
                             supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
                             trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
                         ),
+                        modifier = Modifier.clickable { displayingItem = item }
                     )
                 }
             }

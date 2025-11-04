@@ -33,9 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
-import coil3.compose.AsyncImage
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.ImageFileContainer
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.ui.data.DialogContext
@@ -63,6 +62,7 @@ fun <T> ListCard(
     supportingContent: (@Composable (T) -> Unit)? = null,
     trailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
+    fileContainerProvider: ((T) -> ImageFileContainer)? = null,
     onClick: ((T) -> Unit)? = null,
 ) {
     val (sharedTransitionScope, animatedContentScope) = LocalTransitionContext.currentOrThrow
@@ -164,16 +164,16 @@ fun <T> ListCard(
                             actions(item).forEach { it.IconButton() }
                         }
                     },
-                    leadingContent = {
-                        if (item is Department && item.image != null) {
-                            val imageFile by item.rememberImageFile()
-                            AsyncImage(
-                                model = imageFile,
+                    leadingContent = if (item is ImageFileContainer || fileContainerProvider != null) {
+                        {
+                            val imageFile by ((item as? ImageFileContainer ?: fileContainerProvider!!.invoke(item)).rememberImageFile())
+                            AsyncByteImage(
+                                bytes = imageFile,
                                 contentDescription = null,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(36.dp),
                             )
                         }
-                    },
+                    } else null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(enabled = detailsDialogContent != null || onClick != null) {

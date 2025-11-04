@@ -66,6 +66,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
@@ -175,7 +176,7 @@ private fun HomeScreenContent(
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Job,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
@@ -444,7 +445,7 @@ fun HomeScreenPagerContent(
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Job,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 

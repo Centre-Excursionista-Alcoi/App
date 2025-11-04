@@ -232,11 +232,13 @@ fun InventoryItemTypesCard(
         list = groupedItems + typesWithoutItems,
         titleResource = Res.string.management_inventory_item_types,
         emptyTextResource = Res.string.management_no_item_types,
-        displayName = { (type, items) -> "${type.displayName} (${items.size})" },
+        displayName = { (type) -> type.displayName },
+        trailingContent = { (_, items) -> Badge { Text(items.size.toString()) } },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onCreate = { creating = true },
         onClick = { (type) -> onClick(type) },
         sharedContentStateKey = { (type) -> "iit_${type.id}" },
+        fileContainerProvider = { (type) -> type },
     )
 }
 

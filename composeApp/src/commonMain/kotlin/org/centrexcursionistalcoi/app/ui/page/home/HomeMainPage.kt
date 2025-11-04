@@ -69,6 +69,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
@@ -92,7 +93,7 @@ fun HomeMainPage(
     inventoryItems: List<ReferencedInventoryItem>?,
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     shoppingList: Map<Uuid, Int>,
@@ -546,7 +547,7 @@ fun OldLendingItem(lending: ReferencedLending) {
 fun LendingItem(
     lending: ReferencedLending,
     snackbarHostState: SnackbarHostState,
-    memoryUploadProgress: Pair<Long, Long>?,
+    memoryUploadProgress: Progress?,
     onMemorySubmitted: (PlatformFile) -> Job,
     onMemoryEditorRequested: () -> Unit,
     onCancelLendingRequest: () -> Job,

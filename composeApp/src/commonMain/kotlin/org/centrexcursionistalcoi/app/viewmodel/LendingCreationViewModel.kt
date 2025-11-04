@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlin.uuid.Uuid
@@ -20,7 +19,7 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 
 class LendingCreationViewModel(
     private val originalShoppingList: ShoppingList
-) : ViewModel() {
+) : ErrorViewModel() {
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
@@ -36,9 +35,6 @@ class LendingCreationViewModel(
 
     private val _allocatedItems = MutableStateFlow<List<ReferencedInventoryItem>?>(null)
     val allocatedItems = _allocatedItems.asStateFlow()
-
-    private val _error = MutableStateFlow<Throwable?>(null)
-    val error = _error.asStateFlow()
 
     fun setFrom(date: LocalDate) {
         _from.value = date
@@ -99,7 +95,7 @@ class LendingCreationViewModel(
         val from = from.value ?: return@launch
         val to = to.value ?: return@launch
 
-        _error.emit(null)
+        clearError()
         _allocatedItems.emit(null)
 
         val allocatedItemsIds = mutableListOf<Uuid>()
@@ -112,13 +108,13 @@ class LendingCreationViewModel(
             } catch (e: CannotAllocateEnoughItemsException) {
                 // Not enough items available
                 Napier.e(e) { "Not enough items available for the given date range." }
-                _error.emit(e)
+                setError(e)
                 _allocatedItems.emit(emptyList())
                 return@launch
             } catch (e: IllegalArgumentException) {
                 // Some other error
                 Napier.e(e) { "Failed to allocate $typeId" }
-                _error.emit(e)
+                setError(e)
                 _allocatedItems.emit(emptyList())
                 return@launch
             }

@@ -26,6 +26,7 @@ import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
@@ -70,6 +71,11 @@ fun App(
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     val navController = rememberNavController()
+
+    val errorState by GlobalAsyncErrorHandler.error.collectAsState()
+    errorState?.let { error ->
+        ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
+    }
 
     SharedTransitionLayout {
         NavHost(
@@ -119,8 +125,8 @@ fun App(
             }
             destination<Destination.Home> {
                 HomeScreen(
-                    onClickInventoryItemType = {
-                        navController.navigate(Destination.InventoryItems(it.id))
+                    onClickInventoryItemType = { type ->
+                        navController.navigate(Destination.InventoryItems(type))
                     },
                     onManageLendingsRequested = {
                         navController.navigate(Destination.LendingsManagement)
@@ -146,9 +152,11 @@ fun App(
 
             destination<Destination.InventoryItems> { route ->
                 val typeId = route.typeId
+                val displayName = route.displayName
 
                 InventoryItemsScreen(
                     typeId = typeId,
+                    typeDisplayName = displayName,
                     onBack = { navController.navigateUp() }
                 )
             }

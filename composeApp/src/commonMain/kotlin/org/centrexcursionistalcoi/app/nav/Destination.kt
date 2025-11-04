@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.nav
 import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
@@ -16,7 +17,9 @@ sealed interface Destination {
     /**
      * Shows all the items of a given inventory type.
      */
-    @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid) : Destination
+    @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid, val displayName: String) : Destination {
+        constructor(type: InventoryItemType): this(type.id, type.displayName)
+    }
 
     @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
 

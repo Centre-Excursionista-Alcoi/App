@@ -20,12 +20,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.ktor.http.ContentType
 import org.centrexcursionistalcoi.app.data.UserInsurance
-import org.centrexcursionistalcoi.app.data.filePath
+import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
+import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -46,6 +48,7 @@ private fun InsuranceInfoText(labelRes: StringResource, value: String) {
 @Composable
 fun InsuranceDialog(
     insurance: UserInsurance,
+    fpm: FileProviderModel = viewModel { FileProviderModel() },
     onDismissRequest: () -> Unit
 ) {
     AlertDialog(
@@ -65,8 +68,7 @@ fun InsuranceDialog(
                         if (PlatformShareLogic.isSupported) {
                             IconButton(
                                 onClick = {
-                                    val path = insurance.filePath(documentId)
-                                    PlatformShareLogic.share(path, ContentType.Application.Pdf)
+                                    fpm.shareFile { insurance.fetchFilePath(documentId) }
                                 },
                             ) {
                                 Icon(Icons.Default.Share, stringResource(Res.string.share))
@@ -75,8 +77,7 @@ fun InsuranceDialog(
                         if (PlatformOpenFileLogic.isSupported) {
                             OutlinedButton(
                                 onClick = {
-                                    val path = insurance.filePath(documentId)
-                                    PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                                    fpm.openFile { insurance.fetchFilePath(documentId) }
                                 },
                                 modifier = Modifier.weight(1f).padding(start = 8.dp)
                             ) {
@@ -85,6 +86,8 @@ fun InsuranceDialog(
                         }
                     }
                 }
+
+                fpm.progress.LinearLoadingIndicator()
             }
         },
         confirmButton = {

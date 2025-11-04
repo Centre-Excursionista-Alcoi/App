@@ -8,8 +8,10 @@ import io.ktor.http.content.forEachPart
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import java.time.Instant
@@ -57,6 +59,7 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
 
@@ -152,6 +155,11 @@ fun Route.inventoryRoutes() {
                     this.type = itemType
                 }
             }
+        },
+        deleteReferencesCheck = { item ->
+            LendingItems.select(LendingItems.item)
+                .where { LendingItems.item eq item.id }
+                .empty()
         },
         updater = UpdateInventoryItemRequest.serializer(),
     )
@@ -339,6 +347,25 @@ fun Route.inventoryRoutes() {
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
         }
+    }
+    delete("inventory/lendings/{id}") {
+        assertAdmin() ?: return@delete
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            return@delete
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            return@delete
+        }
+
+        Database { lending.delete() }
+
+        call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/cancel") {
         val session = getUserSessionOrFail() ?: return@post
@@ -582,6 +609,29 @@ fun Route.inventoryRoutes() {
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)
+    }
+    // Allows admins to skip the memory submission for a lending
+    post("inventory/lendings/{id}/skip_memory") {
+        assertAdmin() ?: return@post
+
+        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        if (lendingId == null) {
+            respondError(Error.MalformedId())
+            return@post
+        }
+
+        val lending = Database { LendingEntity.findById(lendingId) }
+        if (lending == null) {
+            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
+            return@post
+        }
+
+        Database {
+            lending.memorySubmitted = true
+            lending.memorySubmittedAt = Instant.now()
+        }
+
+        call.respond(HttpStatusCode.OK)
     }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
     // TODO: Add tests

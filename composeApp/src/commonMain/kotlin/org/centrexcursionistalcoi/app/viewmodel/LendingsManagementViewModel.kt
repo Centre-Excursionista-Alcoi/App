@@ -28,4 +28,16 @@ class LendingsManagementViewModel : ViewModel() {
             Napier.i { "Return of lending has been received." }
         }
     }
+
+    fun delete(lending: ReferencedLending) = launch {
+        Napier.i { "Deleting lending..." }
+        LendingsRemoteRepository.delete(lending.id)
+        Napier.i { "Lending has been deleted." }
+    }
+
+    fun skipMemory(lending: ReferencedLending) = launch {
+        Napier.i { "Skipping memory for lending..." }
+        LendingsRemoteRepository.skipMemory(lending.id)
+        Napier.i { "Memory for lending has been skipped." }
+    }
 }

@@ -6,4 +6,6 @@ expect object PlatformShareLogic : PlatformProvider {
     override val isSupported: Boolean
 
     fun share(path: String, contentType: ContentType)
+
+    fun share(text: String)
 }

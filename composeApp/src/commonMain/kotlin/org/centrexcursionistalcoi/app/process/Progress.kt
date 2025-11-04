@@ -85,7 +85,9 @@ sealed class Progress {
     }
 
     companion object {
-        fun HttpRequestBuilder.monitorUploadProgress(notifier: ProgressNotifier, name: String? = null) {
+        fun HttpRequestBuilder.monitorUploadProgress(notifier: ProgressNotifier?, name: String? = null) {
+            if (notifier == null) return
+
             // Set initial progress value
             CoroutineScope(defaultAsyncDispatcher).launch {
                 notifier(
@@ -102,7 +104,9 @@ sealed class Progress {
             }
         }
 
-        fun HttpRequestBuilder.monitorDownloadProgress(notifier: ProgressNotifier, name: String? = null) {
+        fun HttpRequestBuilder.monitorDownloadProgress(notifier: ProgressNotifier?, name: String? = null) {
+            if (notifier == null) return
+
             // Set initial progress value
             CoroutineScope(defaultAsyncDispatcher).launch {
                 notifier(

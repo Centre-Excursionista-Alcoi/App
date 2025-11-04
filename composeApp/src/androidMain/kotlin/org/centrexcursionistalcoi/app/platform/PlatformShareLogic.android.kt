@@ -29,4 +29,17 @@ actual object PlatformShareLogic : PlatformProvider {
             context.startActivity(Intent.createChooser(intent, null))
         } ?: Napier.e { "Sharing not supported for $path as $contentType" }
     }
+
+    actual fun share(text: String) {
+        val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
+
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, text)
+            type = "text/plain"
+        }
+        intent.resolveActivity(context.packageManager)?.let {
+            context.startActivity(Intent.createChooser(intent, null))
+        } ?: Napier.e { "Sharing not supported for text" }
+    }
 }

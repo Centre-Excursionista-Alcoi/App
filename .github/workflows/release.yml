@@ -90,16 +90,27 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo ${{ secrets.KEYSTORE_BASE64 }} > keystore.txt
+          echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} > keystore.txt
           base64 --decode keystore.txt > keystore.jks
+      - name: Verify Keystore integrity
+        env:
+          KEYSTORE_SHA256: 6268f9f99a68ab7903a342290ff1762c5ffdebd0fa467d3176c6dac2e0cdde7f
+        run: |
+          echo "${{ env.KEYSTORE_SHA256 }} keystore.jks" | sha256sum --check --status || exit 1
+      - name: Verify Keystore contents
+        run: |
+          keytool -list -v -keystore keystore.jks -storepass ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
       - name: Decode google-services.json
         run: |
-          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.base64
-          base64 --decode google-services.base64 > composeApp/google-services.json
-
-      - name: Write local.properties
-        run: echo '${{ secrets.LOCAL_PROPERTIES }}' > local.properties
+          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
+          base64 --decode google-services.txt > composeApp/google-services.json
+      - name: Verify google-services.json integrity
+        env:
+          KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
+        run: |
+          cd composeApp
+          echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
       - name: Build AAB
         id: build_aab
@@ -126,7 +137,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./composeApp/build/outputs/**/*.aab
             ./composeApp/build/outputs/**/*.apk
 
       - name: Upload to Play Store
@@ -134,9 +144,9 @@ jobs:
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
-          packageName: org.escalaralcoiaicomtat.android
+          packageName: org.centrexcursionistalcoi.app
           releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
-          track: "production"
+          track: "beta"
           inAppUpdatePriority: 2
           # mappingFile: ./base/build/outputs/mapping/release/mapping.txt
           # whatsNewDirectory: ./changelog
