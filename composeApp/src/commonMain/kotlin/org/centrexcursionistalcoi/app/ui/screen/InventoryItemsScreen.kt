@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -59,6 +58,7 @@ import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemDetailsDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.utils.currentOrThrow
 import org.centrexcursionistalcoi.app.viewmodel.InventoryItemModel
@@ -242,7 +242,7 @@ fun InventoryItemsScreen(
                 )
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumnWidthWrapper(modifier = Modifier.fillMaxSize()) {
                 val description = type.description
                 if (!description.isNullOrBlank()) item("description") {
                     Text(
