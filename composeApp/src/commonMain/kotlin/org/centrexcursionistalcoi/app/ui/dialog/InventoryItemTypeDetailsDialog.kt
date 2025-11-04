@@ -22,19 +22,15 @@ import org.jetbrains.compose.resources.stringResource
 fun InventoryItemTypeDetailsDialog(type: InventoryItemType, onDismissRequest: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(Res.string.inventory_item_type_title)) },
+        title = { Text(type.displayName) },
         text = {
             Column {
-                Text(
-                    text = stringResource(Res.string.inventory_item_type, type.displayName),
-                    style = MaterialTheme.typography.titleMedium
-                )
                 val description = type.description
                 if (!description.isNullOrBlank()) {
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
                 if (type.image != null) {
