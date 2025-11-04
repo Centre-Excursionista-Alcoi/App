@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -59,6 +59,7 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
+import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
@@ -77,7 +78,7 @@ fun LendingCreationScreen(
     val from by model.from.collectAsState()
     val to by model.to.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
-    val error by model.error.collectAsState()
+    val errors by model.errors.collectAsState()
 
     val isDirty = originalShoppingList != shoppingList
 
@@ -102,7 +103,7 @@ fun LendingCreationScreen(
         onFromChange = model::setFrom,
         to = to,
         onToChange = model::setTo,
-        error = error,
+        errors = errors,
         onCreateLendingRequest = {
             model.createLending(onLendingCreated)
         },
@@ -134,7 +135,7 @@ private fun LendingCreationScreen(
     onFromChange: (LocalDate) -> Unit,
     to: LocalDate?,
     onToChange: (LocalDate) -> Unit,
-    error: Throwable?,
+    errors: List<Throwable>?,
     allocatedItems: List<ReferencedInventoryItem>?,
     onCreateLendingRequest: () -> Unit,
     onBackRequested: () -> Unit,
@@ -179,7 +180,7 @@ private fun LendingCreationScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+        LazyColumnWidthWrapper(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -213,7 +214,9 @@ private fun LendingCreationScreen(
             } else {
                 items(shoppingList.toList()) { (typeId, amount) ->
                     val type = inventoryItemTypes.find { it.id == typeId }
-                    val error = (error as? CannotAllocateEnoughItemsException?)?.takeIf { it.itemTypeId == typeId }
+                    val itemError = errors
+                        ?.filterIsInstance<CannotAllocateEnoughItemsException>()
+                        ?.find { it.itemTypeId == typeId }
 
                     ListItem(
                         headlineContent = { Text("${type?.displayName ?: unknown()} ($amount)") },
@@ -222,8 +225,8 @@ private fun LendingCreationScreen(
                             Column {
                                 Text(
                                     text = when {
-                                        error != null -> {
-                                            val availableAmount = error.availableItems?.size ?: 0
+                                        itemError != null -> {
+                                            val availableAmount = itemError.availableItems?.size ?: 0
                                             if (availableAmount > 0) {
                                                 stringResource(Res.string.lending_creation_error_allocation_insufficient, availableAmount)
                                             } else {
@@ -238,7 +241,7 @@ private fun LendingCreationScreen(
                                                 items.joinToString("\n") { "- ${it.id}" }
                                     }
                                 )
-                                if (error != null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()) {
+                                if (itemError != null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()) {
                                     for (item in items) {
                                         Text(
                                             text = "- ${item.id}",
@@ -253,7 +256,7 @@ private fun LendingCreationScreen(
                             val canAddMore = amount < availableAmount
 
                             Row {
-                                if (error != null && error.availableItems.isNullOrEmpty()) {
+                                if (itemError != null && itemError.availableItems.isNullOrEmpty()) {
                                     AssistChip(
                                         onClick = { onRemoveItemTypeFromShoppingList(typeId) },
                                         label = { Icon(Icons.Default.Delete, null) },
@@ -274,11 +277,11 @@ private fun LendingCreationScreen(
                             }
                         },
                         colors = ListItemDefaults.colors(
-                            containerColor = if (error != null) MaterialTheme.colorScheme.errorContainer else Color.Transparent,
-                            headlineColor = if (error != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
-                            supportingColor = if (error != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
+                            containerColor = if (itemError != null) MaterialTheme.colorScheme.errorContainer else Color.Transparent,
+                            headlineColor = if (itemError != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
+                            supportingColor = if (itemError != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
                         ),
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+                        modifier = Modifier.padding(vertical = 4.dp).clip(RoundedCornerShape(8.dp)),
                     )
                 }
             }
@@ -294,33 +297,42 @@ private fun LendingCreationScreen(
                     ),
                 )
             }
-            if (error != null) item("error") {
-                val message = when (error) {
-                    is CannotAllocateEnoughItemsException -> {
-                        val displayName = inventoryItemTypes?.find { it.id == error.itemTypeId }?.displayName ?: unknown()
-                        stringResource(
-                            Res.string.lending_creation_error_allocation,
-                            displayName,
-                            error.availableItems?.size ?: 0,
-                            error.triedToAllocateAmount,
+            if (!errors.isNullOrEmpty()) {
+                val allocationErrors = errors.filterIsInstance<CannotAllocateEnoughItemsException>()
+                if (allocationErrors.isNotEmpty()) {
+                    item(
+                        key = "error-allocation"
+                    ) {
+                        CardWithIcon(
+                            icon = Icons.Default.ErrorOutline,
+                            title = stringResource(Res.string.lending_creation_error_allocation_title),
+                            message = stringResource(Res.string.lending_creation_error_allocation),
+                            modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            ),
                         )
                     }
+                }
 
-                    else -> error.message
-                }?.takeUnless { it.isBlank() }
-
-                CardWithIcon(
-                    icon = Icons.Default.ErrorOutline,
-                    title = stringResource(Res.string.lending_creation_error_title),
-                    message = message?.let {
-                        stringResource(Res.string.lending_creation_error_message, it)
-                    } ?: stringResource(Res.string.lending_creation_error_message_unknown),
-                    modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    ),
-                )
+                itemsIndexed(
+                    errors.filterNot { it is CannotAllocateEnoughItemsException },
+                    { i, _ -> "error-$i" }
+                ) { _, error ->
+                    CardWithIcon(
+                        icon = Icons.Default.ErrorOutline,
+                        title = stringResource(Res.string.lending_creation_error_title),
+                        message = error.message?.let { message ->
+                            stringResource(Res.string.lending_creation_error_message, message)
+                        } ?: stringResource(Res.string.lending_creation_error_message_unknown),
+                        modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
+                    )
+                }
             }
             item("spacer") { Spacer(Modifier.height(48.dp)) }
         }

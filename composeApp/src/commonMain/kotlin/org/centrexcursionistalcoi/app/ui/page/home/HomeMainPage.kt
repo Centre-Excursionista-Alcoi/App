@@ -194,7 +194,7 @@ fun HomeMainPage(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(activeLendings, key = { it.id }, contentType = { "active-lending" }) { lending ->
+            items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { GridItemSpan(2) }) { lending ->
                 LendingItem(
                     lending,
                     snackbarHostState,

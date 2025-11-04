@@ -185,8 +185,9 @@ fun UnconfirmedLendingsCard(
             Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
-                val unitText = pluralStringResource(Res.plurals.lending_details_item_row, items.size, items.size)
-                Text("- ${type.displayName}: $unitText")
+                Text(
+                    text = pluralStringResource(Res.plurals.lending_details_item_row, items.size, type.displayName, items.size)
+                )
             }
 
             HorizontalDivider()
@@ -247,8 +248,9 @@ fun PendingReturnLendingsCard(
             Text(stringResource(Res.string.management_lending_user, lending.user.username))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in items.groupBy { it.type }) {
-                val unitText = pluralStringResource(Res.plurals.lending_details_item_row, items.size, items.size)
-                Text("- ${type.displayName}: $unitText")
+                Text(
+                    text = pluralStringResource(Res.plurals.lending_details_item_row, items.size, type.displayName, items.size)
+                )
             }
 
             HorizontalDivider()

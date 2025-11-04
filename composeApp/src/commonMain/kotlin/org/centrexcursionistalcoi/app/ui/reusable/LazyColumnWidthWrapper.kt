@@ -23,11 +23,13 @@ import androidx.compose.ui.unit.dp
 fun LazyColumnWidthWrapper(
     modifier: Modifier = Modifier,
     maxWidth: Dp = 600.dp,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: LazyListScope.() -> Unit
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         LazyColumn(
             modifier = Modifier.widthIn(max = maxWidth).fillMaxWidth(),
+            horizontalAlignment = horizontalAlignment,
         ) {
             content()
         }

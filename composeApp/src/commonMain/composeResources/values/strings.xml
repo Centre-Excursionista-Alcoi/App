@@ -134,7 +134,8 @@
     <string name="lending_creation_error_message_unknown">An unknown error occurred while allocating items.</string>
     <string name="lending_creation_error_allocation_insufficient">Only %1$d available.</string>
     <string name="lending_creation_error_allocation_none">None available.</string>
-    <string name="lending_creation_error_allocation">There aren't enough "%1$s" for the selected dates.\nOnly %2$d available.\nYou have requested %3$d.</string>
+    <string name="lending_creation_error_allocation_title">Cannot allocate enough items</string>
+    <string name="lending_creation_error_allocation">Please, check for errors above, and modify your request accordingly.</string>
 
     <string name="lending_not_confirmed">Not Confirmed</string>
     <string name="lending_pending_pickup">Pending Pickup</string>
