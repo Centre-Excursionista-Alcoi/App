@@ -328,7 +328,20 @@ private fun HomeScreenContent(
                     Spacer(Modifier.weight(1f))
                     TooltipBox(
                         state = rememberTooltipState(),
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.logout)) }
+                        }
+                    ) {
+                        NavigationRailItem(
+                            selected = false,
+                            onClick = { showingLogoutDialog = true },
+                            icon = { Icon(Icons.AutoMirrored.Default.Logout, stringResource(Res.string.logout)) }
+                        )
+                    }
+                    TooltipBox(
+                        state = rememberTooltipState(),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
                         tooltip = {
                             PlainTooltip { Text(stringResource(Res.string.force_sync)) }
                         }
