@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.FirstPage
+import androidx.compose.material.icons.filled.FreeCancellation
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Numbers
@@ -146,7 +147,7 @@ fun LendingPickupScreen(
         onMarkItem = model::onScan,
         onUnMarkItem = model::unmark,
         onCompleteRequest = model::pickup,
-        onCancelRequest = model::cancelLending,
+        onDeleteRequest = model::deleteLending,
         onBack = onBack,
         onComplete = onComplete,
     )
@@ -162,7 +163,7 @@ private fun LendingPickupScreen(
     onMarkItem: (Uuid) -> Unit,
     onUnMarkItem: (Uuid) -> Unit,
     onCompleteRequest: () -> Job,
-    onCancelRequest: () -> Job,
+    onDeleteRequest: () -> Job,
     onBack: () -> Unit,
     onComplete: () -> Unit,
 ) {
@@ -203,6 +204,39 @@ private fun LendingPickupScreen(
         }
     }
 
+    var showingCancelConfirmation by remember { mutableStateOf(false) }
+    if (showingCancelConfirmation) {
+        var isLoading by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isLoading) showingCancelConfirmation = false },
+            title = { Text(stringResource(Res.string.lending_details_cancel_confirm_title)) },
+            text = { Text(stringResource(Res.string.lending_details_cancel_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    enabled = !isLoading,
+                    onClick = {
+                        isLoading = true
+                        onDeleteRequest().invokeOnCompletion {
+                            isLoading = false
+                            showingCancelConfirmation = false
+                            onBack()
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.lending_details_cancel))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !isLoading,
+                    onClick = { showingCancelConfirmation = false }
+                ) {
+                    Text(stringResource(Res.string.close))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -225,6 +259,19 @@ private fun LendingPickupScreen(
                         },
                     ) {
                         Icon(Icons.Default.QrCodeScanner, null)
+                    }
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
+                        state = rememberTooltipState(),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.lending_details_cancel)) }
+                        },
+                    ) {
+                        IconButton(
+                            onClick = { showingCancelConfirmation = true },
+                        ) {
+                            Icon(Icons.Default.FreeCancellation, stringResource(Res.string.lending_details_cancel))
+                        }
                     }
                 },
             )

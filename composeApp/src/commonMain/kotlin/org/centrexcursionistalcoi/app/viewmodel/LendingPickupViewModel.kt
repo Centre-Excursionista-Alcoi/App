@@ -67,11 +67,11 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
         }
     }
 
-    fun cancelLending() = launch {
+    fun deleteLending() = launch {
         doAsync {
-            Napier.i { "Cancelling lending..." }
-            LendingsRemoteRepository.cancel(lendingId)
-            Napier.i { "Lending has been cancelled." }
+            Napier.i { "Deleting lending..." }
+            LendingsRemoteRepository.delete(lendingId)
+            Napier.i { "Lending has been deleted." }
         }
     }
 

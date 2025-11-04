@@ -207,6 +207,8 @@
 
     <string name="lending_details_title">Lending Details</string>
     <string name="lending_details_cancel">Cancel Lending</string>
+    <string name="lending_details_cancel_confirm_title">Lending Cancellation Confirm</string>
+    <string name="lending_details_cancel_confirm_message">Are you sure that you want to cancel this lending?</string>
     <string name="lending_details_items_title">Items:</string>
     <plurals name="lending_details_item_row">
         <item quantity="one">- %1$s: %2$d unit</item>
