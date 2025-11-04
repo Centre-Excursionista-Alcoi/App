@@ -192,6 +192,10 @@ private fun LendingCreationScreen(
                         label = stringResource(Res.string.lending_creation_from),
                         modifier = Modifier.weight(1f).padding(end = 4.dp),
                         selectableDates = RangeSelectableDates(from = today, to = to),
+                        onRangeSelected = { range ->
+                            onFromChange(range.start)
+                            onToChange(range.endInclusive)
+                        },
                     )
                     DatePickerFormField(
                         value = to,
@@ -199,6 +203,10 @@ private fun LendingCreationScreen(
                         label = stringResource(Res.string.lending_creation_until),
                         modifier = Modifier.weight(1f).padding(start = 4.dp),
                         selectableDates = FutureSelectableDates(from ?: today),
+                        onRangeSelected = { range ->
+                            onFromChange(range.start)
+                            onToChange(range.endInclusive)
+                        },
                     )
                 }
             }
