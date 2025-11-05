@@ -23,6 +23,9 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
     private val _scannedItems = MutableStateFlow(emptySet<Uuid>())
     val scannedItems get() = _scannedItems.asStateFlow()
 
+    private val _dismissedItems = MutableStateFlow(emptySet<Uuid>())
+    val dismissedItems get() = _dismissedItems.asStateFlow()
+
     private val _scanError = MutableStateFlow<String?>(null)
     val scanError get() = _scanError.asStateFlow()
 
@@ -61,8 +64,11 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
 
     fun pickup() = launch {
         doAsync {
+            val dismissedItems = _dismissedItems.value
+
             Napier.i { "Marking lending as picked up..." }
-            LendingsRemoteRepository.pickup(lendingId)
+            Napier.d { "Dismissing ${dismissedItems.size} items: ${dismissedItems.joinToString()}" }
+            LendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
             Napier.i { "Lending has been marked as picked up." }
         }
     }
@@ -86,8 +92,18 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
         }
     }
 
-    fun unmark(itemId: Uuid) {
-        _scannedItems.value -= itemId
+    fun toggleItem(itemId: Uuid) {
+        if (scannedItems.value.contains(itemId)) {
+            // dismiss the item
+            _dismissedItems.value += itemId
+            _scannedItems.value -= itemId
+        } else if (dismissedItems.value.contains(itemId)) {
+            // clear the item status
+            _dismissedItems.value -= itemId
+        } else {
+            // scan the item
+            _scannedItems.value += itemId
+        }
     }
 
     private suspend fun processScan(itemId: Uuid) {
@@ -100,5 +116,7 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
         }
 
         _scannedItems.value += item.id
+        _dismissedItems.value -= item.id
+        Napier.i { "Item ${item.id} scanned successfully." }
     }
 }

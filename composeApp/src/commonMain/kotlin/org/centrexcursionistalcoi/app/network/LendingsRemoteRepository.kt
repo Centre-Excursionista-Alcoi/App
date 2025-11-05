@@ -141,11 +141,23 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * Marks a lending as picked up by its ID.
      * The logged-in user must have the necessary permissions to pickup lendings.
      * @param lendingId The UUID of the lending to pickup.
+     * @param dismissItemsIds The list of item UUIDs to dismiss from the lending. Can be empty.
      * @throws IllegalArgumentException if the pickup fails.
      * @throws NoSuchElementException if the lending is not found after pickup.
      */
-    suspend fun pickup(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post("inventory/lendings/$lendingId/pickup") {
+    suspend fun pickup(
+        lendingId: Uuid,
+        dismissItemsIds: List<Uuid>,
+        progress: ProgressNotifier? = null
+    ) {
+        val response = httpClient.submitForm(
+            "inventory/lendings/$lendingId/pickup",
+            formParameters = parameters {
+                if (dismissItemsIds.isNotEmpty()) {
+                    append("dismiss_items", dismissItemsIds.joinToString(","))
+                }
+            },
+        ) {
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
