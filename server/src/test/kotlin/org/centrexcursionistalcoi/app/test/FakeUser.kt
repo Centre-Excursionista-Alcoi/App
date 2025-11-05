@@ -10,7 +10,7 @@ object FakeUser {
     val GROUPS = listOf("user")
 
     context(_: JdbcTransaction)
-    fun provideEntity(): UserReferenceEntity = UserReferenceEntity.new(SUB) {
+    fun provideEntity(): UserReferenceEntity = UserReferenceEntity.findById(SUB) ?: UserReferenceEntity.new(SUB) {
         username = USERNAME
         email = EMAIL
         groups = GROUPS
