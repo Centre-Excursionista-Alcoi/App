@@ -131,6 +131,8 @@ fun HomeMainPage(
         gridMinSize = 200.dp,
         modifier = Modifier.fillMaxSize().padding(16.dp),
     ) {
+        val lendingSpan = GridItemSpan(if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) 2 else 1)
+
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
                 Text(
@@ -194,7 +196,7 @@ fun HomeMainPage(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
-            items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { GridItemSpan(2) }) { lending ->
+            items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { lendingSpan }) { lending ->
                 LendingItem(
                     lending,
                     snackbarHostState,
@@ -320,7 +322,7 @@ fun HomeMainPage(
                 items = oldLendings,
                 key = { it.id },
                 contentType = { "old-lending" },
-                span = { GridItemSpan(2) },
+                span = { lendingSpan },
             ) { lending ->
                 OldLendingItem(lending)
             }
