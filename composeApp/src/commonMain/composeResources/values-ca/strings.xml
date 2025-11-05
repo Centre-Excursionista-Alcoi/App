@@ -233,4 +233,15 @@
     <string name="notification_lending_returned_message">Has tornat els elements del teu préstec. Per favor, recorda pujar la memòria de l'activitat.</string>
     <string name="notification_lending_returned_other_title">Préstec Retornat</string>
     <string name="notification_lending_returned_other_message">Un usuari ha tornat el material d'un préstec.</string>
+    <string name="error_dialog_title" translatable="false"></string>
+    <string name="error_delete_references" translatable="false"></string>
+    <string name="management_return" translatable="false"></string>
+    <string name="inventory_item_variation" translatable="false"></string>
+    <string name="none" translatable="false"></string>
+    <string name="error_dialog_type" translatable="false"></string>
+    <string name="error_dialog_stacktrace" translatable="false"></string>
+    <string name="management_inventory_item_edit" translatable="false"></string>
+    <string name="error_dialog_message" translatable="false"></string>
+    <string name="management_lending_given_by" translatable="false"></string>
+    <string name="management_skip_memory" translatable="false"></string>
 </resources>
