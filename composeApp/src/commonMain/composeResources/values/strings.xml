@@ -179,7 +179,7 @@
         <item quantity="other">- %1$s: %2$d units</item>
     </plurals>
     <string name="lending_details_call_user" translatable="false">Call User</string>
-    <string name="lending_details_whatsapp">WhatsApp</string>
+    <string name="lending_details_whatsapp" translatable="false">WhatsApp</string>
     <string name="lending_details_copy_number" translatable="false">Copy Phone</string>
     <string name="lending_details_email" translatable="false">Send Email</string>
     <string name="lending_details_notes" translatable="false">Notes:</string>
