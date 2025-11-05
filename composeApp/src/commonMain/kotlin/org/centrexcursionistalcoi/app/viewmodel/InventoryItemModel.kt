@@ -49,8 +49,8 @@ class InventoryItemModel(private val typeId: Uuid) : ErrorViewModel() {
         doAsync {
             InventoryItemsRemoteRepository.update(
                 item.id,
-                variation.takeUnless { it.isNullOrEmpty() },
-                nfcId,
+                variation,
+                if (nfcId == null && item.nfcId != null) ByteArray(0) else nfcId,
             )
         }
     }

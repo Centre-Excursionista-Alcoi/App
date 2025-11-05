@@ -160,7 +160,7 @@ fun InventoryItemsScreen(
         InventoryItemDetailsDialog(
             item = item,
             onDelete = { onDeleteItem(item) },
-            onEdit = { variation -> onUpdateItem(item, variation, item.nfcId) },
+            onEdit = { variation, nfcId -> onUpdateItem(item, variation, nfcId) },
             onDismissRequest = { displayingItem = null },
         )
     }

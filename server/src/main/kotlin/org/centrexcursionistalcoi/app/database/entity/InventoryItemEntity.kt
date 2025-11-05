@@ -30,8 +30,8 @@ class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConver
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateInventoryItemRequest) {
-        request.variation?.let { variation = it }
+        request.variation?.let { variation = it.takeUnless { it.isEmpty() } }
         request.type?.let { type = InventoryItemTypeEntity[it.toJavaUuid()] }
-        request.nfcId?.let { nfcId = it }
+        request.nfcId?.let { nfcId = it.takeUnless { it.isEmpty() } }
     }
 }

@@ -22,7 +22,7 @@ import org.jetbrains.compose.resources.stringResource
 fun InventoryItemDetailsDialog(
     item: ReferencedInventoryItem,
     onDelete: () -> Job,
-    onEdit: (variation: String) -> Job,
+    onEdit: (variation: String, nfcId: ByteArray?) -> Job,
     onDismissRequest: () -> Unit
 ) {
     var deleting by remember { mutableStateOf(false) }

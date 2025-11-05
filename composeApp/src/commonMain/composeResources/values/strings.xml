@@ -70,6 +70,8 @@
     <string name="share">Share</string>
     <string name="logout">Logout</string>
     <string name="none">None</string>
+    <string name="remove">Remove</string>
+    <string name="undo">Undo</string>
 
     <string name="error_dialog_title">Unhandled exception</string>
     <string name="error_dialog_message">Message:</string>
@@ -205,6 +207,7 @@
     <string name="create_inventory_item_variation">Variation</string>
     <string name="create_inventory_item_type">Type</string>
     <string name="create_inventory_item_amount">Amount</string>
+    <string name="create_inventory_item_nfc_id">NFC Id</string>
 
     <string name="lending_details_title">Lending Details</string>
     <string name="lending_details_cancel">Cancel Lending</string>
