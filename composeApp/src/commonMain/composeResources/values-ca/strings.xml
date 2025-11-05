@@ -106,7 +106,7 @@
     <string name="lending_creation_error_message_unknown" translatable="false">Ha hagut un error desconegut al reservar el material.</string>
     <string name="lending_creation_error_allocation_insufficient" translatable="false">Només %1$d disponible.</string>
     <string name="lending_creation_error_allocation_none" translatable="false">Cap disponible.</string>
-    <string name="lending_creation_error_allocation" translatable="false">No hi ha prous %1$s per a les dates seleccionades.\nNomés hi ha %2$d disponibles.\nHas sol·licitat %3$d.</string>
+    <string name="lending_creation_error_allocation" translatable="false">Per favor, comprova els errors de dalt, i modifica la teua petició en conseqüència.</string>
     <string name="lending_not_confirmed" translatable="false">No Confirmada</string>
     <string name="lending_pending_pickup" translatable="false">Recollida Pendent</string>
     <string name="lending_pending_return" translatable="false">Retorn Pendent</string>
@@ -244,4 +244,16 @@
     <string name="error_dialog_message" translatable="false">Missatge:</string>
     <string name="management_lending_given_by" translatable="false">Donat per: %1$s el %2$s</string>
     <string name="management_skip_memory" translatable="false">Saltar Memòria</string>
+    <string name="remove">Eliminar</string>
+    <string name="undo">Desfer</string>
+    <string name="lending_creation_error_allocation_title">No s\'han pogut reservar elements suficients</string>
+    <string name="inventory_item_nfc_id">ID NFC: %1$s</string>
+    <string name="create_inventory_item_nfc_id">ID NFC</string>
+    <string name="lending_details_cancel_confirm_title">Confirmar Cancel·lació de Préstec</string>
+    <string name="lending_details_cancel_confirm_message">Segur que vols cancel·lar aquest préstec?</string>
+    <string name="nfc_write_success">NFC escrit correctament</string>
+    <string name="nfc_error_read_only">L\'etiqueta NFC és de només lectura</string>
+    <string name="nfc_error_too_small">L\'etiqueta NFC no té prou memòria</string>
+    <string name="nfc_error_format_unsupported">L\'etiqueta NFC no s\'ha pogut formatar com a %1$s</string>
+    <string name="nfc_error_unknown">Error NFC desconegut: %1$s</string>
 </resources>
