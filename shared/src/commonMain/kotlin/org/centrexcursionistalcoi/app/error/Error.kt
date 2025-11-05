@@ -77,7 +77,8 @@ sealed interface Error {
     @Serializable
     @SerialName("InvalidContentType")
     class InvalidContentType(
-        @Serializable(ContentTypeSerializer::class) val expected: ContentType? = null
+        @Serializable(ContentTypeSerializer::class) val expected: ContentType? = null,
+        @Serializable(ContentTypeSerializer::class) val actual: ContentType? = null,
     ) : Error {
         override val code: Int = ERROR_INVALID_CONTENT_TYPE
         override val description: String = "Content-Type must be: $expected"

@@ -37,8 +37,9 @@ import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
-    if (!call.request.contentType().match(contentType)) {
-        respondError(Error.InvalidContentType(contentType))
+    val requestContentType = call.request.contentType()
+    if (!requestContentType.match(contentType)) {
+        respondError(Error.InvalidContentType(contentType, requestContentType))
         return null
     }
     return Unit

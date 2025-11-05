@@ -5,6 +5,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.server.request.contentLength
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
@@ -58,6 +59,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -454,6 +456,20 @@ fun Route.inventoryRoutes() {
         if (userReference == null) {
             call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
             return@post
+        }
+
+        val contentLength = call.request.contentLength()
+        if (contentLength != null && contentLength > 0) {
+            assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+            val parameters = call.receiveParameters()
+            val dismissItemsParam = parameters["dismiss_items"]
+            val dismissItems = dismissItemsParam?.split(',')?.mapNotNull { it.toUUIDOrNull() } ?: emptyList()
+            Database {
+                for (itemId in dismissItems) {
+                    LendingItems.deleteWhere { (LendingItems.lending eq lending.id) and (LendingItems.item eq itemId) }
+                }
+            }
+            call.response.header("CEA-Dismissed-Items", dismissItems.joinToString(","))
         }
 
         Database {

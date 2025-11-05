@@ -23,7 +23,9 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.OIDCConfig
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 abstract class ApplicationTestBase {
@@ -55,6 +57,9 @@ abstract class ApplicationTestBase {
 
         try {
             val dib = databaseInitBlock?.let { Database(it) }
+
+            if (shouldLogIn == LoginType.USER) Database { FakeUser.provideEntity() }
+            else if (shouldLogIn == LoginType.ADMIN) Database { FakeAdminUser.provideEntity() }
 
             testApplication {
                 application {

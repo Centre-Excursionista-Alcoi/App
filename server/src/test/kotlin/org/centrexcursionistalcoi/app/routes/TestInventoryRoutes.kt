@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -23,13 +24,16 @@ import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
@@ -44,21 +48,33 @@ class TestInventoryRoutes : ApplicationTestBase() {
     private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
     context(_: JdbcTransaction)
-    private fun initializeItem(): InventoryItemEntity {
-        return InventoryItemEntity.findById(exampleItemId) ?: InventoryItemEntity.new(exampleItemId) {
-            variation = "Variant A"
-            type = InventoryItemTypeEntity.findById(exampleItemTypeId) ?: InventoryItemTypeEntity.new(exampleItemTypeId) {
-                displayName = "Item Type 1"
-                description = "Description 1"
-                image = null
-            }
+    private fun getOrCreateItem(
+        id: UUID = exampleItemId,
+        variation: String? = "Variant A",
+        type: InventoryItemTypeEntity = getOrCreateItemType()
+    ): InventoryItemEntity {
+        return InventoryItemEntity.findById(id) ?: InventoryItemEntity.new(id) {
+            this.variation = variation
+            this.type = type
         }
+    }
+
+    context(_: JdbcTransaction)
+    private fun getOrCreateItemType(
+        id: UUID = exampleItemTypeId,
+        displayName: String = "Item Type 1",
+        description: String? = "Description 1",
+        image: FileEntity? = null,
+    ): InventoryItemTypeEntity = InventoryItemTypeEntity.findById(id) ?: InventoryItemTypeEntity.new(id) {
+        this.displayName = displayName
+        this.description = description
+        this.image = image
     }
 
     @Test
     fun test_create_lending_invalidContentType() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { initializeItem() },
+        databaseInitBlock = { getOrCreateItem() },
     ) {
         client.post("/inventory/lendings").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
@@ -68,7 +84,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_missingParameters() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { initializeItem() },
+        databaseInitBlock = { getOrCreateItem() },
     ) {
         // No parameters
         client.submitForm("/inventory/lendings").apply {
@@ -156,7 +172,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_datesInPast() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { initializeItem() },
+        databaseInitBlock = { getOrCreateItem() },
         finally = { today = { LocalDate.now() } },
     ) {
         today = { LocalDate.of(2025, 10, 8) }
@@ -189,7 +205,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     fun test_create_lending_conflicts() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
-            initializeItem()
+            getOrCreateItem()
 
             FakeUser.provideEntity()
 
@@ -281,7 +297,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     fun test_create_lending_pendingMemory() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
-            initializeItem()
+            getOrCreateItem()
 
             // Existing lending from 2025-10-01 to 2025-10-03
             val user = FakeUser.provideEntity()
@@ -326,7 +342,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_correct() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { initializeItem() },
+        databaseInitBlock = { getOrCreateItem() },
         finally = { today = { LocalDate.now() } },
     ) { context ->
         val item = context.dibResult
@@ -384,7 +400,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     fun test_list_lending_notAdmin() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
-            initializeItem()
+            getOrCreateItem()
 
             // Existing lending from 2025-10-10 to 2025-10-15
             val user = FakeUser.provideEntity()
@@ -434,7 +450,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     fun test_list_lending_admin() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            initializeItem()
+            getOrCreateItem()
 
             // Existing lending from 2025-10-10 to 2025-10-15
             val user = FakeUser.provideEntity()
@@ -488,7 +504,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     fun test_delete_item_with_ending() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            initializeItem()
+            getOrCreateItem()
 
             val user = FakeUser.provideEntity()
 
@@ -508,6 +524,92 @@ class TestInventoryRoutes : ApplicationTestBase() {
         // try deleting exampleItemId
         client.delete("/inventory/items/$exampleItemId").apply {
             assertError(Error.EntityDeleteReferencesExist())
+        }
+    }
+
+    @Test
+    fun test_pickup_lending_without_dismissing() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            getOrCreateItem(id = item2Id)
+
+            val user = FakeUser.provideEntity()
+
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = item2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val entity = context.dibResult!!
+        client.post("inventory/lendings/${entity.id.value}/pickup").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+    }
+
+    @Test
+    fun test_pickup_lending_with_item_dismiss() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            getOrCreateItem(id = item2Id)
+
+            val user = FakeUser.provideEntity()
+
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = item2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val entity = context.dibResult!!
+        client.submitForm(
+            "inventory/lendings/${entity.id.value}/pickup",
+            parameters {
+                append("dismiss_items", exampleItemId.toString())
+            }
+        ).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            val dismissedItems = headers["CEA-Dismissed-Items"]
+            assertNotNull(dismissedItems)
+            val dismissedItemIds = dismissedItems.split(',').mapNotNull { it.toUUIDOrNull() }
+            assertEquals(1, dismissedItemIds.size)
+            assertEquals(exampleItemId, dismissedItemIds[0])
+        }
+
+        // Make sure the item was removed from the lending
+        Database {
+            val lendingEntity = LendingEntity[entity.id.value]
+            val items = lendingEntity.items.toList()
+            assertEquals(1, items.size)
+            assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), items[0].id.value)
         }
     }
 }

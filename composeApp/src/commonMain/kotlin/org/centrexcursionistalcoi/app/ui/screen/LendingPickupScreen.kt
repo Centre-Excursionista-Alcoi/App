@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.LastPage
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Call
@@ -112,6 +113,7 @@ fun LendingPickupScreen(
 
     val lending by model.lending.collectAsState()
     val scannedItems by model.scannedItems.collectAsState()
+    val dismissedItems by model.dismissedItems.collectAsState()
     val scanError by model.scanError.collectAsState()
     val scanSuccess by model.scanSuccess.collectAsState()
 
@@ -143,9 +145,9 @@ fun LendingPickupScreen(
         snackbarHostState = snackbarHostState,
         lending = lending,
         scannedItems = scannedItems,
+        dismissedItems = dismissedItems,
         onScanCode = model::onScan,
-        onMarkItem = model::onScan,
-        onUnMarkItem = model::unmark,
+        onToggleItem = model::toggleItem,
         onCompleteRequest = model::pickup,
         onDeleteRequest = model::deleteLending,
         onBack = onBack,
@@ -159,9 +161,9 @@ private fun LendingPickupScreen(
     snackbarHostState: SnackbarHostState,
     lending: ReferencedLending?,
     scannedItems: Set<Uuid>,
+    dismissedItems: Set<Uuid>,
     onScanCode: (Barcode) -> Unit,
-    onMarkItem: (Uuid) -> Unit,
-    onUnMarkItem: (Uuid) -> Unit,
+    onToggleItem: (Uuid) -> Unit,
     onCompleteRequest: () -> Job,
     onDeleteRequest: () -> Job,
     onBack: () -> Unit,
@@ -290,7 +292,7 @@ private fun LendingPickupScreen(
     ) { paddingValues ->
         if (lending == null) LoadingBox(paddingValues)
         else Column(modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState())) {
-            LendingPickupContent(lending, scannedItems, snackbarHostState, onMarkItem, onUnMarkItem)
+            LendingPickupContent(lending, scannedItems, dismissedItems, snackbarHostState, onToggleItem)
 
             Spacer(Modifier.height(96.dp))
         }
@@ -391,9 +393,9 @@ private fun AnimatedVisibilityScope.LendingFAB(
 private fun LendingPickupContent(
     lending: ReferencedLending,
     scannedItems: Set<Uuid>,
+    dismissedItems: Set<Uuid>,
     snackbarHostState: SnackbarHostState,
-    onMarkItem: (Uuid) -> Unit,
-    onUnMarkItem: (Uuid) -> Unit,
+    onToggleItem: (Uuid) -> Unit,
 ) {
     val lendingUser = lending.user.lendingUser
     val items = lending.items
@@ -547,9 +549,11 @@ private fun LendingPickupContent(
         for ((index, entry) in groupedItems.entries.withIndex()) {
             val (type, items) = entry
             val allItemsScanned = items.all { it.id in scannedItems }
+            val allItemsDismissed = items.all { it.id in dismissedItems }
             ScanItemListItem(
                 text = type.displayName,
                 scanned = allItemsScanned,
+                dismissed = allItemsDismissed,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -559,22 +563,18 @@ private fun LendingPickupContent(
             )
             for (item in items) {
                 val isScanned = item.id in scannedItems
+                val isDismissed = item.id in dismissedItems
                 ScanItemListItem(
                     text = item.id.toString(),
                     scanned = isScanned,
+                    dismissed = isDismissed,
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         fontFamily = FontFamily.Monospace,
                     ),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                ) {
-                    if (isScanned) {
-                        onUnMarkItem(item.id)
-                    } else {
-                        onMarkItem(item.id)
-                    }
-                }
+                ) { onToggleItem(item.id) }
             }
             if (index < groupedItems.size - 1) {
                 HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
@@ -584,7 +584,14 @@ private fun LendingPickupContent(
 }
 
 @Composable
-private fun ScanItemListItem(text: String, scanned: Boolean, style: TextStyle, modifier: Modifier = Modifier, onClickIcon: (() -> Unit)?) {
+private fun ScanItemListItem(
+    text: String,
+    scanned: Boolean,
+    dismissed: Boolean,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    onClickIcon: (() -> Unit)?
+) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = text,
@@ -597,12 +604,16 @@ private fun ScanItemListItem(text: String, scanned: Boolean, style: TextStyle, m
         Icon(
             imageVector = if (scanned) {
                 Icons.Default.CheckCircleOutline
-            } else {
+            } else if (dismissed) {
                 Icons.Default.RemoveCircleOutline
+            } else {
+                Icons.AutoMirrored.Default.HelpOutline
             },
             contentDescription = null,
             tint = if (scanned) {
                 Color(0xFF4CAF50) // Green for scanned
+            } else if (dismissed) {
+                Color(0xffcd1919) // Red for dismissed
             } else {
                 Color(0xFF368CF4) // Blue for not scanned
             },
