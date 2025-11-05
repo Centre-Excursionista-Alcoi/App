@@ -17,6 +17,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import java.lang.reflect.InvocationTargetException
 import java.util.UUID
+import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
@@ -41,9 +42,10 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
+import org.centrexcursionistalcoi.app.utils.FileBytesWrapper
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -134,19 +136,20 @@ object ProvidedRouteTests {
         }
     }
 
-    private fun formDataOf(pairs: List<Pair<String, () -> Any?>>) = formData {
+    private fun formDataOf(pairs: List<Pair<String, Any?>>) = formData {
         println("Constructing form data:")
-        for ((key, valueProvider) in pairs) {
-            when (val value = valueProvider()) {
+        for ((key, value) in pairs) {
+            when (value) {
                 is String -> append(key, value).also { println("- $key: $value") }
-                is ByteArray -> append(
+                is ByteArray -> append(key, Base64.UrlSafe.encode(value).also { println("- $key: $it") })
+                is FileBytesWrapper -> append(
                     key,
-                    value,
+                    value.bytes,
                     Headers.build {
                         append(HttpHeaders.ContentType, ContentType.Application.OctetStream.toString())
                         append(HttpHeaders.ContentDisposition, "filename=\"raw-bytes\"")
                     }
-                ).also { println("- $key: byte array (size=${value.size})") }
+                ).also { println("- $key: byte array (size=${value.bytes.size})") }
                 is Number -> append(key, value).also { println("- $key: $value") }
                 is Boolean -> append(key, value).also { println("- $key: $value") }
                 null -> {}
@@ -156,24 +159,24 @@ object ProvidedRouteTests {
     }
 
     context(_: JdbcTransaction)
-    private fun Any.populate(name: String, valueProvider: () -> Any, foreignTypesAssociations: Map<String, EntityClass<*, *>>) {
+    private fun Any.populate(name: String, value: Any, foreignTypesAssociations: Map<String, EntityClass<*, *>>) {
         val memberProperty = this::class.memberProperties.firstOrNull { it.name == name }
         assertNotNull(memberProperty) { "Could not find \"$name\" in properties. List: ${this::class.memberProperties.joinToString()}" }
         assertInstanceOf<KMutableProperty<*>>(memberProperty, "Property $name is not mutable: $memberProperty")
         val member = memberProperty.setter
-        val value = valueProvider()
         try {
             when (value) {
                 is String -> member.call(this, value)
                 is Number -> member.call(this, value)
                 is Boolean -> member.call(this, value)
-                is ByteArray -> {
-                    // For ByteArray, the setter is a FileEntity. We have to create a FileEntity first.
+                is ByteArray -> member.call(this, value)
+                is FileBytesWrapper -> {
+                    // For FileBytesWrapper, the setter is a FileEntity. We have to create a FileEntity first.
                     val fileEntity = transaction {
                         FileEntity.new {
                             this.name = "bytes"
                             this.type = "application/octet-stream"
-                            this.data = value
+                            this.data = value.bytes
                         }
                     }
                     member.call(this, fileEntity)
@@ -211,8 +214,8 @@ object ProvidedRouteTests {
         baseUrl: String,
         listLoginType: LoginType = LoginType.USER,
         modificationsLoginType: LoginType = LoginType.ADMIN,
-        requiredCreationValues: Map<String, () -> Any>,
-        optionalCreationValues: Map<String, () -> Any> = emptyMap(),
+        requiredCreationValuesProvider: Map<String, () -> Any>,
+        optionalCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
         locationRegex: Regex,
         entityClass: EntityClass<EID, EE>,
         idTypeConverter: (String) -> EID,
@@ -256,13 +259,14 @@ object ProvidedRouteTests {
 
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> {
-        val creationValues = requiredCreationValues + optionalCreationValues
+        fun provideRequiredCreationValues(): Map<String, Any> = requiredCreationValuesProvider.mapValues { (_, provider) -> provider() }
+        fun provideOptionalCreationValues(): Map<String, Any> = optionalCreationValuesProvider.mapValues { (_, provider) -> provider() }
 
         fun fetchFromDatabaseAndCheckFields(
             id: EID,
-            presentValues: Map<String, () -> Any> = emptyMap(),
-            absentValues: Map<String, () -> Any> = emptyMap(),
-            checkSpecificFieldPresent: Pair<String, () -> Any>? = null,
+            presentValues: Map<String, Any> = emptyMap(),
+            absentValues: Map<String, Any> = emptyMap(),
+            checkSpecificFieldPresent: Pair<String, Any>? = null,
         ) {
             Database { entityClass.findById(id) }.let { entity ->
                 assertNotNull(entity)
@@ -274,9 +278,9 @@ object ProvidedRouteTests {
                 fun <T> T.assertActual(name: String, expected: T) {
                     when (this) {
                         is FileEntity -> {
-                            assertInstanceOf<ByteArray>(expected, "Expected value for $name should be a ByteArray")
+                            assertInstanceOf<FileBytesWrapper>(expected, "Expected value for $name should be a FileBytesWrapper")
                             val actualBytes = Database { data }
-                            assertContentEquals(expected, actualBytes, "Field $name contents does not match")
+                            assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         }
 
                         is ExposedEntity<*> -> {
@@ -284,6 +288,11 @@ object ProvidedRouteTests {
                             assertInstanceOf<UUID>(expected, "Expected value for $name should be a UUID")
                             val actualId = this.id.value
                             assertEquals(expected, actualId, "Field $name ID does not match")
+                        }
+
+                        is ByteArray -> {
+                            assertInstanceOf<ByteArray>(expected, "Expected value for $name should be a ByteArray")
+                            assertContentEquals(expected, this, "Field $name contents does not match")
                         }
 
                         else -> {
@@ -295,7 +304,7 @@ object ProvidedRouteTests {
                 // Check that all required fields are present
                 for ((name) in presentValues) {
                     assertTrue { name in names }
-                    val expected = presentValues[name]?.invoke()
+                    val expected = presentValues[name]
                     val actual = members.call(name, entity)
                     actual.assertActual(name, expected)
                 }
@@ -306,9 +315,8 @@ object ProvidedRouteTests {
                     assertNull(actual, "Field $name should not be present")
                 }
                 // Check that the specific field is present
-                checkSpecificFieldPresent?.let { (name, expectedProvider) ->
+                checkSpecificFieldPresent?.let { (name, expected) ->
                     assertTrue { name in names }
-                    val expected = expectedProvider()
                     println("Expected value for $name: $expected (${expected::class.simpleName})")
                     val actual = members.call(name, entity)
                     assertNotNull(actual, "Field $name should be present")
@@ -319,9 +327,9 @@ object ProvidedRouteTests {
         suspend fun ApplicationTestBuilder.fetchFromServerAndCheckFields(
             url: String,
             id: EID,
-            presentValues: Map<String, () -> Any> = emptyMap(),
-            absentValues: Map<String, () -> Any> = emptyMap(),
-            checkSpecificFieldPresent: Pair<String, () -> Any>? = null,
+            presentValues: Map<String, Any> = emptyMap(),
+            absentValues: Map<String, Any> = emptyMap(),
+            checkSpecificFieldPresent: Pair<String, Any>? = null,
         ) {
             client.get(url).apply {
                 assertStatusCode(HttpStatusCode.OK)
@@ -334,26 +342,28 @@ object ProvidedRouteTests {
 
                     fun Any.assertActual(name: String, expected: Any?) {
                         val actual = this
-                        if (expected is ByteArray) {
-                            // If expected is a ByteArray, actual is a UUID matching a FileEntity.
+                        if (expected is FileBytesWrapper) {
+                            // If expected is a FileBytesWrapper, actual is a UUID matching a FileEntity.
                             // Fetch the FileEntity from the database and compare its data.
                             assertInstanceOf<Uuid>(actual, "Expected value for $name should be a Uuid")
                             val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
                             assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
                             val actualBytes = Database { fileEntity.data }
-                            assertContentEquals(expected, actualBytes, "Field $name contents does not match")
+                            assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         } else if (expected is UUID && actual is Uuid) {
                             // If expected is a UUID and actual is a Uuid, compare their values
                             assertEquals(expected, actual.toJavaUuid(), "Field $name ID does not match")
+                        } else if (expected is ByteArray) {
+                            assertInstanceOf<ByteArray>(actual, "Expected value for $name should be a ByteArray")
+                            assertContentEquals(expected, actual, "Field $name contents does not match")
                         } else {
                             assertEquals(expected, actual, "Field $name does not match")
                         }
                     }
 
                     // Check that all required fields are present
-                    for ((name, provider) in presentValues) {
+                    for ((name, expected) in presentValues) {
                         assertTrue { name in fields }
-                        val expected = provider()
                         val actual = members.call(name, entity)
                         assertNotNull(actual, "Field $name should be present")
                         actual.assertActual(name, expected)
@@ -367,10 +377,13 @@ object ProvidedRouteTests {
                     }
 
                     // Check that the field is present and correct
-                    checkSpecificFieldPresent?.let { (name, provider) ->
+                    checkSpecificFieldPresent?.let { (name, expected) ->
                         assertTrue { name in fields }
-                        val expected = provider()
                         val actual = members.call(name, entity)
+                        println("Name: $name")
+                        println("Entity: $entity")
+                        println("Members: $members")
+                        println("Actual value for $name: $actual (${actual?.let { it::class.simpleName }})")
                         assertNotNull(actual, "Field $name should be present")
                         actual.assertActual(name, expected)
                     }
@@ -390,15 +403,15 @@ object ProvidedRouteTests {
                 // Insert one without optional values
                 Database {
                     entities += entityClass.new {
-                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
                 // One with each optional value
-                for ((name, valueProvider) in optionalCreationValues) {
+                for ((name, valueProvider) in provideOptionalCreationValues()) {
                     Database {
                         entities += entityClass.new {
                             // Fill all required values
-                            for ((rName, rValueProvider) in requiredCreationValues) populate(rName, rValueProvider, foreignTypesAssociations)
+                            for ((rName, rValueProvider) in provideRequiredCreationValues()) populate(rName, rValueProvider, foreignTypesAssociations)
                             // Fill the optional value
                             populate(name, valueProvider, foreignTypesAssociations)
                         }
@@ -407,8 +420,8 @@ object ProvidedRouteTests {
                 // And one with all optional values
                 Database {
                     entities += entityClass.new {
-                        for ((name, valueProvider) in requiredCreationValues) populate(name, valueProvider, foreignTypesAssociations)
-                        for ((name, valueProvider) in optionalCreationValues) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in provideOptionalCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
 
@@ -445,42 +458,22 @@ object ProvidedRouteTests {
                 }
             },
             // Generate tests for each required field
-            *requiredCreationValues.map { (name) ->
-                "$title - Test create without $name" runs {
-                    runApplicationTest(shouldLogIn = modificationsLoginType) {
-                        val data = formDataOf(requiredCreationValues.toList().filter { it.first != name })
-                        client.submitFormWithBinaryData(baseUrl, formData = data).apply {
-                            assertStatusCode(HttpStatusCode.BadRequest)
+            *provideRequiredCreationValues().let { requiredCreationValues ->
+                requiredCreationValues.map { (name) ->
+                    "$title - Test create without $name" runs {
+                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                            val data = formDataOf(requiredCreationValues.toList().filter { it.first != name })
+                            client.submitFormWithBinaryData(baseUrl, formData = data).apply {
+                                assertStatusCode(HttpStatusCode.BadRequest)
+                            }
                         }
                     }
                 }
             }.toTypedArray(),
-            "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider runs {
-                runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    val data = formDataOf(requiredCreationValues.toList())
-                    val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
-                        assertStatusCode(HttpStatusCode.Created)
-                        val location = headers[HttpHeaders.Location]
-                        assertNotNull(location)
-                        assertTrue { location.matches(locationRegex) }
-                        location
-                    }
-                    val id = location.substringAfterLast('/').let(idTypeConverter)
-                    fetchFromDatabaseAndCheckFields(id, requiredCreationValues, optionalCreationValues)
-                    fetchFromServerAndCheckFields(
-                        url = location,
-                        id = id,
-                        presentValues = requiredCreationValues,
-                        absentValues = optionalCreationValues
-                    )
-                }
-            },
-            *optionalCreationValues.map { (name) ->
-                "$title - Test create with optional parameter \"$name\"" withEntities auxiliaryEntitiesProvider runs {
+            (provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+                "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType) {
-                        val data = formDataOf(
-                            requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
-                        )
+                        val data = formDataOf(requiredCreationValues.toList())
                         val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
                             assertStatusCode(HttpStatusCode.Created)
                             val location = headers[HttpHeaders.Location]
@@ -489,17 +482,43 @@ object ProvidedRouteTests {
                             location
                         }
                         val id = location.substringAfterLast('/').let(idTypeConverter)
-                        fetchFromDatabaseAndCheckFields(
-                            id,
-                            requiredCreationValues,
-                            checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
-                        )
+                        fetchFromDatabaseAndCheckFields(id, requiredCreationValues, optionalCreationValues)
                         fetchFromServerAndCheckFields(
                             url = location,
                             id = id,
                             presentValues = requiredCreationValues,
-                            checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
+                            absentValues = optionalCreationValues
                         )
+                    }
+                }
+            },
+            *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+                optionalCreationValues.map { (name) ->
+                    "$title - Test create with optional parameter \"$name\"" withEntities auxiliaryEntitiesProvider runs {
+                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                            val data = formDataOf(
+                                requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
+                            )
+                            val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
+                                assertStatusCode(HttpStatusCode.Created)
+                                val location = headers[HttpHeaders.Location]
+                                assertNotNull(location)
+                                assertTrue { location.matches(locationRegex) }
+                                location
+                            }
+                            val id = location.substringAfterLast('/').let(idTypeConverter)
+                            fetchFromDatabaseAndCheckFields(
+                                id,
+                                requiredCreationValues,
+                                checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
+                            )
+                            fetchFromServerAndCheckFields(
+                                url = location,
+                                id = id,
+                                presentValues = requiredCreationValues,
+                                checkSpecificFieldPresent = name to optionalCreationValues[name]!!,
+                            )
+                        }
                     }
                 }
             }.toTypedArray(),
@@ -538,30 +557,67 @@ object ProvidedRouteTests {
                 }
             },
             // Generate tests for each required field
-            *requiredCreationValues.map { (name) ->
-                "$title - Test patch without $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
-                    runApplicationTest(shouldLogIn = modificationsLoginType) {
-                        val obj = JsonObject(
-                            requiredCreationValues
-                                .filter { it.key != name }
-                                .map { (name, provider) -> name to provider().toJsonElement() }
-                                .toMap()
-                        )
-                        client.patch(baseUrl.withEntityId()) {
-                            contentType(ContentType.Application.Json)
-                            setBody(json.encodeToString(obj))
-                        }.apply {
-                            assertStatusCode(HttpStatusCode.BadRequest)
+            *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+                requiredCreationValues.map { (name) ->
+                    "$title - Test patch without $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
+                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                            val obj = JsonObject(
+                                requiredCreationValues
+                                    .filter { it.key != name }
+                                    .map { (name, value) -> name to value.toJsonElement() }
+                                    .toMap()
+                            )
+                            client.patch(baseUrl.withEntityId()) {
+                                contentType(ContentType.Application.Json)
+                                setBody(json.encodeToString(obj))
+                            }.apply {
+                                assertStatusCode(HttpStatusCode.BadRequest)
+                            }
                         }
                     }
                 }
             }.toTypedArray(),
-            *creationValues.map { entry ->
-                val (name, provider) = entry
-                "$title - Test patch $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
+            *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+                val creationValues = requiredCreationValues + optionalCreationValues
+                creationValues.map { entry ->
+                    val (name, value) = entry
+                    "$title - Test patch $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
+                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                            val data = JsonObject(
+                                mapOf(name to value.toJsonElement())
+                            )
+                            val location = client.patch(baseUrl.withEntityId()) {
+                                contentType(ContentType.Application.Json)
+                                setBody(json.encodeToString(data))
+                            }.run {
+                                assertStatusCode(HttpStatusCode.OK)
+                                val location = headers[HttpHeaders.Location]
+                                assertNotNull(location)
+                                assertTrue { location.matches(locationRegex) }
+                                location
+                            }
+                            val id = location.substringAfterLast('/').let(idTypeConverter)
+                            fetchFromDatabaseAndCheckFields(
+                                id,
+                                requiredCreationValues + entry.toPair(),
+                                optionalCreationValues - entry.key
+                            )
+                            fetchFromServerAndCheckFields(
+                                url = location,
+                                id = id,
+                                presentValues = requiredCreationValues + entry.toPair(),
+                                absentValues = optionalCreationValues - entry.key
+                            )
+                        }
+                    }
+                }
+            }.toTypedArray(),
+            (provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+                val creationValues = requiredCreationValues + optionalCreationValues
+                "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType) {
                         val data = JsonObject(
-                            mapOf(name to provider().toJsonElement())
+                            creationValues.map { (name, value) -> name to value.toJsonElement() }.toMap()
                         )
                         val location = client.patch(baseUrl.withEntityId()) {
                             contentType(ContentType.Application.Json)
@@ -574,42 +630,13 @@ object ProvidedRouteTests {
                             location
                         }
                         val id = location.substringAfterLast('/').let(idTypeConverter)
-                        fetchFromDatabaseAndCheckFields(
-                            id,
-                            requiredCreationValues + entry.toPair(),
-                            optionalCreationValues - entry.key
-                        )
+                        fetchFromDatabaseAndCheckFields(id, creationValues)
                         fetchFromServerAndCheckFields(
                             url = location,
                             id = id,
-                            presentValues = requiredCreationValues + entry.toPair(),
-                            absentValues = optionalCreationValues - entry.key
+                            presentValues = creationValues
                         )
                     }
-                }
-            }.toTypedArray(),
-            "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
-                runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    val data = JsonObject(
-                        creationValues.map { (name, provider) -> name to provider().toJsonElement() }.toMap()
-                    )
-                    val location = client.patch(baseUrl.withEntityId()) {
-                        contentType(ContentType.Application.Json)
-                        setBody(json.encodeToString(data))
-                    }.run {
-                        assertStatusCode(HttpStatusCode.OK)
-                        val location = headers[HttpHeaders.Location]
-                        assertNotNull(location)
-                        assertTrue { location.matches(locationRegex) }
-                        location
-                    }
-                    val id = location.substringAfterLast('/').let(idTypeConverter)
-                    fetchFromDatabaseAndCheckFields(id, creationValues)
-                    fetchFromServerAndCheckFields(
-                        url = location,
-                        id = id,
-                        presentValues = creationValues
-                    )
                 }
             },
         ).mapNotNull { it.createDynamicTest() }

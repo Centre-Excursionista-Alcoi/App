@@ -1,247 +1,302 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <resources>
-    <string name="app_name" translatable="false">CEA App</string>
-    <string name="admin" translatable="false">Admin</string>
-    <string name="welcome" translatable="false">Welcome back %1$s</string>
-    <string name="login_title" translatable="false">Welcome to CEA App</string>
-    <string name="login_message" translatable="false">Please, press the button below to log in with the SSO platform.</string>
-    <string name="login_action" translatable="false">Login</string>
-    <string name="registration_complete_title" translatable="false">Registration complete!</string>
-    <string name="registration_complete_message" translatable="false">Now you can log into your new account.</string>
-    <string name="register_title" translatable="false">Register an Account</string>
-    <string name="register_username" translatable="false">Username</string>
-    <string name="register_email" translatable="false">Email</string>
-    <string name="register_name" translatable="false">Name</string>
-    <string name="register_password" translatable="false">Password</string>
-    <string name="register_confirm_password" translatable="false">Confirm Password</string>
-    <string name="register_action" translatable="false">Register</string>
-    <string name="password_show" translatable="false">Show Password</string>
-    <string name="password_hide" translatable="false">Hide Password</string>
-    <string name="register_error_email_format" translatable="false">Introduce a valid email address</string>
-    <string name="nav_home" translatable="false">Home</string>
-    <string name="nav_profile" translatable="false">Profile</string>
-    <string name="nav_management" translatable="false">Management</string>
-    <string name="home_lendings" translatable="false">Your Lendings</string>
-    <string name="home_lending" translatable="false">Material Lending</string>
-    <string name="home_past_lendings" translatable="false">Past Lendings</string>
-    <plurals name="home_lending_items" translatable="false">
+    <string name="app_name">CEA App</string>
+
+    <string name="admin">Admin</string>
+
+    <string name="welcome">Welcome back %1$s</string>
+
+    <string name="login_title">Welcome to CEA App</string>
+    <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
+    <string name="login_action">Login</string>
+    <string name="registration_complete_title">Registration complete!</string>
+    <string name="registration_complete_message">Now you can log into your new account.</string>
+
+    <string name="register_title">Register an Account</string>
+    <string name="register_username">Username</string>
+    <string name="register_email">Email</string>
+    <string name="register_name">Name</string>
+    <string name="register_password">Password</string>
+    <string name="register_confirm_password">Confirm Password</string>
+    <string name="register_action">Register</string>
+    <string name="password_show">Show Password</string>
+    <string name="password_hide">Hide Password</string>
+    <string name="register_error_email_format">Introduce a valid email address</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_management">Management</string>
+
+    <string name="home_lendings">Your Lendings</string>
+    <string name="home_lending">Material Lending</string>
+    <string name="home_past_lendings">Past Lendings</string>
+    <plurals name="home_lending_items">
         <item quantity="one">%1$d item: %2$s</item>
         <item quantity="other">%1$d items: %2$s</item>
     </plurals>
-    <string name="force_sync" translatable="false">Force Sync</string>
-    <string name="permission_grant" translatable="false">Grant</string>
-    <string name="permission_settings" translatable="false">Open Settings</string>
-    <string name="permission_deny" translatable="false">Deny</string>
-    <string name="permission_notification_title" translatable="false">Notification Permission</string>
-    <string name="permission_notification_message" translatable="false">Please, grant access to send you notification so that we can keep you up to date with your lendings.</string>
-    <string name="management_departments" translatable="false">Departments</string>
-    <string name="management_users" translatable="false">Users</string>
-    <string name="management_inventory_item_types" translatable="false">Item Types</string>
-    <string name="management_inventory_items" translatable="false">Items</string>
-    <string name="management_inventory_item_type_create" translatable="false">Create Item Type</string>
-    <string name="management_inventory_item_type_display_name" translatable="false">Display Name</string>
-    <string name="management_inventory_item_type_description" translatable="false">Description</string>
-    <string name="management_inventory_item_type_category" translatable="false">Category</string>
-    <string name="management_inventory_item_type_image" translatable="false">Select Image</string>
-    <string name="management_inventory_item_edit" translatable="false">Edit Item</string>
-    <string name="back" translatable="false">Go Back</string>
-    <string name="submit" translatable="false">Submit</string>
-    <string name="cancel" translatable="false">Cancel</string>
-    <string name="close" translatable="false">Close</string>
-    <string name="create" translatable="false">Create</string>
-    <string name="delete" translatable="false">Delete</string>
-    <string name="update" translatable="false">Update</string>
-    <string name="edit" translatable="false">Edit</string>
-    <string name="confirm" translatable="false">Confirm</string>
-    <string name="qrcode" translatable="false">QR Code</string>
-    <string name="unknown" translatable="false">Unknown</string>
-    <string name="share" translatable="false">Share</string>
-    <string name="logout" translatable="false">Logout</string>
-    <string name="none" translatable="false">None</string>
-    <string name="error_dialog_title" translatable="false">Unhandled exception</string>
-    <string name="error_dialog_message" translatable="false">Message:</string>
-    <string name="error_dialog_type" translatable="false">Type:</string>
-    <string name="error_dialog_stacktrace" translatable="false">Stacktrace:</string>
-    <string name="logout_confirmation_title" translatable="false">Confirm Logout</string>
-    <string name="logout_confirmation_message" translatable="false">Are you sure you want to log out?</string>
-    <string name="copied_to_clipboard" translatable="false">Copied to clipboard</string>
-    <string name="status_loading" translatable="false">Loading...</string>
-    <string name="loading_screen_error" translatable="false">Load failed</string>
-    <string name="error_unknown" translatable="false">An unknown error occurred. Type: %1$s</string>
-    <string name="error_delete_references" translatable="false">This element is referenced by another entity, it cannot be removed.</string>
-    <string name="auth_callback_error_title" translatable="false">Could not process login</string>
-    <string name="auth_callback_error_server_http" translatable="false">Server responded with exception (%1$d): %2$s</string>
-    <string name="auth_callback_error_server_code" translatable="false">Server responded with exception (#%1$d): %2$s</string>
-    <string name="sport_climbing" translatable="false">Climbing</string>
-    <string name="sport_climbing_without_belay" translatable="false">Climbing without Belay</string>
-    <string name="sport_via_ferrata" translatable="false">Via Ferrata</string>
-    <string name="sport_canyoning" translatable="false">Canyoning</string>
-    <string name="sport_hiking" translatable="false">Hiking</string>
-    <string name="sport_alpinism" translatable="false">Alpinism</string>
-    <string name="lending_signup_required" translatable="false">You are not signed up for material lending. Please complete the form by pressing the button below.</string>
-    <string name="lending_signup_action" translatable="false">Sign Up</string>
-    <string name="lending_signup_title" translatable="false">Registration Required</string>
-    <string name="lending_signup_message" translatable="false">With this form, the member certifies that he/she is aware of the internal rules of the Climbing and Mountaineering Sections for the use of technical equipment owned by the CEA. That he/she has the necessary training and knowledge for the use of this type of equipment, being the member solely responsible for the correct use and maintenance, as well as the obligation to notify the Sections\' managers of any damage or misuse of this equipment.</string>
-    <string name="lending_signup_full_name" translatable="false">Full Name</string>
-    <string name="lending_signup_nif" translatable="false">NIF</string>
-    <string name="lending_signup_phone" translatable="false">Phone Number</string>
-    <string name="lending_signup_sports" translatable="false">Sports</string>
-    <string name="lending_signup_address" translatable="false">Address</string>
-    <string name="lending_signup_city" translatable="false">City</string>
-    <string name="lending_signup_postal_code" translatable="false">Postal Code</string>
-    <string name="lending_signup_country" translatable="false">Country</string>
-    <string name="lending_signup_province" translatable="false">Province</string>
-    <string name="lending_signup_accept" translatable="false">I accept the terms and conditions</string>
-    <string name="lending_signup_submit" translatable="false">Submit</string>
-    <string name="lending_no_active_insurances_title" translatable="false">No active insurances</string>
-    <string name="lending_no_active_insurances_message" translatable="false">You won\'t be able to make any lending until you have a valid insurance.</string>
-    <string name="lending_no_active_insurances_action" translatable="false">Add Insurance</string>
-    <string name="lending_creation_title" translatable="false">Create Lending</string>
-    <string name="lending_creation_action" translatable="false">Create Lending</string>
-    <string name="lending_creation_reset" translatable="false">Reset List</string>
-    <string name="lending_creation_from" translatable="false">Start Date</string>
-    <string name="lending_creation_until" translatable="false">End Date</string>
-    <string name="lending_creation_select_dates" translatable="false">Select dates to allocate items</string>
-    <string name="lending_creation_allocating" translatable="false">Allocating...</string>
-    <string name="lending_creation_no_items_allocated" translatable="false">No items allocated</string>
-    <string name="lending_creation_items_allocated" translatable="false">Allocated items:</string>
-    <string name="lending_creation_warning_title" translatable="false">Attention</string>
-    <string name="lending_creation_warning_message" translatable="false">You will reserve the allocated items for the selected dates, but the request has to be approved by an administrator before the lending is complete.\nOnce an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.</string>
-    <string name="lending_creation_error_title" translatable="false">Error</string>
-    <string name="lending_creation_error_message" translatable="false">An error occurred while allocating items:\n%1$s</string>
-    <string name="lending_creation_error_message_unknown" translatable="false">An unknown error occurred while allocating items.</string>
-    <string name="lending_creation_error_allocation_insufficient" translatable="false">Only %1$d available.</string>
-    <string name="lending_creation_error_allocation_none" translatable="false">None available.</string>
+
+    <string name="force_sync">Force Sync</string>
+
+    <string name="permission_grant">Grant</string>
+    <string name="permission_settings">Open Settings</string>
+    <string name="permission_deny">Deny</string>
+    <string name="permission_notification_title">Notification Permission</string>
+    <string name="permission_notification_message">Please, grant access to send you notification so that we can keep you up to date with your lendings.</string>
+
+    <string name="management_departments">Departments</string>
+    <string name="management_users">Users</string>
+    <string name="management_inventory_item_types">Item Types</string>
+    <string name="management_inventory_items">Items</string>
+
+    <string name="management_inventory_item_type_create">Create Item Type</string>
+    <string name="management_inventory_item_type_display_name">Display Name</string>
+    <string name="management_inventory_item_type_description">Description</string>
+    <string name="management_inventory_item_type_category">Category</string>
+    <string name="management_inventory_item_type_image">Select Image</string>
+
+    <string name="management_inventory_item_edit">Edit Item</string>
+
+    <string name="back">Go Back</string>
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="create">Create</string>
+    <string name="delete">Delete</string>
+    <string name="update">Update</string>
+    <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
+    <string name="qrcode">QR Code</string>
+    <string name="unknown">Unknown</string>
+    <string name="share">Share</string>
+    <string name="logout">Logout</string>
+    <string name="none">None</string>
+    <string name="remove">Remove</string>
+    <string name="undo">Undo</string>
+
+    <string name="error_dialog_title">Unhandled exception</string>
+    <string name="error_dialog_message">Message:</string>
+    <string name="error_dialog_type">Type:</string>
+    <string name="error_dialog_stacktrace">Stacktrace:</string>
+
+    <string name="logout_confirmation_title">Confirm Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to log out?</string>
+
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
+    <string name="status_loading">Loading...</string>
+
+    <string name="loading_screen_error">Load failed</string>
+    <string name="error_unknown">An unknown error occurred. Type: %1$s</string>
+    <string name="error_delete_references">This element is referenced by another entity, it cannot be removed.</string>
+
+    <string name="auth_callback_error_title">Could not process login</string>
+    <string name="auth_callback_error_server_http">Server responded with exception (%1$d): %2$s</string>
+    <string name="auth_callback_error_server_code">Server responded with exception (#%1$d): %2$s</string>
+
+    <string name="sport_climbing">Climbing</string>
+    <string name="sport_climbing_without_belay">Climbing without Belay</string>
+    <string name="sport_via_ferrata">Via Ferrata</string>
+    <string name="sport_canyoning">Canyoning</string>
+    <string name="sport_hiking">Hiking</string>
+    <string name="sport_alpinism">Alpinism</string>
+
+    <string name="lending_signup_required">You are not signed up for material lending. Please complete the form by pressing the button below.</string>
+    <string name="lending_signup_action">Sign Up</string>
+    <string name="lending_signup_title">Registration Required</string>
+    <string name="lending_signup_message">With this form, the member certifies that he/she is aware of the internal rules of the Climbing and Mountaineering Sections for the use of technical equipment owned by the CEA. That he/she has the necessary training and knowledge for the use of this type of equipment, being the member solely responsible for the correct use and maintenance, as well as the obligation to notify the Sections' managers of any damage or misuse of this equipment.</string>
+    <string name="lending_signup_full_name">Full Name</string>
+    <string name="lending_signup_nif">NIF</string>
+    <string name="lending_signup_phone">Phone Number</string>
+    <string name="lending_signup_sports">Sports</string>
+    <string name="lending_signup_address">Address</string>
+    <string name="lending_signup_city">City</string>
+    <string name="lending_signup_postal_code">Postal Code</string>
+    <string name="lending_signup_country">Country</string>
+    <string name="lending_signup_province">Province</string>
+    <string name="lending_signup_accept">I accept the terms and conditions</string>
+    <string name="lending_signup_submit">Submit</string>
+
+    <string name="lending_no_active_insurances_title">No active insurances</string>
+    <string name="lending_no_active_insurances_message">You won't be able to make any lending until you have a valid insurance.</string>
+    <string name="lending_no_active_insurances_action">Add Insurance</string>
+
+    <string name="lending_creation_title">Create Lending</string>
+    <string name="lending_creation_action">Create Lending</string>
+    <string name="lending_creation_reset">Reset List</string>
+    <string name="lending_creation_from">Start Date</string>
+    <string name="lending_creation_until">End Date</string>
+    <string name="lending_creation_select_dates">Select dates to allocate items</string>
+    <string name="lending_creation_allocating">Allocating...</string>
+    <string name="lending_creation_no_items_allocated">No items allocated</string>
+    <string name="lending_creation_items_allocated">Allocated items:</string>
+    <string name="lending_creation_warning_title">Attention</string>
+    <string name="lending_creation_warning_message">You will reserve the allocated items for the selected dates, but the request has to be approved by an administrator before the lending is complete.\nOnce an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.</string>
+    <string name="lending_creation_error_title">Error</string>
+    <string name="lending_creation_error_message">An error occurred while allocating items:\n%1$s</string>
+    <string name="lending_creation_error_message_unknown">An unknown error occurred while allocating items.</string>
+    <string name="lending_creation_error_allocation_insufficient">Only %1$d available.</string>
+    <string name="lending_creation_error_allocation_none">None available.</string>
     <string name="lending_creation_error_allocation_title">Cannot allocate enough items</string>
-    <string name="lending_creation_error_allocation" translatable="false">There aren\'t enough %1$s for the selected dates.\nOnly %2$d available.\nYou have requested %3$d.</string>
-    <string name="lending_not_confirmed" translatable="false">Not Confirmed</string>
-    <string name="lending_pending_pickup" translatable="false">Pending Pickup</string>
-    <string name="lending_pending_return" translatable="false">Pending Return</string>
-    <string name="lending_pending_memory" translatable="false">Pending Memory</string>
-    <string name="lending_not_confirmed_message" translatable="false">An admin has to confirm your request before it\'s effective.</string>
-    <string name="lending_pending_pickup_message" translatable="false">Your request has been confirmed, an admin will get in touch with you to schedule the pickup.</string>
-    <string name="lending_pending_return_message" translatable="false">Please, schedule the return with your assigned administrator as soon as possible.</string>
-    <string name="lending_pending_memory_message" translatable="false">Please, prepare and upload the memory of the activity as soon as possible. You can\'t make another request until you do this.</string>
-    <string name="insurance_add_title" translatable="false">Add Insurance</string>
-    <string name="insurance" translatable="false">Insurance</string>
-    <string name="insurance_company" translatable="false">Insurance Company</string>
-    <string name="insurance_policy_number" translatable="false">Policy Number</string>
-    <string name="insurance_start_date" translatable="false">Start Date</string>
-    <string name="insurance_end_date" translatable="false">End Date</string>
-    <string name="insurance_view_document" translatable="false">View Document</string>
-    <string name="active_insurances_title" translatable="false">Active Insurances</string>
-    <string name="management_no_departments" translatable="false">No departments</string>
-    <string name="management_no_users" translatable="false">No users</string>
-    <string name="management_no_item_types" translatable="false">No item types</string>
-    <string name="management_no_items" translatable="false">No items</string>
-    <string name="management_no_lendings" translatable="false">No lendings</string>
-    <plurals name="management_items_amount" translatable="false">
+    <string name="lending_creation_error_allocation">Please, check for errors above, and modify your request accordingly.</string>
+
+    <string name="lending_not_confirmed">Not Confirmed</string>
+    <string name="lending_pending_pickup">Pending Pickup</string>
+    <string name="lending_pending_return">Pending Return</string>
+    <string name="lending_pending_memory">Pending Memory</string>
+    <string name="lending_not_confirmed_message">An admin has to confirm your request before it's effective.</string>
+    <string name="lending_pending_pickup_message">Your request has been confirmed, an admin will get in touch with you to schedule the pickup.</string>
+    <string name="lending_pending_return_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
+    <string name="lending_pending_memory_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
+
+    <string name="insurance_add_title">Add Insurance</string>
+    <string name="insurance">Insurance</string>
+    <string name="insurance_company">Insurance Company</string>
+    <string name="insurance_policy_number">Policy Number</string>
+    <string name="insurance_start_date">Start Date</string>
+    <string name="insurance_end_date">End Date</string>
+    <string name="insurance_view_document">View Document</string>
+
+    <string name="active_insurances_title">Active Insurances</string>
+
+    <string name="management_no_departments">No departments</string>
+    <string name="management_no_users">No users</string>
+    <string name="management_no_item_types">No item types</string>
+    <string name="management_no_items">No items</string>
+    <string name="management_no_lendings">No lendings</string>
+
+    <plurals name="management_items_amount">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
     </plurals>
-    <string name="management_lendings" translatable="false">View Lendings</string>
-    <string name="management_unconfirmed_lendings" translatable="false">Lendings awaiting confirmation</string>
-    <string name="management_pending_pickup_lendings" translatable="false">Lendings pending pickup</string>
-    <string name="management_pending_return_lendings" translatable="false">Lendings pending return</string>
-    <string name="management_pending_memory_lendings" translatable="false">Lendings pending memory</string>
-    <string name="management_completed_lendings" translatable="false">Completed lendings</string>
-    <string name="management_pickup_screen" translatable="false">Lending Pickup</string>
-    <string name="management_pickup_screen_skip" translatable="false">Skip Inventory Check</string>
-    <string name="management_pickup_screen_confirm" translatable="false">Complete</string>
-    <string name="management_pickup_screen_skip_warning_title" translatable="false">Skipping inventory check</string>
-    <string name="management_pickup_screen_skip_warning_message" translatable="false">Are you sure that you want to skip the inventory check? Make sure all the items have been delivered to the user, and that they match the references assigned.</string>
-    <string name="management_lending_user" translatable="false">User: %1$s</string>
-    <string name="management_lending_given_by" translatable="false">Given by: %1$s at %2$s</string>
-    <string name="management_lending_returned_to" translatable="false">Returned to: %1$s at %2$s</string>
-    <string name="management_view_memory" translatable="false">View Memory</string>
-    <string name="management_return" translatable="false">Return</string>
-    <string name="management_skip_memory" translatable="false">Skip Memory</string>
-    <string name="management_promote_user" translatable="false">Promote</string>
-    <string name="management_promote_user_title" translatable="false">Promote user</string>
-    <string name="management_promote_user_confirmation" translatable="false">Are you sure that you want to promote %1$s to be an administrator?</string>
-    <string name="delete_dialog_title" translatable="false">Delete %1$s</string>
-    <string name="delete_dialog_message" translatable="false">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
-    <string name="inventory_item_type_title" translatable="false">Item Details</string>
-    <string name="inventory_item_type_not_found" translatable="false">Type not found</string>
-    <string name="inventory_item_type" translatable="false">Type: %1$s</string>
-    <string name="inventory_item_amount" translatable="false">Amount: %1$d</string>
-    <string name="inventory_item_variation" translatable="false">Variation: %1$d</string>
-    <string name="create_inventory_item_variation" translatable="false">Variation</string>
-    <string name="create_inventory_item_type" translatable="false">Type</string>
-    <string name="create_inventory_item_amount" translatable="false">Amount</string>
-    <string name="lending_details_title" translatable="false">Lending Details</string>
-    <string name="lending_details_cancel" translatable="false">Cancel Lending</string>
+
+    <string name="management_lendings">View Lendings</string>
+
+    <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
+    <string name="management_pending_pickup_lendings">Lendings pending pickup</string>
+    <string name="management_pending_return_lendings">Lendings pending return</string>
+    <string name="management_pending_memory_lendings">Lendings pending memory</string>
+    <string name="management_completed_lendings">Completed lendings</string>
+
+    <string name="management_pickup_screen">Lending Pickup</string>
+    <string name="management_pickup_screen_skip">Skip Inventory Check</string>
+    <string name="management_pickup_screen_confirm">Complete</string>
+    <string name="management_pickup_screen_skip_warning_title">Skipping inventory check</string>
+    <string name="management_pickup_screen_skip_warning_message">Are you sure that you want to skip the inventory check? Make sure all the items have been delivered to the user, and that they match the references assigned.</string>
+
+    <string name="management_lending_user">User: %1$s</string>
+    <string name="management_lending_given_by">Given by: %1$s at %2$s</string>
+    <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
+    <string name="management_view_memory">View Memory</string>
+    <string name="management_return">Return</string>
+    <string name="management_skip_memory">Skip Memory</string>
+
+    <string name="management_promote_user">Promote</string>
+    <string name="management_promote_user_title">Promote user</string>
+    <string name="management_promote_user_confirmation">Are you sure that you want to promote %1$s to be an administrator?</string>
+
+    <string name="delete_dialog_title">Delete %1$s</string>
+    <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+
+    <string name="inventory_item_type_title">Item Details</string>
+    <string name="inventory_item_type_not_found">Type not found</string>
+    <string name="inventory_item_type">Type: %1$s</string>
+    <string name="inventory_item_amount">Amount: %1$d</string>
+    <string name="inventory_item_variation">Variation: %1$d</string>
+    <string name="inventory_item_nfc_id">NFC ID: %1$s</string>
+
+    <string name="create_inventory_item_variation">Variation</string>
+    <string name="create_inventory_item_type">Type</string>
+    <string name="create_inventory_item_amount">Amount</string>
+    <string name="create_inventory_item_nfc_id">NFC Id</string>
+
+    <string name="lending_details_title">Lending Details</string>
+    <string name="lending_details_cancel">Cancel Lending</string>
     <string name="lending_details_cancel_confirm_title">Lending Cancellation Confirm</string>
     <string name="lending_details_cancel_confirm_message">Are you sure that you want to cancel this lending?</string>
-    <string name="lending_details_items_title" translatable="false">Items:</string>
-    <plurals name="lending_details_item_row" translatable="false">
+    <string name="lending_details_items_title">Items:</string>
+    <plurals name="lending_details_item_row">
         <item quantity="one">- %1$s: %2$d unit</item>
         <item quantity="other">- %1$s: %2$d units</item>
     </plurals>
-    <string name="lending_details_call_user" translatable="false">Call User</string>
-    <string name="lending_details_whatsapp" translatable="false">WhatsApp</string>
-    <string name="lending_details_copy_number" translatable="false">Copy Phone</string>
-    <string name="lending_details_email" translatable="false">Send Email</string>
-    <string name="lending_details_notes" translatable="false">Notes:</string>
-    <string name="lending_details_from" translatable="false">From:</string>
-    <string name="lending_details_until" translatable="false">Until:</string>
-    <string name="lending_details_id" translatable="false">Lending ID:</string>
-    <string name="lending_details_user" translatable="false">User:</string>
-    <string name="lending_details_nfc_title" translatable="false">NFC Reader</string>
-    <string name="lending_details_nfc_message" translatable="false">Place your device near the NFC tag to register the item automatically.</string>
-    <string name="lending_details_scan_error_not_found" translatable="false">Item not found in lending</string>
-    <string name="personal_info" translatable="false">Personal Information</string>
-    <string name="personal_info_username" translatable="false">Username</string>
-    <string name="personal_info_email" translatable="false">Email</string>
-    <string name="femecv_sync_title" translatable="false">FEMECV Sync</string>
-    <string name="femecv_sync_enable" translatable="false">Sign into FEMECV</string>
-    <string name="femecv_sync_connected" translatable="false">Synchronizing with FEMECV</string>
-    <string name="femecv_sync_disable" translatable="false">Disconnect</string>
-    <string name="femecv_sync_login" translatable="false">Login</string>
-    <string name="femecv_username" translatable="false">Username</string>
-    <string name="femecv_password" translatable="false">Password</string>
-    <string name="femecv_logo" translatable="false">FEMECV Logo</string>
-    <string name="femecv_notice" translatable="false">This app is not related to or endorsed by the FEMECV. This connection procedure is just a utility function to simplify your licenses\' management. After pressing the login button, you authorize the Centre Excursionista d\'Alcoi to manage and process your FEMECV licenses.</string>
-    <string name="form_display_name" translatable="false">Display Name</string>
-    <string name="form_description" translatable="false">Description</string>
-    <string name="form_select_image" translatable="false">Select Image</string>
-    <string name="form_label_optional" translatable="false">(optional)</string>
-    <string name="shopping_list_selected" translatable="false">Selected (%1$d items)</string>
-    <string name="shopping_list_view" translatable="false">View Shopping List</string>
-    <string name="shopping_list_summary" translatable="false">Summary</string>
-    <string name="shopping_list_confirm" translatable="false">Confirm</string>
-    <string name="memory_pending" translatable="false">Pending Memories</string>
-    <string name="memory_pending_lending" translatable="false">Memory submission is pending.</string>
-    <string name="memory_pick" translatable="false">Pick memory file</string>
-    <string name="memory_editor" translatable="false">Open memory editor</string>
-    <string name="memory_editor_title" translatable="false">Activity Memory Editor</string>
-    <string name="memory_editor_save" translatable="false">Save Memory</string>
-    <string name="scanner_read" translatable="false">Read code: %1$s</string>
-    <string name="scanner_error" translatable="false">Could not read code</string>
-    <string name="progress_download" translatable="false">Downloading...</string>
-    <string name="progress_download_percentage" translatable="false">Downloading... %1$d %</string>
-    <string name="progress_download_name" translatable="false">Downloading %1$s...</string>
-    <string name="progress_download_name_percentage" translatable="false">Downloading %1$s... %2$d %</string>
-    <string name="progress_upload" translatable="false">Uploading...</string>
-    <string name="progress_upload_percentage" translatable="false">Uploading... %1$d %</string>
-    <string name="progress_upload_name" translatable="false">Uploading %1$s...</string>
-    <string name="progress_upload_name_percentage" translatable="false">Uploading %1$s... %2$d %</string>
-    <string name="progress_local_fs_read" translatable="false">Reading file...</string>
-    <string name="progress_local_db_read" translatable="false">Reading database...</string>
-    <string name="progress_local_db_write" translatable="false">Writing database...</string>
-    <string name="progress_data_processing" translatable="false">Processing...</string>
-    <string name="notification_lending_confirmed_title" translatable="false">Lending Confirmed</string>
-    <string name="notification_lending_confirmed_message" translatable="false">An administrator has confirmed your lending request.</string>
-    <string name="notification_lending_cancelled_title" translatable="false">Lending Cancelled</string>
-    <string name="notification_lending_cancelled_message" translatable="false">Your lending has been cancelled.</string>
-    <string name="notification_lending_created_title" translatable="false">Lending Request</string>
-    <string name="notification_lending_created_message" translatable="false">A new lending request has been created. Please review and confirm it.</string>
-    <string name="notification_lending_taken_title" translatable="false">Lending Taken</string>
-    <string name="notification_lending_taken_message" translatable="false">You have been given the items of your request.</string>
-    <string name="notification_lending_given_title" translatable="false">Lending Given</string>
-    <string name="notification_lending_given_message" translatable="false">A user was given all the items for a lending.</string>
-    <string name="notification_lending_returned_title" translatable="false">Lending Returned</string>
-    <string name="notification_lending_returned_message" translatable="false">You have returned the items of your lending. Please, remember to upload the memory of the activity.</string>
-    <string name="notification_lending_returned_other_title" translatable="false">Lending Returned</string>
-    <string name="notification_lending_returned_other_message" translatable="false">A user has returned the items of a lending.</string>
+    <string name="lending_details_call_user">Call User</string>
+    <string name="lending_details_whatsapp">WhatsApp</string>
+    <string name="lending_details_copy_number">Copy Phone</string>
+    <string name="lending_details_email">Send Email</string>
+    <string name="lending_details_notes">Notes:</string>
+    <string name="lending_details_from">From:</string>
+    <string name="lending_details_until">Until:</string>
+    <string name="lending_details_id">Lending ID:</string>
+    <string name="lending_details_user">User:</string>
+    <string name="lending_details_nfc_title">NFC Reader</string>
+    <string name="lending_details_nfc_message">Place your device near the NFC tag to register the item automatically.</string>
+    <string name="lending_details_scan_error_not_found">Item not found in lending</string>
+
+    <string name="personal_info">Personal Information</string>
+    <string name="personal_info_username">Username</string>
+    <string name="personal_info_email">Email</string>
+
+    <string name="femecv_sync_title">FEMECV Sync</string>
+    <string name="femecv_sync_enable">Sign into FEMECV</string>
+    <string name="femecv_sync_connected">Synchronizing with FEMECV</string>
+    <string name="femecv_sync_disable">Disconnect</string>
+    <string name="femecv_sync_login">Login</string>
+    <string name="femecv_username">Username</string>
+    <string name="femecv_password">Password</string>
+    <string name="femecv_logo">FEMECV Logo</string>
+    <string name="femecv_notice">This app is not related to or endorsed by the FEMECV. This connection procedure is just a utility function to simplify your licenses' management. After pressing the login button, you authorize the Centre Excursionista d'Alcoi to manage and process your FEMECV licenses.</string>
+
+    <string name="form_display_name">Display Name</string>
+    <string name="form_description">Description</string>
+    <string name="form_select_image">Select Image</string>
+    <string name="form_label_optional">(optional)</string>
+
+    <string name="shopping_list_selected">Selected (%1$d items)</string>
+    <string name="shopping_list_view">View Shopping List</string>
+    <string name="shopping_list_summary">Summary</string>
+    <string name="shopping_list_confirm">Confirm</string>
+
+    <string name="memory_pending">Pending Memories</string>
+    <string name="memory_pending_lending">Memory submission is pending.</string>
+    <string name="memory_pick">Pick memory file</string>
+    <string name="memory_editor">Open memory editor</string>
+    <string name="memory_editor_title">Activity Memory Editor</string>
+    <string name="memory_editor_save">Save Memory</string>
+
+    <string name="scanner_read">Read code: %1$s</string>
+    <string name="scanner_error">Could not read code</string>
+
+    <string name="progress_download">Downloading...</string>
+    <string name="progress_download_percentage">Downloading... %1$d %</string>
+    <string name="progress_download_name">Downloading %1$s...</string>
+    <string name="progress_download_name_percentage">Downloading %1$s... %2$d %</string>
+    <string name="progress_upload">Uploading...</string>
+    <string name="progress_upload_percentage">Uploading... %1$d %</string>
+    <string name="progress_upload_name">Uploading %1$s...</string>
+    <string name="progress_upload_name_percentage">Uploading %1$s... %2$d %</string>
+    <string name="progress_local_fs_read">Reading file...</string>
+    <string name="progress_local_db_read">Reading database...</string>
+    <string name="progress_local_db_write">Writing database...</string>
+    <string name="progress_data_processing">Processing...</string>
+
+    <string name="notification_lending_confirmed_title">Lending Confirmed</string>
+    <string name="notification_lending_confirmed_message">An administrator has confirmed your lending request.</string>
+    <string name="notification_lending_cancelled_title">Lending Cancelled</string>
+    <string name="notification_lending_cancelled_message">Your lending has been cancelled.</string>
+    <string name="notification_lending_created_title">Lending Request</string>
+    <string name="notification_lending_created_message">A new lending request has been created. Please review and confirm it.</string>
+    <string name="notification_lending_taken_title">Lending Taken</string>
+    <string name="notification_lending_taken_message">You have been given the items of your request.</string>
+    <string name="notification_lending_given_title">Lending Given</string>
+    <string name="notification_lending_given_message">A user was given all the items for a lending.</string>
+    <string name="notification_lending_returned_title">Lending Returned</string>
+    <string name="notification_lending_returned_message">You have returned the items of your lending. Please, remember to upload the memory of the activity.</string>
+    <string name="notification_lending_returned_other_title">Lending Returned</string>
+    <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
+
+    <string name="nfc_write_success">NFC written successfully</string>
+    <string name="nfc_error_read_only">NFC tag is read-only</string>
+    <string name="nfc_error_too_small">NFC tag memory is too small</string>
+    <string name="nfc_error_format_unsupported">NFC tag cannot be formatted as %1$s</string>
+    <string name="nfc_error_unknown">Unknown NFC error occurred: %1$s</string>
+
 </resources>

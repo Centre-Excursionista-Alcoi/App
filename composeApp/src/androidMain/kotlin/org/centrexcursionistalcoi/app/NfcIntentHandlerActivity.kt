@@ -5,13 +5,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.nfc.tech.MifareClassic
 import android.nfc.tech.Ndef
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import io.github.aakira.napier.Napier
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 
@@ -23,7 +23,6 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
 
     private val techList = arrayOf(
         arrayOf(Ndef::class.java.name),
-        arrayOf(MifareClassic::class.java.name),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,18 +98,25 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
                 // Handle read
                 val techList = tag.techList.map { it.substringAfterLast('.') }
 
-                val result = if ("Ndef" in techList) {
+                val payload = if ("Ndef" in techList) {
                     // Priority given to NDEF-formatted tags
-                    NfcUtils.readNdefTag(intent).joinToString(",")
-                } else if ("MifareClassic" in techList) {
-                    // Fallback for Mifare Classic tags that are not NDEF formatted
-                    NfcUtils.readMifareClassicTag(tag)
+                    val tagPayload = NfcUtils.readNdefTag(intent)
+                    if (tagPayload == null) {
+                        PlatformNFC.readContinuation?.resumeWithException(
+                            NoSuchElementException("NFC tag has no NDEF records.")
+                        )
+                        return
+                    }
+                    tagPayload
                 } else {
-                    error("Unsupported NFC tag type: $techList")
+                    PlatformNFC.readContinuation?.resumeWithException(
+                        UnsupportedOperationException("Unsupported NFC tag type: $techList")
+                    )
+                    return
                 }
 
-                Napier.d { "Read NFC tag: $result" }
-                PlatformNFC.readContinuation?.resume(result) ?: Napier.v { "There's no pending read continuation." }
+                Napier.d { "Read NFC tag: $payload" }
+                PlatformNFC.readContinuation?.resume(payload) ?: Napier.v { "There's no pending read continuation." }
             }
         }
     }

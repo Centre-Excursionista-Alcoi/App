@@ -39,9 +39,9 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
 
         nfcReaderJob = launch {
             while (true) {
-                val tag = PlatformNFC.readNFC() ?: continue
-                Napier.d("NFC tag read: $tag")
-                val uuid = tag.toUuidOrNull() ?: continue
+                val payload = PlatformNFC.readNFC() ?: continue
+                Napier.d("NFC tag read: $payload")
+                val uuid = payload.uuid() ?: continue
                 onScan(uuid)
             }
         }
