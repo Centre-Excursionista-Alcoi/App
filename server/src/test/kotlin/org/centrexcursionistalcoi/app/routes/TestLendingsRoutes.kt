@@ -4,19 +4,24 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.parameters
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
@@ -28,8 +33,12 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
@@ -37,10 +46,12 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuid
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 
-class TestInventoryRoutes : ApplicationTestBase() {
+class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
@@ -311,14 +322,19 @@ class TestInventoryRoutes : ApplicationTestBase() {
                 this.givenBy = FakeAdminUser.provideEntity().sub
                 this.givenAt = LocalDate.of(2025, 9, 30).atStartOfDay().toInstant(ZoneOffset.UTC)
                 this.returned = true
-                this.receivedBy = FakeAdminUser.provideEntity().sub
-                this.receivedAt = LocalDate.of(2025, 10, 4).atStartOfDay().toInstant(ZoneOffset.UTC)
 
                 this.notes = "Example lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
                     it[item] = exampleItemId
                     it[lending] = lendingEntity.id
+                }
+            }.also { lendingEntity ->
+                ReceivedItemEntity.new {
+                    this.lending = lendingEntity
+                    this.item = InventoryItemEntity[exampleItemId]
+                    this.receivedBy = FakeAdminUser.provideEntity()
+                    this.receivedAt = LocalDate.of(2025, 10, 4).atStartOfDay().toInstant(ZoneOffset.UTC)
                 }
             }
         },
@@ -335,7 +351,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
                 append("items", exampleItemId.toString())
             }
         ).apply {
-            assertStatusCode(HttpStatusCode.PreconditionFailed)
+            assertError(Error.MemoryNotSubmitted())
         }
     }
 
@@ -610,6 +626,155 @@ class TestInventoryRoutes : ApplicationTestBase() {
             val items = lendingEntity.items.toList()
             assertEquals(1, items.size)
             assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), items[0].id.value)
+        }
+    }
+
+    @Test
+    fun test_return_lending_all_items() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            getOrCreateItem(id = item2Id)
+
+            val user = FakeUser.provideEntity()
+
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+                this.taken = true
+                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = item2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val entity = context.dibResult!!
+        client.post(
+            "inventory/lendings/${entity.id.value}/return",
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(
+                    ReturnLendingRequest.serializer(),
+                    ReturnLendingRequest(
+                        receivedBySub = FakeAdminUser.SUB,
+                        returnedItems = listOf(
+                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid())
+                        )
+                    )
+                )
+            )
+        }.apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        // Make sure the lending is marked as returned
+        Database {
+            val lendingEntity = LendingEntity[entity.id.value]
+            assertTrue(lendingEntity.returned)
+        }
+
+        // Make sure all items are marked as received
+        Database {
+            val receivedItems = ReceivedItemEntity.find { ReceivedItems.lending eq entity.id.value }.toList()
+            assertEquals(2, receivedItems.size)
+            receivedItems[0].let { receivedItem ->
+                assertEquals(exampleItemId, receivedItem.item.id.value)
+                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals("All good", receivedItem.notes)
+            }
+            receivedItems[1].let { receivedItem ->
+                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), receivedItem.item.id.value)
+                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals(null, receivedItem.notes)
+            }
+        }
+    }
+
+    @Test
+    fun test_return_lending_partial_items() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            getOrCreateItem(id = item2Id)
+
+            val user = FakeUser.provideEntity()
+
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+                this.taken = true
+                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = item2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val entity = context.dibResult!!
+        client.post(
+            "inventory/lendings/${entity.id.value}/return",
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(
+                    ReturnLendingRequest.serializer(),
+                    ReturnLendingRequest(
+                        receivedBySub = FakeAdminUser.SUB,
+                        returnedItems = listOf(
+                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                        )
+                    )
+                )
+            )
+        }.apply {
+            assertStatusCode(HttpStatusCode.Accepted)
+            headers["CEA-Missing-Items"]?.let { remainingItemsHeader ->
+                val remainingItemIds = remainingItemsHeader.split(',').mapNotNull { it.toUUIDOrNull() }
+                assertEquals(1, remainingItemIds.size)
+                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), remainingItemIds[0])
+            } ?: throw AssertionError("Missing CEA-Missing-Items header in response")
+        }
+
+        // Make sure the lending is not marked as returned
+        Database {
+            val lendingEntity = LendingEntity[entity.id.value]
+            assertFalse(lendingEntity.returned)
+        }
+
+        // Make sure the item is marked as received
+        Database {
+            val receivedItems = ReceivedItemEntity.find { ReceivedItems.lending eq entity.id.value }.toList()
+            assertEquals(1, receivedItems.size)
+            receivedItems[0].let { receivedItem ->
+                assertEquals(exampleItemId, receivedItem.item.id.value)
+                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals("All good", receivedItem.notes)
+            }
         }
     }
 }

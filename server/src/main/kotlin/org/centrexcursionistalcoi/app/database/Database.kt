@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
@@ -32,6 +33,7 @@ object Database {
         InventoryItems,
         Lendings,
         LendingItems,
+        ReceivedItems,
         FCMRegistrationTokens,
     )
     private var database: JdbcDatabase? = null

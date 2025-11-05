@@ -108,6 +108,15 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                 println("Link: $linkName, Serializer: ${serializer.descriptor.serialName}, Nullable: $nullable")
                 element(linkName, serializer.descriptor, isOptional = nullable)
             }
+            if (this@serializer is CustomTableSerializer<*, *>) {
+                // Add extra columns from CustomTableSerializer
+                val serializers = columnSerializers()
+                println("There are ${serializers.size} extra columns from CustomTableSerializer:")
+                for ((name, serializer) in serializers) {
+                    println("- $name: ${serializer.descriptor.serialName}")
+                    element(name, serializer.descriptor, isOptional = true)
+                }
+            }
         }
 
         override fun serialize(encoder: Encoder, value: E) = Database {
@@ -191,6 +200,20 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         encodeViaLink(descriptor, value)
                     }
                 }
+                if (this@serializer is CustomTableSerializer<*, *>) { // CustomTableSerializer<ID, E>
+                    @Suppress("UNCHECKED_CAST")
+                    with(this@serializer as CustomTableSerializer<ID, E>) {
+                        val serializers = columnSerializers()
+                        println("Encoding extra columns from CustomTableSerializer:")
+                        val columns = extraColumns(value)
+                        for ((column, value) in columns) {
+                            val serializer = serializers[column] ?: error("No serializer found for extra column \"$column\"")
+                            val idx = descriptor.getElementIndex(column)
+                            println("- Encoding extra column \"$column\" with value: $value")
+                            encode(descriptor, serializer, idx, value)
+                        }
+                    }
+                }
             }
         }
 
@@ -217,4 +240,9 @@ private fun <FromID: Any, FromEntity: Entity<FromID>, ToID: Any, ToEntity: Entit
         return
     }
     encodeSerializableElement(descriptor, idx, serializer.list(), links.toList())
+}
+
+private fun <T> CompositeEncoder.encode(descriptor: SerialDescriptor, serializer: SerializationStrategy<T>, idx: Int, value: Any?) {
+    @Suppress("UNCHECKED_CAST")
+    encodeSerializableElement(descriptor, idx, serializer, value as T)
 }

@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.error
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import kotlin.reflect.KClass
+import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -299,7 +300,7 @@ sealed interface Error {
         override val description: String = "You have a lending with a pending memory."
 
         @Serializable(HttpStatusCodeSerializer::class)
-        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
     }
 
     @Serializable
@@ -310,6 +311,26 @@ sealed interface Error {
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("LendingNotTaken")
+    class LendingNotTaken(val lendingId: Uuid? = null): Error {
+        override val code: Int = ERROR_LENDING_NOT_TAKEN
+        override val description: String = "Lending with id $lendingId has not been taken yet."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("InvalidItemInReturnedItems")
+    class InvalidItemInReturnedItems(): Error {
+        override val code: Int = ERROR_INVALID_ITEM_IN_RETURNED_ITEMS
+        override val description: String = "One or more items in the returned items list are invalid."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
     }
 
 
@@ -340,6 +361,8 @@ sealed interface Error {
         const val ERROR_LIST_CANNOT_BE_EMPTY = 23
         const val ERROR_MEMORY_NOT_SUBMITTED = 24
         const val ERROR_LENDING_CONFLICT = 25
+        const val ERROR_LENDING_NOT_TAKEN = 26
+        const val ERROR_INVALID_ITEM_IN_RETURNED_ITEMS = 27
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -368,6 +391,8 @@ sealed interface Error {
             ERROR_LIST_CANNOT_BE_EMPTY -> ListCannotBeEmpty.serializer()
             ERROR_MEMORY_NOT_SUBMITTED -> MemoryNotSubmitted.serializer()
             ERROR_LENDING_CONFLICT -> LendingConflict.serializer()
+            ERROR_LENDING_NOT_TAKEN -> LendingNotTaken.serializer()
+            ERROR_INVALID_ITEM_IN_RETURNED_ITEMS -> InvalidItemInReturnedItems.serializer()
             else -> null
         }
     }
