@@ -206,105 +206,105 @@ fun HomeMainPage(
                     onCancelLendingRequest = { onCancelLendingRequest(lending) }
                 )
             }
-        }
-
-        stickyHeader("lending_header") {
-            Text(
-                text = stringResource(Res.string.home_lending),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-            )
-        }
-
-        if (profile.lendingUser == null) {
-            item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
-                        Icon(Icons.Default.Badge, null, modifier = Modifier.padding(end = 16.dp))
-                        Text(
-                            text = stringResource(Res.string.lending_signup_required),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = onLendingSignUpRequested,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp).padding(horizontal = 16.dp)
-                    ) { Text(stringResource(Res.string.lending_signup_action)) }
-                }
-            }
         } else {
-            val groupedItems = inventoryItems?.groupBy { it.type }
-                .orEmpty()
-                .toList()
-                .filter { (type) ->
-                    if (selectedCategories.isNotEmpty())
-                        type.category in selectedCategories
-                    else
-                        true
-                }
-            val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
-
-            item("categories_chips", span = { GridItemSpan(maxLineSpan) }) {
-                LazyRow(modifier = Modifier.fillMaxWidth()) {
-                    items(
-                        items = categories,
-                        key = { it },
-                        contentType = { "category-chip" },
-                    ) { category ->
-                        val isSelected = selectedCategories.contains(category)
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                selectedCategories = if (isSelected) {
-                                    selectedCategories - category
-                                } else {
-                                    selectedCategories + category
-                                }
-                            },
-                            label = { Text(category) },
-                            modifier = Modifier.padding(end = 4.dp),
-                        )
-                    }
-                }
+            stickyHeader("lending_header") {
+                Text(
+                    text = stringResource(Res.string.home_lending),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                )
             }
 
-            if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
-                items(
-                    items = groupedItems,
-                    key = { (type) -> type.id },
-                    contentType = { "lending-item-large" },
-                ) { (type, items) ->
-                    val selectedAmount = shoppingList[type.id] ?: 0
-
-                    LendingItem_Large(
-                        type = type,
-                        items = items,
-                        selectedAmount = selectedAmount,
-                        onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
-                        onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                        onClick = { showingItemTypeDetails = type }
-                    )
+            if (profile.lendingUser == null) {
+                item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
+                            Icon(Icons.Default.Badge, null, modifier = Modifier.padding(end = 16.dp))
+                            Text(
+                                text = stringResource(Res.string.lending_signup_required),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = onLendingSignUpRequested,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp).padding(horizontal = 16.dp)
+                        ) { Text(stringResource(Res.string.lending_signup_action)) }
+                    }
                 }
             } else {
-                items(
-                    items = groupedItems,
-                    key = { (type) -> type.id },
-                    contentType = { "lending-item-small" },
-                ) { (type, items) ->
-                    val selectedAmount = shoppingList[type.id] ?: 0
+                val groupedItems = inventoryItems?.groupBy { it.type }
+                    .orEmpty()
+                    .toList()
+                    .filter { (type) ->
+                        if (selectedCategories.isNotEmpty())
+                            type.category in selectedCategories
+                        else
+                            true
+                    }
+                val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
 
-                    LendingItem_Small(
-                        type = type,
-                        items = items,
-                        selectedAmount = selectedAmount,
-                        onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
-                        onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                        onClick = { showingItemTypeDetails = type }
-                    )
+                item("categories_chips", span = { GridItemSpan(maxLineSpan) }) {
+                    LazyRow(modifier = Modifier.fillMaxWidth()) {
+                        items(
+                            items = categories,
+                            key = { it },
+                            contentType = { "category-chip" },
+                        ) { category ->
+                            val isSelected = selectedCategories.contains(category)
+                            Spacer(Modifier.width(8.dp))
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedCategories = if (isSelected) {
+                                        selectedCategories - category
+                                    } else {
+                                        selectedCategories + category
+                                    }
+                                },
+                                label = { Text(category) },
+                                modifier = Modifier.padding(end = 4.dp),
+                            )
+                        }
+                    }
+                }
+
+                if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
+                    items(
+                        items = groupedItems,
+                        key = { (type) -> type.id },
+                        contentType = { "lending-item-large" },
+                    ) { (type, items) ->
+                        val selectedAmount = shoppingList[type.id] ?: 0
+
+                        LendingItem_Large(
+                            type = type,
+                            items = items,
+                            selectedAmount = selectedAmount,
+                            onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
+                            onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
+                            onClick = { showingItemTypeDetails = type }
+                        )
+                    }
+                } else {
+                    items(
+                        items = groupedItems,
+                        key = { (type) -> type.id },
+                        contentType = { "lending-item-small" },
+                    ) { (type, items) ->
+                        val selectedAmount = shoppingList[type.id] ?: 0
+
+                        LendingItem_Small(
+                            type = type,
+                            items = items,
+                            selectedAmount = selectedAmount,
+                            onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
+                            onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
+                            onClick = { showingItemTypeDetails = type }
+                        )
+                    }
                 }
             }
         }
