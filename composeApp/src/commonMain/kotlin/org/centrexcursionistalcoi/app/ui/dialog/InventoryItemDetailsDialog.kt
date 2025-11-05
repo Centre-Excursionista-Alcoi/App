@@ -46,6 +46,11 @@ fun InventoryItemDetailsDialog(
                 Text(
                     stringResource(Res.string.inventory_item_variation, item.variation ?: stringResource(Res.string.none))
                 )
+
+                val nfcIdHex = item.nfcId?.toHexString()
+                Text(
+                    stringResource(Res.string.inventory_item_nfc_id, nfcIdHex ?: stringResource(Res.string.none))
+                )
             }
         },
         confirmButton = {

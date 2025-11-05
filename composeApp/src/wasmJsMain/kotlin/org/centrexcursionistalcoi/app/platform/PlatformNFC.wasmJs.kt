@@ -5,11 +5,13 @@ package org.centrexcursionistalcoi.app.platform
 import io.github.aakira.napier.Napier
 import io.ktor.client.fetch.AbortSignal
 import io.ktor.client.fetch.ArrayBuffer
+import io.ktor.utils.io.core.toByteArray
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Promise
 import kotlinx.coroutines.await
+import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.khronos.webgl.DataView
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.EventTarget
@@ -107,7 +109,7 @@ actual object PlatformNFC : PlatformProvider {
     actual override val isSupported: Boolean
         get() = ndefReaderAvailable
 
-    actual suspend fun readNFC(): String? = suspendCoroutine { cont ->
+    actual suspend fun readNFC(): NfcPayload? = suspendCoroutine { cont ->
         val ndef = NDEFReader()
         ndef.scan()
             .then {
@@ -118,7 +120,11 @@ actual object PlatformNFC : PlatformProvider {
                     val event = ev as NDEFEvent
                     val records = event.message.records
                     Napier.d { "Read NFC tag. Serial number: ${event.serialNumber}. Record count: ${records.length}" }
-                    cont.resume(records.toList().mapNotNull { it.data?.toString() }.joinToString("\n"))
+                    val payload = NfcPayload(
+                        null,
+                        records.toList().mapNotNull { it.data?.toString()?.toByteArray() }.map { "unknown" to it }
+                    )
+                    cont.resume(payload)
                 }
                 null
             }

@@ -13,5 +13,6 @@ fun Any?.toJsonElement() = when (this) {
     is Number -> JsonPrimitive(this)
     is ByteArray -> JsonPrimitive(Base64.UrlSafe.encode(this))
     is UUID -> JsonPrimitive(this.toString())
+    is FileBytesWrapper -> JsonPrimitive(Base64.UrlSafe.encode(this.bytes))
     else -> throw IllegalArgumentException("Cannot convert $this (${this::class.simpleName}) to JsonElement")
 }

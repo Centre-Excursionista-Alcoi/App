@@ -19,6 +19,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.UUID
+import kotlin.io.encoding.Base64
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -124,17 +125,22 @@ fun Route.inventoryRoutes() {
         creator = { formParameters ->
             var variation: String? = null
             var type: UUID? = null
+            var nfcId: ByteArray? = null
 
             formParameters.forEachPart { partData ->
                 when (partData) {
                     is PartData.FormItem -> {
-                        if (partData.name == "variation") {
-                            variation = partData.value
-                        } else if (partData.name == "type") {
-                            type = try {
+                        when (partData.name) {
+                            "variation" -> variation = partData.value
+                            "type" -> type = try {
                                 UUID.fromString(partData.value)
                             } catch (_: IllegalArgumentException) {
                                 null
+                            }
+                            "nfcId" -> {
+                                val bytes = Base64.UrlSafe.decode(partData.value)
+                                println("Decoded nfcId! Bytes: ${bytes.joinToString(",") { it.toString() }}")
+                                nfcId = bytes
                             }
                         }
                     }
@@ -155,6 +161,7 @@ fun Route.inventoryRoutes() {
                 InventoryItemEntity.new {
                     this.variation = variation
                     this.type = itemType
+                    this.nfcId = nfcId
                 }
             }
         },

@@ -25,8 +25,8 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
         item.referenced(type)
     },
 ) {
-    suspend fun create(variation: String?, type: Uuid, progressNotifier: ProgressNotifier? = null) {
-        create(InventoryItem(Uuid.Zero, variation, type), progressNotifier)
+    suspend fun create(variation: String?, type: Uuid, nfcId: ByteArray?, progressNotifier: ProgressNotifier? = null) {
+        create(InventoryItem(Uuid.Zero, variation, type, nfcId), progressNotifier)
     }
 
     suspend fun create(variation: String?, type: Uuid, amount: Int, progressNotifier: ProgressNotifier? = null) {
@@ -49,10 +49,10 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
         synchronizeWithDatabase(progressNotifier)
     }
 
-    suspend fun update(id: Uuid, variation: String?, progressNotifier: ProgressNotifier? = null) {
+    suspend fun update(id: Uuid, variation: String?, nfcId: ByteArray?, progressNotifier: ProgressNotifier? = null) {
         update(
             id,
-            UpdateInventoryItemRequest(variation),
+            UpdateInventoryItemRequest(variation, nfcId = nfcId),
             UpdateInventoryItemRequest.serializer(),
             progressNotifier
         )

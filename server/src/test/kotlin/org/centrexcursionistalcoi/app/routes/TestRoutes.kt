@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import java.util.Random
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -11,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
+import org.centrexcursionistalcoi.app.utils.FileBytesWrapper.Companion.wrapFile
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.DynamicTest
@@ -20,14 +22,17 @@ class TestRoutes : ApplicationTestBase() {
     private val testDepartmentId = 123
     private val testItemTypeId = "3a305821-03f2-4ca8-98c8-ffe64e262cf7".toUUID()
     private val testItemId = "3c509110-2115-4fd7-b3d5-20692cb935e5".toUUID()
+    private val random = Random(0)
 
     @TestFactory
     fun runRouteTests(): List<DynamicTest> = listOf(
         runTestsOnRoute(
             title = "Department",
             baseUrl = "/departments",
-            requiredCreationValues = mapOf("displayName" to { "Test Department" }),
-            optionalCreationValues = mapOf("image" to { ResourcesUtils.bytesFromResource("/square.png") }),
+            requiredCreationValuesProvider = mapOf("displayName" to { "Test Department" }),
+            optionalCreationValuesProvider = mapOf(
+                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile() }
+            ),
             locationRegex = "/departments/\\d+".toRegex(),
             entityClass = DepartmentEntity,
             idTypeConverter = { it.toInt() },
@@ -43,10 +48,10 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Inventory Item Types",
             baseUrl = "/inventory/types",
-            requiredCreationValues = mapOf("displayName" to { "Test Item Type" }),
-            optionalCreationValues = mapOf(
+            requiredCreationValuesProvider = mapOf("displayName" to { "Test Item Type" }),
+            optionalCreationValuesProvider = mapOf(
                 "description" to { "This is a test description for the item" },
-                "image" to { ResourcesUtils.bytesFromResource("/square.png") }
+                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile() }
             ),
             locationRegex = "/inventory/types/[a-z0-9-]+".toRegex(),
             entityClass = InventoryItemTypeEntity,
@@ -63,9 +68,10 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Inventory Items",
             baseUrl = "/inventory/items",
-            requiredCreationValues = mapOf("type" to { testItemTypeId }),
-            optionalCreationValues = mapOf(
+            requiredCreationValuesProvider = mapOf("type" to { testItemTypeId }),
+            optionalCreationValuesProvider = mapOf(
                 "variation" to { "This is a test variation for the item" },
+                "nfcId" to { ByteArray(6).apply { random.nextBytes(this) } },
             ),
             locationRegex = "/inventory/items/[a-z0-9-]+".toRegex(),
             entityClass = InventoryItemEntity,

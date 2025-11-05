@@ -15,7 +15,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.jetbrains.compose.resources.getString
 
-class InventoryItemModel(private val typeId: Uuid): ErrorViewModel() {
+class InventoryItemModel(private val typeId: Uuid) : ErrorViewModel() {
     val type = InventoryItemTypesRepository.getAsFlow(typeId).stateInViewModel()
     val categories = InventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
     val items = InventoryItemsRepository.selectAllWithTypeIdFlow(typeId).stateInViewModel()
@@ -45,11 +45,12 @@ class InventoryItemModel(private val typeId: Uuid): ErrorViewModel() {
         }
     }
 
-    fun updateInventoryItem(item: ReferencedInventoryItem, variation: String) = launch {
+    fun updateInventoryItem(item: ReferencedInventoryItem, variation: String?, nfcId: ByteArray?) = launch {
         doAsync {
             InventoryItemsRemoteRepository.update(
                 item.id,
-                variation.takeUnless { it.isEmpty() }
+                variation.takeUnless { it.isNullOrEmpty() },
+                nfcId,
             )
         }
     }

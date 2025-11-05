@@ -4,11 +4,12 @@ CREATE TABLE InventoryItems (
     id TEXT AS Uuid PRIMARY KEY NOT NULL,
     variation TEXT DEFAULT NULL,
     type TEXT AS Uuid NOT NULL,
+    nfcId BLOB DEFAULT NULL,
     FOREIGN KEY (type) REFERENCES InventoryItemTypes(id) ON DELETE CASCADE
 );
 
 insert:
-INSERT INTO InventoryItems (id, variation, type) VALUES (?, ?, ?);
+INSERT INTO InventoryItems (id, variation, type, nfcId) VALUES (?, ?, ?, ?);
 
 get:
 SELECT * FROM InventoryItems WHERE id = ?;
@@ -23,4 +24,4 @@ deleteById:
 DELETE FROM InventoryItems WHERE id = ?;
 
 update:
-UPDATE InventoryItems SET variation = ?, type = ? WHERE id = ?;
+UPDATE InventoryItems SET variation = ?, type = ?, nfcId = ? WHERE id = ?;
