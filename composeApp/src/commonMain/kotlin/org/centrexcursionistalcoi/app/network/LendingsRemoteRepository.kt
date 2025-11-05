@@ -26,6 +26,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.reference
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
@@ -59,7 +60,8 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             val lending = get(id) ?: throw NoSuchElementException("Lending $id not found after creation")
             LendingsRepository.insert(lending)
         } else {
-            throw IllegalArgumentException("Failed to create lending (${response.status}): ${response.bodyAsText()}")
+            val error = response.bodyAsError()
+            throw error.toThrowable()
         }
     }
 

@@ -163,8 +163,9 @@ class LendingCreationViewModel(
                 LendingsRemoteRepository.create(from, to, itemIds, null)
                 Napier.i { "Lending created" }
                 withContext(Dispatchers.Main) { onSuccess() }
-            } catch (_: IllegalArgumentException) {
-                Napier.e { "Failed to create lending. Conflict with another lending." }
+            } catch (e: Exception) {
+                Napier.e(e) { "Failed to create lending." }
+                addError(e)
             }
         }
     }

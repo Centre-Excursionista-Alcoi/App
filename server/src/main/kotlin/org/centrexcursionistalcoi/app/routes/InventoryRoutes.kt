@@ -189,7 +189,7 @@ fun Route.inventoryRoutes() {
             null
         }
         if (from == null) {
-            call.respondText("Missing or malformed 'from' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("from"))
             return@postWithLock
         }
         val to = try {
@@ -198,40 +198,40 @@ fun Route.inventoryRoutes() {
             null
         }
         if (to == null) {
-            call.respondText("Missing or malformed 'to' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("to"))
             return@postWithLock
         }
         if (to.isBefore(from)) {
-            call.respondText("'to' date cannot be before 'from' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.EndDateCannotBeBeforeStart())
             return@postWithLock
         }
 
         // Make sure dates are in the future
         val today = today()
         if (from.isBefore(today) || to.isBefore(today)) {
-            call.respondText("Lending dates must be in the future", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.DateMustBeInFuture())
             return@postWithLock
         }
 
         if (items == null) {
-            call.respondText("Missing 'items' parameter", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("items"))
             return@postWithLock
         }
         val itemsIdList = items.split(',').mapNotNull { it.toUUIDOrNull() }
         if (itemsIdList.isEmpty()) {
-            call.respondText("No valid item IDs in 'items' parameter", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.ListCannotBeEmpty("items"))
             return@postWithLock
         }
 
         val userReferenceEntity = Database { UserReferenceEntity.findById(session.sub) }
         if (userReferenceEntity == null) {
-            call.respondText("User reference not found", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.UserReferenceNotFound())
             return@postWithLock
         }
 
         val itemsList = Database { InventoryItemEntity.find { InventoryItems.id inList itemsIdList }.toList() }
         if (itemsList.isEmpty()) {
-            call.respondText("No valid item IDs in 'items' parameter", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.ListCannotBeEmpty("items"))
             return@postWithLock
         }
 
@@ -243,14 +243,14 @@ fun Route.inventoryRoutes() {
             }.empty().not()
         }
         if (openLendingWithoutMemory) {
-            call.respondText("User has an open lending without a submitted memory", status = HttpStatusCode.PreconditionFailed)
+            call.respondError(Error.MemoryNotSubmitted())
             return@postWithLock
         }
 
         // Make sure there are no conflicts with existing non-returned lendings
         val conflicts = Database { LendingEntity.find { Lendings.returned eq false }.conflictsWith(from, to, itemsList) }
         if (conflicts) {
-            call.respondText("Lending conflicts with existing lending for one or more items", status = HttpStatusCode.Conflict)
+            call.respondError(Error.LendingConflict())
             return@postWithLock
         }
 

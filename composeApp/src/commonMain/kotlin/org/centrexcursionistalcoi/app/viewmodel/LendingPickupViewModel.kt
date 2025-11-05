@@ -41,8 +41,12 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
             while (true) {
                 val payload = PlatformNFC.readNFC() ?: continue
                 Napier.d("NFC tag read: $payload")
-                val uuid = payload.uuid() ?: continue
-                onScan(uuid)
+                payload.uuid()?.let { uuid ->
+                    onScan(uuid)
+                }
+                payload.id?.let { tagId ->
+                    processScan(tagId)
+                }
             }
         }
     }
@@ -111,6 +115,20 @@ class LendingPickupViewModel(private val lendingId: Uuid): ViewModel() {
         val item = lending.items.find { it.id == itemId }
         if (item == null) {
             Napier.e { "Could not find item $itemId" }
+            _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
+            return
+        }
+
+        _scannedItems.value += item.id
+        _dismissedItems.value -= item.id
+        Napier.i { "Item ${item.id} scanned successfully." }
+    }
+
+    private suspend fun processScan(tagId: ByteArray) {
+        val lending = lending.value ?: return
+        val item = lending.items.find { it.nfcId.contentEquals(tagId) }
+        if (item == null) {
+            Napier.e { "Could not find item for tag: ${tagId}" }
             _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
             return
         }

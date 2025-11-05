@@ -342,7 +342,7 @@ private fun LendingCreationScreen(
                     )
                 }
             }
-            item("spacer") { Spacer(Modifier.height(48.dp)) }
+            item("spacer") { Spacer(Modifier.height(64.dp)) }
         }
     }
 }

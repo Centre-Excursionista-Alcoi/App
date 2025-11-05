@@ -114,9 +114,9 @@ sealed interface Error {
 
     @Serializable
     @SerialName("MissingArgument")
-    class MissingArgument() : Error {
+    class MissingArgument(val argumentName: String? = null) : Error {
         override val code: Int = ERROR_MISSING_ARGUMENT
-        override val description: String = "Missing argument"
+        override val description: String = if (argumentName == null) "Missing argument" else "Missing argument: $argumentName"
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
@@ -262,6 +262,56 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("EndDateCannotBeBeforeStart")
+    class EndDateCannotBeBeforeStart(): Error {
+        override val code: Int = ERROR_END_DATE_CANNOT_BE_BEFORE_START
+        override val description: String = "End date cannot be before start date."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("DateMustBeInFuture")
+    class DateMustBeInFuture(): Error {
+        override val code: Int = ERROR_DATE_MUST_BE_IN_FUTURE
+        override val description: String = "The date must be in the future."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("ListCannotBeEmpty")
+    class ListCannotBeEmpty(val argName: String? = null): Error {
+        override val code: Int = ERROR_LIST_CANNOT_BE_EMPTY
+        override val description: String = "\"${argName ?: "List"}\" cannot be empty."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("MemoryNotSubmitted")
+    class MemoryNotSubmitted(): Error {
+        override val code: Int = ERROR_MEMORY_NOT_SUBMITTED
+        override val description: String = "You have a lending with a pending memory."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("LendingConflict")
+    class LendingConflict(): Error {
+        override val code: Int = ERROR_LENDING_CONFLICT
+        override val description: String = "There are conflicts with your lending request: there's another lending overlapping with the same items."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
 
     companion object {
         const val ERROR_UNKNOWN = 0
@@ -285,6 +335,11 @@ sealed interface Error {
         const val ERROR_AUTHENTIK_NOT_CONFIGURED = 18
         const val ERROR_SERIALIZATION_ERROR = 19
         const val ERROR_ENTITY_DELETE_REFERENCES_EXIST = 20
+        const val ERROR_END_DATE_CANNOT_BE_BEFORE_START = 21
+        const val ERROR_DATE_MUST_BE_IN_FUTURE = 22
+        const val ERROR_LIST_CANNOT_BE_EMPTY = 23
+        const val ERROR_MEMORY_NOT_SUBMITTED = 24
+        const val ERROR_LENDING_CONFLICT = 25
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -308,6 +363,11 @@ sealed interface Error {
             18 -> AuthentikNotConfigured.serializer()
             19 -> SerializationError.serializer()
             20 -> EntityDeleteReferencesExist.serializer()
+            ERROR_END_DATE_CANNOT_BE_BEFORE_START -> EndDateCannotBeBeforeStart.serializer()
+            ERROR_DATE_MUST_BE_IN_FUTURE -> DateMustBeInFuture.serializer()
+            ERROR_LIST_CANNOT_BE_EMPTY -> ListCannotBeEmpty.serializer()
+            ERROR_MEMORY_NOT_SUBMITTED -> MemoryNotSubmitted.serializer()
+            ERROR_LENDING_CONFLICT -> LendingConflict.serializer()
             else -> null
         }
     }
