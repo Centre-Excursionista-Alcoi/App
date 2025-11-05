@@ -2,7 +2,12 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,13 +26,14 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun EditInventoryItemDialog(
     item: ReferencedInventoryItem,
-    onSubmit: (variation: String) -> Job,
+    onSubmit: (variation: String, nfcId: ByteArray?) -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
     var variation by remember { mutableStateOf("") }
+    var nfcId by remember { mutableStateOf(item.nfcId) }
 
-    val isDirty = variation != item.variation
+    val isDirty = variation != item.variation || nfcId != item.nfcId
 
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },
@@ -42,6 +48,26 @@ fun EditInventoryItemDialog(
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = nfcId?.toHexString() ?: stringResource(Res.string.none),
+                    onValueChange = { },
+                    label = { Text(stringResource(Res.string.create_inventory_item_nfc_id).optional()) },
+                    readOnly = true,
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (nfcId != null) {
+                            IconButton(
+                                onClick = { nfcId = null }
+                            ) { Icon(Icons.Default.Remove, stringResource(Res.string.remove)) }
+                        } else {
+                            IconButton(
+                                onClick = { nfcId = item.nfcId }
+                            ) { Icon(Icons.AutoMirrored.Default.Undo, stringResource(Res.string.undo)) }
+                        }
+                    }
+                )
             }
         },
         confirmButton = {
@@ -49,7 +75,7 @@ fun EditInventoryItemDialog(
                 enabled = !isLoading && isDirty,
                 onClick = {
                     isLoading = true
-                    onSubmit(variation).invokeOnCompletion { onDismissRequested() }
+                    onSubmit(variation, nfcId).invokeOnCompletion { onDismissRequested() }
                 }
             ) { Text(stringResource(Res.string.submit)) }
         },

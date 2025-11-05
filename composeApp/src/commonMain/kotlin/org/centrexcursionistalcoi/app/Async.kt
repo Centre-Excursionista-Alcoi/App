@@ -16,5 +16,4 @@ suspend fun <T> doAsync(block: suspend CoroutineScope.() -> T) = withContext(def
 /**
  * Switches to the main coroutine context ([Dispatchers.Main]).
  */
-context(_: CoroutineScope)
 suspend fun <T> doMain(block: suspend CoroutineScope.() -> T) = withContext(Dispatchers.Main) { block() }

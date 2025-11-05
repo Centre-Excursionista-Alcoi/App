@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import io.github.aakira.napier.Napier
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.oned.BarcodeType
 import io.github.alexzhirkevich.qrose.oned.rememberBarcodePainter
@@ -39,6 +40,7 @@ import io.github.alexzhirkevich.qrose.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
@@ -50,14 +52,28 @@ private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
 private val Code128Regex = Regex("^[\\x00-\\x7F]+$")
 
 @Composable
-fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
+fun QRCodeDialog(
+    value: String,
+    onReadNfc: (NfcPayload) -> Unit,
+    onDismissRequest: () -> Unit
+) {
     var writingNFC by remember { mutableStateOf(false) }
-    if (writingNFC) {
+    var readingNFC by remember { mutableStateOf(false) }
+    if (writingNFC || readingNFC) {
         var job by remember { mutableStateOf<Job?>(null) }
         LaunchedEffect(Unit) {
             job = CoroutineScope(defaultAsyncDispatcher).launch {
-                PlatformNFC.writeNFC(value)
-                writingNFC = false
+                if (writingNFC) {
+                    PlatformNFC.writeNFC(value)
+                    writingNFC = false
+                } else {
+                    val nfcValue = PlatformNFC.readNFC()
+                    if (nfcValue != null) {
+                        Napier.d { "Read NFC: $nfcValue" }
+                        onReadNfc(nfcValue)
+                    }
+                    readingNFC = false
+                }
             }
         }
 
@@ -65,6 +81,7 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
             onDismissRequest = {
                 job?.cancel()
                 writingNFC = false
+                readingNFC = false
             },
             title = { Text("Waiting for NFC tag") },
             text = {
@@ -80,6 +97,7 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
                     onClick = {
                         job?.cancel()
                         writingNFC = false
+                        readingNFC = false
                     }
                 ) {
                     Text(stringResource(Res.string.cancel))
@@ -115,9 +133,16 @@ fun QRCodeDialog(value: String, onDismissRequest: () -> Unit) {
                 }
 
                 if (PlatformNFC.isSupported) {
-                    OutlinedButton(
-                        onClick = { writingNFC = true }
-                    ) { Text("Write NFC") }
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { writingNFC = true },
+                        ) { Text("Write NFC") }
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { readingNFC = true },
+                        ) { Text("Store NFC") }
+                    }
                 }
             }
         },

@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,10 +42,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
+import io.ktor.util.encodeBase64
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.rememberImageFile
@@ -113,7 +116,7 @@ fun InventoryItemsScreen(
     onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
     onUpdate: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
     onDelete: () -> Job,
-    onUpdateItem: (ReferencedInventoryItem, variation: String) -> Job,
+    onUpdateItem: (ReferencedInventoryItem, variation: String?, nfcId: ByteArray?) -> Job,
     onDeleteItem: (ReferencedInventoryItem) -> Job,
     onBack: () -> Unit
 ) {
@@ -121,7 +124,15 @@ fun InventoryItemsScreen(
 
     var showingItemDetails by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
     showingItemDetails?.let { item ->
-        QRCodeDialog(value = item.id.toString()) { showingItemDetails = null }
+        QRCodeDialog(
+            value = item.id.toString(),
+            onReadNfc = { payload ->
+                if (payload.id != null) {
+                    Napier.d { "NFC tag ID Base64: ${payload.id.encodeBase64()}" }
+                    onUpdateItem(item, item.variation, payload.id)
+                }
+            },
+        ) { showingItemDetails = null }
     }
 
     // Creating item
@@ -149,7 +160,7 @@ fun InventoryItemsScreen(
         InventoryItemDetailsDialog(
             item = item,
             onDelete = { onDeleteItem(item) },
-            onEdit = { variation -> onUpdateItem(item, variation) },
+            onEdit = { variation, nfcId -> onUpdateItem(item, variation, nfcId) },
             onDismissRequest = { displayingItem = null },
         )
     }
@@ -161,25 +172,33 @@ fun InventoryItemsScreen(
     }
 
     var highlightInventoryItemId by remember { mutableStateOf<Uuid?>(null) }
-    LaunchedEffect(PlatformNFC.isSupported) {
-        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.isSupported}" }
-        if (PlatformNFC.isSupported) withContext(defaultAsyncDispatcher) {
+    var highlightInventoryItemNfcId by remember { mutableStateOf<ByteArray?>(null) }
+    DisposableEffect(PlatformNFC.isSupported, showingItemDetails) {
+        Napier.i { "Starting NFC read... Supported: ${PlatformNFC.isSupported}, isShowingItemDetails: ${showingItemDetails != null}" }
+        val job = if (PlatformNFC.isSupported && showingItemDetails == null) CoroutineScope(defaultAsyncDispatcher).launch {
             while (true) {
-                val read = PlatformNFC.readNFC() ?: continue
+                val payload = PlatformNFC.readNFC() ?: continue
                 try {
-                    highlightInventoryItemId = Uuid.parse(read)
+                    highlightInventoryItemId = payload.uuid()
+                    highlightInventoryItemNfcId = payload.id
                     Napier.i { "Highlighting item: $highlightInventoryItemId" }
                 } catch (_: IllegalArgumentException) {
                     // invalid UUID
                 }
             }
+        } else null
+
+        onDispose {
+            Napier.i { "Stopping NFC read..." }
+            job?.cancel()
         }
     }
     // dismiss highlight after 3 seconds
-    LaunchedEffect(highlightInventoryItemId) {
-        if (highlightInventoryItemId != null) {
+    LaunchedEffect(highlightInventoryItemId, highlightInventoryItemNfcId) {
+        if (highlightInventoryItemId != null || highlightInventoryItemNfcId != null) {
             delay(3000)
             highlightInventoryItemId = null
+            highlightInventoryItemNfcId = null
         }
     }
 
@@ -260,6 +279,7 @@ fun InventoryItemsScreen(
                     )
                 }
                 items(items) { item ->
+                    val shouldHighlight = highlightInventoryItemId == item.id || (item.nfcId != null && highlightInventoryItemNfcId.contentEquals(item.nfcId))
                     ListItem(
                         headlineContent = {
                             Text(
@@ -278,10 +298,10 @@ fun InventoryItemsScreen(
                             }
                         },
                         colors = ListItemDefaults.colors(
-                            containerColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                            headlineColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                            supportingColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
-                            trailingIconColor = if (highlightInventoryItemId == item.id) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                            containerColor = if (shouldHighlight) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                            headlineColor = if (shouldHighlight) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                            supportingColor = if (shouldHighlight) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+                            trailingIconColor = if (shouldHighlight) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
                         ),
                         modifier = Modifier.clickable { displayingItem = item }
                     )
