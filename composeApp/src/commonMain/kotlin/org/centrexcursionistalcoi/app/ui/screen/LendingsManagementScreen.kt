@@ -55,6 +55,7 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingsManagementScreen(
     model: LendingsManagementViewModel = viewModel { LendingsManagementViewModel() },
     onLendingPickupRequest: (ReferencedLending) -> Unit,
+    onLendingReturnRequest: (ReferencedLending) -> Unit,
     onBack: () -> Unit
 ) {
     val lendings by model.lendings.collectAsState()
@@ -63,7 +64,7 @@ fun LendingsManagementScreen(
         lendings = lendings,
         onConfirmRequest = model::confirm,
         onPickupRequest = onLendingPickupRequest,
-        onReturnRequest = model::`return`,
+        onReturnRequest = onLendingReturnRequest,
         onDeleteRequest = model::delete,
         onSkipMemoryRequest = model::skipMemory,
         onBack = onBack

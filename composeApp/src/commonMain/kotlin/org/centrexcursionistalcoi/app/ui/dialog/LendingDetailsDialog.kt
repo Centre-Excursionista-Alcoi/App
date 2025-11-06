@@ -73,7 +73,25 @@ fun LendingDetailsDialog(
                     Lending.Status.REQUESTED -> Text("Status: Pending")
                     Lending.Status.TAKEN -> Text("Taken on: ${lending.givenAt}")
                     Lending.Status.CONFIRMED -> Text("Status: Confirmed")
-                    else -> Text("Returned on: ${lending.receivedAt}")
+                    Lending.Status.RETURNED -> {
+                        if (lending.receivedItems.isEmpty()) {
+                            Text("Status: ERROR! No items returned")
+                            return@Column
+                        } else if (lending.receivedItems.size == 1) {
+                            val received = lending.receivedItems.first()
+                            Text("Returned on: ${received.receivedAt}")
+                        } else {
+                            val text = lending.receivedItems
+                                .groupBy { it.receivedAt }
+                                .map { (date, items) ->
+                                    "- ${items.size} items on $date"
+                                }
+                                .joinToString("\n")
+                            Text("Returned:\n$text")
+                        }
+                    }
+
+                    else -> { /* nothing */ }
                 }
                 if (status == Lending.Status.RETURNED) {
                     Text(

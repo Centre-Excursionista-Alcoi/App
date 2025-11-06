@@ -12,12 +12,12 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.ui.screen.shared.LendingPickupReturnScreen
-import org.centrexcursionistalcoi.app.viewmodel.LendingPickupViewModel
+import org.centrexcursionistalcoi.app.viewmodel.LendingReturnViewModel
 
 @Composable
-fun LendingPickupScreen(
+fun LendingReturnScreen(
     lendingId: Uuid,
-    model: LendingPickupViewModel = viewModel { LendingPickupViewModel(lendingId) },
+    model: LendingReturnViewModel = viewModel { LendingReturnViewModel(lendingId) },
     onBack: () -> Unit,
     onComplete: () -> Unit,
 ) {
@@ -60,7 +60,7 @@ fun LendingPickupScreen(
         dismissedItems = dismissedItems,
         onScanCode = model::onScan,
         onToggleItem = model::toggleItem,
-        onCompleteRequest = model::pickup,
+        onCompleteRequest = model::`return`,
         onDeleteRequest = model::deleteLending,
         onBack = onBack,
         onComplete = onComplete,

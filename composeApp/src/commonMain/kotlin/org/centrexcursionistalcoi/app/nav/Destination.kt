@@ -38,6 +38,8 @@ sealed interface Destination {
 
     @Serializable @SerialName("lendingPickup") data class LendingPickup(val lendingId: Uuid) : Destination
 
+    @Serializable @SerialName("lendingReturn") data class LendingReturn(val lendingId: Uuid) : Destination
+
     @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
         constructor(lending: ReferencedLending): this(lending.id)
     }
