@@ -299,6 +299,8 @@
     <string name="notification_lending_returned_message">You have returned the items of your lending. Please, remember to upload the memory of the activity.</string>
     <string name="notification_lending_returned_other_title">Lending Returned</string>
     <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
+    <string name="notification_lending_returned_partial_title">Lending Partially Returned</string>
+    <string name="notification_lending_returned_partial_message">You have returned some items of your lending. Please, remember to return the remaining items as soon as possible.</string>
 
     <string name="nfc_write_success">NFC written successfully</string>
     <string name="nfc_error_read_only">NFC tag is read-only</string>

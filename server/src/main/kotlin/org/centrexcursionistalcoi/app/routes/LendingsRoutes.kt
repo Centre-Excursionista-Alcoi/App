@@ -480,6 +480,10 @@ fun Route.lendingsRoutes() {
 
             call.respondText("All items returned", status = HttpStatusCode.OK)
         } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                Push.sendAdminPushNotification(lending.partialReturnNotification())
+            }
+
             call.response.header("CEA-Missing-Items", missingItemsIds.joinToString(","))
             call.respondText("Still some items missing", status = HttpStatusCode.Accepted)
         }

@@ -75,6 +75,13 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         )
     }
 
+    fun partialReturnNotification(): PushNotification.LendingPartiallyReturned = Database {
+        PushNotification.LendingPartiallyReturned(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
     fun memoryAddedNotification(): PushNotification.NewMemoryUpload = Database {
         PushNotification.NewMemoryUpload(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
