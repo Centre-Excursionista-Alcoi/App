@@ -335,7 +335,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
                 append("items", exampleItemId.toString())
             }
         ).apply {
-            assertStatusCode(HttpStatusCode.PreconditionFailed)
+            assertError(Error.MemoryNotSubmitted())
         }
     }
 
