@@ -279,6 +279,29 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+      - name: Update Release description
+        # https://img.shields.io/docker/image-size/arnyminerz/cea-app/latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUFFIX: |
+            🏁 Server build completed successfully!
+            [![Docker Hub badge](https://img.shields.io/docker/image-size/arnyminerz/cea-app/${{ github.event.release.name }})](https://hub.docker.com/repository/docker/arnyminerz/cea-app/tags/${{ github.event.release.name }}/)
+        run: |
+          # Get the release data for this tag
+          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.event.release.tag_name }} --jq '.id')
+          
+          # Get current release body
+          BODY=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID --jq '.body')
+          
+          # Append your suffix
+          NEW_BODY="${BODY}\n\n${SUFFIX}"
+          
+          # Update the release with new body text
+          gh api \
+            -X PATCH \
+            -H "Accept: application/vnd.github+json" \
+            repos/${{ github.repository }}/releases/$RELEASE_ID \
+            -f body="$NEW_BODY"
   sentry-server:
     name: Release Server to Sentry
     runs-on: ubuntu-latest
