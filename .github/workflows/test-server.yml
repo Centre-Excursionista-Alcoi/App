@@ -1,10 +1,7 @@
 name: Server Tests
 
 on:
-  push:
-    branches-ignore:
-      # Do not run on master, tests are already run on build-server.yml
-      - master
+  pull_request:
     paths:
       - '.github/workflows/build-server.yml'
       - 'server/**'
