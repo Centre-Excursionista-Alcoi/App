@@ -669,7 +669,6 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 json.encodeToString(
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
-                        receivedBySub = FakeAdminUser.SUB,
                         returnedItems = listOf(
                             ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
                             ReturnLendingRequest.ReturnedItem("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid())
@@ -744,7 +743,6 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 json.encodeToString(
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
-                        receivedBySub = FakeAdminUser.SUB,
                         returnedItems = listOf(
                             ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
                         )

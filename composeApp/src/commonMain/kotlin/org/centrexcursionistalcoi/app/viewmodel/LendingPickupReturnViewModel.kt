@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import androidx.lifecycle.ViewModel
 import cea_app.composeapp.generated.resources.*
 import io.github.aakira.napier.Napier
 import kotlin.uuid.Uuid
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.isNotSupported
@@ -16,7 +16,13 @@ import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
 import org.ncgroup.kscan.Barcode
 
-abstract class LendingPickupReturnViewModel(protected val lendingId: Uuid): ViewModel() {
+abstract class LendingPickupReturnViewModel(
+    protected val lendingId: Uuid,
+    /**
+     * Whether scanned items can be toggled to indeterminate (not dismissed and not scanned) state.
+     */
+    private val toggleAllowIndeterminate: Boolean = true,
+): ErrorViewModel() {
 
     val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
 
@@ -58,6 +64,14 @@ abstract class LendingPickupReturnViewModel(protected val lendingId: Uuid): View
         nfcReaderJob = null
     }
 
+    protected fun setScannedItems(items: Set<Uuid>) {
+        _scannedItems.value = items
+    }
+
+    protected fun setDismissedItems(items: Set<Uuid>) {
+        _dismissedItems.value = items
+    }
+
     fun onScan(barcode: Barcode) {
         val data = barcode.data
         val uuid = data.toUuidOrNull() ?: return
@@ -67,10 +81,15 @@ abstract class LendingPickupReturnViewModel(protected val lendingId: Uuid): View
     }
 
     fun deleteLending() = launch {
-        doAsync {
-            Napier.i { "Deleting lending..." }
-            LendingsRemoteRepository.delete(lendingId)
-            Napier.i { "Lending has been deleted." }
+        try {
+            doAsync {
+                Napier.i { "Deleting lending..." }
+                LendingsRemoteRepository.delete(lendingId)
+                Napier.i { "Lending has been deleted." }
+            }
+        } catch (e: ServerException) {
+            Napier.e("Error deleting lending", e)
+            setError(e)
         }
     }
 
@@ -86,16 +105,28 @@ abstract class LendingPickupReturnViewModel(protected val lendingId: Uuid): View
     }
 
     fun toggleItem(itemId: Uuid) {
-        if (scannedItems.value.contains(itemId)) {
-            // dismiss the item
-            _dismissedItems.value += itemId
-            _scannedItems.value -= itemId
-        } else if (dismissedItems.value.contains(itemId)) {
-            // clear the item status
-            _dismissedItems.value -= itemId
+        if (toggleAllowIndeterminate) {
+            if (scannedItems.value.contains(itemId)) {
+                // dismiss the item
+                _dismissedItems.value += itemId
+                _scannedItems.value -= itemId
+            } else if (dismissedItems.value.contains(itemId)) {
+                // clear the item status
+                _dismissedItems.value -= itemId
+            } else {
+                // scan the item
+                _scannedItems.value += itemId
+            }
         } else {
-            // scan the item
-            _scannedItems.value += itemId
+            if (scannedItems.value.contains(itemId)) {
+                // dismiss the item
+                _dismissedItems.value += itemId
+                _scannedItems.value -= itemId
+            } else {
+                // scan the item
+                _scannedItems.value += itemId
+                _dismissedItems.value -= itemId
+            }
         }
     }
 

@@ -55,6 +55,8 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +66,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -72,6 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.LifecycleStartEffect
 import cea_app.composeapp.generated.resources.*
 import io.github.aakira.napier.Napier
 import kotlin.uuid.Uuid
@@ -87,6 +92,7 @@ import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
 import org.centrexcursionistalcoi.app.ui.icons.Whatsapp
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.viewmodel.LendingPickupReturnViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -96,8 +102,78 @@ import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerView
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun LendingPickupReturnScreen(
+    title: String,
+    skipDialogTitle: String,
+    skipDialogMessage: String,
+    model: LendingPickupReturnViewModel,
+    onBack: () -> Unit,
+    onCompleteRequest: () -> Job,
+    isItemToggleable: (Uuid) -> Boolean = { true },
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+
+    val lending by model.lending.collectAsState()
+    val scannedItems by model.scannedItems.collectAsState()
+    val dismissedItems by model.dismissedItems.collectAsState()
+    val scanError by model.scanError.collectAsState()
+    val scanSuccess by model.scanSuccess.collectAsState()
+    val error by model.error.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LifecycleStartEffect(Unit) {
+        model.startNfc()
+        onStopOrDispose {
+            model.stopNfc()
+        }
+    }
+
+    LaunchedEffect(scanError) {
+        val error = scanError
+        if (error != null) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.Reject)
+            snackbarHostState.showSnackbar(error)
+            model.clearScanResult()
+        }
+    }
+    LaunchedEffect(scanSuccess) {
+        if (scanSuccess != null) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+            model.clearScanResult()
+        }
+    }
+    LaunchedEffect(error) {
+        val error = error
+        if (error != null) {
+            snackbarHostState.showSnackbar(error.message ?: error::class.simpleName ?: "Unknown error")
+            model.clearScanResult()
+        }
+    }
+
+    LendingPickupReturnScreen(
+        title = title,
+        skipDialogTitle = skipDialogTitle,
+        skipDialogMessage = skipDialogMessage,
+        snackbarHostState = snackbarHostState,
+        lending = lending,
+        scannedItems = scannedItems,
+        dismissedItems = dismissedItems,
+        onScanCode = model::onScan,
+        onToggleItem = model::toggleItem,
+        onCompleteRequest = onCompleteRequest,
+        onDeleteRequest = model::deleteLending,
+        onBack = onBack,
+        isItemToggleable = isItemToggleable,
+    )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun LendingPickupReturnScreen(
+    title: String,
+    skipDialogTitle: String,
+    skipDialogMessage: String,
     snackbarHostState: SnackbarHostState,
     lending: ReferencedLending?,
     scannedItems: Set<Uuid>,
@@ -107,7 +183,7 @@ fun LendingPickupReturnScreen(
     onCompleteRequest: () -> Job,
     onDeleteRequest: () -> Job,
     onBack: () -> Unit,
-    onComplete: () -> Unit,
+    isItemToggleable: (Uuid) -> Boolean = { true },
 ) {
     val scope = rememberCoroutineScope()
 
@@ -187,7 +263,7 @@ fun LendingPickupReturnScreen(
                         onClick = onBack
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
-                title = { Text(stringResource(Res.string.management_pickup_screen)) },
+                title = { Text(title) },
                 actions = {
                     IconButton(
                         onClick = {
@@ -225,14 +301,14 @@ fun LendingPickupReturnScreen(
                 AnimatedContent(
                     targetState = allItemsScanned
                 ) { areAllItemsScanned ->
-                    LendingFAB(areAllItemsScanned, onCompleteRequest, onComplete)
+                    LendingFAB(skipDialogTitle, skipDialogMessage, areAllItemsScanned, onCompleteRequest)
                 }
             }
         },
     ) { paddingValues ->
         if (lending == null) LoadingBox(paddingValues)
         else Column(modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState())) {
-            LendingPickupContent(lending, scannedItems, dismissedItems, snackbarHostState, onToggleItem)
+            LendingPickupContent(lending, scannedItems, dismissedItems, snackbarHostState, onToggleItem, isItemToggleable)
 
             Spacer(Modifier.height(96.dp))
         }
@@ -242,17 +318,18 @@ fun LendingPickupReturnScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun AnimatedVisibilityScope.LendingFAB(
+    dialogTitle: String,
+    dialogMessage: String,
     allItemsScanned: Boolean,
     onCompleteRequest: () -> Job,
-    onComplete: () -> Unit,
 ) {
     var showingSkipWarning by remember { mutableStateOf(false) }
     if (showingSkipWarning) {
         var isLoading by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { if (!isLoading) showingSkipWarning = false },
-            title = { Text(stringResource(Res.string.management_pickup_screen_skip_warning_title)) },
-            text = { Text(stringResource(Res.string.management_pickup_screen_skip_warning_message)) },
+            title = { Text(dialogTitle) },
+            text = { Text(dialogMessage) },
             confirmButton = {
                 TextButton(
                     enabled = !isLoading,
@@ -260,7 +337,6 @@ private fun AnimatedVisibilityScope.LendingFAB(
                         onCompleteRequest().invokeOnCompletion {
                             isLoading = false
                             showingSkipWarning = false
-                            onComplete()
                         }
                     }
                 ) { Text(stringResource(Res.string.management_pickup_screen_confirm)) }
@@ -292,7 +368,6 @@ private fun AnimatedVisibilityScope.LendingFAB(
                     isLoading = true
                     onCompleteRequest().invokeOnCompletion {
                         isLoading = false
-                        onComplete()
                     }
                 }
             ) {
@@ -336,6 +411,7 @@ private fun LendingPickupContent(
     dismissedItems: Set<Uuid>,
     snackbarHostState: SnackbarHostState,
     onToggleItem: (Uuid) -> Unit,
+    isItemToggleable: (Uuid) -> Boolean = { true },
 ) {
     val lendingUser = lending.user.lendingUser
     val items = lending.items
@@ -513,8 +589,11 @@ private fun LendingPickupContent(
                         fontWeight = FontWeight.Normal,
                         fontFamily = FontFamily.Monospace,
                     ),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                ) { onToggleItem(item.id) }
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    onClickIcon = if (isItemToggleable(item.id)) {
+                        { onToggleItem(item.id) }
+                    } else null,
+                )
             }
             if (index < groupedItems.size - 1) {
                 HorizontalDivider(modifier = Modifier.padding(top = 8.dp))

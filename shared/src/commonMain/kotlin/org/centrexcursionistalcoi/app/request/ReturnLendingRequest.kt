@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ReturnLendingRequest(
-    val receivedBySub: String,
     /**
      * List of the items being returned.
      *

@@ -142,10 +142,12 @@
     <string name="lending_not_confirmed">Not Confirmed</string>
     <string name="lending_pending_pickup">Pending Pickup</string>
     <string name="lending_pending_return">Pending Return</string>
+    <string name="lending_pending_return_partial">Missing Items</string>
     <string name="lending_pending_memory">Pending Memory</string>
     <string name="lending_not_confirmed_message">An admin has to confirm your request before it's effective.</string>
     <string name="lending_pending_pickup_message">Your request has been confirmed, an admin will get in touch with you to schedule the pickup.</string>
     <string name="lending_pending_return_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
+    <string name="lending_pending_return_partial_message">You have not returned all the items yet.</string>
     <string name="lending_pending_memory_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
 
     <string name="insurance_add_title">Add Insurance</string>
@@ -183,6 +185,10 @@
     <string name="management_pickup_screen_skip_warning_title">Skipping inventory check</string>
     <string name="management_pickup_screen_skip_warning_message">Are you sure that you want to skip the inventory check? Make sure all the items have been delivered to the user, and that they match the references assigned.</string>
 
+    <string name="management_return_screen">Lending Return</string>
+    <string name="management_return_screen_skip_warning_title">Missing items</string>
+    <string name="management_return_screen_skip_warning_message">You have not marked all items, this means that the user has not brought them back, and the lending will be kept pendent until all of them have been returned. The user cannot create new lendings until all items have been delivered.</string>
+
     <string name="management_lending_user">User: %1$s</string>
     <string name="management_lending_given_by">Given by: %1$s at %2$s</string>
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
@@ -218,6 +224,7 @@
         <item quantity="one">- %1$s: %2$d unit</item>
         <item quantity="other">- %1$s: %2$d units</item>
     </plurals>
+    <string name="lending_details_returned_items">Returned %1$d / %2$d</string>
     <string name="lending_details_call_user">Call User</string>
     <string name="lending_details_whatsapp">WhatsApp</string>
     <string name="lending_details_copy_number">Copy Phone</string>

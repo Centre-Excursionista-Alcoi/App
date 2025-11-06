@@ -606,7 +606,22 @@ fun LendingItem(
         val badge = when (lending.status()) {
             Lending.Status.REQUESTED -> Triple(Res.string.lending_not_confirmed, Icons.Default.Pending, Res.string.lending_not_confirmed_message)
             Lending.Status.CONFIRMED -> Triple(Res.string.lending_pending_pickup, Icons.Default.Inventory2, Res.string.lending_pending_pickup_message)
-            Lending.Status.TAKEN -> Triple(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn, Res.string.lending_pending_return_message)
+            Lending.Status.TAKEN -> {
+                val returnStarted = lending.receivedItems.isNotEmpty()
+                if (returnStarted) {
+                    Triple(
+                        Res.string.lending_pending_return_partial,
+                        Icons.AutoMirrored.Default.AssignmentReturn,
+                        Res.string.lending_pending_return_partial_message
+                    )
+                } else {
+                    Triple(
+                        Res.string.lending_pending_return,
+                        Icons.AutoMirrored.Default.AssignmentReturn,
+                        Res.string.lending_pending_return_message
+                    )
+                }
+            }
             Lending.Status.RETURNED -> Triple(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd, Res.string.lending_pending_memory_message)
             else -> null
         }
