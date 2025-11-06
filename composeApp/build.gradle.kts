@@ -3,7 +3,6 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Calendar
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 
@@ -59,11 +58,11 @@ kotlin {
 
     jvm()
 
-    @OptIn(ExperimentalWasmDsl::class)
+    /*@OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
         binaries.executable()
-    }
+    }*/
     
     sourceSets {
         commonMain.dependencies {
@@ -209,7 +208,7 @@ kotlin {
         iosArm64Main { dependsOn(iosMain.get()) }
         iosSimulatorArm64Main { dependsOn(iosMain.get()) }
 
-        webMain { dependsOn(commonMain.get()) }
+        /*webMain { dependsOn(commonMain.get()) }
         wasmJsMain {
             dependsOn(webMain.get())
             dependsOn(permissionsMain)
@@ -229,7 +228,7 @@ kotlin {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
             }
-        }
+        }*/
     }
 
     compilerOptions {
@@ -443,14 +442,14 @@ buildkonfig {
                 nullable = true,
             )
         }
-        create("wasmJs") {
+        /*create("wasmJs") {
             buildConfigField(
                 type = STRING,
                 name = "REDIRECT_URI",
                 value = "http://localhost:8080#redirect",
                 nullable = true,
             )
-        }
+        }*/
         create("ios") {
             buildConfigField(
                 type = STRING,
