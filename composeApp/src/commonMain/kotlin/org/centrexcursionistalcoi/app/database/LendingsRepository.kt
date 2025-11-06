@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesDatabaseRepository.toInventoryItemType
@@ -18,6 +19,7 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
 import org.centrexcursionistalcoi.app.database.data.Lendings
+import org.centrexcursionistalcoi.app.database.data.ReceivedItems
 import org.centrexcursionistalcoi.app.database.data.Users
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
@@ -31,6 +33,7 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
     private val inventoryItemsQueries by lazy { databaseInstance.inventoryItemsQueries }
     private val inventoryItemTypesQueries by lazy { databaseInstance.inventoryItemTypesQueries }
     private val usersQueries by lazy { databaseInstance.usersQueries }
+    private val receivedItemsQueries by lazy { databaseInstance.receivedItemsQueries }
 
     override suspend fun get(id: Uuid): ReferencedLending? {
         val lending = queries.get(id).executeAsOneOrNull() ?: return null
@@ -38,7 +41,8 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
         val users = usersQueries.selectAll().awaitAsList()
-        return lending.toLending(items, inventoryItems, inventoryItemTypes, users)
+        val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
+        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems)
     }
 
     override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedLending?> {
@@ -47,14 +51,23 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val inventoryItemsFlow = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
+        val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
+        @Suppress("UNCHECKED_CAST")
         return combine(
             lendingFlow,
             lendingItemsFlow,
             inventoryItemsFlow,
             inventoryItemTypesFlow,
             usersQueries,
-        ) { lending, items, inventoryItems, inventoryItemTypes, users ->
-            lending?.toLending(items, inventoryItems, inventoryItemTypes, users)
+            receivedItemsFlow,
+        ) { flows ->
+            val lending = flows[0] as Lendings?
+            val items = flows[1] as List<LendingItems>
+            val inventoryItems = flows[2] as List<InventoryItems>
+            val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
+            val users = flows[4] as List<Users>
+            val receivedItems = flows[5] as List<ReceivedItems>
+            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems)
         }
     }
 
@@ -64,16 +77,25 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val inventoryItemsQueries = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
+        val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
+        @Suppress("UNCHECKED_CAST")
         return combine(
             lendingsFlow,
             lendingItemsFlow,
             inventoryItemsQueries,
             inventoryItemTypesFlow,
-            usersQueries
-        ) { lendings, items, inventoryItems, inventoryItemTypes, users ->
+            usersQueries,
+            receivedItemsFlow,
+        ) { flows ->
+            val lendings = flows[0] as List<Lendings>
+            val items = flows[1] as List<LendingItems>
+            val inventoryItems = flows[2] as List<InventoryItems>
+            val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
+            val users = flows[4] as List<Users>
+            val receivedItems = flows[5] as List<ReceivedItems>
             lendings.map { lending ->
                 val relatedItems = items.filter { it.lendingId == lending.id }
-                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users)
+                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems)
             }
         }
     }
@@ -84,9 +106,10 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
         val users = usersQueries.selectAll().awaitAsList()
+        val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
         return lendings.map { lending ->
             val relatedItems = items.filter { it.lendingId == lending.id }
-            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users)
+            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems)
         }
     }
 
@@ -103,8 +126,6 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
             givenBy = item.givenBy?.sub,
             givenAt = item.givenAt,
             returned = item.returned,
-            receivedBy = item.receivedBy?.sub,
-            receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
             memoryDocumentId = item.memoryDocument,
@@ -117,6 +138,19 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
                 lendingItemsQueries.insert(
                     lendingId = item.id,
                     itemId = inventoryItem.id
+                )
+            }
+        }
+        for (receivedItem in item.receivedItems) {
+            val exists = receivedItemsQueries.get(receivedItem.id).executeAsOneOrNull() != null
+            if (!exists) {
+                receivedItemsQueries.insert(
+                    id = receivedItem.id,
+                    lending = item.id,
+                    item = receivedItem.itemId,
+                    notes = receivedItem.notes,
+                    receivedBy = receivedItem.receivedBy,
+                    receivedAt = receivedItem.receivedAt,
                 )
             }
         }
@@ -136,14 +170,13 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
             givenBy = item.givenBy?.sub,
             givenAt = item.givenAt,
             returned = item.returned,
-            receivedBy = item.receivedBy?.sub,
-            receivedAt = item.receivedAt,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
             memoryDocumentId = item.memoryDocument,
             memoryPlainText = item.memoryPlainText,
             memoryReviewed = item.memoryReviewed,
         )
+
         lendingItemsQueries.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
             lendingItemsQueries.insert(
@@ -151,6 +184,19 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
                 itemId = inventoryItem.id
             )
         }
+
+        receivedItemsQueries.deleteByLendingId(item.id)
+        for (receivedItem in item.receivedItems) {
+            receivedItemsQueries.insert(
+                id = receivedItem.id,
+                lending = item.id,
+                item = receivedItem.itemId,
+                notes = receivedItem.notes,
+                receivedBy = receivedItem.receivedBy,
+                receivedAt = receivedItem.receivedAt,
+            )
+        }
+
         return 1L
     }
 
@@ -158,7 +204,22 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         queries.deleteById(id)
     }
 
-    fun Lendings.toLending(items: List<LendingItems>, inventoryItems: List<InventoryItems>, inventoryItemTypes: List<InventoryItemTypes>, users: List<Users>) = Lending(
+    fun ReceivedItems.toReceivedItem(): ReceivedItem = ReceivedItem(
+        id = id,
+        lendingId = lending,
+        itemId = item,
+        notes = notes,
+        receivedBy = receivedBy,
+        receivedAt = receivedAt,
+    )
+
+    fun Lendings.toLending(
+        items: List<LendingItems>,
+        inventoryItems: List<InventoryItems>,
+        inventoryItemTypes: List<InventoryItemTypes>,
+        users: List<Users>,
+        receivedItems: List<ReceivedItems>,
+    ) = Lending(
         id = id,
         userSub = userSub,
         timestamp = timestamp,
@@ -170,14 +231,13 @@ object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>(
         givenBy = givenBy,
         givenAt = givenAt,
         returned = returned,
-        receivedBy = receivedBy,
-        receivedAt = receivedAt,
         memorySubmitted = memorySubmitted,
         memorySubmittedAt = memorySubmittedAt,
         memoryDocument = memoryDocumentId,
         memoryReviewed = memoryReviewed,
         memoryPlainText = memoryPlainText,
-        items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() }
+        items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() },
+        receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }
     ).referenced(
         users.map { it.toUser() },
         inventoryItemTypes.map { it.toInventoryItemType() }

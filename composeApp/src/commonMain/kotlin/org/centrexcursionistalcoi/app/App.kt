@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingReturnScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
@@ -166,7 +167,10 @@ fun App(
                     onLendingPickupRequest = {
                         navController.navigate(Destination.LendingPickup(it.id))
                     },
-                    onBack = { navController.popBackStack() }
+                    onLendingReturnRequest = {
+                        navController.navigate(Destination.LendingReturn(it.id))
+                    },
+                    onBack = { navController.popBackStack() },
                 )
             }
 
@@ -196,6 +200,15 @@ fun App(
                 val lendingId = route.lendingId
 
                 LendingPickupScreen(
+                    lendingId = lendingId,
+                    onBack = { navController.navigateUp() },
+                    onComplete = { navController.popBackStack() },
+                )
+            }
+            destination<Destination.LendingReturn> { route ->
+                val lendingId = route.lendingId
+
+                LendingReturnScreen(
                     lendingId = lendingId,
                     onBack = { navController.navigateUp() },
                     onComplete = { navController.popBackStack() },

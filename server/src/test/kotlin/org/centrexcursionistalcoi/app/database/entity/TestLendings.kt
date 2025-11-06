@@ -127,8 +127,7 @@ class TestLendings {
             givenBy = null,
             givenAt = null,
             returned = false,
-            receivedBy = null,
-            receivedAt = null,
+            receivedItems = emptyList(),
             from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
             to = LocalDate.of(2025, 10, 9).toKotlinLocalDate(),
             notes = null,
@@ -143,8 +142,8 @@ class TestLendings {
         )
 
         assertJsonEquals(
+            json.encodeToString(Lending.serializer(), instance),
             json.encodeEntityToString(entity),
-            json.encodeToString(Lending.serializer(), instance)
         )
     }
 }
