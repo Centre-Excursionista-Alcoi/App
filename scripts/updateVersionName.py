@@ -4,7 +4,7 @@ import os.path as path
 import re
 
 root = path.join(path.dirname(__file__), '..')
-versionFile = path.join(root, 'composeApp', "version.properties")
+versionFile = path.join(root, "version.properties")
 
 if not path.exists(versionFile):
     print(f"Version file ({versionFile}) doesn't exist.")
