@@ -6,7 +6,7 @@ import io.ktor.http.content.PartData
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.utils.isZero
 
 suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
@@ -25,7 +25,7 @@ suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                     }
 
                     else -> {
-                        PlatformFileSystem.read(value.uuid.toString())
+                        FileSystem.read(value.uuid.toString())
                     }
                 }
             }

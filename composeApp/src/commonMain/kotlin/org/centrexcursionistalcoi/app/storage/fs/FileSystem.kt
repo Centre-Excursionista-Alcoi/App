@@ -16,7 +16,7 @@ import org.centrexcursionistalcoi.app.data.IMAGES_PATH
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.utils.copyTo
 
-object PlatformFileSystem {
+object FileSystem {
     private val fs = SystemFileSystem
 
     suspend fun write(path: String, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
@@ -30,13 +30,13 @@ object PlatformFileSystem {
         }
     }
 
-    fun read(path: String, progress: (ProgressNotifier)?): ByteArray {
+    fun read(path: String, progress: (ProgressNotifier)? = null): ByteArray {
         return fs.source(SystemDataPath / path).use { source ->
             source.buffered().readByteArray()
         }
     }
 
-    fun exists(path: String, progress: (ProgressNotifier)?): Boolean {
+    fun exists(path: String, progress: (ProgressNotifier)? = null): Boolean {
         return fs.exists(SystemDataPath / path)
     }
 

@@ -14,7 +14,7 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
 
 object AuthBackend {
@@ -60,7 +60,7 @@ object AuthBackend {
             PostsRepository.deleteAll()
             DepartmentsRepository.deleteAll()
             Napier.d { "Removing all files..." }
-            PlatformFileSystem.deleteAll()
+            FileSystem.deleteAll()
             Napier.d { "Revoking FCM token..." }
             FCMTokenManager.revoke()
             Napier.d { "Removing all settings..." }
