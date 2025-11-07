@@ -33,29 +33,15 @@ object ProfileRemoteRepository {
     }
 
     suspend fun signUpForLending(
-        fullName: String,
-        nif: String,
         phoneNumber: String,
         sports: List<Sports>,
-        address: String,
-        postalCode: String,
-        city: String,
-        province: String,
-        country: String,
         progressNotifier: ProgressNotifier? = null,
     ) {
         val response = httpClient.submitForm(
             "/profile/lendingSignUp",
             formParameters = parameters {
-                append("fullName", fullName)
-                append("nif", nif)
                 append("phoneNumber", phoneNumber)
                 append("sports", sports.joinToString(",") { it.name })
-                append("address", address)
-                append("postalCode", postalCode)
-                append("city", city)
-                append("province", province)
-                append("country", country)
             }
         ) {
             progressNotifier?.let { monitorUploadProgress(it) }

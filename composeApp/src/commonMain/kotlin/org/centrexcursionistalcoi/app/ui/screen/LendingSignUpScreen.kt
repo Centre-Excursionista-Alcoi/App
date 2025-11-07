@@ -40,7 +40,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
 import org.centrexcursionistalcoi.app.viewmodel.LendingSignUpViewModel
 import org.jetbrains.compose.resources.stringResource
 
-typealias LendingPageOnCreate = (fullName: String, nif: String, phoneNumber: String, sports: List<Sports>, address: String, postalCode: String, city: String, province: String, country: String) -> Job
+typealias LendingPageOnCreate = (phoneNumber: String, sports: List<Sports>) -> Job
 
 @Composable
 fun LendingSignUpScreen(
@@ -81,39 +81,12 @@ private fun LendingUserSignUpPage(
 
             Spacer(Modifier.height(12.dp))
 
-            var fullName by remember { mutableStateOf("") }
-            var nif by remember { mutableStateOf("") }
             var phoneNumber by remember { mutableStateOf("") }
             var sports by remember { mutableStateOf(emptyList<Sports>()) }
-            var address by remember { mutableStateOf("") }
-            var postalCode by remember { mutableStateOf("") }
-            var city by remember { mutableStateOf("") }
-            var province by remember { mutableStateOf("") }
-            var country by remember { mutableStateOf("") }
             var conditionsAccepted by remember { mutableStateOf(false) }
 
             var isLoading by remember { mutableStateOf(false) }
 
-            OutlinedTextField(
-                value = fullName,
-                onValueChange = { fullName = it },
-                label = { Text(stringResource(Res.string.lending_signup_full_name)) },
-                placeholder = { Text("Jordi Ferrandis i Carbonell") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-            OutlinedTextField(
-                value = nif,
-                onValueChange = { nif = it },
-                label = { Text(stringResource(Res.string.lending_signup_nif)) },
-                placeholder = { Text("12345678A") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { phoneNumber = it },
@@ -133,56 +106,6 @@ private fun LendingUserSignUpPage(
                 modifier = Modifier.fillMaxWidth(),
                 itemToString = { it.displayName },
             )
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                label = { Text(stringResource(Res.string.lending_signup_address)) },
-                placeholder = { Text("Carrer de l'Exemple, 1") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-            OutlinedTextField(
-                value = postalCode,
-                onValueChange = { postalCode = it },
-                label = { Text(stringResource(Res.string.lending_signup_postal_code)) },
-                placeholder = { Text("03801") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-            OutlinedTextField(
-                value = city,
-                onValueChange = { city = it },
-                label = { Text(stringResource(Res.string.lending_signup_city)) },
-                placeholder = { Text("Alcoi") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-            OutlinedTextField(
-                value = province,
-                onValueChange = { province = it },
-                label = { Text(stringResource(Res.string.lending_signup_province)) },
-                placeholder = { Text("Alacant") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-            OutlinedTextField(
-                value = country,
-                onValueChange = { country = it },
-                label = { Text(stringResource(Res.string.lending_signup_country)) },
-                placeholder = { Text("Spain") },
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            )
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -193,12 +116,12 @@ private fun LendingUserSignUpPage(
             }
 
             val valid =
-                conditionsAccepted && fullName.isNotBlank() && nif.isNotBlank() && phoneNumber.isNotBlank() && sports.isNotEmpty() && address.isNotBlank() && postalCode.isNotBlank() && city.isNotBlank() && province.isNotBlank() && country.isNotBlank()
+                conditionsAccepted && phoneNumber.isNotBlank() && sports.isNotEmpty()
 
             OutlinedButton(
                 onClick = {
                     isLoading = true
-                    onCreate(fullName, nif, phoneNumber, sports, address, postalCode, city, province, country).invokeOnCompletion {
+                    onCreate(phoneNumber, sports).invokeOnCompletion {
                         isLoading = false
                         onBackRequested()
                     }

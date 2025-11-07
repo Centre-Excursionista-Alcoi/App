@@ -9,17 +9,10 @@ import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class LendingSignUpViewModel : ViewModel() {
     fun signUpForLending(
-        fullName: String,
-        nif: String,
         phoneNumber: String,
         sports: List<Sports>,
-        address: String,
-        postalCode: String,
-        city: String,
-        province: String,
-        country: String
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
-        ProfileRemoteRepository.signUpForLending(fullName, nif, phoneNumber, sports, address, postalCode, city, province, country)
+        ProfileRemoteRepository.signUpForLending(phoneNumber, sports)
         ProfileRemoteRepository.synchronize()
     }
 }
