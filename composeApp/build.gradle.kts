@@ -140,14 +140,6 @@ kotlin {
             }
         }
 
-        // Includes: desktop, android, ios
-        val physicalMain by creating {
-            dependsOn(commonMain.get())
-            dependencies {
-                implementation(libs.kotlinx.io.core)
-            }
-        }
-
         // Implements workers with Kotlin Coroutines
         // Includes: jvm, iOS
         val coroutinesWorkersMain by creating {
@@ -155,7 +147,6 @@ kotlin {
         }
 
         jvmMain {
-            dependsOn(physicalMain)
             dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(compose.desktop.currentOs)
@@ -166,7 +157,6 @@ kotlin {
         }
 
         val phonesMain by creating {
-            dependsOn(physicalMain)
             dependsOn(permissionsMain)
         }
 
