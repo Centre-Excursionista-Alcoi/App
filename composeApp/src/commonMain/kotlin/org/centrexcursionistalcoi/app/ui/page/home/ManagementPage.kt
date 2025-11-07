@@ -150,7 +150,7 @@ fun UsersCard(users: List<UserData>?, onPromote: (UserData) -> Job) {
         AlertDialog(
             onDismissRequest = { if (!isPromoting) promotingUser = null },
             title = { Text(stringResource(Res.string.management_promote_user_title)) },
-            text = { Text(stringResource(Res.string.management_promote_user_confirmation, user.username)) },
+            text = { Text(stringResource(Res.string.management_promote_user_confirmation, user.fullName)) },
             confirmButton = {
                 TextButton(
                     enabled = !isPromoting,
@@ -176,7 +176,7 @@ fun UsersCard(users: List<UserData>?, onPromote: (UserData) -> Job) {
         list = users,
         titleResource = Res.string.management_users,
         emptyTextResource = Res.string.management_no_departments,
-        displayName = { it.username },
+        displayName = { it.fullName },
         trailingContent = { if (it.isAdmin()) Badge { Text(stringResource(Res.string.admin)) } },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         actions = { user ->

@@ -6,22 +6,18 @@
 
     <string name="welcome">Welcome back %1$s</string>
 
+    <string name="nif">NIF</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_message">Please, press the button below to log in with the SSO platform.</string>
     <string name="login_action">Login</string>
-    <string name="registration_complete_title">Registration complete!</string>
-    <string name="registration_complete_message">Now you can log into your new account.</string>
 
     <string name="register_title">Register an Account</string>
-    <string name="register_username">Username</string>
-    <string name="register_email">Email</string>
-    <string name="register_name">Name</string>
-    <string name="register_password">Password</string>
-    <string name="register_confirm_password">Confirm Password</string>
     <string name="register_action">Register</string>
     <string name="password_show">Show Password</string>
     <string name="password_hide">Hide Password</string>
-    <string name="register_error_email_format">Introduce a valid email address</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_profile">Profile</string>
@@ -239,7 +235,7 @@
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
 
     <string name="personal_info">Personal Information</string>
-    <string name="personal_info_username">Username</string>
+    <string name="personal_info_full_name">Full Name</string>
     <string name="personal_info_email">Email</string>
 
     <string name="femecv_sync_title">FEMECV Sync</string>
