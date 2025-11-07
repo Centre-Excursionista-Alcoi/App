@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.doMain
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class LendingSignUpViewModel : ViewModel() {
@@ -12,9 +10,9 @@ class LendingSignUpViewModel : ViewModel() {
         phoneNumber: String,
         sports: List<Sports>,
         onComplete: () -> Unit
-    ) = viewModelScope.launch(defaultAsyncDispatcher) {
+    ) = launch {
         ProfileRemoteRepository.signUpForLending(phoneNumber, sports)
         ProfileRemoteRepository.synchronize()
-        onComplete()
+        doMain { onComplete() }
     }
 }
