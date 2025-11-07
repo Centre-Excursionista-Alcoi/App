@@ -48,7 +48,7 @@ fun Route.profileRoutes() {
             LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
         }
 
-        val reference = Database { UserReferenceEntity.getOrProvide(session) }
+        val reference = Database { UserReferenceEntity[session.sub] }
         try {
             if (reference.femecvUsername != null && reference.femecvPassword != null) {
                 val lastSync = reference.femecvLastSync
@@ -65,7 +65,7 @@ fun Route.profileRoutes() {
         call.respond(
             ProfileResponse(
                 sub = session.sub,
-                username = session.username,
+                fullName = session.fullName,
                 email = session.email,
                 groups = session.groups,
                 departments = departments,
@@ -110,7 +110,7 @@ fun Route.profileRoutes() {
 
         Database {
             LendingUserEntity.new {
-                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
+                userSub = Database { UserReferenceEntity[session.sub].id }
                 this.fullName = fullName
                 this.nif = nif
                 this.phoneNumber = phoneNumber
@@ -160,7 +160,7 @@ fun Route.profileRoutes() {
 
         Database {
             UserInsuranceEntity.new {
-                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
+                userSub = Database { UserReferenceEntity[session.sub].id }
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
@@ -187,7 +187,7 @@ fun Route.profileRoutes() {
             return@post call.respondText("FEMECV login failed: ${e.message}", status = HttpStatusCode.Unauthorized)
         }
 
-        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+        val userReference = Database { UserReferenceEntity[session.sub] }
 
         Database {
             userReference.femecvUsername = username
@@ -207,7 +207,7 @@ fun Route.profileRoutes() {
 
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@delete
 
-        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+        val userReference = Database { UserReferenceEntity[session.sub] }
 
         // Delete FEMECV-linked insurances
         Database {
@@ -237,7 +237,7 @@ fun Route.profileRoutes() {
         if (token.isNullOrBlank()) return@post respondError(Error.FCMTokenIsRequired())
 
         Database {
-            val reference = UserReferenceEntity.getOrProvide(session)
+            val reference = UserReferenceEntity[session.sub]
             reference.addFCMRegistrationToken(token, deviceId)
         }
 
@@ -255,7 +255,7 @@ fun Route.profileRoutes() {
         if (token.isNullOrBlank()) return@delete respondError(Error.DeviceIdIsRequired())
 
         Database {
-            val reference = UserReferenceEntity.getOrProvide(session)
+            val reference = UserReferenceEntity[session.sub]
             FCMRegistrationTokenEntity.find {
                 (FCMRegistrationTokens.deviceId eq token) and (FCMRegistrationTokens.user eq reference.id)
             }.forEach { it.delete() }

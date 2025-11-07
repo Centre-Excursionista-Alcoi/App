@@ -12,6 +12,7 @@ import io.ktor.server.sessions.sessions
 import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 
@@ -21,11 +22,12 @@ val secretSignKey = hex("6819b57a326945c1968f45236589")
 
 /**
  * @param sub Subject Identifier
- * @param username Preferred Username
+ * @param fullName Full Name
  * @param email Email Address
+ * @param groups List of groups the user belongs to
  */
 @Serializable
-data class UserSession(val sub: String, val username: String, val email: String, val groups: List<String>) {
+data class UserSession(val sub: String, val fullName: String, val email: String, val groups: List<String>) {
     companion object {
         const val COOKIE_NAME = "USER_SESSION"
 
@@ -55,14 +57,14 @@ data class UserSession(val sub: String, val username: String, val email: String,
         }
     }
 
-    fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
-}
+    constructor(reference: UserReferenceEntity): this(
+        sub = reference.nif,
+        fullName = reference.fullName,
+        email = reference.email,
+        groups = reference.groups,
+    )
 
-@Serializable
-data class LoginSession(val redirectUrl: String?) {
-    companion object {
-        const val COOKIE_NAME = "LOGIN_SESSION"
-    }
+    fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
 }
 
 fun Application.configureSessions(isTesting: Boolean, isDevelopment: Boolean) {
@@ -76,13 +78,6 @@ fun Application.configureSessions(isTesting: Boolean, isDevelopment: Boolean) {
 
             // Encrypt and sign the cookie to prevent tampering
             transform(SessionTransportTransformerEncrypt(secretEncryptKey, secretSignKey))
-        }
-        cookie<LoginSession>(LoginSession.COOKIE_NAME) {
-            cookie.httpOnly = true      // Prevent JS access
-            cookie.secure = !isTesting  // Use HTTPS in production
-            cookie.extensions["SameSite"] = "lax"
-            cookie.path = "/"
-            cookie.maxAgeInSeconds = 5 * 60 // 5 minutes
         }
     }
 }

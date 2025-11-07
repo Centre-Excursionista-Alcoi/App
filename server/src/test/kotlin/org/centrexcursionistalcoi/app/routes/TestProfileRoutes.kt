@@ -27,7 +27,9 @@ import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.core.eq
 
 class TestProfileRoutes : ApplicationTestBase() {
@@ -39,7 +41,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         "/profile",
         ProfileResponse.serializer()
     ) { response ->
-        assertEquals("user", response.username)
+        assertEquals(FakeUser.FULL_NAME, response.fullName)
         assertEquals("user@example.com", response.email)
         assertContentEquals(listOf("user"), response.groups)
         assertNull(response.lendingUser)

@@ -61,6 +61,9 @@ dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
 
+    // CSV serialization
+    implementation(libs.kotlinx.serializationCsv)
+
     // Ktor serialization
     implementation(libs.ktor.serialization.kotlinxJson)
 
@@ -92,6 +95,9 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.postgresql)
     implementation(libs.sqlite)
+
+    // Encryption
+    implementation(libs.bcrypt)
 
     // Redis
     implementation(libs.kreds)

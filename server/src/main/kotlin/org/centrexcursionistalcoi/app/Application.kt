@@ -8,7 +8,6 @@ import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
@@ -59,7 +58,6 @@ fun main() {
 }
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
-    configureAuth()
     configureContentNegotiation()
     configureRouting()
     configureStatusPages()

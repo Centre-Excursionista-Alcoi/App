@@ -19,7 +19,9 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class TestUsersRoutes: ApplicationTestBase() {
@@ -77,7 +79,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             assertEquals(2, users.size)
             users[0].let { user ->
                 assertEquals(FakeAdminUser.SUB, user.sub)
-                assertEquals(FakeAdminUser.USERNAME, user.username)
+                assertEquals(FakeAdminUser.FULL_NAME, user.fullName)
                 assertEquals(FakeAdminUser.EMAIL, user.email)
                 assertEquals(FakeAdminUser.GROUPS, user.groups)
                 assertTrue(user.departments.isEmpty())
@@ -86,7 +88,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
             users[1].let { user ->
                 assertEquals(FakeUser.SUB, user.sub)
-                assertEquals(FakeUser.USERNAME, user.username)
+                assertEquals(FakeUser.FULL_NAME, user.fullName)
                 assertEquals(FakeUser.EMAIL, user.email)
                 assertEquals(FakeUser.GROUPS, user.groups)
 
