@@ -35,7 +35,7 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
         context(_: JdbcTransaction)
         fun fromNif(nif: String) = UserReferenceEntity.findByNif(nif)?.let { reference ->
             UserSession(
-                sub = reference.nif,
+                sub = reference.sub.value,
                 fullName = reference.fullName,
                 email = reference.email,
                 groups = reference.groups,
