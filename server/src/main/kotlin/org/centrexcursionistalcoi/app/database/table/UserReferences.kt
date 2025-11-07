@@ -16,7 +16,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     val nif = text("nif").uniqueIndex()
 
-    val memberNumber = uinteger("member")
+    val memberNumber = uinteger("member").uniqueIndex()
 
     val fullName = text("full_name")
     val email = text("email")

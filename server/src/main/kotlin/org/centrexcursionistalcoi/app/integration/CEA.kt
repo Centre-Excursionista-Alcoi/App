@@ -9,10 +9,9 @@ import kotlinx.serialization.csv.Csv
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.table.UserReferences
+import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
-import org.jetbrains.exposed.v1.core.inList
 import org.slf4j.LoggerFactory
 
 object CEA {
@@ -28,7 +27,9 @@ object CEA {
         val nif: String,
         @SerialName("Correu electrònic")
         val email: String,
-    )
+    ) {
+        val isDisabled = status.lowercase() != "alta"
+    }
 
     /**
      * Sync once a day.
@@ -48,31 +49,36 @@ object CEA {
     fun synchronizeWithDatabase(members: List<Member>) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
-        val existingMembers = Database { UserReferenceEntity.find { UserReferences.nif inList members.map { it.nif } }.toList() }
-        val nonExistingMembers = members.filter { member -> existingMembers.none { it.id.value == member.nif } }
-        logger.debug("Found ${existingMembers.size} existing members, ${nonExistingMembers.size} new members.")
-        logger.debug("Updating existing members...")
-        Database {
-            existingMembers.forEach { userReference ->
-                val member = members.first { it.nif == userReference.id.value }
-                userReference.nif = member.nif
-                userReference.memberNumber = member.number.toUInt()
-                userReference.fullName = member.fullName
-                userReference.email = member.email
-                userReference.isDisabled = member.status.equals("alta", ignoreCase = true).not()
+        for (member in members) {
+            val isNifValid = NIFValidation.validate(member.nif)
+            if (!isNifValid) {
+                logger.warn("Invalid NIF for member number=${member.number}, NIF=${member.nif}. Skipping.")
+                continue
             }
-        }
-        logger.debug("Inserting new members...")
-        Database {
-            nonExistingMembers.forEach { member ->
-                val sub = generateRandomString(12)
-                UserReferenceEntity.new(sub) {
-                    nif = member.nif
-                    memberNumber = member.number.toUInt()
-                    fullName = member.fullName
-                    email = member.email
-                    isDisabled = member.status.equals("alta", ignoreCase = true).not()
+
+            val existingEntity = Database { UserReferenceEntity.findByNif(member.nif) }
+            if (existingEntity != null) {
+                // Update existing member
+                Database {
+                    existingEntity.fullName = member.fullName
+                    existingEntity.email = member.email
+                    existingEntity.isDisabled = member.isDisabled
                 }
+                logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+            } else {
+                // Create new member
+                val randomSub = generateRandomString(16)
+                Database {
+                    UserReferenceEntity.new(randomSub) {
+                        nif = member.nif
+                        memberNumber = member.number.toUInt()
+                        fullName = member.fullName
+                        email = member.email
+                        groups = listOf("cea_member")
+                        isDisabled = member.isDisabled
+                    }
+                }
+                logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
             }
         }
         logger.info("Synchronization complete.")
