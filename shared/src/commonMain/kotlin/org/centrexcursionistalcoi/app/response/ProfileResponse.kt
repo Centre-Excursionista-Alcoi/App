@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.data.UserInsurance
 @Serializable
 data class ProfileResponse(
     val sub: String,
-    val username: String,
+    val fullName: String,
     val email: String,
     val groups: List<String>,
     val departments: List<Int>,

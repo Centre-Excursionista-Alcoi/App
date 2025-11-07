@@ -12,8 +12,6 @@ import org.centrexcursionistalcoi.app.storage.databaseInstance
 
 expect val UsersRepository : Repository<UserData, String>
 
-object UsersSettingsRepository : SettingsRepository<UserData, String>("users", UserData.serializer())
-
 object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
     override val queries by lazy { databaseInstance.usersQueries }
 
@@ -40,7 +38,7 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
 
     override suspend fun insert(item: UserData) = queries.insert(
         sub = item.sub,
-        username = item.username,
+        fullName = item.fullName,
         email = item.email,
         groups = item.groups,
         departments = item.departments,
@@ -50,7 +48,7 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
 
     override suspend fun update(item: UserData) = queries.update(
         sub = item.sub,
-        username = item.username,
+        fullName = item.fullName,
         email = item.email,
         groups = item.groups,
         departments = item.departments,
@@ -64,7 +62,7 @@ object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
 
     fun Users.toUser() = UserData(
         sub = sub,
-        username = username,
+        fullName = fullName,
         email = email,
         groups = groups,
         departments = departments,

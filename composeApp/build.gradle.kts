@@ -58,12 +58,6 @@ kotlin {
 
     jvm()
 
-    /*@OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        binaries.executable()
-    }*/
-    
     sourceSets {
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -168,7 +162,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.java)
                 implementation(libs.sqldelight.sqlite)
-                implementation(libs.webview)
             }
         }
 
@@ -207,28 +200,6 @@ kotlin {
         }
         iosArm64Main { dependsOn(iosMain.get()) }
         iosSimulatorArm64Main { dependsOn(iosMain.get()) }
-
-        /*webMain { dependsOn(commonMain.get()) }
-        wasmJsMain {
-            dependsOn(webMain.get())
-            dependsOn(permissionsMain)
-            dependencies {
-                implementation(libs.ktor.client.js)
-                implementation(libs.kotlinx.browser)
-
-                // SQLDelight for WASM
-                implementation(libs.sqldelight.wasm)
-                implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.0.2"))
-                implementation(npm("sql.js", "1.6.2"))
-                implementation(devNpm("copy-webpack-plugin", "9.1.0"))
-            }
-        }
-        wasmJsTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.kotlinx.coroutines.test)
-            }
-        }*/
     }
 
     compilerOptions {
@@ -401,12 +372,6 @@ buildkonfig {
         )
         buildConfigField(
             type = STRING,
-            name = "REDIRECT_URI",
-            value = null,
-            nullable = true,
-        )
-        buildConfigField(
-            type = STRING,
             name = "SENTRY_DSN",
             value = null,
             nullable = true,
@@ -431,32 +396,12 @@ buildkonfig {
         create("android") {
             buildConfigField(
                 type = STRING,
-                name = "REDIRECT_URI",
-                value = "cea://redirect",
-                nullable = true,
-            )
-            buildConfigField(
-                type = STRING,
                 name = "SENTRY_DSN",
                 value = sentryProperties.getProperty("SENTRY_DSN_ANDROID"),
                 nullable = true,
             )
         }
-        /*create("wasmJs") {
-            buildConfigField(
-                type = STRING,
-                name = "REDIRECT_URI",
-                value = "http://localhost:8080#redirect",
-                nullable = true,
-            )
-        }*/
         create("ios") {
-            buildConfigField(
-                type = STRING,
-                name = "REDIRECT_URI",
-                value = "cea://redirect",
-                nullable = true,
-            )
             buildConfigField(
                 type = STRING,
                 name = "SENTRY_DSN",
@@ -465,12 +410,6 @@ buildkonfig {
             )
         }
         create("jvm") {
-            buildConfigField(
-                type = STRING,
-                name = "REDIRECT_URI",
-                value = "cea://redirect",
-                nullable = true,
-            )
             buildConfigField(
                 type = STRING,
                 name = "SENTRY_DSN",

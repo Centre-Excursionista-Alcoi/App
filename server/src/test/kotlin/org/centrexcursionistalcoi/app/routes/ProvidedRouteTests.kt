@@ -42,6 +42,8 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
@@ -110,8 +112,13 @@ object ProvidedRouteTests {
         assertTrue { baseUrl.startsWith('/') }
 
         with(base) {
-            if (isAdmin) loginAsFakeAdminUser()
-            else loginAsFakeUser()
+            if (isAdmin) {
+                Database { FakeAdminUser.provideEntity() }
+                loginAsFakeAdminUser()
+            } else {
+                Database { FakeUser.provideEntity() }
+                loginAsFakeUser()
+            }
         }
 
         client.get(baseUrl).apply {

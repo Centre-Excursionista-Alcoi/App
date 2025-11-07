@@ -10,7 +10,6 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
-import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -22,22 +21,20 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
         context(_: JdbcTransaction)
-        fun getOrProvide(session: UserSession): UserReferenceEntity = findById(session.sub)?.apply {
-            // Update existing user
-            this.username = session.username
-            this.email = session.email
-            this.groups = session.groups
-        } ?: new(session.sub) {
-            this.username = session.username
-            this.email = session.email
-            this.groups = session.groups
-        }
+        fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
     }
 
     var sub by UserReferences.sub
-    var username by UserReferences.username
+
+    var nif by UserReferences.nif
+    var memberNumber by UserReferences.memberNumber
+    var fullName by UserReferences.fullName
     var email by UserReferences.email
     var groups by UserReferences.groups
+
+    var isDisabled by UserReferences.isDisabled
+
+    var password by UserReferences.password
 
     var femecvUsername by UserReferences.femecvUsername
     var femecvPassword by UserReferences.femecvPassword
@@ -46,7 +43,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     context(_: JdbcTransaction)
     fun toData(lendingUser: LendingUser?, insurances: List<UserInsurance>?, departments: List<DepartmentMemberInfo>?) = UserData(
         sub = sub.value,
-        username = username,
+        fullName = fullName,
         email = email,
         groups = groups,
         lendingUser = lendingUser,

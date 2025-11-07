@@ -21,11 +21,13 @@ import androidx.compose.ui.unit.dp
 fun ColumnWidthWrapper(
     modifier: Modifier = Modifier,
     maxWidth: Dp = 600.dp,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Column(
             modifier = Modifier.widthIn(max = maxWidth).fillMaxWidth(),
+            horizontalAlignment = horizontalAlignment,
         ) {
             content()
         }
