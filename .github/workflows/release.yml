@@ -294,7 +294,7 @@ jobs:
           BODY=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID --jq '.body')
           
           # Append your suffix
-          NEW_BODY="${BODY}\n\n${SUFFIX}"
+          NEW_BODY="${BODY} <br/>${SUFFIX}"
           
           # Update the release with new body text
           gh api \
