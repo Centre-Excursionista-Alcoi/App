@@ -83,7 +83,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomeMainPage(
+fun LendingsPage(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
     notificationPermissionResult: NotificationPermissionResult?,
@@ -136,7 +136,7 @@ fun HomeMainPage(
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
                 Text(
-                    text = stringResource(Res.string.welcome, profile.username),
+                    text = stringResource(Res.string.welcome, profile.fullName),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
                         .fillMaxWidth()

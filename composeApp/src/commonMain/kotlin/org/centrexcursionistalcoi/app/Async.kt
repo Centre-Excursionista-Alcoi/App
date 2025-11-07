@@ -3,9 +3,10 @@ package org.centrexcursionistalcoi.app
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
-expect val defaultAsyncDispatcher : CoroutineDispatcher
+val defaultAsyncDispatcher : CoroutineDispatcher = Dispatchers.IO
 
 /**
  * Switches to the async coroutine context ([defaultAsyncDispatcher]).

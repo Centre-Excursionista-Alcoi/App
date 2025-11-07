@@ -19,9 +19,9 @@ fun PersonalInformationCard(profile: ProfileResponse) {
         modifier = Modifier.fillMaxWidth().padding(8.dp),
     ) {
         OutlinedTextField(
-            value = profile.username,
+            value = profile.fullName,
             onValueChange = {},
-            label = { Text(stringResource(Res.string.personal_info_username)) },
+            label = { Text(stringResource(Res.string.personal_info_full_name)) },
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             readOnly = true,
         )

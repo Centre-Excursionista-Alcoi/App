@@ -185,6 +185,11 @@ fun App(
 
             destination<Destination.LendingSignUp> {
                 LendingSignUpScreen(
+                    onSignUpComplete = {
+                        navController.navigate(Destination.Home) {
+                            popUpTo<Destination.Home>()
+                        }
+                    },
                     onBackRequested = { navController.navigateUp() }
                 )
             }

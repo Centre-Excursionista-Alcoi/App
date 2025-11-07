@@ -413,7 +413,8 @@ private fun LendingPickupContent(
     onToggleItem: (Uuid) -> Unit,
     isItemToggleable: (Uuid) -> Boolean = { true },
 ) {
-    val lendingUser = lending.user.lendingUser
+    val user = lending.user
+    val lendingUser = user.lendingUser
     val items = lending.items
 
     val scope = rememberCoroutineScope()
@@ -472,7 +473,7 @@ private fun LendingPickupContent(
             DataRow(
                 icon = Icons.Default.Face,
                 titleRes = Res.string.lending_details_user,
-                text = lendingUser.fullName,
+                text = user.fullName,
             )
 
             Row(modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp)) {

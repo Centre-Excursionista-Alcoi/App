@@ -14,27 +14,37 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
 
 object AuthBackend {
-    suspend fun register(username: String, name: String, email: String, password: String): Throwable? {
+    suspend fun register(nif: String, password: String) {
         val response = getHttpClient().submitForm(
             url = "/register",
             formParameters = parameters {
-                append("username", username)
-                append("name", name)
-                append("email", email)
+                append("nif", nif)
                 append("password", password)
             }
         )
         if (response.status.isSuccess()) {
             Napier.d { "Registration successful." }
-            return null
         } else {
-            val error = response.bodyAsError()
-            Napier.d { "Registration failed (${response.status}): $error" }
-            return error.toThrowable()
+            throw response.bodyAsError().toThrowable()
+        }
+    }
+
+    suspend fun login(nif: String, password: String) {
+        val response = getHttpClient().submitForm(
+            url = "/login",
+            formParameters = parameters {
+                append("nif", nif)
+                append("password", password)
+            }
+        )
+        if (response.status.isSuccess()) {
+            Napier.d { "Login successful." }
+        } else {
+            throw response.bodyAsError().toThrowable()
         }
     }
 
@@ -50,7 +60,7 @@ object AuthBackend {
             PostsRepository.deleteAll()
             DepartmentsRepository.deleteAll()
             Napier.d { "Removing all files..." }
-            PlatformFileSystem.deleteAll()
+            FileSystem.deleteAll()
             Napier.d { "Revoking FCM token..." }
             FCMTokenManager.revoke()
             Napier.d { "Removing all settings..." }

@@ -180,7 +180,7 @@ fun Route.lendingsRoutes() {
                 UserReferenceEntity.all()
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.username) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             println("Sending emails to: $emails")
@@ -188,7 +188,7 @@ fun Route.lendingsRoutes() {
                 to = emails,
                 subject = "New lending request (#${lendingEntity.id.value})",
                 htmlContent = """
-                    <p>A new lending request has been created by ${userReferenceEntity.username}.</p>
+                    <p>A new lending request has been created by ${userReferenceEntity.fullName}.</p>
                     <p>
                         <strong>From:</strong> $from<br/>
                         <strong>To:</strong> $to<br/>
@@ -559,13 +559,13 @@ fun Route.lendingsRoutes() {
         // Notify administrators that a new memory has been uploaded
         CoroutineScope(Dispatchers.IO).launch {
             val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
-            val emails = admins.map { MailerSendEmail(it.email, it.username) }
+            val emails = admins.map { MailerSendEmail(it.email, it.fullName) }
             val documentBytes = file.takeIf { it.isNotEmpty() }?.baos?.toByteArray()?.also { file.close() }
             Email.sendEmail(
                 to = emails,
                 subject = "New lending memory submitted (#${lending.id.value})",
                 htmlContent = """
-                    <p>The lending memory for lending #${lending.id.value} has been submitted by ${userReference.username}.</p>
+                    <p>The lending memory for lending #${lending.id.value} has been submitted by ${userReference.fullName}.</p>
                     <p>
                         <strong>From:</strong> ${lending.from}<br/>
                         <strong>To:</strong> ${lending.to}<br/>

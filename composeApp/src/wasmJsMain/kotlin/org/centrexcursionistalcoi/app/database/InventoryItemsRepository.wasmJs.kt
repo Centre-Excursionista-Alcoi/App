@@ -1,3 +1,0 @@
-package org.centrexcursionistalcoi.app.database
-
-actual val InventoryItemsRepository: InventoryItemsRepositoryBase = InventoryItemsSettingsRepository

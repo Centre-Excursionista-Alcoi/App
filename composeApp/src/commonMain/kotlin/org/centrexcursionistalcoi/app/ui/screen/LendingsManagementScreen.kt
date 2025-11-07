@@ -177,11 +177,11 @@ fun UnconfirmedLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
@@ -219,7 +219,7 @@ fun PendingPickupLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onClick = { onPickupRequest(it) },
@@ -237,7 +237,7 @@ fun PendingReturnLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onClick = onReturnRequest,
@@ -256,11 +256,11 @@ fun PendingMemoryLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
@@ -274,7 +274,7 @@ fun PendingMemoryLendingsCard(
 
             val givenBy = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(stringResource(Res.string.management_lending_returned_to, givenBy?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+            Text(stringResource(Res.string.management_lending_returned_to, givenBy?.fullName ?: unknown(), givenAt?.toString() ?: unknown()))
 
             LendingsCardActions(
                 onDeleteRequest = { onDeleteRequest(lending) },
@@ -305,11 +305,11 @@ fun CompleteLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
@@ -323,7 +323,7 @@ fun CompleteLendingsCard(
 
             val givenByUser = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.fullName ?: unknown(), givenAt?.toString() ?: unknown()))
 
             LendingsCardActions(
                 onDeleteRequest = { onDeleteRequest(lending) },

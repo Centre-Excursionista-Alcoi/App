@@ -12,7 +12,6 @@ import io.ktor.server.sessions.sessions
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
@@ -51,10 +50,7 @@ fun Application.configureRouting() {
             ) { file.data }
         }
 
-        get("/dashboard") {
-            val session = getUserSessionOrFail() ?: return@get
-            call.respondText("Welcome ${session.username}! Email: ${session.email}")
-        }
+        configureAuthRoutes()
 
         profileRoutes()
         departmentsRoutes()

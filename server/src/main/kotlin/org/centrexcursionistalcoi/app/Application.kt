@@ -7,8 +7,8 @@ import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.configureAuth
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSessions
@@ -50,6 +50,8 @@ fun main() {
 
     Push.init()
 
+    CEA.synchronizeIfNeeded()
+
     embeddedServer(
         Netty,
         port = SERVER_PORT,
@@ -59,7 +61,6 @@ fun main() {
 }
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
-    configureAuth()
     configureContentNegotiation()
     configureRouting()
     configureStatusPages()
