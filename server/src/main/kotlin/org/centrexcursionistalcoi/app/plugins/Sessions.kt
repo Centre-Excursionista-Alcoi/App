@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 // TODO: Set in environment variables and load from there
 val secretEncryptKey = hex("00112233445566778899aabbccddeeff")
@@ -30,6 +31,16 @@ val secretSignKey = hex("6819b57a326945c1968f45236589")
 data class UserSession(val sub: String, val fullName: String, val email: String, val groups: List<String>) {
     companion object {
         const val COOKIE_NAME = "USER_SESSION"
+
+        context(_: JdbcTransaction)
+        fun fromNif(nif: String) = UserReferenceEntity.findByNif(nif)?.let { reference ->
+            UserSession(
+                sub = reference.nif,
+                fullName = reference.fullName,
+                email = reference.email,
+                groups = reference.groups,
+            )
+        } ?: error("User with NIF $nif not found")
 
         fun RoutingContext.getUserSession(): UserSession? {
             val session = call.sessions.get<UserSession>()
@@ -56,13 +67,6 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
             return session
         }
     }
-
-    constructor(reference: UserReferenceEntity): this(
-        sub = reference.nif,
-        fullName = reference.fullName,
-        email = reference.email,
-        groups = reference.groups,
-    )
 
     fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
 }

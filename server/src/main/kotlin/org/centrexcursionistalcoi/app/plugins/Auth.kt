@@ -1,8 +1,9 @@
 package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveParameters
-import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.sessions.sessions
@@ -27,7 +28,7 @@ fun Route.configureAuthRoutes() {
         if (password == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
 
         // check that the user exists
-        val existingReference = Database { UserReferenceEntity.findById(nif) }
+        val existingReference = Database { UserReferenceEntity.findByNif(nif) }
         if (existingReference == null) {
             return@post call.respondError(Error.IncorrectPasswordOrNIF())
         }
@@ -40,8 +41,9 @@ fun Route.configureAuthRoutes() {
         }
 
         // Success, set session and respond accordingly
-        call.sessions.set(UserSession(existingReference))
-        call.respondRedirect("/")
+        val session = Database { UserSession.fromNif(nif) }
+        call.sessions.set(session)
+        call.respond(HttpStatusCode.OK)
     }
 
     post("/register") {
@@ -60,7 +62,7 @@ fun Route.configureAuthRoutes() {
         if (!Passwords.isSafe(password)) return@post call.respondError(Error.PasswordNotSafeEnough())
 
         // check that the user exists
-        val existingReference = Database { UserReferenceEntity.findById(nif) }
+        val existingReference = Database { UserReferenceEntity.findByNif(nif) }
         if (existingReference == null) {
             return@post call.respondError(Error.NIFNotRegistered())
         }
@@ -72,6 +74,6 @@ fun Route.configureAuthRoutes() {
         }
 
         // Success, respond accordingly
-        call.respondRedirect("/login")
+        call.respond(HttpStatusCode.OK)
     }
 }

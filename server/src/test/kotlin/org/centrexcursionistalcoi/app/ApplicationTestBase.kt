@@ -15,6 +15,7 @@ import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import javax.crypto.spec.IvParameterSpec
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
@@ -22,6 +23,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.security.AES
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
@@ -41,6 +43,9 @@ abstract class ApplicationTestBase {
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
         Database.init(TEST_URL)
+
+        AES.secretKey = AES.generateKey()
+        AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
 
         try {
             val dib = databaseInitBlock?.let { Database(it) }

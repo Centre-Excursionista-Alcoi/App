@@ -19,7 +19,10 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
-    companion object : EntityClass<String, UserReferenceEntity>(UserReferences)
+    companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
+        context(_: JdbcTransaction)
+        fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
+    }
 
     var sub by UserReferences.sub
 

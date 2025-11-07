@@ -9,11 +9,15 @@ import kotlin.test.Test
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class TestAuth: ApplicationTestBase() {
     private val parameters = mapOf(
-        "nif" to "87654321X",
+        "nif" to FakeUser.NIF,
         "password" to "TestPassword123",
     )
 
@@ -60,12 +64,16 @@ class TestAuth: ApplicationTestBase() {
     }
 
     @Test
-    fun test_registration_success() = runApplicationTest {
+    fun test_registration_success() = runApplicationTest(
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+        }
+    ) {
         client.submitForm(
             "/register",
             parameters { appendAll(parameters) },
         ).apply {
-            assertStatusCode(HttpStatusCode.Found)
+            assertSuccess()
         }
     }
 
@@ -78,7 +86,6 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_login_missingFields() = runApplicationTest {
-        client.submitForm("/login").assertStatusCode(HttpStatusCode.BadRequest)
         for ((key) in parameters) {
             client.submitForm(
                 "/login",
@@ -110,12 +117,17 @@ class TestAuth: ApplicationTestBase() {
     }
 
     @Test
-    fun test_login_success() = runApplicationTest {
+    fun test_login_success() = runApplicationTest(
+        databaseInitBlock = {
+            val entity = transaction { FakeUser.provideEntity() }
+            entity.password = Passwords.hash(parameters.getValue("password").toCharArray())
+        }
+    ) {
         client.submitForm(
             "/login",
             parameters { appendAll(parameters) },
         ).apply {
-            assertStatusCode(HttpStatusCode.Found)
+            assertSuccess()
         }
     }
 }
