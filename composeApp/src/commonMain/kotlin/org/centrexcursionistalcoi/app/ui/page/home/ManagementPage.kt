@@ -70,9 +70,9 @@ fun ManagementPage(
         item(key = "departments") {
             DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)
         }
-        item(key = "users") {
-            UsersCard(users, onPromote)
-        }
+        // item(key = "users") {
+        //     UsersCard(users, onPromote)
+        // }
         item(key = "items") {
             InventoryItemTypesCard(
                 inventoryItemTypes,
