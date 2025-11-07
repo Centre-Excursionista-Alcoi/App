@@ -81,6 +81,9 @@ kotlin {
             // Compose Navigation
             implementation(libs.androidx.navigation.compose)
 
+            // Runtime Language Change
+            implementation(libs.localina)
+
             // Rich Text Editor
             implementation(libs.richeditor)
 

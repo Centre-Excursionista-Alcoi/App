@@ -308,4 +308,6 @@
     <string name="nfc_error_format_unsupported">NFC tag cannot be formatted as %1$s</string>
     <string name="nfc_error_unknown">Unknown NFC error occurred: %1$s</string>
 
+    <string name="settings_title">Settings</string>
+
 </resources>

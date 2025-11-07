@@ -20,6 +20,7 @@ import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
+import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
@@ -39,6 +40,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
+import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
@@ -56,12 +58,14 @@ fun MainApp(
     }
 
     AppTheme {
-        val isReady by model.isReady.collectAsState()
+        LocalinaApp {
+            val isReady by model.isReady.collectAsState()
 
-        if (isReady) {
-            App(onNavHostReady)
-        } else {
-            LoadingBox()
+            if (isReady) {
+                App(onNavHostReady)
+            } else {
+                LoadingBox()
+            }
         }
     }
 }
@@ -149,6 +153,11 @@ fun App(
                         }
                     },
                 )
+            }
+            destination<Destination.Settings> {
+                SettingsScreen {
+                    navController.navigateUp()
+                }
             }
 
             destination<Destination.InventoryItems> { route ->
