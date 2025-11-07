@@ -11,8 +11,10 @@ class LendingSignUpViewModel : ViewModel() {
     fun signUpForLending(
         phoneNumber: String,
         sports: List<Sports>,
+        onComplete: () -> Unit
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.signUpForLending(phoneNumber, sports)
         ProfileRemoteRepository.synchronize()
+        onComplete()
     }
 }

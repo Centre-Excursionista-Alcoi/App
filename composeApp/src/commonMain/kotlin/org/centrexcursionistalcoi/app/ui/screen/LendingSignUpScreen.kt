@@ -45,10 +45,11 @@ typealias LendingPageOnCreate = (phoneNumber: String, sports: List<Sports>) -> J
 @Composable
 fun LendingSignUpScreen(
     model: LendingSignUpViewModel = viewModel { LendingSignUpViewModel() },
+    onSignUpComplete: () -> Unit,
     onBackRequested: () -> Unit
 ) {
     LendingUserSignUpPage(
-        onCreate = model::signUpForLending,
+        onCreate = { phoneNumber, sports -> model.signUpForLending(phoneNumber, sports, onSignUpComplete) },
         onBackRequested
     )
 }
