@@ -373,6 +373,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
     }
 
+    @Serializable
+    @SerialName("UserAlreadyRegisteredForLending")
+    class UserAlreadyRegisteredForLending(): Error {
+        override val code: Int = ERROR_USER_ALREADY_REGISTERED_FOR_LENDING
+        override val description: String = "The user is already registered for lending."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -406,6 +416,7 @@ sealed interface Error {
         const val ERROR_NIF_NOT_REGISTERED = 29
         const val ERROR_INCORRECT_PASSWORD_OR_NIF = 30
         const val ERROR_PASSWORD_NOT_SET = 31
+        const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -440,6 +451,7 @@ sealed interface Error {
             ERROR_NIF_NOT_REGISTERED -> NIFNotRegistered.serializer()
             ERROR_INCORRECT_PASSWORD_OR_NIF -> IncorrectPasswordOrNIF.serializer()
             ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
+            ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
             else -> null
         }
     }

@@ -144,15 +144,8 @@ class TestProfileRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             LendingUserEntity.new {
                 userSub = FakeUser.provideEntity().id
-                fullName = "John Doe"
-                nif = "12345678A"
                 phoneNumber = "123456789"
                 sports = listOf(Sports.CLIMBING, Sports.HIKING)
-                address = "123 Main St"
-                postalCode = "12345"
-                city = "Anytown"
-                province = "Anyprovince"
-                country = "Anycountry"
             }
         }
     )  {
@@ -179,30 +172,16 @@ class TestProfileRoutes : ApplicationTestBase() {
             val lendingUser = LendingUserEntity.all().firstOrNull()
             assertNotNull(lendingUser)
             assertEquals(FakeUser.SUB, lendingUser.userSub.value)
-            assertEquals("John Doe", lendingUser.fullName)
-            assertEquals("12345678A", lendingUser.nif)
             assertEquals("123456789", lendingUser.phoneNumber)
             assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
-            assertEquals("123 Main St", lendingUser.address)
-            assertEquals("12345", lendingUser.postalCode)
-            assertEquals("Anytown", lendingUser.city)
-            assertEquals("Anyprovince", lendingUser.province)
-            assertEquals("Anycountry", lendingUser.country)
         }
 
         client.get("/profile").apply {
             val response = bodyAsJson(ProfileResponse.serializer())
             response.lendingUser?.let { lendingUser ->
                 assertEquals(FakeUser.SUB, lendingUser.sub)
-                assertEquals("John Doe", lendingUser.fullName)
-                assertEquals("12345678A", lendingUser.nif)
                 assertEquals("123456789", lendingUser.phoneNumber)
                 assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
-                assertEquals("123 Main St", lendingUser.address)
-                assertEquals("12345", lendingUser.postalCode)
-                assertEquals("Anytown", lendingUser.city)
-                assertEquals("Anyprovince", lendingUser.province)
-                assertEquals("Anycountry", lendingUser.country)
             }
         }
     }
