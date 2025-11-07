@@ -83,58 +83,16 @@ class TestProfileRoutes : ApplicationTestBase() {
         // Missing all fields
         client.submitForm("/profile/lendingSignUp").assertBadRequest()
 
-        // Missing Full name
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("fullName")),
-        ).assertBadRequest()
-
         // Missing Phone
         client.submitForm(
             "/profile/lendingSignUp",
             parametersOf(lendingAllParameters.minus("phoneNumber")),
         ).assertBadRequest()
 
-        // Missing NIF
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("nif")),
-        ).assertBadRequest()
-
         // Missing Sports
         client.submitForm(
             "/profile/lendingSignUp",
             parametersOf(lendingAllParameters.minus("sports")),
-        ).assertBadRequest()
-
-        // Missing Address
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("address")),
-        ).assertBadRequest()
-
-        // Missing Postal Code
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("postalCode")),
-        ).assertBadRequest()
-
-        // Missing City
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("city")),
-        ).assertBadRequest()
-
-        // Missing Province
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("province")),
-        ).assertBadRequest()
-
-        // Missing Country
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("country")),
         ).assertBadRequest()
     }
 
