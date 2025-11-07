@@ -11,11 +11,7 @@ import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val PostsRepository : Repository<Post, Uuid>
-
-object PostsSettingsRepository : SettingsRepository<Post, Uuid>("posts", Post.serializer())
-
-object PostsDatabaseRepository : DatabaseRepository<Post, Uuid>() {
+object PostsRepository : DatabaseRepository<Post, Uuid>() {
     override val queries by lazy { databaseInstance.postsQueries }
 
     override suspend fun get(id: Uuid): Post? {

@@ -10,9 +10,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.data.Users
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val UsersRepository : Repository<UserData, String>
-
-object UsersDatabaseRepository : DatabaseRepository<UserData, String>() {
+object UsersRepository : DatabaseRepository<UserData, String>() {
     override val queries by lazy { databaseInstance.usersQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries

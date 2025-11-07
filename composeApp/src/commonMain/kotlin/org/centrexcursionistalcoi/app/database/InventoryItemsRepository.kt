@@ -15,25 +15,11 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val InventoryItemsRepository : InventoryItemsRepositoryBase
-
-interface InventoryItemsRepositoryBase : Repository<ReferencedInventoryItem, Uuid> {
-    fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<ReferencedInventoryItem>>
-}
-
-object InventoryItemsSettingsRepository : SettingsRepository<ReferencedInventoryItem, Uuid>("inventory_items", ReferencedInventoryItem.serializer()), InventoryItemsRepositoryBase {
-    override fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
-        return selectAllAsFlow(dispatcher).map { items ->
-            items.filter { it.type.id == typeId }
-        }
-    }
-}
-
-object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>(), InventoryItemsRepositoryBase {
+object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>() {
     override val queries by lazy { databaseInstance.inventoryItemsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
-        val typesFlow = InventoryItemTypesDatabaseRepository.selectAllAsFlow(dispatcher)
+        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
         val itemsFlow = queries.selectAll().asFlow().mapToList(dispatcher)
         return combine(typesFlow, itemsFlow) { types, items ->
             items.map { item ->
@@ -44,15 +30,15 @@ object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventory
     }
 
     override suspend fun selectAll(): List<ReferencedInventoryItem> {
-        val types = InventoryItemTypesDatabaseRepository.selectAll()
+        val types = InventoryItemTypesRepository.selectAll()
         return queries.selectAll().awaitAsList().map { item ->
             val type = types.first { it.id == item.type }
             item.toInventoryItem().referenced(type)
         }
     }
 
-    override fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
-        val typesFlow = InventoryItemTypesDatabaseRepository.selectAllAsFlow(dispatcher)
+    fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<ReferencedInventoryItem>> {
+        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
         val itemsFlow = queries.selectAllByType(typeId).asFlow().mapToList(dispatcher)
         return combine(typesFlow, itemsFlow) { types, items ->
             items.map { item ->
@@ -69,7 +55,7 @@ object InventoryItemsDatabaseRepository : DatabaseRepository<ReferencedInventory
     }
 
     override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedInventoryItem?> {
-        val typesFlow = InventoryItemTypesDatabaseRepository.selectAllAsFlow(dispatcher)
+        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
         val itemFlow = queries.get(id).asFlow().mapToList(dispatcher).map { it.firstOrNull() }
         return combine(typesFlow, itemFlow) { types, items ->
             items ?: return@combine null

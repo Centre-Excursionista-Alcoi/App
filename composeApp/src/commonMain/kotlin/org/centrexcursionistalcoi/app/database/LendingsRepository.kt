@@ -12,9 +12,9 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesDatabaseRepository.toInventoryItemType
-import org.centrexcursionistalcoi.app.database.InventoryItemsDatabaseRepository.toInventoryItem
-import org.centrexcursionistalcoi.app.database.UsersDatabaseRepository.toUser
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository.toInventoryItemType
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository.toInventoryItem
+import org.centrexcursionistalcoi.app.database.UsersRepository.toUser
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
@@ -23,11 +23,7 @@ import org.centrexcursionistalcoi.app.database.data.ReceivedItems
 import org.centrexcursionistalcoi.app.database.data.Users
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val LendingsRepository : Repository<ReferencedLending, Uuid>
-
-object LendingsSettingsRepository : SettingsRepository<ReferencedLending, Uuid>("lendings", ReferencedLending.serializer())
-
-object LendingsDatabaseRepository : DatabaseRepository<ReferencedLending, Uuid>() {
+object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
     override val queries by lazy { databaseInstance.lendingsQueries }
     private val lendingItemsQueries by lazy { databaseInstance.lendingItemsQueries }
     private val inventoryItemsQueries by lazy { databaseInstance.inventoryItemsQueries }

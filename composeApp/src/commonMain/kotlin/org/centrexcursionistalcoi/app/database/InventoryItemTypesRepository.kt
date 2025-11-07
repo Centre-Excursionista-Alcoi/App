@@ -12,21 +12,7 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val InventoryItemTypesRepository : InventoryItemTypesRepositoryBase
-
-interface InventoryItemTypesRepositoryBase : Repository<InventoryItemType, Uuid> {
-    fun categoriesAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<Set<String>>
-}
-
-object InventoryItemTypesSettingsRepository : SettingsRepository<InventoryItemType, Uuid>("inventory_types", InventoryItemType.serializer()), InventoryItemTypesRepositoryBase {
-    override fun categoriesAsFlow(dispatcher: CoroutineDispatcher): Flow<Set<String>> {
-        return selectAllAsFlow(dispatcher).map { items ->
-            items.mapNotNull { it.category }.toSet()
-        }
-    }
-}
-
-object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemType, Uuid>(), InventoryItemTypesRepositoryBase {
+object InventoryItemTypesRepository : DatabaseRepository<InventoryItemType, Uuid>() {
     override val queries by lazy { databaseInstance.inventoryItemTypesQueries }
 
     override suspend fun get(id: Uuid): InventoryItemType? {
@@ -52,7 +38,7 @@ object InventoryItemTypesDatabaseRepository : DatabaseRepository<InventoryItemTy
 
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toInventoryItemType() }
 
-    override fun categoriesAsFlow(dispatcher: CoroutineDispatcher): Flow<Set<String>> = queries
+    fun categoriesAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<Set<String>> = queries
         .categories()
         .asFlow()
         .mapToList(dispatcher)
