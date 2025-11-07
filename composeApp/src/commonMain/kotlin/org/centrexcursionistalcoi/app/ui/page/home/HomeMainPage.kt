@@ -83,7 +83,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomeMainPage(
+fun LendingsPage(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
     notificationPermissionResult: NotificationPermissionResult?,
