@@ -7,6 +7,7 @@ import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
@@ -48,6 +49,8 @@ fun main() {
     val isDevelopment = System.getenv("ENV") == "development"
 
     Push.init()
+
+    CEA.synchronizeIfNeeded()
 
     embeddedServer(
         Netty,

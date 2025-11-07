@@ -1,10 +1,13 @@
 package org.centrexcursionistalcoi.app.integration
 
+import java.io.File
+import java.time.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.csv.Csv
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.serialization.list
@@ -26,6 +29,11 @@ object CEA {
         @SerialName("Correu electrònic")
         val email: String,
     )
+
+    /**
+     * Sync once a day.
+     */
+    private const val SYNC_EVERY_SECONDS = 24 * 60 * 60 // 1 day
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -68,5 +76,26 @@ object CEA {
             }
         }
         logger.info("Synchronization complete.")
+    }
+
+    fun synchronizeIfNeeded(clock: Clock = Clock.systemDefaultZone()) {
+        val dataFile = File("/cea_members.csv")
+        if (!dataFile.exists()) {
+            logger.warn("CEA members data file ($dataFile) not found, skipping synchronization.")
+            return
+        }
+
+        val now = clock.instant()
+        val lastSync = Database { ConfigEntity[ConfigEntity.LastCEASync] }
+        if (lastSync == null || now.epochSecond - lastSync.epochSecond >= SYNC_EVERY_SECONDS) {
+            logger.info("Starting CEA members synchronization...")
+            val data = dataFile.readText()
+            val members = parse(data)
+            synchronizeWithDatabase(members)
+            Database { ConfigEntity[ConfigEntity.LastCEASync] = now }
+            logger.info("CEA members synchronization finished.")
+        } else {
+            logger.info("CEA members synchronization not needed. Last sync at $lastSync.")
+        }
     }
 }

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
 import java.sql.DriverManager
+import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 object Database {
     val tables = arrayOf(
         Files,
+        ConfigTable,
         Departments,
         UserReferences,
         Posts,
