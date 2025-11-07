@@ -356,7 +356,7 @@ sealed interface Error {
     @Serializable
     @SerialName("IncorrectPasswordOrNIF")
     class IncorrectPasswordOrNIF(): Error {
-        override val code: Int = ERROR_NIF_NOT_REGISTERED
+        override val code: Int = ERROR_INCORRECT_PASSWORD_OR_NIF
         override val description: String = "The NIF or password is incorrect."
 
         @Serializable(HttpStatusCodeSerializer::class)
