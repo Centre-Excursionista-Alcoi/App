@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +37,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -74,6 +71,7 @@ import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.centrexcursionistalcoi.app.ui.utils.modIf
 import org.jetbrains.compose.resources.stringResource
@@ -385,6 +383,7 @@ fun LendingsCalendar(lendings: List<ReferencedLending>) {
         }
     }
 
+    var drawingLendings by remember { mutableStateOf<Map<CalendarDay, Map<Uuid, Int>>>(emptyMap()) }
     HorizontalCalendar(
         state = state,
         dayContent = { day ->
@@ -394,14 +393,23 @@ fun LendingsCalendar(lendings: List<ReferencedLending>) {
                     (lending.from <= day.date) && (lending.to >= day.date)
                 }
             }
-            Day(day = day, isToday = day.date == today, filteredLendings) { lendingId ->
+            Day(
+                day = day,
+                isToday = day.date == today,
+                lendings = filteredLendings,
+                previousDayDrawingLendings = drawingLendings[day] ?: emptyMap(),
+                onDrawingLendingsUpdate = {
+                    if (drawingLendings[day] != it) {
+                        drawingLendings = drawingLendings.toMutableMap().also { map ->
+                            map[day] = it
+                        }
+                    }
+                },
+            ) { lendingId ->
                 displayingLending = lendingId
             }
         },
         monthHeader = { month ->
-            // Clear the drawing stack at the start of a new month
-            drawingLendings.clear()
-
             MonthHeader(
                 daysOfWeek = remember(firstDayOfWeek) { month.weekDays.first().map { it.date.dayOfWeek } },
             )
@@ -439,8 +447,10 @@ fun Day(
     day: CalendarDay,
     isToday: Boolean,
     lendings: List<ReferencedLending>,
+    previousDayDrawingLendings: Map<Uuid, Int>,
     lineHeight: Dp = 8.dp,
     linePadding: Dp = 2.dp,
+    onDrawingLendingsUpdate: (Map<Uuid, Int>) -> Unit = {},
     onClick: ((Uuid) -> Unit)? = null,
 ) {
     val backgroundColor = if (isToday) MaterialTheme.colorScheme.primary else Color.Unspecified
@@ -471,27 +481,20 @@ fun Day(
             }.values.maxOfOrNull { it.size } ?: 0
         }
 
-        var bounds by remember { mutableStateOf<Map<Uuid, Rect>>(emptyMap()) }
-        fun setBounds(newBounds: Map<Uuid, Rect>) {
-            bounds = newBounds
-        }
-
-        Canvas(
-            modifier = Modifier.fillMaxWidth().height((lineHeight + linePadding) * maxNumberOfLendingsPerDay)
-                .pointerInput(Unit) {
-                    detectTapGestures { position ->
-                        // Check if the tap position intersects with any lending bounds
-                        for ((lendingId, rect) in bounds) {
-                            if (rect.contains(Offset(position.x, position.y))) {
-                                onClick?.invoke(lendingId)
-                                break
-                            }
-                        }
-                    }
+        InteractiveCanvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height((lineHeight + linePadding) * maxNumberOfLendingsPerDay),
+            onClick = onClick,
+            tooltipContent = { id ->
+                lendings.find { it.id == id }?.let { lending ->
+                    "${lending.user.username}\n${lending.from} → ${lending.to}"
                 }
+            },
         ) {
-            val bounds = drawLendings(day, lendings, lineHeight, linePadding)
-            setBounds(bounds)
+            val (drawingLendings, bounds) = drawLendings(day, lendings, previousDayDrawingLendings, lineHeight, linePadding)
+            onDrawingLendingsUpdate(drawingLendings)
+            bounds
         }
     }
 }
@@ -504,16 +507,16 @@ private val lendingStatusColors = mapOf(
     Lending.Status.MEMORY_SUBMITTED to Color.Gray,
 )
 
-// A stack that stores the currently drawn lendings to avoid drawing ones over each other
-private val drawingLendings = mutableMapOf<Uuid, Int>()
-
 private fun DrawScope.drawLendings(
     day: CalendarDay,
     lendings: List<ReferencedLending>,
+    previousDayDrawingLendings: Map<Uuid, Int>,
     lineHeight: Dp = 8.dp,
     linePadding: Dp = 2.dp,
-): Map<Uuid, Rect> {
-    val singleDayLendings = lendings.filter { it.durationDays == 1 && it.from == day.date}
+): Pair<Map<Uuid, Int>, Map<Uuid, Rect>> {
+    val drawingLendings = previousDayDrawingLendings.toMutableMap()
+
+    val singleDayLendings = lendings.filter { it.durationDays == 1 }
     // All the lendings that start on this day
     val startingLendings = lendings.filter { it.from == day.date && it !in singleDayLendings }
     // All the lendings that contain this day, but don't start or end on it
@@ -523,7 +526,7 @@ private fun DrawScope.drawLendings(
 
     // If there is nothing to draw, skip
     if (startingLendings.isEmpty() && containedLendings.isEmpty() && endingLendings.isEmpty()) {
-        return emptyMap()
+        return drawingLendings to emptyMap()
     }
 
     val lendingsBounds = mutableMapOf<Uuid, Rect>()
@@ -613,5 +616,5 @@ private fun DrawScope.drawLendings(
         )
     }
 
-    return lendingsBounds
+    return drawingLendings to lendingsBounds
 }
