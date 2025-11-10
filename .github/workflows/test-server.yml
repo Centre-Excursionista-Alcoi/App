@@ -36,6 +36,9 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
+      - name: Pre-pull PostgreSQL image
+        run: docker pull postgres:17
+
       - name: Run Server Tests
         id: server_tests
         env:
