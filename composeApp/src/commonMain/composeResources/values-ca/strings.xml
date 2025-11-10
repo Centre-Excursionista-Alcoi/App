@@ -72,9 +72,9 @@
     <string name="sport_canyoning" translatable="false">Barranquisme</string>
     <string name="sport_hiking" translatable="false">Excursionisme</string>
     <string name="sport_alpinism" translatable="false">Alpinisme</string>
-    <string name="lending_signup_required" translatable="false">No estàs donat d\'alta per al préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
-    <string name="lending_signup_action" translatable="false">Registrar-me</string>
-    <string name="lending_signup_title" translatable="false">Registre Necessari</string>
+    <string name="lending_signup_required" translatable="false">No has signat les condicions de préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
+    <string name="lending_signup_action" translatable="false">Revisar i Signar</string>
+    <string name="lending_signup_title" translatable="false">Cal signar les condicions</string>
     <string name="lending_signup_message" translatable="false">Amb aquest formulari, el membre certifica que ell/ella és conscient de les normes internes de les seccions d\'escalada i muntanyisme per a l\'ús de l\'equipament tècnic propietat del CEA. Que ell/ella té els coneixements i entrenament suficients per a fer ús d\'aquest equipament, sent l\'únic responsable tant per a l\'ús correcte i manteniment, com de notificar als vocals de les seccions de qualsevol dany o mal ús que el material poguera haver rebut.</string>
     <string name="lending_signup_full_name" translatable="false">Nom Complet</string>
     <string name="lending_signup_nif" translatable="false">NIF</string>
@@ -264,4 +264,9 @@
     <string name="management_return_screen_skip_warning_title">Falten Elements</string>
     <string name="lending_details_returned_items">Retornats %1$d / %2$d</string>
     <string name="lending_pending_return_partial">Falten Elements</string>
+    <string name="nif">NIF</string>
+    <string name="password">Contrasenya</string>
+    <string name="confirm_password">Confirmar Contrasenya</string>
+    <string name="nav_lendings">Préstecs</string>
+    <string name="personal_info_full_name">Nom Complet</string>
 </resources>
