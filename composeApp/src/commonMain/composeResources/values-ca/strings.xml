@@ -264,9 +264,4 @@
     <string name="management_return_screen_skip_warning_title">Falten Elements</string>
     <string name="lending_details_returned_items">Retornats %1$d / %2$d</string>
     <string name="lending_pending_return_partial">Falten Elements</string>
-    <string name="password"></string>
-    <string name="nav_lendings"></string>
-    <string name="confirm_password"></string>
-    <string name="nif"></string>
-    <string name="personal_info_full_name"></string>
 </resources>
