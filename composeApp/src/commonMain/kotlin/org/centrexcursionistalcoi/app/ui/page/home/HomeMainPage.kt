@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -129,8 +130,10 @@ fun LendingsPage(
         windowSizeClass,
         state = scrollState,
         gridMinSize = 200.dp,
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
     ) {
+        item(key = "top_spacer", contentType = "spacer") { Modifier.height(16.dp) }
+
         val lendingSpan = GridItemSpan(if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) 2 else 1)
 
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
@@ -241,36 +244,32 @@ fun LendingsPage(
                 val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
 
                 stickyHeader("lending_header") {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp)) {
                         Text(
                             text = stringResource(Res.string.home_lending),
                             style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.background(MaterialTheme.colorScheme.background).weight(1f).padding(horizontal = 8.dp),
                         )
-                    }
-                }
-
-                item("categories_chips", span = { GridItemSpan(maxLineSpan) }) {
-                    LazyRow(modifier = Modifier.fillMaxWidth()) {
-                        items(
-                            items = categories,
-                            key = { it },
-                            contentType = { "category-chip" },
-                        ) { category ->
-                            val isSelected = selectedCategories.contains(category)
-                            Spacer(Modifier.width(8.dp))
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedCategories = if (isSelected) {
-                                        selectedCategories - category
-                                    } else {
-                                        selectedCategories + category
-                                    }
-                                },
-                                label = { Text(category) },
-                                modifier = Modifier.padding(end = 4.dp),
-                            )
+                        LazyRow(modifier = Modifier.fillMaxWidth()) {
+                            items(
+                                items = categories,
+                                key = { it },
+                                contentType = { "category-chip" },
+                            ) { category ->
+                                val isSelected = selectedCategories.contains(category)
+                                Spacer(Modifier.width(8.dp))
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedCategories = if (isSelected) {
+                                            selectedCategories - category
+                                        } else {
+                                            selectedCategories + category
+                                        }
+                                    },
+                                    label = { Text(category) },
+                                    modifier = Modifier.padding(end = 4.dp),
+                                )
+                            }
                         }
                     }
                 }
@@ -331,6 +330,8 @@ fun LendingsPage(
                 OldLendingItem(lending)
             }
         }
+
+        item(key = "bottom_spacer", contentType = "spacer") { Modifier.height(16.dp) }
     }
 }
 
