@@ -307,6 +307,14 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_adjust">Adjust</string>
+    <string name="settings_category_general">General</string>
     <string name="settings_language">Language</string>
+    <string name="settings_category_privacy">Privacy</string>
+    <string name="settings_report_errors_title">Collect error information</string>
+    <string name="settings_report_errors_summary">If enabled, the app will automatically collect and report error information.</string>
+    <string name="settings_report_analytics_title">Collect usage analytics</string>
+    <string name="settings_report_analytics_summary">If enabled, the app will collect usage statistics to help improve the app.</string>
+    <string name="settings_report_session_title">Collect session replay information</string>
+    <string name="settings_report_session_summary">If enabled, the app will collect session replay data to help improve user experience.</string>
 
 </resources>
