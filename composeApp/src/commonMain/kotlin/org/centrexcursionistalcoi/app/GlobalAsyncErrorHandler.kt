@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app
 
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -8,6 +9,7 @@ object GlobalAsyncErrorHandler {
     val error get() = _error.asStateFlow()
 
     fun setError(throwable: Throwable) {
+        Napier.e("Unhandled exception", throwable)
         _error.value = throwable
     }
 
