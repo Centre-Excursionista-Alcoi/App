@@ -256,4 +256,12 @@
     <string name="nfc_error_too_small">L\'etiqueta NFC no té prou memòria</string>
     <string name="nfc_error_format_unsupported">L\'etiqueta NFC no s\'ha pogut formatar com a %1$s</string>
     <string name="nfc_error_unknown">Error NFC desconegut: %1$s</string>
+    <string name="notification_lending_returned_partial_title">Préstec Parcialment Retornat</string>
+    <string name="management_return_screen_skip_warning_message">No has marcat tots els elements, això significa que l\'usuari no ha tornat tot el material, i el préstec estarà pendent fins que es torne tot. L\'usuari no pot crear nous préstecs fins que tot el material haja sigut tornat.</string>
+    <string name="lending_pending_return_partial_message">Encara no has tornat tot el material del préstec.</string>
+    <string name="notification_lending_returned_partial_message">Només has tornat una part del préstec. Per favor, recorda retornar-ho tot el més prompte possible.</string>
+    <string name="management_return_screen">Retorn de Préstec</string>
+    <string name="management_return_screen_skip_warning_title">Falten Elements</string>
+    <string name="lending_details_returned_items">Retornats %1$d / %2$d</string>
+    <string name="lending_pending_return_partial">Falten Elements</string>
 </resources>
