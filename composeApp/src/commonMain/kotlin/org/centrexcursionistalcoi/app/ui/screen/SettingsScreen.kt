@@ -1,13 +1,23 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -17,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import com.russhwolf.settings.ExperimentalSettingsApi
@@ -115,6 +126,45 @@ fun SettingsScreen(onBack: () -> Unit) {
                     checked = checked,
                     onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, it) },
                 )
+            }
+
+            item(key = "credits") {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                        Image(painterResource(Res.drawable.arnyminerz), null, modifier = Modifier.size(64.dp).padding(8.dp))
+
+                        Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                            Text(
+                                text = stringResource(Res.string.settings_dev_credit_title, "Arnau Mora"),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = stringResource(Res.string.settings_dev_credit_message, "Arnau Mora Gras"),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)) {
+                        val uriHandler = LocalUriHandler.current
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { uriHandler.openUri("https://arnyminerz.com") },
+                        ) {
+                            Icon(Icons.Default.Web, null, modifier = Modifier.padding(end = 8.dp))
+                            Text(stringResource(Res.string.settings_dev_credit_website))
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = { uriHandler.openUri("mailto:arnyminerz@proton.me") },
+                        ) {
+                            Icon(Icons.Default.Email, null, modifier = Modifier.padding(end = 8.dp))
+                            Text(stringResource(Res.string.settings_dev_credit_email))
+                        }
+                    }
+                }
             }
         }
     }

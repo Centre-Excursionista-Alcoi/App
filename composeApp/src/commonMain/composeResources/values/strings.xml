@@ -316,5 +316,9 @@
     <string name="settings_report_analytics_summary">If enabled, the app will collect usage statistics to help improve the app.</string>
     <string name="settings_report_session_title">Collect session replay information</string>
     <string name="settings_report_session_summary">If enabled, the app will collect session replay data to help improve user experience.</string>
+    <string name="settings_dev_credit_title">App developed by %1$s</string>
+    <string name="settings_dev_credit_message">This app has been developed free of charge for the Centre Excursionista d'Alcoi by %1$s.</string>
+    <string name="settings_dev_credit_website">Website</string>
+    <string name="settings_dev_credit_email">Email</string>
 
 </resources>
