@@ -23,6 +23,11 @@ class MainActivity : NfcIntentHandlerActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        instance = this
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         instance = null
