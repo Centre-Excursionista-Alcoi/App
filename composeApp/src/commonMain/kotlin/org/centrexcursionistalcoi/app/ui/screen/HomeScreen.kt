@@ -246,11 +246,16 @@ private fun HomeScreenContent(
                 TopAppBar(
                     title = { Text(stringResource(Res.string.app_name)) },
                     actions = {
-                        val showLogoutButton = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
+                        val isProfilePage = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }
                         }
-                        if (showLogoutButton) {
+                        if (isProfilePage) {
+                            IconButton(
+                                onClick = onSettingsRequested
+                            ) {
+                                Icon(Icons.Default.Settings, stringResource(Res.string.settings))
+                            }
                             IconButton(
                                 onClick = { showingLogoutDialog = true }
                             ) {
