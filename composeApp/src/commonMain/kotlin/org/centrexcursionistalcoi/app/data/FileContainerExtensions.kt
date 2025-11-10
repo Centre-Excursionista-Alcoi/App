@@ -178,15 +178,15 @@ suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid:
  */
 @Composable
 @OptIn(DelicateCoroutinesApi::class)
-fun ImageFileContainer.rememberImageFile(
+fun ImageFileContainer?.rememberImageFile(
     scope: CoroutineScope = GlobalScope,
     dispatcher: CoroutineDispatcher = defaultAsyncDispatcher,
 ): State<ByteArray?> {
     val state = rememberSaveable { mutableStateOf<ByteArray?>(null) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(this) {
         scope.launch(dispatcher) {
             try {
-                val bytes = imageFile()
+                val bytes = this@rememberImageFile?.imageFile()
                 withContext(Dispatchers.Main) { state.value = bytes }
             } catch (e: IllegalStateException) {
                 Napier.w(e) { "Image file not found." }

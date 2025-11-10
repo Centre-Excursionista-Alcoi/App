@@ -15,14 +15,23 @@ sealed interface Destination {
     @Serializable @SerialName("home") data object Home : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
 
-    /**
-     * Shows all the items of a given inventory type.
-     */
-    @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid, val displayName: String) : Destination {
+    @Serializable @SerialName("itemTypeDetails") data class ItemTypeDetails(val typeId: Uuid, val displayName: String) : Destination {
         constructor(type: InventoryItemType): this(type.id, type.displayName)
     }
 
-    @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
+    /**
+     * Admin-related destinations.
+     */
+    object Admin {
+        /**
+         * Shows all the items of a given inventory type.
+         */
+        @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid, val displayName: String) : Destination {
+            constructor(type: InventoryItemType): this(type.id, type.displayName)
+        }
+
+        @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
+    }
 
     @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination
     @Serializable @SerialName("lendingCreation") data class LendingCreation(

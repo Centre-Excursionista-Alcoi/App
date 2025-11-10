@@ -72,7 +72,7 @@ import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
-import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
+import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
@@ -92,6 +92,7 @@ fun LendingsPage(
     onNotificationPermissionDenyRequest: () -> Unit,
     profile: ProfileResponse,
     inventoryItems: List<ReferencedInventoryItem>?,
+    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     memoryUploadProgress: Progress?,
@@ -107,11 +108,6 @@ fun LendingsPage(
     val isRegisteredForLendings = profile.lendingUser != null
 
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
-
-    var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
-    showingItemTypeDetails?.let { type ->
-        InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
-    }
 
     LaunchedEffect(lendings) {
         if (!lendings.isNullOrEmpty()) {
@@ -288,7 +284,7 @@ fun LendingsPage(
                             selectedAmount = selectedAmount,
                             onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
                             onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                            onClick = { showingItemTypeDetails = type }
+                            onClick = { onItemTypeDetailsRequested(type) },
                         )
                     }
                 } else {
@@ -305,7 +301,7 @@ fun LendingsPage(
                             selectedAmount = selectedAmount,
                             onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
                             onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                            onClick = { showingItemTypeDetails = type }
+                            onClick = { onItemTypeDetailsRequested(type) },
                         )
                     }
                 }
@@ -360,18 +356,24 @@ fun LendingItem_Small(
                 AsyncByteImage(
                     bytes = imageFile,
                     contentDescription = type.displayName,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().sharedBounds("type-${type.id}-image"),
                     contentScale = ContentScale.Crop,
                 )
             }
             Column(
                 modifier = Modifier.weight(3f)
             ) {
-                Text(
-                    text = "${type.displayName} (${items.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(8.dp)
-                )
+                Row(Modifier.padding(8.dp)) {
+                    Text(
+                        text = type.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.sharedBounds("type-${type.id}-display-name")
+                    )
+                    Text(
+                        text = " (${items.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -496,15 +498,21 @@ fun LendingItem_Large(
             AsyncByteImage(
                 bytes = imageFile,
                 contentDescription = type.displayName,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().sharedBounds("type-${type.id}-image"),
                 contentScale = ContentScale.Crop,
             )
         }
-        Text(
-            text = "${type.displayName} (${items.size})",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(8.dp)
-        )
+        Row(Modifier.padding(8.dp)) {
+            Text(
+                text = type.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.sharedBounds("type-${type.id}-display-name"),
+            )
+            Text(
+                text = " (${items.size})",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
     }
 }
 
