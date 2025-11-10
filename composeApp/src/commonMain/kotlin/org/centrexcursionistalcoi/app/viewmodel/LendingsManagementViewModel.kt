@@ -21,14 +21,6 @@ class LendingsManagementViewModel : ViewModel() {
         }
     }
 
-    fun `return`(lending: ReferencedLending) {
-        viewModelScope.launch(defaultAsyncDispatcher) {
-            Napier.i { "Returning lending..." }
-            LendingsRemoteRepository.`return`(lending.id)
-            Napier.i { "Return of lending has been received." }
-        }
-    }
-
     fun delete(lending: ReferencedLending) = launch {
         Napier.i { "Deleting lending..." }
         LendingsRemoteRepository.delete(lending.id)

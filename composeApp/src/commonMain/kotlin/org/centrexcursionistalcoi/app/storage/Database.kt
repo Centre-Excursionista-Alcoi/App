@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
 import org.centrexcursionistalcoi.app.database.data.Lendings
 import org.centrexcursionistalcoi.app.database.data.Posts
+import org.centrexcursionistalcoi.app.database.data.ReceivedItems
 import org.centrexcursionistalcoi.app.database.data.Users
 
 expect class DriverFactory {
@@ -46,10 +47,15 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             LocalDateAdapter,
             InstantAdapter,
             InstantAdapter,
-            InstantAdapter,
             UUIDAdapter,
         ),
         Posts.Adapter(UUIDAdapter, InstantAdapter),
+        ReceivedItems.Adapter(
+            UUIDAdapter,
+            UUIDAdapter,
+            UUIDAdapter,
+            InstantAdapter,
+        ),
         Users.Adapter(
             JsonAdapter(ListSerializer(String.serializer())),
             JsonAdapter(ListSerializer(DepartmentMemberInfo.serializer())),

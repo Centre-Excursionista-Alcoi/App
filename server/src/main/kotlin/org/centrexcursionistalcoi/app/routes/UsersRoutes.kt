@@ -1,25 +1,10 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.accept
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.get
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
-import io.ktor.http.appendPathSegments
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import kotlinx.serialization.json.JsonObject
-import org.centrexcursionistalcoi.app.ADMIN_GROUP_UUID
-import org.centrexcursionistalcoi.app.authentik.AuthentikPaginatedResults
-import org.centrexcursionistalcoi.app.authentik.AuthentikUser
-import org.centrexcursionistalcoi.app.authentik.errors.AuthentikError
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
@@ -33,11 +18,6 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.centrexcursionistalcoi.app.plugins.getAuthHttpClient
-import org.centrexcursionistalcoi.app.security.OIDCConfig
-import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.utils.toJson
-import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.core.eq
 
 fun Route.usersRoutes() {
@@ -49,7 +29,7 @@ fun Route.usersRoutes() {
             val lendingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData() }
             val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
             val departments = Database { DepartmentMemberEntity.find { DepartmentMembers.userSub eq session.sub }.map { it.toData() } }
-            val self = Database { UserReferenceEntity.getOrProvide(session).toData(lendingUser, insurances, departments) }
+            val self = Database { UserReferenceEntity[session.sub].toData(lendingUser, insurances, departments) }
 
             call.respond(listOf(self))
         } else {
@@ -73,12 +53,6 @@ fun Route.usersRoutes() {
     post("/users/{sub}/promote") {
         assertAdmin() ?: return@post
 
-        val authentikToken = OIDCConfig.authentikToken
-        if (authentikToken == null) {
-            respondError(Error.AuthentikNotConfigured())
-            return@post
-        }
-
         val sub = call.parameters["sub"]!!
 
         // Find user reference
@@ -88,60 +62,7 @@ fun Route.usersRoutes() {
             return@post
         }
 
-        // Fetch a list of all the groups the user already has
-        val userUrl = URLBuilder(OIDCConfig.authentikBase)
-            .appendPathSegments("/api/v3/core/users/")
-            .apply {
-                parameters.append("username", reference.username)
-            }
-            .build()
-        val response = getAuthHttpClient().get(userUrl) {
-            bearerAuth(authentikToken)
-            accept(ContentType.Application.Json)
-        }
-        if (!response.status.isSuccess()) {
-            val error = response.bodyAsJson(AuthentikError.serializer())
-            throw error.asThrowable()
-        }
-        val paginatedResults = response.bodyAsJson(AuthentikPaginatedResults.serializer(AuthentikUser.serializer()))
-        val user = paginatedResults.results.firstOrNull()
-        if (user == null) {
-            respondError(Error.UserNotFound())
-            return@post
-        }
-        val groups = user.groups.toMutableSet()
-
-        // Add the admin group
-        groups.add(ADMIN_GROUP_UUID.toUuid())
-
-        // Update the user
-        val updateUrl = URLBuilder(OIDCConfig.authentikBase)
-            .appendPathSegments("/api/v3/core/users/${user.pk}/")
-            .build()
-        val updateResponse = getAuthHttpClient().put(updateUrl) {
-            bearerAuth(authentikToken)
-            accept(ContentType.Application.Json)
-            contentType(ContentType.Application.Json)
-            setBody(
-                JsonObject(
-                    mapOf(
-                        // Required fields - keep existing values
-                        "name" to user.name.toJson(),
-                        "username" to user.username.toJson(),
-                        // Updated groups
-                        "groups" to groups.toJson { it.toString().toJson() },
-                    )
-                )
-            )
-        }
-        if (!updateResponse.status.isSuccess()) {
-            val error = updateResponse.bodyAsJson(AuthentikError.serializer())
-            throw error.asThrowable()
-        }
-        val updatedUser = updateResponse.bodyAsJson(AuthentikUser.serializer())
-
-        // Update the groups in our local database as well
-        Database { reference.groups = updatedUser.groupsObj.map { it.name } }
+        TODO("Implement promote user to admin functionality")
 
         call.respond(HttpStatusCode.NoContent)
     }

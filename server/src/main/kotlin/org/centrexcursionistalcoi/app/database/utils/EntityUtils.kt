@@ -18,6 +18,8 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
+import org.centrexcursionistalcoi.app.serializer.Base64Serializer
+import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
@@ -97,6 +99,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
+                    is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
@@ -105,24 +108,45 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                 println("Link: $linkName, Serializer: ${serializer.descriptor.serialName}, Nullable: $nullable")
                 element(linkName, serializer.descriptor, isOptional = nullable)
             }
+            if (this@serializer is CustomTableSerializer<*, *>) {
+                // Add extra columns from CustomTableSerializer
+                val serializers = columnSerializers()
+                println("There are ${serializers.size} extra columns from CustomTableSerializer:")
+                for ((name, serializer) in serializers) {
+                    println("- $name: ${serializer.descriptor.serialName}")
+                    element(name, serializer.descriptor, isOptional = true)
+                }
+            }
         }
 
         override fun serialize(encoder: Encoder, value: E) = Database {
             println("Encoding structure of ${value::class.simpleName} (${descriptor.serialName})...")
+            println("Columns: ${columns.joinToString { it.name }}")
             encoder.encodeStructure(descriptor) {
                 for (column in columns) {
                     val columnName = column.name
                     val idx = descriptor.getElementIndex(columnName)
                     val className = value::class.simpleName
                     val members = value::class.members
-                    val typeValue = members.find { it.name == columnName }?.call(value)
+                    val member = members.find { it.name == columnName }
+                    if (member == null) {
+                        if (!column.columnType.nullable) {
+                            error("Could not find member named \"$columnName\" in ${className}.\nMembers: ${members.joinToString { it.name }}")
+                        }
+                        println("- Won't encode column \"$columnName\" because member is missing.\n\tMembers: ${members.joinToString { it.name }}")
+                        // Skip missing members
+                        continue
+                    }
+                    val typeValue = member.call(value)
                     if (typeValue == null) {
                         if (!column.columnType.nullable) {
                             error("Could not find property or function named \"$columnName\" in ${className}.\nMembers: ${members.joinToString { it.name }}")
                         }
+                        println("- Won't encode column \"$columnName\" because it's null")
                         // Skip null values
                         continue
                     }
+                    println("- Encoding column \"$columnName\" (Type: ${column.columnType::class.simpleName}) with value: $typeValue")
                     when (column.columnType) {
                         is EntityIDColumnType<*> -> {
                             when (typeValue) {
@@ -164,6 +188,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())
                         }
+                        is BasicBinaryColumnType -> {
+                            encodeSerializableElement(descriptor, idx, Base64Serializer, typeValue as ByteArray)
+                        }
                         else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                     }
                 }
@@ -171,6 +198,20 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     @Suppress("UNCHECKED_CAST")
                     with(this@serializer as ViaLink<ID, E, *, *>) {
                         encodeViaLink(descriptor, value)
+                    }
+                }
+                if (this@serializer is CustomTableSerializer<*, *>) { // CustomTableSerializer<ID, E>
+                    @Suppress("UNCHECKED_CAST")
+                    with(this@serializer as CustomTableSerializer<ID, E>) {
+                        val serializers = columnSerializers()
+                        println("Encoding extra columns from CustomTableSerializer:")
+                        val columns = extraColumns(value)
+                        for ((column, value) in columns) {
+                            val serializer = serializers[column] ?: error("No serializer found for extra column \"$column\"")
+                            val idx = descriptor.getElementIndex(column)
+                            println("- Encoding extra column \"$column\" with value: $value")
+                            encode(descriptor, serializer, idx, value)
+                        }
                     }
                 }
             }
@@ -199,4 +240,9 @@ private fun <FromID: Any, FromEntity: Entity<FromID>, ToID: Any, ToEntity: Entit
         return
     }
     encodeSerializableElement(descriptor, idx, serializer.list(), links.toList())
+}
+
+private fun <T> CompositeEncoder.encode(descriptor: SerialDescriptor, serializer: SerializationStrategy<T>, idx: Int, value: Any?) {
+    @Suppress("UNCHECKED_CAST")
+    encodeSerializableElement(descriptor, idx, serializer, value as T)
 }

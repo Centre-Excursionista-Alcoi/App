@@ -9,7 +9,7 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 @Serializable
 data class UserData(
     val sub: String,
-    val username: String,
+    val fullName: String,
     val email: String,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,

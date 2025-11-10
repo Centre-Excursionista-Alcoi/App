@@ -23,8 +23,7 @@ data class ReferencedLending(
     @Serializable(InstantSerializer::class) val givenAt: Instant?,
 
     val returned: Boolean,
-    val receivedBy: UserData?,
-    @Serializable(InstantSerializer::class) val receivedAt: Instant?,
+    val receivedItems: List<ReceivedItem>,
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
@@ -49,8 +48,7 @@ data class ReferencedLending(
             givenBy = this.givenBy?.let { givenBy -> users.getUser(givenBy) },
             givenAt = this.givenAt,
             returned = this.returned,
-            receivedBy = this.receivedBy?.let { receivedBy -> users.getUser(receivedBy) },
-            receivedAt = this.receivedAt,
+            receivedItems = receivedItems,
             memorySubmitted = this.memorySubmitted,
             memorySubmittedAt = this.memorySubmittedAt,
             memoryDocument = this.memoryDocument,

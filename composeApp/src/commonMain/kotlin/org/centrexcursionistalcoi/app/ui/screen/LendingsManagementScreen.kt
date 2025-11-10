@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileOpen
@@ -44,7 +43,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.ListCard
 import org.centrexcursionistalcoi.app.ui.reusable.OutlinedButtonWithIcon
-import org.centrexcursionistalcoi.app.ui.utils.orUnknown
 import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingsManagementViewModel
@@ -55,6 +53,7 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingsManagementScreen(
     model: LendingsManagementViewModel = viewModel { LendingsManagementViewModel() },
     onLendingPickupRequest: (ReferencedLending) -> Unit,
+    onLendingReturnRequest: (ReferencedLending) -> Unit,
     onBack: () -> Unit
 ) {
     val lendings by model.lendings.collectAsState()
@@ -63,7 +62,7 @@ fun LendingsManagementScreen(
         lendings = lendings,
         onConfirmRequest = model::confirm,
         onPickupRequest = onLendingPickupRequest,
-        onReturnRequest = model::`return`,
+        onReturnRequest = onLendingReturnRequest,
         onDeleteRequest = model::delete,
         onSkipMemoryRequest = model::skipMemory,
         onBack = onBack
@@ -121,7 +120,7 @@ private fun LendingsManagementScreen(
                 PendingPickupLendingsCard(pendingPickupLendings, onPickupRequest)
             }
             if (pendingReturnLendings.isNotEmpty()) item(key = "pending_return_lendings") {
-                PendingReturnLendingsCard(pendingReturnLendings, onReturnRequest) { deletingLending = it }
+                PendingReturnLendingsCard(pendingReturnLendings, onReturnRequest)
             }
             if (pendingMemoryLendings.isNotEmpty()) item(key = "pending_memory_lendings") {
                 PendingMemoryLendingsCard(pendingMemoryLendings, onSkipMemoryRequest) { deletingLending = it }
@@ -178,15 +177,16 @@ fun UnconfirmedLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
-                val unitText = pluralStringResource(Res.plurals.lending_details_item_row, items.size, items.size)
-                Text("- ${type.displayName}: $unitText")
+                Text(
+                    text = pluralStringResource(Res.plurals.lending_details_item_row, items.size, type.displayName, items.size)
+                )
             }
 
             HorizontalDivider()
@@ -219,7 +219,7 @@ fun PendingPickupLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         onClick = { onPickupRequest(it) },
@@ -230,7 +230,6 @@ fun PendingPickupLendingsCard(
 fun PendingReturnLendingsCard(
     lendings: List<ReferencedLending>,
     onReturnRequest: (ReferencedLending) -> Unit,
-    onDeleteRequest: (ReferencedLending) -> Unit,
 ) {
     ListCard(
         list = lendings,
@@ -238,44 +237,10 @@ fun PendingReturnLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
-        detailsDialogContent = { lending ->
-            val items = lending.items
-
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
-            Text(stringResource(Res.string.lending_details_items_title))
-            for ((type, items) in items.groupBy { it.type }) {
-                val unitText = pluralStringResource(Res.plurals.lending_details_item_row, items.size, items.size)
-                Text("- ${type.displayName}: $unitText")
-            }
-
-            HorizontalDivider()
-
-            val givenBy = lending.givenBy
-            val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(
-                stringResource(Res.string.management_lending_given_by, givenBy?.username.orUnknown(), givenAt?.toString().orUnknown())
-            )
-
-            HorizontalDivider()
-
-            Text("When pressing the button above, you are confirming that the user has returned the items in good condition.")
-            LendingsCardActions(
-                onDeleteRequest = { onDeleteRequest(lending) },
-                {
-                    OutlinedButtonWithIcon(
-                        icon = Icons.AutoMirrored.Default.AssignmentReturn,
-                        text = stringResource(Res.string.management_return),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        onReturnRequest(lending)
-                        this@ListCard.dismiss()
-                    }
-                }
-            )
-        }
+        onClick = onReturnRequest,
     )
 }
 
@@ -291,11 +256,11 @@ fun PendingMemoryLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
@@ -309,7 +274,7 @@ fun PendingMemoryLendingsCard(
 
             val givenBy = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(stringResource(Res.string.management_lending_returned_to, givenBy?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+            Text(stringResource(Res.string.management_lending_returned_to, givenBy?.fullName ?: unknown(), givenAt?.toString() ?: unknown()))
 
             LendingsCardActions(
                 onDeleteRequest = { onDeleteRequest(lending) },
@@ -340,11 +305,11 @@ fun CompleteLendingsCard(
         emptyTextResource = Res.string.management_no_lendings,
         displayName = { it.id.toString() },
         supportingContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         detailsDialogContent = { lending ->
-            Text(stringResource(Res.string.management_lending_user, lending.user.username))
+            Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
             for ((type, items) in lending.items.groupBy { it.type }) {
                 Text(
@@ -358,7 +323,7 @@ fun CompleteLendingsCard(
 
             val givenByUser = lending.givenBy
             val givenAt = lending.givenAt?.toLocalDateTime(TimeZone.currentSystemDefault())
-            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.username ?: unknown(), givenAt?.toString() ?: unknown()))
+            Text(stringResource(Res.string.management_lending_returned_to, givenByUser?.fullName ?: unknown(), givenAt?.toString() ?: unknown()))
 
             LendingsCardActions(
                 onDeleteRequest = { onDeleteRequest(lending) },

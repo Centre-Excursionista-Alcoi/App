@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
 import java.sql.DriverManager
+import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
@@ -11,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
@@ -22,6 +24,7 @@ import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 object Database {
     val tables = arrayOf(
         Files,
+        ConfigTable,
         Departments,
         UserReferences,
         Posts,
@@ -32,6 +35,7 @@ object Database {
         InventoryItems,
         Lendings,
         LendingItems,
+        ReceivedItems,
         FCMRegistrationTokens,
     )
     private var database: JdbcDatabase? = null

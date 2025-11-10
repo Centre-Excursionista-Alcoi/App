@@ -1,0 +1,29 @@
+import kotlin.uuid.Uuid;
+import kotlin.time.Instant;
+
+CREATE TABLE ReceivedItems(
+    id TEXT AS Uuid PRIMARY KEY,
+    lending TEXT AS Uuid NOT NULL,
+    item TEXT AS Uuid NOT NULL,
+    notes TEXT,
+    receivedBy TEXT NOT NULL,
+    receivedAt INTEGER AS Instant NOT NULL,
+    FOREIGN KEY (lending) REFERENCES Lendings(id),
+    FOREIGN KEY (item) REFERENCES InventoryItems(id),
+    FOREIGN KEY (receivedBy) REFERENCES Users(sub)
+);
+
+insert:
+INSERT INTO ReceivedItems (id, lending, item, notes, receivedBy, receivedAt) VALUES (?, ?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM ReceivedItems WHERE id = ?;
+
+selectAll:
+SELECT * FROM ReceivedItems ORDER BY receivedAt DESC;
+
+deleteByLendingId:
+DELETE FROM ReceivedItems WHERE lending = ?;
+
+update:
+UPDATE ReceivedItems SET lending = ?, item = ?, notes = ?, receivedBy = ?, receivedAt = ? WHERE id = ?;

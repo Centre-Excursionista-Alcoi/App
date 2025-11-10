@@ -35,7 +35,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
@@ -296,7 +296,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 it.bodyAsChannel()
             }
             Napier.v { "Writing file..." }
-            PlatformFileSystem.write(path, channel, progressNotifier)
+            FileSystem.write(path, channel, progressNotifier)
             Napier.d { "File $uuid stored." }
         }
     }

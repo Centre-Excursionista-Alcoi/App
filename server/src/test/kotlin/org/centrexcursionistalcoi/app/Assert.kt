@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlin.test.assertEquals
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.jsonArray
@@ -60,6 +61,10 @@ fun assertJsonEquals(expected: String, actual: String) {
     }
 
     throw AssertionError("Could not compare JSON elements: $expectedJson and $actualJson")
+}
+
+fun HttpResponse.assertSuccess() {
+    assert(status.isSuccess()) { "Expected a successful status code (200-299)." }
 }
 
 suspend fun HttpResponse.assertStatusCode(expected: HttpStatusCode) {

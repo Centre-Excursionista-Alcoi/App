@@ -17,8 +17,10 @@ class TestUserReferenceEntity {
         // Test that we can create a user with FEMECV credentials and no errors occur
         Database {
             UserReferenceEntity.new("abc") {
-                username = "testuser"
+                nif = "12345678Z"
+                fullName = "Test User"
                 email = "mail@example.com"
+                memberNumber = 1000u
                 groups = emptyList()
 
                 femecvUsername = "valid_username"

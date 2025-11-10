@@ -13,6 +13,7 @@ sealed interface Destination {
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination
     @Serializable @SerialName("home") data object Home : Destination
+    @Serializable @SerialName("settings") data object Settings : Destination
 
     /**
      * Shows all the items of a given inventory type.
@@ -37,6 +38,8 @@ sealed interface Destination {
     }
 
     @Serializable @SerialName("lendingPickup") data class LendingPickup(val lendingId: Uuid) : Destination
+
+    @Serializable @SerialName("lendingReturn") data class LendingReturn(val lendingId: Uuid) : Destination
 
     @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
         constructor(lending: ReferencedLending): this(lending.id)

@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
@@ -37,6 +38,7 @@ import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -71,9 +73,22 @@ fun LendingDetailsDialog(
                 val status = lending.status()
                 when (status) {
                     Lending.Status.REQUESTED -> Text("Status: Pending")
-                    Lending.Status.TAKEN -> Text("Taken on: ${lending.givenAt}")
+                    Lending.Status.TAKEN -> {
+                        Text("Taken on: ${lending.givenAt}")
+
+                        val receivedItems = lending.receivedItems
+                        if (receivedItems.isNotEmpty()) {
+                            // Partial return, show already received items
+                            Text(stringResource(Res.string.lending_details_returned_items, receivedItems.size, lending.items.size))
+                        }
+                    }
                     Lending.Status.CONFIRMED -> Text("Status: Confirmed")
-                    else -> Text("Returned on: ${lending.receivedAt}")
+                    Lending.Status.RETURNED -> {
+                        val received = lending.receivedItems.last()
+                        Text("Returned on: ${received.receivedAt}")
+                    }
+
+                    else -> { /* nothing */ }
                 }
                 if (status == Lending.Status.RETURNED) {
                     Text(
@@ -120,7 +135,20 @@ fun LendingDetailsDialog(
                 val list = lending.items.groupBy { it.type }
                 Text(stringResource(Res.string.lending_details_items_title))
                 for ((type, items) in list) {
-                    Text("- ${type.displayName}: ${items.size} items")
+                    val text = pluralStringResource(Res.plurals.lending_details_item_row, items.size, type.displayName, items.size)
+                    val isPartialReturn = status == Lending.Status.TAKEN && lending.receivedItems.isNotEmpty()
+                    val allItemsReturned = isPartialReturn && items.all { item -> item.id in lending.receivedItems.map { it.itemId } }
+                    Text(
+                        text = text,
+                        textDecoration = if (allItemsReturned) TextDecoration.LineThrough else TextDecoration.None,
+                    )
+                    if (isPartialReturn && !allItemsReturned) {
+                        val returnedItems = items.count { item -> item.id in lending.receivedItems.map { it.itemId } }
+                        Text(
+                            text = stringResource(Res.string.lending_details_returned_items, returnedItems, items.size),
+                            modifier = Modifier.padding(start = 16.dp),
+                        )
+                    }
                 }
 
                 if (PlatformOpenFileLogic.isSupported && lending.memoryDocument != null) {

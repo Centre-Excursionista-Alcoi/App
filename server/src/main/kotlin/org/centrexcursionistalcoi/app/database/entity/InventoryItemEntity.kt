@@ -18,17 +18,20 @@ class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConver
 
     var variation by InventoryItems.variation
     var type by InventoryItemTypeEntity referencedOn InventoryItems.type
+    var nfcId by InventoryItems.nfcId
 
     context(_: JdbcTransaction)
     override fun toData(): InventoryItem = InventoryItem(
         id = id.value.toKotlinUuid(),
         variation = variation,
         type = type.id.value.toKotlinUuid(),
+        nfcId = nfcId,
     )
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateInventoryItemRequest) {
-        request.variation?.let { variation = it }
+        request.variation?.let { variation = it.takeUnless { it.isEmpty() } }
         request.type?.let { type = InventoryItemTypeEntity[it.toJavaUuid()] }
+        request.nfcId?.let { nfcId = it.takeUnless { it.isEmpty() } }
     }
 }

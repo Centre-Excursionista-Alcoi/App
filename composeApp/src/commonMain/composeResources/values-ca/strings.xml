@@ -1,236 +1,259 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CEA App</string>
-    <string name="admin">Admin</string>
-    <string name="welcome">Benvingut/da de nou %1$s</string>
-    <string name="login_title">Benvingut/da a l'App del CEA</string>
-    <string name="login_message">Per favor, fes click al botó de baix per iniciar sessió amb la plataforma SSO.</string>
-    <string name="login_action">Iniciar Sessió</string>
-    <string name="registration_complete_title">Registre completat!</string>
-    <string name="registration_complete_message">Ara ja pots iniciar sessió amb el teu nou compte.</string>
-    <string name="register_title">Registra un compte</string>
-    <string name="register_username">Nom d'usuari</string>
-    <string name="register_email">Correu electrònic</string>
-    <string name="register_name">Nom</string>
-    <string name="register_password">Contrasenya</string>
-    <string name="register_confirm_password">Confirmar Contrasenya</string>
-    <string name="register_action">Registrar-se</string>
-    <string name="password_show">Mostrar Contrasenya</string>
-    <string name="password_hide">Amargar Contrasenya</string>
-    <string name="register_error_email_format">Introdueix una adreça de correu electrònic vàlida</string>
-    <string name="nav_home">Inici</string>
-    <string name="nav_profile">Perfil</string>
-    <string name="nav_management">Administració</string>
-    <string name="home_lendings">Els teus Préstecs</string>
-    <string name="home_lending">Préstec de Material</string>
-    <string name="home_past_lendings">Préstecs Passats</string>
-    <plurals name="home_lending_items">
+    <string name="app_name" translatable="false">CEA App</string>
+    <string name="admin" translatable="false">Admin</string>
+    <string name="welcome" translatable="false">Benvingut/da de nou %1$s</string>
+    <string name="login_title" translatable="false">Benvingut/da a l\'App del CEA</string>
+    <string name="login_message" translatable="false">Per favor, fes click al botó de baix per iniciar sessió amb la plataforma SSO.</string>
+    <string name="login_action" translatable="false">Iniciar Sessió</string>
+    <string name="registration_complete_title" translatable="false">Registre completat!</string>
+    <string name="registration_complete_message" translatable="false">Ara ja pots iniciar sessió amb el teu nou compte.</string>
+    <string name="register_title" translatable="false">Registra un compte</string>
+    <string name="register_username" translatable="false">Nom d\'usuari</string>
+    <string name="register_email" translatable="false">Correu electrònic</string>
+    <string name="register_name" translatable="false">Nom</string>
+    <string name="register_password" translatable="false">Contrasenya</string>
+    <string name="register_confirm_password" translatable="false">Confirmar Contrasenya</string>
+    <string name="register_action" translatable="false">Registrar-se</string>
+    <string name="password_show" translatable="false">Mostrar Contrasenya</string>
+    <string name="password_hide" translatable="false">Amargar Contrasenya</string>
+    <string name="register_error_email_format" translatable="false">Introdueix una adreça de correu electrònic vàlida</string>
+    <string name="nav_home" translatable="false">Inici</string>
+    <string name="nav_profile" translatable="false">Perfil</string>
+    <string name="nav_management" translatable="false">Administració</string>
+    <string name="home_lendings" translatable="false">Els teus Préstecs</string>
+    <string name="home_lending" translatable="false">Préstec de Material</string>
+    <string name="home_past_lendings" translatable="false">Préstecs Passats</string>
+    <plurals name="home_lending_items" translatable="false">
         <item quantity="one">%1$d element: %2$s</item>
         <item quantity="many">%1$d elements: %2$s</item>
         <item quantity="other">%1$d elements: %2$s</item>
     </plurals>
-    <string name="force_sync">Sincronització Forçada</string>
-    <string name="permission_grant">Permet</string>
-    <string name="permission_settings">Obre Configuració</string>
-    <string name="permission_deny">Denega</string>
-    <string name="permission_notification_title">Permís de Notificacions</string>
-    <string name="permission_notification_message">Per favor, garanteix accés per enviar-te notificacions per a que puguem mantindre't al dia amb els teus préstecs.</string>
-    <string name="management_departments">Seccions</string>
-    <string name="management_users">Usuaris</string>
-    <string name="management_inventory_item_types">Tipus d'Element</string>
-    <string name="management_inventory_items">Elements</string>
-    <string name="back">Ves enrere</string>
-    <string name="submit">Enviar</string>
-    <string name="cancel">Cancel·lar</string>
-    <string name="close">Tanca</string>
-    <string name="create">Crear</string>
-    <string name="delete">Eliminar</string>
-    <string name="update">Actualitzar</string>
-    <string name="edit">Editar</string>
-    <string name="confirm">Confirmar</string>
-    <string name="qrcode">Codi QR</string>
-    <string name="unknown">Desconegut</string>
-    <string name="share">Compartir</string>
-    <string name="logout">Sortir</string>
-    <string name="logout_confirmation_title">Confirmar tancament de sessió</string>
-    <string name="logout_confirmation_message">Segur que vols tancar la sessió?</string>
-    <string name="copied_to_clipboard">Copiat al porta-retalls</string>
-    <string name="status_loading">Carregant...</string>
-    <string name="loading_screen_error">Error de càrrega</string>
-    <string name="error_unknown">Ha hagut un error desconegut. Tipus: %1$s</string>
-    <string name="auth_callback_error_title">No s'ha pogut processar l'inici de sessió</string>
-    <string name="management_inventory_item_type_create">Crear Tipus d'Element</string>
-    <string name="management_inventory_item_type_display_name">Nom a mostrar</string>
-    <string name="management_inventory_item_type_description">Descripció</string>
-    <string name="management_inventory_item_type_category">Categoria</string>
-    <string name="management_inventory_item_type_image">Seleccionar Imatge</string>
-    <string name="auth_callback_error_server_http">El servidor ha respost amb una excepció (%1$d): %2$s</string>
-    <string name="auth_callback_error_server_code">El servidor ha respost amb un error (#%1$d): %2$s</string>
-    <string name="sport_climbing">Escalada Esportiva</string>
-    <string name="sport_climbing_without_belay">Escalada Lliure</string>
-    <string name="sport_via_ferrata">Via Ferrada</string>
-    <string name="sport_canyoning">Barranquisme</string>
-    <string name="sport_hiking">Excursionisme</string>
-    <string name="sport_alpinism">Alpinisme</string>
-    <string name="lending_signup_required">No estàs donat d'alta per al préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
-    <string name="lending_signup_action">Registrar-me</string>
-    <string name="lending_signup_title">Registre Necessari</string>
-    <string name="lending_signup_message">Amb aquest formulari, el membre certifica que ell/ella és conscient de les normes internes de les seccions d'escalada i muntanyisme per a l'ús de l'equipament tècnic propietat del CEA. Que ell/ella té els coneixements i entrenament suficients per a fer ús d'aquest equipament, sent l'únic responsable tant per a l'ús correcte i manteniment, com de notificar als vocals de les seccions de qualsevol dany o mal ús que el material poguera haver rebut.</string>
-    <string name="lending_signup_full_name">Nom Complet</string>
-    <string name="lending_signup_nif">NIF</string>
-    <string name="lending_signup_phone">Telèfon Mòbil</string>
-    <string name="lending_signup_sports">Esports</string>
-    <string name="lending_signup_address">Adreça</string>
-    <string name="lending_signup_city">Ciutat</string>
-    <string name="lending_signup_postal_code">Codi Postal</string>
-    <string name="lending_signup_country">País</string>
-    <string name="lending_signup_province">Província</string>
-    <string name="lending_signup_accept">Accepte els termes i condicions</string>
-    <string name="lending_signup_submit">Enviar</string>
-    <string name="lending_no_active_insurances_title">Cap segur actiu</string>
-    <string name="lending_no_active_insurances_message">No podràs fer cap préstec sense un segur actiu.</string>
-    <string name="lending_no_active_insurances_action">Afegir Segur</string>
-    <string name="lending_creation_title">Crear Préstec</string>
-    <string name="lending_creation_action">Crear Préstec</string>
-    <string name="lending_creation_reset">Reiniciar Llista</string>
-    <string name="lending_creation_from">Data d'Inici</string>
-    <string name="lending_creation_until">Data Final</string>
-    <string name="lending_creation_select_dates">Selecciona dates per a reservar material</string>
-    <string name="lending_creation_allocating">Reservant...</string>
-    <string name="lending_creation_no_items_allocated">Cap element reservat</string>
-    <string name="lending_creation_items_allocated">Elements reservats:</string>
-    <string name="lending_creation_warning_title">Atenció</string>
-    <string name="lending_creation_warning_message">Reservaràs el material per a les dates seleccionades, però la teua sol·licitud a de ser aprovada per un administrador abans de ser completada.\nUna vegada es confirme la teua reserva, rebràs una notificació, i podràs programar la recollida del material.</string>
-    <string name="lending_creation_error_title">Error</string>
-    <string name="lending_creation_error_message">Ha hagut un error en reservar el material:\n%1$s</string>
-    <string name="lending_creation_error_message_unknown">Ha hagut un error desconegut al reservar el material.</string>
-    <string name="lending_creation_error_allocation_insufficient">Només %1$d disponible.</string>
-    <string name="lending_creation_error_allocation_none">Cap disponible.</string>
-    <string name="lending_creation_error_allocation">No hi ha prous %1$s per a les dates seleccionades.\nNomés hi ha %2$d disponibles.\nHas sol·licitat %3$d.</string>
-    <string name="lending_not_confirmed">No Confirmada</string>
-    <string name="lending_pending_pickup">Recollida Pendent</string>
-    <string name="lending_pending_return">Retorn Pendent</string>
-    <string name="lending_pending_memory">Memòria Pendent</string>
-    <string name="lending_not_confirmed_message">Un administrador ha de confirmar la teua sol·licitud abans de ser efectiva.</string>
-    <string name="lending_pending_pickup_message">La teua sol·licitud ha sigut confirmada, un administrador es posarà en contacte amb tu per a programar la recollida.</string>
-    <string name="lending_pending_return_message">Per favor, programa la devolució amb el teu administrador assignat el més prompte possible.</string>
-    <string name="lending_pending_memory_message">Per favor, prepara i puja la memòria de l'activitat el més prompte possible. No pots fer una altra sol·licitud fins que ho fages.</string>
-    <string name="insurance_add_title">Afegir Segur</string>
-    <string name="insurance_company">Companyia Asseguradora</string>
-    <string name="insurance_policy_number">Número de Pòlissa</string>
-    <string name="insurance_start_date">Data d'Inici</string>
-    <string name="insurance_end_date">Data de fi</string>
-    <string name="insurance_view_document">Veure Document</string>
-    <string name="active_insurances_title">Segurs Actius</string>
-    <string name="management_no_departments">Cap secció</string>
-    <string name="insurance">Segur</string>
-    <string name="management_no_users">Cap usuari</string>
-    <string name="management_no_item_types">Cap tipus de material</string>
-    <string name="management_no_items">Cap material</string>
-    <string name="management_no_lendings">Cap préstec</string>
-    <plurals name="management_items_amount">
+    <string name="force_sync" translatable="false">Sincronització Forçada</string>
+    <string name="permission_grant" translatable="false">Permet</string>
+    <string name="permission_settings" translatable="false">Obre Configuració</string>
+    <string name="permission_deny" translatable="false">Denega</string>
+    <string name="permission_notification_title" translatable="false">Permís de Notificacions</string>
+    <string name="permission_notification_message" translatable="false">Per favor, garanteix accés per enviar-te notificacions per a que puguem mantindre\'t al dia amb els teus préstecs.</string>
+    <string name="management_departments" translatable="false">Seccions</string>
+    <string name="management_users" translatable="false">Usuaris</string>
+    <string name="management_inventory_item_types" translatable="false">Tipus d\'Element</string>
+    <string name="management_inventory_items" translatable="false">Elements</string>
+    <string name="back" translatable="false">Ves enrere</string>
+    <string name="submit" translatable="false">Enviar</string>
+    <string name="cancel" translatable="false">Cancel·lar</string>
+    <string name="close" translatable="false">Tanca</string>
+    <string name="create" translatable="false">Crear</string>
+    <string name="delete" translatable="false">Eliminar</string>
+    <string name="update" translatable="false">Actualitzar</string>
+    <string name="edit" translatable="false">Editar</string>
+    <string name="confirm" translatable="false">Confirmar</string>
+    <string name="qrcode" translatable="false">Codi QR</string>
+    <string name="unknown" translatable="false">Desconegut</string>
+    <string name="share" translatable="false">Compartir</string>
+    <string name="logout" translatable="false">Sortir</string>
+    <string name="logout_confirmation_title" translatable="false">Confirmar tancament de sessió</string>
+    <string name="logout_confirmation_message" translatable="false">Segur que vols tancar la sessió?</string>
+    <string name="copied_to_clipboard" translatable="false">Copiat al porta-retalls</string>
+    <string name="status_loading" translatable="false">Carregant...</string>
+    <string name="loading_screen_error" translatable="false">Error de càrrega</string>
+    <string name="error_unknown" translatable="false">Ha hagut un error desconegut. Tipus: %1$s</string>
+    <string name="auth_callback_error_title" translatable="false">No s\'ha pogut processar l\'inici de sessió</string>
+    <string name="management_inventory_item_type_create" translatable="false">Crear Tipus d\'Element</string>
+    <string name="management_inventory_item_type_display_name" translatable="false">Nom a mostrar</string>
+    <string name="management_inventory_item_type_description" translatable="false">Descripció</string>
+    <string name="management_inventory_item_type_category" translatable="false">Categoria</string>
+    <string name="management_inventory_item_type_image" translatable="false">Seleccionar Imatge</string>
+    <string name="auth_callback_error_server_http" translatable="false">El servidor ha respost amb una excepció (%1$d): %2$s</string>
+    <string name="auth_callback_error_server_code" translatable="false">El servidor ha respost amb un error (#%1$d): %2$s</string>
+    <string name="sport_climbing" translatable="false">Escalada Esportiva</string>
+    <string name="sport_climbing_without_belay" translatable="false">Escalada Lliure</string>
+    <string name="sport_via_ferrata" translatable="false">Via Ferrada</string>
+    <string name="sport_canyoning" translatable="false">Barranquisme</string>
+    <string name="sport_hiking" translatable="false">Excursionisme</string>
+    <string name="sport_alpinism" translatable="false">Alpinisme</string>
+    <string name="lending_signup_required" translatable="false">No estàs donat d\'alta per al préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
+    <string name="lending_signup_action" translatable="false">Registrar-me</string>
+    <string name="lending_signup_title" translatable="false">Registre Necessari</string>
+    <string name="lending_signup_message" translatable="false">Amb aquest formulari, el membre certifica que ell/ella és conscient de les normes internes de les seccions d\'escalada i muntanyisme per a l\'ús de l\'equipament tècnic propietat del CEA. Que ell/ella té els coneixements i entrenament suficients per a fer ús d\'aquest equipament, sent l\'únic responsable tant per a l\'ús correcte i manteniment, com de notificar als vocals de les seccions de qualsevol dany o mal ús que el material poguera haver rebut.</string>
+    <string name="lending_signup_full_name" translatable="false">Nom Complet</string>
+    <string name="lending_signup_nif" translatable="false">NIF</string>
+    <string name="lending_signup_phone" translatable="false">Telèfon Mòbil</string>
+    <string name="lending_signup_sports" translatable="false">Esports</string>
+    <string name="lending_signup_address" translatable="false">Adreça</string>
+    <string name="lending_signup_city" translatable="false">Ciutat</string>
+    <string name="lending_signup_postal_code" translatable="false">Codi Postal</string>
+    <string name="lending_signup_country" translatable="false">País</string>
+    <string name="lending_signup_province" translatable="false">Província</string>
+    <string name="lending_signup_accept" translatable="false">Accepte els termes i condicions</string>
+    <string name="lending_signup_submit" translatable="false">Enviar</string>
+    <string name="lending_no_active_insurances_title" translatable="false">Cap segur actiu</string>
+    <string name="lending_no_active_insurances_message" translatable="false">No podràs fer cap préstec sense un segur actiu.</string>
+    <string name="lending_no_active_insurances_action" translatable="false">Afegir Segur</string>
+    <string name="lending_creation_title" translatable="false">Crear Préstec</string>
+    <string name="lending_creation_action" translatable="false">Crear Préstec</string>
+    <string name="lending_creation_reset" translatable="false">Reiniciar Llista</string>
+    <string name="lending_creation_from" translatable="false">Data d\'Inici</string>
+    <string name="lending_creation_until" translatable="false">Data Final</string>
+    <string name="lending_creation_select_dates" translatable="false">Selecciona dates per a reservar material</string>
+    <string name="lending_creation_allocating" translatable="false">Reservant...</string>
+    <string name="lending_creation_no_items_allocated" translatable="false">Cap element reservat</string>
+    <string name="lending_creation_items_allocated" translatable="false">Elements reservats:</string>
+    <string name="lending_creation_warning_title" translatable="false">Atenció</string>
+    <string name="lending_creation_warning_message" translatable="false">Reservaràs el material per a les dates seleccionades, però la teua sol·licitud a de ser aprovada per un administrador abans de ser completada.\nUna vegada es confirme la teua reserva, rebràs una notificació, i podràs programar la recollida del material.</string>
+    <string name="lending_creation_error_title" translatable="false">Error</string>
+    <string name="lending_creation_error_message" translatable="false">Ha hagut un error en reservar el material:\n%1$s</string>
+    <string name="lending_creation_error_message_unknown" translatable="false">Ha hagut un error desconegut al reservar el material.</string>
+    <string name="lending_creation_error_allocation_insufficient" translatable="false">Només %1$d disponible.</string>
+    <string name="lending_creation_error_allocation_none" translatable="false">Cap disponible.</string>
+    <string name="lending_creation_error_allocation" translatable="false">Per favor, comprova els errors de dalt, i modifica la teua petició en conseqüència.</string>
+    <string name="lending_not_confirmed" translatable="false">No Confirmada</string>
+    <string name="lending_pending_pickup" translatable="false">Recollida Pendent</string>
+    <string name="lending_pending_return" translatable="false">Retorn Pendent</string>
+    <string name="lending_pending_memory" translatable="false">Memòria Pendent</string>
+    <string name="lending_not_confirmed_message" translatable="false">Un administrador ha de confirmar la teua sol·licitud abans de ser efectiva.</string>
+    <string name="lending_pending_pickup_message" translatable="false">La teua sol·licitud ha sigut confirmada, un administrador es posarà en contacte amb tu per a programar la recollida.</string>
+    <string name="lending_pending_return_message" translatable="false">Per favor, programa la devolució amb el teu administrador assignat el més prompte possible.</string>
+    <string name="lending_pending_memory_message" translatable="false">Per favor, prepara i puja la memòria de l\'activitat el més prompte possible. No pots fer una altra sol·licitud fins que ho fages.</string>
+    <string name="insurance_add_title" translatable="false">Afegir Segur</string>
+    <string name="insurance_company" translatable="false">Companyia Asseguradora</string>
+    <string name="insurance_policy_number" translatable="false">Número de Pòlissa</string>
+    <string name="insurance_start_date" translatable="false">Data d\'Inici</string>
+    <string name="insurance_end_date" translatable="false">Data de fi</string>
+    <string name="insurance_view_document" translatable="false">Veure Document</string>
+    <string name="active_insurances_title" translatable="false">Segurs Actius</string>
+    <string name="management_no_departments" translatable="false">Cap secció</string>
+    <string name="insurance" translatable="false">Segur</string>
+    <string name="management_no_users" translatable="false">Cap usuari</string>
+    <string name="management_no_item_types" translatable="false">Cap tipus de material</string>
+    <string name="management_no_items" translatable="false">Cap material</string>
+    <string name="management_no_lendings" translatable="false">Cap préstec</string>
+    <plurals name="management_items_amount" translatable="false">
         <item quantity="one">%1$d element</item>
         <item quantity="many">%1$d elements</item>
         <item quantity="other">%1$d elements</item>
     </plurals>
-    <string name="management_lendings">Veure Préstecs</string>
-    <string name="management_unconfirmed_lendings">Préstecs esperant confirmació</string>
-    <string name="management_pending_pickup_lendings">Préstecs esperant la recollida</string>
-    <string name="management_pending_return_lendings">Préstecs esperant la devolució</string>
-    <string name="management_pending_memory_lendings">Préstecs esperant la memòria</string>
-    <string name="management_completed_lendings">Préstecs completats</string>
-    <string name="management_pickup_screen">Recollida del Préstec</string>
-    <string name="management_pickup_screen_skip">Saltar Comprovació d'Inventari</string>
-    <string name="management_pickup_screen_confirm">Completar</string>
-    <string name="management_pickup_screen_skip_warning_title">Saltant la comprovació d'inventari</string>
-    <string name="management_pickup_screen_skip_warning_message">Segur que vols saltar la comprovació d'inventari? Has d'estar segur que tot el material ha sigut entregat a l'usuari, i que les referències coincideixen.</string>
-    <string name="management_lending_user">Usuari: %1$s</string>
-    <string name="management_lending_returned_to">Retornat a: %1$s el %2$s</string>
-    <string name="management_view_memory">Veure Memòria</string>
-    <string name="management_promote_user">Promou</string>
-    <string name="management_promote_user_title">Promou usuari</string>
-    <string name="management_promote_user_confirmation">Segur que vols promoure a %1$s a ser administrador?</string>
-    <string name="delete_dialog_title">Eliminar %1$s</string>
-    <string name="delete_dialog_message">Segur que vols eliminar "%1$s"? Aquesta acció no es pot desfer.</string>
-    <string name="inventory_item_type_title">Detalls de l'Element</string>
-    <string name="inventory_item_type_not_found">Tipus no trobat</string>
-    <string name="inventory_item_type">Tipus: %1$s</string>
-    <string name="inventory_item_amount">Quantitat: %1$d</string>
-    <string name="create_inventory_item_variation">Variació</string>
-    <string name="create_inventory_item_type">Tipus</string>
-    <string name="create_inventory_item_amount">Quantitat</string>
-    <string name="lending_details_title">Detalls del Préstec</string>
-    <string name="lending_details_cancel">Cancel·lar Préstec</string>
-    <string name="lending_details_items_title">Elements:</string>
-    <plurals name="lending_details_item_row">
+    <string name="management_lendings" translatable="false">Veure Préstecs</string>
+    <string name="management_unconfirmed_lendings" translatable="false">Préstecs esperant confirmació</string>
+    <string name="management_pending_pickup_lendings" translatable="false">Préstecs esperant la recollida</string>
+    <string name="management_pending_return_lendings" translatable="false">Préstecs esperant la devolució</string>
+    <string name="management_pending_memory_lendings" translatable="false">Préstecs esperant la memòria</string>
+    <string name="management_completed_lendings" translatable="false">Préstecs completats</string>
+    <string name="management_pickup_screen" translatable="false">Recollida del Préstec</string>
+    <string name="management_pickup_screen_skip" translatable="false">Saltar Comprovació d\'Inventari</string>
+    <string name="management_pickup_screen_confirm" translatable="false">Completar</string>
+    <string name="management_pickup_screen_skip_warning_title" translatable="false">Saltant la comprovació d\'inventari</string>
+    <string name="management_pickup_screen_skip_warning_message" translatable="false">Segur que vols saltar la comprovació d\'inventari? Has d\'estar segur que tot el material ha sigut entregat a l\'usuari, i que les referències coincideixen.</string>
+    <string name="management_lending_user" translatable="false">Usuari: %1$s</string>
+    <string name="management_lending_returned_to" translatable="false">Retornat a: %1$s el %2$s</string>
+    <string name="management_view_memory" translatable="false">Veure Memòria</string>
+    <string name="management_promote_user" translatable="false">Promou</string>
+    <string name="management_promote_user_title" translatable="false">Promou usuari</string>
+    <string name="management_promote_user_confirmation" translatable="false">Segur que vols promoure a %1$s a ser administrador?</string>
+    <string name="delete_dialog_title" translatable="false">Eliminar %1$s</string>
+    <string name="delete_dialog_message" translatable="false">Segur que vols eliminar \"%1$s\"? Aquesta acció no es pot desfer.</string>
+    <string name="inventory_item_type_title" translatable="false">Detalls de l\'Element</string>
+    <string name="inventory_item_type_not_found" translatable="false">Tipus no trobat</string>
+    <string name="inventory_item_type" translatable="false">Tipus: %1$s</string>
+    <string name="inventory_item_amount" translatable="false">Quantitat: %1$d</string>
+    <string name="create_inventory_item_variation" translatable="false">Variació</string>
+    <string name="create_inventory_item_type" translatable="false">Tipus</string>
+    <string name="create_inventory_item_amount" translatable="false">Quantitat</string>
+    <string name="lending_details_title" translatable="false">Detalls del Préstec</string>
+    <string name="lending_details_cancel" translatable="false">Cancel·lar Préstec</string>
+    <string name="lending_details_items_title" translatable="false">Elements:</string>
+    <plurals name="lending_details_item_row" translatable="false">
         <item quantity="one">- %1$s: %2$d unitat</item>
         <item quantity="many">- %1$s: %2$d unitats</item>
         <item quantity="other">- %1$s: %2$d unitats</item>
     </plurals>
-    <string name="lending_details_call_user">Cridar Usuari</string>
-    <string name="lending_details_whatsapp">WhatsApp</string>
-    <string name="lending_details_copy_number">Copiar Mòbil</string>
-    <string name="lending_details_email">Enviar Email</string>
-    <string name="lending_details_notes">Notes:</string>
-    <string name="lending_details_from">Des de:</string>
-    <string name="lending_details_until">Fins a:</string>
-    <string name="lending_details_id">ID de Préstec:</string>
-    <string name="lending_details_user">Usuari:</string>
-    <string name="lending_details_nfc_title">Lector NFC</string>
-    <string name="lending_details_nfc_message">Posa el teu dispositiu prop de l'etiqueta NFC per a registrar-lo automàticament.</string>
-    <string name="lending_details_scan_error_not_found">No s'ha trobat l'element al préstec</string>
-    <string name="personal_info">Informació Personal</string>
-    <string name="personal_info_username">Nom d'usuari</string>
-    <string name="personal_info_email">Correu Electrònic</string>
-    <string name="femecv_sync_title">Sincronització FEMECV</string>
-    <string name="femecv_sync_enable">Iniciar Sessió en FEMECV</string>
-    <string name="femecv_sync_connected">Sincronitzant amb la FEMECV</string>
-    <string name="femecv_sync_disable">Desconnectar</string>
-    <string name="femecv_sync_login">Iniciar Sessió</string>
-    <string name="femecv_username">Nom d'Usuari</string>
-    <string name="femecv_password">Contrasenya</string>
-    <string name="femecv_logo">Logo FEMECV</string>
-    <string name="femecv_notice">Aquesta app no està relacionada ni finançada per la FEMECV. Aquesta connexió és únicament una utilitat per facilitar l'administració de les teues llicències. Després de fer click al botó d'iniciar sessió, autoritzes al Centre Excursionista d'Alcoi a obtenir i processar les teues llicències de la FEMECV.</string>
-    <string name="form_display_name">Nom a mostrar</string>
-    <string name="form_description">Descripció</string>
-    <string name="form_select_image">Seleccionar Imatge</string>
-    <string name="form_label_optional">(opcional)</string>
-    <string name="shopping_list_selected">Seleccionats (%1$d elements)</string>
-    <string name="shopping_list_view">Veure Llista</string>
-    <string name="shopping_list_summary">Resum</string>
-    <string name="shopping_list_confirm">Confirmar</string>
-    <string name="memory_pending">Memòria Pendent</string>
-    <string name="memory_pending_lending">Pujada de memòria pendent.</string>
-    <string name="memory_pick">Seleccionar memòria</string>
-    <string name="memory_editor">Obrir editor de memòria</string>
-    <string name="memory_editor_title">Editor de Memòries d'Activitat</string>
-    <string name="memory_editor_save">Desar Memòria</string>
-    <string name="scanner_read">Llegit codi: %1$s</string>
-    <string name="scanner_error">No s'ha pogut llegir el codi</string>
-    <string name="progress_download">Descarregant...</string>
-    <string name="progress_download_percentage">Descarregant... %1$d %</string>
-    <string name="progress_download_name">Descarregant %1$s...</string>
-    <string name="progress_download_name_percentage">Descarregant %1$s... %2$d %</string>
-    <string name="progress_upload">Pujant...</string>
-    <string name="progress_upload_percentage">Pujant... %1$d %</string>
-    <string name="progress_upload_name">Pujant %1$s...</string>
-    <string name="progress_upload_name_percentage">Pujant %1$s... %2$d %</string>
-    <string name="progress_local_fs_read">Llegint arxiu...</string>
-    <string name="progress_local_db_read">Llegint base de dades...</string>
-    <string name="progress_local_db_write">Escrivint a la base de dades...</string>
-    <string name="progress_data_processing">Processant...</string>
-    <string name="notification_lending_confirmed_title">Préstec Confirmat</string>
-    <string name="notification_lending_confirmed_message">Un administrador ha confirmat la teua sol·licitud de préstec.</string>
-    <string name="notification_lending_cancelled_title">Préstec Cancel·lat</string>
-    <string name="notification_lending_cancelled_message">El teu préstec ha sigut cancel·lat.</string>
-    <string name="notification_lending_created_title">Sol·licitud de Préstec</string>
-    <string name="notification_lending_created_message">S'ha creat una nova sol·licitud de préstec. Per favor, revisa-la i confirma-la.</string>
-    <string name="notification_lending_taken_title">Préstec Recollit</string>
-    <string name="notification_lending_taken_message">Has recollit el material del teu préstec.</string>
-    <string name="notification_lending_given_title">Préstec Entregat</string>
-    <string name="notification_lending_given_message">Se li ha entregat el material del seu préstec a un usuari.</string>
-    <string name="notification_lending_returned_title">Préstec Tornat</string>
-    <string name="notification_lending_returned_message">Has tornat els elements del teu préstec. Per favor, recorda pujar la memòria de l'activitat.</string>
-    <string name="notification_lending_returned_other_title">Préstec Retornat</string>
-    <string name="notification_lending_returned_other_message">Un usuari ha tornat el material d'un préstec.</string>
+    <string name="lending_details_call_user" translatable="false">Cridar Usuari</string>
+    <string name="lending_details_whatsapp" translatable="false">WhatsApp</string>
+    <string name="lending_details_copy_number" translatable="false">Copiar Mòbil</string>
+    <string name="lending_details_email" translatable="false">Enviar Email</string>
+    <string name="lending_details_notes" translatable="false">Notes:</string>
+    <string name="lending_details_from" translatable="false">Des de:</string>
+    <string name="lending_details_until" translatable="false">Fins a:</string>
+    <string name="lending_details_id" translatable="false">ID de Préstec:</string>
+    <string name="lending_details_user" translatable="false">Usuari:</string>
+    <string name="lending_details_nfc_title" translatable="false">Lector NFC</string>
+    <string name="lending_details_nfc_message" translatable="false">Posa el teu dispositiu prop de l\'etiqueta NFC per a registrar-lo automàticament.</string>
+    <string name="lending_details_scan_error_not_found" translatable="false">No s\'ha trobat l\'element al préstec</string>
+    <string name="personal_info" translatable="false">Informació Personal</string>
+    <string name="personal_info_username" translatable="false">Nom d\'usuari</string>
+    <string name="personal_info_email" translatable="false">Correu Electrònic</string>
+    <string name="femecv_sync_title" translatable="false">Sincronització FEMECV</string>
+    <string name="femecv_sync_enable" translatable="false">Iniciar Sessió en FEMECV</string>
+    <string name="femecv_sync_connected" translatable="false">Sincronitzant amb la FEMECV</string>
+    <string name="femecv_sync_disable" translatable="false">Desconnectar</string>
+    <string name="femecv_sync_login" translatable="false">Iniciar Sessió</string>
+    <string name="femecv_username" translatable="false">Nom d\'Usuari</string>
+    <string name="femecv_password" translatable="false">Contrasenya</string>
+    <string name="femecv_logo" translatable="false">Logo FEMECV</string>
+    <string name="femecv_notice" translatable="false">Aquesta app no està relacionada ni finançada per la FEMECV. Aquesta connexió és únicament una utilitat per facilitar l\'administració de les teues llicències. Després de fer click al botó d\'iniciar sessió, autoritzes al Centre Excursionista d\'Alcoi a obtenir i processar les teues llicències de la FEMECV.</string>
+    <string name="form_display_name" translatable="false">Nom a mostrar</string>
+    <string name="form_description" translatable="false">Descripció</string>
+    <string name="form_select_image" translatable="false">Seleccionar Imatge</string>
+    <string name="form_label_optional" translatable="false">(opcional)</string>
+    <string name="shopping_list_selected" translatable="false">Seleccionats (%1$d elements)</string>
+    <string name="shopping_list_view" translatable="false">Veure Llista</string>
+    <string name="shopping_list_summary" translatable="false">Resum</string>
+    <string name="shopping_list_confirm" translatable="false">Confirmar</string>
+    <string name="memory_pending" translatable="false">Memòria Pendent</string>
+    <string name="memory_pending_lending" translatable="false">Pujada de memòria pendent.</string>
+    <string name="memory_pick" translatable="false">Seleccionar memòria</string>
+    <string name="memory_editor" translatable="false">Obrir editor de memòria</string>
+    <string name="memory_editor_title" translatable="false">Editor de Memòries d\'Activitat</string>
+    <string name="memory_editor_save" translatable="false">Desar Memòria</string>
+    <string name="scanner_read" translatable="false">Llegit codi: %1$s</string>
+    <string name="scanner_error" translatable="false">No s\'ha pogut llegir el codi</string>
+    <string name="progress_download" translatable="false">Descarregant...</string>
+    <string name="progress_download_percentage" translatable="false">Descarregant... %1$d %</string>
+    <string name="progress_download_name" translatable="false">Descarregant %1$s...</string>
+    <string name="progress_download_name_percentage" translatable="false">Descarregant %1$s... %2$d %</string>
+    <string name="progress_upload" translatable="false">Pujant...</string>
+    <string name="progress_upload_percentage" translatable="false">Pujant... %1$d %</string>
+    <string name="progress_upload_name" translatable="false">Pujant %1$s...</string>
+    <string name="progress_upload_name_percentage" translatable="false">Pujant %1$s... %2$d %</string>
+    <string name="progress_local_fs_read" translatable="false">Llegint arxiu...</string>
+    <string name="progress_local_db_read" translatable="false">Llegint base de dades...</string>
+    <string name="progress_local_db_write" translatable="false">Escrivint a la base de dades...</string>
+    <string name="progress_data_processing" translatable="false">Processant...</string>
+    <string name="notification_lending_confirmed_title" translatable="false">Préstec Confirmat</string>
+    <string name="notification_lending_confirmed_message" translatable="false">Un administrador ha confirmat la teua sol·licitud de préstec.</string>
+    <string name="notification_lending_cancelled_title" translatable="false">Préstec Cancel·lat</string>
+    <string name="notification_lending_cancelled_message" translatable="false">El teu préstec ha sigut cancel·lat.</string>
+    <string name="notification_lending_created_title" translatable="false">Sol·licitud de Préstec</string>
+    <string name="notification_lending_created_message" translatable="false">S\'ha creat una nova sol·licitud de préstec. Per favor, revisa-la i confirma-la.</string>
+    <string name="notification_lending_taken_title" translatable="false">Préstec Recollit</string>
+    <string name="notification_lending_taken_message" translatable="false">Has recollit el material del teu préstec.</string>
+    <string name="notification_lending_given_title" translatable="false">Préstec Entregat</string>
+    <string name="notification_lending_given_message" translatable="false">Se li ha entregat el material del seu préstec a un usuari.</string>
+    <string name="notification_lending_returned_title" translatable="false">Préstec Tornat</string>
+    <string name="notification_lending_returned_message" translatable="false">Has tornat els elements del teu préstec. Per favor, recorda pujar la memòria de l\'activitat.</string>
+    <string name="notification_lending_returned_other_title" translatable="false">Préstec Retornat</string>
+    <string name="notification_lending_returned_other_message" translatable="false">Un usuari ha tornat el material d\'un préstec.</string>
+    <string name="error_dialog_title" translatable="false">Error descontrolat</string>
+    <string name="error_delete_references" translatable="false">Aquest element està referenciat per una altra entitat, no es pot eliminar.</string>
+    <string name="management_return" translatable="false">Retornar</string>
+    <string name="inventory_item_variation" translatable="false">Variació: %1$d</string>
+    <string name="none" translatable="false">Cap</string>
+    <string name="error_dialog_type" translatable="false">Tipus:</string>
+    <string name="error_dialog_stacktrace" translatable="false">Traça de pila:</string>
+    <string name="management_inventory_item_edit" translatable="false">Editar Material</string>
+    <string name="error_dialog_message" translatable="false">Missatge:</string>
+    <string name="management_lending_given_by" translatable="false">Donat per: %1$s el %2$s</string>
+    <string name="management_skip_memory" translatable="false">Saltar Memòria</string>
+    <string name="remove">Eliminar</string>
+    <string name="undo">Desfer</string>
+    <string name="lending_creation_error_allocation_title">No s\'han pogut reservar elements suficients</string>
+    <string name="inventory_item_nfc_id">ID NFC: %1$s</string>
+    <string name="create_inventory_item_nfc_id">ID NFC</string>
+    <string name="lending_details_cancel_confirm_title">Confirmar Cancel·lació de Préstec</string>
+    <string name="lending_details_cancel_confirm_message">Segur que vols cancel·lar aquest préstec?</string>
+    <string name="nfc_write_success">NFC escrit correctament</string>
+    <string name="nfc_error_read_only">L\'etiqueta NFC és de només lectura</string>
+    <string name="nfc_error_too_small">L\'etiqueta NFC no té prou memòria</string>
+    <string name="nfc_error_format_unsupported">L\'etiqueta NFC no s\'ha pogut formatar com a %1$s</string>
+    <string name="nfc_error_unknown">Error NFC desconegut: %1$s</string>
 </resources>

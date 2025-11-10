@@ -19,7 +19,7 @@ import kotlinx.io.files.SystemPathSeparator
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.network.RemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
@@ -41,7 +41,7 @@ suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: Progre
         this::class.simpleName ?: "generic",
         documentFile?.toString() ?: error("No document file for container")
     )
-    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+    if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Document file not found at path ($path). UUID could not be inferred.")
         Napier.d { "Tried to read non-existing file. Downloading..." }
@@ -56,12 +56,12 @@ suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: Progre
  */
 suspend fun DocumentFileContainer.writeFile(channel: ByteReadChannel, progressNotifier: ProgressNotifier? = null) {
     val path = fetchDocumentFilePath(progressNotifier, downloadIfNotExists = false)
-    PlatformFileSystem.write(path, channel, progressNotifier)
+    FileSystem.write(path, channel, progressNotifier)
 }
 
 suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? = null): ByteArray {
     val path = fetchDocumentFilePath(progressNotifier)
-    return PlatformFileSystem.read(path, progressNotifier)
+    return FileSystem.read(path, progressNotifier)
 }
 
 /**
@@ -74,7 +74,7 @@ suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? =
 suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
     val uuid = image ?: throw IllegalStateException("No image associated with this container.")
     val path = joinPaths(IMAGES_PATH, this::class.simpleName ?: "generic", uuid.toString())
-    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+    if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Image file not found at path ($path). UUID could not be inferred.")
         Napier.d { "Tried to read non-existing file. Downloading..." }
@@ -85,7 +85,7 @@ suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNoti
 
 suspend fun ImageFileContainer.imageFile(progressNotifier: ProgressNotifier? = null): ByteArray? = image?.let { uuid ->
     val path = fetchImageFilePath(progressNotifier)
-    return PlatformFileSystem.read(path)
+    return FileSystem.read(path)
 }
 
 
@@ -111,7 +111,7 @@ suspend fun FileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNo
     require(files.values.contains(uuid)) { "UUID must be in the container." }
 
     val path = joinPaths(FILES_PATH, this::class.simpleName ?: "generic", uuid.toString())
-    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+    if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Generic file not found at path ($path). UUID could not be inferred.")
         Napier.d { "Tried to read non-existing file. Downloading..." }
@@ -126,7 +126,7 @@ suspend fun FileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNo
  */
 suspend fun FileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
     val path = fetchFilePath(uuid, downloadIfNotExists = false)
-    PlatformFileSystem.write(path, channel, progressNotifier)
+    FileSystem.write(path, channel, progressNotifier)
 }
 
 /**
@@ -135,7 +135,7 @@ suspend fun FileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progre
  */
 suspend fun FileContainer.readFile(uuid: Uuid, progressNotifier: ProgressNotifier? = null): ByteArray {
     val path = fetchFilePath(uuid)
-    return PlatformFileSystem.read(path, progressNotifier)
+    return FileSystem.read(path, progressNotifier)
 }
 
 
@@ -151,7 +151,7 @@ suspend fun SubReferencedFileContainer.fetchFilePath(uuid: Uuid, progressNotifie
     require(ref != null) { "UUID must be in the container." }
 
     val path = joinPaths(FILES_PATH, ref.third, uuid.toString())
-    if (!PlatformFileSystem.exists(path) && downloadIfNotExists) {
+    if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Sub-referenced file not found at path ($path). UUID could not be inferred.")
         Napier.d { "Tried to read non-existing file. Downloading..." }
@@ -166,7 +166,7 @@ suspend fun SubReferencedFileContainer.fetchFilePath(uuid: Uuid, progressNotifie
  */
 suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
     val path = fetchFilePath(uuid, progressNotifier, downloadIfNotExists = false)
-    PlatformFileSystem.write(path, channel, progressNotifier)
+    FileSystem.write(path, channel, progressNotifier)
 }
 
 /**

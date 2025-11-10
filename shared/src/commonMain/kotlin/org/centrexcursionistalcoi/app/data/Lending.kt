@@ -19,8 +19,7 @@ data class Lending(
     @Serializable(InstantSerializer::class) val givenAt: Instant?,
 
     val returned: Boolean,
-    val receivedBy: String?,
-    @Serializable(InstantSerializer::class) val receivedAt: Instant?,
+    val receivedItems: List<ReceivedItem>,
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
@@ -51,8 +50,6 @@ data class Lending(
         "givenBy" to givenBy,
         "givenAt" to givenAt,
         "returned" to returned,
-        "receivedBy" to receivedBy,
-        "receivedAt" to receivedAt,
         "memorySubmitted" to memorySubmitted,
         "memorySubmittedAt" to memorySubmittedAt,
         "memoryDocument" to memoryDocument,

@@ -3,9 +3,10 @@ package org.centrexcursionistalcoi.app.data
 import io.github.aakira.napier.Napier
 import io.ktor.client.request.forms.formData
 import io.ktor.http.content.PartData
+import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
-import org.centrexcursionistalcoi.app.storage.fs.PlatformFileSystem
+import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.utils.isZero
 
 suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
@@ -24,7 +25,7 @@ suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                     }
 
                     else -> {
-                        PlatformFileSystem.read(value.uuid.toString())
+                        FileSystem.read(value.uuid.toString())
                     }
                 }
             }
@@ -40,7 +41,8 @@ suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                 is Uuid -> append(key, value.toString())
                 is Number -> append(key, value)
                 is Boolean -> append(key, value)
-                is ByteArray -> append(key, value)
+                // Encode ByteArray as Base64 string
+                is ByteArray -> append(key, Base64.UrlSafe.encode(value))
                 else -> Napier.e { "Unsupported type: ${value::class.simpleName ?: "N/A"}" }
             }
         }

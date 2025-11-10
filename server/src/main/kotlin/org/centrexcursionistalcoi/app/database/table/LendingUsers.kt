@@ -12,16 +12,7 @@ object LendingUsers : UUIDTable("lendingUsers") {
     /** The Subject Identifier of the user */
     val userSub = reference("sub", UserReferences, ReferenceOption.CASCADE, ReferenceOption.RESTRICT).uniqueIndex()
 
-    val fullName = text("fullName")
-    val nif = text("nif")
-
     val phoneNumber = text("phoneNumber")
 
     val sports = array("sports", EnumerationNameColumnType(Sports::class, 32))
-
-    val address = text("address")
-    val postalCode = text("postalCode")
-    val city = text("city")
-    val province = text("province")
-    val country = text("country")
 }

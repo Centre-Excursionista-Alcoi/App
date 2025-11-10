@@ -16,32 +16,16 @@ class LendingUserEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverte
 
     var userSub by LendingUsers.userSub
 
-    var fullName by LendingUsers.fullName
-
-    var nif by LendingUsers.nif
     var phoneNumber by LendingUsers.phoneNumber
 
     var sports by LendingUsers.sports
-
-    var address by LendingUsers.address
-    var postalCode by LendingUsers.postalCode
-    var city by LendingUsers.city
-    var province by LendingUsers.province
-    var country by LendingUsers.country
 
     @ExperimentalUuidApi
     context(_: JdbcTransaction)
     override fun toData(): LendingUser = LendingUser(
         id = id.value.toKotlinUuid(),
         sub = userSub.value,
-        fullName = fullName,
-        nif = nif,
         phoneNumber = phoneNumber,
         sports = sports,
-        address = address,
-        postalCode = postalCode,
-        city = city,
-        province = province,
-        country = country,
     )
 }

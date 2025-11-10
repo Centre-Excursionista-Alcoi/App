@@ -10,11 +10,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-expect val DepartmentsRepository : Repository<Department, Int>
-
-object DepartmentsSettingsRepository : SettingsRepository<Department, Int>("departments", Department.serializer())
-
-object DepartmentsDatabaseRepository : DatabaseRepository<Department, Int>() {
+object DepartmentsRepository : DatabaseRepository<Department, Int>() {
     override val queries by lazy { databaseInstance.departmentsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries

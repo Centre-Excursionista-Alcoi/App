@@ -30,14 +30,16 @@ fun getCredential(key: String): String? {
     return System.getenv(key) ?: gradleProperty.orNull ?: credentialsProperties?.getProperty(key)
 }
 
+val versionProperties = readProperties("version.properties", rootProject.rootDir) ?: error("Could not read version.properties")
+
 group = "org.centrexcursionistalcoi.app"
-version = "2.0.0"
+version = versionProperties.getProperty("VERSION_NAME") ?: error("VERSION_NAME not found in version.properties")
 
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment", "-Dapp.version=$version")
 }
 
 kotlin {
@@ -58,6 +60,9 @@ java {
 dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
+
+    // CSV serialization
+    implementation(libs.kotlinx.serializationCsv)
 
     // Ktor serialization
     implementation(libs.ktor.serialization.kotlinxJson)
@@ -91,6 +96,9 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.sqlite)
 
+    // Encryption
+    implementation(libs.bcrypt)
+
     // Redis
     implementation(libs.kreds)
 
@@ -107,10 +115,6 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.register<JavaExec>("generateMigrationScript") {
     group = "application"
     description = "Generate a migration script in the path src/main/kotlin/org/centrexcursionistalcoi/app/database/migrations"
@@ -118,9 +122,30 @@ tasks.register<JavaExec>("generateMigrationScript") {
     mainClass = "org.centrexcursionistalcoi.app.database.GenerateMigrationScriptKt"
 }
 
+fun Manifest.configureAppManifest() {
+    attributes(
+        "Implementation-Version" to version
+    )
+}
+
+tasks.test {
+    useJUnitPlatform()
+
+    systemProperty("app.version", version)
+}
+
+// Regular (thin) JAR
+tasks.jar {
+    manifest.configureAppManifest()
+}
+
+// Fat (shadow) JAR
 tasks.withType<ShadowJar> {
     // Make sure all drivers are included in the fat jar
     mergeServiceFiles()
+
+    // Add manifest attributes
+    manifest.configureAppManifest()
 }
 
 sentry {

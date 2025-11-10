@@ -116,6 +116,16 @@ object PushNotifierListener : NotifierManager.Listener {
                         )
                     }
                 }
+                is PushNotification.LendingPartiallyReturned -> {
+                    if (profile?.sub == notification.userSub) {
+                        // The lending is for the current user
+                        showNotification(
+                            Res.string.notification_lending_returned_partial_title,
+                            Res.string.notification_lending_returned_partial_message,
+                            data
+                        )
+                    }
+                }
 
                 // --- Admin notifications --
                 is PushNotification.NewLendingRequest -> {

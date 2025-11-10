@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.error
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import kotlin.reflect.KClass
+import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -77,7 +78,8 @@ sealed interface Error {
     @Serializable
     @SerialName("InvalidContentType")
     class InvalidContentType(
-        @Serializable(ContentTypeSerializer::class) val expected: ContentType? = null
+        @Serializable(ContentTypeSerializer::class) val expected: ContentType? = null,
+        @Serializable(ContentTypeSerializer::class) val actual: ContentType? = null,
     ) : Error {
         override val code: Int = ERROR_INVALID_CONTENT_TYPE
         override val description: String = "Content-Type must be: $expected"
@@ -113,9 +115,9 @@ sealed interface Error {
 
     @Serializable
     @SerialName("MissingArgument")
-    class MissingArgument() : Error {
+    class MissingArgument(val argumentName: String? = null) : Error {
         override val code: Int = ERROR_MISSING_ARGUMENT
-        override val description: String = "Missing argument"
+        override val description: String = if (argumentName == null) "Missing argument" else "Missing argument: $argumentName"
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
@@ -232,13 +234,13 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("AuthentikNotConfigured")
-    class AuthentikNotConfigured() : Error {
-        override val code: Int = ERROR_AUTHENTIK_NOT_CONFIGURED
-        override val description: String = "Authentik is not configured on the server."
+    @SerialName("InvalidArgument")
+    class InvalidArgument(val argument: String? = null) : Error {
+        override val code: Int = ERROR_INVALID_ARGUMENT
+        override val description: String = "Invalid argument${if (argument != null) ": $argument" else ""}."
 
         @Serializable(HttpStatusCodeSerializer::class)
-        override val statusCode: HttpStatusCode = HttpStatusCode.ServiceUnavailable
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
     }
 
     @Serializable
@@ -261,6 +263,125 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("EndDateCannotBeBeforeStart")
+    class EndDateCannotBeBeforeStart(): Error {
+        override val code: Int = ERROR_END_DATE_CANNOT_BE_BEFORE_START
+        override val description: String = "End date cannot be before start date."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("DateMustBeInFuture")
+    class DateMustBeInFuture(): Error {
+        override val code: Int = ERROR_DATE_MUST_BE_IN_FUTURE
+        override val description: String = "The date must be in the future."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("ListCannotBeEmpty")
+    class ListCannotBeEmpty(val argName: String? = null): Error {
+        override val code: Int = ERROR_LIST_CANNOT_BE_EMPTY
+        override val description: String = "\"${argName ?: "List"}\" cannot be empty."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("MemoryNotSubmitted")
+    class MemoryNotSubmitted(): Error {
+        override val code: Int = ERROR_MEMORY_NOT_SUBMITTED
+        override val description: String = "You have a lending with a pending memory."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("LendingConflict")
+    class LendingConflict(): Error {
+        override val code: Int = ERROR_LENDING_CONFLICT
+        override val description: String = "There are conflicts with your lending request: there's another lending overlapping with the same items."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("LendingNotTaken")
+    class LendingNotTaken(val lendingId: Uuid? = null): Error {
+        override val code: Int = ERROR_LENDING_NOT_TAKEN
+        override val description: String = "Lending with id $lendingId has not been taken yet."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("InvalidItemInReturnedItems")
+    class InvalidItemInReturnedItems(): Error {
+        override val code: Int = ERROR_INVALID_ITEM_IN_RETURNED_ITEMS
+        override val description: String = "One or more items in the returned items list are invalid."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("PasswordNotSafeEnough")
+    class PasswordNotSafeEnough(): Error {
+        override val code: Int = ERROR_PASSWORD_NOT_SAFE_ENOUGH
+        override val description: String = "Password is not safe enough. It must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, and one number."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("NIFNotRegistered")
+    class NIFNotRegistered(): Error {
+        override val code: Int = ERROR_NIF_NOT_REGISTERED
+        override val description: String = "There is not any user registered with the given NIF."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.NotFound
+    }
+
+    @Serializable
+    @SerialName("IncorrectPasswordOrNIF")
+    class IncorrectPasswordOrNIF(): Error {
+        override val code: Int = ERROR_INCORRECT_PASSWORD_OR_NIF
+        override val description: String = "The NIF or password is incorrect."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Unauthorized
+    }
+
+    @Serializable
+    @SerialName("PasswordNotSet")
+    class PasswordNotSet(): Error {
+        override val code: Int = ERROR_PASSWORD_NOT_SET
+        override val description: String = "The user has not set a password yet."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("UserAlreadyRegisteredForLending")
+    class UserAlreadyRegisteredForLending(): Error {
+        override val code: Int = ERROR_USER_ALREADY_REGISTERED_FOR_LENDING
+        override val description: String = "The user is already registered for lending."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
 
     companion object {
         const val ERROR_UNKNOWN = 0
@@ -281,9 +402,21 @@ sealed interface Error {
         const val ERROR_FCM_TOKEN_IS_REQUIRED = 15
         const val ERROR_MEMORY_NOT_GIVEN = 16
         const val ERROR_USER_NOT_FOUND = 17
-        const val ERROR_AUTHENTIK_NOT_CONFIGURED = 18
+        const val ERROR_INVALID_ARGUMENT = 18
         const val ERROR_SERIALIZATION_ERROR = 19
         const val ERROR_ENTITY_DELETE_REFERENCES_EXIST = 20
+        const val ERROR_END_DATE_CANNOT_BE_BEFORE_START = 21
+        const val ERROR_DATE_MUST_BE_IN_FUTURE = 22
+        const val ERROR_LIST_CANNOT_BE_EMPTY = 23
+        const val ERROR_MEMORY_NOT_SUBMITTED = 24
+        const val ERROR_LENDING_CONFLICT = 25
+        const val ERROR_LENDING_NOT_TAKEN = 26
+        const val ERROR_INVALID_ITEM_IN_RETURNED_ITEMS = 27
+        const val ERROR_PASSWORD_NOT_SAFE_ENOUGH = 28
+        const val ERROR_NIF_NOT_REGISTERED = 29
+        const val ERROR_INCORRECT_PASSWORD_OR_NIF = 30
+        const val ERROR_PASSWORD_NOT_SET = 31
+        const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -304,9 +437,21 @@ sealed interface Error {
             15 -> FCMTokenIsRequired.serializer()
             16 -> MemoryNotGiven.serializer()
             17 -> UserNotFound.serializer()
-            18 -> AuthentikNotConfigured.serializer()
+            18 -> InvalidArgument.serializer()
             19 -> SerializationError.serializer()
             20 -> EntityDeleteReferencesExist.serializer()
+            ERROR_END_DATE_CANNOT_BE_BEFORE_START -> EndDateCannotBeBeforeStart.serializer()
+            ERROR_DATE_MUST_BE_IN_FUTURE -> DateMustBeInFuture.serializer()
+            ERROR_LIST_CANNOT_BE_EMPTY -> ListCannotBeEmpty.serializer()
+            ERROR_MEMORY_NOT_SUBMITTED -> MemoryNotSubmitted.serializer()
+            ERROR_LENDING_CONFLICT -> LendingConflict.serializer()
+            ERROR_LENDING_NOT_TAKEN -> LendingNotTaken.serializer()
+            ERROR_INVALID_ITEM_IN_RETURNED_ITEMS -> InvalidItemInReturnedItems.serializer()
+            ERROR_PASSWORD_NOT_SAFE_ENOUGH -> PasswordNotSafeEnough.serializer()
+            ERROR_NIF_NOT_REGISTERED -> NIFNotRegistered.serializer()
+            ERROR_INCORRECT_PASSWORD_OR_NIF -> IncorrectPasswordOrNIF.serializer()
+            ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
+            ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
             else -> null
         }
     }

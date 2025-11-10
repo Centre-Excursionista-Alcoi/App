@@ -18,7 +18,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -127,8 +127,7 @@ class TestLendings {
             givenBy = null,
             givenAt = null,
             returned = false,
-            receivedBy = null,
-            receivedAt = null,
+            receivedItems = emptyList(),
             from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
             to = LocalDate.of(2025, 10, 9).toKotlinLocalDate(),
             notes = null,
@@ -138,13 +137,13 @@ class TestLendings {
             memoryPlainText = null,
             memoryReviewed = false,
             items = listOf(
-                InventoryItem(itemId.toKotlinUuid(), null, itemTypeId.toKotlinUuid())
+                InventoryItem(itemId.toKotlinUuid(), null, itemTypeId.toKotlinUuid(), null)
             ),
         )
 
         assertJsonEquals(
+            json.encodeToString(Lending.serializer(), instance),
             json.encodeEntityToString(entity),
-            json.encodeToString(Lending.serializer(), instance)
         )
     }
 }

@@ -34,6 +34,14 @@ class LoadingViewModel(
                 Napier.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
 
+                Napier.d { "Updating Sentry user context..." }
+                Sentry.setUser(
+                    User().apply {
+                        id = profile.sub
+                        email = profile.email
+                    }
+                )
+
                 Napier.d { "Scheduling data sync..." }
                 BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
@@ -74,15 +82,6 @@ class LoadingViewModel(
         try {
             // Try to fetch the profile to see if the session is still valid
             if (syncAll(progressNotifier = progressNotifier)) {
-                ProfileRepository.getProfile()?.let { profile ->
-                    val sentryUser = User().apply {
-                        id = profile.sub
-                        username = profile.username
-                        email = profile.email
-                    }
-                    Sentry.setUser(sentryUser)
-                }
-
                 Napier.d { "Scheduling periodic sync..." }
                 BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                     input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),

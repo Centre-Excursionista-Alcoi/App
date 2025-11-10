@@ -15,8 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
@@ -72,7 +73,7 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.dialog.ShoppingListDialog
-import org.centrexcursionistalcoi.app.ui.page.home.HomeMainPage
+import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
@@ -88,6 +89,7 @@ fun HomeScreen(
     onLendingSignUpRequested: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onLogoutRequested: () -> Unit,
+    onSettingsRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
 ) {
     val profile by model.profile.collectAsState()
@@ -112,6 +114,7 @@ fun HomeScreen(
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
+            onSettingsRequested = onSettingsRequested,
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
@@ -144,14 +147,14 @@ fun HomeScreen(
     } ?: LoadingBox()
 }
 
-private const val IDX_HOME = 0
+private const val IDX_LENDING = 0
 private const val IDX_MANAGEMENT = 1
 private const val IDX_PROFILE_NOT_ADMIN = 1
 private const val IDX_PROFILE_ADMIN = 2
 
 private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composable (() -> String)>> {
     return mutableListOf<Pair<ImageVector, @Composable (() -> String)>>().apply {
-        add(Icons.Default.Home to { stringResource(Res.string.nav_home) })
+        add(Icons.Default.Inventory2 to { stringResource(Res.string.nav_lendings) })
         if (isAdmin) {
             add(Icons.Default.SupervisorAccount to { stringResource(Res.string.nav_management) })
         }
@@ -165,6 +168,8 @@ private fun HomeScreenContent(
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
+
+    onSettingsRequested: () -> Unit,
 
     profile: ProfileResponse,
     onLogoutRequested: () -> Unit,
@@ -272,7 +277,7 @@ private fun HomeScreenContent(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = pager.currentPage == IDX_HOME && shoppingList.isNotEmpty(),
+                visible = pager.currentPage == IDX_LENDING && shoppingList.isNotEmpty(),
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it },
             ) {
@@ -328,7 +333,33 @@ private fun HomeScreenContent(
                     Spacer(Modifier.weight(1f))
                     TooltipBox(
                         state = rememberTooltipState(),
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.settings)) }
+                        }
+                    ) {
+                        NavigationRailItem(
+                            selected = false,
+                            onClick = onSettingsRequested,
+                            icon = { Icon(Icons.Default.Settings, stringResource(Res.string.settings)) }
+                        )
+                    }
+                    TooltipBox(
+                        state = rememberTooltipState(),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.logout)) }
+                        }
+                    ) {
+                        NavigationRailItem(
+                            selected = false,
+                            onClick = { showingLogoutDialog = true },
+                            icon = { Icon(Icons.AutoMirrored.Default.Logout, stringResource(Res.string.logout)) }
+                        )
+                    }
+                    TooltipBox(
+                        state = rememberTooltipState(),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
                         tooltip = {
                             PlainTooltip { Text(stringResource(Res.string.force_sync)) }
                         }
@@ -471,7 +502,7 @@ fun HomeScreenPagerContent(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (page) {
-            IDX_HOME -> HomeMainPage(
+            IDX_LENDING -> LendingsPage(
                 windowSizeClass,
                 snackbarHostState,
                 notificationPermissionResult,

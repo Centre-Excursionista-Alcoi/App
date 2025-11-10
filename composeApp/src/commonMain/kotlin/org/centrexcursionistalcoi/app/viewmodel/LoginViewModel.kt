@@ -1,61 +1,48 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.auth.AuthFlowLogic
+import org.centrexcursionistalcoi.app.doMain
+import org.centrexcursionistalcoi.app.exception.ServerException
 
-class LoginViewModel: ViewModel() {
-    private val _isLoggingIn = MutableStateFlow(false)
-    val isLoggingIn get() = _isLoggingIn.asStateFlow()
+class LoginViewModel : ErrorViewModel() {
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading get() = _isLoading.asStateFlow()
 
-    private val _isRegistering = MutableStateFlow(false)
-    val isRegistering get() = _isRegistering.asStateFlow()
-
-    private val _registerError = MutableStateFlow<String?>(null)
-    val registerError get() = _registerError.asStateFlow()
-
-    fun login() = viewModelScope.launch {
+    fun login(nif: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
         try {
-            if (isLoggingIn.value) {
-                Napier.d { "Already loading." }
-                return@launch
-            }
+            _isLoading.emit(true)
 
-            _isLoggingIn.emit(true)
+            AuthBackend.login(nif, password)
 
-            AuthFlowLogic.start()
-
-            _isLoggingIn.emit(false)
+            doMain { afterLogin() }
+        } catch (e: ServerException) {
+            setError(e)
         } finally {
-            _isLoggingIn.emit(false)
+            _isLoading.emit(false)
         }
     }
 
-    fun clearErrors() {
-        _registerError.value = null
-    }
-
-    fun register(username: String, name: String, email: String, password: String): Deferred<Boolean> = viewModelScope.async {
+    fun register(nif: String, password: String, afterLogin: () -> Unit) = viewModelScope.async {
         try {
-            _isRegistering.emit(true)
-            _registerError.emit(null)
+            _isLoading.emit(true)
+            clearError()
 
-            val exception = AuthBackend.register(username, name, email, password)
-            if (exception != null) {
-                _registerError.emit(exception.message ?: "Unknown error")
-                false
-            } else {
-                true
-            }
+            // Try to register
+            AuthBackend.register(nif, password)
+
+            // If successful, log in
+            AuthBackend.login(nif, password)
+
+            doMain { afterLogin() }
+        } catch (e: ServerException) {
+            setError(e)
         } finally {
-            _isRegistering.emit(false)
+            _isLoading.emit(false)
         }
     }
 }

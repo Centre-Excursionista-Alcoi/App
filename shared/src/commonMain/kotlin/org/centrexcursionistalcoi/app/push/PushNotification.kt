@@ -44,6 +44,11 @@ sealed interface PushNotification {
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingReturned push notification data")
                     LendingReturned(lendingId, userSub)
                 }
+                LendingPartiallyReturned.TYPE -> {
+                    lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingPartiallyReturned push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingPartiallyReturned push notification data")
+                    LendingPartiallyReturned(lendingId, userSub)
+                }
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
         }
@@ -123,6 +128,18 @@ sealed interface PushNotification {
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingTaken"
+        }
+
+        override val type: String = TYPE
+    }
+
+    @Serializable
+    class LendingPartiallyReturned(
+        override val lendingId: Uuid,
+        override val userSub: String,
+    ) : LendingUpdated {
+        companion object {
+            const val TYPE = "LendingPartiallyReturned"
         }
 
         override val type: String = TYPE

@@ -48,7 +48,7 @@ fun Route.profileRoutes() {
             LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
         }
 
-        val reference = Database { UserReferenceEntity.getOrProvide(session) }
+        val reference = Database { UserReferenceEntity[session.sub] }
         try {
             if (reference.femecvUsername != null && reference.femecvPassword != null) {
                 val lastSync = reference.femecvLastSync
@@ -65,7 +65,7 @@ fun Route.profileRoutes() {
         call.respond(
             ProfileResponse(
                 sub = session.sub,
-                username = session.username,
+                fullName = session.fullName,
                 email = session.email,
                 groups = session.groups,
                 departments = departments,
@@ -83,47 +83,26 @@ fun Route.profileRoutes() {
 
         val existingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull() }
         if (existingUser != null) {
-            call.respondText("User already signed up", status = HttpStatusCode.Conflict)
+            call.respondError(Error.UserAlreadyRegisteredForLending())
             return@post
         }
 
         val parameters = call.receiveParameters()
-        val fullName = parameters["fullName"]
-        val nif = parameters["nif"]
         val phoneNumber = parameters["phoneNumber"]
         val sports = parameters["sports"]?.split(',')?.map(String::trim)?.map(Sports::valueOf)
-        val address = parameters["address"]
-        val postalCode = parameters["postalCode"]
-        val city = parameters["city"]
-        val province = parameters["province"]
-        val country = parameters["country"]
 
-        if (nif.isNullOrBlank()) return@post call.respondText("NIF is required", status = HttpStatusCode.BadRequest)
-        if (phoneNumber.isNullOrBlank()) return@post call.respondText("Phone number is required", status = HttpStatusCode.BadRequest)
-        if (fullName.isNullOrBlank()) return@post call.respondText("Full name is required", status = HttpStatusCode.BadRequest)
-        if (sports.isNullOrEmpty()) return@post call.respondText("At least one sport must be selected", status = HttpStatusCode.BadRequest)
-        if (address.isNullOrBlank()) return@post call.respondText("Address is required", status = HttpStatusCode.BadRequest)
-        if (postalCode.isNullOrBlank()) return@post call.respondText("Postal code is required", status = HttpStatusCode.BadRequest)
-        if (city.isNullOrBlank()) return@post call.respondText("City is required", status = HttpStatusCode.BadRequest)
-        if (province.isNullOrBlank()) return@post call.respondText("Province is required", status = HttpStatusCode.BadRequest)
-        if (country.isNullOrBlank()) return@post call.respondText("Country is required", status = HttpStatusCode.BadRequest)
+        if (phoneNumber.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("phoneNumber"))
+        if (sports.isNullOrEmpty()) return@post call.respondError(Error.MissingArgument("sports"))
 
         Database {
             LendingUserEntity.new {
-                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
-                this.fullName = fullName
-                this.nif = nif
+                userSub = Database { UserReferenceEntity[session.sub].id }
                 this.phoneNumber = phoneNumber
                 this.sports = sports
-                this.address = address
-                this.postalCode = postalCode
-                this.city = city
-                this.province = province
-                this.country = country
             }
         }
 
-        call.respondText("OK", status = HttpStatusCode.Created)
+        call.respond(HttpStatusCode.Created)
     }
     get("/profile/insurances") {
         val session = getUserSessionOrFail() ?: return@get
@@ -160,7 +139,7 @@ fun Route.profileRoutes() {
 
         Database {
             UserInsuranceEntity.new {
-                userSub = Database { UserReferenceEntity.getOrProvide(session).id }
+                userSub = Database { UserReferenceEntity[session.sub].id }
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
@@ -187,7 +166,7 @@ fun Route.profileRoutes() {
             return@post call.respondText("FEMECV login failed: ${e.message}", status = HttpStatusCode.Unauthorized)
         }
 
-        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+        val userReference = Database { UserReferenceEntity[session.sub] }
 
         Database {
             userReference.femecvUsername = username
@@ -207,7 +186,7 @@ fun Route.profileRoutes() {
 
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@delete
 
-        val userReference = Database { UserReferenceEntity.getOrProvide(session) }
+        val userReference = Database { UserReferenceEntity[session.sub] }
 
         // Delete FEMECV-linked insurances
         Database {
@@ -237,7 +216,7 @@ fun Route.profileRoutes() {
         if (token.isNullOrBlank()) return@post respondError(Error.FCMTokenIsRequired())
 
         Database {
-            val reference = UserReferenceEntity.getOrProvide(session)
+            val reference = UserReferenceEntity[session.sub]
             reference.addFCMRegistrationToken(token, deviceId)
         }
 
@@ -255,7 +234,7 @@ fun Route.profileRoutes() {
         if (token.isNullOrBlank()) return@delete respondError(Error.DeviceIdIsRequired())
 
         Database {
-            val reference = UserReferenceEntity.getOrProvide(session)
+            val reference = UserReferenceEntity[session.sub]
             FCMRegistrationTokenEntity.find {
                 (FCMRegistrationTokens.deviceId eq token) and (FCMRegistrationTokens.user eq reference.id)
             }.forEach { it.delete() }

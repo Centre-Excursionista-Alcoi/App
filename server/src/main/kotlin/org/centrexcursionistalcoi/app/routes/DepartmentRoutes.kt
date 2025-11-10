@@ -113,7 +113,7 @@ fun Route.departmentsRoutes() {
             Database {
                 DepartmentMemberEntity.new {
                     this.department = department
-                    this.userSub = Database { UserReferenceEntity.getOrProvide(session).id }
+                    this.userSub = Database { UserReferenceEntity[session.sub].id }
                     this.confirmed = confirmed
                 }
             }
