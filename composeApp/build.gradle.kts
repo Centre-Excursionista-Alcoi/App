@@ -214,7 +214,7 @@ kotlin {
         // https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table
         pod("Sentry") {
             // Check the version compatibility table for the correct version
-            version = "8.55.1"
+            version = "8.57.1"
             linkOnly = true
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
