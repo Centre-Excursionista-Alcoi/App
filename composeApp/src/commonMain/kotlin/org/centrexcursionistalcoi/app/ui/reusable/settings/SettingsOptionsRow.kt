@@ -29,6 +29,7 @@ fun <T: Any> SettingsOptionsRow(
     contentDescription: String? = title,
     toString: (T) -> String = { it.toString() },
     optionLeadingContent: (@Composable (T) -> Unit)? = null,
+    key: ((T) -> Any)? = null,
     onOptionSelected: (T) -> Unit,
 ) {
     var showingDialog by remember { mutableStateOf(false) }
@@ -37,7 +38,7 @@ fun <T: Any> SettingsOptionsRow(
             onDismissRequest = { showingDialog = false },
             text = {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(items = options, key = { it }) { option ->
+                    items(items = options, key = key) { option ->
                         ListItem(
                             headlineContent = { Text(toString(option)) },
                             leadingContent = optionLeadingContent?.let {

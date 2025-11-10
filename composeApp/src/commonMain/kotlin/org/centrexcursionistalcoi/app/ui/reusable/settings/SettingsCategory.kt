@@ -12,6 +12,6 @@ fun SettingsCategory(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        modifier = Modifier.padding(top = 12.dp)
+        modifier = Modifier.padding(top = 12.dp).padding(horizontal = 8.dp)
     )
 }
