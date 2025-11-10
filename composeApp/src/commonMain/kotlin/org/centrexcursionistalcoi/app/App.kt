@@ -35,16 +35,16 @@ import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
-import org.centrexcursionistalcoi.app.ui.screen.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingReturnScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
-import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
+import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
+import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
