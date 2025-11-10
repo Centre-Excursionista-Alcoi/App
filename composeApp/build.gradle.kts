@@ -238,6 +238,8 @@ sqldelight {
         create("Database") {
             generateAsync.set(true)
             packageName.set("org.centrexcursionistalcoi.app.database")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
+            verifyMigrations.set(true)
         }
     }
 }

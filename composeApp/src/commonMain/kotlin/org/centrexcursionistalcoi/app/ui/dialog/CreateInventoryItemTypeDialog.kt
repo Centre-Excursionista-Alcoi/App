@@ -23,7 +23,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
+import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
@@ -31,14 +31,14 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun CreateInventoryItemTypeDialog(
     /** Existing categories, for autocomplete. */
-    categories: Set<String>,
-    onCreate: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
+    allCategories: Set<String>,
+    onCreate: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
     var displayName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
+    var categories by remember { mutableStateOf(emptyList<String>()) }
 
     var image by remember { mutableStateOf<PlatformFile?>(null) }
     val imagePicker = rememberFilePickerLauncher(
@@ -66,10 +66,11 @@ fun CreateInventoryItemTypeDialog(
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                AutocompleteFormField(
-                    value = category,
-                    onValueChange = { category = it },
-                    suggestions = categories,
+                AutocompleteMultipleFormField(
+                    entries = categories,
+                    onEntryAdded = { categories = categories + it },
+                    onEntryRemoved = { categories = categories - it },
+                    suggestions = allCategories,
                     label = { Text(stringResource(Res.string.management_inventory_item_type_category).optional()) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -97,7 +98,7 @@ fun CreateInventoryItemTypeDialog(
                 enabled = !isLoading && displayName.isNotBlank(),
                 onClick = {
                     isLoading = true
-                    onCreate(displayName, description, category, image).invokeOnCompletion { onDismissRequested() }
+                    onCreate(displayName, description, categories, image).invokeOnCompletion { onDismissRequested() }
                 }
             ) { Text(stringResource(Res.string.create)) }
         },

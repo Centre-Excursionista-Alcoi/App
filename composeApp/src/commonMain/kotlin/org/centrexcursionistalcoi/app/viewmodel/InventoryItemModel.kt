@@ -59,10 +59,10 @@ class InventoryItemModel(private val typeId: Uuid) : ErrorViewModel() {
         doAsync { InventoryItemsRemoteRepository.create(variation.takeUnless { it.isEmpty() }, type.id, amount) }
     }
 
-    fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, category: String?, imageFile: PlatformFile?) = launch {
+    fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, categories: List<String>?, imageFile: PlatformFile?) = launch {
         doAsync {
             val image = imageFile?.readBytes()
-            InventoryItemTypesRemoteRepository.update(id, displayName, description, category, image)
+            InventoryItemTypesRemoteRepository.update(id, displayName, description, categories, image)
         }
     }
 }

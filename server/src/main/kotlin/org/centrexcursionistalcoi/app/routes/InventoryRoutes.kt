@@ -3,15 +3,20 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
+import io.sentry.Sentry
 import java.util.UUID
 import kotlin.io.encoding.Base64
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
+import org.centrexcursionistalcoi.app.serialization.list
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 
@@ -23,7 +28,7 @@ fun Route.inventoryRoutes() {
         creator = { formParameters ->
             var displayName: String? = null
             var description: String? = null
-            var category: String? = null
+            var categories: List<String>? = null
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
@@ -32,7 +37,17 @@ fun Route.inventoryRoutes() {
                         when (partData.name) {
                             "displayName" -> displayName = partData.value
                             "description" -> description = partData.value
-                            "category" -> category = partData.value
+                            "categories" -> categories = partData.value.let {
+                                try {
+                                    json.decodeFromString(String.serializer().list(), it)
+                                } catch (e: SerializationException) {
+                                    Sentry.captureException(e)
+                                    null
+                                } catch (e: IllegalArgumentException) {
+                                    Sentry.captureException(e)
+                                    null
+                                }
+                            }
                         }
                     }
                     is PartData.FileItem -> {
@@ -55,7 +70,7 @@ fun Route.inventoryRoutes() {
                 InventoryItemTypeEntity.new {
                     this.displayName = displayName
                     this.description = description
-                    this.category = category
+                    this.categories = categories
                     this.image = imageFile
                 }
             }

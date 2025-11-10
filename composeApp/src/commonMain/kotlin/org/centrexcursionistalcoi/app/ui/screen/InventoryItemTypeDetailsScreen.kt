@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -83,6 +86,20 @@ fun InventoryItemTypeDetailsScreen(
                         .padding(bottom = 8.dp)
                         .sharedBounds("type-${typeId}-image")
                 )
+            }
+
+            val categories = type?.categories
+            if (!categories.isNullOrEmpty()) item {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    items(categories) { category ->
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(category) },
+                        )
+                    }
+                }
             }
 
             val description = type?.description

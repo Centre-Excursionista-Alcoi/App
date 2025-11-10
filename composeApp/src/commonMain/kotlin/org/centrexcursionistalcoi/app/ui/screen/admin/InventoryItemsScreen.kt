@@ -114,7 +114,7 @@ fun InventoryItemsScreen(
     inventoryItemTypesCategories: Set<String>?,
     items: List<ReferencedInventoryItem>,
     onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
-    onUpdate: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: PlatformFile?) -> Job,
     onDelete: () -> Job,
     onUpdateItem: (ReferencedInventoryItem, variation: String?, nfcId: ByteArray?) -> Job,
     onDeleteItem: (ReferencedInventoryItem) -> Job,

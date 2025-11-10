@@ -233,11 +233,11 @@ fun LendingsPage(
                     .sortedBy { (type) -> type.displayName }
                     .filter { (type) ->
                         if (selectedCategories.isNotEmpty())
-                            type.category in selectedCategories
+                            type.categories.orEmpty().any { it in selectedCategories }
                         else
                             true
                     }
-                val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
+                val categories = inventoryItems?.flatMap { it.type.categories.orEmpty() }?.toSet().orEmpty().toList()
 
                 stickyHeader("lending_header") {
                     Column(modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp)) {

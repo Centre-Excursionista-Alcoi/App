@@ -14,8 +14,10 @@ import org.centrexcursionistalcoi.app.error.Error
 /**
  * Asserts that two JSON strings are equivalent, ignoring formatting and key order.
  * Also ignores types, so `"1"` is equal to `1`.
+ *
+ * Optionally, a set of keys to ignore during comparison can be provided (only applies for objects).
  */
-fun assertJsonEquals(expected: String, actual: String) {
+fun assertJsonEquals(expected: String, actual: String, ignoreKeys: Set<String> = emptySet()) {
     val suffix = "\n\tActual: $actual\n\tExpected: $expected"
     val expectedJson = json.parseToJsonElement(expected)
     val actualJson = json.parseToJsonElement(actual)
@@ -35,8 +37,8 @@ fun assertJsonEquals(expected: String, actual: String) {
     }
 
     try {
-        val expectedObject = expectedJson.jsonObject
-        val actualObject = actualJson.jsonObject
+        val expectedObject = expectedJson.jsonObject.filterKeys { !ignoreKeys.contains(it) }
+        val actualObject = actualJson.jsonObject.filterKeys { !ignoreKeys.contains(it) }
         assertEquals(expectedObject.size, actualObject.size, "JSON objects have different number of keys.$suffix")
         for ((key, expectedValue) in expectedObject) {
             val actualValue = actualObject[key]

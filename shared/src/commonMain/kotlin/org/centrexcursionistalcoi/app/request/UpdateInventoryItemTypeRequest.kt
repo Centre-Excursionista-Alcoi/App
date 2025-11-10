@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.utils.isNullOrEmpty
 data class UpdateInventoryItemTypeRequest(
     val displayName: String? = null,
     val description: String? = null,
-    val category: String? = null,
+    val categories: List<String>? = null,
     @Serializable(Base64Serializer::class) val image: ByteArray? = null,
 ): UpdateEntityRequest<Uuid, InventoryItemType> {
     override fun equals(other: Any?): Boolean {
@@ -21,7 +21,7 @@ data class UpdateInventoryItemTypeRequest(
 
         if (displayName != other.displayName) return false
         if (description != other.description) return false
-        if (category != other.category) return false
+        if (categories != other.categories) return false
         if (!image.contentEquals(other.image)) return false
 
         return true
@@ -30,12 +30,12 @@ data class UpdateInventoryItemTypeRequest(
     override fun hashCode(): Int {
         var result = displayName.hashCode()
         result = 31 * result + (description?.hashCode() ?: 0)
-        result = 31 * result + (category?.hashCode() ?: 0)
+        result = 31 * result + (categories?.hashCode() ?: 0)
         result = 31 * result + (image?.contentHashCode() ?: 0)
         return result
     }
 
     override fun isEmpty(): Boolean {
-        return displayName.isNullOrEmpty() && description.isNullOrEmpty() && category.isNullOrEmpty() && image.isNullOrEmpty()
+        return displayName.isNullOrEmpty() && description.isNullOrEmpty() && categories.isNullOrEmpty() && image.isNullOrEmpty()
     }
 }

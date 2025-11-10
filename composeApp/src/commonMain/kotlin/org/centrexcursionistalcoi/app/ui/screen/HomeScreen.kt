@@ -198,7 +198,7 @@ private fun HomeScreenContent(
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -501,7 +501,7 @@ fun HomeScreenPagerContent(
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
