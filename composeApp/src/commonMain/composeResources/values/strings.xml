@@ -68,6 +68,7 @@
     <string name="none">None</string>
     <string name="remove">Remove</string>
     <string name="undo">Undo</string>
+    <string name="settings">Settings</string>
 
     <string name="error_dialog_title">Unhandled exception</string>
     <string name="error_dialog_message">Message:</string>
@@ -305,5 +306,7 @@
     <string name="nfc_error_unknown">Unknown NFC error occurred: %1$s</string>
 
     <string name="settings_title">Settings</string>
+    <string name="settings_adjust">Adjust</string>
+    <string name="settings_language">Language</string>
 
 </resources>

@@ -24,6 +24,7 @@ fun <T: Any> SettingsOptionsRow(
     title: String,
     options: List<T>,
     selection: T? = null,
+    summary: String? = null,
     icon: ImageVector? = null,
     contentDescription: String? = title,
     toString: (T) -> String = { it.toString() },
@@ -62,6 +63,7 @@ fun <T: Any> SettingsOptionsRow(
 
     SettingsRow(
         title = title,
+        summary = summary,
         icon = icon,
         contentDescription = contentDescription,
         onClick = { showingDialog = true }
