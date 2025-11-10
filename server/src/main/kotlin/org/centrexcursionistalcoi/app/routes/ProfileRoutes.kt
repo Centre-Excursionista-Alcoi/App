@@ -66,6 +66,7 @@ fun Route.profileRoutes() {
             ProfileResponse(
                 sub = session.sub,
                 fullName = session.fullName,
+                memberNumber = reference.memberNumber,
                 email = session.email,
                 groups = session.groups,
                 departments = departments,
