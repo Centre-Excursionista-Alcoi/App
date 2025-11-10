@@ -21,9 +21,6 @@ fun main() {
             override fun performLog(priority: LogLevel, tag: String?, throwable: Throwable?, message: String?) {
                 val out = if (priority == LogLevel.ERROR) System.err else System.out
                 out.println("[$priority] ${tag.orEmpty()}: ${message.orEmpty()}")
-                if (message != null) {
-                    Sentry.captureMessage(message)
-                }
                 if (throwable != null) {
                     throwable.printStackTrace()
                     Sentry.captureException(throwable)
