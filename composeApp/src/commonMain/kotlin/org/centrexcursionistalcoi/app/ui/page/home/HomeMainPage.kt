@@ -207,14 +207,6 @@ fun LendingsPage(
                 )
             }
         } else {
-            stickyHeader("lending_header") {
-                Text(
-                    text = stringResource(Res.string.home_lending),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
-            }
-
             if (profile.lendingUser == null) {
                 item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
                     OutlinedCard(
@@ -235,9 +227,11 @@ fun LendingsPage(
                     }
                 }
             } else {
-                val groupedItems = inventoryItems?.groupBy { it.type }
+                val groupedItems = inventoryItems
+                    ?.groupBy { it.type }
                     .orEmpty()
                     .toList()
+                    .sortedBy { (type) -> type.displayName }
                     .filter { (type) ->
                         if (selectedCategories.isNotEmpty())
                             type.category in selectedCategories
@@ -245,6 +239,16 @@ fun LendingsPage(
                             true
                     }
                 val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
+
+                stickyHeader("lending_header") {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(Res.string.home_lending),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.background).weight(1f).padding(horizontal = 8.dp),
+                        )
+                    }
+                }
 
                 item("categories_chips", span = { GridItemSpan(maxLineSpan) }) {
                     LazyRow(modifier = Modifier.fillMaxWidth()) {
