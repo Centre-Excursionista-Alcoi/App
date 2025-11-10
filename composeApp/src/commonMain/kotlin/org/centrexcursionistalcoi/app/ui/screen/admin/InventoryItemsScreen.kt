@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.screen
+package org.centrexcursionistalcoi.app.ui.screen.admin
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

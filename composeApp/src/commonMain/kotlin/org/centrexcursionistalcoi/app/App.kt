@@ -35,16 +35,17 @@ import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
-import org.centrexcursionistalcoi.app.ui.screen.InventoryItemsScreen
+import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingReturnScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
-import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
+import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
+import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
@@ -142,10 +143,10 @@ fun App(
             destination<Destination.Home> {
                 HomeScreen(
                     onClickInventoryItemType = { type ->
-                        navController.navigate(Destination.InventoryItems(type))
+                        navController.navigate(Destination.Admin.InventoryItems(type))
                     },
                     onManageLendingsRequested = {
-                        navController.navigate(Destination.LendingsManagement)
+                        navController.navigate(Destination.Admin.LendingsManagement)
                     },
                     onLendingSignUpRequested = {
                         navController.navigate(Destination.LendingSignUp)
@@ -158,6 +159,9 @@ fun App(
                     },
                     onSettingsRequested = {
                         navController.navigate(Destination.Settings)
+                    },
+                    onItemTypeDetailsRequested = { type ->
+                        navController.navigate(Destination.ItemTypeDetails(type))
                     },
                     onLogoutRequested = {
                         navController.navigate(Destination.Logout) {
@@ -174,7 +178,18 @@ fun App(
                 }
             }
 
-            destination<Destination.InventoryItems> { route ->
+            destination<Destination.ItemTypeDetails> { route ->
+                val typeId = route.typeId
+                val displayName = route.displayName
+
+                InventoryItemTypeDetailsScreen(
+                    typeId = typeId,
+                    typeDisplayName = displayName,
+                    onBack = { navController.navigateUp() },
+                )
+            }
+
+            destination<Destination.Admin.InventoryItems> { route ->
                 val typeId = route.typeId
                 val displayName = route.displayName
 
@@ -185,7 +200,7 @@ fun App(
                 )
             }
 
-            destination<Destination.LendingsManagement> {
+            destination<Destination.Admin.LendingsManagement> {
                 LendingsManagementScreen(
                     onLendingPickupRequest = {
                         navController.navigate(Destination.LendingPickup(it.id))

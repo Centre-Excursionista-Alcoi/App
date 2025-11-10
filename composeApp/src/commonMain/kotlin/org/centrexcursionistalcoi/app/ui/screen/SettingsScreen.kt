@@ -91,6 +91,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             modifier = Modifier.size(24.dp).clip(RoundedCornerShape(8.dp))
                         )
                     },
+                    key = { it.code },
                     toString = { it.displayName },
                 )
             }
@@ -130,7 +131,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             item(key = "credits") {
                 OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 64.dp).padding(horizontal = 16.dp),
                 ) {
                     Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                         Image(painterResource(Res.drawable.arnyminerz), null, modifier = Modifier.size(64.dp).padding(8.dp))

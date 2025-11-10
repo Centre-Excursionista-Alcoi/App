@@ -89,6 +89,7 @@ fun HomeScreen(
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
@@ -136,6 +137,7 @@ fun HomeScreen(
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
+            onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             onCreateInventoryItemType = model::createInventoryItemType,
             onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
@@ -195,6 +197,7 @@ private fun HomeScreenContent(
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
+    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
@@ -246,11 +249,16 @@ private fun HomeScreenContent(
                 TopAppBar(
                     title = { Text(stringResource(Res.string.app_name)) },
                     actions = {
-                        val showLogoutButton = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
+                        val isProfilePage = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }
                         }
-                        if (showLogoutButton) {
+                        if (isProfilePage) {
+                            IconButton(
+                                onClick = onSettingsRequested
+                            ) {
+                                Icon(Icons.Default.Settings, stringResource(Res.string.settings))
+                            }
                             IconButton(
                                 onClick = { showingLogoutDialog = true }
                             ) {
@@ -403,6 +411,7 @@ private fun HomeScreenContent(
                         onPromote,
                         inventoryItemTypes,
                         inventoryItemTypesCategories,
+                        onItemTypeDetailsRequested,
                         onCreateInventoryItemType,
                         onClickInventoryItemType,
                         inventoryItems,
@@ -445,6 +454,7 @@ private fun HomeScreenContent(
                             onPromote,
                             inventoryItemTypes,
                             inventoryItemTypesCategories,
+                            onItemTypeDetailsRequested,
                             onCreateInventoryItemType,
                             onClickInventoryItemType,
                             inventoryItems,
@@ -490,6 +500,7 @@ fun HomeScreenPagerContent(
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
+    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
@@ -511,6 +522,7 @@ fun HomeScreenPagerContent(
                 onNotificationPermissionDenyRequest,
                 profile,
                 inventoryItems,
+                onItemTypeDetailsRequested,
                 lendings,
                 onLendingSignUpRequested,
                 memoryUploadProgress,

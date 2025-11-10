@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -71,7 +72,7 @@ import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
-import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemTypeDetailsDialog
+import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
@@ -91,6 +92,7 @@ fun LendingsPage(
     onNotificationPermissionDenyRequest: () -> Unit,
     profile: ProfileResponse,
     inventoryItems: List<ReferencedInventoryItem>?,
+    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     memoryUploadProgress: Progress?,
@@ -106,11 +108,6 @@ fun LendingsPage(
     val isRegisteredForLendings = profile.lendingUser != null
 
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
-
-    var showingItemTypeDetails by remember { mutableStateOf<InventoryItemType?>(null) }
-    showingItemTypeDetails?.let { type ->
-        InventoryItemTypeDetailsDialog(type) { showingItemTypeDetails = null }
-    }
 
     LaunchedEffect(lendings) {
         if (!lendings.isNullOrEmpty()) {
@@ -129,8 +126,10 @@ fun LendingsPage(
         windowSizeClass,
         state = scrollState,
         gridMinSize = 200.dp,
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
     ) {
+        item(key = "top_spacer", contentType = "spacer") { Modifier.height(16.dp) }
+
         val lendingSpan = GridItemSpan(if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) 2 else 1)
 
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
@@ -207,14 +206,6 @@ fun LendingsPage(
                 )
             }
         } else {
-            stickyHeader("lending_header") {
-                Text(
-                    text = stringResource(Res.string.home_lending),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
-            }
-
             if (profile.lendingUser == null) {
                 item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
                     OutlinedCard(
@@ -235,9 +226,11 @@ fun LendingsPage(
                     }
                 }
             } else {
-                val groupedItems = inventoryItems?.groupBy { it.type }
+                val groupedItems = inventoryItems
+                    ?.groupBy { it.type }
                     .orEmpty()
                     .toList()
+                    .sortedBy { (type) -> type.displayName }
                     .filter { (type) ->
                         if (selectedCategories.isNotEmpty())
                             type.category in selectedCategories
@@ -246,27 +239,33 @@ fun LendingsPage(
                     }
                 val categories = inventoryItems?.mapNotNull { it.type.category }?.toSet().orEmpty().toList()
 
-                item("categories_chips", span = { GridItemSpan(maxLineSpan) }) {
-                    LazyRow(modifier = Modifier.fillMaxWidth()) {
-                        items(
-                            items = categories,
-                            key = { it },
-                            contentType = { "category-chip" },
-                        ) { category ->
-                            val isSelected = selectedCategories.contains(category)
-                            Spacer(Modifier.width(8.dp))
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedCategories = if (isSelected) {
-                                        selectedCategories - category
-                                    } else {
-                                        selectedCategories + category
-                                    }
-                                },
-                                label = { Text(category) },
-                                modifier = Modifier.padding(end = 4.dp),
-                            )
+                stickyHeader("lending_header") {
+                    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp)) {
+                        Text(
+                            text = stringResource(Res.string.home_lending),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        LazyRow(modifier = Modifier.fillMaxWidth()) {
+                            items(
+                                items = categories,
+                                key = { it },
+                                contentType = { "category-chip" },
+                            ) { category ->
+                                val isSelected = selectedCategories.contains(category)
+                                Spacer(Modifier.width(8.dp))
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedCategories = if (isSelected) {
+                                            selectedCategories - category
+                                        } else {
+                                            selectedCategories + category
+                                        }
+                                    },
+                                    label = { Text(category) },
+                                    modifier = Modifier.padding(end = 4.dp),
+                                )
+                            }
                         }
                     }
                 }
@@ -285,7 +284,7 @@ fun LendingsPage(
                             selectedAmount = selectedAmount,
                             onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
                             onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                            onClick = { showingItemTypeDetails = type }
+                            onClick = { onItemTypeDetailsRequested(type) },
                         )
                     }
                 } else {
@@ -302,7 +301,7 @@ fun LendingsPage(
                             selectedAmount = selectedAmount,
                             onAddItemToShoppingListRequest = { onAddItemToShoppingListRequest(type) },
                             onRemoveItemFromShoppingListRequest = { onRemoveItemFromShoppingListRequest(type) },
-                            onClick = { showingItemTypeDetails = type }
+                            onClick = { onItemTypeDetailsRequested(type) },
                         )
                     }
                 }
@@ -327,6 +326,8 @@ fun LendingsPage(
                 OldLendingItem(lending)
             }
         }
+
+        item(key = "bottom_spacer", contentType = "spacer") { Modifier.height(16.dp) }
     }
 }
 
@@ -355,18 +356,24 @@ fun LendingItem_Small(
                 AsyncByteImage(
                     bytes = imageFile,
                     contentDescription = type.displayName,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().sharedBounds("type-${type.id}-image"),
                     contentScale = ContentScale.Crop,
                 )
             }
             Column(
                 modifier = Modifier.weight(3f)
             ) {
-                Text(
-                    text = "${type.displayName} (${items.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(8.dp)
-                )
+                Row(Modifier.padding(8.dp)) {
+                    Text(
+                        text = type.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.sharedBounds("type-${type.id}-display-name")
+                    )
+                    Text(
+                        text = " (${items.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -491,15 +498,21 @@ fun LendingItem_Large(
             AsyncByteImage(
                 bytes = imageFile,
                 contentDescription = type.displayName,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().sharedBounds("type-${type.id}-image"),
                 contentScale = ContentScale.Crop,
             )
         }
-        Text(
-            text = "${type.displayName} (${items.size})",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(8.dp)
-        )
+        Row(Modifier.padding(8.dp)) {
+            Text(
+                text = type.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.sharedBounds("type-${type.id}-display-name"),
+            )
+            Text(
+                text = " (${items.size})",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
     }
 }
 
