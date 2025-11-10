@@ -68,6 +68,7 @@
     <string name="none">None</string>
     <string name="remove">Remove</string>
     <string name="undo">Undo</string>
+    <string name="settings">Settings</string>
 
     <string name="error_dialog_title">Unhandled exception</string>
     <string name="error_dialog_message">Message:</string>
@@ -303,5 +304,21 @@
     <string name="nfc_error_too_small">NFC tag memory is too small</string>
     <string name="nfc_error_format_unsupported">NFC tag cannot be formatted as %1$s</string>
     <string name="nfc_error_unknown">Unknown NFC error occurred: %1$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_adjust">Adjust</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_category_privacy">Privacy</string>
+    <string name="settings_report_errors_title">Collect error information</string>
+    <string name="settings_report_errors_summary">If enabled, the app will automatically collect and report error information.</string>
+    <string name="settings_report_analytics_title">Collect usage analytics</string>
+    <string name="settings_report_analytics_summary">If enabled, the app will collect usage statistics to help improve the app.</string>
+    <string name="settings_report_session_title">Collect session replay information</string>
+    <string name="settings_report_session_summary">If enabled, the app will collect session replay data to help improve user experience.</string>
+    <string name="settings_dev_credit_title">App developed by %1$s</string>
+    <string name="settings_dev_credit_message">This app has been developed free of charge for the Centre Excursionista d'Alcoi by %1$s.</string>
+    <string name="settings_dev_credit_website">Website</string>
+    <string name="settings_dev_credit_email">Email</string>
 
 </resources>

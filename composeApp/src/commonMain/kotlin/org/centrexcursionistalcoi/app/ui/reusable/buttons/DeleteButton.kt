@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.reusable
+package org.centrexcursionistalcoi.app.ui.reusable.buttons
 
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme

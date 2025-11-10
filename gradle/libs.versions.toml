@@ -39,6 +39,7 @@ kreds = "0.9.1"
 kscan = "0.4.0"
 ksoup = "0.2.5"
 ktor = "3.3.2"
+localina = "1.0.0-alpha2"
 logback = "1.5.20"
 mockk = "1.14.6"
 napier = "2.7.1"
@@ -112,6 +113,7 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "k
 ktor-server-sessions = { module = "io.ktor:ktor-server-sessions", version.ref = "ktor" }
 ktor-server-statusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 ktor-server-testHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
+localina = { module = "io.github.sudarshanmhasrup.localina:localina", version.ref = "localina" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }

@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.ui.reusable.DeleteButton
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

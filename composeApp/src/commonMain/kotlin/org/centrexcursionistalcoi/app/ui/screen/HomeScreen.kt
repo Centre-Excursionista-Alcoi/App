@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
@@ -88,6 +89,7 @@ fun HomeScreen(
     onLendingSignUpRequested: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onLogoutRequested: () -> Unit,
+    onSettingsRequested: () -> Unit,
     model: HomeViewModel = viewModel { HomeViewModel() }
 ) {
     val profile by model.profile.collectAsState()
@@ -112,6 +114,7 @@ fun HomeScreen(
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
+            onSettingsRequested = onSettingsRequested,
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
@@ -165,6 +168,8 @@ private fun HomeScreenContent(
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
+
+    onSettingsRequested: () -> Unit,
 
     profile: ProfileResponse,
     onLogoutRequested: () -> Unit,
@@ -326,6 +331,19 @@ private fun HomeScreenContent(
                         )
                     }
                     Spacer(Modifier.weight(1f))
+                    TooltipBox(
+                        state = rememberTooltipState(),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+                        tooltip = {
+                            PlainTooltip { Text(stringResource(Res.string.settings)) }
+                        }
+                    ) {
+                        NavigationRailItem(
+                            selected = false,
+                            onClick = onSettingsRequested,
+                            icon = { Icon(Icons.Default.Settings, stringResource(Res.string.settings)) }
+                        )
+                    }
                     TooltipBox(
                         state = rememberTooltipState(),
                         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),

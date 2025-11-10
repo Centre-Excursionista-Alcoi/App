@@ -20,12 +20,17 @@ import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ExperimentalSettingsApi
+import io.github.aakira.napier.Napier
+import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
+import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
+import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
@@ -39,6 +44,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
+import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
@@ -56,12 +62,21 @@ fun MainApp(
     }
 
     AppTheme {
-        val isReady by model.isReady.collectAsState()
+        LocalinaApp {
+            val isReady by model.isReady.collectAsState()
 
-        if (isReady) {
-            App(onNavHostReady)
-        } else {
-            LoadingBox()
+            LaunchedEffect(Unit) {
+                settings.getStringOrNull(SETTINGS_LANGUAGE)?.let { lang ->
+                    Napier.i { "Setting locale to: $lang" }
+                    LocaleUpdater.updateLocale(lang)
+                }
+            }
+
+            if (isReady) {
+                App(onNavHostReady)
+            } else {
+                LoadingBox()
+            }
         }
     }
 }
@@ -141,6 +156,9 @@ fun App(
                     onMemoryEditorRequested = {
                         navController.navigate(Destination.LendingMemoryEditor(it))
                     },
+                    onSettingsRequested = {
+                        navController.navigate(Destination.Settings)
+                    },
                     onLogoutRequested = {
                         navController.navigate(Destination.Logout) {
                             popUpTo(navController.graph.id) {
@@ -149,6 +167,11 @@ fun App(
                         }
                     },
                 )
+            }
+            destination<Destination.Settings> {
+                SettingsScreen {
+                    navController.navigateUp()
+                }
             }
 
             destination<Destination.InventoryItems> { route ->
