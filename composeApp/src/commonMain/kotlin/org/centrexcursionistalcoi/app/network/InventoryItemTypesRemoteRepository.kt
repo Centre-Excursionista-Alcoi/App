@@ -12,16 +12,16 @@ object InventoryItemTypesRemoteRepository : SymmetricRemoteRepository<Uuid, Inve
     InventoryItemType.serializer(),
     InventoryItemTypesRepository
 ) {
-    suspend fun create(displayName: String, description: String?, category: String?, image: ByteArray?) {
+    suspend fun create(displayName: String, description: String?, categories: List<String>?, image: ByteArray?) {
         val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
 
-        create(InventoryItemType(Uuid.Zero, displayName, description, category, imageUuid))
+        create(InventoryItemType(Uuid.Zero, displayName, description, categories, imageUuid))
     }
 
-    suspend fun update(id: Uuid, displayName: String?, description: String?, category: String?, image: ByteArray?) {
+    suspend fun update(id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: ByteArray?) {
         update(
             id,
-            UpdateInventoryItemTypeRequest(displayName, description, category, image),
+            UpdateInventoryItemTypeRequest(displayName, description, categories, image),
             UpdateInventoryItemTypeRequest.serializer(),
         )
     }

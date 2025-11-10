@@ -24,7 +24,7 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
-import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
+import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
@@ -32,22 +32,22 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 fun EditInventoryItemTypeDialog(
     item: InventoryItemType,
-    categories: Set<String>,
-    onSubmit: (id: Uuid, displayName: String?, description: String?, category: String?, image: PlatformFile?) -> Job,
+    allCategories: Set<String>,
+    onSubmit: (id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: PlatformFile?) -> Job,
     onDismissRequest: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
 
     var displayName by remember { mutableStateOf(item.displayName) }
     var description by remember { mutableStateOf(item.description.orEmpty()) }
-    var category by remember { mutableStateOf(item.category.orEmpty()) }
+    var categories by remember { mutableStateOf(item.categories.orEmpty()) }
     val imageBytes by item.rememberImageFile()
     var image by remember { mutableStateOf<PlatformFile?>(null) }
     val imagePicker = rememberFilePickerLauncher(
         type = FileKitType.File("png", "jpg", "jpeg", "webp")
     ) { file -> image = file }
 
-    val dirty = displayName != item.displayName || description != (item.description ?: "") || category != (item.category ?: "") || image != null
+    val dirty = displayName != item.displayName || description != (item.description ?: "") || categories != item.categories || image != null
 
     EditDialog(
         enabled = dirty && !isLoading,
@@ -57,7 +57,7 @@ fun EditInventoryItemTypeDialog(
                 item.id,
                 displayName.takeIf { it != item.displayName && it.isNotEmpty() },
                 description.takeIf { it != item.description && it.isNotEmpty() },
-                category.takeIf { it != item.category && it.isNotEmpty() },
+                categories.takeIf { it != item.categories && it.isNotEmpty() },
                 image,
             ).invokeOnCompletion {
                 isLoading = false
@@ -82,10 +82,11 @@ fun EditInventoryItemTypeDialog(
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth(),
         )
-        AutocompleteFormField(
-            value = category,
-            onValueChange = { category = it },
-            suggestions = categories,
+        AutocompleteMultipleFormField(
+            entries = categories,
+            onEntryAdded = { categories = categories + it },
+            onEntryRemoved = { categories = categories - it },
+            suggestions = allCategories,
             label = { Text(stringResource(Res.string.management_inventory_item_type_category).optional()) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading,
