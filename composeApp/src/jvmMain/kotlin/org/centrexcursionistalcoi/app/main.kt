@@ -7,14 +7,27 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Antilog
+import io.github.aakira.napier.LogLevel
 import io.github.aakira.napier.Napier
+import io.sentry.kotlin.multiplatform.Sentry
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     // Initialize the logging library
-    Napier.base(DebugAntilog())
+    Napier.base(
+        object : Antilog() {
+            override fun performLog(priority: LogLevel, tag: String?, throwable: Throwable?, message: String?) {
+                val out = if (priority == LogLevel.ERROR) System.err else System.out
+                out.println("[$priority] ${tag.orEmpty()}: ${message.orEmpty()}")
+                if (throwable != null) {
+                    throwable.printStackTrace()
+                    Sentry.captureException(throwable)
+                }
+            }
+        }
+    )
 
     initializeSentry()
 
