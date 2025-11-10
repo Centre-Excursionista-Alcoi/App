@@ -198,7 +198,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is ArrayColumnType<*, *> -> {
                             @Suppress("UNCHECKED_CAST")
-                            val array = typeValue as Array<Any?>
+                            val array = typeValue as List<*>
                             val jsonArray = JsonArray(array.map { elem ->
                                 when (elem) {
                                     is String -> JsonPrimitive(elem)
