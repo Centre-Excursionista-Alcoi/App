@@ -32,6 +32,12 @@ class ConfigEntity(id: EntityID<String>) : Entity<String>(id) {
         val store: (Type) -> String,
     )
 
+    object DatabaseVersion : ConfigEntry<Int>(
+        key = "database_version",
+        retrieve = { it?.toIntOrNull() },
+        store = { it.toString() },
+    )
+
     object LastCEASync : ConfigEntry<Instant>(
         key = "last_cea_sync",
         retrieve = { it?.toLongOrNull()?.let { Instant.ofEpochSecond(it) } },

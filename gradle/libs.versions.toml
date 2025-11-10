@@ -50,6 +50,7 @@ sentry = "5.12.2"
 sentry-multiplatform = "0.21.0"
 sqldelight = "2.1.0"
 sqlite = "3.51.0.0"
+testcontainers = "1.20.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -128,9 +129,12 @@ sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", 
 sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 sqldelight-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
 [bundles]
 androidx-work = ["androidx-work-gcm", "androidx-work-runtime"]
+testcontainers = ["testcontainers-junit-jupiter", "testcontainers-postgresql"]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

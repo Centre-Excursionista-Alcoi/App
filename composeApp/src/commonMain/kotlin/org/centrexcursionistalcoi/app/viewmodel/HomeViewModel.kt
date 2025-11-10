@@ -98,9 +98,9 @@ class HomeViewModel: ViewModel() {
         DepartmentsRemoteRepository.delete(department.id)
     }
 
-    fun createInventoryItemType(displayName: String, description: String, category: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun createInventoryItemType(displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
         val image = imageFile?.readBytes()
-        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, category.takeUnless { it.isEmpty() }, image)
+        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, image)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {

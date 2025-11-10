@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.adapters.InstantAdapter
 import org.centrexcursionistalcoi.app.database.adapters.JsonAdapter
+import org.centrexcursionistalcoi.app.database.adapters.ListStringAdapter
 import org.centrexcursionistalcoi.app.database.adapters.LocalDateAdapter
 import org.centrexcursionistalcoi.app.database.adapters.UUIDAdapter
 import org.centrexcursionistalcoi.app.database.data.Departments
@@ -37,7 +38,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
     return Database(
         driver,
         Departments.Adapter(UUIDAdapter),
-        InventoryItemTypes.Adapter(UUIDAdapter, UUIDAdapter),
+        InventoryItemTypes.Adapter(UUIDAdapter, ListStringAdapter, UUIDAdapter),
         InventoryItems.Adapter(UUIDAdapter, UUIDAdapter),
         LendingItems.Adapter(UUIDAdapter, UUIDAdapter),
         Lendings.Adapter(

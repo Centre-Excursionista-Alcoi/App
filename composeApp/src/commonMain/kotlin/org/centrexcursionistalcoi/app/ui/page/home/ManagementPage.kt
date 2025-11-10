@@ -51,7 +51,7 @@ fun ManagementPage(
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -112,7 +112,7 @@ fun InventoryItemTypesCard(
     types: List<InventoryItemType>?,
     categories: Set<String>,
     items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
+    onCreate: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClick: (InventoryItemType) -> Unit,
 ) {
     var creating by remember { mutableStateOf(false) }
