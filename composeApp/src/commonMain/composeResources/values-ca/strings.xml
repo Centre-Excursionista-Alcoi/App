@@ -269,4 +269,20 @@
     <string name="confirm_password">Confirmar Contrasenya</string>
     <string name="nav_lendings">Préstecs</string>
     <string name="personal_info_full_name">Nom Complet</string>
+    <string name="settings">Configuració</string>
+    <string name="settings_title">Configuració</string>
+    <string name="settings_adjust">Ajustar</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_category_privacy">Privacitat</string>
+    <string name="settings_report_errors_title">Recol·lectar informació d\'errors</string>
+    <string name="settings_report_errors_summary">Si està habilitat, l\'app recol·lectarà automàticament informació sobre errors.</string>
+    <string name="settings_report_analytics_title">Recol·lectar analítiques d\'ús</string>
+    <string name="settings_report_analytics_summary">Si està habilitat, l\'app recol·lectarà automàticament analítiques d\'ús per a millorar-la.</string>
+    <string name="settings_report_session_title">Recol·lectar informació de reproducció de sessions</string>
+    <string name="settings_report_session_summary">Si està habilitat, l\'app recol·lectarà automàticament dades de reproducció de sessions per a millorar l\'experiència d\'usuari.</string>
+    <string name="settings_dev_credit_title">App desenvolupada per %1$s</string>
+    <string name="settings_dev_credit_message">Aquesta app ha sigut desenvolupada de manera desinteressada per al Centre Excursionista d\'Alcoi per %1$s.</string>
+    <string name="settings_dev_credit_website">Lloc Web</string>
+    <string name="settings_dev_credit_email">Email</string>
 </resources>
