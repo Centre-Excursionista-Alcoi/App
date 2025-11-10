@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.data.UserInsurance
 data class ProfileResponse(
     val sub: String,
     val fullName: String,
+    val memberNumber: UInt,
     val email: String,
     val groups: List<String>,
     val departments: List<Int>,
