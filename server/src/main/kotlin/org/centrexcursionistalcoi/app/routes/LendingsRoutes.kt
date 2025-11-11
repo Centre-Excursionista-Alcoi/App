@@ -560,8 +560,10 @@ fun Route.lendingsRoutes() {
 
         // Notify administrators that a new memory has been uploaded
         CoroutineScope(Dispatchers.IO).launch {
-            val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
-            val emails = admins.map { MailerSendEmail(it.email, it.fullName) }
+            val emails = Database {
+                UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
+            }
             val documentBytes = file.takeIf { it.isNotEmpty() }?.baos?.toByteArray()?.also { file.close() }
             val url = "cea://admin/lendings#${lending.id.value}"
             Email.sendEmail(
