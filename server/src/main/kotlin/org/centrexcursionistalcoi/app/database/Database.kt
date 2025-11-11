@@ -126,6 +126,7 @@ object Database {
             SchemaUtils.drop(*tables)
             SchemaUtils.create(*tables)
         }
+        database = null
     }
 
     operator fun <T> invoke(statement: JdbcTransaction.() -> T): T = transaction(database, statement = statement)
