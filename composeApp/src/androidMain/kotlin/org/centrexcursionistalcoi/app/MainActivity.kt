@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
 import io.github.aakira.napier.Napier
+import io.ktor.http.Url
 import org.centrexcursionistalcoi.app.push.PushNotification
 import tech.kotlinlang.permission.PermissionInitiation
 
@@ -21,9 +22,10 @@ class MainActivity : NfcIntentHandlerActivity() {
         NotifierManager.onCreateOrOnNewIntent(intent)
 
         val pushNotification = getPushNotificationFromIntent()
+        val url = getUrlFromIntent()
 
         setContent {
-            MainApp(pushNotification)
+            MainApp(url, pushNotification)
         }
     }
 
@@ -54,6 +56,12 @@ class MainActivity : NfcIntentHandlerActivity() {
             Napier.d { "Got intent with extras, but no valid push notification could be inferred." }
             return null
         }
+    }
+
+    private fun getUrlFromIntent(): Url? {
+        val uri = intent.data ?: return null
+        if (uri.scheme != "cea") return null
+        return Url(uri.toString())
     }
 
     companion object {
