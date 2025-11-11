@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Badge
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -363,16 +364,18 @@ fun LendingItem_Small(
             Column(
                 modifier = Modifier.weight(3f)
             ) {
-                Row(Modifier.padding(8.dp)) {
+                Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = type.displayName,
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.sharedBounds("type-${type.id}-display-name")
+                        modifier = Modifier.sharedBounds("type-${type.id}-display-name").weight(1f),
                     )
-                    Text(
-                        text = " (${items.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ) {
+                        Text(text = items.size.toString())
+                    }
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -502,16 +505,18 @@ fun LendingItem_Large(
                 contentScale = ContentScale.Crop,
             )
         }
-        Row(Modifier.padding(8.dp)) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = type.displayName,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.sharedBounds("type-${type.id}-display-name"),
+                modifier = Modifier.sharedBounds("type-${type.id}-display-name").weight(1f),
             )
-            Text(
-                text = " (${items.size})",
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Badge(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Text(text = items.size.toString())
+            }
         }
     }
 }
