@@ -121,9 +121,9 @@ fun <T> ListCard(
             }
         }
         if (list == null) {
-            Text(stringResource(Res.string.status_loading))
+            Text(stringResource(Res.string.status_loading), Modifier.padding(8.dp))
         } else if (list.isEmpty()) {
-            Text(stringResource(emptyTextResource))
+            Text(stringResource(emptyTextResource), Modifier.padding(8.dp))
         } else {
             for (item in list) {
                 val shouldHighlight = highlight?.invoke(item) == true
