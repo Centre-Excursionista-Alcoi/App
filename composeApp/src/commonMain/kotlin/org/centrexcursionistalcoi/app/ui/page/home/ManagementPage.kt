@@ -129,7 +129,7 @@ fun InventoryItemTypesCard(
         }.map { type -> type to emptyList<ReferencedInventoryItem>() }
     }
     ListCard(
-        list = groupedItems + typesWithoutItems,
+        list = (groupedItems + typesWithoutItems).sortedBy { (type) -> type.displayName },
         titleResource = Res.string.management_inventory_item_types,
         emptyTextResource = Res.string.management_no_item_types,
         displayName = { (type) -> type.displayName },
