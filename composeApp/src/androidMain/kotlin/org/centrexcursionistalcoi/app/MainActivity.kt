@@ -58,6 +58,6 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     companion object {
         var instance: MainActivity? = null
-        private set
+            private set
     }
 }

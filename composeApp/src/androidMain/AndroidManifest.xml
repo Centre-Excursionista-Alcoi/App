@@ -39,6 +39,11 @@
                     android:name="android.support.FILE_PROVIDER_PATHS"
                     android:resource="@xml/provider_paths" />
         </provider>
+
+        <provider
+                android:name=".AppInitProvider"
+                android:authorities="${applicationId}.AppInitProvider"
+                android:exported="false"/>
     </application>
 
     <queries>
