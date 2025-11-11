@@ -84,7 +84,9 @@ object Database {
         username: String = "",
         password: String = "",
     ) {
-        initializeConnection(url, driver, username, password)
+        if (database == null) {
+            initializeConnection(url, driver, username, password)
+        }
 
         logger.info("Creating database schema if not exists")
         transaction(database) {
