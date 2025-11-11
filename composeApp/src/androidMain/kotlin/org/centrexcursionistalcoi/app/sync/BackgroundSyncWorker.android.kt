@@ -59,6 +59,7 @@ actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(ap
 
                 context.run(input).toWorkerResult()
             } catch (e: Exception) {
+                Napier.e(e) { "Worker failed." }
                 Result.failure(
                     workDataOf(
                         RESULT_EXCEPTION_TYPE to e::class.simpleName,
