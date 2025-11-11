@@ -456,7 +456,7 @@ private fun LendingPickupContent(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = lending.from.toString(),
+                        text = lending.to.toString(),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
