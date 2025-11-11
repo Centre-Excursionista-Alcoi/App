@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import kotlin.uuid.Uuid
@@ -182,7 +182,7 @@ fun ImageFileContainer?.rememberImageFile(
     scope: CoroutineScope = GlobalScope,
     dispatcher: CoroutineDispatcher = defaultAsyncDispatcher,
 ): State<ByteArray?> {
-    val state = rememberSaveable { mutableStateOf<ByteArray?>(null) }
+    val state = remember { mutableStateOf<ByteArray?>(null) }
     LaunchedEffect(this) {
         scope.launch(dispatcher) {
             try {
