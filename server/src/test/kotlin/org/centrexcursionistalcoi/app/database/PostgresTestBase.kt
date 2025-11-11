@@ -36,6 +36,8 @@ abstract class PostgresTestBase {
 
     @AfterEach
     fun teardown() {
+        println("Clearing database...")
+        Database.clear()
         println("Stopping PostgreSQL container...")
         postgres.stop()
     }
