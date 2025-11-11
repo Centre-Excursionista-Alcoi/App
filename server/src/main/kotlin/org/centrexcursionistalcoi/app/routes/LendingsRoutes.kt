@@ -284,7 +284,7 @@ fun Route.lendingsRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@post
         }
 
@@ -292,12 +292,12 @@ fun Route.lendingsRoutes() {
         // Otherwise return 404 to avoid leaking existence of the lending
         val lending = Database { LendingEntity.find { (Lendings.id eq lendingId) and (Lendings.userSub eq session.sub) }.firstOrNull() }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 
         if (lending.taken) {
-            call.respondText("Lending #$lendingId has already been picked up and cannot be cancelled", status = HttpStatusCode.Conflict)
+            call.respondError(Error.LendingAlreadyPickedUp())
             return@post
         }
 
@@ -311,7 +311,7 @@ fun Route.lendingsRoutes() {
             )
         }
 
-        call.respondText("Lending #$lendingId cancelled", status = HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/confirm") {
         assertAdmin() ?: return@post
