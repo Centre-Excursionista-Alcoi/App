@@ -52,6 +52,7 @@ data class Language(val code: String, val displayName: String, val flag: Drawabl
 private val availableLanguages = listOf(
     Language("en", "English", Res.drawable.flag_en),
     Language("ca", "Català", Res.drawable.flag_ca),
+    Language("es", "Castellano", Res.drawable.flag_es),
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
