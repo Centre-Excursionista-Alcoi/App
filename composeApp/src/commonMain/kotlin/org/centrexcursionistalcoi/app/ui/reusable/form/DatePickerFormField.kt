@@ -38,7 +38,10 @@ fun DatePickerFormField(
      */
     onRangeSelected: ((ClosedRange<LocalDate>) -> Unit)? = null,
 ) {
-    var showingPicker by remember { mutableStateOf(false) }
+    var showingDialog by remember { mutableStateOf(false) }
+    val showingRange = showingDialog && onRangeSelected != null && value == null
+    val showingPicker = showingDialog && !showingRange
+
     if (showingPicker) {
         val state = rememberDatePickerState(
             initialSelectedDateMillis = value?.toEpochDays()?.times(24 * 60 * 60 * 1000),
@@ -46,14 +49,14 @@ fun DatePickerFormField(
         )
 
         DatePickerDialog(
-            onDismissRequest = { showingPicker = false },
+            onDismissRequest = { showingDialog = false },
             confirmButton = {
                 TextButton(
                     enabled = state.selectedDateMillis != null,
                     onClick = {
                         val selectedDate = LocalDate.fromEpochDays(state.selectedDateMillis!! / (24 * 60 * 60 * 1000))
                         onValueChange(selectedDate)
-                        showingPicker = false
+                        showingDialog = false
                     }
                 ) {
                     Text(stringResource(Res.string.confirm))
@@ -66,14 +69,13 @@ fun DatePickerFormField(
         }
     }
 
-    var showingRange by remember { mutableStateOf(false) }
-    if (showingRange && onRangeSelected != null) {
+    if (showingRange) {
         val state = rememberDateRangePickerState(
             selectableDates = selectableDates,
         )
 
         DatePickerDialog(
-            onDismissRequest = { showingRange = false },
+            onDismissRequest = { showingDialog = false },
             confirmButton = {
                 TextButton(
                     enabled = state.selectedStartDateMillis != null && state.selectedEndDateMillis != null,
@@ -81,7 +83,7 @@ fun DatePickerFormField(
                         val selectedStartDate = LocalDate.fromEpochDays(state.selectedStartDateMillis!! / (24 * 60 * 60 * 1000))
                         val selectedEndDate = LocalDate.fromEpochDays(state.selectedEndDateMillis!! / (24 * 60 * 60 * 1000))
                         onRangeSelected(selectedStartDate..selectedEndDate)
-                        showingRange = false
+                        showingDialog = false
                     }
                 ) {
                     Text(stringResource(Res.string.confirm))
@@ -101,11 +103,7 @@ fun DatePickerFormField(
         modifier = modifier,
         label = { Text(label) },
         interactionSource = clickInteractionSource {
-            if (onRangeSelected != null && value == null) {
-                showingRange = true
-            } else {
-                showingPicker = true
-            }
+            showingDialog = true
         },
     )
 }

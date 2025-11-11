@@ -129,15 +129,21 @@ class HomeViewModel: ViewModel() {
         }
     }
 
-    fun cancelLending(lending: ReferencedLending) = viewModelScope.launch(defaultAsyncDispatcher) {
-        LendingsRemoteRepository.cancel(lending.id)
+    fun cancelLending(lending: ReferencedLending) = async {
+        try {
+            doAsync { LendingsRemoteRepository.cancel(lending.id) }
+            null
+        } catch (error: ServerException) {
+            error
+        }
     }
 
-    fun submitMemory(lending: ReferencedLending, file: PlatformFile) = viewModelScope.async(defaultAsyncDispatcher) {
+    fun submitMemory(lending: ReferencedLending, file: PlatformFile) = async {
         try {
             LendingsRemoteRepository.submitMemory(lending.id, file) { _memoryUploadProgress.value = it }
-        } catch (e: ServerException) {
-            Napier.e(e) { "Could not submit memory." }
+            null
+        } catch (error: ServerException) {
+            error
         }
     }
 
