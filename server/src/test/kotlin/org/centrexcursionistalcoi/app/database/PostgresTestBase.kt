@@ -21,7 +21,10 @@ abstract class PostgresTestBase {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            println("Starting PostgreSQL container for tests...")
             postgres.start()
+
+            println("Connecting to PostgreSQL database at ${postgres.jdbcUrl}...")
             Database.initializeConnection(
                 url = postgres.jdbcUrl,
                 driver = "org.postgresql.Driver",
@@ -36,6 +39,7 @@ abstract class PostgresTestBase {
         @AfterAll
         @JvmStatic
         fun teardown() {
+            println("Stopping PostgreSQL container...")
             postgres.stop()
         }
     }
