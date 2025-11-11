@@ -84,7 +84,9 @@ object Database {
         username: String = "",
         password: String = "",
     ) {
-        initializeConnection(url, driver, username, password)
+        if (database == null) {
+            initializeConnection(url, driver, username, password)
+        }
 
         logger.info("Creating database schema if not exists")
         transaction(database) {
@@ -124,6 +126,7 @@ object Database {
             SchemaUtils.drop(*tables)
             SchemaUtils.create(*tables)
         }
+        database = null
     }
 
     operator fun <T> invoke(statement: JdbcTransaction.() -> T): T = transaction(database, statement = statement)
