@@ -268,7 +268,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SUFFIX: |
-            🏁 Server build completed successfully!
+            
             [![Docker Hub badge](https://img.shields.io/docker/image-size/arnyminerz/cea-app/${{ github.event.release.name }})](https://hub.docker.com/repository/docker/arnyminerz/cea-app/tags/${{ github.event.release.name }}/)
         run: |
           # Get the release data for this tag
