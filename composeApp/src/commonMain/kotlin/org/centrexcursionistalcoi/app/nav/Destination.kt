@@ -1,15 +1,44 @@
 package org.centrexcursionistalcoi.app.nav
 
+import io.ktor.http.Url
 import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 
 @Serializable
 sealed interface Destination {
+    companion object {
+        const val ITEM_TYPE = "itemType"
+
+        const val ADMIN_ITEMS = "admin/items"
+        const val ADMIN_LENDINGS_MANAGEMENT = "admin/lendings"
+
+        suspend fun fromUrl(url: Url?): Destination? {
+            if (url == null) return null
+            if (url.host == ITEM_TYPE) {
+                val typeId = url.fragment.toUuidOrNull() ?: return null
+                val type = InventoryItemTypesRepository.get(typeId) ?: return null
+                return ItemTypeDetails(type)
+            }
+            if (url.host == ADMIN_ITEMS) {
+                val typeId = url.fragment.toUuidOrNull() ?: return null
+                val type = InventoryItemTypesRepository.get(typeId) ?: return null
+                return Admin.InventoryItems(type)
+            }
+            if (url.host == ADMIN_LENDINGS_MANAGEMENT) {
+                val showingLendingId = url.fragment.toUuidOrNull()
+                return Admin.LendingsManagement(showingLendingId)
+            }
+            return null
+        }
+    }
+
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination

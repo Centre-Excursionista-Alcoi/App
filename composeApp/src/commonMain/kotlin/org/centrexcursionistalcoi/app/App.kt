@@ -25,6 +25,7 @@ import io.github.aakira.napier.Napier
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
+import io.ktor.http.Url
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
@@ -54,8 +55,9 @@ import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
 @Composable
 fun MainApp(
+    url: Url? = null,
     pushNotification: PushNotification? = null,
-    model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel() },
+    model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel(url) },
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     setSingletonImageLoaderFactory { context ->
@@ -69,6 +71,7 @@ fun MainApp(
     AppTheme {
         LocalinaApp {
             val isReady by model.isReady.collectAsState()
+            val startDestination by model.startDestination.collectAsState()
 
             LaunchedEffect(Unit) {
                 settings.getStringOrNull(SETTINGS_LANGUAGE)?.let { lang ->
@@ -120,7 +123,7 @@ fun MainApp(
                         else -> null
                     }
                 }
-                App(afterLoad, onNavHostReady)
+                App(afterLoad ?: startDestination, onNavHostReady)
             } else {
                 LoadingBox()
             }
