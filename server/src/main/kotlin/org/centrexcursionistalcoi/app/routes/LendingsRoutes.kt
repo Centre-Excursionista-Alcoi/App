@@ -183,7 +183,6 @@ fun Route.lendingsRoutes() {
                     .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
-            println("Sending emails to: $emails")
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
             Email.sendEmail(
                 to = emails,
@@ -212,7 +211,7 @@ fun Route.lendingsRoutes() {
             HttpHeaders.Location,
             "/inventory/lendings/${lendingEntity.id.value}"
         )
-        call.respondText("Lending created", status = HttpStatusCode.Created)
+        call.respond(HttpStatusCode.Created)
     }
     getWithLock("inventory/lendings", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
@@ -237,13 +236,13 @@ fun Route.lendingsRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@get
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@get
         }
 
@@ -251,7 +250,7 @@ fun Route.lendingsRoutes() {
             val lendingUserSub = Database { lending.userSub.sub.value }
             if (lendingUserSub != session.sub) {
                 // Return not found to avoid leaking existence of the lending
-                call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+                call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
                 return@get
             }
         }
@@ -265,13 +264,13 @@ fun Route.lendingsRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@delete
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@delete
         }
 
@@ -318,13 +317,13 @@ fun Route.lendingsRoutes() {
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@post
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 
@@ -340,31 +339,31 @@ fun Route.lendingsRoutes() {
             )
         }
 
-        call.respondText("Lending #$lendingId confirmed", status = HttpStatusCode.OK)
+        call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/pickup") {
         val session = assertAdmin() ?: return@post
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
-            call.respondText("Malformed lending id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@post
         }
 
         val lending = Database { LendingEntity.findById(lendingId) }
         if (lending == null) {
-            call.respondText("Lending #$lendingId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
             return@post
         }
 
         if (!lending.confirmed) {
-            call.respondText("Lending #$lendingId is not confirmed", status = HttpStatusCode.Conflict)
+            call.respondError(Error.LendingNotConfirmed())
             return@post
         }
 
         val userReference = Database { UserReferenceEntity.findById(session.sub) }
         if (userReference == null) {
-            call.respondText("Your user reference was not found", status = HttpStatusCode.InternalServerError)
+            call.respondError(Error.UserReferenceNotFound())
             return@post
         }
 
@@ -397,7 +396,7 @@ fun Route.lendingsRoutes() {
             )
         }
 
-        call.respondText("Lending #$lendingId picked up", status = HttpStatusCode.OK)
+        call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/return") {
         assertContentType(ContentType.Application.Json) ?: return@post
@@ -482,14 +481,14 @@ fun Route.lendingsRoutes() {
                 )
             }
 
-            call.respondText("All items returned", status = HttpStatusCode.OK)
+            call.respond(HttpStatusCode.NoContent)
         } else {
             CoroutineScope(Dispatchers.IO).launch {
                 Push.sendAdminPushNotification(lending.partialReturnNotification(false))
             }
 
             call.response.header("CEA-Missing-Items", missingItemsIds.joinToString(","))
-            call.respondText("Still some items missing", status = HttpStatusCode.Accepted)
+            call.respond(HttpStatusCode.Accepted)
         }
     }
     post("inventory/lendings/{id}/add_memory") {
@@ -594,7 +593,7 @@ fun Route.lendingsRoutes() {
             )
         }
 
-        call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)
+        call.respond(HttpStatusCode.NoContent)
     }
     // Allows admins to skip the memory submission for a lending
     post("inventory/lendings/{id}/skip_memory") {
@@ -625,7 +624,7 @@ fun Route.lendingsRoutes() {
             )
         }
 
-        call.respond(HttpStatusCode.OK)
+        call.respond(HttpStatusCode.NoContent)
     }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
     getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
@@ -633,7 +632,7 @@ fun Route.lendingsRoutes() {
 
         val typeId = call.parameters["id"]?.toUUIDOrNull()
         if (typeId == null) {
-            call.respondText("Malformed item type id", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MalformedId())
             return@getWithLock
         }
 

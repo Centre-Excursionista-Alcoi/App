@@ -406,6 +406,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
     }
 
+    @Serializable
+    @SerialName("LendingNotConfirmed")
+    class LendingNotConfirmed(): Error {
+        override val code: Int = ERROR_LENDING_NOT_CONFIRMED
+        override val description: String = "The lending is not confirmed"
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -442,6 +452,7 @@ sealed interface Error {
         const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
         const val ERROR_LENDING_ALREADY_PICKED_UP = 33
         const val ERROR_USER_NOT_SIGNED_UP_FOR_LENDING = 34
+        const val ERROR_LENDING_NOT_CONFIRMED = 35
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
