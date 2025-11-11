@@ -630,7 +630,7 @@ fun Route.lendingsRoutes() {
         val amount = parameters["amount"]?.toIntOrNull()
 
         if (amount == null || amount <= 0) {
-            call.respondText("Missing or invalid 'amount' parameter", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("amount"))
             return@getWithLock
         }
 
@@ -640,7 +640,7 @@ fun Route.lendingsRoutes() {
             null
         }
         if (from == null) {
-            call.respondText("Missing or malformed 'from' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("from"))
             return@getWithLock
         }
         val to = try {
@@ -649,31 +649,31 @@ fun Route.lendingsRoutes() {
             null
         }
         if (to == null) {
-            call.respondText("Missing or malformed 'to' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.MissingArgument("to"))
             return@getWithLock
         }
 
         if (to.isBefore(from)) {
-            call.respondText("'to' date cannot be before 'from' date", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.InvalidArgument(message = "'to' date cannot be before 'from' date"))
             return@getWithLock
         }
 
         val today = today()
         if (to.isBefore(today)) {
-            call.respondText("Lending dates must be in the future", status = HttpStatusCode.BadRequest)
+            call.respondError(Error.InvalidArgument(message = "dates must be in the future"))
             return@getWithLock
         }
 
         // Make sure the user is signed up for lending
         val userNotSignedUpForLending = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.empty() }
         if (userNotSignedUpForLending) {
-            call.respondText("User not signed up for lending", status = HttpStatusCode.Forbidden)
+            call.respondError(Error.UserNotSignedUpForLending())
             return@getWithLock
         }
 
         val type = Database { InventoryItemTypeEntity.findById(typeId) }
         if (type == null) {
-            call.respondText("Item type #$typeId not found", status = HttpStatusCode.NotFound)
+            call.respondError(Error.EntityNotFound("Item Type", typeId.toString()))
             return@getWithLock
         }
 
@@ -685,7 +685,7 @@ fun Route.lendingsRoutes() {
         }
         if (availableItems.size < amount) {
             call.response.header("CEA-Available-Items", availableItems.joinToString(",") { it.id.value.toString() })
-            call.respondText("Not enough available items of type #$typeId for the given date range", status = HttpStatusCode.Conflict)
+            call.respondError(Error.LendingConflict())
             return@getWithLock
         }
 
