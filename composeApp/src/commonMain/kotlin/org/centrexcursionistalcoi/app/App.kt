@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -28,7 +29,9 @@ import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
+import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
 import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
@@ -51,6 +54,7 @@ import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
 @Composable
 fun MainApp(
+    pushNotification: PushNotification? = null,
     model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel() },
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
@@ -74,7 +78,49 @@ fun MainApp(
             }
 
             if (isReady) {
-                App(onNavHostReady)
+                fun <N: PushNotification.LendingUpdated> destination(
+                    notification: N,
+                    forAdmin: (N) -> Destination? = { null },
+                    forUser: (N) -> Destination? = { null }
+                ): Destination? {
+                    return if (notification.isSelf) forUser(notification)
+                    else forAdmin(notification)
+                }
+
+                val afterLoad: Destination? = remember(pushNotification) {
+                    when (pushNotification) {
+                        // always admin notifications
+                        is PushNotification.NewLendingRequest -> Destination.Admin.LendingsManagement(
+                            showingLendingId = pushNotification.lendingId
+                        )
+                        is PushNotification.NewMemoryUpload -> Destination.Admin.LendingsManagement(
+                            showingLendingId = pushNotification.lendingId
+                        )
+                        // always user notifications
+                        is PushNotification.LendingCancelled -> null // the lending is cancelled, cannot show any info
+                        is PushNotification.LendingConfirmed -> Destination.Home(
+                            showingLendingId = pushNotification.lendingId
+                        )
+                        // could be either
+                        is PushNotification.LendingTaken -> destination(
+                            pushNotification,
+                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                        )
+                        is PushNotification.LendingPartiallyReturned -> destination(
+                            pushNotification,
+                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                        )
+                        is PushNotification.LendingReturned -> destination(
+                            pushNotification,
+                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                        )
+                        else -> null
+                    }
+                }
+                App(afterLoad, onNavHostReady)
             } else {
                 LoadingBox()
             }
@@ -85,6 +131,7 @@ fun MainApp(
 @Composable
 @OptIn(ExperimentalSettingsApi::class)
 fun App(
+    afterLoad: Destination? = null,
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -103,7 +150,8 @@ fun App(
             destination<Destination.Loading> {
                 LoadingScreen(
                     onLoggedIn = {
-                        navController.navigate(Destination.Home) {
+                        Napier.i { "User is logged in. Navigating to: ${afterLoad ?: Destination.Home}" }
+                        navController.navigate(afterLoad ?: Destination.Home()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
                             }
@@ -140,8 +188,11 @@ fun App(
                     }
                 )
             }
-            destination<Destination.Home> {
+            destination<Destination.Home> { route ->
+                val showingLendingId = route.showingLendingId
+
                 HomeScreen(
+                    showingLendingId = showingLendingId,
                     onClickInventoryItemType = { type ->
                         navController.navigate(Destination.Admin.InventoryItems(type))
                     },
@@ -200,8 +251,11 @@ fun App(
                 )
             }
 
-            destination<Destination.Admin.LendingsManagement> {
+            destination<Destination.Admin.LendingsManagement> { route ->
+                val showingLendingId = route.showingLendingId
+
                 LendingsManagementScreen(
+                    showingLendingId = showingLendingId,
                     onLendingPickupRequest = {
                         navController.navigate(Destination.LendingPickup(it.id))
                     },
@@ -276,6 +330,7 @@ inline fun <reified D: Destination> NavGraphBuilder.destination(
     composable<D>(
         typeMap = mapOf(
             typeOf<Uuid>() to UuidNavType,
+            typeOf<Uuid?>() to NullableUuidNavType,
         ),
     ) { bse ->
         val route = bse.toRoute<D>()

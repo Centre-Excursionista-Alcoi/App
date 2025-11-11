@@ -390,7 +390,7 @@ fun Route.lendingsRoutes() {
         CoroutineScope(Dispatchers.IO).launch {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.takenNotification()
+                notification = lending.takenNotification(true)
             )
         }
 
@@ -474,14 +474,14 @@ fun Route.lendingsRoutes() {
             CoroutineScope(Dispatchers.IO).launch {
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
-                    notification = lending.returnedNotification()
+                    notification = lending.returnedNotification(true)
                 )
             }
 
             call.respondText("All items returned", status = HttpStatusCode.OK)
         } else {
             CoroutineScope(Dispatchers.IO).launch {
-                Push.sendAdminPushNotification(lending.partialReturnNotification())
+                Push.sendAdminPushNotification(lending.partialReturnNotification(false))
             }
 
             call.response.header("CEA-Missing-Items", missingItemsIds.joinToString(","))

@@ -88,6 +88,7 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingsPage(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
+    showingLendingId: Uuid?,
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -200,6 +201,7 @@ fun LendingsPage(
                 LendingItem(
                     lending,
                     snackbarHostState,
+                    showingDialog = showingLendingId == lending.id,
                     memoryUploadProgress,
                     onMemorySubmitted = { onMemorySubmitted(lending, it) },
                     onMemoryEditorRequested = { onMemoryEditorRequested(lending) },
@@ -569,6 +571,7 @@ fun OldLendingItem(lending: ReferencedLending) {
 fun LendingItem(
     lending: ReferencedLending,
     snackbarHostState: SnackbarHostState,
+    showingDialog: Boolean,
     memoryUploadProgress: Progress?,
     onMemorySubmitted: (PlatformFile) -> Job,
     onMemoryEditorRequested: () -> Unit,
@@ -576,7 +579,7 @@ fun LendingItem(
 ) {
     val scope = rememberCoroutineScope()
 
-    var showingDialog by remember { mutableStateOf(false) }
+    var showingDialog by remember { mutableStateOf(showingDialog) }
     if (showingDialog) {
         LendingDetailsDialog(
             lending = lending,
