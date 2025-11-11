@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -49,6 +50,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LendingsManagementScreen(
+    showingLendingId: Uuid? = null,
     model: LendingsManagementViewModel = viewModel { LendingsManagementViewModel() },
     onLendingPickupRequest: (ReferencedLending) -> Unit,
     onLendingReturnRequest: (ReferencedLending) -> Unit,
@@ -58,6 +60,7 @@ fun LendingsManagementScreen(
 
     LendingsManagementScreen(
         lendings = lendings,
+        showingLendingId = showingLendingId,
         onConfirmRequest = model::confirm,
         onPickupRequest = onLendingPickupRequest,
         onReturnRequest = onLendingReturnRequest,
@@ -71,6 +74,7 @@ fun LendingsManagementScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LendingsManagementScreen(
     lendings: List<ReferencedLending>?,
+    showingLendingId: Uuid?,
     onConfirmRequest: (ReferencedLending) -> Unit,
     onPickupRequest: (ReferencedLending) -> Unit,
     onReturnRequest: (ReferencedLending) -> Unit,
@@ -78,6 +82,7 @@ private fun LendingsManagementScreen(
     onDeleteRequest: (ReferencedLending) -> Job,
     onBack: () -> Unit
 ) {
+    val showingLending = remember(lendings, showingLendingId) { lendings?.find { it.id == showingLendingId } }
     val unconfirmedLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.REQUESTED }.orEmpty() }
     val pendingPickupLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.CONFIRMED }.orEmpty() }
     val pendingReturnLendings = remember(lendings) { lendings?.filter { it.status() == Lending.Status.TAKEN }.orEmpty() }
@@ -110,7 +115,7 @@ private fun LendingsManagementScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             if (unconfirmedLendings.isNotEmpty()) item(key = "unconfirmed_lendings") {
-                UnconfirmedLendingsCard(unconfirmedLendings, onConfirmRequest) { deletingLending = it }
+                UnconfirmedLendingsCard(unconfirmedLendings, showingLending, onConfirmRequest) { deletingLending = it }
             }
             if (pendingPickupLendings.isNotEmpty()) item(key = "pending_pickup_lendings") {
                 PendingPickupLendingsCard(pendingPickupLendings, onPickupRequest)
@@ -119,10 +124,10 @@ private fun LendingsManagementScreen(
                 PendingReturnLendingsCard(pendingReturnLendings, onReturnRequest)
             }
             if (pendingMemoryLendings.isNotEmpty()) item(key = "pending_memory_lendings") {
-                PendingMemoryLendingsCard(pendingMemoryLendings, onSkipMemoryRequest) { deletingLending = it }
+                PendingMemoryLendingsCard(pendingMemoryLendings, showingLending, onSkipMemoryRequest) { deletingLending = it }
             }
             if (completedLendings.isNotEmpty()) item(key = "completed_lendings") {
-                CompleteLendingsCard(completedLendings) { deletingLending = it }
+                CompleteLendingsCard(completedLendings, showingLending) { deletingLending = it }
             }
 
             if ((unconfirmedLendings + pendingPickupLendings + pendingReturnLendings + pendingMemoryLendings + completedLendings).isEmpty()) {
@@ -164,6 +169,7 @@ fun LendingsCardActions(
 @Composable
 fun UnconfirmedLendingsCard(
     lendings: List<ReferencedLending>,
+    showingLending: ReferencedLending?,
     onConfirmRequest: (ReferencedLending) -> Unit,
     onDeleteRequest: (ReferencedLending) -> Unit,
 ) {
@@ -176,6 +182,7 @@ fun UnconfirmedLendingsCard(
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
+        showDetailsFor = showingLending?.takeIf { lending -> lendings.find { it.id == lending.id } != null },
         detailsDialogContent = { lending ->
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
@@ -243,6 +250,7 @@ fun PendingReturnLendingsCard(
 @Composable
 fun PendingMemoryLendingsCard(
     lendings: List<ReferencedLending>,
+    showingLending: ReferencedLending?,
     onSkipMemoryRequest: (ReferencedLending) -> Unit,
     onDeleteRequest: (ReferencedLending) -> Unit,
 ) {
@@ -255,6 +263,7 @@ fun PendingMemoryLendingsCard(
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
+        showDetailsFor = showingLending?.takeIf { lending -> lendings.find { it.id == lending.id } != null },
         detailsDialogContent = { lending ->
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))
@@ -292,6 +301,7 @@ fun PendingMemoryLendingsCard(
 @Composable
 fun CompleteLendingsCard(
     lendings: List<ReferencedLending>,
+    showingLending: ReferencedLending?,
     fpm: FileProviderModel = viewModel { FileProviderModel() },
     onDeleteRequest: (ReferencedLending) -> Unit,
 ) {
@@ -304,6 +314,7 @@ fun CompleteLendingsCard(
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
         },
         modifier = Modifier.fillMaxWidth().padding(8.dp),
+        showDetailsFor = showingLending?.takeIf { lending -> lendings.find { it.id == lending.id } != null },
         detailsDialogContent = { lending ->
             Text(stringResource(Res.string.management_lending_user, lending.user.fullName))
             Text(stringResource(Res.string.lending_details_items_title))

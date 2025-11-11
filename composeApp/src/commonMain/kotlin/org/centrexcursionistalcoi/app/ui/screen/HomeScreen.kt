@@ -84,6 +84,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeScreen(
+    showingLendingId: Uuid?,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
@@ -113,6 +114,7 @@ fun HomeScreen(
 
     profile?.let {
         HomeScreenContent(
+            showingLendingId,
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
@@ -168,6 +170,8 @@ private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composabl
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun HomeScreenContent(
+    showingLendingId: Uuid?,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -390,6 +394,7 @@ private fun HomeScreenContent(
                     HomeScreenPagerContent(
                         page,
                         snackbarHostState,
+                        showingLendingId,
                         notificationPermissionResult,
                         onNotificationPermissionRequest,
                         onNotificationPermissionDenyRequest,
@@ -433,6 +438,7 @@ private fun HomeScreenContent(
                         HomeScreenPagerContent(
                             page,
                             snackbarHostState,
+                            showingLendingId,
                             notificationPermissionResult,
                             onNotificationPermissionRequest,
                             onNotificationPermissionDenyRequest,
@@ -474,6 +480,7 @@ private fun HomeScreenContent(
 fun HomeScreenPagerContent(
     page: Int,
     snackbarHostState: SnackbarHostState,
+    showingLendingId: Uuid?,
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -517,6 +524,7 @@ fun HomeScreenPagerContent(
             IDX_LENDING -> LendingsPage(
                 windowSizeClass,
                 snackbarHostState,
+                showingLendingId,
                 notificationPermissionResult,
                 onNotificationPermissionRequest,
                 onNotificationPermissionDenyRequest,

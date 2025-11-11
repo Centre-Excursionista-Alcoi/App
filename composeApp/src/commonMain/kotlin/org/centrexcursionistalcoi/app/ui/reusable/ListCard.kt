@@ -61,6 +61,7 @@ fun <T> ListCard(
     actions: @Composable (T) -> List<IconAction> = { emptyList() },
     supportingContent: (@Composable (T) -> Unit)? = null,
     trailingContent: (@Composable RowScope.(T) -> Unit)? = null,
+    showDetailsFor: T? = null,
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
     fileContainerProvider: ((T) -> ImageFileContainer)? = null,
     onClick: ((T) -> Unit)? = null,
@@ -78,7 +79,7 @@ fun <T> ListCard(
         }
     }
 
-    var showingDetails by remember { mutableStateOf<T?>(null) }
+    var showingDetails by remember { mutableStateOf(showDetailsFor) }
     if (detailsDialogContent != null) showingDetails?.let { item ->
         AlertDialog(
             onDismissRequest = { showingDetails = null },

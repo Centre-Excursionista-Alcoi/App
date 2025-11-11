@@ -27,7 +27,14 @@ object PushNotifierListener : NotifierManager.Listener {
                 id = Random.nextInt()
                 title = notificationTitle
                 body = notificationBody
-                // TODO - payloadData = data
+                payloadData = data.mapValues { (_, value) ->
+                    when (value) {
+                        is String -> value
+                        is Number -> value.toString()
+                        is Boolean -> value.toString()
+                        else -> value.toString()
+                    }
+                }
             }
         }
     }

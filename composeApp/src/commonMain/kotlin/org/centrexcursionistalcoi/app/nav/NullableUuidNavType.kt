@@ -7,8 +7,9 @@ import androidx.savedstate.write
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.utils.toUuid
 
-object UuidNavType : NavType<Uuid>(isNullableAllowed = false) {
-    override fun put(bundle: SavedState, key: String, value: Uuid) {
+object NullableUuidNavType : NavType<Uuid?>(isNullableAllowed = true) {
+    override fun put(bundle: SavedState, key: String, value: Uuid?) {
+        value ?: return
         bundle.write {
             putString(key, value.toString())
         }
