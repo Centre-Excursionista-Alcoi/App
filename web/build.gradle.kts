@@ -1,4 +1,5 @@
 import com.varabyte.kobweb.gradle.application.util.configAsKobwebApplication
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.composeCompiler)
@@ -9,8 +10,23 @@ plugins {
     alias(libs.plugins.kobwebxMarkdown)
 }
 
+fun readProperties(fileName: String, root: File = projectDir): Properties? {
+    val propsFile = File(root, fileName)
+    if (!propsFile.exists()) {
+        return null
+    }
+    if (!propsFile.canRead()) {
+        throw GradleException("Cannot read $fileName")
+    }
+    return Properties().apply {
+        propsFile.inputStream().use { load(it) }
+    }
+}
+
+val versionProperties = readProperties("version.properties", rootProject.rootDir) ?: error("Could not read version.properties")
+
 group = "org.centrexcursionistalcoi.web"
-version = "1.0-SNAPSHOT"
+version = versionProperties.getProperty("VERSION_NAME") ?: error("VERSION_NAME not found in version.properties")
 
 kobweb {
     app {
