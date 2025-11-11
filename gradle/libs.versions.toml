@@ -26,6 +26,7 @@ h2 = "2.4.240"
 kmm-notifier = "1.6.0"
 kmm-permission = "0.15.0"
 kmm-settings = "1.3.0"
+kobweb = "0.23.3"
 kotlin = "2.2.21"
 kotlin-crypto-hash = "0.8.0"
 kotlin-crypto-random = "0.6.0"
@@ -50,7 +51,7 @@ sentry = "5.12.2"
 sentry-multiplatform = "0.21.0"
 sqldelight = "2.1.0"
 sqlite = "3.51.0.0"
-testcontainers = "1.20.3"
+testcontainers = "1.21.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -64,7 +65,9 @@ androidx-work-gcm = { module = "androidx.work:work-gcm", version.ref ="androidx-
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+compose-html-core = { module = "org.jetbrains.compose.html:html-core", version.ref = "composeMultiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
 compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-windowSizeClass" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
@@ -85,12 +88,17 @@ kmm-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-corou
 kmm-settings-makeObservable = { module = "com.russhwolf:multiplatform-settings-make-observable", version.ref = "kmm-settings" }
 kmm-settings-noArg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "kmm-settings" }
 kmm-settings-serialization = { module = "com.russhwolf:multiplatform-settings-serialization", version.ref = "kmm-settings" }
+kobweb-core = { module = "com.varabyte.kobweb:kobweb-core ", version.ref = "kobweb" }
+kobweb-silk-core = { module = "com.varabyte.kobweb:kobweb-silk", version.ref = "kobweb" }
+kobweb-silk-icons-fa = { module = "com.varabyte.kobwebx:silk-icons-fa", version.ref = "kobweb" }
+kobweb-worker = { module = "com.varabyte.kobweb:kobweb-worker", version.ref = "kobweb" }
+kobwebx-markdown = { module = "com.varabyte.kobwebx:kobwebx-markdown", version.ref = "kobweb" }
+kobwebx-serialization-kotlinx = { module = "com.varabyte.kobwebx:kobwebx-serialization-kotlinx", version.ref = "kobweb" }
 kotlin-crypto-random = { module = "org.kotlincrypto.random:crypto-rand", version.ref = "kotlin-crypto-random" }
 kotlin-crypto-sha2 = { module = "org.kotlincrypto.hash:sha2", version.ref = "kotlin-crypto-hash" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serializationCsv = { module = "de.brudaswen.kotlinx.serialization:kotlinx-serialization-csv", version.ref = "kotlinx-serialization-csv" }
 kotlinx-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kreds = { module = "io.github.crackthecodeabhi:kreds", version.ref = "kreds" }
@@ -103,6 +111,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinxJson = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -134,6 +143,7 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 
 [bundles]
 androidx-work = ["androidx-work-gcm", "androidx-work-runtime"]
+kobweb = ["kobweb-core", "kobweb-silk-core", "kobweb-silk-icons-fa", "kobweb-worker", "kobwebx-markdown", "kobwebx-serialization-kotlinx"]
 testcontainers = ["testcontainers-junit-jupiter", "testcontainers-postgresql"]
 
 [plugins]
@@ -146,6 +156,8 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 googleServices = { id = "com.google.gms.google-services", version.ref = "gms" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+kobwebApplication = { id = "com.varabyte.kobweb.application", version.ref = "kobweb" }
+kobwebxMarkdown = { id = "com.varabyte.kobwebx.markdown", version.ref = "kobweb" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
