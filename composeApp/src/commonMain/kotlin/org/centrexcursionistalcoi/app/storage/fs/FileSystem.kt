@@ -58,10 +58,10 @@ object FileSystem {
         val metadata = fs.metadataOrNull(path) ?: error("Could not fetch metadata for $path")
         if (metadata.isDirectory) {
             val count = fs.list(path).sumOf { child -> deleteRecursively(child, failOnNotFound) }
-            fs.delete(path)
+            fs.delete(path, mustExist = failOnNotFound)
             return count + 1
         } else {
-            fs.delete(path)
+            fs.delete(path, mustExist = failOnNotFound)
             return 1
         }
     }

@@ -60,7 +60,7 @@ object AuthBackend {
             PostsRepository.deleteAll()
             DepartmentsRepository.deleteAll()
             Napier.d { "Removing all files..." }
-            FileSystem.deleteAll()
+            FileSystem.deleteAll().also { Napier.v { "$it files were deleted." } }
             Napier.d { "Revoking FCM token..." }
             FCMTokenManager.revoke()
             Napier.d { "Removing all settings..." }
