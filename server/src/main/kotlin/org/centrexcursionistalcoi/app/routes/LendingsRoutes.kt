@@ -184,6 +184,7 @@ fun Route.lendingsRoutes() {
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             println("Sending emails to: $emails")
+            val url = "cea://admin/lendings#${lendingEntity.id.value}"
             Email.sendEmail(
                 to = emails,
                 subject = "New lending request (#${lendingEntity.id.value})",
@@ -199,6 +200,7 @@ fun Route.lendingsRoutes() {
                         </ul>
                     </p>
                     <p>Please review and confirm the lending in the admin panel.</p>
+                    <a href="$url">Open in app</a> (<a href="$url">$url</a>)
                 """.trimIndent()
             )
         }
@@ -561,6 +563,7 @@ fun Route.lendingsRoutes() {
             val admins = Database { UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) } }
             val emails = admins.map { MailerSendEmail(it.email, it.fullName) }
             val documentBytes = file.takeIf { it.isNotEmpty() }?.baos?.toByteArray()?.also { file.close() }
+            val url = "cea://admin/lendings#${lending.id.value}"
             Email.sendEmail(
                 to = emails,
                 subject = "New lending memory submitted (#${lending.id.value})",
@@ -572,6 +575,7 @@ fun Route.lendingsRoutes() {
                         <strong>Notes:</strong> ${lending.notes ?: "None"}<br/>
                     </p>
                     <p>Please review the submitted memory in the admin panel.</p>
+                    <a href="$url">Open in app</a> (<a href="$url">$url</a>)
                 """.trimIndent(),
                 attachments = listOfNotNull(
                     documentBytes?.let { MailerSendAttachment(it, file.originalFileName ?: "memory.pdf") },
