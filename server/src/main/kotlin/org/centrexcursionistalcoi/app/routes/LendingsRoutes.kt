@@ -390,6 +390,7 @@ fun Route.lendingsRoutes() {
 
         // Send Push Notification asynchronously
         CoroutineScope(Dispatchers.IO).launch {
+            Push.sendAdminPushNotification(lending.takenNotification(false))
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.takenNotification(true)
@@ -474,6 +475,7 @@ fun Route.lendingsRoutes() {
 
             // Send Push Notification asynchronously
             CoroutineScope(Dispatchers.IO).launch {
+                Push.sendAdminPushNotification(lending.returnedNotification(false))
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
                     notification = lending.returnedNotification(true)
@@ -586,6 +588,10 @@ fun Route.lendingsRoutes() {
         }
         CoroutineScope(Dispatchers.IO).launch {
             Push.sendAdminPushNotification(lending.memoryAddedNotification())
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.memoryAddedNotification()
+            )
         }
 
         call.respondText("Lending #$lendingId returned", status = HttpStatusCode.OK)
@@ -611,10 +617,17 @@ fun Route.lendingsRoutes() {
             lending.memorySubmittedAt = Instant.now()
         }
 
+        CoroutineScope(Dispatchers.IO).launch {
+            Push.sendAdminPushNotification(lending.memoryAddedNotification())
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.memoryAddedNotification()
+            )
+        }
+
         call.respond(HttpStatusCode.OK)
     }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
-    // TODO: Add tests
     getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
 
