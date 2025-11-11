@@ -3,17 +3,18 @@ package org.centrexcursionistalcoi.app.ui.screen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Receipt
@@ -21,7 +22,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -80,6 +81,7 @@ import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -252,6 +254,14 @@ private fun HomeScreenContent(
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 TopAppBar(
                     title = { Text(stringResource(Res.string.app_name)) },
+                    navigationIcon = {
+                        Image(
+                            painter = painterResource(Res.drawable.icon),
+                            contentDescription = stringResource(Res.string.app_name),
+                            modifier = Modifier.size(36.dp),
+                            contentScale = ContentScale.Inside,
+                        )
+                    },
                     actions = {
                         val isProfilePage = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
                         if (profile.isAdmin) {
@@ -319,21 +329,20 @@ private fun HomeScreenContent(
             if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
                 NavigationRail(
                     header = {
-                        if (profile.isAdmin) {
-                            BadgedBox(
-                                badge = {
-                                    Badge { Text(stringResource(Res.string.admin)) }
-                                },
-                                content = {
-                                    Icon(
-                                        Icons.Default.AdminPanelSettings,
-                                        stringResource(Res.string.admin)
-                                    )
-                                }
-                            )
-                        }
+                        Image(
+                            painter = painterResource(Res.drawable.icon),
+                            contentDescription = stringResource(Res.string.app_name),
+                            modifier = Modifier.size(36.dp),
+                            contentScale = ContentScale.Inside,
+                        )
                     }
                 ) {
+                    if (profile.isAdmin) {
+                        Badge(
+                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp),
+                        ) { Text(stringResource(Res.string.admin)) }
+                    }
+
                     for ((index, item) in navigationItems.withIndex()) {
                         val (icon, label) = item
                         NavigationRailItem(
