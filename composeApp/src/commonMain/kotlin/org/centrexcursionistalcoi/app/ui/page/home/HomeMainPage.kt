@@ -62,6 +62,8 @@ import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.InventoryItemType
@@ -69,6 +71,8 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.process.Progress
@@ -103,7 +107,7 @@ fun LendingsPage(
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
-    onCancelLendingRequest: (ReferencedLending) -> Job,
+    onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
 ) {
     val scrollState = rememberLazyGridState()
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
@@ -567,6 +571,7 @@ fun OldLendingItem(lending: ReferencedLending) {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun LendingItem(
     lending: ReferencedLending,
@@ -575,7 +580,7 @@ fun LendingItem(
     memoryUploadProgress: Progress?,
     onMemorySubmitted: (PlatformFile) -> Job,
     onMemoryEditorRequested: () -> Unit,
-    onCancelLendingRequest: () -> Job,
+    onCancelLendingRequest: () -> Deferred<ServerException?>,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -583,7 +588,24 @@ fun LendingItem(
     if (showingDialog) {
         LendingDetailsDialog(
             lending = lending,
-            onCancelRequest = { onCancelLendingRequest().invokeOnCompletion { showingDialog = false } },
+            onCancelRequest = {
+                val request = onCancelLendingRequest()
+                request.invokeOnCompletion {
+                    val error = request.getCompleted()
+                    if (error == null) {
+                        showingDialog = false
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                when (error.errorCode) {
+                                    Error.ERROR_LENDING_ALREADY_PICKED_UP -> getString(Res.string.lending_details_cancel_error_already_picked_up)
+                                    else -> getString(Res.string.error_unknown, error::class.simpleName ?: error.toString())
+                                }
+                            )
+                        }
+                    }
+                }
+            },
             memoryUploadProgress = memoryUploadProgress,
             onMemorySubmitted = onMemorySubmitted,
             onMemoryEditorRequested = {

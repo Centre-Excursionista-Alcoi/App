@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -25,6 +26,14 @@ fun ViewModel.launch(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
 ) = viewModelScope.launch(Dispatchers.Main, start, block)
+
+/**
+ * Launches a new coroutine in the UI thread.
+ */
+fun <T> ViewModel.async(
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    block: suspend CoroutineScope.() -> T
+) = viewModelScope.async(Dispatchers.Main, start, block)
 
 /**
  * Launches a new coroutine in the UI thread.

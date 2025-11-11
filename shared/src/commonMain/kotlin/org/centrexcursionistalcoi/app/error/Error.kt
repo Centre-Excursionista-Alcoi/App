@@ -383,6 +383,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("LendingAlreadyPickedUp")
+    class LendingAlreadyPickedUp(): Error {
+        override val code: Int = ERROR_LENDING_ALREADY_PICKED_UP
+        override val description: String = "The lending has already been picked up and cannot be cancelled."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -417,6 +427,7 @@ sealed interface Error {
         const val ERROR_INCORRECT_PASSWORD_OR_NIF = 30
         const val ERROR_PASSWORD_NOT_SET = 31
         const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
+        const val ERROR_LENDING_ALREADY_PICKED_UP = 33
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -452,6 +463,7 @@ sealed interface Error {
             ERROR_INCORRECT_PASSWORD_OR_NIF -> IncorrectPasswordOrNIF.serializer()
             ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
             ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
+            ERROR_LENDING_ALREADY_PICKED_UP -> LendingAlreadyPickedUp.serializer()
             else -> null
         }
     }
