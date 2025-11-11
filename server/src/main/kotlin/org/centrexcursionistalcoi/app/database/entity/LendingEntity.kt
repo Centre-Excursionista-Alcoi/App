@@ -61,24 +61,27 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         )
     }
 
-    fun takenNotification(): PushNotification.LendingTaken = Database {
+    fun takenNotification(isSelf: Boolean): PushNotification.LendingTaken = Database {
         PushNotification.LendingTaken(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+            isSelf = isSelf,
         )
     }
 
-    fun returnedNotification(): PushNotification.LendingReturned = Database {
+    fun returnedNotification(isSelf: Boolean): PushNotification.LendingReturned = Database {
         PushNotification.LendingReturned(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+            isSelf = isSelf,
         )
     }
 
-    fun partialReturnNotification(): PushNotification.LendingPartiallyReturned = Database {
+    fun partialReturnNotification(isSelf: Boolean): PushNotification.LendingPartiallyReturned = Database {
         PushNotification.LendingPartiallyReturned(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+            isSelf = isSelf,
         )
     }
 

@@ -8,11 +8,14 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
 
+@Serializable
 sealed interface Destination {
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination
-    @Serializable @SerialName("home") data object Home : Destination
+    @Serializable @SerialName("home") data class Home(
+        val showingLendingId: Uuid? = null
+    ) : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
 
     @Serializable @SerialName("itemTypeDetails") data class ItemTypeDetails(val typeId: Uuid, val displayName: String) : Destination {
@@ -30,7 +33,9 @@ sealed interface Destination {
             constructor(type: InventoryItemType): this(type.id, type.displayName)
         }
 
-        @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
+        @Serializable @SerialName("lendingsManagement") data class LendingsManagement(
+            val showingLendingId: Uuid? = null
+        ) : Destination
     }
 
     @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination
