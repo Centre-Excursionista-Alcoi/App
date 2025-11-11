@@ -200,7 +200,7 @@ fun App(
                         navController.navigate(Destination.Admin.InventoryItems(type))
                     },
                     onManageLendingsRequested = {
-                        navController.navigate(Destination.Admin.LendingsManagement)
+                        navController.navigate(Destination.Admin.LendingsManagement())
                     },
                     onLendingSignUpRequested = {
                         navController.navigate(Destination.LendingSignUp)
