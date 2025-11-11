@@ -287,7 +287,7 @@ fun App(
                 LendingCreationScreen(
                     originalShoppingList = items,
                     onLendingCreated = {
-                        navController.navigate(Destination.Home) {
+                        navController.navigate(Destination.Home()) {
                             popUpTo<Destination.Home>()
                         }
                     }
