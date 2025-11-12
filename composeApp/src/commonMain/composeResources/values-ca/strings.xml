@@ -243,7 +243,7 @@
     <string name="management_inventory_item_edit" translatable="false">Editar Material</string>
     <string name="error_dialog_message" translatable="false">Missatge:</string>
     <string name="management_lending_given_by" translatable="false">Donat per: %1$s el %2$s</string>
-    <string name="management_skip_memory" translatable="false">Saltar Memòria</string>
+    <string name="management_skip_memory" translatable="false">Saltar</string>
     <string name="remove">Eliminar</string>
     <string name="undo">Desfer</string>
     <string name="lending_creation_error_allocation_title">No s\'han pogut reservar elements suficients</string>
@@ -285,4 +285,26 @@
     <string name="settings_dev_credit_message">Aquesta app ha sigut desenvolupada de manera desinteressada per al Centre Excursionista d\'Alcoi per %1$s.</string>
     <string name="settings_dev_credit_website">Lloc Web</string>
     <string name="settings_dev_credit_email">Email</string>
+    <string name="error_access_denied">Accés denegat.</string>
+    <string name="management_other_users_lendings">Préstecs d\'altres usuaris</string>
+    <string name="management_lending_title">Gestió de Préstec</string>
+    <string name="lending_details_confirmation_pending_title">Confirmació Pendent</string>
+    <string name="lending_details_confirmation_pending_message">Un administrador ha de confirmar el teu préstec abans.</string>
+    <string name="lending_details_pickup_pending_title">Recollida Pendent</string>
+    <string name="lending_details_pickup_pending_message">Un administrador es posarà en contacte amb tú per a programar la recollida.</string>
+    <string name="lending_details_incomplete_return_title">Devolució Incompleta</string>
+    <string name="lending_details_incomplete_return_message">Has tornat una part del material, però encara falten coses. Per favor, retorna tot el més prompte possible.</string>
+    <string name="lending_details_return_pending_title">Retorn Pendent</string>
+    <string name="lending_details_return_pending_message">Per favor, programa la devolució amb el teu administrador assignat el més prompte possible.</string>
+    <string name="lending_details_memory_pending_title">Memòria Pendent</string>
+    <string name="lending_details_memory_pending_message">Per favor, prepara i puja/escriu la memòria de l\'activitat el més prompte possible. No pots fer una altra petició fins que ho faces.</string>
+    <string name="lending_details_memory">Memòria d\'Activitat</string>
+    <string name="lending_details_memory_view">Visualització de Memòria</string>
+    <string name="lending_details_memory_view_unsupported">La teua plataforma no suporta la visualització de documents</string>
+    <string name="lending_details_complete">Préstec Complet</string>
+    <string name="lending_details_cancel_error_already_picked_up">El préstec no es pot cancel·lar: ja s\'ha recollit el material</string>
+    <string name="lending_details_delete">Eliminar Préstec</string>
+    <string name="lending_details_delete_confirm_title">Confirmar Eliminació de Préstec</string>
+    <string name="lending_details_delete_confirm_message">Segur que vols eliminar aquest préstec?</string>
+    <string name="lending_details_items">Material</string>
 </resources>
