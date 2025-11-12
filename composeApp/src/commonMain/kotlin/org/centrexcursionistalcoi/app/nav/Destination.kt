@@ -42,7 +42,7 @@ sealed interface Destination {
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination
-    @Serializable @SerialName("home") data class Home(
+    @Serializable @SerialName("main") data class Main(
         val showingLendingId: Uuid? = null
     ) : Destination
     @Serializable @SerialName("settings") data object Settings : Destination

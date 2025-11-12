@@ -18,6 +18,7 @@
     <string name="password_show">Show Password</string>
     <string name="password_hide">Hide Password</string>
 
+    <string name="nav_home">Home</string>
     <string name="nav_lendings">Lendings</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
@@ -84,6 +85,7 @@
     <string name="loading_screen_error">Load failed</string>
     <string name="error_unknown">An unknown error occurred. Type: %1$s</string>
     <string name="error_delete_references">This element is referenced by another entity, it cannot be removed.</string>
+    <string name="error_access_denied">Access denied.</string>
 
     <string name="auth_callback_error_title">Could not process login</string>
     <string name="auth_callback_error_server_http">Server responded with exception (%1$d): %2$s</string>

@@ -24,13 +24,9 @@ import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ElevatedButton
@@ -73,8 +69,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.permission.HelperHolder
-import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
@@ -83,7 +77,6 @@ import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
-import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -91,13 +84,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun LendingsPage(
     windowSizeClass: WindowSizeClass,
-    snackbarHostState: SnackbarHostState,
-
-    showingLendingId: Uuid?,
-
-    notificationPermissionResult: NotificationPermissionResult?,
-    onNotificationPermissionRequest: () -> Unit,
-    onNotificationPermissionDenyRequest: () -> Unit,
 
     profile: ProfileResponse,
 
@@ -107,18 +93,11 @@ fun LendingsPage(
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
 
-    memoryUploadProgress: Progress?,
-    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
-
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
-
-    onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
 ) {
     val scrollState = rememberLazyGridState()
-    val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
 
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -126,12 +105,6 @@ fun LendingsPage(
     LaunchedEffect(lendings) {
         if (!lendings.isNullOrEmpty()) {
             // Scroll to top when lendings change
-            scrollState.animateScrollToItem(0)
-        }
-    }
-    LaunchedEffect(notificationPermissionResult) {
-        if (notificationPermissionResult != NotificationPermissionResult.Granted) {
-            // Scroll to top when permission is required
             scrollState.animateScrollToItem(0)
         }
     }
@@ -144,84 +117,9 @@ fun LendingsPage(
     ) {
         item(key = "top_spacer", contentType = "spacer") { Modifier.height(16.dp) }
 
-        val lendingSpan = GridItemSpan(if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) 2 else 1)
-
-        if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
-            item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    text = stringResource(Res.string.welcome, profile.fullName),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 12.dp, bottom = 24.dp)
-                )
-            }
-        }
-
-        // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings
-        if (isRegisteredForLendings && notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
-            item("notification_permission", contentType = "permission") {
-                CardWithIcon(
-                    title = stringResource(Res.string.permission_notification_title),
-                    message = stringResource(Res.string.permission_notification_message),
-                    icon = Icons.Default.Notifications,
-                    contentDescription = stringResource(Res.string.permission_notification_title),
-                    modifier = Modifier.padding(bottom = 12.dp),
-                ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f).padding(end = 4.dp),
-                        onClick = onNotificationPermissionDenyRequest,
-                    ) {
-                        Icon(Icons.Default.Close, stringResource(Res.string.permission_deny))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(Res.string.permission_deny))
-                    }
-                    if (notificationPermissionResult == NotificationPermissionResult.NotAllowed) {
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f).padding(start = 4.dp),
-                            onClick = { permissionHelper.openSettings() },
-                        ) {
-                            Icon(Icons.Default.Settings, stringResource(Res.string.permission_settings))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(Res.string.permission_settings))
-                        }
-                    } else {
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f).padding(start = 4.dp),
-                            onClick = onNotificationPermissionRequest,
-                        ) {
-                            Icon(Icons.Default.Security, stringResource(Res.string.permission_grant))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(Res.string.permission_grant))
-                        }
-                    }
-                }
-            }
-        }
-
         val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-        if (!activeLendings.isNullOrEmpty()) {
-            stickyHeader("active_lendings_header") {
-                Text(
-                    text = stringResource(Res.string.home_lendings),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
-            }
-            items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { lendingSpan }) { lending ->
-                LendingItem(
-                    lending,
-                    snackbarHostState,
-                    showingDialog = showingLendingId == lending.id,
-                    memoryUploadProgress,
-                    onMemorySubmitted = { onMemorySubmitted(lending, it) },
-                    onMemoryEditorRequested = { onMemoryEditorRequested(lending) },
-                    onCancelLendingRequest = { onCancelLendingRequest(lending) }
-                )
-            }
-        } else {
-            if (profile.lendingUser == null) {
+        if (activeLendings.isNullOrEmpty()) {
+            if (!isRegisteredForLendings) {
                 item("lending_not_signed_up", span = { GridItemSpan(maxLineSpan) }) {
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
@@ -255,7 +153,13 @@ fun LendingsPage(
                 val categories = inventoryItems?.flatMap { it.type.categories.orEmpty() }?.toSet().orEmpty().toList()
 
                 stickyHeader("lending_header") {
-                    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 12.dp)
+                    ) {
                         Text(
                             text = stringResource(Res.string.home_lending),
                             style = MaterialTheme.typography.titleLarge,
@@ -320,25 +224,6 @@ fun LendingsPage(
                         )
                     }
                 }
-            }
-        }
-
-        val oldLendings = lendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
-        if (oldLendings.isNotEmpty()) {
-            stickyHeader {
-                Text(
-                    text = stringResource(Res.string.home_past_lendings),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
-            }
-            items(
-                items = oldLendings,
-                key = { it.id },
-                contentType = { "old-lending" },
-                span = { lendingSpan },
-            ) { lending ->
-                OldLendingItem(lending)
             }
         }
 
