@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.ui.data.IDialogContext
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -21,28 +22,51 @@ fun <T> DeleteDialog(
     onDelete: () -> Job,
     onDismissRequested: () -> Unit
 ) {
+    DeleteDialog(
+        title = stringResource(Res.string.delete_dialog_title, displayName(item)),
+        message = stringResource(Res.string.delete_dialog_message, displayName(item)),
+        onDelete = { onDelete().invokeOnCompletion { dismiss() } },
+        onDismissRequested = onDismissRequested
+    )
+}
+
+@Composable
+fun DeleteDialog(
+    title: String,
+    message: String,
+    buttonText: String = stringResource(Res.string.delete),
+    onDelete: IDialogContext.() -> Unit,
+    onDismissRequested: () -> Unit
+) {
     var isLoading by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },
-        title = { Text(stringResource(Res.string.delete_dialog_title, displayName(item))) },
-        text = { Text(stringResource(Res.string.delete_dialog_message, displayName(item))) },
+        title = { Text(title) },
+        text = { Text(message) },
         confirmButton = {
             TextButton(
                 enabled = !isLoading,
                 onClick = {
                     isLoading = true
-                    onDelete().invokeOnCompletion { onDismissRequested() }
+                    onDelete(
+                        object : IDialogContext {
+                            override fun dismiss() {
+                                onDismissRequested()
+                            }
+                        }
+                    )
+                    isLoading = false
                 },
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
                 )
-            ) { Text(stringResource(Res.string.delete)) }
+            ) { Text(buttonText) }
         },
         dismissButton = {
             TextButton(
                 enabled = !isLoading,
                 onClick = { onDismissRequested() }
-            ) { Text(stringResource(Res.string.cancel)) }
+            ) { Text(stringResource(Res.string.close)) }
         },
     )
 }

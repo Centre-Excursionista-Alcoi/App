@@ -40,8 +40,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
-import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
-import org.centrexcursionistalcoi.app.ui.screen.LendingReturnScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
@@ -49,6 +48,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
+import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
@@ -93,32 +93,28 @@ fun MainApp(
                 val afterLoad: Destination? = remember(pushNotification) {
                     when (pushNotification) {
                         // always admin notifications
-                        is PushNotification.NewLendingRequest -> Destination.Admin.LendingsManagement(
-                            showingLendingId = pushNotification.lendingId
-                        )
-                        is PushNotification.NewMemoryUpload -> Destination.Admin.LendingsManagement(
-                            showingLendingId = pushNotification.lendingId
-                        )
+                        is PushNotification.NewLendingRequest -> Destination.Admin.LendingManagement(pushNotification.lendingId)
+                        is PushNotification.NewMemoryUpload -> Destination.Admin.LendingManagement(pushNotification.lendingId)
                         // always user notifications
                         is PushNotification.LendingCancelled -> null // the lending is cancelled, cannot show any info
-                        is PushNotification.LendingConfirmed -> Destination.Main(
-                            showingLendingId = pushNotification.lendingId
+                        is PushNotification.LendingConfirmed -> Destination.LendingDetails(
+                            lendingId = pushNotification.lendingId
                         )
                         // could be either
                         is PushNotification.LendingTaken -> destination(
                             pushNotification,
-                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
+                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
+                            forUser = { Destination.LendingDetails(it.lendingId) },
                         )
                         is PushNotification.LendingPartiallyReturned -> destination(
                             pushNotification,
-                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
+                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
+                            forUser = { Destination.LendingDetails(it.lendingId) },
                         )
                         is PushNotification.LendingReturned -> destination(
                             pushNotification,
-                            forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
+                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
+                            forUser = { Destination.LendingDetails(it.lendingId) },
                         )
                         else -> null
                     }
@@ -154,7 +150,7 @@ fun App(
                 LoadingScreen(
                     onLoggedIn = {
                         Napier.i { "User is logged in. Navigating to: ${afterLoad ?: Destination.Main}" }
-                        navController.navigate(afterLoad ?: Destination.Main()) {
+                        navController.navigate(afterLoad ?: Destination.Main) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
                             }
@@ -191,25 +187,25 @@ fun App(
                     }
                 )
             }
-            destination<Destination.Main> { route ->
-                val showingLendingId = route.showingLendingId
-
+            destination<Destination.Main> {
                 MainScreen(
-                    showingLendingId = showingLendingId,
                     onClickInventoryItemType = { type ->
                         navController.navigate(Destination.Admin.InventoryItems(type))
                     },
                     onManageLendingsRequested = {
-                        navController.navigate(Destination.Admin.LendingsManagement())
+                        navController.navigate(Destination.Admin.LendingsManagement)
                     },
                     onLendingSignUpRequested = {
                         navController.navigate(Destination.LendingSignUp)
                     },
+                    onLendingClick = {
+                        navController.navigate(Destination.LendingDetails(it))
+                    },
+                    onOtherUserLendingClick = {
+                        navController.navigate(Destination.Admin.LendingManagement(it))
+                    },
                     onShoppingListConfirmed = {
                         navController.navigate(Destination.LendingCreation(it))
-                    },
-                    onMemoryEditorRequested = {
-                        navController.navigate(Destination.LendingMemoryEditor(it))
                     },
                     onSettingsRequested = {
                         navController.navigate(Destination.Settings)
@@ -230,6 +226,18 @@ fun App(
                 SettingsScreen {
                     navController.navigateUp()
                 }
+            }
+
+            destination<Destination.LendingDetails> { route ->
+                val lendingId = route.lendingId
+
+                LendingDetailsScreen(
+                    lendingId = lendingId,
+                    onMemoryEditorRequested = {
+                        navController.navigate(Destination.LendingMemoryEditor(lendingId))
+                    },
+                    onBack = { navController.navigateUp() }
+                )
             }
 
             destination<Destination.ItemTypeDetails> { route ->
@@ -254,18 +262,20 @@ fun App(
                 )
             }
 
-            destination<Destination.Admin.LendingsManagement> { route ->
-                val showingLendingId = route.showingLendingId
-
+            destination<Destination.Admin.LendingsManagement> {
                 LendingsManagementScreen(
-                    showingLendingId = showingLendingId,
-                    onLendingPickupRequest = {
-                        navController.navigate(Destination.LendingPickup(it.id))
-                    },
-                    onLendingReturnRequest = {
-                        navController.navigate(Destination.LendingReturn(it.id))
+                    onClickLending = { lendingId ->
+                        navController.navigate(Destination.Admin.LendingManagement(lendingId))
                     },
                     onBack = { navController.popBackStack() },
+                )
+            }
+            destination<Destination.Admin.LendingManagement> { route ->
+                val lendingId = route.lendingId
+
+                LendingManagementScreen(
+                    lendingId = lendingId,
+                    onBack = { navController.navigateUp() },
                 )
             }
 
@@ -290,29 +300,11 @@ fun App(
                 LendingCreationScreen(
                     originalShoppingList = items,
                     onLendingCreated = {
-                        navController.navigate(Destination.Main()) {
+                        navController.navigate(Destination.Main) {
                             popUpTo<Destination.Main>()
                         }
                     }
                 ) { navController.navigateUp() }
-            }
-            destination<Destination.LendingPickup> { route ->
-                val lendingId = route.lendingId
-
-                LendingPickupScreen(
-                    lendingId = lendingId,
-                    onBack = { navController.navigateUp() },
-                    onComplete = { navController.popBackStack() },
-                )
-            }
-            destination<Destination.LendingReturn> { route ->
-                val lendingId = route.lendingId
-
-                LendingReturnScreen(
-                    lendingId = lendingId,
-                    onBack = { navController.navigateUp() },
-                    onComplete = { navController.popBackStack() },
-                )
             }
             destination<Destination.LendingMemoryEditor> { route ->
                 val lendingId = route.lendingId

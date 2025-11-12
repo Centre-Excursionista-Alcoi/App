@@ -9,8 +9,12 @@ import cea_app.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun DeleteButton(onClick: () -> Unit) {
+fun DeleteButton(
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
     TextButton(
+        enabled = enabled,
         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
         onClick = onClick,
     ) {
