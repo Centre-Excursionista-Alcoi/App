@@ -63,7 +63,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
-import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
@@ -411,21 +410,9 @@ fun LendingItem_Large(
 }
 
 @Composable
-fun OldLendingItem(lending: ReferencedLending) {
-    var showingDialog by remember { mutableStateOf(false) }
-    if (showingDialog) {
-        LendingDetailsDialog(
-            lending = lending,
-            onCancelRequest = {},
-            memoryUploadProgress = null,
-            onMemorySubmitted = null,
-            onMemoryEditorRequested = null,
-            onDismissRequest = { showingDialog = false },
-        )
-    }
-
+fun OldLendingItem(lending: ReferencedLending, onClick: () -> Unit) {
     OutlinedCard(
-        onClick = { showingDialog = true },
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(8.dp),
     ) {
         Text(

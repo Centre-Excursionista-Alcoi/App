@@ -190,7 +190,7 @@
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
     <string name="management_view_memory">View Memory</string>
     <string name="management_return">Return</string>
-    <string name="management_skip_memory">Skip Memory</string>
+    <string name="management_skip_memory">Skip</string>
 
     <string name="management_promote_user">Promote</string>
     <string name="management_promote_user_title">Promote user</string>
@@ -222,7 +222,9 @@
     <string name="lending_details_return_pending_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
     <string name="lending_details_memory_pending_title">Memory Pending</string>
     <string name="lending_details_memory_pending_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
+    <string name="lending_details_memory">Activity Memory</string>
     <string name="lending_details_cancel">Cancel Lending</string>
+    <string name="lending_details_complete">Lending Complete</string>
     <string name="lending_details_cancel_confirm_title">Lending Cancellation Confirm</string>
     <string name="lending_details_cancel_confirm_message">Are you sure that you want to cancel this lending?</string>
     <string name="lending_details_cancel_error_already_picked_up">Lending cannot be cancelled: material already picked up</string>

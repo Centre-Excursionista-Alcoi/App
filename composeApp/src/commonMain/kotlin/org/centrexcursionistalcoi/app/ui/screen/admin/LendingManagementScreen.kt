@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Delete
@@ -90,7 +91,7 @@ import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
 import org.centrexcursionistalcoi.app.ui.icons.Whatsapp
-import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
+import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.screen.DataRow
@@ -198,6 +199,7 @@ fun LendingManagementScreen(
                 lending = lending,
                 onDeleteRequest = model::deleteLending,
                 onConfirmRequest = model::confirmLending,
+                onSkipMemoryRequest = model::skipMemory,
                 onBack = onBack,
             )
         }
@@ -210,6 +212,7 @@ private fun LendingManagementScreen(
     lending: ReferencedLending,
     onDeleteRequest: () -> Job,
     onConfirmRequest: () -> Job,
+    onSkipMemoryRequest: () -> Job,
     onBack: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -243,42 +246,75 @@ private fun LendingManagementScreen(
                             Icon(Icons.Default.Delete, stringResource(Res.string.lending_details_delete))
                         }
                     }
+                    val isComplete = lending.status() == Lending.Status.MEMORY_SUBMITTED
+                    if (isComplete) {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
+                            state = rememberTooltipState(),
+                            tooltip = {
+                                PlainTooltip { Text(stringResource(Res.string.lending_details_complete)) }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = stringResource(Res.string.lending_details_complete),
+                                tint = Color(0xFF58F158),
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                        }
+                    }
                 },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
-        ColumnWidthWrapper(Modifier.fillMaxSize().padding(paddingValues)) {
-            GeneralLendingDetails(lending) {
-                GeneralLendingDetailsExtra(lending, snackbarHostState)
+        LazyColumnWidthWrapper(Modifier.fillMaxSize().padding(paddingValues)) {
+            item("general_details") {
+                GeneralLendingDetails(lending) {
+                    GeneralLendingDetailsExtra(lending, snackbarHostState)
 
-                if (lending.status() == Lending.Status.REQUESTED) {
-                    var isConfirming by remember { mutableStateOf(false) }
-                    ElevatedButton(
-                        enabled = !isConfirming,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
-                        onClick = {
-                            isConfirming = true
-                            onConfirmRequest().invokeOnCompletion { isConfirming = false }
-                        },
-                    ) {
-                        Icon(Icons.Default.Check, stringResource(Res.string.confirm))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(Res.string.confirm))
+                    if (lending.status() == Lending.Status.REQUESTED) {
+                        var isConfirming by remember { mutableStateOf(false) }
+                        ElevatedButton(
+                            enabled = !isConfirming,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
+                            onClick = {
+                                isConfirming = true
+                                onConfirmRequest().invokeOnCompletion { isConfirming = false }
+                            },
+                        ) {
+                            Icon(Icons.Default.Check, stringResource(Res.string.confirm))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(Res.string.confirm))
+                        }
                     }
-                }
 
-                if (lending.status() == Lending.Status.RETURNED) {
-                    Text(
-                        text = stringResource(Res.string.memory_pending_lending),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(12.dp),
-                    )
+                    if (lending.status() == Lending.Status.RETURNED) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = stringResource(Res.string.memory_pending_lending),
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            var skippingMemory by remember { mutableStateOf(false) }
+                            TextButton(
+                                enabled = !skippingMemory,
+                                onClick = {
+                                    skippingMemory = true
+                                    onSkipMemoryRequest().invokeOnCompletion { skippingMemory = false }
+                                },
+                            ) {
+                                Text(stringResource(Res.string.management_skip_memory))
+                            }
+                        }
+                    }
                 }
             }
 
-            LendingItems(lending)
+            item("lendings") {
+                LendingItems(lending)
+            }
         }
     }
 }

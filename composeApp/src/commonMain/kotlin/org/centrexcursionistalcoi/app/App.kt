@@ -234,7 +234,7 @@ fun App(
                 LendingDetailsScreen(
                     lendingId = lendingId,
                     onMemoryEditorRequested = {
-                        navController.navigate(Destination.LendingMemoryEditor(it))
+                        navController.navigate(Destination.LendingMemoryEditor(lendingId))
                     },
                     onBack = { navController.navigateUp() }
                 )

@@ -12,20 +12,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.LastPage
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FirstPage
 import androidx.compose.material.icons.filled.FreeCancellation
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -43,11 +47,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
@@ -56,10 +64,12 @@ import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
+import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
@@ -70,13 +80,21 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingDetailsScreen(
     lendingId: Uuid,
     model: LendingDetailsModel = viewModel { LendingDetailsModel(lendingId) },
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onMemoryEditorRequested: () -> Unit,
     onBack: () -> Unit
 ) {
     val lending by model.lending.collectAsState()
+    val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
 
     lending?.let { lending ->
-        LendingDetailsScreen(lending, model::cancelLending, onBack)
+        LendingDetailsScreen(
+            lending = lending,
+            onCancelRequest = model::cancelLending,
+            memoryUploadProgress = memoryUploadProgress,
+            onMemoryUploadRequest = model::submitMemory,
+            onMemoryEditorRequest = onMemoryEditorRequested,
+            onBack = onBack
+        )
     } ?: LoadingBox()
 }
 
@@ -85,6 +103,9 @@ fun LendingDetailsScreen(
 private fun LendingDetailsScreen(
     lending: ReferencedLending,
     onCancelRequest: () -> Job,
+    memoryUploadProgress: Progress? = null,
+    onMemoryUploadRequest: (PlatformFile) -> Unit = {},
+    onMemoryEditorRequest: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     var showingCancelConfirmation by remember { mutableStateOf(false) }
@@ -118,6 +139,23 @@ private fun LendingDetailsScreen(
                             ) {
                                 Icon(Icons.Default.FreeCancellation, stringResource(Res.string.lending_details_cancel))
                             }
+                        }
+                    }
+                    val isComplete = lending.status() == Lending.Status.MEMORY_SUBMITTED
+                    if (isComplete) {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
+                            state = rememberTooltipState(),
+                            tooltip = {
+                                PlainTooltip { Text(stringResource(Res.string.lending_details_complete)) }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = stringResource(Res.string.lending_details_complete),
+                                tint = Color(0xFF58F158),
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
                         }
                     }
                 },
@@ -189,17 +227,31 @@ private fun LendingDetailsScreen(
             }
 
             val isMemoryPending = lending.status() == Lending.Status.RETURNED
-            if (isMemoryPending) item(key = "memory_pending") {
-                CardWithIcon(
-                    title = stringResource(Res.string.lending_details_memory_pending_title),
-                    message = stringResource(Res.string.lending_details_memory_pending_message),
-                    icon = Icons.Default.NoteAdd,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            if (isMemoryPending) {
+                item(key = "memory_pending") {
+                    CardWithIcon(
+                        title = stringResource(Res.string.lending_details_memory_pending_title),
+                        message = stringResource(Res.string.lending_details_memory_pending_message),
+                        icon = Icons.AutoMirrored.Filled.NoteAdd,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
                     )
-                )
+                }
+
+                item(key = "memory_actions") {
+                    MemoryActions(
+                        onUploadRequest = onMemoryUploadRequest,
+                        onEditorRequest = onMemoryEditorRequest,
+                    )
+                }
+            }
+
+            val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
+            if (isMemorySubmitted) {
+                // TODO: Memory visualization
             }
 
             item("basic_details") {
@@ -300,15 +352,15 @@ fun DataRow(
 fun LendingItems(
     lending: ReferencedLending,
 ) {
-    val items = lending.items.groupBy { it.type }
-    for ((type, items) in items) {
-        OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Text(
-                text = stringResource(Res.string.lending_details_items),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(12.dp)
-            )
+    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(Res.string.lending_details_items),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(12.dp)
+        )
 
+        val items = lending.items.groupBy { it.type }
+        for ((type, items) in items) {
             Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 val image by type.rememberImageFile()
                 AsyncByteImage(image, modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)))
@@ -334,6 +386,57 @@ fun LendingItems(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MemoryActions(
+    memoryUploadProgress: Progress? = null,
+    onUploadRequest: (PlatformFile) -> Unit,
+    onEditorRequest: () -> Unit,
+) {
+    val filePickerLauncher = rememberFilePickerLauncher(type = FileKitType.File("pdf")) { file ->
+        if (file != null) onUploadRequest(file)
+    }
+
+    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(Res.string.lending_details_memory),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(12.dp)
+        )
+
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = { filePickerLauncher.launch() },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.UploadFile,
+                    contentDescription = stringResource(Res.string.memory_pick)
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(Res.string.memory_pick))
+            }
+            Spacer(Modifier.size(8.dp))
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = onEditorRequest,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Article,
+                    contentDescription = stringResource(Res.string.memory_editor)
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(Res.string.memory_editor))
+            }
+        }
+
+        if (memoryUploadProgress != null) {
+            Spacer(Modifier.height(8.dp))
+            LinearLoadingIndicator(memoryUploadProgress)
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

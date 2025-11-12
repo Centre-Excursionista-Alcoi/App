@@ -528,7 +528,6 @@ private fun MainScreenPagerContent(
         when (page) {
             Page.HOME -> HomePage(
                 windowSizeClass,
-                snackbarHostState,
                 notificationPermissionResult,
                 onNotificationPermissionRequest,
                 onNotificationPermissionDenyRequest,

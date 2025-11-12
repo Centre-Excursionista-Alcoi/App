@@ -138,7 +138,7 @@ fun HomePage(
                     key = { it.id },
                     contentType = { "old-lending" },
                 ) { lending ->
-                    OldLendingItem(lending)
+                    OldLendingItem(lending) { onLendingClick(lending) }
                 }
             }
         }

@@ -108,6 +108,19 @@ class LendingManagementViewModel(
         }
     }
 
+    fun skipMemory() = launch {
+        try {
+            doAsync {
+                Napier.i { "Skipping memory for lending..." }
+                LendingsRemoteRepository.skipMemory(lendingId)
+                Napier.i { "Memory has been skipped for lending." }
+            }
+        } catch (e: ServerException) {
+            Napier.e("Error skipping memory for lending", e)
+            setError(e)
+        }
+    }
+
     fun clearScanResult() {
         _scanError.value = null
         _scanSuccess.value = null

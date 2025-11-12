@@ -5,7 +5,6 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -27,9 +26,9 @@ class LendingDetailsModel(private val lendingId: Uuid): ViewModel() {
         }
     }
 
-    fun submitMemory(lending: ReferencedLending, file: PlatformFile) = async {
+    fun submitMemory(file: PlatformFile) = async {
         try {
-            LendingsRemoteRepository.submitMemory(lending.id, file) { _memoryUploadProgress.value = it }
+            LendingsRemoteRepository.submitMemory(lendingId, file) { _memoryUploadProgress.value = it }
             null
         } catch (error: ServerException) {
             error
