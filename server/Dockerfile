@@ -32,8 +32,9 @@ RUN echo '        }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '    }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '} ' >> /home/gradle/app/shared/build.gradle.kts
 
-# Since we are not copying the composeApp source folder, we have to remove it from settings.gradle.kts
+# Since we are not copying the composeApp or web source folders, we have to remove them from settings.gradle.kts
 RUN sed -i '/^include(":composeApp")$/d' /home/gradle/app/settings.gradle.kts
+RUN sed -i '/^include(":web")$/d' /home/gradle/app/settings.gradle.kts
 
 # Create a dummy version.properties file
 RUN echo 'VERSION_NAME=0.0.0' >> /home/gradle/app/version.properties
