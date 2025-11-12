@@ -38,7 +38,6 @@ import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
-import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
@@ -47,6 +46,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
+import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
@@ -101,24 +101,24 @@ fun MainApp(
                         )
                         // always user notifications
                         is PushNotification.LendingCancelled -> null // the lending is cancelled, cannot show any info
-                        is PushNotification.LendingConfirmed -> Destination.Home(
+                        is PushNotification.LendingConfirmed -> Destination.Main(
                             showingLendingId = pushNotification.lendingId
                         )
                         // could be either
                         is PushNotification.LendingTaken -> destination(
                             pushNotification,
                             forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
                         )
                         is PushNotification.LendingPartiallyReturned -> destination(
                             pushNotification,
                             forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
                         )
                         is PushNotification.LendingReturned -> destination(
                             pushNotification,
                             forAdmin = { Destination.Admin.LendingsManagement(showingLendingId = it.lendingId) },
-                            forUser = { Destination.Home(showingLendingId = it.lendingId) },
+                            forUser = { Destination.Main(showingLendingId = it.lendingId) },
                         )
                         else -> null
                     }
@@ -153,8 +153,8 @@ fun App(
             destination<Destination.Loading> {
                 LoadingScreen(
                     onLoggedIn = {
-                        Napier.i { "User is logged in. Navigating to: ${afterLoad ?: Destination.Home}" }
-                        navController.navigate(afterLoad ?: Destination.Home()) {
+                        Napier.i { "User is logged in. Navigating to: ${afterLoad ?: Destination.Main}" }
+                        navController.navigate(afterLoad ?: Destination.Main()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
                             }
@@ -191,10 +191,10 @@ fun App(
                     }
                 )
             }
-            destination<Destination.Home> { route ->
+            destination<Destination.Main> { route ->
                 val showingLendingId = route.showingLendingId
 
-                HomeScreen(
+                MainScreen(
                     showingLendingId = showingLendingId,
                     onClickInventoryItemType = { type ->
                         navController.navigate(Destination.Admin.InventoryItems(type))
@@ -272,8 +272,8 @@ fun App(
             destination<Destination.LendingSignUp> {
                 LendingSignUpScreen(
                     onSignUpComplete = {
-                        navController.navigate(Destination.Home) {
-                            popUpTo<Destination.Home>()
+                        navController.navigate(Destination.Main) {
+                            popUpTo<Destination.Main>()
                         }
                     },
                     onBackRequested = { navController.navigateUp() }
@@ -290,8 +290,8 @@ fun App(
                 LendingCreationScreen(
                     originalShoppingList = items,
                     onLendingCreated = {
-                        navController.navigate(Destination.Home()) {
-                            popUpTo<Destination.Home>()
+                        navController.navigate(Destination.Main()) {
+                            popUpTo<Destination.Main>()
                         }
                     }
                 ) { navController.navigateUp() }

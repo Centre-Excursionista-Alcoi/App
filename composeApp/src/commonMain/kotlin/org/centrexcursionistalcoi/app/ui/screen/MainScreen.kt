@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
@@ -65,6 +67,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
@@ -76,6 +79,7 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.dialog.ShoppingListDialog
+import org.centrexcursionistalcoi.app.ui.page.home.HomePage
 import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
@@ -86,7 +90,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun HomeScreen(
+fun MainScreen(
     showingLendingId: Uuid?,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
     onManageLendingsRequested: () -> Unit,
@@ -116,7 +120,7 @@ fun HomeScreen(
     }
 
     profile?.let {
-        HomeScreenContent(
+        MainScreenContent(
             showingLendingId,
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
@@ -155,24 +159,26 @@ fun HomeScreen(
     } ?: LoadingBox()
 }
 
-private const val IDX_LENDING = 0
-private const val IDX_MANAGEMENT = 1
-private const val IDX_PROFILE_NOT_ADMIN = 1
-private const val IDX_PROFILE_ADMIN = 2
+private enum class Page {
+    HOME, LENDINGS, MANAGEMENT, PROFILE
+}
 
-private fun navigationItems(isAdmin: Boolean): List<Pair<ImageVector, @Composable (() -> String)>> {
-    return mutableListOf<Pair<ImageVector, @Composable (() -> String)>>().apply {
-        add(Icons.Default.Inventory2 to { stringResource(Res.string.nav_lendings) })
-        if (isAdmin) {
-            add(Icons.Default.SupervisorAccount to { stringResource(Res.string.nav_management) })
+private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Page, Pair<ImageVector, @Composable (() -> String)>> {
+    return mutableMapOf<Page, Pair<ImageVector, @Composable (() -> String)>>().apply {
+        put(Page.HOME, Icons.Default.Home to { stringResource(Res.string.nav_home) })
+        if (!anyActiveLending) {
+            put(Page.LENDINGS, Icons.Default.Inventory2 to { stringResource(Res.string.nav_lendings) })
         }
-        add(Icons.Default.Face to { stringResource(Res.string.nav_profile) })
-    }.toList()
+        if (isAdmin) {
+            put(Page.MANAGEMENT, Icons.Default.SupervisorAccount to { stringResource(Res.string.nav_management) })
+        }
+        put(Page.PROFILE, Icons.Default.Face to { stringResource(Res.string.nav_profile) })
+    }.toMap()
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun HomeScreenContent(
+private fun MainScreenContent(
     showingLendingId: Uuid?,
 
     notificationPermissionResult: NotificationPermissionResult?,
@@ -220,7 +226,13 @@ private fun HomeScreenContent(
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
-    val navigationItems = navigationItems(profile.isAdmin)
+    val activeLendingsCount = lendings?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
+    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeLendingsCount > 0)
+
+    fun PagerState.actualPage(): Page {
+        val pages = navigationItems.keys.toList()
+        return pages[currentPage]
+    }
 
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
@@ -264,11 +276,11 @@ private fun HomeScreenContent(
                         )
                     },
                     actions = {
-                        val isProfilePage = (pager.currentPage == IDX_PROFILE_ADMIN && profile.isAdmin) || (pager.currentPage == IDX_PROFILE_NOT_ADMIN && profile.isAdmin.not())
+                        val page = pager.actualPage()
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }
                         }
-                        if (isProfilePage) {
+                        if (page == Page.LENDINGS) {
                             IconButton(
                                 onClick = onSettingsRequested
                             ) {
@@ -287,7 +299,7 @@ private fun HomeScreenContent(
         bottomBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 NavigationBar {
-                    for ((index, item) in navigationItems.withIndex()) {
+                    for ((index, item) in navigationItems.values.withIndex()) {
                         val (icon, label) = item
                         NavigationBarItem(
                             selected = pager.currentPage == index,
@@ -301,7 +313,7 @@ private fun HomeScreenContent(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = pager.currentPage == IDX_LENDING && shoppingList.isNotEmpty(),
+                visible = pager.actualPage() == Page.LENDINGS && shoppingList.isNotEmpty(),
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it },
             ) {
@@ -344,7 +356,7 @@ private fun HomeScreenContent(
                         ) { Text(stringResource(Res.string.admin)) }
                     }
 
-                    for ((index, item) in navigationItems.withIndex()) {
+                    for ((index, item) in navigationItems.values.withIndex()) {
                         val (icon, label) = item
                         NavigationRailItem(
                             selected = pager.currentPage == index,
@@ -400,8 +412,9 @@ private fun HomeScreenContent(
                     state = pager,
                     modifier = Modifier.fillMaxSize(),
                     userScrollEnabled = false
-                ) { page ->
-                    HomeScreenPagerContent(
+                ) { pageIdx ->
+                    val page = navigationItems.keys.toList()[pageIdx]
+                    MainScreenPagerContent(
                         page,
                         snackbarHostState,
                         showingLendingId,
@@ -444,8 +457,9 @@ private fun HomeScreenContent(
                     HorizontalPager(
                         state = pager,
                         modifier = Modifier.fillMaxSize()
-                    ) { page ->
-                        HomeScreenPagerContent(
+                    ) { pageIdx ->
+                        val page = navigationItems.keys.toList()[pageIdx]
+                        MainScreenPagerContent(
                             page,
                             snackbarHostState,
                             showingLendingId,
@@ -487,8 +501,8 @@ private fun HomeScreenContent(
 }
 
 @Composable
-fun HomeScreenPagerContent(
-    page: Int,
+private fun MainScreenPagerContent(
+    page: Page,
     snackbarHostState: SnackbarHostState,
     showingLendingId: Uuid?,
     notificationPermissionResult: NotificationPermissionResult?,
@@ -531,7 +545,7 @@ fun HomeScreenPagerContent(
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
-            IDX_LENDING -> LendingsPage(
+            Page.HOME -> HomePage(
                 windowSizeClass,
                 snackbarHostState,
                 showingLendingId,
@@ -539,20 +553,26 @@ fun HomeScreenPagerContent(
                 onNotificationPermissionRequest,
                 onNotificationPermissionDenyRequest,
                 profile,
+                lendings,
+                memoryUploadProgress,
+                onMemorySubmitted,
+                onMemoryEditorRequested,
+                onCancelLendingRequest,
+            )
+
+            Page.LENDINGS -> LendingsPage(
+                windowSizeClass,
+                profile,
                 inventoryItems,
                 onItemTypeDetailsRequested,
                 lendings,
                 onLendingSignUpRequested,
-                memoryUploadProgress,
-                onMemorySubmitted,
-                onMemoryEditorRequested,
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,
-                onCancelLendingRequest,
             )
 
-            IDX_MANAGEMENT if profile.isAdmin -> ManagementPage(
+            Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
                 departments,
                 onCreateDepartment,
@@ -566,16 +586,9 @@ fun HomeScreenPagerContent(
                 inventoryItems,
                 onManageLendingsRequested,
             )
+            Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
-            IDX_PROFILE_ADMIN if profile.isAdmin -> ProfilePage(
-                windowSizeClass,
-                profile,
-                onCreateInsurance,
-                onFEMECVConnectRequested,
-                onFEMECVDisconnectRequested,
-            )
-
-            IDX_PROFILE_NOT_ADMIN if profile.isAdmin.not() -> ProfilePage(
+            Page.PROFILE -> ProfilePage(
                 windowSizeClass,
                 profile,
                 onCreateInsurance,
