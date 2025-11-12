@@ -42,6 +42,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
+@Deprecated("Use LendingDetailsScreen instead")
 fun LendingDetailsDialog(
     lending: ReferencedLending,
     onCancelRequest: () -> Unit,

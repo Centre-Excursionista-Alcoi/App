@@ -71,9 +71,7 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
-import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
@@ -91,12 +89,12 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MainScreen(
-    showingLendingId: Uuid?,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
     onManageLendingsRequested: () -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onLendingClick: (ReferencedLending) -> Unit,
+    onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
@@ -111,7 +109,6 @@ fun MainScreen(
     val lendings by model.lendings.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
-    val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
     val notificationPermissionResult by model.notificationPermissionResult.collectAsState()
 
     LifecycleResumeEffect(model) {
@@ -121,7 +118,6 @@ fun MainScreen(
 
     profile?.let {
         MainScreenContent(
-            showingLendingId,
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
@@ -133,10 +129,8 @@ fun MainScreen(
             onDeleteDepartment = model::delete,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
-            onCancelLendingRequest = model::cancelLending,
-            memoryUploadProgress = memoryUploadProgress,
-            onMemoryEditorRequested = onMemoryEditorRequested,
-            onMemorySubmitted = model::submitMemory,
+            onLendingClick = onLendingClick,
+            onOtherUserLendingClick = onOtherUserLendingClick,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
@@ -179,8 +173,6 @@ private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Pa
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun MainScreenContent(
-    showingLendingId: Uuid?,
-
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -196,10 +188,8 @@ private fun MainScreenContent(
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
-    onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
-    memoryUploadProgress: Progress?,
-    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onLendingClick: (ReferencedLending) -> Unit,
+    onOtherUserLendingClick: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -417,7 +407,6 @@ private fun MainScreenContent(
                     MainScreenPagerContent(
                         page,
                         snackbarHostState,
-                        showingLendingId,
                         notificationPermissionResult,
                         onNotificationPermissionRequest,
                         onNotificationPermissionDenyRequest,
@@ -428,10 +417,8 @@ private fun MainScreenContent(
                         onDeleteDepartment,
                         lendings,
                         onLendingSignUpRequested,
-                        onCancelLendingRequest,
-                        memoryUploadProgress,
-                        onMemorySubmitted,
-                        onMemoryEditorRequested,
+                        onLendingClick,
+                        onOtherUserLendingClick,
                         onCreateInsurance,
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
@@ -462,7 +449,6 @@ private fun MainScreenContent(
                         MainScreenPagerContent(
                             page,
                             snackbarHostState,
-                            showingLendingId,
                             notificationPermissionResult,
                             onNotificationPermissionRequest,
                             onNotificationPermissionDenyRequest,
@@ -473,10 +459,8 @@ private fun MainScreenContent(
                             onDeleteDepartment,
                             lendings,
                             onLendingSignUpRequested,
-                            onCancelLendingRequest,
-                            memoryUploadProgress,
-                            onMemorySubmitted,
-                            onMemoryEditorRequested,
+                            onLendingClick,
+                            onOtherUserLendingClick,
                             onCreateInsurance,
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
@@ -504,7 +488,6 @@ private fun MainScreenContent(
 private fun MainScreenPagerContent(
     page: Page,
     snackbarHostState: SnackbarHostState,
-    showingLendingId: Uuid?,
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -517,10 +500,8 @@ private fun MainScreenPagerContent(
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
-    onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
-    memoryUploadProgress: Progress?,
-    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onLendingClick: (ReferencedLending) -> Unit,
+    onOtherUserLendingClick: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -548,16 +529,13 @@ private fun MainScreenPagerContent(
             Page.HOME -> HomePage(
                 windowSizeClass,
                 snackbarHostState,
-                showingLendingId,
                 notificationPermissionResult,
                 onNotificationPermissionRequest,
                 onNotificationPermissionDenyRequest,
                 profile,
                 lendings,
-                memoryUploadProgress,
-                onMemorySubmitted,
-                onMemoryEditorRequested,
-                onCancelLendingRequest,
+                onLendingClick,
+                onOtherUserLendingClick,
             )
 
             Page.LENDINGS -> LendingsPage(

@@ -142,11 +142,6 @@
     <string name="lending_pending_return">Pending Return</string>
     <string name="lending_pending_return_partial">Missing Items</string>
     <string name="lending_pending_memory">Pending Memory</string>
-    <string name="lending_not_confirmed_message">An admin has to confirm your request before it's effective.</string>
-    <string name="lending_pending_pickup_message">Your request has been confirmed, an admin will get in touch with you to schedule the pickup.</string>
-    <string name="lending_pending_return_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
-    <string name="lending_pending_return_partial_message">You have not returned all the items yet.</string>
-    <string name="lending_pending_memory_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
 
     <string name="insurance_add_title">Add Insurance</string>
     <string name="insurance">Insurance</string>
@@ -171,11 +166,14 @@
 
     <string name="management_lendings">View Lendings</string>
 
+    <string name="management_other_users_lendings">Lendings from other users</string>
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
     <string name="management_pending_pickup_lendings">Lendings pending pickup</string>
     <string name="management_pending_return_lendings">Lendings pending return</string>
     <string name="management_pending_memory_lendings">Lendings pending memory</string>
     <string name="management_completed_lendings">Completed lendings</string>
+
+    <string name="management_lending_title">Lending Management</string>
 
     <string name="management_pickup_screen">Lending Pickup</string>
     <string name="management_pickup_screen_skip">Skip Inventory Check</string>
@@ -214,10 +212,24 @@
     <string name="create_inventory_item_nfc_id">NFC Id</string>
 
     <string name="lending_details_title">Lending Details</string>
+    <string name="lending_details_confirmation_pending_title">Confirmation Pending</string>
+    <string name="lending_details_confirmation_pending_message">An admin has to confirm your lending first.</string>
+    <string name="lending_details_pickup_pending_title">Pickup Pending</string>
+    <string name="lending_details_pickup_pending_message">An admin will get in touch with you to schedule a pickup.</string>
+    <string name="lending_details_incomplete_return_title">Return Incomplete</string>
+    <string name="lending_details_incomplete_return_message">You have returned some items, but others are missing. Please, return everything as soon as possible.</string>
+    <string name="lending_details_return_pending_title">Return Pending</string>
+    <string name="lending_details_return_pending_message">Please, schedule the return with your assigned administrator as soon as possible.</string>
+    <string name="lending_details_memory_pending_title">Memory Pending</string>
+    <string name="lending_details_memory_pending_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
     <string name="lending_details_cancel">Cancel Lending</string>
     <string name="lending_details_cancel_confirm_title">Lending Cancellation Confirm</string>
     <string name="lending_details_cancel_confirm_message">Are you sure that you want to cancel this lending?</string>
     <string name="lending_details_cancel_error_already_picked_up">Lending cannot be cancelled: material already picked up</string>
+    <string name="lending_details_delete">Delete Lending</string>
+    <string name="lending_details_delete_confirm_title">Lending Delete Confirm</string>
+    <string name="lending_details_delete_confirm_message">Are you sure that you want to delete this lending?</string>
+    <string name="lending_details_items">Items</string>
     <string name="lending_details_items_title">Items:</string>
     <plurals name="lending_details_item_row">
         <item quantity="one">- %1$s: %2$d unit</item>

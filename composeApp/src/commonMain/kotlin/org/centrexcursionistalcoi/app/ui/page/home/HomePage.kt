@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -25,16 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
-import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
-import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
@@ -43,9 +36,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun HomePage(
     windowSizeClass: WindowSizeClass,
-    snackbarHostState: SnackbarHostState,
-
-    showingLendingId: Uuid?,
 
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
@@ -53,15 +43,14 @@ fun HomePage(
 
     profile: ProfileResponse,
     lendings: List<ReferencedLending>?,
-
-    memoryUploadProgress: Progress?,
-    onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
-    onMemoryEditorRequested: (ReferencedLending) -> Unit,
-
-    onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
+    onLendingClick: (ReferencedLending) -> Unit,
+    onOtherUserLendingClick: (ReferencedLending) -> Unit,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
+    val isAdmin = profile.isAdmin
+
+    val userLendings = lendings?.filter { it.user.sub == profile.sub }
 
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -121,7 +110,7 @@ fun HomePage(
                 }
             }
 
-            val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+            val activeLendings = userLendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
             if (!activeLendings.isNullOrEmpty()) {
                 stickyHeader("active_lendings_header") {
                     Text(
@@ -131,19 +120,11 @@ fun HomePage(
                     )
                 }
                 items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { GridItemSpan(maxLineSpan) }) { lending ->
-                    LendingItem(
-                        lending,
-                        snackbarHostState,
-                        showingDialog = showingLendingId == lending.id,
-                        memoryUploadProgress = memoryUploadProgress,
-                        onMemorySubmitted = { onMemorySubmitted(lending, it) },
-                        onMemoryEditorRequested = { onMemoryEditorRequested(lending) },
-                        onCancelLendingRequest = { onCancelLendingRequest(lending) }
-                    )
+                    LendingItem(lending) { onLendingClick(lending) }
                 }
             }
 
-            val oldLendings = lendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
+            val oldLendings = userLendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
             if (oldLendings.isNotEmpty()) {
                 stickyHeader {
                     Text(
@@ -158,6 +139,26 @@ fun HomePage(
                     contentType = { "old-lending" },
                 ) { lending ->
                     OldLendingItem(lending)
+                }
+            }
+        }
+
+        if (isAdmin) {
+            val nonCompletedLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
+            if (nonCompletedLendings.isNotEmpty()) {
+                stickyHeader {
+                    Text(
+                        text = stringResource(Res.string.management_other_users_lendings),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                    )
+                }
+                items(
+                    items = nonCompletedLendings,
+                    key = { "_${it.id}" },
+                    contentType = { "non-completed-lending" },
+                ) { lending ->
+                    LendingItem(lending) { onOtherUserLendingClick(lending) }
                 }
             }
         }

@@ -35,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -45,7 +44,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,20 +54,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
-import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.error.Error
-import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.dialog.LendingDetailsDialog
@@ -77,7 +68,6 @@ import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -468,49 +458,10 @@ fun OldLendingItem(lending: ReferencedLending) {
 @Composable
 fun LendingItem(
     lending: ReferencedLending,
-    snackbarHostState: SnackbarHostState,
-    showingDialog: Boolean,
-    memoryUploadProgress: Progress?,
-    onMemorySubmitted: (PlatformFile) -> Job,
-    onMemoryEditorRequested: () -> Unit,
-    onCancelLendingRequest: () -> Deferred<ServerException?>,
+    onClick: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-
-    var showingDialog by remember { mutableStateOf(showingDialog) }
-    if (showingDialog) {
-        LendingDetailsDialog(
-            lending = lending,
-            onCancelRequest = {
-                val request = onCancelLendingRequest()
-                request.invokeOnCompletion {
-                    val error = request.getCompleted()
-                    if (error == null) {
-                        showingDialog = false
-                    } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                when (error.errorCode) {
-                                    Error.ERROR_LENDING_ALREADY_PICKED_UP -> getString(Res.string.lending_details_cancel_error_already_picked_up)
-                                    else -> getString(Res.string.error_unknown, error::class.simpleName ?: error.toString())
-                                }
-                            )
-                        }
-                    }
-                }
-            },
-            memoryUploadProgress = memoryUploadProgress,
-            onMemorySubmitted = onMemorySubmitted,
-            onMemoryEditorRequested = {
-                showingDialog = false
-                onMemoryEditorRequested()
-            },
-            onDismissRequest = { showingDialog = false },
-        )
-    }
-
     OutlinedCard(
-        onClick = { showingDialog = true },
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(8.dp),
     ) {
         Row(
@@ -540,34 +491,22 @@ fun LendingItem(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         )
         val badge = when (lending.status()) {
-            Lending.Status.REQUESTED -> Triple(Res.string.lending_not_confirmed, Icons.Default.Pending, Res.string.lending_not_confirmed_message)
-            Lending.Status.CONFIRMED -> Triple(Res.string.lending_pending_pickup, Icons.Default.Inventory2, Res.string.lending_pending_pickup_message)
+            Lending.Status.REQUESTED -> Pair(Res.string.lending_not_confirmed, Icons.Default.Pending)
+            Lending.Status.CONFIRMED -> Pair(Res.string.lending_pending_pickup, Icons.Default.Inventory2)
             Lending.Status.TAKEN -> {
                 val returnStarted = lending.receivedItems.isNotEmpty()
                 if (returnStarted) {
-                    Triple(
-                        Res.string.lending_pending_return_partial,
-                        Icons.AutoMirrored.Default.AssignmentReturn,
-                        Res.string.lending_pending_return_partial_message
-                    )
+                    Pair(Res.string.lending_pending_return_partial, Icons.AutoMirrored.Default.AssignmentReturn)
                 } else {
-                    Triple(
-                        Res.string.lending_pending_return,
-                        Icons.AutoMirrored.Default.AssignmentReturn,
-                        Res.string.lending_pending_return_message
-                    )
+                    Pair(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn)
                 }
             }
-            Lending.Status.RETURNED -> Triple(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd, Res.string.lending_pending_memory_message)
+            Lending.Status.RETURNED -> Pair(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd)
             else -> null
         }
-        badge?.let { (labelRes, icon, message) ->
+        badge?.let { (labelRes, icon) ->
             AssistChip(
-                onClick = {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(getString(message))
-                    }
-                },
+                onClick = onClick,
                 label = { Text(stringResource(labelRes)) },
                 leadingIcon = { Icon(icon, stringResource(labelRes)) },
                 modifier = Modifier.padding(horizontal = 8.dp),
