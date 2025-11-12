@@ -38,7 +38,6 @@ import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
-import org.centrexcursionistalcoi.app.ui.screen.HomeScreen
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingPickupScreen
@@ -47,6 +46,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
+import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
@@ -194,7 +194,7 @@ fun App(
             destination<Destination.Home> { route ->
                 val showingLendingId = route.showingLendingId
 
-                HomeScreen(
+                MainScreen(
                     showingLendingId = showingLendingId,
                     onClickInventoryItemType = { type ->
                         navController.navigate(Destination.Admin.InventoryItems(type))
