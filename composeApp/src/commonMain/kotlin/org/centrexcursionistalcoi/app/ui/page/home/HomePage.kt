@@ -121,7 +121,6 @@ fun HomePage(
                 }
             }
 
-            val lendingSpan = GridItemSpan(if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) 2 else 1)
             val activeLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
             if (!activeLendings.isNullOrEmpty()) {
                 stickyHeader("active_lendings_header") {
@@ -131,7 +130,7 @@ fun HomePage(
                         modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                     )
                 }
-                items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { lendingSpan }) { lending ->
+                items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { GridItemSpan(maxLineSpan) }) { lending ->
                     LendingItem(
                         lending,
                         snackbarHostState,
@@ -157,7 +156,6 @@ fun HomePage(
                     items = oldLendings,
                     key = { it.id },
                     contentType = { "old-lending" },
-                    span = { lendingSpan },
                 ) { lending ->
                     OldLendingItem(lending)
                 }
