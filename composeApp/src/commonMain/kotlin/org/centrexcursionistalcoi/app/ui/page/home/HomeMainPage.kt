@@ -92,21 +92,29 @@ import org.jetbrains.compose.resources.stringResource
 fun LendingsPage(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
+
     showingLendingId: Uuid?,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
+
     profile: ProfileResponse,
+
     inventoryItems: List<ReferencedInventoryItem>?,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
+
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
+
     memoryUploadProgress: Progress?,
     onMemorySubmitted: (ReferencedLending, PlatformFile) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+
     onCancelLendingRequest: (ReferencedLending) -> Deferred<ServerException?>,
 ) {
     val scrollState = rememberLazyGridState()
