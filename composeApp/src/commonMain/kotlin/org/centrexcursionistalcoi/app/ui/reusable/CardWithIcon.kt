@@ -64,6 +64,6 @@ fun CardWithIcon(
 
 @Preview
 @Composable
-fun CardWithIcon_Preview() {
+private fun CardWithIcon_Preview() {
     CardWithIcon("Example Card", "This is an example of a card with an icon.", Icons.Default.Info)
 }

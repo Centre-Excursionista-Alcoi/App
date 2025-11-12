@@ -9,13 +9,11 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -28,13 +26,11 @@ import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
-import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
@@ -57,18 +53,13 @@ class HomeViewModel: ViewModel() {
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
-    val lendings = combine(LendingsRepository.selectAllAsFlow(), ProfileRepository.profile) { lendings, profile ->
-        lendings.filter { lending -> lending.user.sub == profile?.sub }
-    }.map { list -> list.sortedBy { it.from } }.stateInViewModel()
+    val lendings = LendingsRepository.selectAllAsFlow().stateInViewModel()
 
     /**
      * A map of InventoryItemType ID to amount in the shopping list.
      */
     private val _shoppingList = MutableStateFlow(emptyMap<Uuid, Int>())
     val shoppingList = _shoppingList.asStateFlow()
-
-    private val _memoryUploadProgress = MutableStateFlow<Progress?>(null)
-    val memoryUploadProgress = _memoryUploadProgress.asStateFlow()
 
     private val permissionHelper = HelperHolder.getPermissionHelperInstance()
     private val _notificationPermissionResult = MutableStateFlow<NotificationPermissionResult?>(null)
@@ -126,24 +117,6 @@ class HomeViewModel: ViewModel() {
                 currentList[type.id] = newAmount
             }
             _shoppingList.value = currentList
-        }
-    }
-
-    fun cancelLending(lending: ReferencedLending) = async {
-        try {
-            doAsync { LendingsRemoteRepository.cancel(lending.id) }
-            null
-        } catch (error: ServerException) {
-            error
-        }
-    }
-
-    fun submitMemory(lending: ReferencedLending, file: PlatformFile) = async {
-        try {
-            LendingsRemoteRepository.submitMemory(lending.id, file) { _memoryUploadProgress.value = it }
-            null
-        } catch (error: ServerException) {
-            error
         }
     }
 

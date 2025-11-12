@@ -33,7 +33,11 @@ sealed interface Destination {
             }
             if (url.host == ADMIN_LENDINGS_MANAGEMENT) {
                 val showingLendingId = url.fragment.toUuidOrNull()
-                return Admin.LendingsManagement(showingLendingId)
+                return if (showingLendingId != null) {
+                    Admin.LendingManagement(showingLendingId)
+                } else {
+                    Admin.LendingsManagement
+                }
             }
             return null
         }
@@ -42,11 +46,12 @@ sealed interface Destination {
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination
-    @Serializable @SerialName("main") data class Main(
-        val showingLendingId: Uuid? = null
-    ) : Destination
+    @Serializable @SerialName("main") data object Main : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
 
+    @Serializable @SerialName("lendingDetails") data class LendingDetails(val lendingId: Uuid) : Destination {
+        constructor(lending: ReferencedLending): this(lending.id)
+    }
     @Serializable @SerialName("itemTypeDetails") data class ItemTypeDetails(val typeId: Uuid, val displayName: String) : Destination {
         constructor(type: InventoryItemType): this(type.id, type.displayName)
     }
@@ -62,9 +67,11 @@ sealed interface Destination {
             constructor(type: InventoryItemType): this(type.id, type.displayName)
         }
 
-        @Serializable @SerialName("lendingsManagement") data class LendingsManagement(
-            val showingLendingId: Uuid? = null
-        ) : Destination
+        @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
+
+        @Serializable @SerialName("lendingManagement") data class LendingManagement(val lendingId: Uuid) : Destination {
+            constructor(lending: ReferencedLending): this(lending.id)
+        }
     }
 
     @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination
@@ -79,10 +86,6 @@ sealed interface Destination {
             .split('&')
             .associate { it.substringBefore('=').toUuid() to it.substringAfter('=').toInt() }
     }
-
-    @Serializable @SerialName("lendingPickup") data class LendingPickup(val lendingId: Uuid) : Destination
-
-    @Serializable @SerialName("lendingReturn") data class LendingReturn(val lendingId: Uuid) : Destination
 
     @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
         constructor(lending: ReferencedLending): this(lending.id)
