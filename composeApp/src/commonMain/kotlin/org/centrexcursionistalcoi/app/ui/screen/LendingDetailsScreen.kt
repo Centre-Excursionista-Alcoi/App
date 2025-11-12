@@ -56,14 +56,18 @@ import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.ktor.http.ContentType
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
@@ -250,8 +254,8 @@ private fun LendingDetailsScreen(
             }
 
             val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
-            if (isMemorySubmitted) {
-                // TODO: Memory visualization
+            if (isMemorySubmitted) item("memory_visualization") {
+                MemoryVisualization(lending)
             }
 
             item("basic_details") {
@@ -437,6 +441,47 @@ fun MemoryActions(
             Spacer(Modifier.height(8.dp))
             LinearLoadingIndicator(memoryUploadProgress)
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun MemoryVisualization(
+    lending: ReferencedLending
+) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(Res.string.lending_details_memory_view),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(12.dp)
+        )
+
+        val document = lending.memoryDocument
+        if (document != null) {
+            if (PlatformOpenFileLogic.isSupported) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    onClick = {
+                        val path = runBlocking { lending.fetchDocumentFilePath() }
+                        PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
+                    }
+                ) {
+                    Text(
+                        text = stringResource(Res.string.management_view_memory),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            } else {
+                Text(
+                    text = stringResource(Res.string.lending_details_memory_view_unsupported),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                )
+            }
+        } else {
+            // TODO: Implement viewing memory from text
+            Text("Visualization not implemented")
         }
     }
 }

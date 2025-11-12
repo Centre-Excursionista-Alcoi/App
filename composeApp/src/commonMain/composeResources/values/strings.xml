@@ -223,6 +223,8 @@
     <string name="lending_details_memory_pending_title">Memory Pending</string>
     <string name="lending_details_memory_pending_message">Please, prepare and upload the memory of the activity as soon as possible. You can't make another request until you do this.</string>
     <string name="lending_details_memory">Activity Memory</string>
+    <string name="lending_details_memory_view">Memory Viewer</string>
+    <string name="lending_details_memory_view_unsupported">Your platform doesn't support viewing documents</string>
     <string name="lending_details_cancel">Cancel Lending</string>
     <string name="lending_details_complete">Lending Complete</string>
     <string name="lending_details_cancel_confirm_title">Lending Cancellation Confirm</string>
