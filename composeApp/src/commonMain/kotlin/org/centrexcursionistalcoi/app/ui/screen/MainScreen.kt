@@ -221,15 +221,15 @@ private fun MainScreenContent(
     val activeLendingsCount = lendings?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
     val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeLendingsCount > 0)
 
-    fun PagerState.actualPage(): Page {
-        val pages = navigationItems.keys.toList()
-        return pages[currentPage]
-    }
-
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
     val windowSizeClass = calculateWindowSizeClass()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val actualPage: Page = remember(pager.currentPage) {
+        val pages = navigationItems.keys.toList()
+        pages[pager.currentPage]
+    }
 
     var showingLogoutDialog by remember { mutableStateOf(false) }
     if (showingLogoutDialog) {
@@ -256,11 +256,10 @@ private fun MainScreenContent(
                         )
                     },
                     actions = {
-                        val page = pager.actualPage()
                         if (profile.isAdmin) {
                             Badge { Text(stringResource(Res.string.admin)) }
                         }
-                        if (page == Page.LENDINGS) {
+                        if (actualPage == Page.PROFILE) {
                             IconButton(
                                 onClick = onSettingsRequested
                             ) {
@@ -293,7 +292,7 @@ private fun MainScreenContent(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = pager.actualPage() == Page.LENDINGS && shoppingList.isNotEmpty(),
+                visible = actualPage == Page.LENDINGS && shoppingList.isNotEmpty(),
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it },
             ) {
