@@ -134,7 +134,7 @@ fun LendingsListView(
                                             Text(stringResource(Res.string.management_lending_give))
                                         }
                                     }
-                                    Lending.Status.RETURNED -> {
+                                    Lending.Status.TAKEN -> {
                                         ElevatedButton(
                                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                                             onClick = { onReceiveRequested(lending) }

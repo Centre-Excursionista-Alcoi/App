@@ -103,6 +103,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.screen.DataRow
 import org.centrexcursionistalcoi.app.ui.screen.GeneralLendingDetails
 import org.centrexcursionistalcoi.app.ui.screen.LendingItems
+import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -633,7 +634,7 @@ private fun GeneralLendingDetailsExtra(
     val givenBy = lending.givenBy
     val givenAt = lending.givenAt
     if (givenBy != null && givenAt != null) {
-        val givenAt = givenAt.toLocalDateTime(TimeZone.currentSystemDefault()).toString()
+        val givenAt = givenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { "${it.date} ${it.time}" }
         DataRow(
             icon = Icons.AutoMirrored.Filled.CallMade,
             title = stringResource(Res.string.management_lending_given_by_title),
@@ -642,8 +643,10 @@ private fun GeneralLendingDetailsExtra(
     }
 
     val items = lending.items
-    val receptionDates = lending.receivedItems.groupBy { it.receivedAt.toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    val receptionDates = lending.receivedItems
+        .groupBy { item -> item.receivedAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { it.date to it.time.withoutSeconds() } }
     for ((receivedAt, receivedItems) in receptionDates) {
+        val receivedAtStr = "${receivedAt.first} ${receivedAt.second}"
         val returnedTo = receivedItems
             .mapNotNull { users.find { user -> user.sub == it.receivedBy } }
             .toSet()
@@ -656,7 +659,7 @@ private fun GeneralLendingDetailsExtra(
         DataRow(
             icon = Icons.AutoMirrored.Filled.CallMade,
             title = stringResource(Res.string.management_lending_returned_to_title, returnedTo),
-            text = stringResource(Res.string.management_lending_returned_to_data, receivedAt.toString(), items),
+            text = stringResource(Res.string.management_lending_returned_to_data, receivedAtStr, items),
         )
     }
 
