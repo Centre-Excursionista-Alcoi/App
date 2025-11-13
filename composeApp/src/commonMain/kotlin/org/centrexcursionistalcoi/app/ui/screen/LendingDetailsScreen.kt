@@ -331,6 +331,17 @@ fun DataRow(
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
+    DataRow(stringResource(titleRes), text, icon, contentDescription, onClick)
+}
+
+@Composable
+fun DataRow(
+    title: String,
+    text: String,
+    icon: ImageVector,
+    contentDescription: String? = null,
+    onClick: (() -> Unit)? = null,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -341,7 +352,7 @@ fun DataRow(
         Icon(icon, contentDescription, Modifier.padding(end = 8.dp))
         Column(Modifier.fillMaxWidth()) {
             Text(
-                text = stringResource(titleRes),
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(

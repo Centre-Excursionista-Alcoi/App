@@ -198,7 +198,11 @@
     <string name="management_lending_give">Give Lending</string>
     <string name="management_lending_receive">Receive Lending</string>
     <string name="management_lending_user">User: %1$s</string>
+    <string name="management_lending_given_by_title">Given</string>
+    <string name="management_lending_given_by_date">by %1$s at %2$s</string>
     <string name="management_lending_given_by">Given by: %1$s at %2$s</string>
+    <string name="management_lending_returned_to_title">Returned to: %1$s</string>
+    <string name="management_lending_returned_to_data">At: %1$s\nItems:\n%1$s</string>
     <string name="management_lending_returned_to">Returned to: %1$s at %2$s</string>
     <string name="management_view_memory">View Memory</string>
     <string name="management_return">Return</string>

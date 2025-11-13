@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,7 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -61,16 +65,20 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.ui.page.home.LendingItem
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
+import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.screen.admin.lendingManagementScreenContent
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LendingsListView(
     windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
     lendings: List<ReferencedLending>?,
+    users: List<UserData>,
     onConfirmLendingRequest: (ReferencedLending) -> Job,
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
@@ -96,53 +104,12 @@ fun LendingsListView(
                         selectedLending = lendings?.find { it.id == lendingId }
                     },
                 )
-                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp)) {
-                    val activeLendings = lendings?.filter {
-                        when (it.status()) {
-                            Lending.Status.REQUESTED,
-                            Lending.Status.CONFIRMED,
-                            Lending.Status.TAKEN,
-                            Lending.Status.RETURNED -> true
-                            else -> false
-                        }
-                    }?.sortedBy { it.from }
-                    if (!activeLendings.isNullOrEmpty()) {
-                        item("active_lendings") {
-                            Text(
-                                text = stringResource(Res.string.management_active_lendings),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                        items(activeLendings, key = { it.id }) { lending ->
-                            LendingItem(lending, isActive = selectedLending?.id == lending.id) { selectedLending = lending }
-                        }
-
-                        item("active_lendings_divider") {
-                            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                        }
-                    }
-
-                    val completedLendings = lendings?.filter {
-                        when (it.status()) {
-                            Lending.Status.MEMORY_SUBMITTED,
-                            Lending.Status.COMPLETE -> true
-                            else -> false
-                        }
-                    }?.sortedByDescending { it.from }
-                    if (!completedLendings.isNullOrEmpty()) {
-                        item("completed_lendings_header") {
-                            Text(
-                                text = stringResource(Res.string.management_complete_lendings),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                        items(completedLendings, key = { it.id }) { lending ->
-                            LendingItem(lending, isActive = selectedLending?.id == lending.id) { selectedLending = lending }
-                        }
-                    }
-                }
+                LendingsLazyColumn(
+                    lendings = lendings,
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
+                    selectedLending = selectedLending,
+                    onClick = { selectedLending = it }
+                )
             }
 
             Column(modifier = Modifier.weight(1f)) {
@@ -156,6 +123,7 @@ fun LendingsListView(
                             snackbarHostState = snackbarHostState,
                             onConfirmRequest = { onConfirmLendingRequest(lending) },
                             onSkipMemoryRequest = { onSkipMemoryRequest(lending) },
+                            users = users,
                             extraContent = {
                                 when (lending.status()) {
                                     Lending.Status.CONFIRMED -> {
@@ -182,6 +150,113 @@ fun LendingsListView(
                         )
                     }
                 }
+            }
+        }
+    } else {
+        selectedLending?.let { lending ->
+            // a lending is selected
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    TooltipIconButton(
+                        imageVector = Icons.Default.Close,
+                        tooltip = stringResource(Res.string.close),
+                    ) { selectedLending = null }
+                }
+
+                lendingManagementScreenContent(
+                    lending = lending,
+                    users = users,
+                    snackbarHostState = snackbarHostState,
+                    onConfirmRequest = { onConfirmLendingRequest(lending) },
+                    onSkipMemoryRequest = { onSkipMemoryRequest(lending) },
+                    extraContent = {
+                        when (lending.status()) {
+                            Lending.Status.CONFIRMED -> {
+                                ElevatedButton(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
+                                    onClick = { onGiveRequested(lending) }
+                                ) {
+                                    Text(stringResource(Res.string.management_lending_give))
+                                }
+                            }
+                            Lending.Status.RETURNED -> {
+                                ElevatedButton(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
+                                    onClick = { onReceiveRequested(lending) }
+                                ) {
+                                    Text(stringResource(Res.string.management_lending_receive))
+                                }
+                            }
+                            else -> {
+                                // nothing
+                            }
+                        }
+                    },
+                )
+            }
+        } ?: run {
+            // no lending is selected
+            LendingsLazyColumn(
+                lendings = lendings,
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                selectedLending = selectedLending,
+                onClick = { selectedLending = it }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LendingsLazyColumn(
+    lendings: List<ReferencedLending>?,
+    selectedLending: ReferencedLending?,
+    modifier: Modifier = Modifier,
+    onClick: (ReferencedLending) -> Unit
+) {
+    LazyColumn(modifier = modifier) {
+        val activeLendings = lendings?.filter {
+            when (it.status()) {
+                Lending.Status.REQUESTED,
+                Lending.Status.CONFIRMED,
+                Lending.Status.TAKEN,
+                Lending.Status.RETURNED -> true
+                else -> false
+            }
+        }?.sortedBy { it.from }
+        if (!activeLendings.isNullOrEmpty()) {
+            item("active_lendings") {
+                Text(
+                    text = stringResource(Res.string.management_active_lendings),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            items(activeLendings, key = { it.id }) { lending ->
+                LendingItem(lending, isActive = selectedLending?.id == lending.id) { onClick(lending) }
+            }
+
+            item("active_lendings_divider") {
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            }
+        }
+
+        val completedLendings = lendings?.filter {
+            when (it.status()) {
+                Lending.Status.MEMORY_SUBMITTED,
+                Lending.Status.COMPLETE -> true
+                else -> false
+            }
+        }?.sortedByDescending { it.from }
+        if (!completedLendings.isNullOrEmpty()) {
+            item("completed_lendings_header") {
+                Text(
+                    text = stringResource(Res.string.management_complete_lendings),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            items(completedLendings, key = { it.id }) { lending ->
+                LendingItem(lending, isActive = selectedLending?.id == lending.id) { onClick(lending) }
             }
         }
     }

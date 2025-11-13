@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
@@ -27,6 +28,8 @@ class LendingManagementViewModel(
 ): ErrorViewModel() {
 
     val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
+
+    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
 
     private val _scannedItems = MutableStateFlow(emptySet<Uuid>())
     val scannedItems get() = _scannedItems.asStateFlow()
