@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -83,7 +82,7 @@ import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
-import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
+import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -98,7 +97,7 @@ fun MainScreen(
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
-    model: HomeViewModel = viewModel { HomeViewModel() }
+    model: MainViewModel = viewModel { MainViewModel() }
 ) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
@@ -125,8 +124,6 @@ fun MainScreen(
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
-            onCreateDepartment = model::createDepartment,
-            onDeleteDepartment = model::delete,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingClick = onLendingClick,
@@ -135,13 +132,11 @@ fun MainScreen(
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
-            onPromote = model::promote,
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
-            onCreateInventoryItemType = model::createInventoryItemType,
             onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
             onManageLendingsRequested = onManageLendingsRequested,
@@ -185,8 +180,6 @@ private fun MainScreenContent(
     onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
-    onDeleteDepartment: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -198,12 +191,10 @@ private fun MainScreenContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
-    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -355,8 +346,6 @@ private fun MainScreenContent(
                         profile,
                         windowSizeClass,
                         departments,
-                        onCreateDepartment,
-                        onDeleteDepartment,
                         lendings,
                         onLendingSignUpRequested,
                         onLendingClick,
@@ -365,11 +354,9 @@ private fun MainScreenContent(
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
                         users,
-                        onPromote,
                         inventoryItemTypes,
                         inventoryItemTypesCategories,
                         onItemTypeDetailsRequested,
-                        onCreateInventoryItemType,
                         onClickInventoryItemType,
                         inventoryItems,
                         shoppingList,
@@ -397,8 +384,6 @@ private fun MainScreenContent(
                             profile,
                             windowSizeClass,
                             departments,
-                            onCreateDepartment,
-                            onDeleteDepartment,
                             lendings,
                             onLendingSignUpRequested,
                             onLendingClick,
@@ -407,11 +392,9 @@ private fun MainScreenContent(
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
                             users,
-                            onPromote,
                             inventoryItemTypes,
                             inventoryItemTypesCategories,
                             onItemTypeDetailsRequested,
-                            onCreateInventoryItemType,
                             onClickInventoryItemType,
                             inventoryItems,
                             shoppingList,
@@ -437,8 +420,6 @@ private fun MainScreenPagerContent(
     windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
-    onDeleteDepartment: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -450,12 +431,10 @@ private fun MainScreenPagerContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
-    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -494,13 +473,9 @@ private fun MainScreenPagerContent(
             Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
                 departments,
-                onCreateDepartment,
-                onDeleteDepartment,
                 users,
-                onPromote,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
-                onCreateInventoryItemType,
                 onClickInventoryItemType,
                 inventoryItems,
                 onManageLendingsRequested,

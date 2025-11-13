@@ -23,6 +23,10 @@
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
 
+    <string name="search">Search...</string>
+    <string name="sort_by_name_asc">Sort by Name (A-Z)</string>
+    <string name="sort_by_name_desc">Sort by Name (Z-A)</string>
+
     <string name="home_lendings">Your Lendings</string>
     <string name="home_lending">Material Lending</string>
     <string name="home_past_lendings">Past Lendings</string>
@@ -41,13 +45,16 @@
 
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
-    <string name="management_inventory_item_types">Item Types</string>
-    <string name="management_inventory_items">Items</string>
+    <string name="management_inventory">Inventory</string>
+
+    <string name="management_department_create">Create Department</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>
     <string name="management_inventory_item_type_description">Description</string>
     <string name="management_inventory_item_type_category">Category</string>
+    <string name="management_inventory_item_type_categories">Categories</string>
+    <string name="management_inventory_item_type_identifiers">Identifiers</string>
     <string name="management_inventory_item_type_image">Select Image</string>
 
     <string name="management_inventory_item_edit">Edit Item</string>
@@ -69,6 +76,7 @@
     <string name="remove">Remove</string>
     <string name="undo">Undo</string>
     <string name="settings">Settings</string>
+    <string name="clear">Clear</string>
 
     <string name="error_dialog_title">Unhandled exception</string>
     <string name="error_dialog_message">Message:</string>
