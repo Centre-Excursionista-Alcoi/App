@@ -47,7 +47,7 @@
         </provider>
 
         <provider
-                android:name=".AppInitProvider"
+                android:name=".ContextProvider"
                 android:authorities="${applicationId}.AppInitProvider"
                 android:exported="false"/>
     </application>

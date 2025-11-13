@@ -6,7 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 
-class AppInitProvider : ContentProvider() {
+class ContextProvider : ContentProvider() {
     companion object {
         var context: Context? = null
             private set
@@ -14,13 +14,13 @@ class AppInitProvider : ContentProvider() {
 
     override fun onCreate(): Boolean {
         val context = context ?: return false
-        AppInitProvider.context = context
+        ContextProvider.context = context
         return true
     }
 
     override fun shutdown() {
         super.shutdown()
-        AppInitProvider.context = null
+        ContextProvider.context = null
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String?>?): Int = 0
