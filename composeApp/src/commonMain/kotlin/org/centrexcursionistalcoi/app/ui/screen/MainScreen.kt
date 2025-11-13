@@ -214,8 +214,12 @@ private fun MainScreenContent(
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
-    val activeLendingsCount = lendings?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
-    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeLendingsCount > 0)
+    val activeUserLendingsCount = lendings
+        // Get only lendings of the current user
+        ?.filter { it.user.sub == profile.sub }
+        // Count only active lendings
+        ?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
+    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLendingsCount > 0)
 
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
