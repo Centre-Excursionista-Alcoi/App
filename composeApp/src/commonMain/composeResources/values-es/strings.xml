@@ -275,4 +275,6 @@
     <string name="settings_dev_credit_message">Esta app ha sido desarrollada de manera desinteresada por el Centre Excursionista d\'Alcoi per %1$s.</string>
     <string name="settings_dev_credit_website">Sitio Web</string>
     <string name="settings_dev_credit_email">Email</string>
+    <string name="nav_home">Inicio</string>
+    <string name="error_access_denied">Acceso denegado.</string>
 </resources>
