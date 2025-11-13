@@ -47,9 +47,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LoginScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
-import org.centrexcursionistalcoi.app.ui.screen.admin.InventoryItemsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
-import org.centrexcursionistalcoi.app.ui.screen.admin.LendingsManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
@@ -149,8 +147,8 @@ fun App(
             destination<Destination.Loading> {
                 LoadingScreen(
                     onLoggedIn = {
-                        Napier.i { "User is logged in. Navigating to: ${afterLoad ?: Destination.Main}" }
-                        navController.navigate(afterLoad ?: Destination.Main) {
+                        Napier.i { "User is logged in. Navigating to: $afterLoad" }
+                        navController.navigate(afterLoad ?: Destination.Main()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
                             }
@@ -187,14 +185,13 @@ fun App(
                     }
                 )
             }
-            destination<Destination.Main> {
+            destination<Destination.Main> { route ->
+                val showingAdminItemTypeId = route.showingAdminItemTypeId
+                val showingAdminLendingsScreen = route.showingAdminLendingsScreen
+
                 MainScreen(
-                    onClickInventoryItemType = { type ->
-                        navController.navigate(Destination.Admin.InventoryItems(type))
-                    },
-                    onManageLendingsRequested = {
-                        navController.navigate(Destination.Admin.LendingsManagement)
-                    },
+                    showingAdminItemTypeId = showingAdminItemTypeId,
+                    showingAdminLendingsScreen = showingAdminLendingsScreen,
                     onLendingSignUpRequested = {
                         navController.navigate(Destination.LendingSignUp)
                     },
@@ -251,25 +248,6 @@ fun App(
                 )
             }
 
-            destination<Destination.Admin.InventoryItems> { route ->
-                val typeId = route.typeId
-                val displayName = route.displayName
-
-                InventoryItemsScreen(
-                    typeId = typeId,
-                    typeDisplayName = displayName,
-                    onBack = { navController.navigateUp() }
-                )
-            }
-
-            destination<Destination.Admin.LendingsManagement> {
-                LendingsManagementScreen(
-                    onClickLending = { lendingId ->
-                        navController.navigate(Destination.Admin.LendingManagement(lendingId))
-                    },
-                    onBack = { navController.popBackStack() },
-                )
-            }
             destination<Destination.Admin.LendingManagement> { route ->
                 val lendingId = route.lendingId
 
@@ -282,7 +260,7 @@ fun App(
             destination<Destination.LendingSignUp> {
                 LendingSignUpScreen(
                     onSignUpComplete = {
-                        navController.navigate(Destination.Main) {
+                        navController.navigate(Destination.Main()) {
                             popUpTo<Destination.Main>()
                         }
                     },
@@ -300,7 +278,7 @@ fun App(
                 LendingCreationScreen(
                     originalShoppingList = items,
                     onLendingCreated = {
-                        navController.navigate(Destination.Main) {
+                        navController.navigate(Destination.Main()) {
                             popUpTo<Destination.Main>()
                         }
                     }

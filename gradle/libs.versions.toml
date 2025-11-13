@@ -13,6 +13,7 @@ androidx-navigation = "2.9.1"
 androidx-work = "2.11.0"
 buildkonfig = "0.17.1"
 bcrypt = "0.10.2"
+calendar ="2.9.0"
 coil = "3.3.0"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
 composeMultiplatform = "1.9.3"
@@ -39,7 +40,7 @@ kscan = "0.4.0"
 ksoup = "0.2.5"
 ktor = "3.3.2"
 localina = "1.0.0-alpha3"
-logback = "1.5.20"
+logback = "1.5.21"
 mockk = "1.14.6"
 napier = "2.7.1"
 postgresql = "42.7.8"
@@ -62,6 +63,7 @@ androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navi
 androidx-work-gcm = { module = "androidx.work:work-gcm", version.ref ="androidx-work" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
+calendar = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "calendar" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
 compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-windowSizeClass" }

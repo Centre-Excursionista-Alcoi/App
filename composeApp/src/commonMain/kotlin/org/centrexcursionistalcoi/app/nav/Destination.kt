@@ -28,15 +28,14 @@ sealed interface Destination {
             }
             if (url.host == ADMIN_ITEMS) {
                 val typeId = url.fragment.toUuidOrNull() ?: return null
-                val type = InventoryItemTypesRepository.get(typeId) ?: return null
-                return Admin.InventoryItems(type)
+                return Main(showingAdminItemTypeId = typeId)
             }
             if (url.host == ADMIN_LENDINGS_MANAGEMENT) {
                 val showingLendingId = url.fragment.toUuidOrNull()
                 return if (showingLendingId != null) {
                     Admin.LendingManagement(showingLendingId)
                 } else {
-                    Admin.LendingsManagement
+                    Main(showingAdminLendingsScreen = true)
                 }
             }
             return null
@@ -46,7 +45,10 @@ sealed interface Destination {
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
     @Serializable @SerialName("login") data object Login : Destination
-    @Serializable @SerialName("main") data object Main : Destination
+    @Serializable @SerialName("main") data class Main(
+        val showingAdminItemTypeId: Uuid? = null,
+        val showingAdminLendingsScreen: Boolean = false,
+    ) : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
 
     @Serializable @SerialName("lendingDetails") data class LendingDetails(val lendingId: Uuid) : Destination {
@@ -60,15 +62,6 @@ sealed interface Destination {
      * Admin-related destinations.
      */
     object Admin {
-        /**
-         * Shows all the items of a given inventory type.
-         */
-        @Serializable @SerialName("inventoryItem") data class InventoryItems(val typeId: Uuid, val displayName: String) : Destination {
-            constructor(type: InventoryItemType): this(type.id, type.displayName)
-        }
-
-        @Serializable @SerialName("lendingsManagement") data object LendingsManagement : Destination
-
         @Serializable @SerialName("lendingManagement") data class LendingManagement(val lendingId: Uuid) : Destination {
             constructor(lending: ReferencedLending): this(lending.id)
         }

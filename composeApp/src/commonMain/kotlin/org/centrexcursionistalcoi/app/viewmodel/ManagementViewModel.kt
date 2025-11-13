@@ -7,11 +7,13 @@ import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
@@ -77,6 +79,18 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             UsersRemoteRepository.promote(user.sub)
             UsersRemoteRepository.update(user.sub)
+        }
+    }
+
+    fun confirmLending(lending: ReferencedLending) = launch {
+        doAsync {
+            LendingsRemoteRepository.confirm(lending.id)
+        }
+    }
+
+    fun skipLendingMemory(lending: ReferencedLending) = launch {
+        doAsync {
+            LendingsRemoteRepository.skipMemory(lending.id)
         }
     }
 }

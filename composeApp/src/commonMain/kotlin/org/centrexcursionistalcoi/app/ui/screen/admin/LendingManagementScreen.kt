@@ -6,6 +6,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -269,53 +271,70 @@ private fun LendingManagementScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         LazyColumnWidthWrapper(Modifier.fillMaxSize().padding(paddingValues)) {
-            item("general_details") {
-                GeneralLendingDetails(lending) {
-                    GeneralLendingDetailsExtra(lending, snackbarHostState)
+            lendingManagementScreenContent(
+                lending = lending,
+                snackbarHostState = snackbarHostState,
+                onConfirmRequest = onConfirmRequest,
+                onSkipMemoryRequest = onSkipMemoryRequest,
+            )
+        }
+    }
+}
 
-                    if (lending.status() == Lending.Status.REQUESTED) {
-                        var isConfirming by remember { mutableStateOf(false) }
-                        ElevatedButton(
-                            enabled = !isConfirming,
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
-                            onClick = {
-                                isConfirming = true
-                                onConfirmRequest().invokeOnCompletion { isConfirming = false }
-                            },
-                        ) {
-                            Icon(Icons.Default.Check, stringResource(Res.string.confirm))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(Res.string.confirm))
-                        }
-                    }
+fun LazyListScope.lendingManagementScreenContent(
+    lending: ReferencedLending,
+    snackbarHostState: SnackbarHostState,
+    onConfirmRequest: () -> Job,
+    onSkipMemoryRequest: () -> Job,
+    extraContent: @Composable (ColumnScope.() -> Unit)? = null
+) {
+    item("general_details") {
+        GeneralLendingDetails(lending) {
+            GeneralLendingDetailsExtra(lending, snackbarHostState)
 
-                    if (lending.status() == Lending.Status.RETURNED) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(Res.string.memory_pending_lending),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            var skippingMemory by remember { mutableStateOf(false) }
-                            TextButton(
-                                enabled = !skippingMemory,
-                                onClick = {
-                                    skippingMemory = true
-                                    onSkipMemoryRequest().invokeOnCompletion { skippingMemory = false }
-                                },
-                            ) {
-                                Text(stringResource(Res.string.management_skip_memory))
-                            }
-                        }
+            if (lending.status() == Lending.Status.REQUESTED) {
+                var isConfirming by remember { mutableStateOf(false) }
+                ElevatedButton(
+                    enabled = !isConfirming,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
+                    onClick = {
+                        isConfirming = true
+                        onConfirmRequest().invokeOnCompletion { isConfirming = false }
+                    },
+                ) {
+                    Icon(Icons.Default.Check, stringResource(Res.string.confirm))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(Res.string.confirm))
+                }
+            }
+
+            if (lending.status() == Lending.Status.RETURNED) {
+                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(Res.string.memory_pending_lending),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    var skippingMemory by remember { mutableStateOf(false) }
+                    TextButton(
+                        enabled = !skippingMemory,
+                        onClick = {
+                            skippingMemory = true
+                            onSkipMemoryRequest().invokeOnCompletion { skippingMemory = false }
+                        },
+                    ) {
+                        Text(stringResource(Res.string.management_skip_memory))
                     }
                 }
             }
 
-            item("lendings") {
-                LendingItems(lending)
-            }
+            extraContent?.invoke(this)
         }
+    }
+
+    item("lendings") {
+        LendingItems(lending)
     }
 }
 

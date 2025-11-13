@@ -47,6 +47,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +79,10 @@ import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.page.home.HomePage
 import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_DEPARTMENTS
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_INVENTORY
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_LENDINGS
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_USERS
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
@@ -88,8 +93,8 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MainScreen(
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
-    onManageLendingsRequested: () -> Unit,
+    showingAdminItemTypeId: Uuid?,
+    showingAdminLendingsScreen: Boolean,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
@@ -117,6 +122,8 @@ fun MainScreen(
 
     profile?.let {
         MainScreenContent(
+            showingAdminItemTypeId = showingAdminItemTypeId,
+            showingAdminLendingsScreen = showingAdminLendingsScreen,
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
@@ -137,9 +144,7 @@ fun MainScreen(
             inventoryItemTypes = inventoryItemTypes,
             inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
-            onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
-            onManageLendingsRequested = onManageLendingsRequested,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -170,6 +175,9 @@ private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Pa
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun MainScreenContent(
+    showingAdminItemTypeId: Uuid?,
+    showingAdminLendingsScreen: Boolean,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -195,11 +203,8 @@ private fun MainScreenContent(
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-
-    onManageLendingsRequested: () -> Unit,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -231,6 +236,29 @@ private fun MainScreenContent(
             },
             onDismissRequested = { showingLogoutDialog = false },
         )
+    }
+
+    val selectedManagementItem = remember(showingAdminItemTypeId, showingAdminLendingsScreen) {
+        if (showingAdminItemTypeId != null) {
+            Pair(MANAGEMENT_PAGE_INVENTORY, showingAdminItemTypeId)
+        } else if (showingAdminLendingsScreen) {
+            Pair(MANAGEMENT_PAGE_LENDINGS, null)
+        } else {
+            null
+        }
+    }
+    LaunchedEffect(profile, showingAdminItemTypeId, showingAdminLendingsScreen) {
+        if (profile.isAdmin) {
+            if (showingAdminItemTypeId != null) {
+                pager.scrollToPage(
+                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                )
+            } else if (showingAdminLendingsScreen) {
+                pager.scrollToPage(
+                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -340,6 +368,7 @@ private fun MainScreenContent(
                     MainScreenPagerContent(
                         page,
                         snackbarHostState,
+                        selectedManagementItem,
                         notificationPermissionResult,
                         onNotificationPermissionRequest,
                         onNotificationPermissionDenyRequest,
@@ -357,12 +386,10 @@ private fun MainScreenContent(
                         inventoryItemTypes,
                         inventoryItemTypesCategories,
                         onItemTypeDetailsRequested,
-                        onClickInventoryItemType,
                         inventoryItems,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
-                        onManageLendingsRequested,
                     )
                 }
             } else {
@@ -378,6 +405,7 @@ private fun MainScreenContent(
                         MainScreenPagerContent(
                             page,
                             snackbarHostState,
+                            selectedManagementItem,
                             notificationPermissionResult,
                             onNotificationPermissionRequest,
                             onNotificationPermissionDenyRequest,
@@ -395,12 +423,10 @@ private fun MainScreenContent(
                             inventoryItemTypes,
                             inventoryItemTypesCategories,
                             onItemTypeDetailsRequested,
-                            onClickInventoryItemType,
                             inventoryItems,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
-                            onManageLendingsRequested,
                         )
                     }
                 }
@@ -413,6 +439,14 @@ private fun MainScreenContent(
 private fun MainScreenPagerContent(
     page: Page,
     snackbarHostState: SnackbarHostState,
+
+    /**
+     * The currently selected management item in the format Pair(pageIndex, itemId).
+     *
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_INVENTORY].
+     */
+    selectedManagementItem: Pair<Int, Uuid?>?,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -435,15 +469,12 @@ private fun MainScreenPagerContent(
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
-
-    onManageLendingsRequested: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
@@ -472,13 +503,16 @@ private fun MainScreenPagerContent(
 
             Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
+                snackbarHostState,
+                selectedManagementItem,
+                lendings,
+                onOtherUserLendingClick,
+                onOtherUserLendingClick,
                 departments,
                 users,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
-                onClickInventoryItemType,
                 inventoryItems,
-                onManageLendingsRequested,
             )
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
