@@ -33,7 +33,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun InsurancesListCard(
     activeInsurances: List<UserInsurance>,
-    onAddInsuranceRequested: () -> Unit,
+    onAddInsuranceRequested: (() -> Unit)? = null,
 ) {
     var displayingInsurance by remember { mutableStateOf<UserInsurance?>(null) }
     displayingInsurance?.let {
@@ -46,11 +46,15 @@ fun InsurancesListCard(
     InformationCard(
         title = stringResource(Res.string.active_insurances_title),
         modifier = Modifier.fillMaxWidth().padding(8.dp),
-        action = IconAction(
-            icon = Icons.Default.Add,
-            contentDescription = stringResource(Res.string.insurance_add_title),
-            onClick = onAddInsuranceRequested
-        )
+        action = if (onAddInsuranceRequested != null) {
+            IconAction(
+                icon = Icons.Default.Add,
+                contentDescription = stringResource(Res.string.insurance_add_title),
+                onClick = onAddInsuranceRequested
+            )
+        } else {
+            null
+        }
     ) {
         for (insurance in activeInsurances) {
             ListItem(

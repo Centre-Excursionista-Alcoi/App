@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.ui.page.home.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
 import org.jetbrains.compose.resources.stringResource
@@ -63,13 +64,15 @@ fun UsersListView(
         itemIdProvider = { it.id },
         itemDisplayName = { it.fullName },
         emptyItemsText = stringResource(Res.string.management_no_users),
-        itemToolbarActions = {
-            TooltipIconButton(
-                imageVector = Icons.Default.AddModerator,
-                tooltip = stringResource(Res.string.management_promote_user),
-                positioning = TooltipAnchorPosition.Left,
-                onClick = { promotingUser = it },
-            )
+        itemToolbarActions = { user ->
+            if (!user.isAdmin()) {
+                TooltipIconButton(
+                    imageVector = Icons.Default.AddModerator,
+                    tooltip = stringResource(Res.string.management_promote_user),
+                    positioning = TooltipAnchorPosition.Left,
+                    onClick = { promotingUser = user },
+                )
+            }
         },
         // users cannot be created or edited
         isCreatingSupported = false,
@@ -80,5 +83,17 @@ fun UsersListView(
             label = stringResource(Res.string.personal_info_full_name),
             modifier = Modifier.fillMaxWidth(),
         )
+
+        user.lendingUser?.let { lendingUser ->
+            ReadOnlyFormField(
+                value = lendingUser.phoneNumber,
+                label = stringResource(Res.string.lending_signup_phone),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        if (user.insurances.isNotEmpty()) {
+            InsurancesListCard(user.insurances)
+        }
     }
 }
