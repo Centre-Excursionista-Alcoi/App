@@ -47,6 +47,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -79,18 +79,22 @@ import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.page.home.HomePage
 import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_DEPARTMENTS
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_INVENTORY
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_LENDINGS
+import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_USERS
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
-import org.centrexcursionistalcoi.app.viewmodel.HomeViewModel
+import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MainScreen(
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
-    onManageLendingsRequested: () -> Unit,
+    showingAdminItemTypeId: Uuid?,
+    showingAdminLendingsScreen: Boolean,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
@@ -98,7 +102,7 @@ fun MainScreen(
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
-    model: HomeViewModel = viewModel { HomeViewModel() }
+    model: MainViewModel = viewModel { MainViewModel() }
 ) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
@@ -118,6 +122,8 @@ fun MainScreen(
 
     profile?.let {
         MainScreenContent(
+            showingAdminItemTypeId = showingAdminItemTypeId,
+            showingAdminLendingsScreen = showingAdminLendingsScreen,
             notificationPermissionResult = notificationPermissionResult,
             onNotificationPermissionRequest = model::requestNotificationsPermission,
             onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
@@ -125,8 +131,6 @@ fun MainScreen(
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
-            onCreateDepartment = model::createDepartment,
-            onDeleteDepartment = model::delete,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingClick = onLendingClick,
@@ -135,16 +139,12 @@ fun MainScreen(
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
-            onPromote = model::promote,
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
             inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
-            onCreateInventoryItemType = model::createInventoryItemType,
-            onClickInventoryItemType = onClickInventoryItemType,
             inventoryItems = inventoryItems,
-            onManageLendingsRequested = onManageLendingsRequested,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -175,6 +175,9 @@ private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Pa
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun MainScreenContent(
+    showingAdminItemTypeId: Uuid?,
+    showingAdminLendingsScreen: Boolean,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -185,8 +188,6 @@ private fun MainScreenContent(
     onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
-    onDeleteDepartment: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -198,17 +199,12 @@ private fun MainScreenContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
-    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-
-    onManageLendingsRequested: () -> Unit,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -218,8 +214,12 @@ private fun MainScreenContent(
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
-    val activeLendingsCount = lendings?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
-    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeLendingsCount > 0)
+    val activeUserLendingsCount = lendings
+        // Get only lendings of the current user
+        ?.filter { it.user.sub == profile.sub }
+        // Count only active lendings
+        ?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
+    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLendingsCount > 0)
 
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
@@ -240,6 +240,29 @@ private fun MainScreenContent(
             },
             onDismissRequested = { showingLogoutDialog = false },
         )
+    }
+
+    val selectedManagementItem = remember(showingAdminItemTypeId, showingAdminLendingsScreen) {
+        if (showingAdminItemTypeId != null) {
+            Pair(MANAGEMENT_PAGE_INVENTORY, showingAdminItemTypeId)
+        } else if (showingAdminLendingsScreen) {
+            Pair(MANAGEMENT_PAGE_LENDINGS, null)
+        } else {
+            null
+        }
+    }
+    LaunchedEffect(profile, showingAdminItemTypeId, showingAdminLendingsScreen) {
+        if (profile.isAdmin) {
+            if (showingAdminItemTypeId != null) {
+                pager.scrollToPage(
+                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                )
+            } else if (showingAdminLendingsScreen) {
+                pager.scrollToPage(
+                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -349,14 +372,13 @@ private fun MainScreenContent(
                     MainScreenPagerContent(
                         page,
                         snackbarHostState,
+                        selectedManagementItem,
                         notificationPermissionResult,
                         onNotificationPermissionRequest,
                         onNotificationPermissionDenyRequest,
                         profile,
                         windowSizeClass,
                         departments,
-                        onCreateDepartment,
-                        onDeleteDepartment,
                         lendings,
                         onLendingSignUpRequested,
                         onLendingClick,
@@ -365,17 +387,13 @@ private fun MainScreenContent(
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
                         users,
-                        onPromote,
                         inventoryItemTypes,
                         inventoryItemTypesCategories,
                         onItemTypeDetailsRequested,
-                        onCreateInventoryItemType,
-                        onClickInventoryItemType,
                         inventoryItems,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
-                        onManageLendingsRequested,
                     )
                 }
             } else {
@@ -391,14 +409,13 @@ private fun MainScreenContent(
                         MainScreenPagerContent(
                             page,
                             snackbarHostState,
+                            selectedManagementItem,
                             notificationPermissionResult,
                             onNotificationPermissionRequest,
                             onNotificationPermissionDenyRequest,
                             profile,
                             windowSizeClass,
                             departments,
-                            onCreateDepartment,
-                            onDeleteDepartment,
                             lendings,
                             onLendingSignUpRequested,
                             onLendingClick,
@@ -407,17 +424,13 @@ private fun MainScreenContent(
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
                             users,
-                            onPromote,
                             inventoryItemTypes,
                             inventoryItemTypesCategories,
                             onItemTypeDetailsRequested,
-                            onCreateInventoryItemType,
-                            onClickInventoryItemType,
                             inventoryItems,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
-                            onManageLendingsRequested,
                         )
                     }
                 }
@@ -430,6 +443,14 @@ private fun MainScreenContent(
 private fun MainScreenPagerContent(
     page: Page,
     snackbarHostState: SnackbarHostState,
+
+    /**
+     * The currently selected management item in the format Pair(pageIndex, itemId).
+     *
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_INVENTORY].
+     */
+    selectedManagementItem: Pair<Int, Uuid?>?,
+
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
@@ -437,8 +458,6 @@ private fun MainScreenPagerContent(
     windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
-    onDeleteDepartment: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -450,21 +469,16 @@ private fun MainScreenPagerContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
-    onPromote: (UserData) -> Job,
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
-
-    onManageLendingsRequested: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
@@ -493,17 +507,16 @@ private fun MainScreenPagerContent(
 
             Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
+                snackbarHostState,
+                selectedManagementItem,
+                lendings,
+                onOtherUserLendingClick,
+                onOtherUserLendingClick,
                 departments,
-                onCreateDepartment,
-                onDeleteDepartment,
                 users,
-                onPromote,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
-                onCreateInventoryItemType,
-                onClickInventoryItemType,
                 inventoryItems,
-                onManageLendingsRequested,
             )
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 

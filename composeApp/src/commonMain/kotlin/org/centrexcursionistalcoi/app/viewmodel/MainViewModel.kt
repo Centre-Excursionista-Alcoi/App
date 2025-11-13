@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,9 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -22,12 +18,8 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
@@ -36,7 +28,7 @@ import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
-class HomeViewModel: ViewModel() {
+class MainViewModel: ViewModel() {
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
         .stateFlow()
         .map { it == BackgroundJobState.RUNNING }
@@ -78,20 +70,6 @@ class HomeViewModel: ViewModel() {
     fun denyNotificationsPermission() = launch {
         settings.putBoolean("permission.notifications.denied", true)
         _notificationPermissionResult.value = null
-    }
-
-    fun createDepartment(displayName: String, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
-        val image = imageFile?.readBytes()
-        DepartmentsRemoteRepository.create(displayName, image)
-    }
-
-    fun delete(department: Department) = viewModelScope.launch(defaultAsyncDispatcher) {
-        DepartmentsRemoteRepository.delete(department.id)
-    }
-
-    fun createInventoryItemType(displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = viewModelScope.launch(defaultAsyncDispatcher) {
-        val image = imageFile?.readBytes()
-        InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, image)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
@@ -136,12 +114,5 @@ class HomeViewModel: ViewModel() {
 
     fun disconnectFEMECV() = viewModelScope.launch(defaultAsyncDispatcher) {
         ProfileRemoteRepository.disconnectFEMECV()
-    }
-
-    fun promote(user: UserData) = launch {
-        doAsync {
-            UsersRemoteRepository.promote(user.sub)
-            UsersRemoteRepository.update(user.sub)
-        }
     }
 }

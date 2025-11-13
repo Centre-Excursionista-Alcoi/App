@@ -6,6 +6,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
@@ -80,8 +83,11 @@ import io.github.aakira.napier.Napier
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -97,6 +103,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.screen.DataRow
 import org.centrexcursionistalcoi.app.ui.screen.GeneralLendingDetails
 import org.centrexcursionistalcoi.app.ui.screen.LendingItems
+import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -111,6 +118,7 @@ fun LendingManagementScreen(
     model: LendingManagementViewModel = viewModel { LendingManagementViewModel(lendingId) },
     onBack: () -> Unit,
 ) {
+    val users by model.users.collectAsState()
     val lending by model.lending.collectAsState()
     val scannedItems by model.scannedItems.collectAsState()
     val dismissedItems by model.dismissedItems.collectAsState()
@@ -174,6 +182,7 @@ fun LendingManagementScreen(
                 },
                 snackbarHostState = snackbarHostState,
                 lending = lending,
+                users = users.orEmpty(),
                 scannedItems = scannedItems,
                 dismissedItems = dismissedItems,
                 onScanCode = model::onScan,
@@ -200,6 +209,7 @@ fun LendingManagementScreen(
                 onDeleteRequest = model::deleteLending,
                 onConfirmRequest = model::confirmLending,
                 onSkipMemoryRequest = model::skipMemory,
+                users = users.orEmpty(),
                 onBack = onBack,
             )
         }
@@ -210,6 +220,7 @@ fun LendingManagementScreen(
 @Composable
 private fun LendingManagementScreen(
     lending: ReferencedLending,
+    users: List<UserData>,
     onDeleteRequest: () -> Job,
     onConfirmRequest: () -> Job,
     onSkipMemoryRequest: () -> Job,
@@ -269,53 +280,72 @@ private fun LendingManagementScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         LazyColumnWidthWrapper(Modifier.fillMaxSize().padding(paddingValues)) {
-            item("general_details") {
-                GeneralLendingDetails(lending) {
-                    GeneralLendingDetailsExtra(lending, snackbarHostState)
+            lendingManagementScreenContent(
+                lending = lending,
+                snackbarHostState = snackbarHostState,
+                users = users,
+                onConfirmRequest = onConfirmRequest,
+                onSkipMemoryRequest = onSkipMemoryRequest,
+            )
+        }
+    }
+}
 
-                    if (lending.status() == Lending.Status.REQUESTED) {
-                        var isConfirming by remember { mutableStateOf(false) }
-                        ElevatedButton(
-                            enabled = !isConfirming,
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
-                            onClick = {
-                                isConfirming = true
-                                onConfirmRequest().invokeOnCompletion { isConfirming = false }
-                            },
-                        ) {
-                            Icon(Icons.Default.Check, stringResource(Res.string.confirm))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(Res.string.confirm))
-                        }
-                    }
+fun LazyListScope.lendingManagementScreenContent(
+    lending: ReferencedLending,
+    snackbarHostState: SnackbarHostState,
+    users: List<UserData>,
+    onConfirmRequest: () -> Job,
+    onSkipMemoryRequest: () -> Job,
+    extraContent: @Composable (ColumnScope.() -> Unit)? = null
+) {
+    item("general_details") {
+        GeneralLendingDetails(lending) {
+            GeneralLendingDetailsExtra(lending, snackbarHostState, users)
 
-                    if (lending.status() == Lending.Status.RETURNED) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(Res.string.memory_pending_lending),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            var skippingMemory by remember { mutableStateOf(false) }
-                            TextButton(
-                                enabled = !skippingMemory,
-                                onClick = {
-                                    skippingMemory = true
-                                    onSkipMemoryRequest().invokeOnCompletion { skippingMemory = false }
-                                },
-                            ) {
-                                Text(stringResource(Res.string.management_skip_memory))
-                            }
-                        }
+            if (lending.status() == Lending.Status.REQUESTED) {
+                var isConfirming by remember { mutableStateOf(false) }
+                ElevatedButton(
+                    enabled = !isConfirming,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
+                    onClick = {
+                        isConfirming = true
+                        onConfirmRequest().invokeOnCompletion { isConfirming = false }
+                    },
+                ) {
+                    Icon(Icons.Default.Check, stringResource(Res.string.confirm))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(Res.string.confirm))
+                }
+            }
+
+            if (lending.status() == Lending.Status.RETURNED) {
+                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(Res.string.memory_pending_lending),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    var skippingMemory by remember { mutableStateOf(false) }
+                    TextButton(
+                        enabled = !skippingMemory,
+                        onClick = {
+                            skippingMemory = true
+                            onSkipMemoryRequest().invokeOnCompletion { skippingMemory = false }
+                        },
+                    ) {
+                        Text(stringResource(Res.string.management_skip_memory))
                     }
                 }
             }
 
-            item("lendings") {
-                LendingItems(lending)
-            }
+            extraContent?.invoke(this)
         }
+    }
+
+    item("lendings") {
+        LendingItems(lending)
     }
 }
 
@@ -329,6 +359,7 @@ private fun LendingPickupReturnScreen(
     lending: ReferencedLending,
     scannedItems: Set<Uuid>,
     dismissedItems: Set<Uuid>,
+    users: List<UserData>,
     onScanCode: (Barcode) -> Unit,
     onToggleItem: (Uuid) -> Unit,
     onCompleteRequest: () -> Job,
@@ -429,7 +460,7 @@ private fun LendingPickupReturnScreen(
         },
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState())) {
-            LendingPickupReturnContent(lending, scannedItems, dismissedItems, snackbarHostState, onToggleItem, isItemToggleable)
+            LendingPickupReturnContent(lending, scannedItems, dismissedItems, snackbarHostState, users, onToggleItem, isItemToggleable)
 
             Spacer(Modifier.height(96.dp))
         }
@@ -526,7 +557,11 @@ private fun AnimatedVisibilityScope.LendingFAB(
 }
 
 @Composable
-private fun GeneralLendingDetailsExtra(lending: ReferencedLending, snackbarHostState: SnackbarHostState) {
+private fun GeneralLendingDetailsExtra(
+    lending: ReferencedLending,
+    snackbarHostState: SnackbarHostState,
+    users: List<UserData>,
+) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val uriHandler = LocalUriHandler.current
@@ -595,6 +630,40 @@ private fun GeneralLendingDetailsExtra(lending: ReferencedLending, snackbarHostS
             }
         }
     }
+
+    val givenBy = lending.givenBy
+    val givenAt = lending.givenAt
+    if (givenBy != null && givenAt != null) {
+        val givenAt = givenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { "${it.date} ${it.time}" }
+        DataRow(
+            icon = Icons.AutoMirrored.Filled.CallMade,
+            title = stringResource(Res.string.management_lending_given_by_title),
+            text = stringResource(Res.string.management_lending_given_by_date, givenBy.fullName, givenAt),
+        )
+    }
+
+    val items = lending.items
+    val receptionDates = lending.receivedItems
+        .groupBy { item -> item.receivedAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { it.date to it.time.withoutSeconds() } }
+    for ((receivedAt, receivedItems) in receptionDates) {
+        val receivedAtStr = "${receivedAt.first} ${receivedAt.second}"
+        val returnedTo = receivedItems
+            .mapNotNull { users.find { user -> user.sub == it.receivedBy } }
+            .toSet()
+            .joinToString { it.fullName }
+        val items = receivedItems
+            .mapNotNull { items.find { item -> item.id == it.itemId } }
+            .groupBy { it.type }
+            .toList()
+            .joinToString("\n") { (type, items) -> "- ${type.displayName} (${items.size})" }
+        DataRow(
+            icon = Icons.AutoMirrored.Filled.CallMade,
+            title = stringResource(Res.string.management_lending_returned_to_title, returnedTo),
+            text = stringResource(Res.string.management_lending_returned_to_data, receivedAtStr, items),
+        )
+    }
+
+    Spacer(Modifier.height(12.dp))
 }
 
 @Composable
@@ -603,12 +672,13 @@ private fun LendingPickupReturnContent(
     scannedItems: Set<Uuid>,
     dismissedItems: Set<Uuid>,
     snackbarHostState: SnackbarHostState,
+    users: List<UserData>,
     onToggleItem: (Uuid) -> Unit,
     isItemToggleable: (Uuid) -> Boolean = { true },
 ) {
     val items = lending.items
 
-    GeneralLendingDetails(lending) { GeneralLendingDetailsExtra(lending, snackbarHostState) }
+    GeneralLendingDetails(lending) { GeneralLendingDetailsExtra(lending, snackbarHostState, users) }
 
     if (PlatformNFC.isSupported) {
         OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {

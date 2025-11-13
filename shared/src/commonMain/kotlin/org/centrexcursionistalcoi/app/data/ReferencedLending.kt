@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.data
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.InventoryItemType.Companion.getType
 import org.centrexcursionistalcoi.app.data.Lending.Status
@@ -60,6 +61,8 @@ data class ReferencedLending(
             referencedEntity = this,
         )
     }
+
+    val durationDays: Int = from.daysUntil(to) + 1
 
     fun status(): Status = referencedEntity.status()
 

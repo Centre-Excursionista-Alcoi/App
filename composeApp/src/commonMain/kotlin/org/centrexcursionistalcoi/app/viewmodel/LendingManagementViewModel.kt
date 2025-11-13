@@ -8,7 +8,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
@@ -20,13 +22,16 @@ import org.ncgroup.kscan.Barcode
 
 class LendingManagementViewModel(
     private val lendingId: Uuid,
-    /**
-     * Whether scanned items can be toggled to indeterminate (not dismissed and not scanned) state.
-     */
-    private val toggleAllowIndeterminate: Boolean = true,
 ): ErrorViewModel() {
 
     val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
+
+    val toggleAllowIndeterminate = lending
+        // Allow indeterminate for pickups
+        .map { lending -> lending?.status() == Lending.Status.CONFIRMED }
+        .stateInViewModel()
+
+    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
 
     private val _scannedItems = MutableStateFlow(emptySet<Uuid>())
     val scannedItems get() = _scannedItems.asStateFlow()
@@ -66,11 +71,11 @@ class LendingManagementViewModel(
         nfcReaderJob = null
     }
 
-    protected fun setScannedItems(items: Set<Uuid>) {
+    private fun setScannedItems(items: Set<Uuid>) {
         _scannedItems.value = items
     }
 
-    protected fun setDismissedItems(items: Set<Uuid>) {
+    private fun setDismissedItems(items: Set<Uuid>) {
         _dismissedItems.value = items
     }
 
@@ -133,7 +138,7 @@ class LendingManagementViewModel(
     }
 
     fun toggleItem(itemId: Uuid) {
-        if (toggleAllowIndeterminate) {
+        if (toggleAllowIndeterminate.value == true) {
             if (scannedItems.value.contains(itemId)) {
                 // dismiss the item
                 _dismissedItems.value += itemId
@@ -219,13 +224,19 @@ class LendingManagementViewModel(
 
     init {
         launch {
-            // if it's a pickup (allow indeterminate) we don't auto-load received items
-            if (toggleAllowIndeterminate) return@launch
-
-            // Auto-load received items for return processing
+            // if it's a pickup (allow indeterminate) we do
             receivedItems.collect { receivedItems ->
+                val lending = lending.value ?: return@collect
+                if (lending.status() != Lending.Status.TAKEN) {
+                    // Only load received items for taken lendings
+                    Napier.i { "Lending is not taken, skipping received items load." }
+                    // No need to keep collecting
+                    cancel()
+                    return@collect
+                }
+
                 if (receivedItems == null) return@collect
-                val lendingItems = lending.value!!.items.map { it.id }
+                val lendingItems = lending.items.map { it.id }
                 Napier.i { "Received items updated: ${receivedItems.size} / ${lendingItems.size} items received." }
                 val receivedItemsIds = receivedItems.map { it.itemId }
                 Napier.d { "Lending items:  ${lendingItems.joinToString()}" }

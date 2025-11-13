@@ -14,8 +14,7 @@ import org.centrexcursionistalcoi.app.transfer.FileTransferable
 
 @OptIn(ExperimentalComposeUiApi::class)
 actual object PlatformDragAndDrop : PlatformProvider {
-    actual override val isSupported: Boolean
-        get() = TODO("Not yet implemented")
+    actual override val isSupported: Boolean = false // not working: throws unknown error
 
     actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
         return DragAndDropTransferData(
