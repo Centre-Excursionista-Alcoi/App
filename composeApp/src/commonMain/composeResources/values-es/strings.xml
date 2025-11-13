@@ -137,7 +137,7 @@
         <item quantity="many">%1$d elementos</item>
         <item quantity="other">%1$d elementos</item>
     </plurals>
-    <string name="management_lendings">Ver Préstamos</string>
+    <string name="management_lendings">Préstamos</string>
     <string name="management_unconfirmed_lendings">Préstamos esperando confirmación</string>
     <string name="management_pending_pickup_lendings">Préstamos esperando la recogida</string>
     <string name="management_pending_return_lendings">Préstamos esperando la devolución</string>
@@ -156,7 +156,7 @@
     <string name="management_lending_returned_to">Devuelto a: %1$s el %2$s</string>
     <string name="management_view_memory">Ver Memoria</string>
     <string name="management_return">Devolver</string>
-    <string name="management_skip_memory">Saltar Memoria</string>
+    <string name="management_skip_memory">Saltar</string>
     <string name="management_promote_user">Promocionar</string>
     <string name="management_promote_user_title">Promocionar usuario</string>
     <string name="management_promote_user_confirmation">Seguro que quieres promocionar %1$s para que sea un administrador?</string>
@@ -277,4 +277,26 @@
     <string name="settings_dev_credit_email">Email</string>
     <string name="nav_home">Inicio</string>
     <string name="error_access_denied">Acceso denegado.</string>
+    <string name="search">Buscar...</string>
+    <string name="sort_by_name_asc">Ordenar por Nombre (A-Z)</string>
+    <string name="sort_by_name_desc">Ordenar por Nombre (Z-A)</string>
+    <string name="management_inventory">Inventario</string>
+    <string name="management_department_create">Crear Sección</string>
+    <string name="management_inventory_item_type_categories">Categorías</string>
+    <string name="management_inventory_item_type_identifiers">Identificadores</string>
+    <string name="clear">Vaciar</string>
+    <string name="management_active_lendings">Préstamos Activos</string>
+    <string name="management_complete_lendings">Préstamos Completados</string>
+    <string name="management_other_users_lendings">Préstamos de otros usuarios</string>
+    <string name="management_lending_title">Gestión de Préstamos</string>
+    <string name="management_lending_give">Dar Préstamo</string>
+    <string name="management_lending_receive">Recibir Préstamo</string>
+    <string name="management_lending_given_by_title">Dado</string>
+    <string name="management_lending_given_by_date">por %1$s el %2$s</string>
+    <string name="management_lending_returned_to_title">Devuelto a: %1$s</string>
+    <string name="management_lending_returned_to_data">El: %1$s\nMaterial:\n%2$s</string>
+    <string name="lending_details_confirmation_pending_title">Confirmación Pendiente</string>
+    <string name="lending_details_confirmation_pending_message">Un admin tiene que confirmar tu préstamo primero.</string>
+    <string name="lending_details_pickup_pending_title">Recogida Pendiente</string>
+    <string name="lending_details_pickup_pending_message">Un admin se pondrá en contacto contigo para programar una recogida.</string>
 </resources>
