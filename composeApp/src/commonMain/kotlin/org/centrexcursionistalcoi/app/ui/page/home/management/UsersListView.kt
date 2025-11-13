@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.page.home.management
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material3.AlertDialog
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.UserData
@@ -81,14 +83,20 @@ fun UsersListView(
         ReadOnlyFormField(
             value = user.fullName,
             label = stringResource(Res.string.personal_info_full_name),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        )
+
+        ReadOnlyFormField(
+            value = user.email,
+            label = stringResource(Res.string.personal_info_email),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         )
 
         user.lendingUser?.let { lendingUser ->
             ReadOnlyFormField(
                 value = lendingUser.phoneNumber,
                 label = stringResource(Res.string.lending_signup_phone),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             )
         }
 
