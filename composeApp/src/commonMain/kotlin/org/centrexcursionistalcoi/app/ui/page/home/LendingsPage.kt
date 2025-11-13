@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -47,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -445,10 +447,15 @@ fun OldLendingItem(lending: ReferencedLending, onClick: () -> Unit) {
 @Composable
 fun LendingItem(
     lending: ReferencedLending,
+    isActive: Boolean = false,
     onClick: () -> Unit,
 ) {
     OutlinedCard(
         onClick = onClick,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Unspecified,
+            contentColor = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified,
+        ),
         modifier = Modifier.fillMaxWidth().padding(8.dp),
     ) {
         Row(
