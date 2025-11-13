@@ -76,7 +76,6 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
-import org.centrexcursionistalcoi.app.ui.dialog.ShoppingListDialog
 import org.centrexcursionistalcoi.app.ui.page.home.HomePage
 import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
 import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
@@ -229,18 +228,6 @@ private fun MainScreenContent(
     val windowSizeClass = calculateWindowSizeClass()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var displayingShoppingList by remember { mutableStateOf(false) }
-    if (displayingShoppingList) {
-        ShoppingListDialog(
-            shoppingList,
-            inventoryItemTypes,
-            onContinue = {
-                displayingShoppingList = false
-                onShoppingListConfirmed()
-            }
-        ) { displayingShoppingList = false }
-    }
-
     var showingLogoutDialog by remember { mutableStateOf(false) }
     if (showingLogoutDialog) {
         LogoutConfirmationDialog(
@@ -308,7 +295,7 @@ private fun MainScreenContent(
                 exit = slideOutHorizontally { it },
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { displayingShoppingList = true }
+                    onClick = onShoppingListConfirmed,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Receipt,
