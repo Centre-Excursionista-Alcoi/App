@@ -31,7 +31,6 @@ kotlin-crypto-hash = "0.8.0"
 kotlin-crypto-random = "0.6.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
-kotlinx-io = "0.8.0"
 kotlinx-serialization = "1.9.0"
 kotlinx-serialization-csv = "3.2.0"
 kotlinx-kover = "0.9.3"
@@ -50,7 +49,7 @@ sentry = "5.12.2"
 sentry-multiplatform = "0.21.0"
 sqldelight = "2.1.0"
 sqlite = "3.51.0.0"
-testcontainers = "1.20.3"
+testcontainers = "1.21.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -90,7 +89,6 @@ kotlin-crypto-sha2 = { module = "org.kotlincrypto.hash:sha2", version.ref = "kot
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serializationCsv = { module = "de.brudaswen.kotlinx.serialization:kotlinx-serialization-csv", version.ref = "kotlinx-serialization-csv" }
 kotlinx-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kreds = { module = "io.github.crackthecodeabhi:kreds", version.ref = "kreds" }

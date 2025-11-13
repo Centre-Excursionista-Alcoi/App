@@ -274,8 +274,6 @@
 
     <string name="shopping_list_selected">Selected (%1$d items)</string>
     <string name="shopping_list_view">View Shopping List</string>
-    <string name="shopping_list_summary">Summary</string>
-    <string name="shopping_list_confirm">Confirm</string>
 
     <string name="memory_pending">Pending Memories</string>
     <string name="memory_pending_lending">Memory submission is pending.</string>

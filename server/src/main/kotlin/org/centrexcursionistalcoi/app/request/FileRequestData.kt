@@ -1,10 +1,13 @@
 package org.centrexcursionistalcoi.app.request
 
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.content.PartData
 import io.ktor.utils.io.core.Closeable
 import io.ktor.utils.io.jvm.javaio.copyTo
 import java.io.ByteArrayOutputStream
+import kotlin.io.encoding.Base64
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 
@@ -21,6 +24,25 @@ class FileRequestData: Closeable {
         contentType = partData.contentType
         originalFileName = partData.originalFileName
         partData.provider().copyTo(baos)
+    }
+
+    /**
+     * Populates this file data from the given [PartData.FormItem].
+     *
+     * Data will be provided as a Base64-encoded string in the form item.
+     */
+    fun populate(partData: PartData.FormItem) {
+        contentType = partData.contentType
+
+        val filename = partData.headers[HttpHeaders.ContentDisposition]
+            ?.let(ContentDisposition::parse)
+            ?.parameters
+            ?.find { it.name.equals("filename", true) }
+            ?.value
+        originalFileName = filename
+
+        val value = Base64.UrlSafe.decode(partData.value)
+        baos.writeBytes(value)
     }
 
     /**
