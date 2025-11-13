@@ -5,6 +5,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -156,8 +157,10 @@ private enum class Page {
     HOME, LENDINGS, MANAGEMENT, PROFILE
 }
 
-private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Page, Pair<ImageVector, @Composable (() -> String)>> {
-    return mutableMapOf<Page, Pair<ImageVector, @Composable (() -> String)>>().apply {
+private typealias NavigationItem = Pair<ImageVector, @Composable (() -> String)>
+
+private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Page, NavigationItem> {
+    return mutableMapOf<Page, NavigationItem>().apply {
         put(Page.HOME, Icons.Default.Home to { stringResource(Res.string.nav_home) })
         if (!anyActiveLending) {
             put(Page.LENDINGS, Icons.Default.Inventory2 to { stringResource(Res.string.nav_lendings) })
@@ -327,62 +330,15 @@ private fun MainScreenContent(
                         )
                     }
                 ) {
-                    if (profile.isAdmin) {
-                        Badge(
-                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp),
-                        ) { Text(stringResource(Res.string.admin)) }
-                    }
-
-                    for ((index, item) in navigationItems.values.withIndex()) {
-                        val (icon, label) = item
-                        NavigationRailItem(
-                            selected = pager.currentPage == index,
-                            onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                            label = { Text(label()) },
-                            icon = { Icon(icon, label()) }
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    TooltipBox(
-                        state = rememberTooltipState(),
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
-                        tooltip = {
-                            PlainTooltip { Text(stringResource(Res.string.settings)) }
-                        }
-                    ) {
-                        NavigationRailItem(
-                            selected = false,
-                            onClick = onSettingsRequested,
-                            icon = { Icon(Icons.Default.Settings, stringResource(Res.string.settings)) }
-                        )
-                    }
-                    TooltipBox(
-                        state = rememberTooltipState(),
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
-                        tooltip = {
-                            PlainTooltip { Text(stringResource(Res.string.logout)) }
-                        }
-                    ) {
-                        NavigationRailItem(
-                            selected = false,
-                            onClick = { showingLogoutDialog = true },
-                            icon = { Icon(Icons.AutoMirrored.Default.Logout, stringResource(Res.string.logout)) }
-                        )
-                    }
-                    TooltipBox(
-                        state = rememberTooltipState(),
-                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
-                        tooltip = {
-                            PlainTooltip { Text(stringResource(Res.string.force_sync)) }
-                        }
-                    ) {
-                        NavigationRailItem(
-                            selected = false,
-                            enabled = !isSyncing,
-                            onClick = onSyncRequested,
-                            icon = { Icon(Icons.Default.Sync, stringResource(Res.string.force_sync)) }
-                        )
-                    }
+                    NavigationRailItems(
+                        pager = pager,
+                        navigationItems = navigationItems,
+                        isAdmin = profile.isAdmin,
+                        isSyncing = isSyncing,
+                        onSettingsRequested = onSettingsRequested,
+                        onLogoutRequested = { showingLogoutDialog = true },
+                        onSyncRequested = onSyncRequested,
+                    )
                 }
 
                 VerticalPager(
@@ -560,5 +516,76 @@ private fun MainScreenPagerContent(
                 onFEMECVDisconnectRequested,
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ColumnScope.NavigationRailItems(
+    pager: PagerState,
+    navigationItems: Map<Page, NavigationItem>,
+    isAdmin: Boolean,
+    isSyncing: Boolean,
+    onSettingsRequested: () -> Unit,
+    onLogoutRequested: () -> Unit,
+    onSyncRequested: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+
+    if (isAdmin) {
+        Badge(
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp),
+        ) { Text(stringResource(Res.string.admin)) }
+    }
+
+    for ((index, item) in navigationItems.values.withIndex()) {
+        val (icon, label) = item
+        NavigationRailItem(
+            selected = pager.currentPage == index,
+            onClick = { scope.launch { pager.animateScrollToPage(index) } },
+            label = { Text(label()) },
+            icon = { Icon(icon, label()) }
+        )
+    }
+    Spacer(Modifier.weight(1f))
+    TooltipBox(
+        state = rememberTooltipState(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+        tooltip = {
+            PlainTooltip { Text(stringResource(Res.string.settings)) }
+        }
+    ) {
+        NavigationRailItem(
+            selected = false,
+            onClick = onSettingsRequested,
+            icon = { Icon(Icons.Default.Settings, stringResource(Res.string.settings)) }
+        )
+    }
+    TooltipBox(
+        state = rememberTooltipState(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+        tooltip = {
+            PlainTooltip { Text(stringResource(Res.string.logout)) }
+        }
+    ) {
+        NavigationRailItem(
+            selected = false,
+            onClick = onLogoutRequested,
+            icon = { Icon(Icons.AutoMirrored.Default.Logout, stringResource(Res.string.logout)) }
+        )
+    }
+    TooltipBox(
+        state = rememberTooltipState(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+        tooltip = {
+            PlainTooltip { Text(stringResource(Res.string.force_sync)) }
+        }
+    ) {
+        NavigationRailItem(
+            selected = false,
+            enabled = !isSyncing,
+            onClick = onSyncRequested,
+            icon = { Icon(Icons.Default.Sync, stringResource(Res.string.force_sync)) }
+        )
     }
 }
