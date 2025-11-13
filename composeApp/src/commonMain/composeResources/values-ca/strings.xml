@@ -133,7 +133,7 @@
         <item quantity="many">%1$d elements</item>
         <item quantity="other">%1$d elements</item>
     </plurals>
-    <string name="management_lendings" translatable="false">Veure Préstecs</string>
+    <string name="management_lendings" translatable="false">Préstecs</string>
     <string name="management_unconfirmed_lendings" translatable="false">Préstecs esperant confirmació</string>
     <string name="management_pending_pickup_lendings" translatable="false">Préstecs esperant la recollida</string>
     <string name="management_pending_return_lendings" translatable="false">Préstecs esperant la devolució</string>
@@ -307,4 +307,39 @@
     <string name="lending_details_delete_confirm_title">Confirmar Eliminació de Préstec</string>
     <string name="lending_details_delete_confirm_message">Segur que vols eliminar aquest préstec?</string>
     <string name="lending_details_items">Material</string>
+    <string name="search">Cercar...</string>
+    <string name="sort_by_name_asc">Ordena per Nom (A-Z)</string>
+    <string name="sort_by_name_desc">Ordena per Nom (Z-A)</string>
+    <string name="management_inventory">Inventari</string>
+    <string name="management_department_create">Crear Secció</string>
+    <string name="management_inventory_item_type_categories">Categories</string>
+    <string name="management_inventory_item_type_identifiers">Identificadors</string>
+    <string name="clear">Buidar</string>
+    <string name="management_active_lendings">Préstecs Actius</string>
+    <string name="management_complete_lendings">Préstecs Completats</string>
+    <string name="management_lending_give">Donar Préstec</string>
+    <string name="management_lending_receive">Rebre Préstec</string>
+    <string name="management_lending_given_by_title">Donat</string>
+    <string name="management_lending_given_by_date">per %1$s el %2$s</string>
+    <string name="management_lending_returned_to_title">Retornat a: %1$s</string>
+    <string name="management_lending_returned_to_data">El: %1$s\nElements:\n%2$s</string>
+    <string name="days_of_week_short_monday">Dl.</string>
+    <string name="days_of_week_short_tuesday">Dt.</string>
+    <string name="days_of_week_short_wednesday">Dc.</string>
+    <string name="days_of_week_short_thursday">Dj.</string>
+    <string name="days_of_week_short_friday">Dv.</string>
+    <string name="days_of_week_short_saturday">Ds.</string>
+    <string name="days_of_week_short_sunday">Dg.</string>
+    <string name="months_january">Gener</string>
+    <string name="months_february">Febrer</string>
+    <string name="months_march">Març</string>
+    <string name="months_april">Abril</string>
+    <string name="months_may">Maig</string>
+    <string name="months_june">Juny</string>
+    <string name="months_july">Juliol</string>
+    <string name="months_august">Agost</string>
+    <string name="months_september">Setembre</string>
+    <string name="months_october">Octubre</string>
+    <string name="months_november">Novembre</string>
+    <string name="months_december">Desembre</string>
 </resources>
