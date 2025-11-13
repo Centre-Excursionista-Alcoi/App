@@ -659,6 +659,8 @@ private fun GeneralLendingDetailsExtra(
             text = stringResource(Res.string.management_lending_returned_to_data, receivedAt.toString(), items),
         )
     }
+
+    Spacer(Modifier.height(12.dp))
 }
 
 @Composable
