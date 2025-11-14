@@ -88,6 +88,7 @@ import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -157,18 +158,29 @@ private enum class Page {
     HOME, LENDINGS, MANAGEMENT, PROFILE
 }
 
-private typealias NavigationItem = Pair<ImageVector, @Composable (() -> String)>
+private class NavigationItem(
+    val icon: ImageVector,
+    val label: StringResource,
+    val enabled: Boolean = true,
+    val tooltip: StringResource? = null,
+)
 
 private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Page, NavigationItem> {
     return mutableMapOf<Page, NavigationItem>().apply {
-        put(Page.HOME, Icons.Default.Home to { stringResource(Res.string.nav_home) })
-        if (!anyActiveLending) {
-            put(Page.LENDINGS, Icons.Default.Inventory2 to { stringResource(Res.string.nav_lendings) })
-        }
+        put(Page.HOME, NavigationItem(Icons.Default.Home, Res.string.nav_home))
+        put(
+            Page.LENDINGS,
+            NavigationItem(
+                icon = Icons.Default.Inventory2,
+                label = Res.string.nav_lendings,
+                enabled = !anyActiveLending,
+                tooltip = Res.string.nav_lendings_disabled.takeIf { anyActiveLending }
+            )
+        )
         if (isAdmin) {
-            put(Page.MANAGEMENT, Icons.Default.SupervisorAccount to { stringResource(Res.string.nav_management) })
+            put(Page.MANAGEMENT, NavigationItem(Icons.Default.SupervisorAccount, Res.string.nav_management))
         }
-        put(Page.PROFILE, Icons.Default.Face to { stringResource(Res.string.nav_profile) })
+        put(Page.PROFILE, NavigationItem(Icons.Default.Face, Res.string.nav_profile))
     }.toMap()
 }
 
@@ -219,7 +231,9 @@ private fun MainScreenContent(
         ?.filter { it.user.sub == profile.sub }
         // Count only active lendings
         ?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
-    val navigationItems = navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLendingsCount > 0)
+    val navigationItems = remember(profile, activeUserLendingsCount) {
+        navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLendingsCount > 0)
+    }
 
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { navigationItems.size }
@@ -302,12 +316,26 @@ private fun MainScreenContent(
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 NavigationBar {
                     for ((index, item) in navigationItems.values.withIndex()) {
-                        val (icon, label) = item
                         NavigationBarItem(
                             selected = pager.currentPage == index,
+                            enabled = item.enabled,
                             onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                            label = { Text(label()) },
-                            icon = { Icon(icon, label()) }
+                            label = { Text(stringResource(item.label)) },
+                            icon = {
+                                if (item.tooltip != null) {
+                                    TooltipBox(
+                                        state = rememberTooltipState(),
+                                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                                        tooltip = {
+                                            PlainTooltip { Text(stringResource(item.tooltip)) }
+                                        }
+                                    ) {
+                                        Icon(item.icon, stringResource(item.label))
+                                    }
+                                } else {
+                                    Icon(item.icon, stringResource(item.label))
+                                }
+                            }
                         )
                     }
                 }
@@ -368,9 +396,10 @@ private fun MainScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     userScrollEnabled = false
                 ) { pageIdx ->
-                    val page = navigationItems.keys.toList()[pageIdx]
+                    val entry = navigationItems.entries.toList()[pageIdx]
+                    if (!entry.value.enabled) return@VerticalPager
                     MainScreenPagerContent(
-                        page,
+                        page = entry.key,
                         snackbarHostState,
                         selectedManagementItem,
                         notificationPermissionResult,
@@ -405,9 +434,10 @@ private fun MainScreenContent(
                         state = pager,
                         modifier = Modifier.fillMaxSize()
                     ) { pageIdx ->
-                        val page = navigationItems.keys.toList()[pageIdx]
+                        val entry = navigationItems.entries.toList()[pageIdx]
+                        if (!entry.value.enabled) return@HorizontalPager
                         MainScreenPagerContent(
-                            page,
+                            page = entry.key,
                             snackbarHostState,
                             selectedManagementItem,
                             notificationPermissionResult,
@@ -551,13 +581,31 @@ private fun ColumnScope.NavigationRailItems(
     }
 
     for ((index, item) in navigationItems.values.withIndex()) {
-        val (icon, label) = item
-        NavigationRailItem(
-            selected = pager.currentPage == index,
-            onClick = { scope.launch { pager.animateScrollToPage(index) } },
-            label = { Text(label()) },
-            icon = { Icon(icon, label()) }
-        )
+        if (item.tooltip != null) {
+            TooltipBox(
+                state = rememberTooltipState(),
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
+                tooltip = {
+                    PlainTooltip { Text(stringResource(item.tooltip)) }
+                }
+            ) {
+                NavigationRailItem(
+                    selected = pager.currentPage == index,
+                    onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                    enabled = item.enabled,
+                    label = { Text(stringResource(item.label)) },
+                    icon = { Icon(item.icon, stringResource(item.label)) }
+                )
+            }
+        } else {
+            NavigationRailItem(
+                selected = pager.currentPage == index,
+                onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                enabled = item.enabled,
+                label = { Text(stringResource(item.label)) },
+                icon = { Icon(item.icon, stringResource(item.label)) }
+            )
+        }
     }
     Spacer(Modifier.weight(1f))
     TooltipBox(
