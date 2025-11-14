@@ -21,6 +21,8 @@ import io.ktor.server.routing.options
 import io.ktor.server.routing.route
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.CEAWebDAVMessage
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -47,23 +49,27 @@ private suspend fun RoutingContext.handleSession(): Boolean {
         if (session.isAdmin()) {
             return true
         } else {
+            call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
         }
     }
     val basicAuth = call.request.basicAuthenticationCredentials()
     if (basicAuth == null) {
+        call.response.header(HttpHeaders.CEAWebDAVMessage, "Missing or invalid Authorization header")
         call.respond(HttpStatusCode.Unauthorized)
         return false
     } else {
         val loginError = login(basicAuth.name, basicAuth.password.toCharArray())
         if (loginError != null) {
+            call.response.header(HttpHeaders.CEAWebDAVMessage, "Invalid credentials: $loginError")
             call.respond(HttpStatusCode.Unauthorized)
             return false
         }
 
         val session = Database { UserSession.fromNif(basicAuth.name) }
         if (!session.isAdmin()) {
+            call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
         }

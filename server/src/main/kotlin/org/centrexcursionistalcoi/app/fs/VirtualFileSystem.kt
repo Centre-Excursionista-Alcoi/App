@@ -24,9 +24,13 @@ object VirtualFileSystem {
     private class RootDir<Id: Any, E: Entity<Id>>(
         val entityClass: EntityClass<Id, E>,
         val accessor: (E) -> FileEntity?,
-    )
+    ) {
+        fun all(): List<FileEntity> {
+            return Database { entityClass.all().mapNotNull { entity -> accessor(entity) } }
+        }
+    }
 
-    private val rootDirs = mapOf(
+    private val rootDirs: Map<String, RootDir<*, *>> = mapOf(
         "Departments" to RootDir(DepartmentEntity) { it.image },
         "Inventory Item" to RootDir(InventoryItemTypeEntity) { it.image },
         "Lending Memories" to RootDir(LendingEntity) { it.memoryDocument },
@@ -49,8 +53,7 @@ object VirtualFileSystem {
             val dirName = parts[0]
             val rootDir = rootDirs[dirName] ?: return null
             return Database {
-                rootDir.entityClass.all().mapNotNull { entity ->
-                    val fileEntity = rootDir.accessor(entity) ?: return@mapNotNull null
+                rootDir.all().map { fileEntity ->
                     val fileName = fileEntity.name ?: fileEntity.id.value.toString()
                     val fileExtensions = fileEntity.type?.let(ContentType::parse)?.fileExtensions()
                     val fileExtension = fileExtensions?.firstOrNull()
@@ -78,17 +81,15 @@ object VirtualFileSystem {
         val fileName = parts[1]
         val rootDir = rootDirs[dirName] ?: throw IllegalArgumentException("Invalid directory: $dirName")
         return Database {
-            val entity = rootDir.entityClass.all().firstOrNull { entity ->
-                val fileEntity = rootDir.accessor(entity) ?: return@firstOrNull false
+            val fileEntity = rootDir.all().firstOrNull { fileEntity ->
                 val storedFileName = fileEntity.name ?: fileEntity.id.value.toString()
                 val fileExtensions = fileEntity.type?.let(ContentType::parse)?.fileExtensions()
                 val fileExtension = fileExtensions?.firstOrNull()
                 val storedFileNameWithExtension = "$storedFileName${fileExtension?.let { ".$it" } ?: ""}"
                 storedFileNameWithExtension == fileName
             }
-            if (entity == null) return@Database null
+            if (fileEntity == null) return@Database null
 
-            val fileEntity = rootDir.accessor(entity) ?: return@Database null
             fileEntity.data
         }
     }
