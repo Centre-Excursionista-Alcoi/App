@@ -13,5 +13,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var type by Files.type
     var name by Files.name
 
+    var lastModified by Files.lastModified
+
     var rules by Files.rules
 }

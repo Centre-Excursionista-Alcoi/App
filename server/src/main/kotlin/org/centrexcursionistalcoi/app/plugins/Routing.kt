@@ -6,6 +6,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
@@ -18,6 +19,7 @@ import org.centrexcursionistalcoi.app.routes.lendingsRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
+import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 
 fun Application.configureRouting() {
@@ -58,6 +60,10 @@ fun Application.configureRouting() {
         usersRoutes()
         inventoryRoutes()
         lendingsRoutes()
+
+        route("/webdav") {
+            webDavRoutes()
+        }
 
         get("/logout") {
             call.sessions.clear<UserSession>()
