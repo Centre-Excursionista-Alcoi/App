@@ -52,6 +52,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         lendingUser = lendingUser,
         insurances = insurances.orEmpty(),
         departments = departments.orEmpty(),
+        isDisabled = isDisabled,
     )
 
     suspend fun refreshFEMECVData() {
@@ -80,7 +81,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
                         policyNumber = license.code
                         validFrom = license.validFrom.toJavaLocalDate()
                         validTo = license.validTo.toJavaLocalDate()
-                        document = certificateEntity.id
+                        document = certificateEntity
                         femecvLicense = license
                     }
                 }
