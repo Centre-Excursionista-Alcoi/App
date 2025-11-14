@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -55,14 +57,35 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-private enum class SortBy(val displayNameRes: StringResource) {
-    NAME_ASC(Res.string.sort_by_name_asc),
-    NAME_DESC(Res.string.sort_by_name_desc),
+class SortBy<T>(
+    val label: @Composable () -> String,
+    val sorted: (Iterable<T>) -> List<T>,
+) {
+    companion object {
+        fun <T> nameAsc(name: (T) -> String): SortBy<T> = SortBy(
+            label = { stringResource(Res.string.sort_by_name_asc) },
+            sorted = { items -> items.sortedBy { name(it) } }
+        )
+
+        fun <T> nameDesc(name: (T) -> String): SortBy<T> = SortBy(
+            label = { stringResource(Res.string.sort_by_name_desc) },
+            sorted = { items -> items.sortedByDescending { name(it) } }
+        )
+
+        fun <T> defaults(name: (T) -> String): List<SortBy<T>> = listOf(
+            nameAsc(name),
+            nameDesc(name),
+        )
+    }
 }
+
+class Filter<T>(
+    val label: @Composable () -> String,
+    val predicate: (T) -> Boolean
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +97,17 @@ fun <T> ListView(
     emptyItemsText: String,
     itemIdProvider: (T) -> Any,
     isCreatingSupported: Boolean = true,
+    /**
+     * Map of filters to apply to the items.
+     * The key is the filter name, and the value is a pair of a composable that returns the filter label and a predicate that returns true if the item should be included.
+     */
+    filters: Map<String, Filter<T>> = emptyMap(),
+    /**
+     * List of sorting options for the items.
+     *
+     * Cannot be empty.
+     */
+    sortByOptions: List<SortBy<T>> = SortBy.defaults(itemDisplayName),
     itemLeadingContent: (@Composable (T) -> Unit)? = null,
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
@@ -130,6 +164,8 @@ fun <T> ListView(
                 itemLeadingContent = itemLeadingContent,
                 itemTrailingContent = itemTrailingContent,
                 selectedItem = selectedItem,
+                filters = filters,
+                sortByOptions = sortByOptions,
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
@@ -182,6 +218,8 @@ fun <T> ListView(
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
                 selectedItem = selectedItem,
+                filters = filters,
+                sortByOptions = sortByOptions,
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
@@ -204,18 +242,35 @@ fun <T> ListView_ListColumn(
     onSelectedItemChange: (T) -> Unit,
     isCreatingSupported: Boolean,
     onCreateRequested: (() -> Unit)? = null,
+    /**
+     * Map of filters to apply to the items.
+     * The key is the filter name, and the value is a pair of a composable that returns the filter label and a predicate that returns true if the item should be included.
+     */
+    filters: Map<String, Filter<T>> = emptyMap(),
+    /**
+     * List of sorting options for the items.
+     *
+     * Cannot be empty.
+     */
+    sortByOptions: List<SortBy<T>> = SortBy.defaults(itemDisplayName),
     modifier: Modifier = Modifier
 ) {
     var search by remember { mutableStateOf("") }
-    var sortBy by remember { mutableStateOf(SortBy.NAME_ASC) }
-    val filteredItems = remember(items, search) {
-        items.orEmpty().filter { itemDisplayName(it).contains(search, ignoreCase = true) }
-    }
-    val filteredAndSortedItems = remember(filteredItems, sortBy) {
-        when (sortBy) {
-            SortBy.NAME_ASC -> filteredItems.sortedBy { itemDisplayName(it) }
-            SortBy.NAME_DESC -> filteredItems.sortedByDescending { itemDisplayName(it) }
+    var sortBy by remember { mutableStateOf(sortByOptions.first()) }
+    var activeFilters by remember { mutableStateOf<List<String>>(emptyList()) }
+    val filteredItems = remember(items, filters, activeFilters) {
+        if (filters.isEmpty() || activeFilters.isEmpty()) items
+        else items?.filter { item ->
+            activeFilters.all { key ->
+                filters.getValue(key).predicate(item)
+            }
         }
+    }
+    val searchedItems = remember(filteredItems, search) {
+        filteredItems.orEmpty().filter { itemDisplayName(it).contains(search, ignoreCase = true) }
+    }
+    val filteredAndSortedItems = remember(searchedItems, sortBy) {
+        sortBy.sorted(searchedItems)
     }
 
     Column(modifier = modifier) {
@@ -242,10 +297,28 @@ fun <T> ListView_ListColumn(
                             onClick = onCreateRequested,
                         )
                     }
+                    if (filters.isNotEmpty()) {
+                        DropdownIconButton(
+                            imageVector = if (activeFilters.isEmpty()) Icons.Default.FilterListOff else Icons.Default.FilterList,
+                            items = filters.keys,
+                            selectedItems = activeFilters,
+                            onItemClicked = { filterKey ->
+                                if (activeFilters.contains(filterKey)) {
+                                    activeFilters -= filterKey
+                                } else {
+                                    activeFilters += filterKey
+                                }
+                            },
+                            toString = { filterKey ->
+                                filters.getValue(filterKey).label()
+                            },
+                        )
+                    }
                     DropdownIconButton(
                         imageVector = Icons.AutoMirrored.Filled.Sort,
-                        items = SortBy.entries,
-                        toString = { stringResource(it.displayNameRes) },
+                        items = sortByOptions,
+                        selection = sortBy,
+                        toString = { it.label() },
                         onItemSelected = { sortBy = it },
                     )
                 }

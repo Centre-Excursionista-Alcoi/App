@@ -26,6 +26,10 @@
     <string name="search">Search...</string>
     <string name="sort_by_name_asc">Sort by Name (A-Z)</string>
     <string name="sort_by_name_desc">Sort by Name (Z-A)</string>
+    <string name="sort_by_has_insurance_first">Has Insurance First</string>
+    <string name="sort_by_has_insurance_last">Has Insurance Last</string>
+    <string name="sort_by_signed_lendings_first">Signed Up for Lendings First</string>
+    <string name="sort_by_signed_lendings_last">Signed Up for Lendings Last</string>
 
     <string name="home_lendings">Your Lendings</string>
     <string name="home_lending">Material Lending</string>
@@ -211,6 +215,9 @@
     <string name="management_promote_user">Promote</string>
     <string name="management_promote_user_title">Promote user</string>
     <string name="management_promote_user_confirmation">Are you sure that you want to promote %1$s to be an administrator?</string>
+
+    <string name="management_user_signed_up_for_lendings">Signed lendings agreement</string>
+    <string name="management_user_has_insurance">Has a valid insurance</string>
 
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>

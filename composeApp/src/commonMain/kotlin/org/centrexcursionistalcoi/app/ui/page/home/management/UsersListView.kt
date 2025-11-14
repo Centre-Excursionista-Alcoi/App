@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -66,6 +68,27 @@ fun UsersListView(
         itemIdProvider = { it.id },
         itemDisplayName = { it.fullName },
         emptyItemsText = stringResource(Res.string.management_no_users),
+        itemTrailingContent = { user ->
+            if (user.lendingUser != null) {
+                TooltipIconButton(
+                    imageVector = Icons.Default.Inventory2,
+                    tooltip = stringResource(Res.string.management_user_signed_up_for_lendings),
+                    enabled = false,
+                    positioning = TooltipAnchorPosition.Left,
+                    onClick = {},
+                )
+            }
+            val hasActiveInsurances = user.insurances.any { it.isActive() }
+            if (hasActiveInsurances) {
+                TooltipIconButton(
+                    imageVector = Icons.Default.HealthAndSafety,
+                    tooltip = stringResource(Res.string.management_user_has_insurance),
+                    enabled = false,
+                    positioning = TooltipAnchorPosition.Left,
+                    onClick = {},
+                )
+            }
+        },
         itemToolbarActions = { user ->
             if (!user.isAdmin()) {
                 TooltipIconButton(
@@ -76,6 +99,28 @@ fun UsersListView(
                 )
             }
         },
+        filters = mapOf(
+            "signed_up_for_lendings" to Filter({ stringResource(Res.string.management_user_signed_up_for_lendings) }, { it.lendingUser != null }),
+            "has_active_insurances" to Filter({ stringResource(Res.string.management_user_has_insurance) }, { u -> u.insurances.any { it.isActive() } }),
+        ),
+        sortByOptions = SortBy.defaults<UserData> { it.fullName } + listOf(
+            /*SortBy(
+                label = { stringResource(Res.string.sort_by_has_insurance_first) },
+                sorted = { it.sortedBy { u -> u.insurances.isNotEmpty() } },
+            ),
+            SortBy(
+                label = { stringResource(Res.string.sort_by_has_insurance_last) },
+                sorted = { it.sortedBy { u -> u.insurances.isEmpty() } },
+            ),
+            SortBy(
+                label = { stringResource(Res.string.sort_by_signed_lendings_first) },
+                sorted = { it.sortedBy { u -> u.lendingUser != null } },
+            ),
+            SortBy(
+                label = { stringResource(Res.string.sort_by_signed_lendings_last) },
+                sorted = { it.sortedBy { u -> u.lendingUser == null } },
+            ),*/
+        ),
         // users cannot be created or edited
         isCreatingSupported = false,
         editItemContent = null,
