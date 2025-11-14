@@ -209,8 +209,7 @@ fun Route.webDavRoutes() {
             }
 
             val xml = buildMultiStatusXml(call.request.path(), path, responses)
-            val multiStatus = HttpStatusCode(207, "Multi-Status")
-            call.respondText(xml, ContentType.parse("application/xml; charset=utf-8"), multiStatus)
+            call.respondText(xml, ContentType.parse("application/xml; charset=utf-8"), HttpStatusCode.MultiStatus)
         }
     }
 }
