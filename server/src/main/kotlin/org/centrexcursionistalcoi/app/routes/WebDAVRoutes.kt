@@ -125,6 +125,7 @@ fun Route.webDavRoutes() {
                     val html = buildHtmlIndex(call.request.path(), path, list)
                     call.respondText(html, ContentType.Text.Html)
                 } else {
+                    call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
                     call.respond(HttpStatusCode.NotFound)
                 }
             }
@@ -139,6 +140,7 @@ fun Route.webDavRoutes() {
             val data = try {
                 VirtualFileSystem.read(path)
             } catch (e: Throwable) {
+                logger.error("Error reading file at path: $path", e)
                 null
             }
 
@@ -155,6 +157,7 @@ fun Route.webDavRoutes() {
                 if (list != null) {
                     call.respond(HttpStatusCode.OK)
                 } else {
+                    call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
                     call.respond(HttpStatusCode.NotFound)
                 }
             }
@@ -196,6 +199,7 @@ fun Route.webDavRoutes() {
                 }
 
                 if (dirList == null) {
+                    call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
                     call.respond(HttpStatusCode.NotFound)
                     return@propfind
                 }
@@ -233,14 +237,11 @@ private fun buildHtmlIndex(requestPath: String, dirPath: String, list: List<Virt
     sb.append(escapeHtml(base))
     sb.append("</h1><ul>")
     if (dirPath.isNotEmpty()) {
-        val parent = dirPath.substringBeforeLast('/', "")
-        val parentPathRelative = if (parent.isEmpty()) "" else parent
-        val parentHref = if (parentPathRelative.isEmpty()) base else "$base/${encodePath(parentPathRelative)}"
+        val parentHref = dirPath.trimEnd('/').substringBeforeLast('/', "")
         sb.append("<li><a href=\"${escapeHtml(parentHref)}\">..</a></li>")
     }
     for (it in list) {
-        val hrefRelative = if (dirPath.isEmpty()) it.name else "$dirPath/${it.name}"
-        val href = if (base.isEmpty() || base == "/") "/${encodePath(hrefRelative)}" else "$base/${encodePath(hrefRelative)}"
+        val href = it.path
         val display = if (it.isDirectory) "${it.name}/" else it.name
         sb.append("<li><a href=\"${escapeHtml(href)}\">${escapeHtml(display)}</a></li>")
     }
@@ -264,7 +265,7 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
     for (it in items) {
         val href = if (it.path == basePath || basePath.isEmpty() && it.path.isEmpty()) {
             // the requested resource itself
-            if (baseRequest.isEmpty()) "/" else baseRequest
+            baseRequest.ifEmpty { "/" }
         } else {
             // child item within the requested dir -> append the child name
             val prefix = if (baseRequest.isEmpty()) "/" else "$baseRequest/"

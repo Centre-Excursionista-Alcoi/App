@@ -9,8 +9,11 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.slf4j.LoggerFactory
 
 object VirtualFileSystem {
     data class Item(
@@ -21,24 +24,40 @@ object VirtualFileSystem {
         val lastModified: Instant? = null
     )
 
-    private class RootDir<Id: Any, E: Entity<Id>>(
+    private class RootDir<Id : Any, E : Entity<Id>>(
         val entityClass: EntityClass<Id, E>,
+        val fallbackExtension: String? = null,
+        val idConverter: (String) -> Id?,
         val accessor: (E) -> FileEntity?,
     ) {
         fun all(): List<FileEntity> {
             return Database { entityClass.all().mapNotNull { entity -> accessor(entity) } }
         }
+
+        context(_: JdbcTransaction)
+        fun findByStringId(idStr: String): FileEntity? {
+            val id = idConverter(idStr) ?: throw IllegalArgumentException("Invalid ID: $idStr")
+            return findById(id)
+        }
+
+        context(_: JdbcTransaction)
+        fun findById(id: Id): FileEntity? {
+            val entity = entityClass.findById(id) ?: return null
+            return accessor(entity)
+        }
     }
 
+    private val logger = LoggerFactory.getLogger(VirtualFileSystem::class.java)
+
     private val rootDirs: Map<String, RootDir<*, *>> = mapOf(
-        "Departments" to RootDir(DepartmentEntity) { it.image },
-        "Inventory Item" to RootDir(InventoryItemTypeEntity) { it.image },
-        "Lending Memories" to RootDir(LendingEntity) { it.memoryDocument },
-        "Insurances" to RootDir(UserInsuranceEntity) { it.document },
+        "Departments" to RootDir(DepartmentEntity, idConverter = { it.toIntOrNull() }) { it.image },
+        "Inventory Item" to RootDir(InventoryItemTypeEntity, idConverter = { it.toUUIDOrNull() }) { it.image },
+        "Lending Memories" to RootDir(LendingEntity, idConverter = { it.toUUIDOrNull() }) { it.memoryDocument },
+        "Insurances" to RootDir(UserInsuranceEntity, idConverter = { it.toUUIDOrNull() }) { it.document },
     )
 
     fun list(path: String): List<Item>? {
-        val parts = path.trim('/').split('/').filter { it.isNotEmpty() }
+        val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
         if (parts.isEmpty()) {
             // root directory
             return rootDirs.map { (dirName) ->
@@ -55,13 +74,26 @@ object VirtualFileSystem {
             return Database {
                 rootDir.all().map { fileEntity ->
                     val fileName = fileEntity.name ?: fileEntity.id.value.toString()
-                    val fileExtensions = fileEntity.type?.let(ContentType::parse)?.fileExtensions()
-                    val fileExtension = fileExtensions?.firstOrNull()
-                    val fileNameWithExtension = "$fileName${fileExtension?.let { ".$it" } ?: ""}"
+                    val fileNameHasExtension = fileName.contains('.')
+                    val fileNameWithExtension = if (fileNameHasExtension) fileName else {
+                        val fileExtension = fileEntity.type
+                            ?.let(ContentType::parse)
+                            // Ignore application/octet-stream as it is too generic
+                            ?.takeUnless { it == ContentType.Application.OctetStream }
+                            ?.fileExtensions()
+                            ?.firstOrNull()
+                            ?.let { ".$it" }
+                        // If no extension from content type, use fallback extension from root dir
+                            ?: rootDir.fallbackExtension
+                                ?.let { ".$it" }
+                            // If no fallback extension, use empty string (no extension)
+                            ?: ""
+                        "$fileName$fileExtension"
+                    }
                     val bytes = fileEntity.data
                     Item(
-                        path = "$dirName/$fileNameWithExtension",
-                        name = "$fileName$fileNameWithExtension",
+                        path = "$dirName/${fileEntity.id.value}",
+                        name = fileNameWithExtension,
                         isDirectory = false,
                         size = bytes.size.toLong(),
                         lastModified = fileEntity.lastModified,
@@ -75,21 +107,16 @@ object VirtualFileSystem {
     }
 
     fun read(path: String): ByteArray? {
-        val parts = path.trim('/').split('/').filter { it.isNotEmpty() }
+        logger.debug("Reading file at path: $path")
+        val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
+        // Expecting exactly two parts: [rootDir, fileId]
         if (parts.size != 2) return null
         val dirName = parts[0]
-        val fileName = parts[1]
+        val fileId = parts[1]
+
         val rootDir = rootDirs[dirName] ?: throw IllegalArgumentException("Invalid directory: $dirName")
         return Database {
-            val fileEntity = rootDir.all().firstOrNull { fileEntity ->
-                val storedFileName = fileEntity.name ?: fileEntity.id.value.toString()
-                val fileExtensions = fileEntity.type?.let(ContentType::parse)?.fileExtensions()
-                val fileExtension = fileExtensions?.firstOrNull()
-                val storedFileNameWithExtension = "$storedFileName${fileExtension?.let { ".$it" } ?: ""}"
-                storedFileNameWithExtension == fileName
-            }
-            if (fileEntity == null) return@Database null
-
+            val fileEntity = rootDir.findByStringId(fileId) ?: return@Database null
             fileEntity.data
         }
     }
