@@ -58,6 +58,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
     val basicAuth = call.request.basicAuthenticationCredentials()
     if (basicAuth == null) {
         call.response.header(HttpHeaders.CEAWebDAVMessage, "Missing or invalid Authorization header")
+        call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"WebDAV Admin Area\"")
         call.respond(HttpStatusCode.Unauthorized)
         return false
     } else {
