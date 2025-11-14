@@ -5,6 +5,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
@@ -37,7 +38,7 @@ object ProfileRemoteRepository {
             progressNotifier?.let { monitorDownloadProgress(it) }
 
             if (lastProfileSync != null) {
-                headers.append("If-Modified-Since", HttpDateFormatter.format(lastProfileSync))
+                headers.append(HttpHeaders.IfModifiedSince, HttpDateFormatter.format(lastProfileSync))
             }
         }
         val status = response.status
