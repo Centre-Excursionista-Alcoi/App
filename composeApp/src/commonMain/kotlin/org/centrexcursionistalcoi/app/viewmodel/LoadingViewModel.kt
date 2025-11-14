@@ -28,11 +28,11 @@ class LoadingViewModel(
 ) : ViewModel() {
     companion object {
         suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
-            Napier.d { "Getting profile..." }
-            val profile = ProfileRemoteRepository.getProfile(progressNotifier)
-            return if (profile != null) {
-                Napier.d { "User is logged in, updating cached profile data..." }
-                ProfileRepository.update(profile)
+            Napier.d { "Synchronizing profile..." }
+            val syncedProfile = ProfileRemoteRepository.synchronize(progressNotifier)
+            return if (syncedProfile) {
+                Napier.d { "User is logged in" }
+                val profile = ProfileRepository.getProfile()!!
 
                 Napier.d { "Updating Sentry user context..." }
                 Sentry.setUser(

@@ -9,6 +9,11 @@ import com.russhwolf.settings.observable.makeObservable
 val settings: ObservableSettings = Settings().makeObservable()
 
 /**
+ * Key for storing the last profile synchronization timestamp.
+ */
+const val SETTINGS_LAST_PROFILE_SYNC = "last_profile_sync"
+
+/**
  * Key for storing the selected language in the settings.
  */
 const val SETTINGS_LANGUAGE = "language"

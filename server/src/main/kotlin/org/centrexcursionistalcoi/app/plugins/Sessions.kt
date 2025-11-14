@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.response.header
 import io.ktor.server.routing.RoutingContext
@@ -42,11 +43,13 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
             )
         } ?: error("User with NIF $nif not found")
 
-        fun RoutingContext.getUserSession(): UserSession? {
-            val session = call.sessions.get<UserSession>()
-            call.response.header("CEA-LoggedIn", (session != null).toString())
+        fun ApplicationCall.getUserSession(): UserSession? {
+            val session = sessions.get<UserSession>()
+            response.header("CEA-LoggedIn", (session != null).toString())
             return session
         }
+
+        fun RoutingContext.getUserSession(): UserSession? = call.getUserSession()
 
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
             val session = getUserSession()

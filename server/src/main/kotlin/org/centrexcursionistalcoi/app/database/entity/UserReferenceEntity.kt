@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
+import org.centrexcursionistalcoi.app.now
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -25,6 +26,8 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     }
 
     var sub by UserReferences.sub
+
+    var lastUpdate by UserReferences.lastUpdate
 
     var nif by UserReferences.nif
     var memberNumber by UserReferences.memberNumber
@@ -83,6 +86,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
                 }
             }
         }
+        Database { lastUpdate = now() }
     }
 
     context(_: JdbcTransaction)
