@@ -24,7 +24,10 @@ object VirtualFileSystem {
     )
 
     private val rootDirs = mapOf(
-        "Departments" to RootDir(DepartmentEntity) { it.image }
+        "Departments" to RootDir(DepartmentEntity) { it.image },
+        "Inventory Item" to RootDir(InventoryItemTypeEntity) { it.image },
+        "Lending Memories" to RootDir(LendingEntity) { it.memoryDocument },
+        "Insurances" to RootDir(UserInsuranceEntity) { it.document },
     )
 
     fun list(path: String): List<Item>? {
