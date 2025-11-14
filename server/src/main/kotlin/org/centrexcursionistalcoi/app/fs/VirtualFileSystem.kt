@@ -62,7 +62,7 @@ object VirtualFileSystem {
             // root directory
             return rootDirs.map { (dirName) ->
                 Item(
-                    path = "$dirName/",
+                    path = "/webdav/$dirName/",
                     name = dirName,
                     isDirectory = true,
                 )
@@ -92,7 +92,7 @@ object VirtualFileSystem {
                     }
                     val bytes = fileEntity.data
                     Item(
-                        path = "$dirName/${fileEntity.id.value}",
+                        path = "/webdav/$dirName/${fileEntity.id.value}",
                         name = fileNameWithExtension,
                         isDirectory = false,
                         size = bytes.size.toLong(),
