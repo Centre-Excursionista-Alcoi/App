@@ -3,10 +3,12 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.http.parametersOf
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -25,6 +27,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
@@ -46,6 +50,26 @@ class TestProfileRoutes : ApplicationTestBase() {
         assertContentEquals(listOf("user"), response.groups)
         assertNull(response.lendingUser)
         assertTrue(response.insurances.isEmpty())
+    }
+
+    @Test
+    fun test_conditionalHeaders_ifModifiedSince() {
+        try {
+            // GMT: Tuesday 20 October 2015 0:00:00
+            now = { Instant.ofEpochSecond(1445299200) }
+
+            runApplicationTest(
+                shouldLogIn = LoginType.USER,
+            ) {
+                client.get("/profile") {
+                    headers.append(HttpHeaders.IfModifiedSince, "Wed, 21 Oct 2015 07:28:00 GMT")
+                }.apply {
+                    assertStatusCode(HttpStatusCode.NotModified)
+                }
+            }
+        } finally {
+            resetTimeFunctions()
+        }
     }
 
     private val lendingAllParameters = mapOf(

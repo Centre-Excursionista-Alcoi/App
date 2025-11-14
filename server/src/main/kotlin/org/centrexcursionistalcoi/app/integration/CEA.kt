@@ -9,6 +9,7 @@ import kotlinx.serialization.csv.Csv
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
@@ -76,6 +77,8 @@ object CEA {
                         email = member.email
                         groups = listOf("cea_member")
                         isDisabled = member.isDisabled
+
+                        lastUpdate = now()
                     }
                 }
                 logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
