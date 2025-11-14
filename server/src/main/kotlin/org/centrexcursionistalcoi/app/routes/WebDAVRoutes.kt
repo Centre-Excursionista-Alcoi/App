@@ -24,6 +24,7 @@ import io.ktor.server.sessions.set
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import org.centrexcursionistalcoi.app.CEAWebDAVMessage
+import org.centrexcursionistalcoi.app.CEAWebDAVNormalizedPath
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -99,6 +100,8 @@ fun Route.webDavRoutes() {
 
             val raw = call.parameters["path"] ?: ""
             val path = normalizePath(raw)
+            call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
+
             // Try reading a file
             val data = try {
                 VirtualFileSystem.read(path)
@@ -137,6 +140,8 @@ fun Route.webDavRoutes() {
             // HEAD behaves like GET but without body
             val raw = call.parameters["path"] ?: ""
             val path = normalizePath(raw)
+            call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
+
             val data = try {
                 VirtualFileSystem.read(path)
             } catch (e: Throwable) {
@@ -169,6 +174,8 @@ fun Route.webDavRoutes() {
 
             val raw = call.parameters["path"] ?: ""
             val path = normalizePath(raw)
+            call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
+
             val depthHeader = call.request.header(HttpHeaders.Depth) ?: "1"
             val depth = when (depthHeader) {
                 "0" -> 0
@@ -219,13 +226,8 @@ fun Route.webDavRoutes() {
     }
 }
 
-/** Normalize incoming path param to a canonical form (no leading slash, empty for root) */
 private fun normalizePath(raw: String): String {
-    var p = raw.trim()
-    if (p.startsWith("/")) p = p.removePrefix("/")
-    // remove trailing slash unless it is root
-    if (p.endsWith("/") && p.length > 1) p = p.removeSuffix("/")
-    return p
+    return raw.trim('/', ' ')
 }
 
 private fun buildHtmlIndex(requestPath: String, dirPath: String, list: List<VirtualFileSystem.Item>): String {
