@@ -19,9 +19,10 @@ import io.ktor.server.routing.head
 import io.ktor.server.routing.method
 import io.ktor.server.routing.options
 import io.ktor.server.routing.route
+import io.ktor.server.sessions.sessions
+import io.ktor.server.sessions.set
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.CEAWebDAVMessage
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
@@ -73,6 +74,9 @@ private suspend fun RoutingContext.handleSession(): Boolean {
             call.respond(HttpStatusCode.Forbidden)
             return false
         }
+
+        logger.info("WebDAV login successful for admin user (${session.sub}). Sending session cookie...")
+        call.sessions.set(session)
     }
     return true
 }
