@@ -27,6 +27,12 @@ var now: () -> Instant = { Instant.now() }
     @VisibleForTesting
     set
 
+@VisibleForTesting
+internal fun resetTimeFunctions() {
+    today = { LocalDate.now() }
+    now = { Instant.now() }
+}
+
 fun main() {
     logger.info("Starting Centre Excursionista d'Alcoi server version $version")
 
