@@ -122,6 +122,7 @@ object Database {
 
     @TestOnly
     fun clear() {
+        if (database == null) return
         this {
             SchemaUtils.drop(*tables)
             SchemaUtils.create(*tables)
