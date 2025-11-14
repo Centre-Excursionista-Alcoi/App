@@ -1,6 +1,10 @@
 package org.centrexcursionistalcoi.app
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -11,7 +15,16 @@ import io.github.aakira.napier.Antilog
 import io.github.aakira.napier.LogLevel
 import io.github.aakira.napier.Napier
 import io.sentry.kotlin.multiplatform.Sentry
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.jetbrains.compose.resources.painterResource
+
+object PointerEventFlow {
+    private val mutableFlow = MutableStateFlow<PointerEvent?>(null)
+    val flow = mutableFlow.asStateFlow()
+
+    fun tryEmit(event: PointerEvent) = mutableFlow.tryEmit(event)
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
@@ -40,7 +53,19 @@ fun main() {
             ),
             onCloseRequest = ::exitApplication,
         ) {
-            MainApp()
+            Box(
+                modifier = Modifier.pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        Napier.d { "Listening for pointer events..." }
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            PointerEventFlow.tryEmit(event)
+                        }
+                    }
+                }
+            ) {
+                MainApp()
+            }
         }
     }
 }

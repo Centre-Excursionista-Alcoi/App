@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
 import org.jetbrains.compose.resources.pluralStringResource
@@ -404,6 +405,10 @@ fun ListView_Content(
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
 ) {
+    PlatformBackHandler {
+        onCloseRequested()
+    }
+
     Surface(
         // Rounded corners on the left side
         shape = shape,
