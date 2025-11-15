@@ -125,27 +125,11 @@ fun LendingsListView(
                             onSkipMemoryRequest = { onSkipMemoryRequest(lending) },
                             users = users,
                             extraContent = {
-                                when (lending.status()) {
-                                    Lending.Status.CONFIRMED -> {
-                                        ElevatedButton(
-                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                            onClick = { onGiveRequested(lending) }
-                                        ) {
-                                            Text(stringResource(Res.string.management_lending_give))
-                                        }
-                                    }
-                                    Lending.Status.TAKEN -> {
-                                        ElevatedButton(
-                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                            onClick = { onReceiveRequested(lending) }
-                                        ) {
-                                            Text(stringResource(Res.string.management_lending_receive))
-                                        }
-                                    }
-                                    else -> {
-                                        // nothing
-                                    }
-                                }
+                                LendingManagementScreenContent_ExtraContent(
+                                    lending = lending,
+                                    onGiveRequested = onGiveRequested,
+                                    onReceiveRequested = onReceiveRequested,
+                                )
                             },
                         )
                     }
@@ -170,27 +154,11 @@ fun LendingsListView(
                     onConfirmRequest = { onConfirmLendingRequest(lending) },
                     onSkipMemoryRequest = { onSkipMemoryRequest(lending) },
                     extraContent = {
-                        when (lending.status()) {
-                            Lending.Status.CONFIRMED -> {
-                                ElevatedButton(
-                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
-                                    onClick = { onGiveRequested(lending) }
-                                ) {
-                                    Text(stringResource(Res.string.management_lending_give))
-                                }
-                            }
-                            Lending.Status.RETURNED -> {
-                                ElevatedButton(
-                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp, start = 12.dp, end = 12.dp),
-                                    onClick = { onReceiveRequested(lending) }
-                                ) {
-                                    Text(stringResource(Res.string.management_lending_receive))
-                                }
-                            }
-                            else -> {
-                                // nothing
-                            }
-                        }
+                        LendingManagementScreenContent_ExtraContent(
+                            lending = lending,
+                            onGiveRequested = onGiveRequested,
+                            onReceiveRequested = onReceiveRequested,
+                        )
                     },
                 )
             }
@@ -202,6 +170,35 @@ fun LendingsListView(
                 selectedLending = selectedLending,
                 onClick = { selectedLending = it }
             )
+        }
+    }
+}
+
+@Composable
+private fun LendingManagementScreenContent_ExtraContent(
+    lending: ReferencedLending,
+    onGiveRequested: (ReferencedLending) -> Unit,
+    onReceiveRequested: (ReferencedLending) -> Unit,
+) {
+    when (lending.status()) {
+        Lending.Status.CONFIRMED -> {
+            ElevatedButton(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                onClick = { onGiveRequested(lending) }
+            ) {
+                Text(stringResource(Res.string.management_lending_give))
+            }
+        }
+        Lending.Status.TAKEN -> {
+            ElevatedButton(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                onClick = { onReceiveRequested(lending) }
+            ) {
+                Text(stringResource(Res.string.management_lending_receive))
+            }
+        }
+        else -> {
+            // nothing
         }
     }
 }
