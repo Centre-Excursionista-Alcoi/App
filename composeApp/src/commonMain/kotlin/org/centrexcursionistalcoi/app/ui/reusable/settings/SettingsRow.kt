@@ -22,7 +22,7 @@ fun SettingsRow(
     icon: ImageVector? = null,
     contentDescription: String? = title,
     trailingContent: @Composable (() -> Unit)? = null,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     ListItem(
         headlineContent = { Text(title) },
@@ -45,6 +45,6 @@ fun SettingsRow(
                 )
             }
         },
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
     )
 }

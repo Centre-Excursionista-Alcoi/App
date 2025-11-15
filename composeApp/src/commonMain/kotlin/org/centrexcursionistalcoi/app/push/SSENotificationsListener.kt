@@ -10,6 +10,8 @@ import io.ktor.client.plugins.sse.sse
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
@@ -22,6 +24,9 @@ import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
 
 object SSENotificationsListener {
     private var job: Job? = null
+
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected = _isConnected.asStateFlow()
 
     private val client = HttpClient {
         defaultRequest {
@@ -51,6 +56,7 @@ object SSENotificationsListener {
         job = CoroutineScope(defaultAsyncDispatcher).launch {
             client.sse("/events") {
                 Napier.i(tag = "SSE") { "Listening for events." }
+                _isConnected.value = true
                 while (true) {
                     incoming.collect { event ->
                         val type = event.event
@@ -82,11 +88,13 @@ object SSENotificationsListener {
                     }
                 }
             }
+            _isConnected.value = false
         }
     }
 
     fun stopListening() {
         job?.cancel()
         job = null
+        _isConnected.value = false
     }
 }
