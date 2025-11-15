@@ -116,6 +116,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         } else {
                             stringResource(Res.string.settings_push_connection_message_disconnected)
                         } + (sseError?.message?.let { "\n$it" } ?: ""),
+                        onClick = if (sseError != null) { { SSENotificationsListener.startListening() } } else null
                     )
                 }
             }
