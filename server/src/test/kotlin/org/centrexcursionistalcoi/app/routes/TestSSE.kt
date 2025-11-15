@@ -43,6 +43,7 @@ class TestSSE : ApplicationTestBase() {
         try {
             // wait for connection to be established
             while (!connectionEstablished) delay(10)
+            delay(50) // wait for the event to be received
             assertEquals("connection", type, "Didn't receive the connection event.") // initial connection event
             type = null // reset for next tests
 
@@ -53,6 +54,7 @@ class TestSSE : ApplicationTestBase() {
                 userSub = "other",
                 includeAdmins = true,
             )
+            delay(50) // wait for the event to be received
 
             type.let { notificationType ->
                 assertNotNull(notificationType)
@@ -60,8 +62,8 @@ class TestSSE : ApplicationTestBase() {
             }
             data.let { notificationData ->
                 assertNotNull(notificationData)
-                assertEquals(notificationData["lendingId"], Uuid.Zero.toString())
-                assertEquals(notificationData["userSub"], "def")
+                assertEquals(Uuid.Zero.toString(), notificationData["lendingId"])
+                assertEquals("xyz", notificationData["userSub"])
             }
 
             // reset for next test
@@ -75,6 +77,7 @@ class TestSSE : ApplicationTestBase() {
                 userSub = "other",
                 includeAdmins = false,
             )
+            delay(50) // wait for the event to be received
 
             assertEquals(null, type)
             assertEquals(null, data)
@@ -86,6 +89,7 @@ class TestSSE : ApplicationTestBase() {
                 userSub = "test-user-id-456",
                 includeAdmins = false,
             )
+            delay(50) // wait for the event to be received
 
             type.let { notificationType ->
                 assertNotNull(notificationType)
@@ -93,8 +97,8 @@ class TestSSE : ApplicationTestBase() {
             }
             data.let { notificationData ->
                 assertNotNull(notificationData)
-                assertEquals(notificationData["lendingId"], Uuid.Zero.toString())
-                assertEquals(notificationData["userSub"], "abc")
+                assertEquals(Uuid.Zero.toString(), notificationData["lendingId"])
+                assertEquals("xyz", notificationData["userSub"])
             }
         } finally {
             job.cancel()

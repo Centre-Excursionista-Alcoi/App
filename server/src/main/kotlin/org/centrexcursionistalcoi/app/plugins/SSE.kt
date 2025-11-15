@@ -31,7 +31,6 @@ fun Route.configureSSERoutes() {
 
         Push.flow(session).collect { notification ->
             val data = notification.toMap()
-                .filterKeys { it == "type" }
                 .toList()
                 .joinToString("&") { (key, value) -> "$key=$value" }
 
