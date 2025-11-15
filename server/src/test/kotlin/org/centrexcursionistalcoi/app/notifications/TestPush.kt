@@ -6,6 +6,7 @@ import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -34,6 +35,7 @@ class TestPush {
                 userSub = "def",
                 includeAdmins = true,
             )
+            delay(50) // give some time for the coroutine to process
 
             notification.let { noti ->
                 assertNotNull(noti)
@@ -49,6 +51,7 @@ class TestPush {
                 userSub = "def",
                 includeAdmins = false,
             )
+            delay(50) // give some time for the coroutine to process
 
             assertNull(notification)
 
@@ -61,6 +64,7 @@ class TestPush {
                 userSub = "abc",
                 includeAdmins = false,
             )
+            delay(50) // give some time for the coroutine to process
 
             notification.let { noti ->
                 assertNotNull(noti)
