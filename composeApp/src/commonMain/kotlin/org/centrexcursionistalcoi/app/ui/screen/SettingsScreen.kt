@@ -108,13 +108,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
                 item(key = "push_sse_connected", contentType = "info") {
                     val isConnected by SSENotificationsListener.isConnected.collectAsState()
+                    val sseError by SSENotificationsListener.sseException.collectAsState()
                     SettingsRow(
                         title = stringResource(Res.string.settings_push_connection_title),
                         summary = if (isConnected) {
                             stringResource(Res.string.settings_push_connection_message_connected)
                         } else {
                             stringResource(Res.string.settings_push_connection_message_disconnected)
-                        },
+                        } + (sseError?.message?.let { "\n$it" } ?: ""),
                     )
                 }
             }
