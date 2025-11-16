@@ -5,8 +5,8 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleURLSchemes</key>
-    <array>
-      <string>cea</string>
-    </array>
+	<array>
+		<string>cea</string>
+	</array>
 </dict>
 </plist>
