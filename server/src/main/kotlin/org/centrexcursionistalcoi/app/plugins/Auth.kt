@@ -16,6 +16,29 @@ import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.security.Passwords
 
+/**
+ * Attempts to log in a user with the given NIF and password.
+ * @param nif The NIF of the user.
+ * @param password The password of the user.
+ * @return An Error if the login failed, or null if it succeeded.
+ */
+fun login(nif: String, password: CharArray): Error? {
+    // check that the user exists
+    val existingReference = Database { UserReferenceEntity.findByNif(nif) }
+    if (existingReference == null) {
+        return Error.IncorrectPasswordOrNIF()
+    }
+
+    val passwordHash = existingReference.password ?: return Error.PasswordNotSet()
+
+    // verify password
+    if (!Passwords.verify(password, passwordHash)) {
+        return Error.IncorrectPasswordOrNIF()
+    }
+
+    return null
+}
+
 fun Route.configureAuthRoutes() {
     post("/login") {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
@@ -27,17 +50,9 @@ fun Route.configureAuthRoutes() {
         if (nif == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
         if (password == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
 
-        // check that the user exists
-        val existingReference = Database { UserReferenceEntity.findByNif(nif) }
-        if (existingReference == null) {
-            return@post call.respondError(Error.IncorrectPasswordOrNIF())
-        }
-
-        val passwordHash = existingReference.password ?: return@post call.respondError(Error.PasswordNotSet())
-
-        // verify password
-        if (!Passwords.verify(password, passwordHash)) {
-            return@post call.respondError(Error.IncorrectPasswordOrNIF())
+        val error = login(nif, password)
+        if (error != null) {
+            return@post call.respondError(error)
         }
 
         // Success, set session and respond accordingly

@@ -13,15 +13,6 @@ services:
       DB_URL: jdbc:postgresql://db:5432/postgres
       DB_USER: postgres
       DB_PASS: 1234567890abcdef
-      # Auth Configuration
-      OAUTH_CLIENT_ID: your_client_id
-      OAUTH_CLIENT_SECRET: your_client_secret
-      OAUTH_ISSUER: https://your-issuer.com
-      OAUTH_AUTH_ENDPOINT: https://your-issuer.com/auth
-      OAUTH_TOKEN_ENDPOINT: https://your-issuer.com/token
-      OAUTH_USERINFO_ENDPOINT: https://your-issuer.com/userinfo
-      OAUTH_JWKS_ENDPOINT: https://your-issuer.com/jwk
-      OAUTH_REDIRECT_URI: http://localhost:8080/callback
       # Redis Configuration
       REDIS_ENDPOINT: redis:6379
       # Email Configuration
