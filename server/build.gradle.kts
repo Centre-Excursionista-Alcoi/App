@@ -114,6 +114,7 @@ dependencies {
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
     testImplementation(libs.bundles.testcontainers)
 }
 
