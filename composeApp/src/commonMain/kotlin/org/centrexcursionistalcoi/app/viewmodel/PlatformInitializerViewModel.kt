@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.platform.PlatformLoadLogic
+import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 
 class PlatformInitializerViewModel(url: Url?): ViewModel() {
     private val _isReady = MutableStateFlow(false)
@@ -27,6 +28,8 @@ class PlatformInitializerViewModel(url: Url?): ViewModel() {
                 _startDestination.value = Destination.fromUrl(url)
                     ?.also { Napier.i { "Start destination: $it" } }
             }
+
+            SSENotificationsListener.startListening()
 
             _isReady.emit(true)
         }

@@ -7,6 +7,10 @@ import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 @Serializable
 sealed interface PushNotification {
     companion object {
+        /**
+         * Creates a [PushNotification] from the given [data] map.
+         * @throws IllegalArgumentException if the data is invalid or missing required fields.
+         */
         fun fromData(data: Map<String, *>): PushNotification {
             val type = data["type"] ?: throw IllegalArgumentException("Missing type field in push notification data")
 

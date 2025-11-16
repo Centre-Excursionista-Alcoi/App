@@ -52,6 +52,8 @@ fun Application.configureRouting() {
 
         configureAuthRoutes()
 
+        configureSSERoutes()
+
         profileRoutes()
         departmentsRoutes()
         postsRoutes()
