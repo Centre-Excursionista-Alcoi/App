@@ -42,13 +42,13 @@ object InventoryItemTypesRepository : DatabaseRepository<InventoryItemType, Uuid
         .categories()
         .asFlow()
         .mapToList(dispatcher)
-        .map { it.toSet() }
+        .map { it.flatten().toSet() }
 
     override suspend fun insert(item: InventoryItemType) = queries.insert(
         id = item.id,
         displayName = item.displayName,
         description = item.description,
-        category = item.category,
+        categories = item.categories,
         image = item.image
     )
 
@@ -56,7 +56,7 @@ object InventoryItemTypesRepository : DatabaseRepository<InventoryItemType, Uuid
         id = item.id,
         displayName = item.displayName,
         description = item.description,
-        category = item.category,
+        categories = item.categories,
         image = item.image
     )
 
@@ -68,7 +68,7 @@ object InventoryItemTypesRepository : DatabaseRepository<InventoryItemType, Uuid
         id = id,
         displayName = displayName,
         description = description,
-        category = category,
+        categories = categories,
         image = image
     )
 }

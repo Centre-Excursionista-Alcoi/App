@@ -12,9 +12,16 @@ import org.centrexcursionistalcoi.app.storage.createDatabase
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 
-class AppBase: Application() {
+class AppBase : Application() {
+    companion object {
+        var instance: AppBase? = null
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+
+        instance = this
 
         Napier.base(DebugAntilog())
 
@@ -36,5 +43,10 @@ class AppBase: Application() {
         }
 
         NotifierManager.addListener(PushNotifierListener)
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        instance = null
     }
 }

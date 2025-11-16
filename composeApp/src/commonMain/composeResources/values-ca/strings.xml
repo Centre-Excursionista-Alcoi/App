@@ -72,9 +72,9 @@
     <string name="sport_canyoning" translatable="false">Barranquisme</string>
     <string name="sport_hiking" translatable="false">Excursionisme</string>
     <string name="sport_alpinism" translatable="false">Alpinisme</string>
-    <string name="lending_signup_required" translatable="false">No estàs donat d\'alta per al préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
-    <string name="lending_signup_action" translatable="false">Registrar-me</string>
-    <string name="lending_signup_title" translatable="false">Registre Necessari</string>
+    <string name="lending_signup_required" translatable="false">No has signat les condicions de préstec de material. Per favor, completa el formulari prement el botó de baix.</string>
+    <string name="lending_signup_action" translatable="false">Revisar i Signar</string>
+    <string name="lending_signup_title" translatable="false">Cal signar les condicions</string>
     <string name="lending_signup_message" translatable="false">Amb aquest formulari, el membre certifica que ell/ella és conscient de les normes internes de les seccions d\'escalada i muntanyisme per a l\'ús de l\'equipament tècnic propietat del CEA. Que ell/ella té els coneixements i entrenament suficients per a fer ús d\'aquest equipament, sent l\'únic responsable tant per a l\'ús correcte i manteniment, com de notificar als vocals de les seccions de qualsevol dany o mal ús que el material poguera haver rebut.</string>
     <string name="lending_signup_full_name" translatable="false">Nom Complet</string>
     <string name="lending_signup_nif" translatable="false">NIF</string>
@@ -133,7 +133,7 @@
         <item quantity="many">%1$d elements</item>
         <item quantity="other">%1$d elements</item>
     </plurals>
-    <string name="management_lendings" translatable="false">Veure Préstecs</string>
+    <string name="management_lendings" translatable="false">Préstecs</string>
     <string name="management_unconfirmed_lendings" translatable="false">Préstecs esperant confirmació</string>
     <string name="management_pending_pickup_lendings" translatable="false">Préstecs esperant la recollida</string>
     <string name="management_pending_return_lendings" translatable="false">Préstecs esperant la devolució</string>
@@ -243,7 +243,7 @@
     <string name="management_inventory_item_edit" translatable="false">Editar Material</string>
     <string name="error_dialog_message" translatable="false">Missatge:</string>
     <string name="management_lending_given_by" translatable="false">Donat per: %1$s el %2$s</string>
-    <string name="management_skip_memory" translatable="false">Saltar Memòria</string>
+    <string name="management_skip_memory" translatable="false">Saltar</string>
     <string name="remove">Eliminar</string>
     <string name="undo">Desfer</string>
     <string name="lending_creation_error_allocation_title">No s\'han pogut reservar elements suficients</string>
@@ -256,4 +256,90 @@
     <string name="nfc_error_too_small">L\'etiqueta NFC no té prou memòria</string>
     <string name="nfc_error_format_unsupported">L\'etiqueta NFC no s\'ha pogut formatar com a %1$s</string>
     <string name="nfc_error_unknown">Error NFC desconegut: %1$s</string>
+    <string name="notification_lending_returned_partial_title">Préstec Parcialment Retornat</string>
+    <string name="management_return_screen_skip_warning_message">No has marcat tots els elements, això significa que l\'usuari no ha tornat tot el material, i el préstec estarà pendent fins que es torne tot. L\'usuari no pot crear nous préstecs fins que tot el material haja sigut tornat.</string>
+    <string name="lending_pending_return_partial_message">Encara no has tornat tot el material del préstec.</string>
+    <string name="notification_lending_returned_partial_message">Només has tornat una part del préstec. Per favor, recorda retornar-ho tot el més prompte possible.</string>
+    <string name="management_return_screen">Retorn de Préstec</string>
+    <string name="management_return_screen_skip_warning_title">Falten Elements</string>
+    <string name="lending_details_returned_items">Retornats %1$d / %2$d</string>
+    <string name="lending_pending_return_partial">Falten Elements</string>
+    <string name="nif">NIF</string>
+    <string name="password">Contrasenya</string>
+    <string name="confirm_password">Confirmar Contrasenya</string>
+    <string name="nav_lendings">Préstecs</string>
+    <string name="personal_info_full_name">Nom Complet</string>
+    <string name="settings">Configuració</string>
+    <string name="settings_title">Configuració</string>
+    <string name="settings_adjust">Ajustar</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_category_privacy">Privacitat</string>
+    <string name="settings_report_errors_title">Recol·lectar informació d\'errors</string>
+    <string name="settings_report_errors_summary">Si està habilitat, l\'app recol·lectarà automàticament informació sobre errors.</string>
+    <string name="settings_report_analytics_title">Recol·lectar analítiques d\'ús</string>
+    <string name="settings_report_analytics_summary">Si està habilitat, l\'app recol·lectarà automàticament analítiques d\'ús per a millorar-la.</string>
+    <string name="settings_report_session_title">Recol·lectar informació de reproducció de sessions</string>
+    <string name="settings_report_session_summary">Si està habilitat, l\'app recol·lectarà automàticament dades de reproducció de sessions per a millorar l\'experiència d\'usuari.</string>
+    <string name="settings_dev_credit_title">App desenvolupada per %1$s</string>
+    <string name="settings_dev_credit_message">Aquesta app ha sigut desenvolupada de manera desinteressada per al Centre Excursionista d\'Alcoi per %1$s.</string>
+    <string name="settings_dev_credit_website">Lloc Web</string>
+    <string name="settings_dev_credit_email">Email</string>
+    <string name="error_access_denied">Accés denegat.</string>
+    <string name="management_other_users_lendings">Préstecs d\'altres usuaris</string>
+    <string name="management_lending_title">Gestió de Préstec</string>
+    <string name="lending_details_confirmation_pending_title">Confirmació Pendent</string>
+    <string name="lending_details_confirmation_pending_message">Un administrador ha de confirmar el teu préstec abans.</string>
+    <string name="lending_details_pickup_pending_title">Recollida Pendent</string>
+    <string name="lending_details_pickup_pending_message">Un administrador es posarà en contacte amb tú per a programar la recollida.</string>
+    <string name="lending_details_incomplete_return_title">Devolució Incompleta</string>
+    <string name="lending_details_incomplete_return_message">Has tornat una part del material, però encara falten coses. Per favor, retorna tot el més prompte possible.</string>
+    <string name="lending_details_return_pending_title">Retorn Pendent</string>
+    <string name="lending_details_return_pending_message">Per favor, programa la devolució amb el teu administrador assignat el més prompte possible.</string>
+    <string name="lending_details_memory_pending_title">Memòria Pendent</string>
+    <string name="lending_details_memory_pending_message">Per favor, prepara i puja/escriu la memòria de l\'activitat el més prompte possible. No pots fer una altra petició fins que ho faces.</string>
+    <string name="lending_details_memory">Memòria d\'Activitat</string>
+    <string name="lending_details_memory_view">Visualització de Memòria</string>
+    <string name="lending_details_memory_view_unsupported">La teua plataforma no suporta la visualització de documents</string>
+    <string name="lending_details_complete">Préstec Complet</string>
+    <string name="lending_details_cancel_error_already_picked_up">El préstec no es pot cancel·lar: ja s\'ha recollit el material</string>
+    <string name="lending_details_delete">Eliminar Préstec</string>
+    <string name="lending_details_delete_confirm_title">Confirmar Eliminació de Préstec</string>
+    <string name="lending_details_delete_confirm_message">Segur que vols eliminar aquest préstec?</string>
+    <string name="lending_details_items">Material</string>
+    <string name="search">Cercar...</string>
+    <string name="sort_by_name_asc">Ordena per Nom (A-Z)</string>
+    <string name="sort_by_name_desc">Ordena per Nom (Z-A)</string>
+    <string name="management_inventory">Inventari</string>
+    <string name="management_department_create">Crear Secció</string>
+    <string name="management_inventory_item_type_categories">Categories</string>
+    <string name="management_inventory_item_type_identifiers">Identificadors</string>
+    <string name="clear">Buidar</string>
+    <string name="management_active_lendings">Préstecs Actius</string>
+    <string name="management_complete_lendings">Préstecs Completats</string>
+    <string name="management_lending_give">Donar Préstec</string>
+    <string name="management_lending_receive">Rebre Préstec</string>
+    <string name="management_lending_given_by_title">Donat</string>
+    <string name="management_lending_given_by_date">per %1$s el %2$s</string>
+    <string name="management_lending_returned_to_title">Retornat a: %1$s</string>
+    <string name="management_lending_returned_to_data">El: %1$s\nElements:\n%2$s</string>
+    <string name="days_of_week_short_monday">Dl.</string>
+    <string name="days_of_week_short_tuesday">Dt.</string>
+    <string name="days_of_week_short_wednesday">Dc.</string>
+    <string name="days_of_week_short_thursday">Dj.</string>
+    <string name="days_of_week_short_friday">Dv.</string>
+    <string name="days_of_week_short_saturday">Ds.</string>
+    <string name="days_of_week_short_sunday">Dg.</string>
+    <string name="months_january">Gener</string>
+    <string name="months_february">Febrer</string>
+    <string name="months_march">Març</string>
+    <string name="months_april">Abril</string>
+    <string name="months_may">Maig</string>
+    <string name="months_june">Juny</string>
+    <string name="months_july">Juliol</string>
+    <string name="months_august">Agost</string>
+    <string name="months_september">Setembre</string>
+    <string name="months_october">Octubre</string>
+    <string name="months_november">Novembre</string>
+    <string name="months_december">Desembre</string>
 </resources>

@@ -8,14 +8,20 @@ expect class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgrou
 
 object SyncLendingBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     const val EXTRA_LENDING_ID = "lending_id"
+    const val EXTRA_IS_REMOVAL = "is_removal"
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val lendingId = input[EXTRA_LENDING_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing lending ID")
+        val isRemoval = input[EXTRA_IS_REMOVAL]?.toBoolean() ?: false
 
-        val lending = LendingsRemoteRepository.get(lendingId, progressNotifier)
-            ?: return SyncResult.Failure("Lending with ID $lendingId not found on server")
-        LendingsRepository.insertOrUpdate(lending)
+        if (isRemoval) {
+            LendingsRepository.delete(lendingId)
+        } else {
+            val lending = LendingsRemoteRepository.get(lendingId, progressNotifier)
+                ?: return SyncResult.Failure("Lending with ID $lendingId not found on server")
+            LendingsRepository.insertOrUpdate(lending)
+        }
 
         return SyncResult.Success()
     }

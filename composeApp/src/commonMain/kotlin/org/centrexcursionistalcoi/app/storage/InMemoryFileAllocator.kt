@@ -15,6 +15,8 @@ object InMemoryFileAllocator {
 
     fun get(uuid: Uuid): ByteArray? = files[uuid]
 
+    fun contains(uuid: Uuid): Boolean = files.containsKey(uuid)
+
     /**
      * Deletes the file associated with the given UUID from the in-memory storage.
      * @return The removed ByteArray if it existed, or null if no file was associated with the UUID.

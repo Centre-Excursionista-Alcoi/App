@@ -61,6 +61,7 @@ fun <T> ListCard(
     actions: @Composable (T) -> List<IconAction> = { emptyList() },
     supportingContent: (@Composable (T) -> Unit)? = null,
     trailingContent: (@Composable RowScope.(T) -> Unit)? = null,
+    showDetailsFor: T? = null,
     detailsDialogContent: (@Composable DialogContext.(T) -> Unit)? = null,
     fileContainerProvider: ((T) -> ImageFileContainer)? = null,
     onClick: ((T) -> Unit)? = null,
@@ -78,7 +79,7 @@ fun <T> ListCard(
         }
     }
 
-    var showingDetails by remember { mutableStateOf<T?>(null) }
+    var showingDetails by remember { mutableStateOf(showDetailsFor) }
     if (detailsDialogContent != null) showingDetails?.let { item ->
         AlertDialog(
             onDismissRequest = { showingDetails = null },
@@ -120,9 +121,9 @@ fun <T> ListCard(
             }
         }
         if (list == null) {
-            Text(stringResource(Res.string.status_loading))
+            Text(stringResource(Res.string.status_loading), Modifier.padding(8.dp))
         } else if (list.isEmpty()) {
-            Text(stringResource(emptyTextResource))
+            Text(stringResource(emptyTextResource), Modifier.padding(8.dp))
         } else {
             for (item in list) {
                 val shouldHighlight = highlight?.invoke(item) == true

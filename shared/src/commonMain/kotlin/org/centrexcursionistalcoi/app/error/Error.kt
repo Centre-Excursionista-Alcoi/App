@@ -235,9 +235,12 @@ sealed interface Error {
 
     @Serializable
     @SerialName("InvalidArgument")
-    class InvalidArgument(val argument: String? = null) : Error {
+    class InvalidArgument(
+        val argument: String? = null,
+        val message: String? = null,
+    ) : Error {
         override val code: Int = ERROR_INVALID_ARGUMENT
-        override val description: String = "Invalid argument${if (argument != null) ": $argument" else ""}."
+        override val description: String = message ?: "Invalid argument${if (argument != null) ": $argument" else ""}."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
@@ -383,6 +386,36 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("LendingAlreadyPickedUp")
+    class LendingAlreadyPickedUp(): Error {
+        override val code: Int = ERROR_LENDING_ALREADY_PICKED_UP
+        override val description: String = "The lending has already been picked up and cannot be cancelled."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("UserNotSignedUpForLending")
+    class UserNotSignedUpForLending(): Error {
+        override val code: Int = ERROR_USER_NOT_SIGNED_UP_FOR_LENDING
+        override val description: String = "The user is not signed up for lendings."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
+    @Serializable
+    @SerialName("LendingNotConfirmed")
+    class LendingNotConfirmed(): Error {
+        override val code: Int = ERROR_LENDING_NOT_CONFIRMED
+        override val description: String = "The lending is not confirmed"
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -417,6 +450,9 @@ sealed interface Error {
         const val ERROR_INCORRECT_PASSWORD_OR_NIF = 30
         const val ERROR_PASSWORD_NOT_SET = 31
         const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
+        const val ERROR_LENDING_ALREADY_PICKED_UP = 33
+        const val ERROR_USER_NOT_SIGNED_UP_FOR_LENDING = 34
+        const val ERROR_LENDING_NOT_CONFIRMED = 35
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -452,6 +488,8 @@ sealed interface Error {
             ERROR_INCORRECT_PASSWORD_OR_NIF -> IncorrectPasswordOrNIF.serializer()
             ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
             ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
+            ERROR_LENDING_ALREADY_PICKED_UP -> LendingAlreadyPickedUp.serializer()
+            ERROR_USER_NOT_SIGNED_UP_FOR_LENDING -> UserNotSignedUpForLending.serializer()
             else -> null
         }
     }

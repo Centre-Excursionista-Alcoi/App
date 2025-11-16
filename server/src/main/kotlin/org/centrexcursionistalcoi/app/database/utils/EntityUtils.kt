@@ -16,9 +16,13 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
+import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
@@ -100,6 +104,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
+                    is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
                     else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                 }
             }
@@ -190,6 +195,20 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is BasicBinaryColumnType -> {
                             encodeSerializableElement(descriptor, idx, Base64Serializer, typeValue as ByteArray)
+                        }
+                        is ArrayColumnType<*, *> -> {
+                            @Suppress("UNCHECKED_CAST")
+                            val array = typeValue as List<*>
+                            val jsonArray = JsonArray(array.map { elem ->
+                                when (elem) {
+                                    is String -> JsonPrimitive(elem)
+                                    is Number -> JsonPrimitive(elem)
+                                    is Boolean -> JsonPrimitive(elem)
+                                    null -> JsonNull
+                                    else -> throw IllegalArgumentException("Unsupported array element type: ${elem::class.simpleName}")
+                                }
+                            })
+                            encodeSerializableElement(descriptor, idx, JsonArray.serializer(), jsonArray)
                         }
                         else -> throw IllegalArgumentException("Unsupported column type: ${column.columnType::class.simpleName}")
                     }

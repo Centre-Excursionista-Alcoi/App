@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.sessions)
+    implementation(libs.ktor.server.sse)
     implementation(libs.ktor.server.statusPages)
 
     // Database
@@ -113,13 +114,8 @@ dependencies {
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.mockk)
-}
-
-tasks.register<JavaExec>("generateMigrationScript") {
-    group = "application"
-    description = "Generate a migration script in the path src/main/kotlin/org/centrexcursionistalcoi/app/database/migrations"
-    classpath = sourceSets.main.get().runtimeClasspath
-    mainClass = "org.centrexcursionistalcoi.app.database.GenerateMigrationScriptKt"
+    testImplementation(libs.turbine)
+    testImplementation(libs.bundles.testcontainers)
 }
 
 fun Manifest.configureAppManifest() {

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.test
 
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.now
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 object FakeUser {
@@ -18,5 +19,6 @@ object FakeUser {
         email = EMAIL
         groups = GROUPS
         memberNumber = MEMBER_NUMBER
+        lastUpdate = now()
     }
 }

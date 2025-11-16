@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.test
 
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.now
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -21,6 +22,7 @@ object FakeAdminUser {
             email = EMAIL
             groups = GROUPS
             memberNumber = MEMBER_NUMBER
+            lastUpdate = now()
         }
     }
 }

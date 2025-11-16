@@ -13,7 +13,6 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
@@ -28,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.reference
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -90,8 +90,9 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
                 json.decodeFromString(ListSerializer(Uuid.serializer()), body)
             }
         } else {
-            when (response.status) {
-                HttpStatusCode.Conflict -> {
+            val error = response.bodyAsError()
+            when (error.code) {
+                Error.ERROR_LENDING_CONFLICT -> {
                     val availableItemIds = response.headers["CEA-Available-Items"]
                         ?.split(',')
                         ?.filter { it.isNotEmpty() }

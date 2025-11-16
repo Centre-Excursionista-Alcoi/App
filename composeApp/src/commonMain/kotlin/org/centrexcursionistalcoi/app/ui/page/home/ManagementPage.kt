@@ -1,49 +1,109 @@
 package org.centrexcursionistalcoi.app.ui.page.home
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddModerator
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.ui.data.IconAction
-import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemTypeDialog
-import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
-import org.centrexcursionistalcoi.app.ui.reusable.ListCard
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.ui.page.home.management.DepartmentsListView
+import org.centrexcursionistalcoi.app.ui.page.home.management.InventoryItemTypesListView
+import org.centrexcursionistalcoi.app.ui.page.home.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.home.management.UsersListView
+import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+
+const val MANAGEMENT_PAGE_COUNT = 4
+const val MANAGEMENT_PAGE_LENDINGS = 0
+const val MANAGEMENT_PAGE_DEPARTMENTS = 1
+const val MANAGEMENT_PAGE_USERS = 2
+const val MANAGEMENT_PAGE_INVENTORY = 3
 
 @Composable
 fun ManagementPage(
     windowSizeClass: WindowSizeClass,
+    snackbarHostState: SnackbarHostState,
+
+    /**
+     * The currently selected item in the format Pair(pageIndex, itemId?).
+     *
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_INVENTORY].
+     */
+    selectedItem: Pair<Int, Uuid?>?,
+
+    lendings: List<ReferencedLending>?,
+    onGiveRequested: (ReferencedLending) -> Unit,
+    onReceiveRequested: (ReferencedLending) -> Unit,
 
     departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?) -> Job,
+
+    users: List<UserData>?,
+
+    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypesCategories: Set<String>,
+
+    inventoryItems: List<ReferencedInventoryItem>?,
+
+    model: ManagementViewModel = viewModel { ManagementViewModel() },
+) {
+    ManagementPage(
+        windowSizeClass = windowSizeClass,
+        snackbarHostState = snackbarHostState,
+        selectedItem = selectedItem,
+        lendings = lendings,
+        onConfirmLendingRequest = model::confirmLending,
+        onSkipMemoryRequest = model::skipLendingMemory,
+        onGiveRequested = onGiveRequested,
+        onReceiveRequested = onReceiveRequested,
+        departments = departments,
+        onCreateDepartment = model::createDepartment,
+        onUpdateDepartment = model::updateDepartment,
+        onDeleteDepartment = model::delete,
+        users = users,
+        onPromote = model::promote,
+        inventoryItemTypes = inventoryItemTypes,
+        inventoryItemTypesCategories = inventoryItemTypesCategories,
+        onCreateInventoryItemType = model::createInventoryItemType,
+        onUpdateInventoryItemType = model::updateInventoryItemType,
+        onDeleteInventoryItem = model::delete,
+        inventoryItems = inventoryItems,
+    )
+}
+
+@Composable
+private fun ManagementPage(
+    windowSizeClass: WindowSizeClass,
+    snackbarHostState: SnackbarHostState,
+
+    selectedItem: Pair<Int, Uuid?>?,
+
+    lendings: List<ReferencedLending>?,
+    onConfirmLendingRequest: (ReferencedLending) -> Job,
+    onSkipMemoryRequest: (ReferencedLending) -> Job,
+    onGiveRequested: (ReferencedLending) -> Unit,
+    onReceiveRequested: (ReferencedLending) -> Unit,
+
+    departments: List<Department>?,
+    onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
+    onUpdateDepartment: (id: Int, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
     users: List<UserData>?,
@@ -51,202 +111,68 @@ fun ManagementPage(
 
     inventoryItemTypes: List<InventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
-    onClickInventoryItemType: (InventoryItemType) -> Unit,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
+    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-
-    onManageLendingsRequested: () -> Unit,
 ) {
-    AdaptiveVerticalGrid(
-        windowSizeClass,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
-    ) {
-        item(key = "lendings") {
-            Button(
-                onClick = onManageLendingsRequested
-            ) { Text(stringResource(Res.string.management_lendings)) }
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
+
+    val selectedItemId = selectedItem?.second
+    LaunchedEffect(selectedItem) {
+        selectedItem ?: return@LaunchedEffect
+        val (page) = selectedItem
+        pagerState.scrollToPage(page)
+    }
+
+    PrimaryTabRow(pagerState.currentPage) {
+        listOf(
+            Res.string.management_lendings,
+            Res.string.management_departments,
+            Res.string.management_users,
+            Res.string.management_inventory,
+        ).forEachIndexed { index, titleRes ->
+            Tab(
+                selected = pagerState.currentPage == index,
+                onClick = {
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                },
+                text = { Text(stringResource(titleRes)) }
+            )
         }
-        item(key = "departments") {
-            DepartmentsCard(departments, onCreateDepartment, onDeleteDepartment)
-        }
-        // item(key = "users") {
-        //     UsersCard(users, onPromote)
-        // }
-        item(key = "items") {
-            InventoryItemTypesCard(
+    }
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize(),
+    ) { page ->
+        when (page) {
+            MANAGEMENT_PAGE_LENDINGS -> LendingsListView(
+                windowSizeClass,
+                snackbarHostState,
+                lendings,
+                users.orEmpty(),
+                onConfirmLendingRequest,
+                onSkipMemoryRequest,
+                onGiveRequested,
+                onReceiveRequested
+            )
+
+            MANAGEMENT_PAGE_DEPARTMENTS -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
+
+            MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
+
+            MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
+                windowSizeClass,
+                selectedItemId,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
                 inventoryItems,
                 onCreateInventoryItemType,
-                onClickInventoryItemType,
+                onUpdateInventoryItemType,
+                onDeleteInventoryItem,
             )
         }
     }
-}
-
-@Composable
-fun DepartmentsCard(
-    departments: List<Department>?,
-    onCreate: (displayName: String, image: PlatformFile?) -> Job,
-    onDelete: (Department) -> Job,
-) {
-    var creating by remember { mutableStateOf(false) }
-    if (creating) {
-        CreateDepartmentDialog(onCreate) { creating = false }
-    }
-
-    ListCard(
-        list = departments,
-        titleResource = Res.string.management_departments,
-        emptyTextResource = Res.string.management_no_departments,
-        displayName = { it.displayName },
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        onCreate = { creating = true },
-        onDelete = onDelete
-    )
-}
-
-@Composable
-fun InventoryItemTypesCard(
-    types: List<InventoryItemType>?,
-    categories: Set<String>,
-    items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, category: String, image: PlatformFile?) -> Job,
-    onClick: (InventoryItemType) -> Unit,
-) {
-    var creating by remember { mutableStateOf(false) }
-    if (creating) {
-        CreateInventoryItemTypeDialog(categories, onCreate) { creating = false }
-    }
-
-    val groupedItems = remember(items, types) {
-        items.orEmpty().groupBy { it.type }.toList()
-    }
-    val typesWithoutItems = remember(items, types) {
-        types.orEmpty().filter { type ->
-            items?.none { it.type.id == type.id } ?: true
-        }.map { type -> type to emptyList<ReferencedInventoryItem>() }
-    }
-    ListCard(
-        list = groupedItems + typesWithoutItems,
-        titleResource = Res.string.management_inventory_item_types,
-        emptyTextResource = Res.string.management_no_item_types,
-        displayName = { (type) -> type.displayName },
-        trailingContent = { (_, items) -> Badge { Text(items.size.toString()) } },
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        onCreate = { creating = true },
-        onClick = { (type) -> onClick(type) },
-        sharedContentStateKey = { (type) -> "iit_${type.id}" },
-        fileContainerProvider = { (type) -> type },
-    )
-}
-
-@Composable
-fun UsersCard(users: List<UserData>?, onPromote: (UserData) -> Job) {
-    var promotingUser by remember { mutableStateOf<UserData?>(null) }
-    promotingUser?.let { user ->
-        var isPromoting by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { if (!isPromoting) promotingUser = null },
-            title = { Text(stringResource(Res.string.management_promote_user_title)) },
-            text = { Text(stringResource(Res.string.management_promote_user_confirmation, user.fullName)) },
-            confirmButton = {
-                TextButton(
-                    enabled = !isPromoting,
-                    onClick = {
-                        isPromoting = true
-                        onPromote(user).invokeOnCompletion {
-                            isPromoting = false
-                            promotingUser = null
-                        }
-                    }
-                ) { Text(stringResource(Res.string.management_promote_user)) }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !isPromoting,
-                    onClick = { if (!isPromoting) promotingUser = null }
-                ) { Text(stringResource(Res.string.cancel)) }
-            },
-        )
-    }
-
-    ListCard(
-        list = users,
-        titleResource = Res.string.management_users,
-        emptyTextResource = Res.string.management_no_departments,
-        displayName = { it.fullName },
-        trailingContent = { if (it.isAdmin()) Badge { Text(stringResource(Res.string.admin)) } },
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        actions = { user ->
-            listOfNotNull(
-                IconAction(
-                    icon = Icons.Default.AddModerator,
-                    onClick = { promotingUser = user },
-                    contentDescription = stringResource(Res.string.management_promote_user),
-                ).takeUnless { user.isAdmin() }
-            )
-        }
-    )
-}
-
-@Composable
-fun CreateDepartmentDialog(
-    onCreate: (displayName: String, image: PlatformFile?) -> Job,
-    onDismissRequested: () -> Unit
-) {
-    var isLoading by remember { mutableStateOf(false) }
-    var displayName by remember { mutableStateOf("") }
-    var image by remember { mutableStateOf<PlatformFile?>(null) }
-    val imagePicker = rememberFilePickerLauncher(
-        type = FileKitType.Image
-    ) { file -> image = file }
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismissRequested() },
-        title = { Text("Create department") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = displayName,
-                    onValueChange = { displayName = it },
-                    label = { Text("Display name") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    enabled = !isLoading,
-                    onClick = { imagePicker.launch() }
-                ) {
-                    image?.let {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                        )
-                    } ?: Text(
-                        "Select image (optional)",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = !isLoading && displayName.isNotBlank(),
-                onClick = {
-                    isLoading = true
-                    onCreate(displayName, image).invokeOnCompletion { onDismissRequested() }
-                }
-            ) { Text("Create") }
-        },
-        dismissButton = {
-            TextButton(
-                enabled = !isLoading,
-                onClick = { onDismissRequested() }
-            ) { Text("Cancel") }
-        },
-    )
 }

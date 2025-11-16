@@ -36,6 +36,27 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Pre-pull PostgreSQL image
+        run: docker pull postgres:17
+
+      # See: https://github.com/testcontainers/testcontainers-java/issues/11212
+      - name: Set Docker API version
+        run: echo api.version=1.44 >> ~/.docker-java.properties
+
       - name: Run Server Tests
         id: server_tests
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
+          TESTCONTAINERS_CHECKS_DISABLE: true
+          TESTCONTAINERS_HOST_OVERRIDE: localhost
         run: ./gradlew :server:check

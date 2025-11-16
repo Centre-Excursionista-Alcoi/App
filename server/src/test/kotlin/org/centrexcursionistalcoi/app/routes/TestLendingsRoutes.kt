@@ -40,9 +40,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
@@ -573,7 +571,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     ) { context ->
         val entity = context.dibResult!!
         client.post("inventory/lendings/${entity.id.value}/pickup").apply {
-            assertStatusCode(HttpStatusCode.OK)
+            assertStatusCode(HttpStatusCode.NoContent)
         }
     }
 
@@ -612,7 +610,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 append("dismiss_items", exampleItemId.toString())
             }
         ).apply {
-            assertStatusCode(HttpStatusCode.OK)
+            assertStatusCode(HttpStatusCode.NoContent)
             val dismissedItems = headers["CEA-Dismissed-Items"]
             assertNotNull(dismissedItems)
             val dismissedItemIds = dismissedItems.split(',').mapNotNull { it.toUUIDOrNull() }
@@ -677,7 +675,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 )
             )
         }.apply {
-            assertStatusCode(HttpStatusCode.OK)
+            assertStatusCode(HttpStatusCode.NoContent)
         }
 
         // Make sure the lending is marked as returned

@@ -33,6 +33,8 @@ import cea_app.composeapp.generated.resources.*
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getBooleanStateFlow
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
+import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
+import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
@@ -42,6 +44,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsCategory
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsOptionsRow
+import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsRow
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsSwitchRow
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -52,6 +55,7 @@ data class Language(val code: String, val displayName: String, val flag: Drawabl
 private val availableLanguages = listOf(
     Language("en", "English", Res.drawable.flag_en),
     Language("ca", "Català", Res.drawable.flag_ca),
+    Language("es", "Castellano", Res.drawable.flag_es),
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
@@ -91,8 +95,30 @@ fun SettingsScreen(onBack: () -> Unit) {
                             modifier = Modifier.size(24.dp).clip(RoundedCornerShape(8.dp))
                         )
                     },
+                    key = { it.code },
                     toString = { it.displayName },
                 )
+            }
+
+            if (PlatformSSEConfiguration.enableSSE) {
+                item(key = "push_category", contentType = "category") {
+                    SettingsCategory(
+                        text = stringResource(Res.string.settings_category_push)
+                    )
+                }
+                item(key = "push_sse_connected", contentType = "info") {
+                    val isConnected by SSENotificationsListener.isConnected.collectAsState()
+                    val sseError by SSENotificationsListener.sseException.collectAsState()
+                    SettingsRow(
+                        title = stringResource(Res.string.settings_push_connection_title),
+                        summary = if (isConnected) {
+                            stringResource(Res.string.settings_push_connection_message_connected)
+                        } else {
+                            stringResource(Res.string.settings_push_connection_message_disconnected)
+                        } + (sseError?.message?.let { "\n$it" } ?: ""),
+                        onClick = if (sseError != null) { { SSENotificationsListener.startListening() } } else null
+                    )
+                }
             }
 
             item(key = "privacy_category", contentType = "category") {
@@ -130,7 +156,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             item(key = "credits") {
                 OutlinedCard(
-                    modifier = Modifier.fillMaxWidth().padding(top = 64.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 64.dp).padding(horizontal = 16.dp),
                 ) {
                     Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                         Image(painterResource(Res.drawable.arnyminerz), null, modifier = Modifier.size(64.dp).padding(8.dp))

@@ -28,6 +28,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="cea" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -39,6 +45,11 @@
                     android:name="android.support.FILE_PROVIDER_PATHS"
                     android:resource="@xml/provider_paths" />
         </provider>
+
+        <provider
+                android:name=".ContextProvider"
+                android:authorities="${applicationId}.AppInitProvider"
+                android:exported="false"/>
     </application>
 
     <queries>

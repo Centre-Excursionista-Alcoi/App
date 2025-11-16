@@ -7,26 +7,17 @@ import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
-import org.centrexcursionistalcoi.app.utils.isZero
 
 suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
     val dataMap = toMap().mapValues { (_, value) ->
         when (value) {
             is FileReference -> {
-                when (val id = id) {
-                    is Long if id <= 0L -> {
-                        // New item, file is in memory
-                        InMemoryFileAllocator.delete(value.uuid)
-                    }
-
-                    is Uuid if id.isZero() -> {
-                        // New item, file is in memory
-                        InMemoryFileAllocator.delete(value.uuid)
-                    }
-
-                    else -> {
-                        FileSystem.read(value.uuid.toString())
-                    }
+                if (InMemoryFileAllocator.contains(value.uuid)) {
+                    // New item, file is in memory
+                    InMemoryFileAllocator.delete(value.uuid)
+                } else {
+                    // Existing item, read file from filesystem
+                    FileSystem.read(value.uuid.toString())
                 }
             }
             else -> value

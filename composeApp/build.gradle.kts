@@ -81,6 +81,9 @@ kotlin {
             // Rich Text Editor
             implementation(libs.richeditor)
 
+            // Calendar Viewer
+            implementation(libs.calendar)
+
             // Ktor serialization
             implementation(libs.ktor.serialization.kotlinxJson)
 
@@ -238,6 +241,8 @@ sqldelight {
         create("Database") {
             generateAsync.set(true)
             packageName.set("org.centrexcursionistalcoi.app.database")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
+            verifyMigrations.set(true)
         }
     }
 }

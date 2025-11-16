@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
+import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
@@ -26,6 +27,12 @@ var today: () -> LocalDate = { LocalDate.now() }
 var now: () -> Instant = { Instant.now() }
     @VisibleForTesting
     set
+
+@VisibleForTesting
+internal fun resetTimeFunctions() {
+    today = { LocalDate.now() }
+    now = { Instant.now() }
+}
 
 fun main() {
     logger.info("Starting Centre Excursionista d'Alcoi server version $version")
@@ -62,6 +69,7 @@ fun main() {
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
     configureContentNegotiation()
+    configureSSE()
     configureRouting()
     configureStatusPages()
     configureSessions(isTesting, isDevelopment)

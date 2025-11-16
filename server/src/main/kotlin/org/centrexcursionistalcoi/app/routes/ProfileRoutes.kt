@@ -26,6 +26,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.ifModifiedSince
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
@@ -39,16 +40,18 @@ fun Route.profileRoutes() {
     get("/profile") {
         val session = getUserSessionOrFail() ?: return@get
 
-        val departments = Database {
-            DepartmentMemberEntity.find {
-                (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
-            }.map { it.department.id.value }
-        }
-        val lendingUser = Database {
-            LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
+        val reference = Database { UserReferenceEntity[session.sub] }
+
+        // Handle If-Modified-Since header
+        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()
+        if (ifModifiedSince != null) {
+            val refLastUpdate = Database { reference.lastUpdate }
+            if (refLastUpdate <= ifModifiedSince) {
+                call.respond(HttpStatusCode.NotModified)
+                return@get
+            }
         }
 
-        val reference = Database { UserReferenceEntity[session.sub] }
         try {
             if (reference.femecvUsername != null && reference.femecvPassword != null) {
                 val lastSync = reference.femecvLastSync
@@ -60,12 +63,22 @@ fun Route.profileRoutes() {
             call.response.header("CEA-FEMECV-Error", e.message ?: "Unknown")
         }
 
+        val departments = Database {
+            DepartmentMemberEntity.find {
+                (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
+            }.map { it.department.id.value }
+        }
+        val lendingUser = Database {
+            LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
+        }
+
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
 
         call.respond(
             ProfileResponse(
                 sub = session.sub,
                 fullName = session.fullName,
+                memberNumber = reference.memberNumber,
                 email = session.email,
                 groups = session.groups,
                 departments = departments,
@@ -171,6 +184,8 @@ fun Route.profileRoutes() {
         Database {
             userReference.femecvUsername = username
             userReference.femecvPassword = password
+
+            userReference.lastUpdate = now()
         }
 
         try {

@@ -62,6 +62,8 @@ fun Route.departmentsRoutes() {
                     is PartData.FormItem -> {
                         if (partData.name == "displayName") {
                             displayName = partData.value
+                        } else if (partData.name == "image") {
+                            image.populate(partData)
                         }
                     }
                     is PartData.FileItem -> {

@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
+import io.github.aakira.napier.Napier
+import io.ktor.http.Url
+import org.centrexcursionistalcoi.app.push.PushNotification
 import tech.kotlinlang.permission.PermissionInitiation
 
 class MainActivity : NfcIntentHandlerActivity() {
@@ -18,9 +21,17 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         NotifierManager.onCreateOrOnNewIntent(intent)
 
+        val pushNotification = getPushNotificationFromIntent()
+        val url = getUrlFromIntent()
+
         setContent {
-            MainApp()
+            MainApp(url, pushNotification)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        instance = this
     }
 
     override fun onDestroy() {
@@ -33,8 +44,28 @@ class MainActivity : NfcIntentHandlerActivity() {
         NotifierManager.onCreateOrOnNewIntent(intent)
     }
 
+    private fun getPushNotificationFromIntent(): PushNotification? {
+        val extras = intent.extras ?: return null
+        // convert the extras to a Map<String, *>
+        @Suppress("DEPRECATION") val data = extras.keySet().associateWith { extras.get(it) }
+        try {
+            // Get the PushNotification object
+            return PushNotification.fromData(data)
+        } catch (_: IllegalArgumentException) {
+            // Ignore invalid push notification data
+            Napier.d { "Got intent with extras, but no valid push notification could be inferred." }
+            return null
+        }
+    }
+
+    private fun getUrlFromIntent(): Url? {
+        val uri = intent.data ?: return null
+        if (uri.scheme != "cea") return null
+        return Url(uri.toString())
+    }
+
     companion object {
         var instance: MainActivity? = null
-        private set
+            private set
     }
 }
