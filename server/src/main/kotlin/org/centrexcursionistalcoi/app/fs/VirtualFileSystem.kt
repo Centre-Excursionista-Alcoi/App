@@ -128,10 +128,30 @@ object VirtualFileSystem {
     private val logger = LoggerFactory.getLogger(VirtualFileSystem::class.java)
 
     private val originalRootDirs: List<RootDir<out Any, out Entity<out Any>>> = listOf(
-        RootDir("Departments", DepartmentEntity, idConverter = { it.toIntOrNull() }, customFileDisplayName = { it.displayName }) { it.image },
-        RootDir("Inventory Item", InventoryItemTypeEntity, idConverter = { it.toUUIDOrNull() }, customFileDisplayName = { it.displayName }) { it.image },
-        RootDir("Lending Memories", LendingEntity, idConverter = { it.toUUIDOrNull() }) { it.memoryDocument },
-        RootDir("Insurances", UserInsuranceEntity, idConverter = { it.toUUIDOrNull() }) { it.document },
+        RootDir(
+            name = "Departments",
+            entityClass = DepartmentEntity,
+            idConverter = { it.toIntOrNull() },
+            customFileDisplayName = { it.displayName },
+        ) { it.image },
+        RootDir(
+            name = "Inventory Item",
+            entityClass = InventoryItemTypeEntity,
+            idConverter = { it.toUUIDOrNull() },
+            customFileDisplayName = { it.displayName },
+        ) { it.image },
+        RootDir(
+            name = "Lending Memories",
+            entityClass = LendingEntity,
+            idConverter = { it.toUUIDOrNull() },
+            customFileDisplayName = { it.userSub.fullName + " :: " + it.from + " - " + it.to },
+        ) { it.memoryDocument },
+        RootDir(
+            name = "Insurances",
+            entityClass = UserInsuranceEntity,
+            idConverter = { it.toUUIDOrNull() },
+            customFileDisplayName = { it.userSub.fullName + " :: " + it.insuranceCompany + " - " + it.policyNumber },
+        ) { it.document },
     )
 
     @VisibleForTesting
