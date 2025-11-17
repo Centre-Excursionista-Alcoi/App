@@ -69,6 +69,20 @@ object VirtualFileSystem {
         /**
          * Finds a [FileEntity] by a string representation of the entity ID.
          *
+         * @param idStr The string representation of the entity ID.
+         *
+         * @return The found [FileEntity], or `null` if not found or the ID string is malformed.
+         */
+        fun findByStringIdOrNull(idStr: String): FileEntity? = try {
+            findByStringId(idStr)
+        } catch (_: IllegalArgumentException) {
+            logger.debug("Malformed id string ($idStr) cannot find entity by string id")
+            null
+        }
+
+        /**
+         * Finds a [FileEntity] by a string representation of the entity ID.
+         *
          * Works by finding the entity using the converted ID, then accessing its [FileEntity] via the [accessor].
          *
          * @throws IllegalArgumentException if the ID string is malformed and cannot be converted.
@@ -151,6 +165,7 @@ object VirtualFileSystem {
             }
         } else {
             // There are no subdirectories
+            logger.error("Invalid path for listing: $path")
             return null
         }
     }
@@ -167,11 +182,22 @@ object VirtualFileSystem {
         )
     }
 
+    /**
+     * Reads a file from the virtual file system.
+     *
+     * @param path The path to the file in the format "/rootDir/fileId".
+     * @return The [ItemData] containing file content and metadata, or `null` if not found.
+     *
+     * @throws IllegalArgumentException if the root directory is invalid.
+     */
     fun read(path: String): ItemData? {
         logger.debug("Reading file at path: $path")
         val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
         // Expecting exactly two parts: [rootDir, fileId]
-        if (parts.size != 2) return null
+        if (parts.size != 2) {
+            logger.error("Invalid path for reading file: $path")
+            return null
+        }
         val dirName = parts[0]
 
         // File ID may be one of:
@@ -182,24 +208,37 @@ object VirtualFileSystem {
 
         val rootDir = rootDirs.find { it.name == dirName } ?: throw IllegalArgumentException("Invalid directory: $dirName")
 
-        val fileEntity = try {
-            rootDir.findByStringId(fileId)
-        } catch (_: IllegalArgumentException) {
-            // Ignore malformed ID errors
-            null
+        var fileEntity: FileEntity? = null
+
+        // First, try finding by entity ID
+        rootDir.findByStringIdOrNull(fileId)?.let {
+            fileEntity = it
         }
-        // If the entity could not be found by its ID, try finding by FileEntity ID
-            ?: Database { FileEntity.findById(fileId.toUUIDOrNull() ?: return@Database null) }
-            // If still not found, try finding by display name
-            ?: Database {
+        // If not found, try finding by FileEntity ID or display name
+        if (fileEntity == null) {
+            logger.warn("File not found by entity ID, trying FileEntity ID or display name")
+            val fileUuid = fileId.toUUIDOrNull()
+            if (fileUuid != null) {
+                fileEntity = Database { FileEntity.findById(fileUuid) }
+            } else {
+                logger.warn("File ID is not a valid UUID: $fileId")
+            }
+        }
+        // If still not found, try finding by display name
+        if (fileEntity == null) {
+            logger.warn("File not found by FileEntity ID, trying display name")
+            fileEntity = Database {
                 rootDir.all().firstOrNull { (e, fileEntity) ->
                     val displayName = rootDir.fileDisplayName(e, fileEntity)
                     val displayNameWithExtension = "$displayName.${fileEntity.contentType.extension()}"
                     displayName == fileId || displayNameWithExtension == fileId
                 }?.second
             }
-            // If still not found, return null
-            ?: return null
+        }
+        if (fileEntity == null) {
+            logger.error("File not found: $fileId in directory: $dirName")
+            return null
+        }
 
         val data = Database { fileEntity.data }
         return ItemData(
