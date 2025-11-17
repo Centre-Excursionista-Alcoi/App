@@ -8,8 +8,8 @@ Pod::Spec.new do |spec|
     spec.summary                  = 'Some description for the Shared Module'
     spec.vendored_frameworks      = 'build/cocoapods/framework/ComposeApp.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target    = '18.1'
-    spec.dependency 'Sentry', '8.55.1'
+    spec.ios.deployment_target    = '15.6'
+    spec.dependency 'Sentry', '8.57.1'
                 
     if !Dir.exist?('build/cocoapods/framework/ComposeApp.framework') || Dir.empty?('build/cocoapods/framework/ComposeApp.framework')
         raise "

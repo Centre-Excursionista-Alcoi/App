@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app
 
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.navigation.NavController
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.storage.DriverFactory
 import org.centrexcursionistalcoi.app.storage.createDatabase
@@ -12,6 +14,8 @@ lateinit var navController: NavController
     private set
 
 fun MainViewController(): UIViewController {
+    Napier.base(DebugAntilog())
+
     // Initialize the database
     databaseInstance = runBlocking { createDatabase(DriverFactory()) }
 

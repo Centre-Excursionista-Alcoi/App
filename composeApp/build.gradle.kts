@@ -209,7 +209,11 @@ kotlin {
         // rest of configuration
         summary = "Some description for the Shared Module"
         homepage = "Link to the Shared Module homepage"
-        ios.deploymentTarget = "18.1"
+
+        // If changed, also update Podfile
+        // https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
+        ios.deploymentTarget = "15.6"
+
         version = appVersionName
         podfile = project.file("../iosApp/Podfile")
 
@@ -217,7 +221,7 @@ kotlin {
         // https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table
         pod("Sentry") {
             // Check the version compatibility table for the correct version
-            version = "8.55.1"
+            version = "8.57.1"
             linkOnly = true
             extraOpts += listOf("-compiler-option", "-fmodules")
         }

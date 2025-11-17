@@ -15,7 +15,7 @@ import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 
-private fun createHttpClient(): HttpClient = HttpClient {
+private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()) {
     defaultRequest {
         url(BuildKonfig.SERVER_URL)
     }
