@@ -1,0 +1,10 @@
+CREATE TABLE tmp_InventoryItemTypes (
+    id TEXT PRIMARY KEY NOT NULL,
+    displayName TEXT NOT NULL,
+    description TEXT DEFAULT NULL,
+    categories TEXT DEFAULT NULL,
+    image TEXT DEFAULT NULL
+);
+INSERT INTO tmp_InventoryItemTypes (id, displayName, description, categories, image) SELECT id, displayName, description, category, image FROM InventoryItemTypes;
+DROP TABLE InventoryItemTypes;
+ALTER TABLE tmp_InventoryItemTypes RENAME TO InventoryItemTypes;
