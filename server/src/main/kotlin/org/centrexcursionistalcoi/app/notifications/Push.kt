@@ -5,14 +5,18 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.MulticastMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
+import org.centrexcursionistalcoi.app.notifications.Push.disable
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.annotations.VisibleForTesting
@@ -25,6 +29,8 @@ object Push {
     private var pushFCMConfigured = false
 
     private val notificationFlow = MutableSharedFlow<LocalNotification>()
+
+    var disable: Boolean = false
 
     class LocalNotification(
         val notification: PushNotification,
@@ -45,6 +51,20 @@ object Push {
 
         pushFCMConfigured = true
         logger.info("Push notification service initialized successfully.")
+    }
+
+    /**
+     * Sends a push notification asynchronously.
+     *
+     * This function launches a coroutine in the IO dispatcher to execute the provided suspend function [block].
+     *
+     * If push notifications are disabled (i.e., [disable] is true), the function returns immediately without executing the block.
+     *
+     * @param block The suspend function that contains the push notification logic.
+     */
+    fun send(block: suspend CoroutineScope.() -> Unit) = CoroutineScope(Dispatchers.IO).launch {
+        if (disable) return@launch
+        block()
     }
 
     fun flow(session: UserSession) = notificationFlow

@@ -203,7 +203,7 @@ fun Route.lendingsRoutes() {
                 """.trimIndent()
             )
         }
-        CoroutineScope(Dispatchers.IO).launch {
+        Push.send {
             Push.sendAdminPushNotification(lendingEntity.newNotification())
         }
 
@@ -303,7 +303,7 @@ fun Route.lendingsRoutes() {
         Database { lending.delete() }
 
         // Send push notification to the owner of the lending asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
+        Push.send {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.cancelledNotification()
@@ -332,7 +332,7 @@ fun Route.lendingsRoutes() {
         }
 
         // Send Push Notification asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
+        Push.send {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.confirmedNotification()
@@ -388,7 +388,7 @@ fun Route.lendingsRoutes() {
         }
 
         // Send Push Notification asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
+        Push.send {
             Push.sendAdminPushNotification(lending.takenNotification(false))
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
@@ -473,8 +473,10 @@ fun Route.lendingsRoutes() {
             }
 
             // Send Push Notification asynchronously
-            CoroutineScope(Dispatchers.IO).launch {
-                Push.sendAdminPushNotification(lending.returnedNotification(false))
+            Push.send {
+                Push.sendAdminPushNotification(
+                    notification = lending.returnedNotification(false)
+                )
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
                     notification = lending.returnedNotification(true)
@@ -483,7 +485,7 @@ fun Route.lendingsRoutes() {
 
             call.respond(HttpStatusCode.NoContent)
         } else {
-            CoroutineScope(Dispatchers.IO).launch {
+            Push.send {
                 Push.sendAdminPushNotification(lending.partialReturnNotification(false))
             }
 
@@ -585,8 +587,10 @@ fun Route.lendingsRoutes() {
                 ),
             )
         }
-        CoroutineScope(Dispatchers.IO).launch {
-            Push.sendAdminPushNotification(lending.memoryAddedNotification())
+        Push.send {
+            Push.sendAdminPushNotification(
+                notification = lending.memoryAddedNotification()
+            )
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.memoryAddedNotification()
@@ -616,7 +620,7 @@ fun Route.lendingsRoutes() {
             lending.memorySubmittedAt = Instant.now()
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        Push.send {
             Push.sendAdminPushNotification(lending.memoryAddedNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
