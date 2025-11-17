@@ -11,7 +11,7 @@ import kotlin.io.encoding.Base64
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 
-class FileRequestData: Closeable {
+class FileRequestData : Closeable {
     var contentType: ContentType? = null
     var originalFileName: String? = null
     val baos: ByteArrayOutputStream = ByteArrayOutputStream()
@@ -54,7 +54,7 @@ class FileRequestData: Closeable {
         return Database {
             FileEntity.new {
                 name = originalFileName ?: "unknown"
-                type = contentType?.toString() ?: "application/octet-stream"
+                type = contentType.toString()
                 data = baos.toByteArray()
             }
         }.also { if (close) close() }

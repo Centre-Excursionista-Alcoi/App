@@ -2,7 +2,7 @@
 
 echo "Building Docker image for development..."
 
-docker build -t arnyminerz/cea-app:development -f server/Dockerfile .
+docker build -t arnyminerz/cea-app:development -f server/Dockerfile . || exit 1
 
 echo "Build complete."
 echo "Push to Docker Hub with: docker push arnyminerz/cea-app:development"

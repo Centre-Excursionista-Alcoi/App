@@ -19,7 +19,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
     var policyNumber by UserInsurances.policyNumber
     var validFrom by UserInsurances.validFrom
     var validTo by UserInsurances.validTo
-    var document by UserInsurances.document
+    var document by FileEntity optionalReferencedOn UserInsurances.document
 
     var femecvLicense by UserInsurances.femecvLicense
 
@@ -31,7 +31,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
         policyNumber = policyNumber,
         validFrom = validFrom.toKotlinLocalDate(),
         validTo = validTo.toKotlinLocalDate(),
-        documentId = document?.value?.toKotlinUuid(),
+        documentId = document?.id?.value?.toKotlinUuid(),
         femecvLicense = femecvLicense,
     )
 }

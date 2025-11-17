@@ -45,6 +45,33 @@ class TestRoutes : ApplicationTestBase() {
             },
             invalidEntityId = 9999,
         ),
+        /*runTestsOnRoute(
+            title = "Posts",
+            baseUrl = "/posts",
+            requiredCreationValuesProvider = mapOf("title" to { "Test Post" }, "content" to { "Content for Test Post." }, "department" to { testDepartmentId }),
+            optionalCreationValuesProvider = mapOf(
+                "onlyForMembers" to { true },
+            ),
+            locationRegex = "/posts/\\d+".toRegex(),
+            entityClass = PostEntity,
+            idTypeConverter = { it.toUUID() },
+            exposedIdTypeConverter = { it.toJavaUuid() },
+            dataEntitySerializer = Post.serializer(),
+            auxiliaryEntitiesProvider = {
+                DepartmentEntity.new(testDepartmentId) {
+                    displayName = "Test Department"
+                }
+            },
+            stubEntityProvider = {
+                PostEntity.new {
+                    title = "Test Post"
+                    content = "Content for Test Post."
+                    onlyForMembers = true
+                    department = DepartmentEntity[testDepartmentId]
+                }
+            },
+            invalidEntityId = Uuid.Zero.toJavaUuid(),
+        ),*/
         runTestsOnRoute(
             title = "Inventory Item Types",
             baseUrl = "/inventory/types",

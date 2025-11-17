@@ -168,7 +168,7 @@ object ProvidedRouteTests {
     context(_: JdbcTransaction)
     private fun Any.populate(name: String, value: Any, foreignTypesAssociations: Map<String, EntityClass<*, *>>) {
         val memberProperty = this::class.memberProperties.firstOrNull { it.name == name }
-        assertNotNull(memberProperty) { "Could not find \"$name\" in properties. List: ${this::class.memberProperties.joinToString()}" }
+        assertNotNull(memberProperty, "Could not find \"$name\" in properties. List: ${this::class.memberProperties.joinToString()}")
         assertInstanceOf<KMutableProperty<*>>(memberProperty, "Property $name is not mutable: $memberProperty")
         val member = memberProperty.setter
         try {
