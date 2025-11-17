@@ -17,13 +17,27 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.slf4j.LoggerFactory
 
 object VirtualFileSystem {
+    private val forcedExtensions = mapOf(
+        ContentType.Image.JPEG to "jpg",
+        ContentType.Image.PNG to "png",
+    )
+
+    private fun ContentType.extension(): String? = forcedExtensions[this] ?: this.fileExtensions().firstOrNull()
+
     data class Item(
         val path: String,          // full path like "foo/bar.txt" or "foo/subdir/"
         val name: String,          // name component
         val isDirectory: Boolean,
-        val size: Long? = null,    // for files
+        val contentType: ContentType? = null, // for files
+        val size: Long? = null,               // for files
         val lastModified: Instant? = null
-    )
+    ) {
+        val nameWithExtension: String
+            get() {
+                val extension = contentType?.extension() ?: return name
+                return "$name.$extension"
+            }
+    }
 
     class ItemData(
         val contentType: ContentType,
@@ -49,11 +63,23 @@ object VirtualFileSystem {
             }
         }
 
+        /**
+         * Finds a [FileEntity] by a string representation of the entity ID.
+         *
+         * Works by finding the entity using the converted ID, then accessing its [FileEntity] via the [accessor].
+         *
+         * @throws IllegalArgumentException if the ID string is malformed and cannot be converted.
+         */
         fun findByStringId(idStr: String): FileEntity? {
             val id = idConverter(idStr) ?: throw IllegalArgumentException("Malformed id: $idStr")
             return findById(id)
         }
 
+        /**
+         * Finds a [FileEntity] by the entity ID.
+         *
+         * Works by finding the entity using the ID, then accessing its [FileEntity] via the [accessor].
+         */
         fun findById(id: Id): FileEntity? = Database {
             val entity = entityClass.findById(id) ?: return@Database null
             return@Database accessor(entity)
@@ -70,12 +96,8 @@ object VirtualFileSystem {
             return if (fileNameHasExtension) {
                 fileName
             } else {
-                val fileExtension = fileEntity.type
-                    ?.let(ContentType::parse)
-                    // Ignore application/octet-stream as it is too generic
-                    ?.takeUnless { it == ContentType.Application.OctetStream }
-                    ?.fileExtensions()
-                    ?.firstOrNull()
+                val fileExtension = fileEntity.contentType
+                    .extension()
                     ?.let { ".$it" }
                 // If no extension from content type, use fallback extension
                     ?: fallbackExtension?.let { ".$it" }
@@ -137,6 +159,7 @@ object VirtualFileSystem {
             name = rootDir.fileDisplayName(entity, fileEntity),
             isDirectory = false,
             size = bytes.size.toLong(),
+            contentType = fileEntity.contentType,
             lastModified = fileEntity.lastModified,
         )
     }
@@ -147,13 +170,37 @@ object VirtualFileSystem {
         // Expecting exactly two parts: [rootDir, fileId]
         if (parts.size != 2) return null
         val dirName = parts[0]
+
+        // File ID may be one of:
+        // - If of the entity (Int or UUID)
+        // - The FileEntity ID (UUID)
+        // - The display name of the file (String)
         val fileId = parts[1]
 
         val rootDir = rootDirs.find { it.name == dirName } ?: throw IllegalArgumentException("Invalid directory: $dirName")
-        val fileEntity = rootDir.findByStringId(fileId) ?: return null
+
+        val fileEntity = try {
+            rootDir.findByStringId(fileId)
+        } catch (_: IllegalArgumentException) {
+            // Ignore malformed ID errors
+            null
+        }
+        // If the entity could not be found by its ID, try finding by FileEntity ID
+            ?: Database { FileEntity.findById(fileId.toUUIDOrNull() ?: return@Database null) }
+            // If still not found, try finding by display name
+            ?: Database {
+                rootDir.all().firstOrNull { (e, fileEntity) ->
+                    val displayName = rootDir.fileDisplayName(e, fileEntity)
+                    val displayNameWithExtension = "$displayName.${fileEntity.contentType.extension()}"
+                    displayName == fileId || displayNameWithExtension == fileId
+                }?.second
+            }
+            // If still not found, return null
+            ?: return null
+
         val data = Database { fileEntity.data }
         return ItemData(
-            contentType = fileEntity.type?.let(ContentType::parse) ?: ContentType.Application.OctetStream,
+            contentType = fileEntity.contentType,
             size = data.size,
             data = data,
         )

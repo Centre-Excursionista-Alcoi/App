@@ -88,9 +88,9 @@ fun Route.webDavRoutes() {
     route("{path...}") {
         // OPTIONS: advertise supported methods
         options {
-            if (!handleSession()) return@options
-
             call.response.header(HttpHeaders.Allow, "OPTIONS, GET, HEAD, PROPFIND")
+            call.response.header(HttpHeaders.DAV, "1,2")
+            call.response.header("MS-Author-Via", "DAV")
             call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
         }
 
@@ -195,7 +195,8 @@ fun Route.webDavRoutes() {
             if (fileData != null) {
                 // path is a file: return info only about the file itself
                 val size = fileData.size.toLong()
-                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), false, size, null))
+                val contentType = fileData.contentType
+                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), false, contentType, size, null))
             } else {
                 val dirList = try {
                     VirtualFileSystem.list(path)
@@ -270,7 +271,7 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
         } else {
             // child item within the requested dir -> append the child name
             val prefix = if (baseRequest.isEmpty()) "/" else "$baseRequest/"
-            prefix + encodePath(it.name)
+            prefix + encodePath(it.nameWithExtension)
         }
 
         sb.append("<D:response>")
