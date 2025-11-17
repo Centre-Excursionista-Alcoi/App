@@ -349,6 +349,10 @@
     <string name="settings_adjust">Adjust</string>
     <string name="settings_category_general">General</string>
     <string name="settings_language">Language</string>
+    <string name="settings_category_push">Push Notifications</string>
+    <string name="settings_push_connection_title">Connection Status</string>
+    <string name="settings_push_connection_message_connected">Receiving push notifications. Data will be updated instantly.</string>
+    <string name="settings_push_connection_message_disconnected">Not receiving push notifications. Data will need to be fetched manually. Restarting the app may reconnect.</string>
     <string name="settings_category_privacy">Privacy</string>
     <string name="settings_report_errors_title">Collect error information</string>
     <string name="settings_report_errors_summary">If enabled, the app will automatically collect and report error information.</string>

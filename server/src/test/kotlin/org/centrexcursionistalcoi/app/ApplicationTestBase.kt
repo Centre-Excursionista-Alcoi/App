@@ -4,6 +4,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.setCookie
@@ -24,9 +25,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.AES
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 abstract class ApplicationTestBase {
@@ -99,6 +98,7 @@ abstract class ApplicationTestBase {
                     install(Logging) {
                         level = LogLevel.ALL
                     }
+                    install(SSE)
                 }
 
                 if (shouldLogIn == LoginType.USER) loginAsFakeUser()

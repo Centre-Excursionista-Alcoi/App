@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
+import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
@@ -68,6 +69,7 @@ fun main() {
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
     configureContentNegotiation()
+    configureSSE()
     configureRouting()
     configureStatusPages()
     configureSessions(isTesting, isDevelopment)

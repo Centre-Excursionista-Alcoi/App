@@ -22,7 +22,7 @@ fun SettingsRow(
     icon: ImageVector? = null,
     contentDescription: String? = title,
     trailingContent: @Composable (() -> Unit)? = null,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     ListItem(
         headlineContent = { Text(title) },
@@ -37,14 +37,16 @@ fun SettingsRow(
             { Text(it) }
         },
         trailingContent = {
-            trailingContent?.invoke() ?: run {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = stringResource(Res.string.settings_adjust),
-                    tint = LocalContentColor.current.copy(alpha = .8f),
-                )
+            if (onClick != null) {
+                trailingContent?.invoke() ?: run {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = stringResource(Res.string.settings_adjust),
+                        tint = LocalContentColor.current.copy(alpha = .8f),
+                    )
+                }
             }
         },
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
     )
 }
