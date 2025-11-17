@@ -22,10 +22,13 @@ import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.AES
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 abstract class ApplicationTestBase {
@@ -45,6 +48,9 @@ abstract class ApplicationTestBase {
 
         AES.secretKey = AES.generateKey()
         AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
+
+        // Disable push notifications during tests
+        Push.disable = true
 
         try {
             val dib = databaseInitBlock?.let { Database(it) }
@@ -108,6 +114,9 @@ abstract class ApplicationTestBase {
                 block(context)
             }
         } finally {
+            // Re-enable push for tests that require it
+            Push.disable = false
+
             Database.clear()
             finally()
         }
