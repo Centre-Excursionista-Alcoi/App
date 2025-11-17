@@ -54,6 +54,9 @@ object VirtualFileSystem {
         val customFileDisplayName: ((E) -> String)? = null,
         val accessor: (E) -> FileEntity?,
     ) {
+        /**
+         * Returns all entities of type [E] along with their associated [FileEntity]s.
+         */
         fun all(): List<Pair<E, FileEntity>> {
             return Database {
                 entityClass.all().mapNotNull { entity ->
