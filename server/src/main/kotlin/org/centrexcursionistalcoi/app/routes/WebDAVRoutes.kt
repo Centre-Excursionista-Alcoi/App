@@ -51,6 +51,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
         if (session.isAdmin()) {
             return true
         } else {
+            logger.error("WebDAV access denied for non-admin user with cookie (${session.sub})")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
@@ -58,6 +59,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
     }
     val basicAuth = call.request.basicAuthenticationCredentials()
     if (basicAuth == null) {
+        logger.warn("WebDAV missing Authorization header")
         call.response.header(HttpHeaders.CEAWebDAVMessage, "Missing or invalid Authorization header")
         call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"WebDAV Admin Area\"")
         call.respond(HttpStatusCode.Unauthorized)
@@ -65,6 +67,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
     } else {
         val loginError = login(basicAuth.name, basicAuth.password.toCharArray())
         if (loginError != null) {
+            logger.warn("WebDAV invalid credentials for user (${basicAuth.name}): $loginError")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "Invalid credentials: $loginError")
             call.respond(HttpStatusCode.Unauthorized)
             return false
@@ -72,12 +75,13 @@ private suspend fun RoutingContext.handleSession(): Boolean {
 
         val session = Database { UserSession.fromNif(basicAuth.name) }
         if (!session.isAdmin()) {
+            logger.error("WebDAV access denied for non-admin user (${session.sub})")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
         }
 
-        logger.info("WebDAV login successful for admin user (${session.sub}). Sending session cookie...")
+        logger.info("WebDAV login successful for admin user with basic auth (${session.sub}). Sending session cookie...")
         call.sessions.set(session)
     }
     return true
