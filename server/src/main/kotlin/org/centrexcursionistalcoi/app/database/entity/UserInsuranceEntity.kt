@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConverter<UserInsurance, Uuid> {
     companion object : UUIDEntityClass<UserInsuranceEntity>(UserInsurances)
 
-    var userSub by UserInsurances.userSub
+    var userSub by UserReferenceEntity referencedOn UserInsurances.userSub
     var insuranceCompany by UserInsurances.insuranceCompany
     var policyNumber by UserInsurances.policyNumber
     var validFrom by UserInsurances.validFrom
@@ -26,7 +26,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
     context(_: JdbcTransaction)
     override fun toData(): UserInsurance = UserInsurance(
         id = id.value.toKotlinUuid(),
-        userSub = userSub.value,
+        userSub = userSub.id.value,
         insuranceCompany = insuranceCompany,
         policyNumber = policyNumber,
         validFrom = validFrom.toKotlinLocalDate(),

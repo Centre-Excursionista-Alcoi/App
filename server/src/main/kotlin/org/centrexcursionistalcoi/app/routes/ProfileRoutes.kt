@@ -152,7 +152,7 @@ fun Route.profileRoutes() {
 
         Database {
             UserInsuranceEntity.new {
-                userSub = Database { UserReferenceEntity[session.sub].id }
+                userSub = Database { UserReferenceEntity[session.sub] }
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate

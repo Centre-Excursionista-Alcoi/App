@@ -76,7 +76,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
 
                 Database {
                     UserInsuranceEntity.new {
-                        userSub = sub
+                        userSub = this@UserReferenceEntity
                         insuranceCompany = "FEMECV"
                         policyNumber = license.code
                         validFrom = license.validFrom.toJavaLocalDate()
