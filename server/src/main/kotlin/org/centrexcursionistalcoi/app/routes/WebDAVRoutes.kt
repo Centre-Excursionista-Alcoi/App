@@ -112,7 +112,6 @@ fun Route.webDavRoutes() {
 
             if (itemData != null) {
                 logger.debug("Serving file at path: {}, size={}, contentType={}", path, itemData.size, itemData.contentType)
-                call.response.header(HttpHeaders.ContentLength, itemData.size.toString())
                 call.respondBytes(itemData.contentType) { itemData.data }
             } else {
                 // If not a file, check if a directory exists
