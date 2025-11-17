@@ -219,6 +219,7 @@
 
     <string name="management_user_signed_up_for_lendings">Signed lendings agreement</string>
     <string name="management_user_has_insurance">Has a valid insurance</string>
+    <string name="management_user_disabled">Disabled</string>
 
     <string name="delete_dialog_title">Delete %1$s</string>
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
@@ -278,6 +279,7 @@
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
 
     <string name="personal_info">Personal Information</string>
+    <string name="personal_info_disabled">The user is disabled.</string>
     <string name="personal_info_full_name">Full Name</string>
     <string name="personal_info_email">Email</string>
 
