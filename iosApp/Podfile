@@ -1,6 +1,8 @@
 # Uncomment the next line to define a global platform for your project
 # platform :ios, '16.6'
-deployment_target = '18.1'
+
+# See: https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
+deployment_target = '15.6'
 
 target 'iosApp' do
   use_frameworks!
