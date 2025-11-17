@@ -42,6 +42,7 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         departments = item.departments,
         lendingUser = item.lendingUser,
         insurances = item.insurances,
+        isDisabled = item.isDisabled,
     )
 
     override suspend fun update(item: UserData) = queries.update(
@@ -52,6 +53,7 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         departments = item.departments,
         lendingUser = item.lendingUser,
         insurances = item.insurances,
+        isDisabled = item.isDisabled,
     )
 
     override suspend fun delete(id: String) {
@@ -66,5 +68,6 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         departments = departments,
         lendingUser = lendingUser,
         insurances = insurances,
+        isDisabled = isDisabled,
     )
 }

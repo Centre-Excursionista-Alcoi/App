@@ -1,4 +1,5 @@
 import kotlin.String;
+import kotlin.Boolean;
 import kotlin.collections.List;
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo;
 import org.centrexcursionistalcoi.app.data.LendingUser;
@@ -11,11 +12,14 @@ CREATE TABLE Users(
     groups TEXT AS List<String> NOT NULL,
     departments TEXT AS List<DepartmentMemberInfo> NOT NULL,
     lendingUser TEXT AS LendingUser DEFAULT NULL,
-    insurances TEXT AS List<UserInsurance> NOT NULL
+    insurances TEXT AS List<UserInsurance> NOT NULL,
+    isDisabled INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
+CREATE INDEX idx_users_isDisabled ON Users(isDisabled);
+
 insert:
-INSERT INTO Users(sub, fullName, email, groups, departments, lendingUser, insurances) VALUES(?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Users(sub, fullName, email, groups, departments, lendingUser, insurances, isDisabled) VALUES(?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Users WHERE sub = ?;
@@ -27,4 +31,4 @@ deleteById:
 DELETE FROM Users WHERE sub = ?;
 
 update:
-UPDATE Users SET fullName = ?, email = ?, groups = ?, departments = ?, lendingUser = ?, insurances = ? WHERE sub = ?;
+UPDATE Users SET fullName = ?, email = ?, groups = ?, departments = ?, lendingUser = ?, insurances = ?, isDisabled = ? WHERE sub = ?;
