@@ -19,7 +19,7 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Post,
     var title by Posts.title
     var content by Posts.content
     var onlyForMembers by Posts.onlyForMembers
-    var department by Posts.department
+    var department by DepartmentEntity referencedOn Posts.department
 
     @OptIn(ExperimentalTime::class)
     context(_: JdbcTransaction)
@@ -29,6 +29,6 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Post,
         title = title,
         content = content,
         onlyForMembers = onlyForMembers,
-        departmentId = department.value,
+        departmentId = department.id.value,
     )
 }

@@ -6,4 +6,5 @@ package org.centrexcursionistalcoi.app
 val version: String
     get() = object {}.javaClass.`package`?.implementationVersion
         ?: System.getProperty("app.version")
+        ?: System.getenv("APP_VERSION")
         ?: error("Version not found")

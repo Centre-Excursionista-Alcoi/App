@@ -14,7 +14,8 @@ data class UserData(
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,
     val lendingUser: LendingUser?,
-    val insurances: List<UserInsurance>
+    val insurances: List<UserInsurance>,
+    val isDisabled: Boolean,
 ): Entity<String>, SubReferencedFileContainer {
     companion object {
         /**

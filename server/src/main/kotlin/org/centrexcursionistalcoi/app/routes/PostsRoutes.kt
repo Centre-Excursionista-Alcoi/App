@@ -37,7 +37,7 @@ fun Route.postsRoutes() {
                             "title" -> title = partData.value
                             "content" -> content = partData.value
                             "onlyForMembers" -> onlyForMembers = partData.value.toBoolean()
-                            "departmentId" -> departmentId = partData.value.toInt()
+                            "department" -> departmentId = partData.value.toInt()
                         }
                     }
                     else -> { /* nothing */ }
@@ -46,7 +46,7 @@ fun Route.postsRoutes() {
 
             title ?: throw NullPointerException("Missing title")
             content ?: throw NullPointerException("Missing content")
-            departmentId ?: throw NullPointerException("Missing departmentId")
+            departmentId ?: throw NullPointerException("Missing department")
 
             // Check that the department exists
             val department = Database { DepartmentEntity.findById(departmentId) }
@@ -57,7 +57,7 @@ fun Route.postsRoutes() {
                     this.title = title
                     this.content = content
                     this.onlyForMembers = onlyForMembers
-                    this.department = department.id
+                    this.department = department
                 }
             }
         }

@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleShortVersionString</key>
+	<string>2.0.9</string>
 	<key>CFBundleURLSchemes</key>
 	<array>
 		<string>cea</string>

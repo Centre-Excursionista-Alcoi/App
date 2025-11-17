@@ -43,7 +43,7 @@ object AES {
     }
 
     fun init() {
-        val keysDir = File("/keys")
+        val keysDir = File(System.getenv("KEYS_PATH") ?: "/keys")
 
         val secretKeyFile = File(keysDir, "aes.key")
         if (!keysDir.exists()) keysDir.mkdirs()
