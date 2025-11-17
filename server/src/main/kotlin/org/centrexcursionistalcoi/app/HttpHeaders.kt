@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException
 val HttpHeaders.CEAInfo: String get() = "CEA-Info"
 
 val HttpHeaders.CEAWebDAVMessage: String get() = "CEA-WebDAV-Message"
+val HttpHeaders.CEAWebDAVNormalizedPath: String get() = "CEA-WebDAV-NormalizedPath"
 
 /**
  * Parses the 'If-Modified-Since' header from the request and returns it as an [Instant], or null if the header is not present.
