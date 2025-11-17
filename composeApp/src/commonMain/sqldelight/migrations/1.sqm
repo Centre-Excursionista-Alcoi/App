@@ -1,3 +1,10 @@
-ALTER TABLE Users ADD COLUMN isDisabled INTEGER NOT NULL DEFAULT 0;
-UPDATE Users SET isDisabled = 0 WHERE isDisabled IS NULL;
-CREATE INDEX idx_users_isDisabled ON Users(isDisabled);
+CREATE TABLE tmp_InventoryItemTypes (
+    id TEXT PRIMARY KEY NOT NULL,
+    displayName TEXT NOT NULL,
+    description TEXT DEFAULT NULL,
+    categories TEXT DEFAULT NULL,
+    image TEXT DEFAULT NULL
+);
+INSERT INTO tmp_InventoryItemTypes (id, displayName, description, categories, image) SELECT id, displayName, description, category, image FROM InventoryItemTypes;
+DROP TABLE InventoryItemTypes;
+ALTER TABLE tmp_InventoryItemTypes RENAME TO InventoryItemTypes;
