@@ -4,6 +4,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.withCharset
 import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.request.header
 import io.ktor.server.request.path
@@ -185,9 +186,6 @@ fun Route.webDavRoutes() {
                 else -> 1
             }
 
-            // collect responses
-            val responses = mutableListOf<VirtualFileSystem.Item>()
-
             // check if path is a file
             val fileData = try {
                 VirtualFileSystem.read(path)
@@ -195,6 +193,9 @@ fun Route.webDavRoutes() {
                 logger.error("Error reading file at path: $path", e)
                 null
             }
+
+            // collect responses
+            val responses = mutableListOf<VirtualFileSystem.Item>()
 
             if (fileData != null) {
                 // path is a file: return info only about the file itself
@@ -210,13 +211,14 @@ fun Route.webDavRoutes() {
                 }
 
                 if (dirList == null) {
+                    logger.error("File or directory not found at path: {}", path)
                     call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
                     call.respond(HttpStatusCode.NotFound)
                     return@propfind
                 }
 
                 // add the directory itself as response
-                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true, null, null))
+                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true))
 
                 if (depth > 0) {
                     // add immediate children
@@ -225,7 +227,8 @@ fun Route.webDavRoutes() {
             }
 
             val xml = buildMultiStatusXml(call.request.path(), path, responses)
-            call.respondText(xml, ContentType.parse("application/xml; charset=utf-8"), HttpStatusCode.MultiStatus)
+            logger.debug("Responding to PROPFIND for path: {} with depth: {} and {} items", path, depth, responses.size)
+            call.respondText(xml, ContentType.Application.Xml.withCharset(Charsets.UTF_8), HttpStatusCode.MultiStatus)
         }
     }
 }
