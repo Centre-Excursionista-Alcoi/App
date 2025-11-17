@@ -10,9 +10,10 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.annotations.TestOnly
+import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.slf4j.LoggerFactory
 
 object VirtualFileSystem {
@@ -24,7 +25,8 @@ object VirtualFileSystem {
         val lastModified: Instant? = null
     )
 
-    private class RootDir<Id : Any, E : Entity<Id>>(
+    @VisibleForTesting
+    internal class RootDir<Id : Any, E : Entity<Id>>(
         val entityClass: EntityClass<Id, E>,
         val fallbackExtension: String? = null,
         val idConverter: (String) -> Id?,
@@ -34,27 +36,33 @@ object VirtualFileSystem {
             return Database { entityClass.all().mapNotNull { entity -> accessor(entity) } }
         }
 
-        context(_: JdbcTransaction)
         fun findByStringId(idStr: String): FileEntity? {
             val id = idConverter(idStr) ?: throw IllegalArgumentException("Invalid ID: $idStr")
             return findById(id)
         }
 
-        context(_: JdbcTransaction)
-        fun findById(id: Id): FileEntity? {
-            val entity = entityClass.findById(id) ?: return null
-            return accessor(entity)
+        fun findById(id: Id): FileEntity? = Database {
+            val entity = entityClass.findById(id) ?: return@Database null
+            return@Database accessor(entity)
         }
     }
 
     private val logger = LoggerFactory.getLogger(VirtualFileSystem::class.java)
 
-    private val rootDirs: Map<String, RootDir<*, *>> = mapOf(
+    private val originalRootDirs: Map<String, RootDir<*, *>> = mapOf(
         "Departments" to RootDir(DepartmentEntity, idConverter = { it.toIntOrNull() }) { it.image },
         "Inventory Item" to RootDir(InventoryItemTypeEntity, idConverter = { it.toUUIDOrNull() }) { it.image },
         "Lending Memories" to RootDir(LendingEntity, idConverter = { it.toUUIDOrNull() }) { it.memoryDocument },
         "Insurances" to RootDir(UserInsuranceEntity, idConverter = { it.toUUIDOrNull() }) { it.document },
     )
+
+    @VisibleForTesting
+    internal var rootDirs: Map<String, RootDir<*, *>> = originalRootDirs
+
+    @TestOnly
+    fun resetRootDirs() {
+        rootDirs = originalRootDirs
+    }
 
     fun list(path: String): List<Item>? {
         val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
@@ -115,9 +123,7 @@ object VirtualFileSystem {
         val fileId = parts[1]
 
         val rootDir = rootDirs[dirName] ?: throw IllegalArgumentException("Invalid directory: $dirName")
-        return Database {
-            val fileEntity = rootDir.findByStringId(fileId) ?: return@Database null
-            fileEntity.data
-        }
+        val fileEntity = rootDir.findByStringId(fileId) ?: return null
+        return Database { fileEntity.data }
     }
 }
