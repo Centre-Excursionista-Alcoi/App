@@ -98,22 +98,21 @@ fun Route.webDavRoutes() {
         get {
             if (!handleSession()) return@get
 
-            val raw = call.parameters["path"] ?: ""
+            val raw = call.pathParameters.getAll("path")?.joinToString("/") ?: ""
             val path = normalizePath(raw)
             call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
 
             // Try reading a file
-            val data = try {
+            val itemData = try {
                 VirtualFileSystem.read(path)
             } catch (e: Throwable) {
                 logger.error("Error reading file at path: $path", e)
                 null
             }
 
-            if (data != null) {
-                // Serve as octet-stream (simple, no content-type sniffing)
-                call.response.header(HttpHeaders.ContentLength, data.size.toString())
-                call.respondBytes(data, ContentType.Application.OctetStream)
+            if (itemData != null) {
+                call.response.header(HttpHeaders.ContentLength, itemData.size.toString())
+                call.respondBytes(itemData.data, itemData.contentType)
             } else {
                 // If not a file, check if a directory exists
                 val list = try {
@@ -138,7 +137,7 @@ fun Route.webDavRoutes() {
             if (!handleSession()) return@head
 
             // HEAD behaves like GET but without body
-            val raw = call.parameters["path"] ?: ""
+            val raw = call.pathParameters.getAll("path")?.joinToString("/") ?: ""
             val path = normalizePath(raw)
             call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
 
@@ -172,7 +171,7 @@ fun Route.webDavRoutes() {
         propfind {
             if (!handleSession()) return@propfind
 
-            val raw = call.parameters["path"] ?: ""
+            val raw = call.pathParameters.getAll("path")?.joinToString("/") ?: ""
             val path = normalizePath(raw)
             call.response.header(HttpHeaders.CEAWebDAVNormalizedPath, path)
 
@@ -239,7 +238,7 @@ private fun buildHtmlIndex(requestPath: String, dirPath: String, list: List<Virt
     sb.append(escapeHtml(base))
     sb.append("</h1><ul>")
     if (dirPath.isNotEmpty()) {
-        val parentHref = dirPath.trimEnd('/').substringBeforeLast('/', "")
+        val parentHref = requestPath.trimEnd('/').substringBeforeLast('/', "")
         sb.append("<li><a href=\"${escapeHtml(parentHref)}\">..</a></li>")
     }
     for (it in list) {

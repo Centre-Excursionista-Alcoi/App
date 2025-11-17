@@ -25,19 +25,32 @@ object VirtualFileSystem {
         val lastModified: Instant? = null
     )
 
+    class ItemData(
+        val contentType: ContentType,
+        val size: Int,
+        val data: ByteArray,
+    )
+
     @VisibleForTesting
     internal class RootDir<Id : Any, E : Entity<Id>>(
+        val name: String,
         val entityClass: EntityClass<Id, E>,
         val fallbackExtension: String? = null,
         val idConverter: (String) -> Id?,
+        val customFileDisplayName: ((E) -> String)? = null,
         val accessor: (E) -> FileEntity?,
     ) {
-        fun all(): List<FileEntity> {
-            return Database { entityClass.all().mapNotNull { entity -> accessor(entity) } }
+        fun all(): List<Pair<E, FileEntity>> {
+            return Database {
+                entityClass.all().mapNotNull { entity ->
+                    val fileEntity = accessor(entity) ?: return@mapNotNull null
+                    entity to fileEntity
+                }
+            }
         }
 
         fun findByStringId(idStr: String): FileEntity? {
-            val id = idConverter(idStr) ?: throw IllegalArgumentException("Invalid ID: $idStr")
+            val id = idConverter(idStr) ?: throw IllegalArgumentException("Malformed id: $idStr")
             return findById(id)
         }
 
@@ -45,19 +58,45 @@ object VirtualFileSystem {
             val entity = entityClass.findById(id) ?: return@Database null
             return@Database accessor(entity)
         }
+
+        fun fileDisplayName(entity: Entity<out Any>, fileEntity: FileEntity): String {
+            @Suppress("UNCHECKED_CAST")
+            customFileDisplayName?.invoke(entity as E)?.let {
+                return it
+            }
+
+            val fileName = fileEntity.name ?: fileEntity.id.value.toString()
+            val fileNameHasExtension = fileName.contains('.')
+            return if (fileNameHasExtension) {
+                fileName
+            } else {
+                val fileExtension = fileEntity.type
+                    ?.let(ContentType::parse)
+                    // Ignore application/octet-stream as it is too generic
+                    ?.takeUnless { it == ContentType.Application.OctetStream }
+                    ?.fileExtensions()
+                    ?.firstOrNull()
+                    ?.let { ".$it" }
+                // If no extension from content type, use fallback extension
+                    ?: fallbackExtension?.let { ".$it" }
+                    // If no fallback extension, use empty string (no extension)
+                    ?: ""
+                "$fileName$fileExtension"
+            }
+        }
     }
 
     private val logger = LoggerFactory.getLogger(VirtualFileSystem::class.java)
 
-    private val originalRootDirs: Map<String, RootDir<*, *>> = mapOf(
-        "Departments" to RootDir(DepartmentEntity, idConverter = { it.toIntOrNull() }) { it.image },
-        "Inventory Item" to RootDir(InventoryItemTypeEntity, idConverter = { it.toUUIDOrNull() }) { it.image },
-        "Lending Memories" to RootDir(LendingEntity, idConverter = { it.toUUIDOrNull() }) { it.memoryDocument },
-        "Insurances" to RootDir(UserInsuranceEntity, idConverter = { it.toUUIDOrNull() }) { it.document },
+    private val originalRootDirs: List<RootDir<out Any, out Entity<out Any>>> = listOf(
+        RootDir("Departments", DepartmentEntity, idConverter = { it.toIntOrNull() }, customFileDisplayName = { it.displayName }) { it.image },
+        RootDir("Inventory Item", InventoryItemTypeEntity, idConverter = { it.toUUIDOrNull() }, customFileDisplayName = { it.displayName }) { it.image },
+        RootDir("Lending Memories", LendingEntity, idConverter = { it.toUUIDOrNull() }) { it.memoryDocument },
+        RootDir("Insurances", UserInsuranceEntity, idConverter = { it.toUUIDOrNull() }) { it.document },
     )
 
     @VisibleForTesting
-    internal var rootDirs: Map<String, RootDir<*, *>> = originalRootDirs
+    internal var rootDirs: List<RootDir<out Any, out Entity<out Any>>> = originalRootDirs
 
     @TestOnly
     fun resetRootDirs() {
@@ -68,7 +107,8 @@ object VirtualFileSystem {
         val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
         if (parts.isEmpty()) {
             // root directory
-            return rootDirs.map { (dirName) ->
+            return rootDirs.map { rootDir ->
+                val dirName = rootDir.name
                 Item(
                     path = "/webdav/$dirName/",
                     name = dirName,
@@ -78,34 +118,10 @@ object VirtualFileSystem {
         } else if (parts.size == 1) {
             // accessing a root dir
             val dirName = parts[0]
-            val rootDir = rootDirs[dirName] ?: return null
+            val rootDir = rootDirs.find { it.name == dirName } ?: return null
             return Database {
-                rootDir.all().map { fileEntity ->
-                    val fileName = fileEntity.name ?: fileEntity.id.value.toString()
-                    val fileNameHasExtension = fileName.contains('.')
-                    val fileNameWithExtension = if (fileNameHasExtension) fileName else {
-                        val fileExtension = fileEntity.type
-                            ?.let(ContentType::parse)
-                            // Ignore application/octet-stream as it is too generic
-                            ?.takeUnless { it == ContentType.Application.OctetStream }
-                            ?.fileExtensions()
-                            ?.firstOrNull()
-                            ?.let { ".$it" }
-                        // If no extension from content type, use fallback extension from root dir
-                            ?: rootDir.fallbackExtension
-                                ?.let { ".$it" }
-                            // If no fallback extension, use empty string (no extension)
-                            ?: ""
-                        "$fileName$fileExtension"
-                    }
-                    val bytes = fileEntity.data
-                    Item(
-                        path = "/webdav/$dirName/${fileEntity.id.value}",
-                        name = fileNameWithExtension,
-                        isDirectory = false,
-                        size = bytes.size.toLong(),
-                        lastModified = fileEntity.lastModified,
-                    )
+                rootDir.all().map { (entity, fileEntity) ->
+                    mapItem(rootDir, entity, fileEntity)
                 }
             }
         } else {
@@ -114,7 +130,18 @@ object VirtualFileSystem {
         }
     }
 
-    fun read(path: String): ByteArray? {
+    private fun mapItem(rootDir: RootDir<out Any, out Entity<out Any>>, entity: Entity<out Any>, fileEntity: FileEntity): Item {
+        val bytes = fileEntity.data
+        return Item(
+            path = "/webdav/${rootDir.name}/${entity.id.value}",
+            name = rootDir.fileDisplayName(entity, fileEntity),
+            isDirectory = false,
+            size = bytes.size.toLong(),
+            lastModified = fileEntity.lastModified,
+        )
+    }
+
+    fun read(path: String): ItemData? {
         logger.debug("Reading file at path: $path")
         val parts = path.replace('+', ' ').trim('/').split('/').filter { it.isNotEmpty() }
         // Expecting exactly two parts: [rootDir, fileId]
@@ -122,8 +149,13 @@ object VirtualFileSystem {
         val dirName = parts[0]
         val fileId = parts[1]
 
-        val rootDir = rootDirs[dirName] ?: throw IllegalArgumentException("Invalid directory: $dirName")
+        val rootDir = rootDirs.find { it.name == dirName } ?: throw IllegalArgumentException("Invalid directory: $dirName")
         val fileEntity = rootDir.findByStringId(fileId) ?: return null
-        return Database { fileEntity.data }
+        val data = Database { fileEntity.data }
+        return ItemData(
+            contentType = fileEntity.type?.let(ContentType::parse) ?: ContentType.Application.OctetStream,
+            size = data.size,
+            data = data,
+        )
     }
 }
