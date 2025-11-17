@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -53,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
@@ -109,6 +111,7 @@ fun <T> ListView(
      * Cannot be empty.
      */
     sortByOptions: List<SortBy<T>> = SortBy.defaults(itemDisplayName),
+    itemTextStyle: (@Composable (T) -> TextStyle)? = null,
     itemLeadingContent: (@Composable (T) -> Unit)? = null,
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
@@ -164,6 +167,7 @@ fun <T> ListView(
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
                 itemTrailingContent = itemTrailingContent,
+                itemTextStyle = itemTextStyle,
                 selectedItem = selectedItem,
                 filters = filters,
                 sortByOptions = sortByOptions,
@@ -218,6 +222,8 @@ fun <T> ListView(
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
+                itemTrailingContent = itemTrailingContent,
+                itemTextStyle = itemTextStyle,
                 selectedItem = selectedItem,
                 filters = filters,
                 sortByOptions = sortByOptions,
@@ -239,6 +245,7 @@ fun <T> ListView_ListColumn(
     itemIdProvider: (T) -> Any,
     itemLeadingContent: (@Composable (T) -> Unit)? = null,
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
+    itemTextStyle: (@Composable (T) -> TextStyle)? = null,
     selectedItem: T?,
     onSelectedItemChange: (T) -> Unit,
     isCreatingSupported: Boolean,
@@ -352,7 +359,12 @@ fun <T> ListView_ListColumn(
                 val contentColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else Color.Unspecified)
 
                 ListItem(
-                    headlineContent = { Text(itemDisplayName(item)) },
+                    headlineContent = {
+                        Text(
+                            text = itemDisplayName(item),
+                            style = itemTextStyle?.invoke(item) ?: LocalTextStyle.current,
+                        )
+                    },
                     leadingContent = { itemLeadingContent?.invoke(item) },
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {

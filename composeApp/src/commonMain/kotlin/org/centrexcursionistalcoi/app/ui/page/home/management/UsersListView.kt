@@ -6,8 +6,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddModerator
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
@@ -18,6 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
@@ -67,8 +72,24 @@ fun UsersListView(
         items = users,
         itemIdProvider = { it.id },
         itemDisplayName = { it.fullName },
+        itemTextStyle = { user ->
+            if (user.isDisabled) {
+                LocalTextStyle.current.copy(fontStyle = FontStyle.Italic)
+            } else {
+                LocalTextStyle.current
+            }
+        },
         emptyItemsText = stringResource(Res.string.management_no_users),
         itemTrailingContent = { user ->
+            if (user.isDisabled) {
+                TooltipIconButton(
+                    imageVector = Icons.Default.PersonOff,
+                    tooltip = stringResource(Res.string.management_user_disabled),
+                    enabled = false,
+                    positioning = TooltipAnchorPosition.Left,
+                    onClick = {},
+                )
+            }
             if (user.lendingUser != null) {
                 TooltipIconButton(
                     imageVector = Icons.Default.Inventory2,
@@ -90,6 +111,7 @@ fun UsersListView(
             }
         },
         itemToolbarActions = { user ->
+            if (user.isDisabled) return@ListView
             if (!user.isAdmin()) {
                 TooltipIconButton(
                     imageVector = Icons.Default.AddModerator,
@@ -125,6 +147,16 @@ fun UsersListView(
         isCreatingSupported = false,
         editItemContent = null,
     ) { user ->
+        if (user.isDisabled) {
+            Text(
+                text = stringResource(Res.string.personal_info_disabled),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            )
+        }
+
         ReadOnlyFormField(
             value = user.fullName,
             label = stringResource(Res.string.personal_info_full_name),
