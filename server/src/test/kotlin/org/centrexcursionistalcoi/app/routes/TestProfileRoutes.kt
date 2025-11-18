@@ -31,9 +31,7 @@ import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.core.eq
 
 class TestProfileRoutes : ApplicationTestBase() {
@@ -179,14 +177,14 @@ class TestProfileRoutes : ApplicationTestBase() {
             // Add some insurances for the user
             Database {
                 UserInsuranceEntity.new {
-                    userSub = FakeUser.provideEntity().id
+                    userSub = FakeUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL123"
                     validFrom = LocalDate.of(2025, 1, 1)
                     validTo = LocalDate.of(2025, 12, 31)
                 }
                 UserInsuranceEntity.new {
-                    userSub = FakeAdminUser.provideEntity().id
+                    userSub = FakeAdminUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL456"
                     validFrom = LocalDate.of(2025, 1, 1)
@@ -308,7 +306,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             val insurances = UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.toList()
             assertEquals(1, insurances.size)
             val insurance = insurances[0]
-            assertEquals(FakeUser.SUB, insurance.userSub.value)
+            assertEquals(FakeUser.SUB, insurance.userSub.id.value)
             assertEquals("FEMECV", insurance.insuranceCompany)
             assertEquals("POL123", insurance.policyNumber)
             assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom)
