@@ -38,7 +38,7 @@ class TestVirtualFileSystem {
         val mockDir = mockk<VirtualFileSystem.RootDir<Any, Entity<Any>>>()
         every { mockDir.name } returns "MockDir"
         every { mockDir.all() } answers { listOf(mockEntity to file) }
-        every { mockDir.findByStringId(any()) } returns file
+        every { mockDir.findByStringIdOrNull(any()) } returns file
         every { mockDir.fileDisplayName(any(), any()) } returns "example.txt"
 
         VirtualFileSystem.rootDirs = listOf(mockDir)

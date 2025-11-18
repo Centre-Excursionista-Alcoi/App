@@ -55,7 +55,7 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.phoneNumber = "123456789"
             }
             UserInsuranceEntity.new {
-                this.userSub = fakeUser.sub
+                this.userSub = fakeUser
                 this.insuranceCompany = "Insurance Co"
                 this.policyNumber = "POL123456"
                 this.validFrom = LocalDate.of(2025, 1, 1)
@@ -155,14 +155,14 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
 
             UserInsuranceEntity.new {
-                this.userSub = fakeUser.sub
+                this.userSub = fakeUser
                 this.insuranceCompany = "Insurance Co"
                 this.policyNumber = "POL123456"
                 this.validFrom = LocalDate.of(2025, 1, 1)
                 this.validTo = LocalDate.of(2025, 12, 31)
             }
             UserInsuranceEntity.new {
-                this.userSub = fakeUser2.sub
+                this.userSub = fakeUser2
                 this.insuranceCompany = "Insurance Co 2"
                 this.policyNumber = "POL654321"
                 this.validFrom = LocalDate.of(2025, 1, 1)
