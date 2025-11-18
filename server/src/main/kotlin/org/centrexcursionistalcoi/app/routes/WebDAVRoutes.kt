@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("WebDAV")
 
+private val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
+
 fun Route.propfind(body: RoutingHandler): Route {
     return method(HttpMethod("PROPFIND")) { handle(body) }
 }
@@ -155,6 +157,8 @@ fun Route.webDavRoutes() {
 
             if (data != null) {
                 call.response.header(HttpHeaders.ContentLength, data.size.toString())
+                call.response.header(HttpHeaders.ContentType, data.contentType.toString())
+                call.response.header(HttpHeaders.LastModified, rfc1123.format(data.lastModified))
                 call.respond(HttpStatusCode.OK)
             } else {
                 val list = try {
@@ -164,6 +168,14 @@ fun Route.webDavRoutes() {
                     null
                 }
                 if (list != null) {
+                    // Return text/html content type for directories (it can be useful for clients)
+                    call.response.header(HttpHeaders.ContentType, ContentType.Text.Html.toString())
+
+                    // Send the latest modification time among the directory items
+                    list.mapNotNull { it.lastModified }
+                        .maxOrNull()
+                        ?.let { call.response.header(HttpHeaders.LastModified, rfc1123.format(it)) }
+
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
@@ -217,8 +229,10 @@ fun Route.webDavRoutes() {
                     return@propfind
                 }
 
+                val lastModified = dirList.mapNotNull { it.lastModified }.maxOrNull()
+
                 // add the directory itself as response
-                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true))
+                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true, lastModified = lastModified))
 
                 if (depth > 0) {
                     // add immediate children
@@ -269,7 +283,6 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
     val sb = StringBuilder()
     sb.append("""<?xml version="1.0" encoding="utf-8"?>""")
     sb.append("<D:multistatus xmlns:D=\"DAV:\">")
-    val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
     val baseRequest = requestPath.trimEnd('/')
     for (it in items) {
         val href = if (it.path == basePath || basePath.isEmpty() && it.path.isEmpty()) {
