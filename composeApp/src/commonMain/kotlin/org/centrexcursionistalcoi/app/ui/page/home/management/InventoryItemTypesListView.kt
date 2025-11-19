@@ -56,6 +56,7 @@ fun InventoryItemTypesListView(
     items: List<ReferencedInventoryItem>?,
     onCreate: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
+    onDelete: (InventoryItemType) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 ) {
     val selectedItemIndex = remember(selectedItemId, types) {
@@ -90,6 +91,7 @@ fun InventoryItemTypesListView(
         },
         emptyItemsText = stringResource(Res.string.management_no_item_types),
         isCreatingSupported = true,
+        onDeleteRequest = { (type) -> onDelete(type) },
         editItemContent = { typeAndItems ->
             val type = typeAndItems?.first
 

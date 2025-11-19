@@ -83,6 +83,7 @@ fun ManagementPage(
         inventoryItemTypesCategories = inventoryItemTypesCategories,
         onCreateInventoryItemType = model::createInventoryItemType,
         onUpdateInventoryItemType = model::updateInventoryItemType,
+        onDeleteInventoryItemType = model::delete,
         onDeleteInventoryItem = model::delete,
         inventoryItems = inventoryItems,
     )
@@ -113,6 +114,7 @@ private fun ManagementPage(
     inventoryItemTypesCategories: Set<String>,
     onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
+    onDeleteInventoryItemType: (InventoryItemType) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -171,6 +173,7 @@ private fun ManagementPage(
                 inventoryItems,
                 onCreateInventoryItemType,
                 onUpdateInventoryItemType,
+                onDeleteInventoryItemType,
                 onDeleteInventoryItem,
             )
         }
