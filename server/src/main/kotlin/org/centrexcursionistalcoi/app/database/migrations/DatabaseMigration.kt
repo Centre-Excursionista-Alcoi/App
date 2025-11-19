@@ -11,7 +11,7 @@ interface DatabaseMigration {
 
     companion object {
         val migrations = listOf<DatabaseMigration>(
-            V1,
+            V1, V2,
         )
 
         /**

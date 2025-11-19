@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
 import java.sql.DriverManager
+import java.sql.Types
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
@@ -51,7 +52,7 @@ object Database {
     @TestOnly
     const val TEST_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;"
 
-    const val VERSION = 1
+    const val VERSION = 2
 
     private val logger = LoggerFactory.getLogger(Database::class.java)
 
@@ -132,23 +133,73 @@ object Database {
 
     operator fun <T> invoke(statement: JdbcTransaction.() -> T): T = transaction(database, statement = statement)
 
+    private val sqlIgnoreExecuteFailure = setOf("CREATE TABLE", "ALTER TABLE")
+
+    /**
+     * Executes raw SQL queries. ONLY FOR TESTS.
+     * @param queries SQL queries to execute. They will be run on sepparate transactions.
+     * @return true if all queries executed successfully, false otherwise.
+     */
     @TestOnly
     @VisibleForTesting
     @Suppress("SqlSourceToSinkFlow")
-    @Deprecated("Should not be used. Only for tests.")
-    internal fun exec(query: String) = transaction(database) {
+    internal fun exec(vararg queries: String) = queries.all { query ->
+        transaction(database) {
+            val conn = (TransactionManager.current().connection as JdbcConnectionImpl).connection
+            val statement = conn.createStatement()
+            logger.info("Executing SQL: $query")
+            statement.execute(query)
+                .let { success ->
+                    if (success) {
+                        logger.info("SQL executed successfully. Update count: ${statement.updateCount}")
+                        true
+                    } else if (sqlIgnoreExecuteFailure.any { query.contains(it, true) }) {
+                        logger.warn("SQL execution failed, but query is a CREATE statement. This might be because CREATE doesn't update any rows, so update count is 0. Trusting that it succeeded.")
+                        true
+                    } else {
+                        logger.error("SQL execution failed.")
+                        false
+                    }
+                }
+        }
+    }
+
+    /**
+     * Executes raw SQL queries with arguments. ONLY FOR TESTS.
+     * @param query SQL query to execute.
+     * @param args Arguments for the SQL query.
+     * @return true if the query executed successfully, false otherwise.
+     */
+    @TestOnly
+    @VisibleForTesting
+    @Suppress("SqlSourceToSinkFlow")
+    internal fun exec(query: String, args: Array<Any?>) = transaction(database) {
         val conn = (TransactionManager.current().connection as JdbcConnectionImpl).connection
-        val statement = conn.createStatement()
-        statement.execute(query)
+        val statement = conn.prepareStatement(query)
+        for ((idx, arg) in args.withIndex()) {
+            when (arg) {
+                is Int -> statement.setInt(idx + 1, arg)
+                is String -> statement.setString(idx + 1, arg)
+                is Long -> statement.setLong(idx + 1, arg)
+                is Boolean -> statement.setBoolean(idx + 1, arg)
+                is Float -> statement.setFloat(idx + 1, arg)
+                is Double -> statement.setDouble(idx + 1, arg)
+                is ByteArray -> statement.setBytes(idx + 1, arg)
+                null -> statement.setNull(idx + 1, Types.NULL)
+                else -> error("Unsupported argument type: ${arg.javaClass.name}")
+            }
+        }
+        logger.info("Executing SQL (${args.joinToString()}): $query")
+        statement.executeUpdate() > 0
     }
 
     @TestOnly
     @VisibleForTesting
     @Suppress("SqlSourceToSinkFlow")
-    @Deprecated("Should not be used. Only for tests.")
     internal fun execQuery(query: String) = transaction(database) {
         val conn = (TransactionManager.current().connection as JdbcConnectionImpl).connection
         val statement = conn.createStatement()
+        logger.info("Executing SQL query: $query")
         statement.executeQuery(query)
     }
 }
