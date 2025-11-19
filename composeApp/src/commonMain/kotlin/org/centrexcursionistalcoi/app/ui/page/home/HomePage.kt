@@ -56,7 +56,7 @@ fun HomePage(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
     ) {
-        item(key = "top_spacer", contentType = "spacer") { Modifier.height(16.dp) }
+        item(key = "top_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) { Modifier.height(16.dp) }
 
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
