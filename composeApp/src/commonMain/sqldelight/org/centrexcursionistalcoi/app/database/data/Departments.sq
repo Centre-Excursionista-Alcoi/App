@@ -1,7 +1,7 @@
 import kotlin.uuid.Uuid;
 
 CREATE TABLE Departments (
-  id INTEGER PRIMARY KEY NOT NULL,
+  id TEXT AS Uuid PRIMARY KEY NOT NULL,
   displayName TEXT NOT NULL,
   imageFile TEXT AS Uuid DEFAULT NULL
 );

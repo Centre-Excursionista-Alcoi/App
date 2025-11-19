@@ -33,7 +33,7 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun updateDepartment(
-        departmentId: Int,
+        departmentId: Uuid,
         displayName: String,
         image: PlatformFile?,
         progressNotifier: ProgressNotifier? = null,

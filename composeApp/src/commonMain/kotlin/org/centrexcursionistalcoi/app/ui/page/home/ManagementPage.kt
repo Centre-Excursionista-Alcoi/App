@@ -103,7 +103,7 @@ private fun ManagementPage(
 
     departments: List<Department>?,
     onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
-    onUpdateDepartment: (id: Int, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
+    onUpdateDepartment: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDeleteDepartment: (Department) -> Job,
 
     users: List<UserData>?,

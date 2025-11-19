@@ -7,12 +7,11 @@ CREATE TABLE Posts (
     date INTEGER AS Instant NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    onlyForMembers INTEGER AS Boolean NOT NULL DEFAULT 0,
-    department INTEGER REFERENCES Departments(id)
+    department TEXT AS Uuid REFERENCES Departments(id)
 );
 
 insert:
-INSERT INTO Posts (id, date, title, content, onlyForMembers, department) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Posts (id, date, title, content, department) VALUES (?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Posts WHERE id = ?;
@@ -24,4 +23,4 @@ deleteById:
 DELETE FROM Posts WHERE id = ?;
 
 update:
-UPDATE Posts SET date = ?, title = ?, content = ?, onlyForMembers = ?, department = ? WHERE id = ?;
+UPDATE Posts SET date = ?, title = ?, content = ?, department = ? WHERE id = ?;

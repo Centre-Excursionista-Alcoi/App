@@ -37,7 +37,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
     val driver = driverFactory.createDriver()
     return Database(
         driver,
-        Departments.Adapter(UUIDAdapter),
+        Departments.Adapter(UUIDAdapter, UUIDAdapter),
         InventoryItemTypes.Adapter(UUIDAdapter, ListStringAdapter, UUIDAdapter),
         InventoryItems.Adapter(UUIDAdapter, UUIDAdapter),
         LendingItems.Adapter(UUIDAdapter, UUIDAdapter),
@@ -50,7 +50,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             InstantAdapter,
             UUIDAdapter,
         ),
-        Posts.Adapter(UUIDAdapter, InstantAdapter),
+        Posts.Adapter(UUIDAdapter, InstantAdapter, UUIDAdapter),
         ReceivedItems.Adapter(
             UUIDAdapter,
             UUIDAdapter,

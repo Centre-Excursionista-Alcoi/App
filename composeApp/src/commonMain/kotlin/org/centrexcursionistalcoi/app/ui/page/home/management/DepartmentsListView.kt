@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.rememberImageFile
@@ -42,7 +43,7 @@ fun DepartmentsListView(
     windowSizeClass: WindowSizeClass,
     departments: List<Department>?,
     onCreate: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
-    onUpdate: (id: Int, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
+    onUpdate: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDelete: (Department) -> Job,
 ) {
     var deleting by remember { mutableStateOf<Department?>(null) }

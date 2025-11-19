@@ -1,0 +1,19 @@
+DROP INDEX idx_Departments_displayName;
+DROP TABLE Departments;
+
+CREATE TABLE Departments (
+  id TEXT AS Uuid PRIMARY KEY NOT NULL,
+  displayName TEXT NOT NULL,
+  imageFile TEXT AS Uuid DEFAULT NULL
+);
+CREATE INDEX idx_Departments_displayName ON Departments(displayName);
+
+
+DROP TABLE Posts;
+CREATE TABLE Posts (
+    id TEXT AS Uuid PRIMARY KEY NOT NULL,
+    date INTEGER AS Instant NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    department TEXT AS Uuid REFERENCES Departments(id)
+);

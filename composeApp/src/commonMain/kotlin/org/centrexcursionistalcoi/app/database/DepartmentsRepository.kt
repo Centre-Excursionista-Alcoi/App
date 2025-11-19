@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -10,7 +11,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object DepartmentsRepository : DatabaseRepository<Department, Int>() {
+object DepartmentsRepository : DatabaseRepository<Department, Uuid>() {
     override val queries by lazy { databaseInstance.departmentsQueries }
 
     override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
@@ -24,13 +25,13 @@ object DepartmentsRepository : DatabaseRepository<Department, Int>() {
 
     override suspend fun selectAll() = queries.selectAll().awaitAsList().map { it.toDepartment() }
 
-    override suspend fun get(id: Int): Department? {
-        return queries.get(id.toLong()).awaitAsList().firstOrNull()?.toDepartment()
+    override suspend fun get(id: Uuid): Department? {
+        return queries.get(id).awaitAsList().firstOrNull()?.toDepartment()
     }
 
-    override fun getAsFlow(id: Int, dispatcher: CoroutineDispatcher): Flow<Department?> {
+    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<Department?> {
         return queries
-            .get(id.toLong())
+            .get(id)
             .asFlow()
             .mapToList(dispatcher)
             .map { departments ->
@@ -39,23 +40,23 @@ object DepartmentsRepository : DatabaseRepository<Department, Int>() {
     }
 
     override suspend fun insert(item: Department) = queries.insert(
-        id = item.id.toLong(),
+        id = item.id,
         displayName = item.displayName,
         imageFile = item.image
     )
 
     override suspend fun update(item: Department) = queries.update(
-        id = item.id.toLong(),
+        id = item.id,
         displayName = item.displayName,
         imageFile = item.image
     )
 
-    override suspend fun delete(id: Int) {
-        queries.deleteById(id.toLong())
+    override suspend fun delete(id: Uuid) {
+        queries.deleteById(id)
     }
 
     private fun Departments.toDepartment() = Department(
-        id = id.toInt(),
+        id = id,
         displayName = displayName,
         image = imageFile
     )

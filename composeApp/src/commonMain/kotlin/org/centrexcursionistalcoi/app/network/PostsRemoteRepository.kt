@@ -14,9 +14,8 @@ object PostsRemoteRepository: SymmetricRemoteRepository<Uuid, Post>(
     suspend fun create(
         title: String,
         content: String,
-        onlyForMembers: Boolean,
-        departmentId: Int
+        departmentId: Uuid
     ) = create(
-        Post(Uuid.Zero, Clock.System.now(), title, content, onlyForMembers, departmentId)
+        Post(Uuid.Zero, Clock.System.now(), title, content, departmentId)
     )
 }
