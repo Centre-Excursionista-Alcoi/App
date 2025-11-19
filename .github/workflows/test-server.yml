@@ -60,3 +60,13 @@ jobs:
           TESTCONTAINERS_CHECKS_DISABLE: true
           TESTCONTAINERS_HOST_OVERRIDE: localhost
         run: ./gradlew :server:check
+
+      - name: Upload test results (on failure)
+        if: ${{ steps.server_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-test-results
+          retention-days: 3
+          path: |
+            server/build/test-results
+            server/build/reports/tests

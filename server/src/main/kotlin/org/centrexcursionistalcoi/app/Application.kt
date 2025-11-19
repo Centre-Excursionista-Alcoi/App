@@ -6,7 +6,12 @@ import io.ktor.server.netty.Netty
 import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
@@ -57,7 +62,17 @@ fun main() {
 
     Push.init()
 
-    CEA.synchronizeIfNeeded()
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            CEA.synchronizeIfNeeded()
+        } catch (e: HttpResponseException) {
+            logger.error("Failed to synchronize CEA members: ${e.statusCode} ${e.message}")
+        } catch (e: SerializationException) {
+            logger.error("Failed to parse CEA members data: ${e.message}")
+        } catch (e: Exception) {
+            logger.error("Unexpected error during CEA members synchronization", e)
+        }
+    }
 
     embeddedServer(
         Netty,

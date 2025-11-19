@@ -23,6 +23,9 @@ services:
       MAILER_SEND_TOKEN: abc
       # Firebase Admin
       GOOGLE_APPLICATION_CREDENTIALS: /service-account-file.json
+      # CEA Configuration
+      CEA_USERNAME: admin
+      CEA_PASSWORD: password
     volumes:
       - keys:/keys
       - ./service-account-file.json:/service-account-file.json:ro
