@@ -6,9 +6,11 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -67,6 +69,12 @@ class ManagementViewModel : ViewModel() {
 
     fun updateInventoryItemType(id: Uuid, displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = launch {
         // TODO
+    }
+
+    fun delete(inventoryItemType: InventoryItemType) = launch {
+        doAsync {
+            InventoryItemTypesRepository.delete(inventoryItemType.id)
+        }
     }
 
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {

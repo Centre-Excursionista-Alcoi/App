@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FilterListOff
@@ -57,6 +58,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
@@ -116,11 +119,22 @@ fun <T> ListView(
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
+    onDeleteRequest: ((T) -> Job)? = null,
     itemContent: @Composable ColumnScope.(T) -> Unit,
 ) {
     var selectedItem by remember { mutableStateOf(selectedItemIndex?.let { items?.getOrNull(it) }) }
     var isEditing by remember { mutableStateOf(false) }
     var isCreating by remember { mutableStateOf(false) }
+
+    var isDeleting by remember { mutableStateOf<T?>(null) }
+    if (onDeleteRequest != null) isDeleting?.let { item ->
+        DeleteDialog(
+            item = item,
+            displayName = itemDisplayName,
+            onDelete = { onDeleteRequest(item).also { job -> job.invokeOnCompletion { selectedItem = null } } },
+            onDismissRequested = { isDeleting = null }
+        )
+    }
 
     @Composable
     fun ColumnScope.actualItemContent() {
@@ -191,6 +205,11 @@ fun <T> ListView(
                     isEditSupported = editItemContent != null,
                     isEditing = isEditing || isCreating,
                     onEditRequest = { isEditing = true },
+                    onDeleteRequest = selectedItem?.let { item ->
+                        if (onDeleteRequest != null) {
+                            { isDeleting = item }
+                        } else null
+                    },
                     modifier = Modifier.fillMaxHeight().weight(contentWeight),
                     shape = RoundedCornerShape(12.dp, 0.dp, 0.dp, 12.dp),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -212,6 +231,11 @@ fun <T> ListView(
                 isEditSupported = editItemContent != null,
                 isEditing = isEditing || isCreating,
                 onEditRequest = { isEditing = true },
+                onDeleteRequest = selectedItem?.let { item ->
+                    if (onDeleteRequest != null) {
+                        { isDeleting = item }
+                    } else null
+                },
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
@@ -412,6 +436,7 @@ fun ListView_Content(
     isEditSupported: Boolean,
     isEditing: Boolean,
     onEditRequest: () -> Unit,
+    onDeleteRequest: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     shape: Shape = RectangleShape,
     containerColor: Color = Color.Unspecified,
@@ -449,6 +474,14 @@ fun ListView_Content(
                             onClick = onEditRequest,
                         )
                     }
+                }
+                if (onDeleteRequest != null) {
+                    TooltipIconButton(
+                        imageVector = Icons.Default.Delete,
+                        tooltip = stringResource(Res.string.delete),
+                        positioning = TooltipAnchorPosition.Left,
+                        onClick = onDeleteRequest,
+                    )
                 }
                 if ((!isEditSupported || !isEditing) && itemToolbarActions != null) {
                     itemToolbarActions(this)
