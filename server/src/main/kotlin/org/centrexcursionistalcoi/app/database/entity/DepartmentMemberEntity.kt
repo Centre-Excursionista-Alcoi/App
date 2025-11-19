@@ -1,14 +1,16 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-class DepartmentMemberEntity(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<DepartmentMemberEntity>(DepartmentMembers)
+class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers)
 
     var department by DepartmentEntity referencedOn DepartmentMembers.departmentId
     var userSub by DepartmentMembers.userSub
@@ -17,7 +19,7 @@ class DepartmentMemberEntity(id: EntityID<Int>) : IntEntity(id) {
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
         userSub = userSub.value,
-        departmentId = department.id.value,
+        departmentId = department.id.value.toKotlinUuid(),
         confirmed = confirmed
     )
 }

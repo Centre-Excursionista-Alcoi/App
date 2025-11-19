@@ -7,6 +7,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -17,11 +18,18 @@ import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.isZero
+import org.centrexcursionistalcoi.app.utils.toUUID
 
 class TestDepartmentRoutes : ApplicationTestBase() {
+    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
+    private val joinRequestId = "a82b9bc2-e357-4cfb-abe0-4c5444680757".toUUID()
+
     @Test
-    fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/123/join", HttpMethod.Post)
+    fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/join", HttpMethod.Post)
 
     @Test
     fun test_join_malformedId() = runApplicationTest(
@@ -36,7 +44,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_join_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.USER
     ) {
-        client.post("/departments/123/join").apply {
+        client.post("/departments/$departmentId/join").apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -47,14 +55,14 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             DepartmentMemberEntity.new {
                 userSub = FakeUser.provideEntity().id
-                department = DepartmentEntity.new(123) {
+                department = DepartmentEntity.new(departmentId) {
                     displayName = "Test Department"
                 }
                 confirmed = false
             }
         }
     ) {
-        client.post("/departments/123/join").apply {
+        client.post("/departments/$departmentId/join").apply {
             assertStatusCode(HttpStatusCode.Conflict)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -68,14 +76,14 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             DepartmentMemberEntity.new {
                 userSub = FakeUser.provideEntity().id
-                department = DepartmentEntity.new(123) {
+                department = DepartmentEntity.new(departmentId) {
                     displayName = "Test Department"
                 }
                 confirmed = true
             }
         }
     ) {
-        client.post("/departments/123/join").apply {
+        client.post("/departments/$departmentId/join").apply {
             assertStatusCode(HttpStatusCode.Conflict)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -87,12 +95,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_join_success_notAdmin() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
-            DepartmentEntity.new(123) {
+            DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
         }
     ) {
-        client.post("/departments/123/join").apply {
+        client.post("/departments/$departmentId/join").apply {
             assertStatusCode(HttpStatusCode.Created)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -104,12 +112,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_join_success_isAdmin() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            DepartmentEntity.new(123) {
+            DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
         }
     ) {
-        client.post("/departments/123/join").apply {
+        client.post("/departments/$departmentId/join").apply {
             assertStatusCode(HttpStatusCode.OK)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -119,7 +127,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_requests_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/123/requests")
+    fun test_requests_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/requests")
 
     @Test
     fun test_requests_notAdmin() = runApplicationTest(
@@ -143,7 +151,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_requests_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.get("/departments/123/requests").apply {
+        client.get("/departments/$departmentId/requests").apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -152,7 +160,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_requests_correct() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            val mockDepartment = DepartmentEntity.new(123) {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new {
@@ -167,14 +175,14 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/123/requests").apply {
+        client.get("/departments/$departmentId/requests").apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(DepartmentJoinRequestsResponse.serializer()) { response ->
                 assertEquals(1, response.requests.size)
                 val request = response.requests[0]
                 assertEquals(FakeUser.SUB, request.userSub)
-                // ID is non-deterministic, just check it's positive
-                assert(request.requestId > 0)
+                // ID is non-deterministic, just check it's not zero
+                assertFalse(request.requestId.isZero())
             }
         }
     }
@@ -205,7 +213,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.post("/departments/123/confirm/abc").apply {
+        client.post("/departments/$departmentId/confirm/abc").apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -214,12 +222,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_malformedRequestId() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            DepartmentEntity.new(123) {
+            DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
         }
     ) {
-        client.post("/departments/123/confirm/abc").apply {
+        client.post("/departments/$departmentId/confirm/abc").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
@@ -228,12 +236,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_requestNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            DepartmentEntity.new(123) {
+            DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
         }
     ) {
-        client.post("/departments/123/confirm/123").apply {
+        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -242,17 +250,17 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_alreadyConfirmed() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            val mockDepartment = DepartmentEntity.new(123) {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
-            DepartmentMemberEntity.new(123) {
+            DepartmentMemberEntity.new(joinRequestId) {
                 userSub = FakeUser.provideEntity().id
                 department = mockDepartment
                 confirmed = true
             }
         }
     ) {
-        client.post("/departments/123/confirm/123").apply {
+        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
             assertStatusCode(HttpStatusCode.OK)
             headers[HttpHeaders.CEAInfo]?.let { ceaInfo ->
                 assertEquals("member", ceaInfo)
@@ -264,21 +272,21 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_correct() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            val mockDepartment = DepartmentEntity.new(123) {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
             }
-            DepartmentMemberEntity.new(123) {
+            DepartmentMemberEntity.new(joinRequestId) {
                 userSub = FakeUser.provideEntity().id
                 department = mockDepartment
                 confirmed = false
             }
         }
     ) {
-        client.post("/departments/123/confirm/123").apply {
+        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
             assertStatusCode(HttpStatusCode.OK)
         }
 
-        val entity = Database { DepartmentMemberEntity.findById(123) }
+        val entity = Database { DepartmentMemberEntity.findById(joinRequestId) }
         assertNotNull(entity)
         assertTrue { entity.confirmed }
     }

@@ -7,8 +7,16 @@ import java.util.UUID
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.request.UpdatePostRequest
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
@@ -17,18 +25,25 @@ fun Route.postsRoutes() {
         idTypeConverter = { UUID.fromString(it) },
         listProvider = { session ->
             if (session == null) {
-                // Not logged in, only show public posts
-                PostEntity.find { Posts.onlyForMembers eq false }
+                // Not logged in, only show public posts (without department)
+                PostEntity.find { Posts.department eq null }
             } else {
-                // Logged in, show all posts
-                PostEntity.all()
+                // Logged in, show public posts, and posts for the user's department
+                val userDepartments = transaction {
+                    DepartmentMembers.selectAll()
+                        .where { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) }
+                        .toList()
+                        .map { it[DepartmentMembers.departmentId] }
+                }
+                PostEntity.find {
+                    (Posts.department eq null) or (Posts.department inList userDepartments)
+                }
             }
         },
         creator = { formParameters ->
             var title: String? = null
             var content: String? = null
-            var onlyForMembers = false
-            var departmentId: Int? = null
+            var departmentId: UUID? = null
 
             formParameters.forEachPart { partData ->
                 when (partData) {
@@ -36,8 +51,7 @@ fun Route.postsRoutes() {
                         when (partData.name) {
                             "title" -> title = partData.value
                             "content" -> content = partData.value
-                            "onlyForMembers" -> onlyForMembers = partData.value.toBoolean()
-                            "department" -> departmentId = partData.value.toInt()
+                            "department" -> departmentId = partData.value.toUUIDOrNull()
                         }
                     }
                     else -> { /* nothing */ }
@@ -46,20 +60,24 @@ fun Route.postsRoutes() {
 
             title ?: throw NullPointerException("Missing title")
             content ?: throw NullPointerException("Missing content")
-            departmentId ?: throw NullPointerException("Missing department")
 
-            // Check that the department exists
-            val department = Database { DepartmentEntity.findById(departmentId) }
-            department ?: throw IllegalArgumentException("Department with id $departmentId does not exist")
+            // Check that the department exists if departmentId is provided
+            val department = departmentId?.let {
+                Database { DepartmentEntity.findById(it) }  ?: throw IllegalArgumentException("Department with id $it does not exist")
+            }
 
             Database {
                 PostEntity.new {
                     this.title = title
                     this.content = content
-                    this.onlyForMembers = onlyForMembers
                     this.department = department
                 }
             }
-        }
+        },
+        deleteReferencesCheck = { department ->
+            // departments are referenced in posts, make sure no posts reference the department before deleting
+            PostEntity.find { Posts.department eq department.id }.empty()
+        },
+        updater = UpdatePostRequest.serializer(),
     )
 }

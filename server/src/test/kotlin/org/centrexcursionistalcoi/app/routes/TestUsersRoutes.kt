@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -19,7 +20,10 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -88,12 +92,12 @@ class TestUsersRoutes: ApplicationTestBase() {
                 assertEquals(2, user.departments.size)
                 user.departments[0].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 1", departments[dept.departmentId]?.displayName)
+                    assertEquals("example 1", departments[dept.departmentId.toJavaUuid()]?.displayName)
                     assertTrue(dept.confirmed)
                 }
                 user.departments[1].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 2", departments[dept.departmentId]?.displayName)
+                    assertEquals("example 2", departments[dept.departmentId.toJavaUuid()]?.displayName)
                     assertFalse(dept.confirmed)
                 }
 

@@ -18,8 +18,7 @@ data class Post(
     val date: Instant,
     val title: String,
     val content: String,
-    val onlyForMembers: Boolean,
-    val departmentId: Int,
+    val department: Uuid?,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> {
         return mapOf(
@@ -27,8 +26,7 @@ data class Post(
             "date" to date.toEpochMilliseconds(),
             "title" to title,
             "content" to content,
-            "onlyForMembers" to onlyForMembers,
-            "departmentId" to departmentId,
+            "department" to department,
         )
     }
 }

@@ -13,6 +13,7 @@ import io.ktor.server.routing.post
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import kotlin.time.toKotlinInstant
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -66,7 +67,7 @@ fun Route.profileRoutes() {
         val departments = Database {
             DepartmentMemberEntity.find {
                 (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
-            }.map { it.department.id.value }
+            }.map { it.department.id.value.toKotlinUuid() }
         }
         val lendingUser = Database {
             LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()

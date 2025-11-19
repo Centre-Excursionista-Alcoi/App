@@ -11,6 +11,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
 import org.centrexcursionistalcoi.app.database.Database
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
@@ -33,7 +35,7 @@ private suspend fun RoutingContext.departmentRequest(mustBeAdmin: Boolean = fals
         return null
     }
 
-    val departmentId = call.parameters["id"]?.toIntOrNull()
+    val departmentId = call.parameters["id"]?.toUUIDOrNull()
     if (departmentId == null) {
         call.respondText("Missing or malformed department id", status = HttpStatusCode.BadRequest)
         return null
@@ -52,7 +54,7 @@ fun Route.departmentsRoutes() {
     provideEntityRoutes(
         base = "departments",
         entityClass = DepartmentEntity,
-        idTypeConverter = { it.toIntOrNull() },
+        idTypeConverter = { it.toUUIDOrNull() },
         creator = { formParameters ->
             var displayName: String? = null
             val image = FileRequestData()
@@ -136,7 +138,7 @@ fun Route.departmentsRoutes() {
         val pendingRequests = Database {
             DepartmentMemberEntity
                 .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.confirmed eq false) }
-                .map { DepartmentJoinRequestsResponse.Request(it.userSub.value, it.id.value) }
+                .map { DepartmentJoinRequestsResponse.Request(it.userSub.value, it.id.value.toKotlinUuid()) }
         }
         call.respondText(
             json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),
@@ -148,7 +150,7 @@ fun Route.departmentsRoutes() {
     post("/departments/{id}/confirm/{requestId}") {
         val (_, department) = departmentRequest(true) ?: return@post
 
-        val requestId = call.parameters["requestId"]?.toIntOrNull()
+        val requestId = call.parameters["requestId"]?.toUUIDOrNull()
         if (requestId == null) {
             call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
             return@post

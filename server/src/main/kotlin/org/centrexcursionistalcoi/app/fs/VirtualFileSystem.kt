@@ -145,7 +145,7 @@ object VirtualFileSystem {
         RootDir(
             name = "Departments",
             entityClass = DepartmentEntity,
-            idConverter = { it.toIntOrNull() },
+            idConverter = { it.toUUIDOrNull() },
             customFileDisplayName = { it.displayName },
         ) { it.image },
         RootDir(
