@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -10,7 +11,9 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
+import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
@@ -21,6 +24,7 @@ import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.version
 
 fun Application.configureRouting() {
     routing {
@@ -70,6 +74,17 @@ fun Application.configureRouting() {
         get("/logout") {
             call.sessions.clear<UserSession>()
             call.respondText("OK")
+        }
+
+        get("/info") {
+            val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0
+            val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilli() ?: 0L
+
+            call.respond(ServerInfo(
+                version = version,
+                databaseVersion = databaseVersion,
+                lastCEASync = lastCEASync,
+            ))
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import java.time.Instant
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.Entity
@@ -30,7 +31,11 @@ class ConfigEntity(id: EntityID<String>) : Entity<String>(id) {
         val key: String,
         val retrieve: (String?) -> Type?,
         val store: (Type) -> String,
-    )
+    ) {
+        fun get() = Database { ConfigEntity[this@ConfigEntry] }
+
+        fun set(value: Type) = Database { ConfigEntity[this@ConfigEntry] = value }
+    }
 
     object DatabaseVersion : ConfigEntry<Int>(
         key = "database_version",
