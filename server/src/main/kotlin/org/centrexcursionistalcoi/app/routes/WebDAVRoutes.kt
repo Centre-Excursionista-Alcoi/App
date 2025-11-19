@@ -292,6 +292,13 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
             // child item within the requested dir -> append the child name
             val prefix = if (baseRequest.isEmpty()) "/" else "$baseRequest/"
             prefix + encodePath(it.nameWithExtension)
+        }.let { href ->
+            if (it.isDirectory) {
+                // ensure trailing slash for directories
+                href.trimEnd('/') + "/"
+            } else {
+                href
+            }
         }
 
         sb.append("<D:response>")
@@ -300,13 +307,16 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
         sb.append("<D:prop>")
         if (it.isDirectory) {
             sb.append("<D:resourcetype><D:collection/></D:resourcetype>")
+            sb.append("<D:getcontenttype>httpd/unix-directory</D:getcontenttype>")
         } else {
             sb.append("<D:resourcetype/>")
             it.size?.let { size -> sb.append("<D:getcontentlength>").append(size).append("</D:getcontentlength>") }
+            it.contentType?.let { ct -> sb.append("<D:getcontenttype>").append(ct.toString()).append("</D:getcontenttype>") }
         }
         it.lastModified?.let { lm ->
             sb.append("<D:getlastmodified>").append(rfc1123.format(lm)).append("</D:getlastmodified>")
         }
+        sb.append("<D:getetag>\"").append(it.eTag()).append("\"</D:getetag>")
         sb.append("</D:prop>")
         sb.append("<D:status>HTTP/1.1 200 OK</D:status>")
         sb.append("</D:propstat>")
