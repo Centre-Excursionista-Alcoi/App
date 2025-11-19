@@ -230,6 +230,16 @@ jobs:
       - name: Run Server Tests
         id: server_tests
         run: ./gradlew :server:check
+
+      - name: Upload test results (on failure)
+        if: ${{ steps.server_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-test-results
+          path: |
+            server/build/test-results
+            server/build/reports/tests
+
   release-server:
     name: Build and Publish Server Docker image
     runs-on: ubuntu-latest

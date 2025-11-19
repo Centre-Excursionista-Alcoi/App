@@ -34,14 +34,28 @@ object VirtualFileSystem {
     ) {
         val nameWithExtension: String
             get() {
+                // Directories do not have extensions, and must end with a slash
+                if (isDirectory) return "$name/"
+
                 val extension = contentType?.extension() ?: return name
                 return "$name.$extension"
             }
+
+        /**
+         * Generates an ETag for the item based on its last modified time, and size.
+         * @return The generated ETag string.
+         */
+        fun eTag(): String {
+            val modifiedPart = lastModified?.toEpochMilli() ?: 0L
+            val sizePart = size ?: 0L
+            return "$modifiedPart-$sizePart"
+        }
     }
 
     class ItemData(
         val contentType: ContentType,
         val size: Int,
+        val lastModified: Instant,
         val data: ByteArray,
     )
 
@@ -131,7 +145,7 @@ object VirtualFileSystem {
         RootDir(
             name = "Departments",
             entityClass = DepartmentEntity,
-            idConverter = { it.toIntOrNull() },
+            idConverter = { it.toUUIDOrNull() },
             customFileDisplayName = { it.displayName },
         ) { it.image },
         RootDir(
@@ -264,6 +278,7 @@ object VirtualFileSystem {
         return ItemData(
             contentType = fileEntity.contentType,
             size = data.size,
+            lastModified = fileEntity.lastModified,
             data = data,
         )
     }

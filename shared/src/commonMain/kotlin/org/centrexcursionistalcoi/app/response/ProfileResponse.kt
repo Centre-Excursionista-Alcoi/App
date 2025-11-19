@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.response
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.LendingUser
@@ -16,7 +17,7 @@ data class ProfileResponse(
     val memberNumber: UInt,
     val email: String,
     val groups: List<String>,
-    val departments: List<Int>,
+    val departments: List<Uuid>,
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>,
     val femecvSyncEnabled: Boolean,

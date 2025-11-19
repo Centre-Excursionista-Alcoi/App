@@ -5,6 +5,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -101,4 +102,8 @@ suspend fun <T> HttpResponse.assertBody(serializer: DeserializationStrategy<T>, 
     println("Decoding JSON: $body")
     val json = json.decodeFromString(serializer, body)
     block(json)
+}
+
+fun Boolean.assertTrue(message: String? = null) {
+    assertTrue(this, message)
 }

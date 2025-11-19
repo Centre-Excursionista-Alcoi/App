@@ -15,6 +15,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
@@ -31,6 +35,20 @@ object Email {
         defaultRequest {
             url("https://api.mailersend.com")
             bearerAuth(NotificationsConfig.mailerSendToken)
+        }
+    }
+
+    val isConfigured: Boolean get() = try {
+        NotificationsConfig.mailerSendToken
+        true
+    } catch (_: IllegalStateException) {
+        false
+    }
+
+    fun launch(block: suspend () -> Unit): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
+            if (!isConfigured) return@launch
+            block()
         }
     }
 

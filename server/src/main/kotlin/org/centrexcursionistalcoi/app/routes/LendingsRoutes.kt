@@ -21,9 +21,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -175,7 +172,7 @@ fun Route.lendingsRoutes() {
 
         // Notify admins asynchronously
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
-        CoroutineScope(Dispatchers.IO).launch {
+        Email.launch {
             val emails = Database {
                 UserReferenceEntity.all()
                     .toList()
@@ -562,7 +559,7 @@ fun Route.lendingsRoutes() {
         }
 
         // Notify administrators that a new memory has been uploaded
-        CoroutineScope(Dispatchers.IO).launch {
+        Email.launch {
             val emails = Database {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
                     .map { MailerSendEmail(it.email, it.fullName) }

@@ -4,6 +4,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.withCharset
 import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.request.header
 import io.ktor.server.request.path
@@ -34,6 +35,8 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("WebDAV")
 
+private val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
+
 fun Route.propfind(body: RoutingHandler): Route {
     return method(HttpMethod("PROPFIND")) { handle(body) }
 }
@@ -51,6 +54,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
         if (session.isAdmin()) {
             return true
         } else {
+            logger.error("WebDAV access denied for non-admin user with cookie (${session.sub})")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
@@ -58,6 +62,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
     }
     val basicAuth = call.request.basicAuthenticationCredentials()
     if (basicAuth == null) {
+        logger.warn("WebDAV missing Authorization header")
         call.response.header(HttpHeaders.CEAWebDAVMessage, "Missing or invalid Authorization header")
         call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"WebDAV Admin Area\"")
         call.respond(HttpStatusCode.Unauthorized)
@@ -65,6 +70,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
     } else {
         val loginError = login(basicAuth.name, basicAuth.password.toCharArray())
         if (loginError != null) {
+            logger.warn("WebDAV invalid credentials for user (${basicAuth.name}): $loginError")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "Invalid credentials: $loginError")
             call.respond(HttpStatusCode.Unauthorized)
             return false
@@ -72,12 +78,13 @@ private suspend fun RoutingContext.handleSession(): Boolean {
 
         val session = Database { UserSession.fromNif(basicAuth.name) }
         if (!session.isAdmin()) {
+            logger.error("WebDAV access denied for non-admin user (${session.sub})")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")
             call.respond(HttpStatusCode.Forbidden)
             return false
         }
 
-        logger.info("WebDAV login successful for admin user (${session.sub}). Sending session cookie...")
+        logger.info("WebDAV login successful for admin user with basic auth (${session.sub}). Sending session cookie...")
         call.sessions.set(session)
     }
     return true
@@ -150,6 +157,8 @@ fun Route.webDavRoutes() {
 
             if (data != null) {
                 call.response.header(HttpHeaders.ContentLength, data.size.toString())
+                call.response.header(HttpHeaders.ContentType, data.contentType.toString())
+                call.response.header(HttpHeaders.LastModified, rfc1123.format(data.lastModified))
                 call.respond(HttpStatusCode.OK)
             } else {
                 val list = try {
@@ -159,6 +168,14 @@ fun Route.webDavRoutes() {
                     null
                 }
                 if (list != null) {
+                    // Return text/html content type for directories (it can be useful for clients)
+                    call.response.header(HttpHeaders.ContentType, ContentType.Text.Html.toString())
+
+                    // Send the latest modification time among the directory items
+                    list.mapNotNull { it.lastModified }
+                        .maxOrNull()
+                        ?.let { call.response.header(HttpHeaders.LastModified, rfc1123.format(it)) }
+
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
@@ -181,9 +198,6 @@ fun Route.webDavRoutes() {
                 else -> 1
             }
 
-            // collect responses
-            val responses = mutableListOf<VirtualFileSystem.Item>()
-
             // check if path is a file
             val fileData = try {
                 VirtualFileSystem.read(path)
@@ -191,6 +205,9 @@ fun Route.webDavRoutes() {
                 logger.error("Error reading file at path: $path", e)
                 null
             }
+
+            // collect responses
+            val responses = mutableListOf<VirtualFileSystem.Item>()
 
             if (fileData != null) {
                 // path is a file: return info only about the file itself
@@ -206,13 +223,16 @@ fun Route.webDavRoutes() {
                 }
 
                 if (dirList == null) {
+                    logger.error("File or directory not found at path: {}", path)
                     call.response.header(HttpHeaders.CEAWebDAVMessage, "File or directory not found. Path: $path")
                     call.respond(HttpStatusCode.NotFound)
                     return@propfind
                 }
 
+                val lastModified = dirList.mapNotNull { it.lastModified }.maxOrNull()
+
                 // add the directory itself as response
-                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true, null, null))
+                responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), true, lastModified = lastModified))
 
                 if (depth > 0) {
                     // add immediate children
@@ -221,7 +241,8 @@ fun Route.webDavRoutes() {
             }
 
             val xml = buildMultiStatusXml(call.request.path(), path, responses)
-            call.respondText(xml, ContentType.parse("application/xml; charset=utf-8"), HttpStatusCode.MultiStatus)
+            logger.debug("Responding to PROPFIND for path: {} with depth: {} and {} items", path, depth, responses.size)
+            call.respondText(xml, ContentType.Application.Xml.withCharset(Charsets.UTF_8), HttpStatusCode.MultiStatus)
         }
     }
 }
@@ -262,7 +283,6 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
     val sb = StringBuilder()
     sb.append("""<?xml version="1.0" encoding="utf-8"?>""")
     sb.append("<D:multistatus xmlns:D=\"DAV:\">")
-    val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
     val baseRequest = requestPath.trimEnd('/')
     for (it in items) {
         val href = if (it.path == basePath || basePath.isEmpty() && it.path.isEmpty()) {
@@ -272,6 +292,13 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
             // child item within the requested dir -> append the child name
             val prefix = if (baseRequest.isEmpty()) "/" else "$baseRequest/"
             prefix + encodePath(it.nameWithExtension)
+        }.let { href ->
+            if (it.isDirectory) {
+                // ensure trailing slash for directories
+                href.trimEnd('/') + "/"
+            } else {
+                href
+            }
         }
 
         sb.append("<D:response>")
@@ -280,13 +307,16 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
         sb.append("<D:prop>")
         if (it.isDirectory) {
             sb.append("<D:resourcetype><D:collection/></D:resourcetype>")
+            sb.append("<D:getcontenttype>httpd/unix-directory</D:getcontenttype>")
         } else {
             sb.append("<D:resourcetype/>")
             it.size?.let { size -> sb.append("<D:getcontentlength>").append(size).append("</D:getcontentlength>") }
+            it.contentType?.let { ct -> sb.append("<D:getcontenttype>").append(ct.toString()).append("</D:getcontenttype>") }
         }
         it.lastModified?.let { lm ->
             sb.append("<D:getlastmodified>").append(rfc1123.format(lm)).append("</D:getlastmodified>")
         }
+        sb.append("<D:getetag>\"").append(it.eTag()).append("\"</D:getetag>")
         sb.append("</D:prop>")
         sb.append("<D:status>HTTP/1.1 200 OK</D:status>")
         sb.append("</D:propstat>")

@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.request
 
+import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
@@ -8,7 +9,7 @@ import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 data class UpdateDepartmentRequest(
     val displayName: String? = null,
     @Serializable(Base64Serializer::class) val image: ByteArray? = null,
-): UpdateEntityRequest<Int, Department> {
+): UpdateEntityRequest<Uuid, Department> {
     override fun isEmpty(): Boolean {
         return displayName.isNullOrEmpty() && (image == null || image.isEmpty())
     }

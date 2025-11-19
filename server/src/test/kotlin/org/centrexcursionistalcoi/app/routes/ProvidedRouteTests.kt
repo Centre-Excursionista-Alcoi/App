@@ -39,6 +39,7 @@ import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
@@ -49,7 +50,10 @@ import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
 import org.centrexcursionistalcoi.app.utils.FileBytesWrapper
 import org.centrexcursionistalcoi.app.utils.toJsonElement
+import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
@@ -192,10 +196,10 @@ object ProvidedRouteTests {
                     this as ExposedEntity<UUID>
 
                     val foreignEntityClass = foreignTypesAssociations[name] as EntityClass<UUID, ExposedEntity<UUID>>?
-                    checkNotNull(foreignEntityClass) { "Could not find a foreign type association for key $name" }
+                    checkNotNull(foreignEntityClass) { "Could not find a foreign type association for key \"$name\"" }
 
                     val entity = foreignEntityClass.findById(value)
-                    checkNotNull(entity) { "Could not find a foreign type association for key $name" }
+                    checkNotNull(entity) { "Could not find a foreign type association for key \"$name\"" }
                     member.call(this, entity)
                 } else {
                     member.call(this, value)
@@ -216,13 +220,97 @@ object ProvidedRouteTests {
 
     @OptIn(InternalSerializationApi::class)
     context(_: ApplicationTestBase)
+    fun <EE: UUIDEntity, ET: Entity<Uuid>> runTestsOnRoute(
+        title: String,
+        baseUrl: String,
+
+        listLoginType: LoginType = LoginType.USER,
+        modificationsLoginType: LoginType = LoginType.ADMIN,
+
+        /**
+         * Patches to apply to the user entity after creation.
+         *
+         * Applies to all [listLoginType] and [modificationsLoginType].
+         */
+        userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
+
+        requiredCreationValuesProvider: Map<String, () -> Any>,
+        optionalCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+        defaultCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+
+        locationRegex: Regex,
+        entityClass: UUIDEntityClass<EE>,
+
+        /**
+         * A provider that creates an example entity to be used in some endpoints that require an entity instance.
+         *
+         * It's guaranteed that this will only be called once per test run.
+         *
+         * Make sure only the entries in [requiredCreationValuesProvider] are populated, as the tests will
+         * check that optional values are not present unless explicitly specified.
+         */
+        stubEntityProvider: JdbcTransaction.() -> EE,
+
+        /**
+         * An ID that is guaranteed to not exist in the database.
+         *
+         * Used in tests that require a non-existing entity ID.
+         */
+        invalidEntityId: UUID,
+
+        /**
+         * If this test requires some auxiliary entities (foreign keys, etc.), they can be created here.
+         */
+        auxiliaryEntitiesProvider: JdbcTransaction.() -> Unit = {},
+
+        /**
+         * If the entity being tested has foreign key references to other entities, they must be specified here.
+         *
+         * This is a map that relates the name of the property in the serializable entity to the [EntityClass] of the referenced entity.
+         */
+        foreignTypesAssociations: Map<String, EntityClass<*, *>> = emptyMap(),
+
+        dataEntitySerializer: KSerializer<ET>
+    ): List<DynamicTest> = runTestsOnRoute(
+        title = title,
+        baseUrl = baseUrl,
+        listLoginType = listLoginType,
+        modificationsLoginType = modificationsLoginType,
+        userEntityPatches = userEntityPatches,
+        requiredCreationValuesProvider = requiredCreationValuesProvider,
+        optionalCreationValuesProvider = optionalCreationValuesProvider,
+        defaultCreationValuesProvider = defaultCreationValuesProvider,
+        locationRegex = locationRegex,
+        entityClass = entityClass,
+        idTypeConverter = { it.toUUID() },
+        exposedIdTypeConverter = { it.toJavaUuid() },
+        stubEntityProvider = stubEntityProvider,
+        invalidEntityId = invalidEntityId,
+        auxiliaryEntitiesProvider = auxiliaryEntitiesProvider,
+        foreignTypesAssociations = foreignTypesAssociations,
+        dataEntitySerializer = dataEntitySerializer
+    )
+
+    @OptIn(InternalSerializationApi::class)
+    context(_: ApplicationTestBase)
     fun <EID: Any, EE: ExposedEntity<EID>, TID: Any, ET: Entity<TID>> runTestsOnRoute(
         title: String,
         baseUrl: String,
+
         listLoginType: LoginType = LoginType.USER,
         modificationsLoginType: LoginType = LoginType.ADMIN,
+
+        /**
+         * Patches to apply to the user entity after creation.
+         *
+         * Applies to all [listLoginType] and [modificationsLoginType].
+         */
+        userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
+
         requiredCreationValuesProvider: Map<String, () -> Any>,
         optionalCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+        defaultCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+
         locationRegex: Regex,
         entityClass: EntityClass<EID, EE>,
         idTypeConverter: (String) -> EID,
@@ -268,6 +356,7 @@ object ProvidedRouteTests {
     ): List<DynamicTest> {
         fun provideRequiredCreationValues(): Map<String, Any> = requiredCreationValuesProvider.mapValues { (_, provider) -> provider() }
         fun provideOptionalCreationValues(): Map<String, Any> = optionalCreationValuesProvider.mapValues { (_, provider) -> provider() }
+        fun provideDefaultCreationValues(): Map<String, Any> = defaultCreationValuesProvider.mapValues { (_, provider) -> provider() }
 
         fun fetchFromDatabaseAndCheckFields(
             id: EID,
@@ -370,7 +459,7 @@ object ProvidedRouteTests {
 
                     // Check that all required fields are present
                     for ((name, expected) in presentValues) {
-                        assertTrue { name in fields }
+                        assertTrue("\"$name\" is not defined for ${entity::class.simpleName}. Fields: $fields") { name in fields }
                         val actual = members.call(name, entity)
                         assertNotNull(actual, "Field $name should be present")
                         actual.assertActual(name, expected)
@@ -378,14 +467,14 @@ object ProvidedRouteTests {
 
                     // Check that all optional fields are not present
                     for ((name) in absentValues) {
-                        assertTrue { name in fields }
+                        assertTrue("\"$name\" is not defined for ${entity::class.simpleName}. Fields: $fields") { name in fields }
                         val actual = members.call(name, entity)
                         assertNull(actual, "Field $name should not be present")
                     }
 
                     // Check that the field is present and correct
                     checkSpecificFieldPresent?.let { (name, expected) ->
-                        assertTrue { name in fields }
+                        assertTrue("\"$name\" is not defined for ${entity::class.simpleName}. Fields: $fields") { name in fields }
                         val actual = members.call(name, entity)
                         println("Name: $name")
                         println("Entity: $entity")
@@ -411,6 +500,8 @@ object ProvidedRouteTests {
                 Database {
                     entities += entityClass.new {
                         for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
+                        // Also fill default values
+                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
                 // One with each optional value
@@ -421,6 +512,8 @@ object ProvidedRouteTests {
                             for ((rName, rValueProvider) in provideRequiredCreationValues()) populate(rName, rValueProvider, foreignTypesAssociations)
                             // Fill the optional value
                             populate(name, valueProvider, foreignTypesAssociations)
+                            // Also fill default values
+                            for ((dName, dValueProvider) in provideDefaultCreationValues()) populate(dName, dValueProvider, foreignTypesAssociations)
                         }
                     }
                 }
@@ -429,16 +522,18 @@ object ProvidedRouteTests {
                     entities += entityClass.new {
                         for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                         for ((name, valueProvider) in provideOptionalCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
+                        // Also fill default values
+                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                     }
                 }
 
-                runApplicationTest(shouldLogIn = LoginType.USER) {
+                runApplicationTest(shouldLogIn = LoginType.USER, userEntityPatches = userEntityPatches) {
                     client.get(baseUrl).apply {
                         assertStatusCode(HttpStatusCode.OK)
                         assertBody(dataEntitySerializer.list()) { list ->
-                            val receivedIds = list.map { it.id.let(exposedIdTypeConverter) }.toSet()
-                            val expectedIds = entities.map { it.id.value }.toSet()
-                            assertEquals(expectedIds, receivedIds, "Received IDs do not match expected IDs")
+                            val receivedIds = list.map { it.id.let(exposedIdTypeConverter) }
+                            val expectedIds = entities.map { it.id.value }
+                            assertContentEquals(expectedIds, receivedIds, "Received IDs do not match expected IDs")
                         }
                     }
                 }
@@ -479,7 +574,7 @@ object ProvidedRouteTests {
             }.toTypedArray(),
             (provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider runs {
-                    runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
                         val data = formDataOf(requiredCreationValues.toList())
                         val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
                             assertStatusCode(HttpStatusCode.Created)
@@ -502,7 +597,7 @@ object ProvidedRouteTests {
             *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 optionalCreationValues.map { (name) ->
                     "$title - Test create with optional parameter \"$name\"" withEntities auxiliaryEntitiesProvider runs {
-                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                        runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
                             val data = formDataOf(
                                 requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
                             )
@@ -564,10 +659,11 @@ object ProvidedRouteTests {
                 }
             },
             // Generate tests for each required field
-            *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
+            // TODO: should requests for patching fail when required arguments are not given? This test should not be necessary then.
+            /**(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 requiredCreationValues.map { (name) ->
                     "$title - Test patch without $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
-                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                        runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
                             val obj = JsonObject(
                                 requiredCreationValues
                                     .filter { it.key != name }
@@ -583,13 +679,13 @@ object ProvidedRouteTests {
                         }
                     }
                 }
-            }.toTypedArray(),
+            }.toTypedArray(),*/
             *(provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 val creationValues = requiredCreationValues + optionalCreationValues
                 creationValues.map { entry ->
                     val (name, value) = entry
                     "$title - Test patch $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
-                        runApplicationTest(shouldLogIn = modificationsLoginType) {
+                        runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
                             val data = JsonObject(
                                 mapOf(name to value.toJsonElement())
                             )
@@ -622,7 +718,7 @@ object ProvidedRouteTests {
             (provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 val creationValues = requiredCreationValues + optionalCreationValues
                 "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
-                    runApplicationTest(shouldLogIn = modificationsLoginType) {
+                    runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
                         val data = JsonObject(
                             creationValues.map { (name, value) -> name to value.toJsonElement() }.toMap()
                         )

@@ -41,7 +41,7 @@ object PostsRepository : DatabaseRepository<Post, Uuid>() {
         title = item.title,
         content = item.content,
         onlyForMembers = item.onlyForMembers,
-        department = item.departmentId.toLong()
+        department = item.department.toLong()
     )
 
     override suspend fun update(item: Post) = queries.update(
@@ -50,7 +50,7 @@ object PostsRepository : DatabaseRepository<Post, Uuid>() {
         title = item.title,
         content = item.content,
         onlyForMembers = item.onlyForMembers,
-        department = item.departmentId.toLong()
+        department = item.department.toLong()
     )
 
     override suspend fun delete(id: Uuid) {
@@ -63,6 +63,6 @@ object PostsRepository : DatabaseRepository<Post, Uuid>() {
         title = title,
         content = content,
         onlyForMembers = onlyForMembers,
-        departmentId = department?.toInt() ?: throw IllegalStateException("Post with id $id has no department ID")
+        department = department?.toInt() ?: throw IllegalStateException("Post with id $id has no department ID")
     )
 }

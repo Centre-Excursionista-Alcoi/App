@@ -70,6 +70,12 @@ object SSENotificationsListener {
                             val data = event.data?.let { data ->
                                 data.split('&').map { it.substringBefore('=') to it.substringAfter('=') }
                             }?.toMap() ?: emptyMap()
+
+                            if (type == "connection") {
+                                Napier.d(tag = "SSE") { "Received connection event." }
+                                return@collect
+                            }
+
                             Napier.d(tag = "SSE") { "Received SSE notification. Type=$type, Data=$data" }
                             try {
                                 val notification = PushNotification.fromData(

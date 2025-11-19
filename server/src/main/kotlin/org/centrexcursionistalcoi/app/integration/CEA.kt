@@ -1,21 +1,36 @@
 package org.centrexcursionistalcoi.app.integration
 
-import java.io.File
-import java.time.Clock
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
+import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.parameters
+import kotlin.time.Duration.Companion.days
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.csv.Csv
+import org.centrexcursionistalcoi.app.PeriodicWorker
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.slf4j.LoggerFactory
 
-object CEA {
+object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
@@ -39,6 +54,12 @@ object CEA {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
+    /**
+     * Parses the CEA members data from a CSV string.
+     * @param data The CSV data as a string.
+     * @return A list of [Member] objects.
+     * @throws SerializationException if the data cannot be parsed.
+     */
     @OptIn(ExperimentalSerializationApi::class)
     fun parse(data: String): List<Member> {
         return Csv {
@@ -87,24 +108,117 @@ object CEA {
         logger.info("Synchronization complete.")
     }
 
-    fun synchronizeIfNeeded(clock: Clock = Clock.systemDefaultZone()) {
-        val dataFile = File("/cea_members.csv")
-        if (!dataFile.exists()) {
-            logger.warn("CEA members data file ($dataFile) not found, skipping synchronization.")
-            return
-        }
-
-        val now = clock.instant()
+    /**
+     * Synchronizes the CEA members data with the database if needed.
+     * @suspend
+     * @throws HttpResponseException if the download fails.
+     * @throws SerializationException if the data cannot be parsed.
+     */
+    suspend fun synchronizeIfNeeded() {
+        val now = now()
         val lastSync = Database { ConfigEntity[ConfigEntity.LastCEASync] }
         if (lastSync == null || now.epochSecond - lastSync.epochSecond >= SYNC_EVERY_SECONDS) {
-            logger.info("Starting CEA members synchronization...")
-            val data = dataFile.readText()
-            val members = parse(data)
-            synchronizeWithDatabase(members)
-            Database { ConfigEntity[ConfigEntity.LastCEASync] = now }
-            logger.info("CEA members synchronization finished.")
+            run()
         } else {
             logger.info("CEA members synchronization not needed. Last sync at $lastSync.")
+        }
+    }
+
+    private fun generateNonce(length: Int = 10): String {
+        val charset = ('a'..'f') + ('0'..'9')
+        return List(length) { charset.random() }.joinToString("")
+    }
+
+    /**
+     * Downloads the CEA members data CSV from the CEA website.
+     * @suspend
+     * @return The CSV data as a string.
+     * @throws HttpResponseException if the login or data export fails.
+     * @throws IllegalStateException if the `CEA_USERNAME` or `CEA_PASSWORD` environment variables are not set.
+     */
+    suspend fun download(): String {
+        val username = System.getenv("CEA_USERNAME")
+            ?: throw IllegalStateException("CEA_USERNAME environment variable is not set.")
+        val password = System.getenv("CEA_PASSWORD")
+            ?: throw IllegalStateException("CEA_PASSWORD environment variable is not set.")
+
+        val client = HttpClient {
+            defaultRequest {
+                url("https://centrexcursionistalcoi.org")
+            }
+            install(ContentNegotiation)
+            install(HttpCookies) {
+                storage = AcceptAllCookiesStorage()
+            }
+            install(Logging) {
+                level = LogLevel.HEADERS
+                logger = object : Logger {
+                    override fun log(message: String) {
+                        CEA.logger.debug(message)
+                    }
+                }
+            }
+        }
+
+        logger.debug("Logging in to CEA website...")
+        val loginResponse = client.submitForm(
+            url = "/wp-login.php",
+            formParameters = parameters {
+                append("log", username)
+                append("pwd", password)
+                append("rememberme", "forever")
+                append("wp-submit", "Entra")
+                append("redirect_to", "https://centrexcursionistalcoi.org/wp-admin/testcookie=1")
+            },
+        )
+        if (loginResponse.status == HttpStatusCode.Found) {
+            logger.debug("Logged in to CEA website successfully.")
+        } else {
+            logger.error("Failed to log in to CEA website.\n\tStatus: ${loginResponse.status}\n\tBody: ${loginResponse.bodyAsText()}")
+            throw HttpResponseException(
+                "Failed to log in to CEA website.",
+                loginResponse.status.value,
+                loginResponse.bodyAsText(),
+            )
+        }
+
+        val nonce = generateNonce()
+        logger.debug("Exporting CEA members data (nonce=$nonce)...")
+        val exportResponse = client.get("/wp-admin/admin.php?page=cea-members&tab-filter-status=0&action=export&nonce=$nonce")
+        if (exportResponse.status == HttpStatusCode.OK) {
+            logger.debug("Downloaded CEA members data successfully.")
+            return exportResponse.bodyAsText()
+        } else {
+            logger.error("Failed to export CEA members data. Status: ${exportResponse.status}")
+            throw HttpResponseException(
+                "Failed to export data from the CEA website.",
+                loginResponse.status.value,
+                loginResponse.bodyAsText(),
+            )
+        }
+    }
+
+    override suspend fun run() {
+        try {
+            logger.info("Starting CEA members synchronization...")
+            val data = download()
+
+            logger.info("CEA members data downloaded. Parsing...")
+            val members = parse(data)
+
+            logger.info("CEA members data parsed. Synchronizing with database...")
+            synchronizeWithDatabase(members)
+
+            logger.info("Updating last synchronization time...")
+            Database { ConfigEntity[ConfigEntity.LastCEASync] = now() }
+
+            logger.info("CEA members synchronization finished.")
+        } catch (e: HttpResponseException) {
+            logger.error("Failed to synchronize CEA members: ${e.statusCode} ${e.message}")
+        } catch (e: SerializationException) {
+            logger.error("Failed to parse CEA members data: ${e.message}")
+        } catch (e: Exception) {
+            logger.error("Unexpected error during CEA members synchronization", e)
         }
     }
 }

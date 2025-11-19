@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.data
 
+import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,6 +10,6 @@ data class DepartmentJoinRequestsResponse(
     @Serializable
     data class Request(
         val userSub: String,
-        val requestId: Int
+        val requestId: Uuid
     )
 }

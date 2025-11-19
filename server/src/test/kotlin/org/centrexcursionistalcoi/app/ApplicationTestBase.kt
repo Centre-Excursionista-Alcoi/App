@@ -22,6 +22,7 @@ import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
@@ -35,12 +36,20 @@ abstract class ApplicationTestBase {
 
     fun runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
+        /**
+         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
+         */
+        userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
-    ) = runApplicationTest(shouldLogIn, { }) { block(it) }
+    ) = runApplicationTest(shouldLogIn, { }, userEntityPatches) { block(it) }
 
     fun <DIB> runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
+        /**
+         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
+         */
+        userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         finally: suspend () -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
@@ -55,8 +64,8 @@ abstract class ApplicationTestBase {
         try {
             val dib = databaseInitBlock?.let { Database(it) }
 
-            if (shouldLogIn == LoginType.USER) Database { FakeUser.provideEntity() }
-            else if (shouldLogIn == LoginType.ADMIN) Database { FakeAdminUser.provideEntity() }
+            if (shouldLogIn == LoginType.USER) Database { FakeUser.provideEntity().also { userEntityPatches(it) } }
+            else if (shouldLogIn == LoginType.ADMIN) Database { FakeAdminUser.provideEntity().also { userEntityPatches(it) } }
 
             testApplication {
                 application {

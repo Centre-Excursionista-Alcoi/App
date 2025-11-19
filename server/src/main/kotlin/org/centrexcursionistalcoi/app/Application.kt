@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
+import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
@@ -28,7 +29,7 @@ var now: () -> Instant = { Instant.now() }
     @VisibleForTesting
     set
 
-@VisibleForTesting
+@TestOnly
 internal fun resetTimeFunctions() {
     today = { LocalDate.now() }
     now = { Instant.now() }
@@ -37,6 +38,7 @@ internal fun resetTimeFunctions() {
 fun main() {
     logger.info("Starting Centre Excursionista d'Alcoi server version $version")
 
+    // Initialize Sentry error tracking if DSN is provided
     System.getenv("SENTRY_DSN")?.let { dsn ->
         Sentry.init { options ->
             options.dsn = dsn
@@ -45,8 +47,10 @@ fun main() {
         }
     } ?: logger.warn("SENTRY_DSN environment variable is not set. Sentry error tracking is disabled.")
 
+    // Initialize AES encryption
     AES.init()
 
+    // Initialize Database connection
     Database.init(
         url = System.getenv("DB_URL") ?: Database.URL,
         driver = System.getenv("DB_DRIVER"),
@@ -55,10 +59,13 @@ fun main() {
     )
     val isDevelopment = System.getenv("ENV") == "development"
 
-    Push.init()
+    // Initialize Push Notification service - Firebase Cloud Messaging
+    Push.initFCM()
 
-    CEA.synchronizeIfNeeded()
+    // Start periodic CEA synchronization
+    CEA.start()
 
+    // Start Ktor server
     embeddedServer(
         Netty,
         port = SERVER_PORT,
