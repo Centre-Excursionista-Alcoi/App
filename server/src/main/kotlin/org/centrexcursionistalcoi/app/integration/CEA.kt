@@ -13,12 +13,13 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
-import java.time.Clock
+import kotlin.time.Duration.Companion.days
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.csv.Csv
+import org.centrexcursionistalcoi.app.PeriodicWorker
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
@@ -29,7 +30,7 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.slf4j.LoggerFactory
 
-object CEA {
+object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
@@ -109,24 +110,15 @@ object CEA {
 
     /**
      * Synchronizes the CEA members data with the database if needed.
-     * @param clock The clock to use for determining the current time. Defaults to the system default clock.
      * @suspend
      * @throws HttpResponseException if the download fails.
      * @throws SerializationException if the data cannot be parsed.
      */
-    suspend fun synchronizeIfNeeded(clock: Clock = Clock.systemDefaultZone()) {
-        val now = clock.instant()
+    suspend fun synchronizeIfNeeded() {
+        val now = now()
         val lastSync = Database { ConfigEntity[ConfigEntity.LastCEASync] }
         if (lastSync == null || now.epochSecond - lastSync.epochSecond >= SYNC_EVERY_SECONDS) {
-            logger.info("Starting CEA members synchronization...")
-            val data = download()
-            logger.info("CEA members data downloaded. Parsing...")
-            val members = parse(data)
-            logger.info("CEA members data parsed. Synchronizing with database...")
-            synchronizeWithDatabase(members)
-            logger.info("Updating last synchronization time...")
-            Database { ConfigEntity[ConfigEntity.LastCEASync] = now }
-            logger.info("CEA members synchronization finished.")
+            run()
         } else {
             logger.info("CEA members synchronization not needed. Last sync at $lastSync.")
         }
@@ -203,6 +195,30 @@ object CEA {
                 loginResponse.status.value,
                 loginResponse.bodyAsText(),
             )
+        }
+    }
+
+    override suspend fun run() {
+        try {
+            logger.info("Starting CEA members synchronization...")
+            val data = download()
+
+            logger.info("CEA members data downloaded. Parsing...")
+            val members = parse(data)
+
+            logger.info("CEA members data parsed. Synchronizing with database...")
+            synchronizeWithDatabase(members)
+
+            logger.info("Updating last synchronization time...")
+            Database { ConfigEntity[ConfigEntity.LastCEASync] = now() }
+
+            logger.info("CEA members synchronization finished.")
+        } catch (e: HttpResponseException) {
+            logger.error("Failed to synchronize CEA members: ${e.statusCode} ${e.message}")
+        } catch (e: SerializationException) {
+            logger.error("Failed to parse CEA members data: ${e.message}")
+        } catch (e: Exception) {
+            logger.error("Unexpected error during CEA members synchronization", e)
         }
     }
 }

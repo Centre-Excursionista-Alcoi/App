@@ -38,7 +38,7 @@ object Push {
         val includeAdmins: Boolean = false,
     )
 
-    fun init() {
+    fun initFCM() {
         if (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") == null) {
             logger.error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. Push notifications will not work.")
             return
