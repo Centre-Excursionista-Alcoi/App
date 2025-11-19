@@ -245,14 +245,6 @@ fun InventoryItemTypesListView(
         }
 
         var deletingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
-        deletingItem?.let { item ->
-            DeleteDialog(
-                item = item,
-                displayName = { it.id.toString() },
-                onDelete = { onDeleteInventoryItem(item) },
-                onDismissRequested = { deletingItem = null }
-            )
-        }
 
         var showingItemDialog by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
         showingItemDialog?.let { item ->
@@ -264,6 +256,19 @@ fun InventoryItemTypesListView(
                 },
                 onDeleteRequest = { deletingItem = item },
                 onDismissRequest = { showingItemDialog = null }
+            )
+        }
+
+        deletingItem?.let { item ->
+            DeleteDialog(
+                item = item,
+                displayName = { it.id.toString() },
+                onDelete = {
+                    onDeleteInventoryItem(item).also { job ->
+                        job.invokeOnCompletion { showingItemDialog = null }
+                    }
+                },
+                onDismissRequested = { deletingItem = null }
             )
         }
 
