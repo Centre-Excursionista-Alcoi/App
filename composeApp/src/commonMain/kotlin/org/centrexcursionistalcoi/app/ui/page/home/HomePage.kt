@@ -63,7 +63,7 @@ fun HomePage(
                 Text(
                     text = stringResource(Res.string.welcome, profile.fullName),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, top = 12.dp)
                 )
             }
         }
