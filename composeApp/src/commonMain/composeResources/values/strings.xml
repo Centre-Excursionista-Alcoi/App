@@ -230,6 +230,7 @@
     <string name="inventory_item_amount">Amount: %1$d</string>
     <string name="inventory_item_variation">Variation: %1$d</string>
     <string name="inventory_item_nfc_id">NFC ID: %1$s</string>
+    <string name="inventory_item_create">Create Inventory Item</string>
 
     <string name="create_inventory_item_variation">Variation</string>
     <string name="create_inventory_item_type">Type</string>

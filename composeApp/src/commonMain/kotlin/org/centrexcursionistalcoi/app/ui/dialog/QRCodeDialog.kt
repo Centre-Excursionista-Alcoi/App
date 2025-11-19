@@ -45,6 +45,7 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.utils.modIf
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,6 +56,7 @@ private val Code128Regex = Regex("^[\\x00-\\x7F]+$")
 fun QRCodeDialog(
     value: String,
     onReadNfc: (NfcPayload) -> Unit,
+    onDeleteRequest: (() -> Unit)? = null,
     onDismissRequest: () -> Unit
 ) {
     var writingNFC by remember { mutableStateOf(false) }
@@ -145,6 +147,11 @@ fun QRCodeDialog(
                     }
                 }
             }
+        },
+        dismissButton = if (onDeleteRequest != null) {
+            { DeleteButton { onDeleteRequest() } }
+        } else {
+            null
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
