@@ -1,6 +1,16 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run Server" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="APP_VERSION" value="0.0.0" />
+          <entry key="DB_DRIVER" value="org.postgresql.Driver" />
+          <entry key="DB_PASS" value="1234567890abcdef" />
+          <entry key="DB_URL" value="jdbc:postgresql://127.0.0.1:5432/postgres" />
+          <entry key="DB_USER" value="postgres" />
+          <entry key="KEYS_PATH" value="./keys" />
+        </map>
+      </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$/server" />
       <option name="externalSystemIdString" value="GRADLE" />
