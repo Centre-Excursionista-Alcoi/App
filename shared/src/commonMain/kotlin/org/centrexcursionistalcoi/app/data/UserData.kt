@@ -49,6 +49,12 @@ data class UserData(
         return sub.hashCode()
     }
 
+    /**
+     * Strips sensitive information from the user data.
+     * @return A new [UserData] instance with sensitive fields removed.
+     */
+    fun strip(): UserData = copy(email = "\u0000", departments = emptyList(), lendingUser = null, insurances = emptyList())
+
     override val referencedFiles: List<Triple<String, Uuid?, String>>
         get() {
             val insurancesFiles = insurances.flatMap { it.files.entries }
