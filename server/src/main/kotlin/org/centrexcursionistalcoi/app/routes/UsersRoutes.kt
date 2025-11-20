@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.notInList
 
@@ -47,7 +48,7 @@ fun Route.usersRoutes() {
 
             // Find all other users
             val users = Database {
-                UserReferenceEntity.find { UserReferences.sub notInList selfAndAdminsSubs }.map { user ->
+                UserReferenceEntity.find { (UserReferences.sub notInList selfAndAdminsSubs) and (UserReferences.isDisabled eq false) }.map { user ->
                     user.toData(null, null, null).strip()
                 }
             }
