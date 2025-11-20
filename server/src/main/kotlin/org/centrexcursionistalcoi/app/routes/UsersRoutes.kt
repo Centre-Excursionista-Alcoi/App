@@ -5,13 +5,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.op.ValueInStringArrayOp
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
@@ -21,28 +19,27 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.neq
 
 fun Route.usersRoutes() {
     // Provides a list of all users - admin only
     get("/users") {
         val session = getUserSessionOrFail() ?: return@get
         if (!session.isAdmin()) {
-            // Return only self, and admins
-            // Admins are necessary because lendings hold references to them (e.g., who approved the lending, or who received the items)
-            // However, we only provide the basic data (display name, email and groups).
+            // Return only self, and other user's simplified data (display name, email and groups).
             val lendingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData() }
             val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
             val departments = Database { DepartmentMemberEntity.find { DepartmentMembers.userSub eq session.sub }.map { it.toData() } }
             val self = Database { UserReferenceEntity[session.sub].toData(lendingUser, insurances, departments) }
 
-            // Find all admins
-            val admins = Database {
-                UserReferenceEntity.find { ValueInStringArrayOp(ADMIN_GROUP_NAME, UserReferences.groups) }.map { user ->
+            // Find all other users
+            val users = Database {
+                UserReferenceEntity.find { UserReferences.sub neq session.sub }.map { user ->
                     user.toData(null, null, null)
                 }
             }
 
-            call.respond(listOf(self) + admins)
+            call.respond(listOf(self) + users)
         } else {
             val departmentMembers = Database { DepartmentMemberEntity.all().map { it.toData() } }
             val lendingUsers = Database { LendingUserEntity.all().map { it.toData() } }
