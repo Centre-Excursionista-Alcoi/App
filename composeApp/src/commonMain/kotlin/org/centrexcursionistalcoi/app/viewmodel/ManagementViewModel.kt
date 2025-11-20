@@ -73,7 +73,7 @@ class ManagementViewModel : ViewModel() {
 
     fun delete(inventoryItemType: InventoryItemType) = launch {
         doAsync {
-            InventoryItemTypesRepository.delete(inventoryItemType.id)
+            InventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
         }
     }
 
