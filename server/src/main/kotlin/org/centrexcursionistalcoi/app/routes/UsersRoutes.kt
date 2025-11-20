@@ -20,16 +20,18 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.notInList
 
 fun Route.usersRoutes() {
     // Provides a list of all users - admin only
     get("/users") {
         val session = getUserSessionOrFail() ?: return@get
         if (!session.isAdmin()) {
-            // Return only self, and admins
-            // Admins are necessary because lendings hold references to them (e.g., who approved the lending, or who received the items)
-            // However, we only provide the basic data (display name, email and groups).
+            // Only self has full data.
+            // Admins include display name, email and groups.
+            // Other users only include display name.
             val lendingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData() }
             val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
             val departments = Database { DepartmentMemberEntity.find { DepartmentMembers.userSub eq session.sub }.map { it.toData() } }
@@ -42,7 +44,16 @@ fun Route.usersRoutes() {
                 }
             }
 
-            call.respond(listOf(self) + admins)
+            val selfAndAdminsSubs = listOf(self.sub) + admins.map { it.sub }
+
+            // Find all other users
+            val users = Database {
+                UserReferenceEntity.find { (UserReferences.sub notInList selfAndAdminsSubs) and (UserReferences.isDisabled eq false) }.map { user ->
+                    user.toData(null, null, null).strip()
+                }
+            }
+
+            call.respond(listOf(self) + admins + users)
         } else {
             val departmentMembers = Database { DepartmentMemberEntity.all().map { it.toData() } }
             val lendingUsers = Database { LendingUserEntity.all().map { it.toData() } }
