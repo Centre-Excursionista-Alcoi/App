@@ -32,7 +32,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: 'Updated Version'
-          file_pattern: 'version.properties Info.plist project.pbxproj'
+          file_pattern: 'version.properties composeApp/version.properties iosApp/iosApp.xcodeproj/project.pbxproj iosApp/iosApp/Info.plist'
           branch: master
 
   build-android:
