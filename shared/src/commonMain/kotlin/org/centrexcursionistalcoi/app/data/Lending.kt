@@ -4,7 +4,6 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
@@ -23,15 +22,14 @@ data class Lending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memoryDocument: Uuid?,
-    val memoryPlainText: String?,
+    val memory: LendingMemory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
     val to: LocalDate,
     val notes: String?,
     val items: List<InventoryItem>,
-): Entity<Uuid>, DocumentFileContainer {
+): Entity<Uuid>, SubReferencedFileContainer {
     enum class Status {
         REQUESTED,
         CONFIRMED,
@@ -52,8 +50,7 @@ data class Lending(
         "returned" to returned,
         "memorySubmitted" to memorySubmitted,
         "memorySubmittedAt" to memorySubmittedAt,
-        "memoryDocument" to memoryDocument,
-        "memoryPlainText" to memoryPlainText,
+        "memory" to memory,
         "memoryReviewed" to memoryReviewed,
         "from" to from,
         "to" to to,
@@ -70,11 +67,11 @@ data class Lending(
         else -> Status.REQUESTED
     }
 
-    @Transient
-    override val files: Map<String, Uuid?> = mapOf(
-        "memoryDocument" to memoryDocument
-    )
-
-    @Transient
-    override val documentFile: Uuid? = memoryDocument
+    override val referencedFiles: List<Triple<String, Uuid?, String>>
+        get() {
+            val files = memory?.files.orEmpty()
+                .map { uuid -> Triple(uuid.toString(), uuid, "MemoryAttachments") }
+                .toTypedArray()
+            return listOf(*files)
+        }
 }

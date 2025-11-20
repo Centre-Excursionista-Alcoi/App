@@ -19,7 +19,6 @@ import io.ktor.server.routing.post
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
-import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.sync.Mutex
@@ -56,7 +55,6 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
@@ -504,7 +502,7 @@ fun Route.lendingsRoutes() {
         }
 
         var place: String? = null
-        var users: List<Uuid>? = null
+        var users: List<String>? = null
         var externalUsers: String? = null
         var plainText: String? = null
         var attachedFiles: List<FileRequestData> = emptyList()
@@ -518,7 +516,7 @@ fun Route.lendingsRoutes() {
                         place = part.value.takeIf { it.isNotBlank() }
                     }
                     name == "users" -> {
-                        val usersList = part.value.split(',').mapNotNull { it.toUuidOrNull() }
+                        val usersList = part.value.split(',')
                         users = usersList.ifEmpty { null }
                     }
                     name == "external_users" -> {

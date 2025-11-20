@@ -27,8 +27,7 @@ data class ReferencedLending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memoryDocument: Uuid?,
-    val memoryPlainText: String?,
+    val memory: LendingMemory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -37,7 +36,7 @@ data class ReferencedLending(
     val items: List<ReferencedInventoryItem>,
 
     override val referencedEntity: Lending
-): ReferencedEntity<Uuid, Lending>(), DocumentFileContainer {
+): ReferencedEntity<Uuid, Lending>(), SubReferencedFileContainer {
     companion object {
         fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<InventoryItemType>) = ReferencedLending(
             id = this.id,
@@ -51,8 +50,7 @@ data class ReferencedLending(
             receivedItems = receivedItems,
             memorySubmitted = this.memorySubmitted,
             memorySubmittedAt = this.memorySubmittedAt,
-            memoryDocument = this.memoryDocument,
-            memoryPlainText = this.memoryPlainText,
+            memory = this.memory,
             memoryReviewed = this.memoryReviewed,
             from = this.from,
             to = this.to,
@@ -66,7 +64,5 @@ data class ReferencedLending(
 
     fun status(): Status = referencedEntity.status()
 
-    override val files: Map<String, Uuid?> = referencedEntity.files
-
-    override val documentFile: Uuid? = referencedEntity.documentFile
+    override val referencedFiles: List<Triple<String, Uuid?, String>> get() = referencedEntity.referencedFiles
 }
