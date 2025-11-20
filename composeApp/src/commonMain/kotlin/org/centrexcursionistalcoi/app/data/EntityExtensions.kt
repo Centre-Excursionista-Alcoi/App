@@ -9,6 +9,8 @@ import io.ktor.http.headers
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
@@ -25,11 +27,23 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                 is Boolean -> append(key, value)
                 is ByteArray -> append(key, value)
                 is List<*> -> {
-                    if (value.isEmpty()) {
-                        append(key, "[]")
+                    if (value.isNotEmpty()) {
+                        @Suppress("UNCHECKED_CAST")
+                        val jsonArray = when (val item = value.first()) {
+                            is String -> json.encodeToString(ListSerializer(String.serializer()), value as List<String>)
+                            is Int -> json.encodeToString(ListSerializer(Int.serializer()), value as List<Int>)
+                            is Long -> json.encodeToString(ListSerializer(Long.serializer()), value as List<Long>)
+                            is Float -> json.encodeToString(ListSerializer(Float.serializer()), value as List<Float>)
+                            is Double -> json.encodeToString(ListSerializer(Double.serializer()), value as List<Double>)
+                            is Boolean -> json.encodeToString(ListSerializer(Boolean.serializer()), value as List<Boolean>)
+                            else -> {
+                                Napier.e(tag = "toFormData") { "Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}" }
+                                return@forEach
+                            }
+                        }
+                        append(key, jsonArray)
                     } else {
-                        val jsonEncodedArray = json.encodeToString(value)
-                        append(key, jsonEncodedArray)
+                        append(key, "[]")
                     }
                 }
                 is FileReference -> {
