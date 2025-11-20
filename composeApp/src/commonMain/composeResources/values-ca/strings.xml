@@ -342,4 +342,17 @@
     <string name="months_october">Octubre</string>
     <string name="months_november">Novembre</string>
     <string name="months_december">Desembre</string>
+    <string name="settings_push_connection_message_disconnected">No s\'estan rebent notificacions push. Les dades s\'hauran de sincronitzar manualment. Reiniciar l\'app pot solucionar-ho.</string>
+    <string name="sort_by_signed_lendings_first">Registrat per a préstecs primer</string>
+    <string name="sort_by_signed_lendings_last">Registrat per a préstecs últim</string>
+    <string name="management_user_disabled">De baixa</string>
+    <string name="management_user_signed_up_for_lendings">Ha signat l\'acord de préstecs</string>
+    <string name="sort_by_has_insurance_last">Té segur últim</string>
+    <string name="nav_lendings_disabled">Tens préstecs pendents</string>
+    <string name="management_user_has_insurance">Té segur</string>
+    <string name="settings_push_connection_message_connected">Rebent notificacions push. Les dades s\'actualitzaran al moment.</string>
+    <string name="settings_category_push">Notificacions Push</string>
+    <string name="sort_by_has_insurance_first">Té segur primer</string>
+    <string name="personal_info_disabled">L\'usuari està donat de baixa.</string>
+    <string name="settings_push_connection_title">Estat de la Connexió</string>
 </resources>
