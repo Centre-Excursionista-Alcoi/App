@@ -37,7 +37,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 
-const val MANAGEMENT_PAGE_COUNT = 4
+const val MANAGEMENT_PAGE_COUNT = 5
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
 const val MANAGEMENT_PAGE_USERS = 2
