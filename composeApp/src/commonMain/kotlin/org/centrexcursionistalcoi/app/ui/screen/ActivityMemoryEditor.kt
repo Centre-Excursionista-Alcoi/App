@@ -49,7 +49,12 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.displayName
+import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
+import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
 import org.centrexcursionistalcoi.app.utils.unaccent
@@ -65,6 +70,7 @@ fun ActivityMemoryEditor(
 ) {
     val users by model.users.collectAsState()
     val isSaving by model.isSaving.collectAsState()
+    val saveProgress by model.saveProgress.collectAsState()
     val uploadSuccessful by model.uploadSuccessful.collectAsState()
 
     LaunchedEffect(uploadSuccessful) {
@@ -75,6 +81,7 @@ fun ActivityMemoryEditor(
 
     ActivityMemoryEditor(
         isSaving = isSaving,
+        saveProgress = saveProgress,
         users = users,
         onSave = model::save,
         onBack = onBack,
@@ -85,14 +92,16 @@ fun ActivityMemoryEditor(
 @OptIn(ExperimentalMaterial3Api::class)
 fun ActivityMemoryEditor(
     isSaving: Boolean,
+    saveProgress: Progress?,
     users: List<UserData>?,
-    onSave: (RichTextState) -> Unit,
+    onSave: (place: String, memberUsers: List<UserData>, externalUsers: String, sport: Sports?, description: RichTextState, files: List<PlatformFile>) -> Unit,
     onBack: () -> Unit,
 ) {
     val state = rememberRichTextState()
     var place by remember { mutableStateOf("") }
     var memberUsers by remember { mutableStateOf<List<UserData>>(emptyList()) }
     var externalUsers by remember { mutableStateOf("") }
+    var sport by remember { mutableStateOf<Sports?>(null) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
     Scaffold(
@@ -107,20 +116,23 @@ fun ActivityMemoryEditor(
                 },
                 title = { Text(stringResource(Res.string.memory_editor_title)) },
                 actions = {
-                    if (!state.toText().isBlank()) {
-                        IconButton(
-                            enabled = !isSaving,
-                            onClick = { onSave(state) }
-                        ) {
-                            Icon(
-                                Icons.Default.CloudUpload,
-                                stringResource(Res.string.memory_editor_save)
-                            )
-                        }
+                    IconButton(
+                        enabled = !isSaving,
+                        onClick = { onSave(place, memberUsers, externalUsers, sport, state, files) }
+                    ) {
+                        Icon(
+                            Icons.Default.CloudUpload,
+                            stringResource(Res.string.memory_editor_save)
+                        )
                     }
                 }
             )
         },
+        bottomBar = {
+            if (isSaving) saveProgress?.let { progress ->
+                LinearLoadingIndicator(progress, modifier = Modifier.fillMaxWidth())
+            }
+        }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(paddingValues)) {
             // Place
@@ -175,6 +187,17 @@ fun ActivityMemoryEditor(
                 enabled = !isSaving,
             )
 
+            // Sport
+            DropdownField(
+                value = sport,
+                onValueChange = { sport = it },
+                options = Sports.entries,
+                label = stringResource(Res.string.memory_editor_sport),
+                itemToString = { it?.displayName ?: "" },
+                enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            )
+
             // Activity description:
             Text(
                 text = stringResource(Res.string.memory_editor_description),
@@ -194,12 +217,14 @@ fun ActivityMemoryEditor(
             )
 
             // Images
-            val imagePicker = rememberFilePickerLauncher(FileKitType.ImageAndVideo, mode = FileKitMode.Multiple()) { files ->
-                if (files == null) return@rememberFilePickerLauncher
+            val imagePicker = rememberFilePickerLauncher(FileKitType.ImageAndVideo, mode = FileKitMode.Multiple()) { pickedFiles ->
+                if (pickedFiles == null) return@rememberFilePickerLauncher
+                files += pickedFiles
             }
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                onClick = { imagePicker.launch() }
+                onClick = { imagePicker.launch() },
+                enabled = !isSaving,
             ) {
                 Icon(Icons.Default.UploadFile, stringResource(Res.string.memory_editor_upload_image))
                 Spacer(Modifier.width(8.dp))
@@ -231,12 +256,13 @@ fun ActivityMemoryEditor(
 fun ActivityMemoryEditor_Preview() {
     ActivityMemoryEditor(
         isSaving = false,
+        saveProgress = null,
         users = listOf(
             UserData("000", "Alice", "alice@example.com", emptyList(), emptyList(), null, emptyList(), false),
             UserData("001", "Bob", "bob@example.com", emptyList(), emptyList(), null, emptyList(), false),
             UserData("002", "Charlie", "charlie@example.com", emptyList(), emptyList(), null, emptyList(), false),
         ),
-        onSave = {},
+        onSave = { _, _, _, _, _, _ -> },
         onBack = {},
     )
 }

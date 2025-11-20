@@ -124,8 +124,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             returned = item.returned,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memoryDocumentId = item.memoryDocument,
-            memoryPlainText = item.memoryPlainText,
+            memory = item.memory,
             memoryReviewed = item.memoryReviewed,
         )
         for (inventoryItem in item.items) {
@@ -168,8 +167,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             returned = item.returned,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memoryDocumentId = item.memoryDocument,
-            memoryPlainText = item.memoryPlainText,
+            memory = item.memory,
             memoryReviewed = item.memoryReviewed,
         )
 
@@ -229,9 +227,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         returned = returned,
         memorySubmitted = memorySubmitted,
         memorySubmittedAt = memorySubmittedAt,
-        memoryDocument = memoryDocumentId,
+        memory = memory,
         memoryReviewed = memoryReviewed,
-        memoryPlainText = memoryPlainText,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() },
         receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }
     ).referenced(
