@@ -36,6 +36,7 @@ import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -48,7 +49,6 @@ import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
-import org.centrexcursionistalcoi.app.utils.FileBytesWrapper
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.dao.EntityClass
@@ -153,12 +153,12 @@ object ProvidedRouteTests {
             when (value) {
                 is String -> append(key, value).also { println("- $key: $value") }
                 is ByteArray -> append(key, Base64.UrlSafe.encode(value).also { println("- $key: $it") })
-                is FileBytesWrapper -> append(
+                is FileWithContext -> append(
                     key,
                     value.bytes,
                     Headers.build {
-                        append(HttpHeaders.ContentType, ContentType.Application.OctetStream.toString())
-                        append(HttpHeaders.ContentDisposition, "filename=\"raw-bytes\"")
+                        append(HttpHeaders.ContentType, (value.contentType ?: ContentType.Application.OctetStream).toString())
+                        append(HttpHeaders.ContentDisposition, "filename=\"${value.name ?: "raw-bytes"}\"")
                     }
                 ).also { println("- $key: byte array (size=${value.bytes.size})") }
                 is Number -> append(key, value).also { println("- $key: $value") }
@@ -181,12 +181,12 @@ object ProvidedRouteTests {
                 is Number -> member.call(this, value)
                 is Boolean -> member.call(this, value)
                 is ByteArray -> member.call(this, value)
-                is FileBytesWrapper -> {
+                is FileWithContext -> {
                     // For FileBytesWrapper, the setter is a FileEntity. We have to create a FileEntity first.
                     val fileEntity = transaction {
                         FileEntity.new {
-                            this.name = "bytes"
-                            this.type = "application/octet-stream"
+                            this.name = value.name ?: "bytes"
+                            this.type = (value.contentType ?: ContentType.Application.OctetStream).toString()
                             this.data = value.bytes
                         }
                     }
@@ -374,7 +374,7 @@ object ProvidedRouteTests {
                 fun <T> T.assertActual(name: String, expected: T) {
                     when (this) {
                         is FileEntity -> {
-                            assertInstanceOf<FileBytesWrapper>(expected, "Expected value for $name should be a FileBytesWrapper")
+                            assertInstanceOf<FileWithContext>(expected, "Expected value for $name should be a FileBytesWrapper")
                             val actualBytes = Database { data }
                             assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         }
@@ -438,7 +438,7 @@ object ProvidedRouteTests {
 
                     fun Any.assertActual(name: String, expected: Any?) {
                         val actual = this
-                        if (expected is FileBytesWrapper) {
+                        if (expected is FileWithContext) {
                             // If expected is a FileBytesWrapper, actual is a UUID matching a FileEntity.
                             // Fetch the FileEntity from the database and compare its data.
                             assertInstanceOf<Uuid>(actual, "Expected value for $name should be a Uuid")

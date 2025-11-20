@@ -8,6 +8,7 @@ import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
@@ -67,7 +68,7 @@ class TestDepartment {
             departmentEntity.patch(
                 UpdateDepartmentRequest(
                     "Updated Department",
-                    byteArrayOf(4, 5, 6)
+                    FileWithContext(byteArrayOf(4, 5, 6))
                 )
             )
         }

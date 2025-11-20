@@ -29,6 +29,6 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter
     context(_: JdbcTransaction)
     override fun patch(request: UpdateDepartmentRequest) {
         request.displayName?.let { displayName = it }
-        updateOrSetImage(request.image, "department_${id.value}_image")
+        updateOrSetImage(request.image)
     }
 }

@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.network
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
@@ -19,10 +20,10 @@ object InventoryItemTypesRemoteRepository : SymmetricRemoteRepository<Uuid, Inve
         create(InventoryItemType(Uuid.Zero, displayName, description, categories, imageUuid))
     }
 
-    suspend fun update(id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: ByteArray?) {
+    suspend fun update(id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: PlatformFile?) {
         update(
             id,
-            UpdateInventoryItemTypeRequest(displayName, description, categories, image),
+            UpdateInventoryItemTypeRequest(displayName, description, categories, image?.fileWithContext()),
             UpdateInventoryItemTypeRequest.serializer(),
         )
     }
