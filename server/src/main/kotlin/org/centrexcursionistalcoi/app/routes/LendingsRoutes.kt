@@ -628,8 +628,10 @@ fun Route.lendingsRoutes() {
                         Database { department?.toData() }
                     ),
                 ),
-                itemsUsed = Database { InventoryItemTypeEntity.all().map { it.toData() } }.let { types ->
-                    Database { lending.items.map { item -> item.toData().referenced(types.first { it.id == item.type }) } }
+                itemsUsed = Database {
+                    lending.items.map { item ->
+                        item.toData().referenced(item.type.toData())
+                    }
                 },
                 submittedBy = userReference.fullName,
                 dateRange = lending.from to lending.to,
