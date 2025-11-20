@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
@@ -19,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,9 +42,11 @@ import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.jetbrains.compose.resources.stringResource
@@ -57,10 +62,20 @@ fun InventoryItemTypesListView(
     onCreate: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
     onDelete: (InventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, InventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 ) {
     val selectedItemIndex = remember(selectedItemId, types) {
         types?.indexOfFirst { it.id == selectedItemId }
+    }
+
+    var creatingInventoryItem by remember { mutableStateOf<InventoryItemType?>(null) }
+    creatingInventoryItem?.let { type ->
+        CreateInventoryItemDialog(
+            type = type,
+            onCreate = onCreateInventoryItem,
+            onDismissRequested = { creatingInventoryItem = null }
+        )
     }
 
     val groupedItems = remember(items, types) {
@@ -88,6 +103,14 @@ fun InventoryItemTypesListView(
         },
         itemTrailingContent = { (_, items) ->
             Badge { Text(items.size.toString(), style = MaterialTheme.typography.labelLarge) }
+        },
+        itemToolbarActions = { (type) ->
+            TooltipIconButton(
+                imageVector = Icons.Default.Add,
+                tooltip = stringResource(Res.string.inventory_item_create),
+                positioning = TooltipAnchorPosition.Left,
+                onClick = { creatingInventoryItem = type },
+            )
         },
         emptyItemsText = stringResource(Res.string.management_no_item_types),
         isCreatingSupported = true,
@@ -221,6 +244,8 @@ fun InventoryItemTypesListView(
             }
         }
 
+        var deletingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
+
         var showingItemDialog by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
         showingItemDialog?.let { item ->
             QRCodeDialog(
@@ -229,16 +254,20 @@ fun InventoryItemTypesListView(
                     payload.uuid()?.let { highlightItemId = it }
                     payload.id?.let { highlightItemNfcId = it }
                 },
+                onDeleteRequest = { deletingItem = item },
                 onDismissRequest = { showingItemDialog = null }
             )
         }
 
-        var deletingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
         deletingItem?.let { item ->
             DeleteDialog(
                 item = item,
                 displayName = { it.id.toString() },
-                onDelete = { onDeleteInventoryItem(item) },
+                onDelete = {
+                    onDeleteInventoryItem(item).also { job ->
+                        job.invokeOnCompletion { showingItemDialog = null }
+                    }
+                },
                 onDismissRequested = { deletingItem = null }
             )
         }

@@ -126,6 +126,14 @@ fun <T> ListView(
     var isEditing by remember { mutableStateOf(false) }
     var isCreating by remember { mutableStateOf(false) }
 
+    // Keep selected item in sync with items list
+    LaunchedEffect(items) {
+        val item = selectedItem
+        if (item != null) {
+            items?.find { itemIdProvider(it) == itemIdProvider(item) }?.let { selectedItem = it }
+        }
+    }
+
     var isDeleting by remember { mutableStateOf<T?>(null) }
     if (onDeleteRequest != null) isDeleting?.let { item ->
         DeleteDialog(

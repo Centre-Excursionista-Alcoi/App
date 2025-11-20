@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -77,9 +78,15 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
+    fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = launch {
+        doAsync {
+            InventoryItemsRemoteRepository.create(variation, type.id, amount)
+        }
+    }
+
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.delete(inventoryItem.id)
+            InventoryItemsRemoteRepository.delete(inventoryItem.id)
         }
     }
 
