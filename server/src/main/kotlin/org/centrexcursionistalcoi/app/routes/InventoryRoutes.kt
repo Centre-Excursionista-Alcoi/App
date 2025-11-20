@@ -48,11 +48,16 @@ fun Route.inventoryRoutes() {
                                     null
                                 }
                             }
+                            "image" -> {
+                                image.populate(partData)
+                            }
                         }
                     }
                     is PartData.FileItem -> {
-                        if (partData.name == "image") {
-                            image.populate(partData)
+                        when (partData.name) {
+                            "image" -> {
+                                image.populate(partData)
+                            }
                         }
                     }
                     else -> { /* nothing */ }
