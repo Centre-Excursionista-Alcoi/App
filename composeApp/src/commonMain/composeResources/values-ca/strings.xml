@@ -356,4 +356,21 @@
     <string name="personal_info_disabled">L\'usuari està donat de baixa.</string>
     <string name="settings_push_connection_title">Estat de la Connexió</string>
     <string name="inventory_item_create">Crear Tipus de Material</string>
+    <string name="management_posts">Publicacions</string>
+    <string name="sport_orienteering">Orientació</string>
+    <string name="sport_nordic_walking">Marxa Nòrdica</string>
+    <string name="sport_speleology">Espeleologia</string>
+    <string name="sport_cycling">Ciclisme</string>
+    <string name="sport_cultural_tourism">Turisme Cultural</string>
+    <string name="management_no_posts">Sense publicacions</string>
+    <string name="management_memory_pdf_not_available">Memòria no disponible en format PDF.</string>
+    <string name="memory_editor_place">Lloc</string>
+    <string name="memory_editor_place_help">On es va dur a terme l\'activitat</string>
+    <string name="memory_editor_member_participants">Membres Participants</string>
+    <string name="memory_editor_external_participants">Participants Externs</string>
+    <string name="memory_editor_external_participants_help">Persones que van participar en l\'activitat des de fora del club.</string>
+    <string name="memory_editor_upload_image">Puja imatges</string>
+    <string name="memory_editor_sport">Esport</string>
+    <string name="memory_editor_description">Descripció de l\'Activitat</string>
+    <string name="post_by">Per%1$s</string>
 </resources>
