@@ -310,6 +310,13 @@
     <string name="memory_editor">Open memory editor</string>
     <string name="memory_editor_title">Activity Memory Editor</string>
     <string name="memory_editor_save">Save Memory</string>
+    <string name="memory_editor_place">Place</string>
+    <string name="memory_editor_place_help">Where the activity took place</string>
+    <string name="memory_editor_member_participants">Member Participants</string>
+    <string name="memory_editor_external_participants">External Participants</string>
+    <string name="memory_editor_external_participants_help">People that participated on the activity from outside the club.</string>
+    <string name="memory_editor_upload_image">Upload Images</string>
+    <string name="memory_editor_description">Activity description</string>
 
     <string name="scanner_read">Read code: %1$s</string>
     <string name="scanner_error">Could not read code</string>

@@ -24,6 +24,33 @@ fun AutocompleteFormField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
+    onSuggestionClicked: (String) -> Unit = { onValueChange(it) },
+) {
+    AutocompleteFormField(
+        value = value,
+        onValueChange = onValueChange,
+        suggestions = suggestions,
+        label = label,
+        modifier = modifier,
+        enabled = enabled,
+        readOnly = readOnly,
+        toString = { it },
+        onSuggestionClicked = onSuggestionClicked
+    )
+}
+
+@Composable
+@ExperimentalMaterial3Api
+fun <T> AutocompleteFormField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    suggestions: Set<T>,
+    label: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    toString: (T) -> String = { it.toString() },
+    onSuggestionClicked: (T) -> Unit = { onValueChange(toString(it)) },
 ) {
     val anySuggestion = suggestions.isNotEmpty()
     var expanded by remember { mutableStateOf(false) }
@@ -49,9 +76,9 @@ fun AutocompleteFormField(
         ) {
             suggestions.forEach { suggestion ->
                 DropdownMenuItem(
-                    text = { Text(suggestion) },
+                    text = { Text(toString(suggestion)) },
                     onClick = {
-                        onValueChange(suggestion)
+                        onSuggestionClicked(suggestion)
                         expanded = false
                     }
                 )
