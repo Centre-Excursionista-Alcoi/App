@@ -103,6 +103,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.screen.DataRow
 import org.centrexcursionistalcoi.app.ui.screen.GeneralLendingDetails
 import org.centrexcursionistalcoi.app.ui.screen.LendingItems
+import org.centrexcursionistalcoi.app.ui.screen.MemoryViewButtons
 import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
@@ -337,6 +338,17 @@ fun LazyListScope.lendingManagementScreenContent(
                     ) {
                         Text(stringResource(Res.string.management_skip_memory))
                     }
+                }
+            }
+
+            if (lending.memorySubmitted) {
+                if (lending.memoryPdf == null) {
+                    Text(
+                        text = stringResource(Res.string.management_memory_pdf_not_available),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                } else {
+                    MemoryViewButtons(lending)
                 }
             }
 

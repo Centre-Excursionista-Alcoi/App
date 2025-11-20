@@ -28,7 +28,7 @@ data class ReferencedLending(
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
     val memory: LendingMemory?,
-    val memoryPdf: Uuid? = null,
+    val memoryPdf: Uuid?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -52,6 +52,7 @@ data class ReferencedLending(
             memorySubmitted = this.memorySubmitted,
             memorySubmittedAt = this.memorySubmittedAt,
             memory = this.memory,
+            memoryPdf = this.memoryPdf,
             memoryReviewed = this.memoryReviewed,
             from = this.from,
             to = this.to,

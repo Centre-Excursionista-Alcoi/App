@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.FreeCancellation
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -59,13 +60,17 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
+import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
+import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -416,8 +421,10 @@ fun MemoryActions(
 
 @Composable
 fun MemoryVisualization(
-    lending: ReferencedLending
+    lending: ReferencedLending,
 ) {
+    lending.memoryPdf ?: return
+
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(Res.string.lending_details_memory_view),
@@ -425,7 +432,36 @@ fun MemoryVisualization(
             modifier = Modifier.padding(12.dp)
         )
 
-        // TODO: Implement viewing memory
-        Text("Visualization not implemented")
+        MemoryViewButtons(lending)
+    }
+}
+
+@Composable
+fun MemoryViewButtons(
+    lending: ReferencedLending,
+    fpm: FileProviderModel = viewModel { FileProviderModel() },
+) {
+    val memoryPdf = lending.memoryPdf ?: return
+
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        if (PlatformShareLogic.isSupported) {
+            IconButton(
+                onClick = {
+                    fpm.shareFile { lending.fetchFilePath(memoryPdf) }
+                },
+            ) {
+                Icon(Icons.Default.Share, stringResource(Res.string.share))
+            }
+        }
+        if (PlatformOpenFileLogic.isSupported) {
+            OutlinedButton(
+                onClick = {
+                    fpm.openFile { lending.fetchFilePath(memoryPdf) }
+                },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text(stringResource(Res.string.insurance_view_document))
+            }
+        }
     }
 }

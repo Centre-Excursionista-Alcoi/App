@@ -219,6 +219,7 @@
     <string name="management_view_memory">View Memory</string>
     <string name="management_return">Return</string>
     <string name="management_skip_memory">Skip</string>
+    <string name="management_memory_pdf_not_available">Memory not available in PDF format.</string>
 
     <string name="management_promote_user">Promote</string>
     <string name="management_promote_user_title">Promote user</string>

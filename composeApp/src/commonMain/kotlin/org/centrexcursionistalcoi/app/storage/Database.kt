@@ -50,6 +50,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             InstantAdapter,
             InstantAdapter,
             JsonAdapter(LendingMemory.serializer()),
+            UUIDAdapter,
         ),
         Posts.Adapter(UUIDAdapter, InstantAdapter, UUIDAdapter),
         ReceivedItems.Adapter(

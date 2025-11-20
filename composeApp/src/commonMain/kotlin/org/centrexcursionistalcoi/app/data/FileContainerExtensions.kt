@@ -146,7 +146,7 @@ suspend fun FileContainer.readFile(uuid: Uuid, progressNotifier: ProgressNotifie
  * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
  * @throws IllegalArgumentException if the file is not found and uuid cannot be inferred.
  */
-suspend fun SubReferencedFileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
+suspend fun SubReferencedFileContainer.fetchSubReferencedFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
     val ref = referencedFiles.find { it.second == uuid }
     require(ref != null) { "UUID must be in the container." }
 
@@ -164,8 +164,8 @@ suspend fun SubReferencedFileContainer.fetchFilePath(uuid: Uuid, progressNotifie
  * Writes the provided ByteReadChannel to the document file associated with this FileContainer.
  * @throws IllegalArgumentException if the UUID is not in the container.
  */
-suspend fun SubReferencedFileContainer.writeFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
-    val path = fetchFilePath(uuid, progressNotifier, downloadIfNotExists = false)
+suspend fun SubReferencedFileContainer.writeSubReferencedFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
+    val path = fetchSubReferencedFilePath(uuid, progressNotifier, downloadIfNotExists = false)
     FileSystem.write(path, channel, progressNotifier)
 }
 
