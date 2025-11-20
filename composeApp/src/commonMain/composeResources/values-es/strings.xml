@@ -338,4 +338,13 @@
     <string name="personal_info_disabled"></string>
     <string name="lending_details_memory_pending_title"></string>
     <string name="settings_push_connection_title"></string>
+    <string name="sort_by_signed_lendings_first">Registrado para préstamos primero</string>
+    <string name="lending_details_incomplete_return_title">Devolución Incompleta</string>
+    <string name="sort_by_signed_lendings_last">Registrado para préstamos último</string>
+    <string name="management_user_disabled">Dado de baja</string>
+    <string name="management_user_signed_up_for_lendings">Firmado condiciones de préstamo</string>
+    <string name="sort_by_has_insurance_last">Tiene seguro último</string>
+    <string name="nav_lendings_disabled">Tienes préstamos pendientes</string>
+    <string name="management_user_has_insurance">Tiene seguro</string>
+    <string name="sort_by_has_insurance_first">Tiene seguro primero</string>
 </resources>
