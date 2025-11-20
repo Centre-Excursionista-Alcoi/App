@@ -148,7 +148,7 @@ fun InventoryItemTypesListView(
             )
 
             AutocompleteMultipleFormField(
-                entries = type?.categories.orEmpty(),
+                entries = categories,
                 onEntryAdded = { categories += it },
                 onEntryRemoved = { categories -= it },
                 suggestions = allCategories,
