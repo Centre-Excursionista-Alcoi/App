@@ -217,7 +217,7 @@ sealed interface Error {
     @SerialName("MemoryNotGiven")
     class MemoryNotGiven() : Error {
         override val code: Int = ERROR_MEMORY_NOT_GIVEN
-        override val description: String = "Memory not given. Set either \"file\" or \"text\""
+        override val description: String = "Memory not given. Must set at least \"text\""
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest

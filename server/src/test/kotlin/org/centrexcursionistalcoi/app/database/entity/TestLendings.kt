@@ -13,11 +13,15 @@ import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.LendingMemory
+import org.centrexcursionistalcoi.app.data.ReceivedItem
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -93,28 +97,77 @@ class TestLendings {
         val id = "315cedda-a219-426d-8acc-ebeb7c70b9f7".toUUID()
         val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUUID()
         val itemTypeId = "2c3c5f3d-5c5e-4916-988c-225b57f91cfa".toUUID()
+        val receivedItemId = "786a1c86-6e7d-4cdc-bebf-d1540f67029b".toUUID()
+        val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUUID()
+
         val instant = Instant.ofEpochSecond(1759917121)
+
+        val department = Database {
+            DepartmentEntity.new {
+                displayName = "Department"
+            }
+        }
         val entity = Database {
             LendingEntity.new(id) {
                 timestamp = instant
                 userSub = transaction { FakeUser.provideEntity() }
                 from = LocalDate.of(2025, 10, 8)
                 to = LocalDate.of(2025, 10, 9)
+                confirmed = true
+                taken = true
+                givenBy = transaction { FakeAdminUser.provideEntity().id }
+                givenAt = instant
+                returned = true
+                notes = "notes"
+                memorySubmitted = true
+                memorySubmittedAt = instant
+                memory = LendingMemory(
+                    place = "Place",
+                    memberUsers = listOf(FakeUser.SUB),
+                    externalUsers = "John Doe",
+                    text = "Lending memory text",
+                    files = listOf(memoryAttachmentFileId.toKotlinUuid()),
+                    department = department.id.value.toKotlinUuid(),
+                    sport = Sports.ORIENTEERING,
+                )
+                memoryReviewed = true
             }
         }
-        val item = Database {
+        // Create and link inventory item
+        val itemEntity = Database {
             InventoryItemEntity.new(itemId) {
                 type = transaction {
                     InventoryItemTypeEntity.new(itemTypeId) {
                         displayName = "Type"
+                        variation = "variation"
+                        nfcId = byteArrayOf(0, 1, 2, 3)
                     }
                 }
             }
+        }.also { item ->
+            Database {
+                LendingItems.insert {
+                    it[LendingItems.lending] = entity.id
+                    it[LendingItems.item] = item.id
+                }
+            }
         }
+        // Create and link received item
         Database {
-            LendingItems.insert {
-                it[LendingItems.lending] = entity.id
-                it[LendingItems.item] = item.id
+            ReceivedItemEntity.new(receivedItemId) {
+                lending = entity
+                item = itemEntity
+                notes = "Good"
+                receivedAt = instant
+                receivedBy = transaction { FakeAdminUser.provideEntity() }
+            }
+        }
+        // Upload memory attachment
+        Database {
+            FileEntity.new(memoryAttachmentFileId) {
+                name = "attachment.pdf"
+                type = "application/pdf"
+                data = byteArrayOf(1, 2, 3, 4)
             }
         }
 
@@ -122,22 +175,38 @@ class TestLendings {
             id = id.toKotlinUuid(),
             userSub = FakeUser.SUB,
             timestamp = instant.toKotlinInstant(),
-            confirmed = false,
-            taken = false,
-            givenBy = null,
-            givenAt = null,
-            returned = false,
-            receivedItems = emptyList(),
             from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
             to = LocalDate.of(2025, 10, 9).toKotlinLocalDate(),
-            notes = null,
-            memorySubmitted = false,
-            memorySubmittedAt = null,
-            memoryDocument = null,
-            memoryPlainText = null,
-            memoryReviewed = false,
+            confirmed = true,
+            taken = true,
+            givenBy = FakeAdminUser.SUB,
+            givenAt = instant.toKotlinInstant(),
+            returned = true,
+            receivedItems = listOf(
+                ReceivedItem(
+                    id = receivedItemId.toKotlinUuid(),
+                    lendingId = id.toKotlinUuid(),
+                    itemId = itemId.toKotlinUuid(),
+                    notes = "Good",
+                    receivedAt = instant.toKotlinInstant(),
+                    receivedBy = FakeAdminUser.SUB
+                )
+            ),
+            notes = "notes",
+            memorySubmitted = true,
+            memorySubmittedAt = instant.toKotlinInstant(),
+            memory = LendingMemory(
+                place = "Place",
+                memberUsers = listOf(FakeUser.SUB),
+                externalUsers = "John Doe",
+                text = "Lending memory text",
+                files = listOf(memoryAttachmentFileId.toKotlinUuid()),
+                department = department.id.value.toKotlinUuid(),
+                sport = Sports.ORIENTEERING,
+            ),
+            memoryReviewed = true,
             items = listOf(
-                InventoryItem(itemId.toKotlinUuid(), null, itemTypeId.toKotlinUuid(), null)
+                InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3))
             ),
         )
 

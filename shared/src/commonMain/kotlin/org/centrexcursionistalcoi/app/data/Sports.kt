@@ -7,4 +7,9 @@ enum class Sports {
     CANYONING,
     HIKING,
     ALPINISM,
+    ORIENTEERING,
+    NORDIC_WALKING,
+    SPELEOLOGY,
+    CYCLING,
+    CULTURAL_TOURISM,
 }

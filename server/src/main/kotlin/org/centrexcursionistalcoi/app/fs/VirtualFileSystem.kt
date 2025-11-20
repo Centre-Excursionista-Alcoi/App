@@ -159,7 +159,9 @@ object VirtualFileSystem {
             entityClass = LendingEntity,
             idConverter = { it.toUUIDOrNull() },
             customFileDisplayName = { it.userSub.fullName + " :: " + it.from + " - " + it.to },
-        ) { it.memoryDocument },
+        ) { lending ->
+            TODO("PDF for memory should be generated after uploading the memory")
+        },
         RootDir(
             name = "Insurances",
             entityClass = UserInsuranceEntity,

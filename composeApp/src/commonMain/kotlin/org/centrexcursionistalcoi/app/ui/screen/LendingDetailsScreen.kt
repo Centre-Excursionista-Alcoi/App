@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.FreeCancellation
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,27 +52,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.ktor.http.ContentType
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
-import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
-import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
@@ -88,14 +78,11 @@ fun LendingDetailsScreen(
     onBack: () -> Unit
 ) {
     val lending by model.lending.collectAsState()
-    val memoryUploadProgress by model.memoryUploadProgress.collectAsState()
 
     lending?.let { lending ->
         LendingDetailsScreen(
             lending = lending,
             onCancelRequest = model::cancelLending,
-            memoryUploadProgress = memoryUploadProgress,
-            onMemoryUploadRequest = model::submitMemory,
             onMemoryEditorRequest = onMemoryEditorRequested,
             onBack = onBack
         )
@@ -107,8 +94,6 @@ fun LendingDetailsScreen(
 private fun LendingDetailsScreen(
     lending: ReferencedLending,
     onCancelRequest: () -> Job,
-    memoryUploadProgress: Progress? = null,
-    onMemoryUploadRequest: (PlatformFile) -> Unit = {},
     onMemoryEditorRequest: () -> Unit = {},
     onBack: () -> Unit,
 ) {
@@ -247,7 +232,6 @@ private fun LendingDetailsScreen(
 
                 item(key = "memory_actions") {
                     MemoryActions(
-                        onUploadRequest = onMemoryUploadRequest,
                         onEditorRequest = onMemoryEditorRequest,
                     )
                 }
@@ -407,14 +391,8 @@ fun LendingItems(
 
 @Composable
 fun MemoryActions(
-    memoryUploadProgress: Progress? = null,
-    onUploadRequest: (PlatformFile) -> Unit,
     onEditorRequest: () -> Unit,
 ) {
-    val filePickerLauncher = rememberFilePickerLauncher(type = FileKitType.File("pdf")) { file ->
-        if (file != null) onUploadRequest(file)
-    }
-
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(Res.string.lending_details_memory),
@@ -422,36 +400,16 @@ fun MemoryActions(
             modifier = Modifier.padding(12.dp)
         )
 
-        Row(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = { filePickerLauncher.launch() },
-            ) {
-                Icon(
-                    imageVector = Icons.Default.UploadFile,
-                    contentDescription = stringResource(Res.string.memory_pick)
-                )
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(Res.string.memory_pick))
-            }
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            onClick = onEditorRequest,
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Article,
+                contentDescription = stringResource(Res.string.memory_editor)
+            )
             Spacer(Modifier.size(8.dp))
-            OutlinedButton(
-                modifier = Modifier.weight(1f),
-                onClick = onEditorRequest,
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Article,
-                    contentDescription = stringResource(Res.string.memory_editor)
-                )
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(Res.string.memory_editor))
-            }
-        }
-
-        if (memoryUploadProgress != null) {
-            Spacer(Modifier.height(8.dp))
-            LinearLoadingIndicator(memoryUploadProgress)
-            Spacer(Modifier.height(8.dp))
+            Text(stringResource(Res.string.memory_editor))
         }
     }
 }
@@ -467,32 +425,7 @@ fun MemoryVisualization(
             modifier = Modifier.padding(12.dp)
         )
 
-        val document = lending.memoryDocument
-        if (document != null) {
-            if (PlatformOpenFileLogic.isSupported) {
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    onClick = {
-                        val path = runBlocking { lending.fetchDocumentFilePath() }
-                        PlatformOpenFileLogic.open(path, ContentType.Application.Pdf)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(Res.string.management_view_memory),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
-            } else {
-                Text(
-                    text = stringResource(Res.string.lending_details_memory_view_unsupported),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                )
-            }
-        } else {
-            // TODO: Implement viewing memory from text
-            Text("Visualization not implemented")
-        }
+        // TODO: Implement viewing memory
+        Text("Visualization not implemented")
     }
 }

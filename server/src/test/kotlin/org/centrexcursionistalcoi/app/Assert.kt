@@ -7,6 +7,7 @@ import io.ktor.http.isSuccess
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -19,9 +20,14 @@ import org.centrexcursionistalcoi.app.error.Error
  * Optionally, a set of keys to ignore during comparison can be provided (only applies for objects).
  */
 fun assertJsonEquals(expected: String, actual: String, ignoreKeys: Set<String> = emptySet()) {
-    val suffix = "\n\tActual: $actual\n\tExpected: $expected"
     val expectedJson = json.parseToJsonElement(expected)
     val actualJson = json.parseToJsonElement(actual)
+
+    assertJsonEquals(expectedJson, actualJson, ignoreKeys)
+}
+
+fun assertJsonEquals(expectedJson: JsonElement, actualJson: JsonElement, ignoreKeys: Set<String> = emptySet()) {
+    val suffix = "\n\tActual: $actualJson\n\tExpected: $expectedJson"
 
     try {
         val expectedPrimitive = expectedJson.jsonPrimitive
@@ -31,7 +37,7 @@ fun assertJsonEquals(expected: String, actual: String, ignoreKeys: Set<String> =
             throw AssertionError("Expected JSON primitive $expectedPrimitive but was $actualJson")
         }
         // both are jsonPrimitives, compare their string values
-        assertEquals(expectedPrimitive.content, actualJson.jsonPrimitive.content)
+        assertEquals(expectedPrimitive.content, actualJson.jsonPrimitive.content, "JSON primitives are not equal.")
         return
     } catch (_: IllegalArgumentException) {
         // ignore, element is not a jsonPrimitive
@@ -42,9 +48,12 @@ fun assertJsonEquals(expected: String, actual: String, ignoreKeys: Set<String> =
         val actualObject = actualJson.jsonObject.filterKeys { !ignoreKeys.contains(it) }
         assertEquals(expectedObject.size, actualObject.size, "JSON objects have different number of keys.$suffix")
         for ((key, expectedValue) in expectedObject) {
-            val actualValue = actualObject[key]
-                ?: throw AssertionError("Expected key '$key' not found in actual JSON object.$suffix")
-            assertJsonEquals(expectedValue.toString(), actualValue.toString())
+            val actualValue = actualObject[key] ?: throw AssertionError("Expected key '$key' not found in actual JSON object.$suffix")
+            try {
+                assertJsonEquals(expectedValue.toString(), actualValue.toString())
+            } catch (e: AssertionError) {
+                throw AssertionError("Values for key '$key' are not equal.$suffix", e)
+            }
         }
         return
     } catch (_: IllegalArgumentException) {

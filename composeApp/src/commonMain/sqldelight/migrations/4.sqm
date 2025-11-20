@@ -1,0 +1,4 @@
+-- We can't remove columns, so just leave memoryDocumentId and memoryPlainText as is
+-- Create the new column
+
+ALTER TABLE Lendings ADD COLUMN memory TEXT DEFAULT NULL;

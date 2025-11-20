@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.name
-import io.github.vinceglb.filekit.readBytes
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -24,6 +22,9 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
+import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
@@ -209,49 +210,46 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * Submits a memory file for a lending by its ID.
      * The logged-in user must be the owner of the lending.
      * @param lendingId The UUID of the lending to submit the memory for.
-     * @param file The memory file to submit.
+     * @param place The place where the activity took place.
+     * @param memberUsers The list of member users who participated in the activity.
+     * @param externalUsers A string describing external users who participated in the activity.
+     * @param text The rich text content of the memory in Markdown.
+     * @param files The list of memory files to submit.
      * @param progress An optional progress listener for upload progress.
      * @throws ServerException if the submission fails.
      * @throws NoSuchElementException if the lending is not found after submission.
      */
-    suspend fun submitMemory(lendingId: Uuid, file: PlatformFile, progress: ProgressNotifier? = null) {
-        val fileBytes = file.readBytes()
-        val response = httpClient.submitFormWithBinaryData(
-            "inventory/lendings/$lendingId/add_memory",
-            formData {
-                append(
-                    key = "file",
-                    value = fileBytes,
-                    headers = headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                        append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"")
-                    }
-                )
-            }
-        ) {
-            monitorUploadProgress(progress)
-        }
-        if (!response.status.isSuccess()) {
-            throw response.bodyAsError().toThrowable()
-        }
-        val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
-        LendingsRepository.update(updatedLending)
-    }
+    suspend fun submitMemory(
+        lendingId: Uuid,
+        place: String,
+        memberUsers: List<UserData>,
+        externalUsers: String,
+        sport: Sports?,
+        text: String,
+        files: List<PlatformFile>,
+        progress: ProgressNotifier? = null
+    ) {
+        val filesWithContext = files.map { it.fileWithContext() }
 
-    /**
-     * Submits a memory file for a lending by its ID.
-     * The logged-in user must be the owner of the lending.
-     * @param lendingId The UUID of the lending to submit the memory for.
-     * @param memoryPlainText The memory content in plain text format.
-     * @param progress An optional progress listener for upload progress.
-     * @throws ServerException if the submission fails.
-     * @throws NoSuchElementException if the lending is not found after submission.
-     */
-    suspend fun submitMemory(lendingId: Uuid, memoryPlainText: String, progress: ProgressNotifier? = null) {
         val response = httpClient.submitFormWithBinaryData(
             "inventory/lendings/$lendingId/add_memory",
             formData {
-                append("text",  memoryPlainText)
+                place.takeIf { it.isNotBlank() }?.let { append("place", it) }
+                append("users", memberUsers.joinToString(",") { it.sub })
+                externalUsers.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
+                sport?.let { append("sport", it.name) }
+                append("text",  text)
+
+                filesWithContext.mapIndexed { index, file ->
+                    append(
+                        key = "file_$index",
+                        value = file.bytes,
+                        headers = headers {
+                            append(HttpHeaders.ContentType, (file.contentType ?: ContentType.Application.OctetStream).toString())
+                            append(HttpHeaders.ContentDisposition, "filename=\"${file.name ?: "file_$index"}\"")
+                        }
+                    )
+                }
             }
         ) {
             monitorUploadProgress(progress)

@@ -16,15 +16,22 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
+import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.data.LendingMemory
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
@@ -45,6 +52,7 @@ import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -54,6 +62,7 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
@@ -500,26 +509,58 @@ fun Route.lendingsRoutes() {
             return@post
         }
 
-        val file = FileRequestData()
+        var place: String? = null
+        var users: List<String>? = null
+        var externalUsers: String? = null
         var plainText: String? = null
+        var sport: Sports? = null
+        var departmentId: Uuid? = null
+        var attachedFiles: List<FileRequestData> = emptyList()
+
         val multiPartData = call.receiveMultipart()
         multiPartData.forEachPart { part ->
-            when (part.name) {
-                "file" -> {
-                    if (part is PartData.FileItem) {
-                        file.populate(part)
+            if (part is PartData.FormItem) {
+                val name = part.name
+                when {
+                    name == "place" -> {
+                        place = part.value.takeIf { it.isNotBlank() }
                     }
-                }
-                "text" -> {
-                    if (part is PartData.FormItem) {
+                    name == "users" -> {
+                        val usersList = part.value.split(',')
+                        users = usersList.ifEmpty { null }
+                    }
+                    name == "external_users" -> {
+                        externalUsers = part.value.takeIf { it.isNotBlank() }
+                    }
+                    name == "text" -> {
                         plainText = part.value.takeIf { it.isNotBlank() }
                     }
+                    name == "department" -> {
+                        departmentId = part.value.toUuidOrNull()
+                    }
+                    name == "sport" -> {
+                        sport = try {
+                            Sports.valueOf(part.value)
+                        } catch (_: IllegalArgumentException) {
+                            null
+                        }
+                    }
+                    name?.startsWith("file_") == true -> {
+                        val data = FileRequestData()
+                        data.populate(part)
+                        attachedFiles = attachedFiles + data
+                    }
                 }
-                else -> { /* Ignore other parts */ }
+            } else if (part is PartData.FileItem) {
+                if (part.name?.startsWith("file_") == true) {
+                    val data = FileRequestData()
+                    data.populate(part)
+                    attachedFiles = attachedFiles + data
+                }
             }
         }
 
-        if (file.isEmpty() && plainText == null) {
+        if (plainText == null) {
             respondError(Error.MemoryNotGiven())
             return@post
         }
@@ -549,13 +590,68 @@ fun Route.lendingsRoutes() {
             return@post
         }
 
-        val documentEntity = if (file.isNotEmpty()) file.newEntity(false) else null
+        // If given, make sure the department exists
+        val department = departmentId?.let { id ->
+            val department = Database { DepartmentEntity.findById(id.toJavaUuid()) }
+            if (department == null) {
+                respondError(Error.EntityNotFound(DepartmentEntity::class, id.toString()))
+                return@post
+            }
+            department
+        }
+
+        // Store all attachments
+        val documentEntities = attachedFiles.map { file ->
+            Database { file.newEntity() }
+        }
+
+        // Instantiate the memory
+        val memory = LendingMemory(
+            place = place,
+            memberUsers = users.orEmpty(),
+            externalUsers = externalUsers,
+            text = plainText!!,
+            sport = sport,
+            department = departmentId,
+            files = documentEntities.map { it.id.value.toKotlinUuid() }
+        )
+
+        // Generate the PDF file for the memory
+        val baos = ByteArrayOutputStream()
+        baos.use { output ->
+            PdfGeneratorService.generateLendingPdf(
+                memory.referenced(
+                    users = Database {
+                        UserReferenceEntity.find { UserReferences.sub inList memory.memberUsers }.map { it.toData(null, null, null) }
+                    },
+                    departments = listOfNotNull(
+                        Database { department?.toData() }
+                    ),
+                ),
+                itemsUsed = Database {
+                    lending.items.map { item ->
+                        item.toData().referenced(item.type.toData())
+                    }
+                },
+                submittedBy = userReference.fullName,
+                dateRange = lending.from to lending.to,
+                photoProvider = { uuid -> Database { FileEntity[uuid].data } },
+                outputStream = output,
+            )
+        }
+        val pdfDocumentEntity = Database {
+            FileEntity.new {
+                name = "lending_memory_${lending.id.value}.pdf"
+                type = "application/pdf"
+                data = baos.toByteArray()
+            }
+        }
 
         Database {
             lending.memorySubmitted = true
             lending.memorySubmittedAt = Instant.now()
-            lending.memoryDocument = documentEntity
-            lending.memoryPlainText = plainText
+            lending.memory = memory
+            lending.memoryPdf = pdfDocumentEntity
         }
 
         // Notify administrators that a new memory has been uploaded
@@ -564,7 +660,19 @@ fun Route.lendingsRoutes() {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
                     .map { MailerSendEmail(it.email, it.fullName) }
             }
-            val documentBytes = file.takeIf { it.isNotEmpty() }?.baos?.toByteArray()?.also { file.close() }
+
+            val fileAttachments = mutableListOf<MailerSendAttachment>()
+            var bytesCounter = 0L
+            val maxTotalSizeBytes = 20 * 1024 * 1024 // 20 MB
+            for ((i, file) in attachedFiles.withIndex()) {
+                val fileBytes = file.baos.toByteArray()
+                bytesCounter += fileBytes.size
+                if (bytesCounter > maxTotalSizeBytes) {
+                    break
+                }
+                fileAttachments.add(MailerSendAttachment(fileBytes, file.originalFileName ?: "memory_attachment_$i"))
+            }
+
             val url = "cea://admin/lendings#${lending.id.value}"
             Email.sendEmail(
                 to = emails,
@@ -579,9 +687,7 @@ fun Route.lendingsRoutes() {
                     <p>Please review the submitted memory in the admin panel.</p>
                     <a href="$url">Open in app</a> (<a href="$url">$url</a>)
                 """.trimIndent(),
-                attachments = listOfNotNull(
-                    documentBytes?.let { MailerSendAttachment(it, file.originalFileName ?: "memory.pdf") },
-                ),
+                attachments = fileAttachments,
             )
         }
         Push.send {
