@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,14 @@ fun <T> Flow<T>.stateInViewModel(
 fun ViewModel.launch(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
-) = viewModelScope.launch(Dispatchers.Main, start, block)
+) = viewModelScope.launch(Dispatchers.Main, start) {
+    try {
+        block()
+    } catch (e: Exception) {
+        Napier.e(e) { "Error in ViewModel coroutine." }
+        throw e
+    }
+}
 
 /**
  * Launches a new coroutine in the UI thread.
