@@ -50,6 +50,7 @@
 
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
+    <string name="management_posts">Posts</string>
     <string name="management_inventory">Inventory</string>
 
     <string name="management_department_create">Create Department</string>
@@ -171,6 +172,7 @@
     <string name="management_no_item_types">No item types</string>
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
+    <string name="management_no_posts">No posts</string>
 
     <plurals name="management_items_amount">
         <item quantity="one">%1$d item</item>
@@ -388,5 +390,7 @@
     <string name="months_october">October</string>
     <string name="months_november">November</string>
     <string name="months_december">December</string>
+
+    <string name="post_by">By %1$s</string>
 
 </resources>

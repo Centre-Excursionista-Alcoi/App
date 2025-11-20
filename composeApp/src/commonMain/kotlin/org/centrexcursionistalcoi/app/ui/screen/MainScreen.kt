@@ -71,6 +71,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -112,6 +113,7 @@ fun MainScreen(
     val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
+    val posts by model.posts.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
     val notificationPermissionResult by model.notificationPermissionResult.collectAsState()
@@ -146,6 +148,7 @@ fun MainScreen(
             inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             inventoryItems = inventoryItems,
+            posts = posts,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -217,6 +220,8 @@ private fun MainScreenContent(
     onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
+
+    posts: List<ReferencedPost>?,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
@@ -420,6 +425,7 @@ private fun MainScreenContent(
                         inventoryItemTypesCategories,
                         onItemTypeDetailsRequested,
                         inventoryItems,
+                        posts,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
@@ -458,6 +464,7 @@ private fun MainScreenContent(
                             inventoryItemTypesCategories,
                             onItemTypeDetailsRequested,
                             inventoryItems,
+                            posts,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
@@ -506,6 +513,8 @@ private fun MainScreenPagerContent(
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
+    posts: List<ReferencedPost>?,
+
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
@@ -547,6 +556,7 @@ private fun MainScreenPagerContent(
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
                 inventoryItems,
+                posts,
             )
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 

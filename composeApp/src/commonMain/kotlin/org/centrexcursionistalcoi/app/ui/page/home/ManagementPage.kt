@@ -3,10 +3,13 @@ package org.centrexcursionistalcoi.app.ui.page.home
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Feed
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,20 +25,24 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.page.home.management.DepartmentsListView
 import org.centrexcursionistalcoi.app.ui.page.home.management.InventoryItemTypesListView
 import org.centrexcursionistalcoi.app.ui.page.home.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.home.management.PostsListView
 import org.centrexcursionistalcoi.app.ui.page.home.management.UsersListView
+import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
+import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
-import org.jetbrains.compose.resources.stringResource
 
 const val MANAGEMENT_PAGE_COUNT = 4
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
 const val MANAGEMENT_PAGE_USERS = 2
-const val MANAGEMENT_PAGE_INVENTORY = 3
+const val MANAGEMENT_PAGE_POSTS = 3
+const val MANAGEMENT_PAGE_INVENTORY = 4
 
 @Composable
 fun ManagementPage(
@@ -45,7 +52,7 @@ fun ManagementPage(
     /**
      * The currently selected item in the format Pair(pageIndex, itemId?).
      *
-     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_INVENTORY].
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_INVENTORY].
      */
     selectedItem: Pair<Int, Uuid?>?,
 
@@ -61,6 +68,8 @@ fun ManagementPage(
     inventoryItemTypesCategories: Set<String>,
 
     inventoryItems: List<ReferencedInventoryItem>?,
+
+    posts: List<ReferencedPost>?,
 
     model: ManagementViewModel = viewModel { ManagementViewModel() },
 ) {
@@ -87,6 +96,7 @@ fun ManagementPage(
         onCreateInventoryItem = model::createInventoryItem,
         onDeleteInventoryItem = model::delete,
         inventoryItems = inventoryItems,
+        posts = posts,
     )
 }
 
@@ -120,6 +130,8 @@ private fun ManagementPage(
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     inventoryItems: List<ReferencedInventoryItem>?,
+
+    posts: List<ReferencedPost>?,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
@@ -131,22 +143,19 @@ private fun ManagementPage(
         pagerState.scrollToPage(page)
     }
 
-    PrimaryTabRow(pagerState.currentPage) {
-        listOf(
-            Res.string.management_lendings,
-            Res.string.management_departments,
-            Res.string.management_users,
-            Res.string.management_inventory,
-        ).forEachIndexed { index, titleRes ->
-            Tab(
-                selected = pagerState.currentPage == index,
-                onClick = {
-                    scope.launch { pagerState.animateScrollToPage(index) }
-                },
-                text = { Text(stringResource(titleRes)) }
-            )
-        }
-    }
+    AdaptiveTabRow(
+        selectedTabIndex = pagerState.currentPage,
+        tabs = listOf(
+            TabData(Res.string.management_lendings, Icons.Default.Inventory2),
+            TabData(Res.string.management_departments, Icons.Default.Category),
+            TabData(Res.string.management_users, Icons.Default.Face),
+            TabData(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed),
+            TabData(Res.string.management_inventory,  Icons.Default.Inventory),
+        ),
+        onTabSelected = { index ->
+            scope.launch { pagerState.animateScrollToPage(index) }
+        },
+    )
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
@@ -166,6 +175,8 @@ private fun ManagementPage(
             MANAGEMENT_PAGE_DEPARTMENTS -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
 
             MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
+
+            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts)
 
             MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
                 windowSizeClass,

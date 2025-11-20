@@ -6,60 +6,68 @@ import app.cash.sqldelight.coroutines.mapToList
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Post
+import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.ReferencedPost.Companion.referenced
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 
-object PostsRepository : DatabaseRepository<Post, Uuid>() {
+object PostsRepository : DatabaseRepository<ReferencedPost, Uuid>() {
     override val queries by lazy { databaseInstance.postsQueries }
 
-    override suspend fun get(id: Uuid): Post? {
-        return queries.get(id).awaitAsList().firstOrNull()?.toPost()
+    override suspend fun get(id: Uuid): ReferencedPost? {
+        val departments = DepartmentsRepository.selectAll()
+        return queries.get(id).awaitAsList().firstOrNull()?.toPost(departments)
     }
 
-    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<Post?> {
-        return queries
-            .get(id)
-            .asFlow()
-            .mapToList(dispatcher)
-            .map { it.firstOrNull()?.toPost() }
+    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedPost?> {
+        val departmentsFlow = DepartmentsRepository.selectAllAsFlow(dispatcher)
+        val postsFlow = queries.get(id).asFlow().mapToList(dispatcher)
+        return combine(departmentsFlow, postsFlow) { departments, posts ->
+            posts.firstOrNull()?.toPost(departments)
+        }
     }
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
-        .selectAll()
-        .asFlow()
-        .mapToList(dispatcher)
-        .map { list -> list.map { it.toPost() } }
+    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedPost>> {
+        val departmentsFlow = DepartmentsRepository.selectAllAsFlow(dispatcher)
+        val postsFlow = queries.selectAll().asFlow().mapToList(dispatcher)
+        return combine(departmentsFlow, postsFlow) { departments, posts ->
+            posts.map { it.toPost(departments) }
+        }
+    }
 
-    override suspend fun selectAll(): List<Post> = queries.selectAll().awaitAsList()
-        .map { it.toPost() }
+    override suspend fun selectAll(): List<ReferencedPost> {
+        val departments = DepartmentsRepository.selectAll()
+        return queries.selectAll().awaitAsList().map { it.toPost(departments) }
+    }
 
-    override suspend fun insert(item: Post) = queries.insert(
+    override suspend fun insert(item: ReferencedPost) = queries.insert(
         id = item.id,
         date = item.date,
         title = item.title,
         content = item.content,
-        department = item.department
+        department = item.department?.id
     )
 
-    override suspend fun update(item: Post) = queries.update(
+    override suspend fun update(item: ReferencedPost) = queries.update(
         id = item.id,
         date = item.date,
         title = item.title,
         content = item.content,
-        department = item.department
+        department = item.department?.id
     )
 
     override suspend fun delete(id: Uuid) {
         queries.deleteById(id)
     }
 
-    fun Posts.toPost() = Post(
+    fun Posts.toPost(departments: List<Department>) = Post(
         id = id,
         date = date,
         title = title,
         content = content,
-        department = department ?: throw IllegalStateException("Post with id $id has no department ID")
-    )
+        department = department,
+    ).referenced(departments)
 }
