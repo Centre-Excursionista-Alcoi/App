@@ -84,7 +84,14 @@ fun Route.usersRoutes() {
             return@post
         }
 
-        TODO("Implement promote user to admin functionality")
+        Database {
+            // Add admin group to user
+            val groups = reference.groups.toMutableList()
+            if (!groups.contains(ADMIN_GROUP_NAME)) {
+                groups.add(ADMIN_GROUP_NAME)
+                reference.groups = groups
+            }
+        }
 
         call.respond(HttpStatusCode.NoContent)
     }
