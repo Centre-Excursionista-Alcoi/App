@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
+import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -12,7 +13,7 @@ object InventoryItemTypesRemoteRepository : SymmetricRemoteRepository<Uuid, Inve
     InventoryItemType.serializer(),
     InventoryItemTypesRepository
 ) {
-    suspend fun create(displayName: String, description: String?, categories: List<String>?, image: ByteArray?) {
+    suspend fun create(displayName: String, description: String?, categories: List<String>?, image: PlatformFile?) {
         val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
 
         create(InventoryItemType(Uuid.Zero, displayName, description, categories, imageUuid))

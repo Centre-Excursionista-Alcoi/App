@@ -2,39 +2,60 @@ package org.centrexcursionistalcoi.app.data
 
 import io.github.aakira.napier.Napier
 import io.ktor.client.request.forms.formData
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.content.PartData
+import io.ktor.http.headers
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
+import kotlinx.serialization.InternalSerializationApi
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 
-suspend fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
-    val dataMap = toMap().mapValues { (_, value) ->
-        when (value) {
-            is FileReference -> {
-                if (InMemoryFileAllocator.contains(value.uuid)) {
-                    // New item, file is in memory
-                    InMemoryFileAllocator.delete(value.uuid)
-                } else {
-                    // Existing item, read file from filesystem
-                    FileSystem.read(value.uuid.toString())
-                }
-            }
-            else -> value
-        }
-    }
-
+@OptIn(InternalSerializationApi::class)
+fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
     return formData {
-        dataMap.forEach { (key, value) ->
+        toMap().forEach { (key, value) ->
             when (value) {
                 null -> { /* ignore null values */ }
                 is String -> append(key, value)
                 is Uuid -> append(key, value.toString())
                 is Number -> append(key, value)
                 is Boolean -> append(key, value)
-                // Encode ByteArray as Base64 string
-                is ByteArray -> append(key, Base64.UrlSafe.encode(value))
-                else -> Napier.e { "Unsupported type: ${value::class.simpleName ?: "N/A"}" }
+                is ByteArray -> append(key, value)
+                is List<*> -> {
+                    if (value.isEmpty()) {
+                        append(key, "[]")
+                    } else {
+                        val jsonEncodedArray = json.encodeToString(value)
+                        append(key, jsonEncodedArray)
+                    }
+                }
+                is FileReference -> {
+                    var contentType: ContentType? = null
+                    val data = if (InMemoryFileAllocator.contains(value.uuid)) {
+                        // New item, file is in memory
+                        InMemoryFileAllocator.delete(value.uuid).also {
+                            contentType = it?.contentType
+                        }?.bytes
+                    } else {
+                        // Existing item, read file from filesystem
+                        FileSystem.read(value.uuid.toString())
+                    }
+                    if (data == null) {
+                        Napier.e { "FileReference data is null for key: $key, uuid: ${value.uuid}" }
+                        return@forEach
+                    }
+                    append(
+                        key = key,
+                        value = Base64.UrlSafe.encode(data),
+                        headers {
+                            contentType?.let { append(HttpHeaders.ContentType, it.toString()) }
+                        },
+                    )
+                }
+                else -> Napier.e(tag = "toFormData") { "Unsupported type at $key: ${value::class.simpleName ?: "N/A"}" }
             }
         }
     }
