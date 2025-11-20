@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.test
 
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.now
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -21,4 +22,15 @@ object FakeUser {
         memberNumber = MEMBER_NUMBER
         lastUpdate = now()
     }
+
+    fun data(): UserData = UserData(
+        sub = SUB,
+        fullName = FULL_NAME,
+        email = EMAIL,
+        groups = GROUPS,
+        departments = emptyList(),
+        lendingUser = null,
+        insurances = emptyList(),
+        isDisabled = false,
+    )
 }

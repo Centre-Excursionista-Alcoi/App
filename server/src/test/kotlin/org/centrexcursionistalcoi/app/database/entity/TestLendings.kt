@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.LendingMemory
 import org.centrexcursionistalcoi.app.data.ReceivedItem
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
@@ -101,6 +102,11 @@ class TestLendings {
 
         val instant = Instant.ofEpochSecond(1759917121)
 
+        val department = Database {
+            DepartmentEntity.new {
+                displayName = "Department"
+            }
+        }
         val entity = Database {
             LendingEntity.new(id) {
                 timestamp = instant
@@ -121,6 +127,8 @@ class TestLendings {
                     externalUsers = "John Doe",
                     text = "Lending memory text",
                     files = listOf(memoryAttachmentFileId.toKotlinUuid()),
+                    department = department.id.value.toKotlinUuid(),
+                    sport = Sports.ORIENTEERING,
                 )
                 memoryReviewed = true
             }
@@ -193,6 +201,8 @@ class TestLendings {
                 externalUsers = "John Doe",
                 text = "Lending memory text",
                 files = listOf(memoryAttachmentFileId.toKotlinUuid()),
+                department = department.id.value.toKotlinUuid(),
+                sport = Sports.ORIENTEERING,
             ),
             memoryReviewed = true,
             items = listOf(

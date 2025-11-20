@@ -107,6 +107,9 @@ dependencies {
     implementation(libs.ksoup.core)
     implementation(libs.ksoup.network)
 
+    // PDF generation
+    implementation(libs.pdfbox)
+
     // Firebase Admin
     implementation(libs.firebase.admin)
 

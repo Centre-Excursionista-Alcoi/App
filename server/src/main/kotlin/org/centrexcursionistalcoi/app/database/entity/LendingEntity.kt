@@ -28,6 +28,7 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var memorySubmitted by Lendings.memorySubmitted
     var memorySubmittedAt by Lendings.memorySubmittedAt
     var memory by Lendings.memory
+    var memoryPdf by FileEntity optionalReferencedOn Lendings.memoryPdf
     var memoryReviewed by Lendings.memoryReviewed
 
     var from by Lendings.from

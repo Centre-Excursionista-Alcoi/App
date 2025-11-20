@@ -43,6 +43,7 @@ localina = "1.0.0-alpha3"
 logback = "1.5.21"
 mockk = "1.14.6"
 napier = "2.7.1"
+pdfbox = "2.0.30"
 postgresql = "42.7.8"
 qrose = "1.0.1"
 richeditor = "1.0.0-rc13"
@@ -121,6 +122,7 @@ localina = { module = "io.github.sudarshanmhasrup.localina:localina", version.re
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 qrose-twod = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qrose" }

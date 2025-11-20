@@ -38,6 +38,7 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
     val memorySubmitted = bool("memorySubmitted").default(false)
     val memorySubmittedAt = timestamp("memorySubmittedAt").nullable()
     val memory = json("memory", json, LendingMemory.serializer()).nullable()
+    val memoryPdf = optReference("memoryPdf", Files, onDelete = ReferenceOption.SET_NULL)
     val memoryReviewed = bool("memoryReviewed").default(false)
 
     val notes = text("notes").nullable()

@@ -16,16 +16,22 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
+import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.LendingMemory
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
@@ -46,6 +52,7 @@ import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -55,6 +62,7 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
@@ -505,6 +513,8 @@ fun Route.lendingsRoutes() {
         var users: List<String>? = null
         var externalUsers: String? = null
         var plainText: String? = null
+        var sport: Sports? = null
+        var departmentId: Uuid? = null
         var attachedFiles: List<FileRequestData> = emptyList()
 
         val multiPartData = call.receiveMultipart()
@@ -524,6 +534,16 @@ fun Route.lendingsRoutes() {
                     }
                     name == "text" -> {
                         plainText = part.value.takeIf { it.isNotBlank() }
+                    }
+                    name == "department" -> {
+                        departmentId = part.value.toUuidOrNull()
+                    }
+                    name == "sport" -> {
+                        sport = try {
+                            Sports.valueOf(part.value)
+                        } catch (_: IllegalArgumentException) {
+                            null
+                        }
                     }
                     name?.startsWith("file_") == true -> {
                         val data = FileRequestData()
@@ -570,6 +590,16 @@ fun Route.lendingsRoutes() {
             return@post
         }
 
+        // If given, make sure the department exists
+        val department = departmentId?.let { id ->
+            val department = Database { DepartmentEntity.findById(id.toJavaUuid()) }
+            if (department == null) {
+                respondError(Error.EntityNotFound(DepartmentEntity::class, id.toString()))
+                return@post
+            }
+            department
+        }
+
         // Store all attachments
         val documentEntities = attachedFiles.map { file ->
             Database { file.newEntity() }
@@ -581,13 +611,45 @@ fun Route.lendingsRoutes() {
             memberUsers = users.orEmpty(),
             externalUsers = externalUsers,
             text = plainText!!,
+            sport = sport,
+            department = departmentId,
             files = documentEntities.map { it.id.value.toKotlinUuid() }
         )
+
+        // Generate the PDF file for the memory
+        val baos = ByteArrayOutputStream()
+        baos.use { output ->
+            PdfGeneratorService.generateLendingPdf(
+                memory.referenced(
+                    users = Database {
+                        UserReferenceEntity.find { UserReferences.sub inList memory.memberUsers }.map { it.toData(null, null, null) }
+                    },
+                    departments = listOfNotNull(
+                        Database { department?.toData() }
+                    ),
+                ),
+                itemsUsed = Database { InventoryItemTypeEntity.all().map { it.toData() } }.let { types ->
+                    Database { lending.items.map { item -> item.toData().referenced(types.first { it.id == item.type }) } }
+                },
+                submittedBy = userReference.fullName,
+                dateRange = lending.from to lending.to,
+                photoProvider = { uuid -> Database { FileEntity[uuid].data } },
+                outputStream = output,
+            )
+        }
+        val pdfDocumentEntity = Database {
+            FileEntity.new {
+                name = "lending_memory_${lending.id.value}.pdf"
+                type = "application/pdf"
+                data = baos.toByteArray()
+            }
+        }
 
         Database {
             lending.memorySubmitted = true
             lending.memorySubmittedAt = Instant.now()
             lending.memory = memory
+            lending.memoryPdf = pdfDocumentEntity
         }
 
         // Notify administrators that a new memory has been uploaded
