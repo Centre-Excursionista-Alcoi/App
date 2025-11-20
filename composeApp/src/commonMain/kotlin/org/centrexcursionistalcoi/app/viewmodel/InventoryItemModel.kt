@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
@@ -61,8 +60,7 @@ class InventoryItemModel(private val typeId: Uuid) : ErrorViewModel() {
 
     fun updateInventoryItemType(id: Uuid, displayName: String?, description: String?, categories: List<String>?, imageFile: PlatformFile?) = launch {
         doAsync {
-            val image = imageFile?.readBytes()
-            InventoryItemTypesRemoteRepository.update(id, displayName, description, categories, image)
+            InventoryItemTypesRemoteRepository.update(id, displayName, description, categories, imageFile)
         }
     }
 }
