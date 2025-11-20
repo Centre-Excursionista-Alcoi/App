@@ -355,5 +355,4 @@
     <string name="sort_by_has_insurance_first">Té segur primer</string>
     <string name="personal_info_disabled">L\'usuari està donat de baixa.</string>
     <string name="settings_push_connection_title">Estat de la Connexió</string>
-    <string name="inventory_item_create"></string>
 </resources>
