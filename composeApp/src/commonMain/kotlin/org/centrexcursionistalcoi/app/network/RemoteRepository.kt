@@ -252,6 +252,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         } else {
             val error = response.bodyAsError()
             Napier.e { "Failed to update $name#$id: $error" }
+            if (error is Error.MalformedRequest) {
+                Napier.e { "Request was malformed: ${json.encodeToString(serializer, request)}" }
+            }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
