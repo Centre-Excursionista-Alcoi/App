@@ -23,13 +23,14 @@ data class Lending(
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
     val memory: LendingMemory?,
+    val memoryPdf: Uuid? = null,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
     val to: LocalDate,
     val notes: String?,
     val items: List<InventoryItem>,
-): Entity<Uuid>, SubReferencedFileContainer {
+): Entity<Uuid>, FileContainer, SubReferencedFileContainer {
     enum class Status {
         REQUESTED,
         CONFIRMED,
@@ -66,6 +67,10 @@ data class Lending(
         confirmed && !taken -> Status.CONFIRMED
         else -> Status.REQUESTED
     }
+
+    override val files: Map<String, Uuid?> = mapOf(
+        "memoryPdf" to memoryPdf
+    )
 
     override val referencedFiles: List<Triple<String, Uuid?, String>>
         get() {

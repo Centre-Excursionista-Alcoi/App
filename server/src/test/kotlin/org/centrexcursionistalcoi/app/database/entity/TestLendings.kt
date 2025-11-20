@@ -98,6 +98,7 @@ class TestLendings {
         val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUUID()
         val itemTypeId = "2c3c5f3d-5c5e-4916-988c-225b57f91cfa".toUUID()
         val receivedItemId = "786a1c86-6e7d-4cdc-bebf-d1540f67029b".toUUID()
+        val memoryPdfFileId = "bd84fb5c-9356-4abe-a8e5-0aea77b7b7cb".toUUID()
         val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUUID()
 
         val instant = Instant.ofEpochSecond(1759917121)
@@ -105,6 +106,13 @@ class TestLendings {
         val department = Database {
             DepartmentEntity.new {
                 displayName = "Department"
+            }
+        }
+        val memoryPdfFileEntity = Database {
+            FileEntity.new(memoryPdfFileId) {
+                name = "memory.pdf"
+                type = "application/pdf"
+                data = byteArrayOf(1, 2, 3, 4)
             }
         }
         val entity = Database {
@@ -130,6 +138,7 @@ class TestLendings {
                     department = department.id.value.toKotlinUuid(),
                     sport = Sports.ORIENTEERING,
                 )
+                memoryPdf = memoryPdfFileEntity
                 memoryReviewed = true
             }
         }
@@ -204,6 +213,7 @@ class TestLendings {
                 department = department.id.value.toKotlinUuid(),
                 sport = Sports.ORIENTEERING,
             ),
+            memoryPdf = memoryPdfFileId.toKotlinUuid(),
             memoryReviewed = true,
             items = listOf(
                 InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3))
@@ -213,6 +223,7 @@ class TestLendings {
         assertJsonEquals(
             json.encodeToString(Lending.serializer(), instance),
             json.encodeEntityToString(entity),
+            ignoreKeys = setOf("files")
         )
     }
 }
