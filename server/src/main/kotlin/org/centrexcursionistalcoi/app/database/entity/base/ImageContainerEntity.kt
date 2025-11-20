@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity.base
 
 import io.ktor.http.ContentType
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
@@ -9,7 +10,7 @@ interface ImageContainerEntity {
 
     /**
      * Update the existing image or set a new one if it doesn't exist.
-     * If `bytes` is null, the function does nothing.
+     * If [bytes] is null, the function does nothing.
      */
     context(_: JdbcTransaction)
     fun updateOrSetImage(bytes: ByteArray?, name: String? = null, contentType: ContentType = ContentType.Application.OctetStream) {
@@ -21,6 +22,23 @@ interface ImageContainerEntity {
             this.name = name ?: "${id.value}_file"
             this.type = contentType.toString()
             this.data = bytes
+        }
+    }
+
+    /**
+     * Update the existing image or set a new one if it doesn't exist.
+     * If [file] is null, the function does nothing.
+     */
+    context(_: JdbcTransaction)
+    fun updateOrSetImage(file: FileWithContext?) {
+        file ?: return
+
+        if (image != null) image?.delete()
+
+        image = FileEntity.new {
+            this.name = file.name ?: "${id.value}_file"
+            this.type = (file.contentType ?: ContentType.Application.OctetStream).toString()
+            this.data = file.bytes
         }
     }
 }

@@ -1,11 +1,13 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.http.ContentType
 import java.util.Random
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.FileWithContext.Companion.wrapFile
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Post
@@ -15,7 +17,6 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
-import org.centrexcursionistalcoi.app.utils.FileBytesWrapper.Companion.wrapFile
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -38,7 +39,7 @@ class TestRoutes : ApplicationTestBase() {
             baseUrl = "/departments",
             requiredCreationValuesProvider = mapOf("displayName" to { "Test Department" }),
             optionalCreationValuesProvider = mapOf(
-                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile() }
+                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile("square", ContentType.Image.PNG) }
             ),
             locationRegex = "/departments/$uuidv4+".toRegex(),
             entityClass = DepartmentEntity,
@@ -91,7 +92,7 @@ class TestRoutes : ApplicationTestBase() {
             requiredCreationValuesProvider = mapOf("displayName" to { "Test Item Type" }),
             optionalCreationValuesProvider = mapOf(
                 "description" to { "This is a test description for the item" },
-                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile() }
+                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile("square.png", ContentType.Image.PNG) }
             ),
             locationRegex = "/inventory/types/$uuidv4+".toRegex(),
             entityClass = InventoryItemTypeEntity,

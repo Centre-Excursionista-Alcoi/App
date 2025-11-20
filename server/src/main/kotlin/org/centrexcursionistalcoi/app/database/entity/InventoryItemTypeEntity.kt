@@ -35,6 +35,6 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
         request.displayName?.let { displayName = it }
         request.description?.let { description = it }
         request.categories?.let { categories = it }
-        updateOrSetImage(request.image, "inventory_${id.value}_image")
+        updateOrSetImage(request.image)
     }
 }

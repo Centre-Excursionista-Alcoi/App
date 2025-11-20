@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -41,12 +42,11 @@ class ManagementViewModel : ViewModel() {
         progressNotifier: ProgressNotifier? = null,
     ) = launch {
         doAsync {
-            val imageBytes = image?.readBytes()
             DepartmentsRemoteRepository.update(
                 departmentId,
                 UpdateDepartmentRequest(
                     displayName = displayName,
-                    image = imageBytes,
+                    image = image?.fileWithContext(),
                 ),
                 UpdateDepartmentRequest.serializer(),
                 progressNotifier,
@@ -67,7 +67,9 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun updateInventoryItemType(id: Uuid, displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = launch {
-        // TODO
+        doAsync {
+            InventoryItemTypesRemoteRepository.update(id, displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, imageFile)
+        }
     }
 
     fun delete(inventoryItemType: InventoryItemType) = launch {
