@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
+import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 
 object PdfGeneratorService {
@@ -26,6 +27,20 @@ object PdfGeneratorService {
     private const val MARGIN = 50f
 
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private fun Sports.displayName(): String = when (this) {
+        Sports.CLIMBING -> "Escalada"
+        Sports.CLIMBING_WITHOUT_BELAY -> "Escalada sense assegurança"
+        Sports.VIA_FERRATA -> "Vies ferrades"
+        Sports.CANYONING -> "Barranquisme"
+        Sports.HIKING -> "Senderisme"
+        Sports.ALPINISM -> "Alpinisme"
+        Sports.ORIENTEERING -> "Orientació"
+        Sports.NORDIC_WALKING -> "Marxa nòrdica"
+        Sports.SPELEOLOGY -> "Espeleologia"
+        Sports.CYCLING -> "Ciclisme"
+        Sports.CULTURAL_TOURISM -> "Turisme cultural"
+    }
 
     fun generateLendingPdf(
         memory: ReferencedLendingMemory,
@@ -135,6 +150,11 @@ object PdfGeneratorService {
             if (memory.place != null) {
                 drawText("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)
             }
+
+            if (memory.sport != null) {
+                drawText("Esport: ${memory.sport?.displayName()}", fontRegular, FONT_SIZE_BODY)
+            }
+
             yPosition -= 10 // Spacer
 
             // =========================================
