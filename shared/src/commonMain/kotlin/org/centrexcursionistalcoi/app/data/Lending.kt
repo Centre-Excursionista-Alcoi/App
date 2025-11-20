@@ -23,7 +23,7 @@ data class Lending(
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
     val memory: LendingMemory?,
-    val memoryPdf: Uuid? = null,
+    val memoryPdf: Uuid?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,

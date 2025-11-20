@@ -126,6 +126,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             memorySubmittedAt = item.memorySubmittedAt,
             memory = item.memory,
             memoryReviewed = item.memoryReviewed,
+            memoryPdf = item.memoryPdf,
         )
         for (inventoryItem in item.items) {
             val exists = lendingItemsQueries.get(item.id, inventoryItem.id).executeAsOneOrNull() != null
@@ -169,6 +170,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             memorySubmittedAt = item.memorySubmittedAt,
             memory = item.memory,
             memoryReviewed = item.memoryReviewed,
+            memoryPdf = item.memoryPdf,
         )
 
         lendingItemsQueries.deleteByLendingId(item.id)
@@ -228,6 +230,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         memorySubmitted = memorySubmitted,
         memorySubmittedAt = memorySubmittedAt,
         memory = memory,
+        memoryPdf = memoryPdf,
         memoryReviewed = memoryReviewed,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() },
         receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }

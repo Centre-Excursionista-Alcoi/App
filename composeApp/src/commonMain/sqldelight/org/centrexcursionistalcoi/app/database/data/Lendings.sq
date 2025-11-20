@@ -19,11 +19,12 @@ CREATE TABLE Lendings (
     memorySubmittedAt INTEGER AS Instant,
     memory TEXT AS LendingMemory,
     memoryReviewed INTEGER AS Boolean NOT NULL,
+    memoryPdf TEXT AS Uuid,
     notes TEXT
 );
 
 insert:
-INSERT INTO Lendings (id, userSub, timestamp, fromDate, toDate, confirmed, taken, givenBy, givenAt, returned, memorySubmitted, memorySubmittedAt, memory, memoryReviewed, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Lendings (id, userSub, timestamp, fromDate, toDate, confirmed, taken, givenBy, givenAt, returned, memorySubmitted, memorySubmittedAt, memory, memoryPdf, memoryReviewed, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Lendings WHERE id = ?;
@@ -35,4 +36,4 @@ deleteById:
 DELETE FROM Lendings WHERE id = ?;
 
 update:
-UPDATE Lendings SET userSub = ?, timestamp = ?, fromDate = ?, toDate = ?, confirmed = ?, taken = ?, givenBy = ?, givenAt = ?, returned = ?, memorySubmitted = ?, memorySubmittedAt = ?, memory = ?, memoryReviewed = ?, notes = ? WHERE id = ?;
+UPDATE Lendings SET userSub = ?, timestamp = ?, fromDate = ?, toDate = ?, confirmed = ?, taken = ?, givenBy = ?, givenAt = ?, returned = ?, memorySubmitted = ?, memorySubmittedAt = ?, memory = ?, memoryPdf = ?, memoryReviewed = ?, notes = ? WHERE id = ?;
