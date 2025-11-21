@@ -137,7 +137,7 @@ private fun ManagementPage(
 
     posts: List<ReferencedPost>?,
     onCreatePost: (title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdatePost: (postId: Uuid, title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) -> Job,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
