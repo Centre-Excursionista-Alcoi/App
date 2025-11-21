@@ -13,7 +13,7 @@ data class ReferencedPost(
     val content: String,
     val department: Department?,
     val link: String?,
-    val files: List<Uuid>,
+    val files: List<FileWithContext>,
 
     override val referencedEntity: Post
 ): ReferencedEntity<Uuid, Post>(), ImageFileListContainer {
@@ -30,5 +30,5 @@ data class ReferencedPost(
         )
     }
 
-    override val images: List<Uuid> = files
+    override val images: List<Uuid> = files.mapNotNull { it.id }
 }

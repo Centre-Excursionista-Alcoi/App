@@ -23,14 +23,14 @@ object InMemoryFileAllocator {
         fun toFileWithContext(name: String? = null): FileWithContext = FileWithContext(bytes, name, contentType, lastModified, id)
     }
 
-    fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Uuid {
+    fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Data {
         val uuid = uuid ?: Uuid.random()
         Napier.i { "Allocated a file of ${bytes.size} bytes at $uuid" }
         files[uuid] = Data(bytes, contentType, Clock.System.now(), uuid)
-        return uuid
+        return Data(bytes, contentType, Clock.System.now(), uuid)
     }
 
-    suspend fun put(platformFile: PlatformFile, uuid: Uuid? = null): Uuid {
+    suspend fun put(platformFile: PlatformFile, uuid: Uuid? = null): Data {
         val bytes = platformFile.readBytes()
         val contentType = ContentType.defaultForFileExtension(platformFile.extension)
         return put(bytes, uuid, contentType)

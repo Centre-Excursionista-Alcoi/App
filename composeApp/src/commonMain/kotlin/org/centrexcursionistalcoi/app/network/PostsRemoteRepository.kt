@@ -43,7 +43,7 @@ object PostsRemoteRepository: RemoteRepository<Uuid, ReferencedPost, Uuid, Post>
                 content,
                 departmentId,
                 link,
-                inMemoryFiles,
+                inMemoryFiles.map { it.toFileWithContext() },
             ),
             progressNotifier,
         )

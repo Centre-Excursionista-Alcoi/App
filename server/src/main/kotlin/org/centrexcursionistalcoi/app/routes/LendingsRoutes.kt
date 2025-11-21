@@ -635,7 +635,7 @@ fun Route.lendingsRoutes() {
                 },
                 submittedBy = userReference.fullName,
                 dateRange = lending.from to lending.to,
-                photoProvider = { uuid -> Database { FileEntity[uuid].data } },
+                photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
                 outputStream = output,
             )
         }
@@ -643,7 +643,7 @@ fun Route.lendingsRoutes() {
             FileEntity.new {
                 name = "lending_memory_${lending.id.value}.pdf"
                 type = "application/pdf"
-                data = baos.toByteArray()
+                bytes = baos.toByteArray()
             }
         }
 

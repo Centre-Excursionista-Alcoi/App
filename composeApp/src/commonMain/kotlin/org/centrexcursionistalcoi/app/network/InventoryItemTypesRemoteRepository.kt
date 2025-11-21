@@ -17,7 +17,7 @@ object InventoryItemTypesRemoteRepository : SymmetricRemoteRepository<Uuid, Inve
     suspend fun create(displayName: String, description: String?, categories: List<String>?, image: PlatformFile?) {
         val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
 
-        create(InventoryItemType(Uuid.Zero, displayName, description, categories, imageUuid))
+        create(InventoryItemType(Uuid.Zero, displayName, description, categories, imageUuid?.id))
     }
 
     suspend fun update(id: Uuid, displayName: String?, description: String?, categories: List<String>?, image: PlatformFile?) {

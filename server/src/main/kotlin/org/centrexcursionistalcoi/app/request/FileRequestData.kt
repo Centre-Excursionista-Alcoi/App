@@ -67,7 +67,7 @@ class FileRequestData : Closeable {
             FileEntity.new {
                 name = originalFileName ?: "unknown"
                 type = contentType.toString()
-                data = baos.toByteArray()
+                bytes = baos.toByteArray()
             }
         }.also { if (close) close() }
     }

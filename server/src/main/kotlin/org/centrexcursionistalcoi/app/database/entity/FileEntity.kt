@@ -16,13 +16,13 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<FileEntity>(Files) {
         context(_: JdbcTransaction)
         fun from(withContext: FileWithContext) = new(withContext.id?.toJavaUuid() ?: UUID.randomUUID()) {
-            data = withContext.bytes
+            bytes = withContext.bytes
             type = withContext.contentType?.toString()
             name = withContext.name
         }
     }
 
-    var data by Files.data
+    var bytes by Files.bytes
     var type by Files.type
     var name by Files.name
 
@@ -40,7 +40,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun toData(): FileWithContext = FileWithContext(
         id = id.value.toKotlinUuid(),
         name = name,
-        bytes = data,
+        bytes = bytes,
         contentType = contentType,
         lastModified = lastModified.toKotlinInstant(),
     )

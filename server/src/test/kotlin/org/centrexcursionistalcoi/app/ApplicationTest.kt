@@ -32,7 +32,7 @@ class ApplicationTest: ApplicationTestBase() {
             FileEntity.new {
                 name = "square.png"
                 type = "image/png"
-                data = bytesFromResource("/square.png")
+                bytes = bytesFromResource("/square.png")
             }.id.value
         }
     ) { context ->

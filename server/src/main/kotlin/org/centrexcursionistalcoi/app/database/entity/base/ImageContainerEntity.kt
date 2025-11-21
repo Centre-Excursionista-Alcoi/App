@@ -30,7 +30,7 @@ interface ImageContainerEntity {
         image = FileEntity.new {
             this.name = name ?: "${id.value}_file"
             this.type = contentType.toString()
-            this.data = bytes
+            this.bytes = bytes
         }
     }
 
@@ -52,20 +52,20 @@ interface ImageContainerEntity {
                     this.image = FileEntity.new {
                         this.name = file.name ?: "${id}_file"
                         this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                        this.data = file.bytes
+                        this.bytes = file.bytes
                     }
                 } else {
                     // Same image, just update the data
                     image.name = file.name ?: image.name
                     image.contentType = file.contentType ?: ContentType.Application.OctetStream
-                    image.data = file.bytes
+                    image.bytes = file.bytes
                 }
             } else {
                 // No existing image, create a new one
                 this.image = FileEntity.new(id.toJavaUuid()) {
                     this.name = file.name ?: "${id}_file"
                     this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                    this.data = file.bytes
+                    this.bytes = file.bytes
                 }
             }
         } else {
@@ -74,7 +74,7 @@ interface ImageContainerEntity {
             image = FileEntity.new {
                 this.name = file.name ?: "${this.id}_file"
                 this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                this.data = file.bytes
+                this.bytes = file.bytes
             }
         }
     }

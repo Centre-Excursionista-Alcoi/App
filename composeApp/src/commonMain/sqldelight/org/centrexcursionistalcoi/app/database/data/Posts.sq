@@ -2,6 +2,7 @@ import kotlin.Boolean;
 import kotlin.collections.List;
 import kotlin.uuid.Uuid;
 import kotlin.time.Instant;
+import org.centrexcursionistalcoi.app.data.FileWithContext;
 
 CREATE TABLE Posts (
     id TEXT AS Uuid PRIMARY KEY NOT NULL,
@@ -10,7 +11,7 @@ CREATE TABLE Posts (
     content TEXT NOT NULL,
     department TEXT AS Uuid REFERENCES Departments(id),
     link TEXT,
-    files TEXT AS List<Uuid>
+    files TEXT AS List<FileWithContext>
 );
 
 insert:

@@ -6,13 +6,14 @@ import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 import org.centrexcursionistalcoi.app.serializer.ContentTypeSerializer
+import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
 data class FileWithContext(
     @Serializable(Base64Serializer::class) val bytes: ByteArray,
     val name: String? = null,
     @Serializable(ContentTypeSerializer::class) val contentType: ContentType? = null,
-    val lastModified: Instant? = null,
+    @Serializable(InstantSerializer::class) val lastModified: Instant? = null,
     val id: Uuid? = null,
 ) {
     companion object {
