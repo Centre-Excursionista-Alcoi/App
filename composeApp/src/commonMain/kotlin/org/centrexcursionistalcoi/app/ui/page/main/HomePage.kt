@@ -130,7 +130,9 @@ fun HomePage(
                 }
             }
 
-            val activeLendings = userLendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+            val activeLendings = userLendings
+                ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+                ?.sortedByDescending { it.from }
             if (!activeLendings.isNullOrEmpty()) {
                 stickyHeader("active_lendings_header") {
                     Text(
@@ -144,7 +146,10 @@ fun HomePage(
                 }
             }
 
-            val oldLendings = userLendings?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
+            val oldLendings = userLendings
+                ?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+                ?.sortedByDescending { it.from }
+                .orEmpty()
             if (oldLendings.isNotEmpty()) {
                 stickyHeader {
                     Text(

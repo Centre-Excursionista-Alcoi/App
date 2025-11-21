@@ -244,7 +244,7 @@ private fun LendingsLazyColumn(
                 Lending.Status.COMPLETE -> true
                 else -> false
             }
-        }?.sortedBy { it.from }
+        }?.sortedByDescending { it.from }
         if (!completedLendings.isNullOrEmpty()) {
             item("completed_lendings_header") {
                 Text(
