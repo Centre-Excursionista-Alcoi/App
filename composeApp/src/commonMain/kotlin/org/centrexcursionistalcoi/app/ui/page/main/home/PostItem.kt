@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.page.main.home
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -87,7 +88,10 @@ fun PostItem(post: ReferencedPost) {
 
             if (post.files.isNotEmpty()) {
                 val images = post.rememberImageFiles()
-                LazyRow(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth().height(300.dp).padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
                     item("start_spacer") { Spacer(Modifier.width(12.dp)) }
                     items(images.toList()) { (_, image) ->
                         AsyncByteImage(
