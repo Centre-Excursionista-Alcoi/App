@@ -24,7 +24,7 @@ class TestImageContainerEntity {
             val fileEntity = mockk<FileEntity>().apply {
                 every { name } returns "square.png"
                 every { type } returns ContentType.Image.PNG.toString()
-                every { data } returns imageBytes
+                every { bytes } returns imageBytes
             }
             mockkObject(FileEntity)
             every { FileEntity.new(any(), any()) } returns fileEntity
@@ -43,7 +43,7 @@ class TestImageContainerEntity {
             assertEquals(ContentType.Image.PNG.toString(), image.type, "Image content type should match")
             assertContentEquals(
                 imageBytes,
-                image.data,
+                image.bytes,
                 "Image data should match the provided bytes"
             )
 

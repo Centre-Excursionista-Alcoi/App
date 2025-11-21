@@ -53,7 +53,7 @@ fun Application.configureRouting() {
 
             call.respondBytes(
                 contentType = file.type?.let(ContentType::parse)
-            ) { file.data }
+            ) { file.bytes }
         }
 
         configureAuthRoutes()

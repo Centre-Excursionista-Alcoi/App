@@ -21,7 +21,7 @@ interface ImageContainerEntity {
         image = FileEntity.new {
             this.name = name ?: "${id.value}_file"
             this.type = contentType.toString()
-            this.data = bytes
+            this.bytes = bytes
         }
     }
 
@@ -38,7 +38,7 @@ interface ImageContainerEntity {
         image = FileEntity.new {
             this.name = file.name ?: "${id.value}_file"
             this.type = (file.contentType ?: ContentType.Application.OctetStream).toString()
-            this.data = file.bytes
+            this.bytes = file.bytes
         }
     }
 }

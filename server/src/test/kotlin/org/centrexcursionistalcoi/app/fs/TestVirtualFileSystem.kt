@@ -27,7 +27,7 @@ class TestVirtualFileSystem {
             FileEntity.new("6489d244-cd88-4441-9526-1a4627b67453".toUUID()) {
                 name = "example.txt"
                 type = "text/plain"
-                data = byteArrayOf(10, 20, 30)
+                bytes = byteArrayOf(10, 20, 30)
                 lastModified = Instant.ofEpochSecond(1763383432)
             }
         }

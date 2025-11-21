@@ -27,7 +27,7 @@ class TestDepartment {
             val imageFileEntity = FileEntity.new {
                 name = "test_image.png"
                 type = "image/png"
-                data = byteArrayOf(1, 2, 3)
+                bytes = byteArrayOf(1, 2, 3)
             }
             imageFileId = imageFileEntity.id.value
             DepartmentEntity.new {
@@ -58,7 +58,7 @@ class TestDepartment {
                     FileEntity.new {
                         name = "test_image.png"
                         type = "image/png"
-                        data = byteArrayOf(1, 2, 3)
+                        bytes = byteArrayOf(1, 2, 3)
                     }
                 }
             }
@@ -77,6 +77,6 @@ class TestDepartment {
         assertEquals("Updated Department", updatedEntity.displayName)
         val image = Database { updatedEntity.image }
         assertNotNull(image)
-        assertContentEquals(byteArrayOf(4, 5, 6), image.data)
+        assertContentEquals(byteArrayOf(4, 5, 6), image.bytes)
     }
 }

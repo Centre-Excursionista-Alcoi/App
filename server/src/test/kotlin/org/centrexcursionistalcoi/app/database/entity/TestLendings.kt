@@ -112,7 +112,7 @@ class TestLendings {
             FileEntity.new(memoryPdfFileId) {
                 name = "memory.pdf"
                 type = "application/pdf"
-                data = byteArrayOf(1, 2, 3, 4)
+                bytes = byteArrayOf(1, 2, 3, 4)
             }
         }
         val entity = Database {
@@ -176,7 +176,7 @@ class TestLendings {
             FileEntity.new(memoryAttachmentFileId) {
                 name = "attachment.pdf"
                 type = "application/pdf"
-                data = byteArrayOf(1, 2, 3, 4)
+                bytes = byteArrayOf(1, 2, 3, 4)
             }
         }
 

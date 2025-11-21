@@ -205,7 +205,7 @@ object VirtualFileSystem {
     }
 
     private fun mapItem(rootDir: RootDir<out Any, out Entity<out Any>>, entity: Entity<out Any>, fileEntity: FileEntity): Item {
-        val bytes = fileEntity.data
+        val bytes = fileEntity.bytes
         return Item(
             path = "/webdav/${rootDir.name}/${entity.id.value}",
             name = rootDir.fileDisplayName(entity, fileEntity),
@@ -274,7 +274,7 @@ object VirtualFileSystem {
             return null
         }
 
-        val data = Database { fileEntity.data }
+        val data = Database { fileEntity.bytes }
         return ItemData(
             contentType = fileEntity.contentType,
             size = data.size,

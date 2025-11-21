@@ -29,7 +29,7 @@ class TestInventoryItemType {
                     FileEntity.new(imageFileId) {
                         name = "test_image.png"
                         type = "image/png"
-                        data = byteArrayOf(1, 2, 3)
+                        bytes = byteArrayOf(1, 2, 3)
                     }
                 }
             }

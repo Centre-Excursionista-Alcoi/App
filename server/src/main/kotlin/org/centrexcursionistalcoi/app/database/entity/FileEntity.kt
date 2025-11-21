@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<FileEntity>(Files)
 
-    var data by Files.data
+    var bytes by Files.bytes
     var type by Files.type
     var name by Files.name
 

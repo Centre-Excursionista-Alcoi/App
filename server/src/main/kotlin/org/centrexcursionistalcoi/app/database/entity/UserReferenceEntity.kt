@@ -68,7 +68,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
             } else {
                 val certificateEntity = Database {
                     FileEntity.new {
-                        data = certificate
+                        bytes = certificate
                         type = ContentType.Application.Pdf.toString()
                         name = "certificado.pdf"
                     }
