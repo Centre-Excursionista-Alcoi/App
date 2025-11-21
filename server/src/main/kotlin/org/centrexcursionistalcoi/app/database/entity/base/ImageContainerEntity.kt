@@ -29,7 +29,7 @@ interface ImageContainerEntity {
 
         image = FileEntity.new {
             this.name = name ?: "${id.value}_file"
-            this.type = contentType.toString()
+            this.contentType = contentType
             this.bytes = bytes
         }
     }

@@ -65,9 +65,9 @@ class FileRequestData : Closeable {
     fun newEntity(close: Boolean = true): FileEntity {
         return Database {
             FileEntity.new {
-                name = originalFileName ?: "unknown"
-                type = contentType.toString()
-                bytes = baos.toByteArray()
+                this.name = originalFileName ?: "unknown"
+                this.contentType = contentType
+                this.bytes = baos.toByteArray()
             }
         }.also { if (close) close() }
     }

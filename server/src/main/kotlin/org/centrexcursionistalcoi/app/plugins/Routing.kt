@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
@@ -52,7 +51,7 @@ fun Application.configureRouting() {
             }
 
             call.respondBytes(
-                contentType = file.type?.let(ContentType::parse)
+                contentType = file.contentType
             ) { file.bytes }
         }
 
