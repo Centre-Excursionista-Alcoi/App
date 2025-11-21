@@ -47,7 +47,8 @@ class LendingUtilsTest {
             }
         }
 
-        val existingLending = Database {
+        Database {
+            // Create a lending from 2025-10-01 to 2025-10-03 with item1 and item2
             LendingEntity.new {
                 userSub = user
                 from = LocalDate.of(2025, 10, 1)
@@ -62,7 +63,31 @@ class LendingUtilsTest {
                     it[item] = item2.id
                 }
             }
+            // Create a lending from 2025-1-1 to 2025-12-31 with all items, but completed
+            LendingEntity.new {
+                userSub = user
+                from = LocalDate.of(2025, 1, 1)
+                to = LocalDate.of(2025, 12, 31)
+                // set all fields to complete
+                confirmed = true
+                taken = true
+                returned = true
+            }.also { entity ->
+                LendingItems.insert {
+                    it[lending] = entity.id
+                    it[item] = item1.id
+                }
+                LendingItems.insert {
+                    it[lending] = entity.id
+                    it[item] = item2.id
+                }
+                LendingItems.insert {
+                    it[lending] = entity.id
+                    it[item] = item3.id
+                }
+            }
         }
+
         val lendings = Database { LendingEntity.all() }
         // Out of range is fine
         assertFalse("Before") {

@@ -6,6 +6,7 @@ import kotlin.time.toKotlinInstant
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.utils.detectFileType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -39,12 +40,12 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             val type = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
             if (type == ContentType.Application.OctetStream) {
                 return detectFileType(bytes)?.contentType?.also { contentType ->
-                    this.type = contentType.toString()
+                    Database { this@FileEntity.type = contentType.toString() }
                 } ?: ContentType.Application.OctetStream
             }
             return type
         }
-        set(value) { type = value.toString() }
+        set(value) { Database { type = value.toString() } }
 
     fun toData(): FileWithContext = FileWithContext(
         id = id.value.toKotlinUuid(),

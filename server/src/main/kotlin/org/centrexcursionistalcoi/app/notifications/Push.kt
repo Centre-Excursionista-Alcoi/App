@@ -62,7 +62,7 @@ object Push {
      *
      * @param block The suspend function that contains the push notification logic.
      */
-    fun send(block: suspend CoroutineScope.() -> Unit) = CoroutineScope(Dispatchers.IO).launch {
+    fun launch(block: suspend CoroutineScope.() -> Unit) = CoroutineScope(Dispatchers.IO).launch {
         if (disable) return@launch
         block()
     }
@@ -170,6 +170,32 @@ object Push {
                         .map { it.token.value }
                 }
                 tokens = tokens + adminTokens
+            }
+
+            sendFCMPushNotification(
+                tokens,
+                mapOf(
+                    "type" to notification.type,
+                    *notification.toMap().toList().toTypedArray()
+                )
+            )
+        }
+    }
+
+    suspend fun sendPushNotificationToAll(notification: PushNotification) {
+        val allReferences = Database {
+            UserReferenceEntity.all().toList()
+        }
+        for (reference in allReferences) {
+            sendLocalPushNotification(
+                notification = notification,
+                userSub = reference.sub.value,
+            )
+        }
+
+        if (pushFCMConfigured) {
+            val tokens = Database {
+                FCMRegistrationTokenEntity.all().map { it.token.value }
             }
 
             sendFCMPushNotification(
