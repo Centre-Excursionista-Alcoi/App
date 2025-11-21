@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home
+package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background

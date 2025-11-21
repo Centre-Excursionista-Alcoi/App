@@ -48,7 +48,9 @@ object PostsRepository : DatabaseRepository<ReferencedPost, Uuid>() {
         date = item.date,
         title = item.title,
         content = item.content,
-        department = item.department?.id
+        department = item.department?.id,
+        link = item.link,
+        files = item.files,
     )
 
     override suspend fun update(item: ReferencedPost) = queries.update(
@@ -56,7 +58,9 @@ object PostsRepository : DatabaseRepository<ReferencedPost, Uuid>() {
         date = item.date,
         title = item.title,
         content = item.content,
-        department = item.department?.id
+        department = item.department?.id,
+        link = item.link,
+        files = item.files,
     )
 
     override suspend fun delete(id: Uuid) {
@@ -69,5 +73,7 @@ object PostsRepository : DatabaseRepository<ReferencedPost, Uuid>() {
         title = title,
         content = content,
         department = department,
+        link = link,
+        files = files.orEmpty(),
     ).referenced(departments)
 }

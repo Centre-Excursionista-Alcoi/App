@@ -4,17 +4,24 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import java.util.UUID
+import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -44,6 +51,8 @@ fun Route.postsRoutes() {
             var title: String? = null
             var content: String? = null
             var departmentId: UUID? = null
+            var link: String? = null
+            val files: MutableList<FileRequestData> = mutableListOf()
 
             formParameters.forEachPart { partData ->
                 when (partData) {
@@ -52,7 +61,25 @@ fun Route.postsRoutes() {
                             "title" -> title = partData.value
                             "content" -> content = partData.value
                             "department" -> departmentId = partData.value.toUUIDOrNull()
+                            "link" -> link = partData.value
+                            "files" -> {
+                                val fileList: List<FileWithContext> = json.decodeFromString(
+                                    ListSerializer(FileWithContext.serializer()),
+                                    partData.value
+                                )
+                                files += fileList.map { it.toFileRequestData() }
+                            }
+                            else -> if (partData.name?.startsWith("file_") == true) {
+                                val reference = FileRequestData()
+                                reference.populate(partData)
+                                files += reference
+                            }
                         }
+                    }
+                    is PartData.FileItem -> {
+                        val reference = FileRequestData()
+                        reference.populate(partData)
+                        files += reference
                     }
                     else -> { /* nothing */ }
                 }
@@ -66,11 +93,21 @@ fun Route.postsRoutes() {
                 Database { DepartmentEntity.findById(it) }  ?: throw IllegalArgumentException("Department with id $it does not exist")
             }
 
+            val fileEntities = Database { files.map { it.newEntity() } }
+
             Database {
                 PostEntity.new {
                     this.title = title
                     this.content = content
                     this.department = department
+                    this.link = link
+                }.also { postEntity ->
+                    for (fileEntity in fileEntities) {
+                        PostFiles.insert {
+                            it[file] = fileEntity.id
+                            it[post] = postEntity.id
+                        }
+                    }
                 }
             }
         },

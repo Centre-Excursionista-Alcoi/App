@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.doAsync
@@ -112,19 +113,48 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
-    fun createPost(title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
+    fun createPost(
+        title: String,
+        department: Department?,
+        content: RichTextState,
+        link: String,
+        files: List<PlatformFile>,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
         doAsync {
             val contentMarkdown = content.toMarkdown()
 
-            PostsRemoteRepository.create(title, contentMarkdown, department?.id, progressNotifier)
+            PostsRemoteRepository.create(
+                title,
+                contentMarkdown,
+                department?.id,
+                link.takeUnless { it.isBlank() },
+                files,
+                progressNotifier
+            )
         }
     }
 
-    fun updatePost(postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) = launch {
+    fun updatePost(
+        postId: Uuid,
+        title: String?,
+        department: Department?,
+        content: RichTextState?,
+        link: String?,
+        removedFiles: List<Uuid>,
+        files: List<PlatformFile>,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, progressNotifier,)
+            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
+        }
+    }
+
+    fun delete(post: ReferencedPost) = launch {
+        doAsync {
+            PostsRemoteRepository.delete(post.id)
         }
     }
 }

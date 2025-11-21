@@ -6,21 +6,31 @@ import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
 import io.ktor.http.ContentType
 import io.ktor.http.defaultForFileExtension
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.data.FileWithContext
 
 object InMemoryFileAllocator {
     private val files = mutableMapOf<Uuid, Data>()
 
-    class Data(val bytes: ByteArray, val contentType: ContentType? = null)
-
-    fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Uuid {
-        val uuid = uuid ?: Uuid.random()
-        Napier.i { "Allocated a file of ${bytes.size} bytes at $uuid" }
-        files[uuid] = Data(bytes, contentType)
-        return uuid
+    class Data(
+        val bytes: ByteArray,
+        val contentType: ContentType? = null,
+        val lastModified: Instant? = null,
+        val id: Uuid? = null,
+    ) {
+        fun toFileWithContext(name: String? = null): FileWithContext = FileWithContext(bytes, name, contentType, lastModified, id)
     }
 
-    suspend fun put(platformFile: PlatformFile, uuid: Uuid? = null): Uuid {
+    fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Data {
+        val uuid = uuid ?: Uuid.random()
+        Napier.i { "Allocated a file of ${bytes.size} bytes at $uuid" }
+        files[uuid] = Data(bytes, contentType, Clock.System.now(), uuid)
+        return Data(bytes, contentType, Clock.System.now(), uuid)
+    }
+
+    suspend fun put(platformFile: PlatformFile, uuid: Uuid? = null): Data {
         val bytes = platformFile.readBytes()
         val contentType = ContentType.defaultForFileExtension(platformFile.extension)
         return put(bytes, uuid, contentType)

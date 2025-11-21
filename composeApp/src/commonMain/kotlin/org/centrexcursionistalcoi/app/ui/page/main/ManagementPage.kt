@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home
+package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -30,11 +30,11 @@ import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
-import org.centrexcursionistalcoi.app.ui.page.home.management.DepartmentsListView
-import org.centrexcursionistalcoi.app.ui.page.home.management.InventoryItemTypesListView
-import org.centrexcursionistalcoi.app.ui.page.home.management.LendingsListView
-import org.centrexcursionistalcoi.app.ui.page.home.management.PostsListView
-import org.centrexcursionistalcoi.app.ui.page.home.management.UsersListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
@@ -101,6 +101,7 @@ fun ManagementPage(
         posts = posts,
         onCreatePost = model::createPost,
         onUpdatePost = model::updatePost,
+        onDeletePost = model::delete,
     )
 }
 
@@ -136,8 +137,9 @@ private fun ManagementPage(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
-    onCreatePost: (title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) -> Job,
+    onCreatePost: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
+    onDeletePost: (ReferencedPost) -> Job,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
@@ -182,7 +184,7 @@ private fun ManagementPage(
 
             MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
 
-            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost)
+            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 
             MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
                 windowSizeClass,

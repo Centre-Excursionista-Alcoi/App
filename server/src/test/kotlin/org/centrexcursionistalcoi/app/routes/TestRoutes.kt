@@ -60,6 +60,7 @@ class TestRoutes : ApplicationTestBase() {
             ),
             optionalCreationValuesProvider = mapOf(
                 "department" to { testDepartmentId },
+                "link" to { "https://example.com" },
             ),
             userEntityPatches = { user ->
                 // Make the user a member of the test department

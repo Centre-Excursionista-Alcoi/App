@@ -31,7 +31,7 @@ class ApplicationTest: ApplicationTestBase() {
         databaseInitBlock = {
             FileEntity.new {
                 name = "square.png"
-                type = "image/png"
+                contentType = ContentType.Image.PNG
                 bytes = bytesFromResource("/square.png")
             }.id.value
         }

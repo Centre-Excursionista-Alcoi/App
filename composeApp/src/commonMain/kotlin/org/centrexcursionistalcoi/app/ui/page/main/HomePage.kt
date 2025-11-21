@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home
+package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
@@ -26,9 +26,11 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.jetbrains.compose.resources.stringResource
@@ -45,6 +47,8 @@ fun HomePage(
     lendings: List<ReferencedLending>?,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
+
+    posts: List<ReferencedPost>?,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
@@ -56,7 +60,7 @@ fun HomePage(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
     ) {
-        item(key = "top_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) { Modifier.height(16.dp) }
+        item(key = "top_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(16.dp)) }
 
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
@@ -65,6 +69,22 @@ fun HomePage(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, top = 12.dp)
                 )
+            }
+        }
+
+        if (!posts.isNullOrEmpty()) {
+            stickyHeader {
+                Text(
+                    text = stringResource(Res.string.home_posts),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
+                )
+            }
+            items(posts) { post ->
+                PostItem(post)
+            }
+            item(key = "posts_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(Modifier.height(16.dp))
             }
         }
 
@@ -168,6 +188,6 @@ fun HomePage(
             }
         }
 
-        item(key = "bottom_spacer", contentType = "spacer") { Modifier.height(16.dp) }
+        item(key = "bottom_spacer", contentType = "spacer") { Spacer(Modifier.height(16.dp)) }
     }
 }

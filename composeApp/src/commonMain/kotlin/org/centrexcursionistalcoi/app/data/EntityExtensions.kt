@@ -36,9 +36,9 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                             is Float -> json.encodeToString(ListSerializer(Float.serializer()), value as List<Float>)
                             is Double -> json.encodeToString(ListSerializer(Double.serializer()), value as List<Double>)
                             is Boolean -> json.encodeToString(ListSerializer(Boolean.serializer()), value as List<Boolean>)
+                            is FileWithContext -> json.encodeToString(ListSerializer(FileWithContext.serializer()), value as List<FileWithContext>)
                             else -> {
-                                Napier.e(tag = "toFormData") { "Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}" }
-                                return@forEach
+                                error("Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}")
                             }
                         }
                         append(key, jsonArray)
@@ -69,7 +69,7 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                         },
                     )
                 }
-                else -> Napier.e(tag = "toFormData") { "Unsupported type at $key: ${value::class.simpleName ?: "N/A"}" }
+                else -> error("Unsupported type at $key: ${value::class.simpleName ?: "N/A"}")
             }
         }
     }

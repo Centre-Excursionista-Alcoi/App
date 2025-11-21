@@ -6,6 +6,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.LendingMemory
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.UserInsurance
@@ -52,7 +53,12 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             JsonAdapter(LendingMemory.serializer()),
             UUIDAdapter,
         ),
-        Posts.Adapter(UUIDAdapter, InstantAdapter, UUIDAdapter),
+        Posts.Adapter(
+            UUIDAdapter,
+            InstantAdapter,
+            UUIDAdapter,
+            JsonAdapter(ListSerializer(FileWithContext.serializer()))
+        ),
         ReceivedItems.Adapter(
             UUIDAdapter,
             UUIDAdapter,

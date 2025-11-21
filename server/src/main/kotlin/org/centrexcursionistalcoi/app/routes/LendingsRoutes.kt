@@ -642,7 +642,7 @@ fun Route.lendingsRoutes() {
         val pdfDocumentEntity = Database {
             FileEntity.new {
                 name = "lending_memory_${lending.id.value}.pdf"
-                type = "application/pdf"
+                contentType = ContentType.Application.Pdf
                 bytes = baos.toByteArray()
             }
         }

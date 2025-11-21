@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home.management
+package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -67,7 +67,7 @@ import kotlinx.datetime.YearMonth
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.ui.page.home.LendingItem
+import org.centrexcursionistalcoi.app.ui.page.main.LendingItem
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.screen.admin.lendingManagementScreenContent
