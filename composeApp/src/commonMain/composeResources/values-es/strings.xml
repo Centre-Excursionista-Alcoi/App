@@ -364,4 +364,20 @@
     <string name="months_november">Noviembre</string>
     <string name="months_december">Diciembre</string>
     <string name="post_by">Por%1$s</string>
+    <string name="home_posts">Anuncios</string>
+    <string name="days_of_week_monday">Lunes</string>
+    <string name="days_of_week_tuesday">Martes</string>
+    <string name="days_of_week_wednesday">Miércoles</string>
+    <string name="days_of_week_thursday">Jueves</string>
+    <string name="days_of_week_friday">Viernes</string>
+    <string name="days_of_week_saturday">Sábado</string>
+    <string name="days_of_week_sunday">Domingo</string>
+    <string name="date_join_day_and_month">de</string>
+    <string name="date_join_month_and_year">del</string>
+    <string name="management_post_create">Crear Anuncio</string>
+    <string name="post_title">Título</string>
+    <string name="post_link">Enlace</string>
+    <string name="post_upload_images">Subir Imágenes</string>
+    <string name="post_department">Sección</string>
+    <string name="post_department_generic">Directiva</string>
 </resources>
