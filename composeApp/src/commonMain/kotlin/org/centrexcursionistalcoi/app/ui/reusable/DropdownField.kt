@@ -20,18 +20,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import cea_app.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun <T> DropdownField(
     value: T?,
-    onValueChange: (T) -> Unit,
+    onValueChange: (T?) -> Unit,
     options: List<T>,
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     itemToString: @Composable (T?) -> String = { it?.toString() ?: "" },
-    itemDescriptionToString: (@Composable (T?) -> String)? = null
+    itemDescriptionToString: (@Composable (T?) -> String)? = null,
+    supportingText: String? = null,
+    allowNull: Boolean = false,
+    nullText: String? = stringResource(Res.string.none),
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -46,7 +51,7 @@ fun <T> DropdownField(
             value = itemToString(value),
             onValueChange = {},
             label = { Text(label) },
-            supportingText = itemDescriptionToString?.invoke(value)?.let {
+            supportingText = (supportingText ?: itemDescriptionToString?.invoke(value))?.let {
                 { Text(it) }
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled) },
@@ -56,6 +61,30 @@ fun <T> DropdownField(
             expanded = expanded && enabled,
             onDismissRequest = { expanded = false },
         ) {
+            if (allowNull) {
+                DropdownMenuItem(
+                    enabled = enabled,
+                    text = {
+                        Column {
+                            Text(nullText ?: itemToString(null))
+                            itemDescriptionToString?.invoke(null)?.let {
+                                Text(it, style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    },
+                    onClick = {
+                        onValueChange(null)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (value == null) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                            contentDescription = if (value == null) "Selected" else "Not selected"
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             options.forEach { option ->
                 val isSelected = value == option
                 DropdownMenuItem(

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
@@ -18,6 +19,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 
@@ -106,6 +108,18 @@ class ManagementViewModel : ViewModel() {
     fun skipLendingMemory(lending: ReferencedLending) = launch {
         doAsync {
             LendingsRemoteRepository.skipMemory(lending.id)
+        }
+    }
+
+    fun createPost(title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
+        doAsync {
+            // TODO: Implementation goes here
+        }
+    }
+
+    fun updatePost(postId: Uuid, title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
+        doAsync {
+            // TODO: Implementation goes here
         }
     }
 }

@@ -406,5 +406,8 @@
     <string name="months_december">December</string>
 
     <string name="post_by">By %1$s</string>
+    <string name="post_title">Title</string>
+    <string name="post_department">Department</string>
+    <string name="post_department_generic">Directive</string>
 
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
+import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
@@ -27,6 +28,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.page.home.management.DepartmentsListView
 import org.centrexcursionistalcoi.app.ui.page.home.management.InventoryItemTypesListView
@@ -97,6 +99,8 @@ fun ManagementPage(
         onDeleteInventoryItem = model::delete,
         inventoryItems = inventoryItems,
         posts = posts,
+        onCreatePost = model::createPost,
+        onUpdatePost = model::updatePost,
     )
 }
 
@@ -132,6 +136,8 @@ private fun ManagementPage(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
+    onCreatePost: (title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdatePost: (postId: Uuid, title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
@@ -176,7 +182,7 @@ private fun ManagementPage(
 
             MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
 
-            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts)
+            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost)
 
             MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
                 windowSizeClass,
