@@ -19,11 +19,15 @@ object LendingUtils {
     ): Boolean {
         val itemIds = items.map { it.id.value }.toSet()
 
-        return any { lending ->
+        return filter { lending ->
+            // Filter lendings that have been returned
+            !lending.returned
+        }.any { lending ->
             // Check for date overlap
             val lendingFrom = lending.from
             val lendingTo = lending.to
 
+            // If dates to not overlap, skip
             val datesOverlap = !to.isBefore(lendingFrom) && !from.isAfter(lendingTo)
             if (!datesOverlap) return@any false
 
