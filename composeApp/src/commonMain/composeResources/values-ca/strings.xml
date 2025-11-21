@@ -373,4 +373,20 @@
     <string name="memory_editor_sport">Esport</string>
     <string name="memory_editor_description">Descripció de l\'Activitat</string>
     <string name="post_by">Per%1$s</string>
+    <string name="home_posts">Anuncis</string>
+    <string name="days_of_week_monday">Dilluns</string>
+    <string name="days_of_week_tuesday">Dimarts</string>
+    <string name="days_of_week_wednesday">Dimecres</string>
+    <string name="days_of_week_thursday">Dijous</string>
+    <string name="days_of_week_friday">Divendres</string>
+    <string name="days_of_week_saturday">Dissabte</string>
+    <string name="days_of_week_sunday">Diumenge</string>
+    <string name="date_join_day_and_month">de</string>
+    <string name="date_join_month_and_year">del</string>
+    <string name="management_post_create">Crear Anunci</string>
+    <string name="post_title">Títol</string>
+    <string name="post_link">Enllaç</string>
+    <string name="post_upload_images">Pujar Imatges</string>
+    <string name="post_department">Secció</string>
+    <string name="post_department_generic">Directiva</string>
 </resources>
