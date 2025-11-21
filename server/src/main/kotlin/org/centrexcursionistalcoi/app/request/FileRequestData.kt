@@ -8,10 +8,22 @@ import io.ktor.utils.io.core.Closeable
 import io.ktor.utils.io.jvm.javaio.copyTo
 import java.io.ByteArrayOutputStream
 import kotlin.io.encoding.Base64
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 
 class FileRequestData : Closeable {
+    companion object {
+        /**
+         * Converts a [FileWithContext] to a [FileRequestData].
+         */
+        fun FileWithContext.toFileRequestData() = FileRequestData().apply {
+            this.contentType = this@toFileRequestData.contentType
+            this.originalFileName = this@toFileRequestData.name
+            this.baos.writeBytes(this@toFileRequestData.bytes)
+        }
+    }
+
     var contentType: ContentType? = null
     var originalFileName: String? = null
     val baos: ByteArrayOutputStream = ByteArrayOutputStream()

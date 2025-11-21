@@ -4,13 +4,17 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import java.util.UUID
+import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
@@ -58,6 +62,13 @@ fun Route.postsRoutes() {
                             "content" -> content = partData.value
                             "department" -> departmentId = partData.value.toUUIDOrNull()
                             "link" -> link = partData.value
+                            "files" -> {
+                                val fileList: List<FileWithContext> = json.decodeFromString(
+                                    ListSerializer(FileWithContext.serializer()),
+                                    partData.value
+                                )
+                                files += fileList.map { it.toFileRequestData() }
+                            }
                             else -> if (partData.name?.startsWith("file_") == true) {
                                 val reference = FileRequestData()
                                 reference.populate(partData)
