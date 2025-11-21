@@ -392,6 +392,17 @@
     <string name="days_of_week_short_saturday">Sat.</string>
     <string name="days_of_week_short_sunday">Sun.</string>
 
+    <string name="days_of_week_monday">Monday</string>
+    <string name="days_of_week_tuesday">Tuesday</string>
+    <string name="days_of_week_wednesday">Wednesday</string>
+    <string name="days_of_week_thursday">Thursday</string>
+    <string name="days_of_week_friday">Friday</string>
+    <string name="days_of_week_saturday">Saturday</string>
+    <string name="days_of_week_sunday">Sunday</string>
+
+    <string name="date_join_day_and_month"> of </string>
+    <string name="date_join_month_and_year">, </string>
+
     <string name="months_january">January</string>
     <string name="months_february">February</string>
     <string name="months_march">March</string>
@@ -405,6 +416,7 @@
     <string name="months_november">November</string>
     <string name="months_december">December</string>
 
+    <string name="management_post_create">Create Post</string>
     <string name="post_by">By %1$s</string>
     <string name="post_title">Title</string>
     <string name="post_department">Department</string>

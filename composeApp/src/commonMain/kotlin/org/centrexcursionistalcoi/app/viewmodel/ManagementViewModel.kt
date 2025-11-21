@@ -18,6 +18,7 @@ import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -113,13 +114,17 @@ class ManagementViewModel : ViewModel() {
 
     fun createPost(title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
         doAsync {
-            // TODO: Implementation goes here
+            val contentMarkdown = content.toMarkdown()
+
+            PostsRemoteRepository.create(title, contentMarkdown, department?.id, progressNotifier)
         }
     }
 
-    fun updatePost(postId: Uuid, title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
+    fun updatePost(postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) = launch {
         doAsync {
-            // TODO: Implementation goes here
+            val contentMarkdown = content?.toMarkdown()
+
+            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, progressNotifier,)
         }
     }
 }

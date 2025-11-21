@@ -103,6 +103,7 @@ fun <T> ListView(
     emptyItemsText: String,
     itemIdProvider: (T) -> Any,
     isCreatingSupported: Boolean = true,
+    createTitle: String = stringResource(Res.string.create),
     /**
      * Map of filters to apply to the items.
      * The key is the filter name, and the value is a pair of a composable that returns the filter label and a predicate that returns true if the item should be included.
@@ -117,6 +118,7 @@ fun <T> ListView(
     itemTextStyle: (@Composable (T) -> TextStyle)? = null,
     itemLeadingContent: (@Composable (T) -> Unit)? = null,
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
+    itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
     onDeleteRequest: ((T) -> Job)? = null,
@@ -189,6 +191,7 @@ fun <T> ListView(
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
                 itemTrailingContent = itemTrailingContent,
+                itemSupportingContent = itemSupportingContent,
                 itemTextStyle = itemTextStyle,
                 selectedItem = selectedItem,
                 filters = filters,
@@ -202,7 +205,7 @@ fun <T> ListView(
 
             if (selectedItem != null || isCreating) {
                 ListView_Content(
-                    itemDisplayName = selectedItem?.let(itemDisplayName) ?: stringResource(Res.string.management_department_create),
+                    itemDisplayName = selectedItem?.let(itemDisplayName) ?: createTitle,
                     itemToolbarActions = selectedItem?.let { item -> { itemToolbarActions?.invoke(this, item) } },
                     onCloseRequested = {
                         selectedItem = null
@@ -228,7 +231,7 @@ fun <T> ListView(
     } else {
         if (selectedItem != null || isCreating) {
             ListView_Content(
-                itemDisplayName = selectedItem?.let(itemDisplayName) ?: stringResource(Res.string.management_department_create),
+                itemDisplayName = selectedItem?.let(itemDisplayName) ?: createTitle,
                 itemToolbarActions = selectedItem?.let { item -> { itemToolbarActions?.invoke(this, item) } },
                 onCloseRequested = {
                     selectedItem = null
@@ -255,6 +258,7 @@ fun <T> ListView(
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
                 itemTrailingContent = itemTrailingContent,
+                itemSupportingContent = itemSupportingContent,
                 itemTextStyle = itemTextStyle,
                 selectedItem = selectedItem,
                 filters = filters,
@@ -277,6 +281,7 @@ fun <T> ListView_ListColumn(
     itemIdProvider: (T) -> Any,
     itemLeadingContent: (@Composable (T) -> Unit)? = null,
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
+    itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemTextStyle: (@Composable (T) -> TextStyle)? = null,
     selectedItem: T?,
     onSelectedItemChange: (T) -> Unit,
@@ -396,6 +401,9 @@ fun <T> ListView_ListColumn(
                             text = itemDisplayName(item),
                             style = itemTextStyle?.invoke(item) ?: LocalTextStyle.current,
                         )
+                    },
+                    supportingContent = itemSupportingContent?.let {
+                        { it(item) }
                     },
                     leadingContent = { itemLeadingContent?.invoke(item) },
                     trailingContent = {

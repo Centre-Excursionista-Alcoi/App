@@ -78,6 +78,7 @@ fun DepartmentsListView(
                 onClick = { deleting = it }
             )
         },
+        createTitle = stringResource(Res.string.management_department_create),
         editItemContent = { department: Department? ->
             var isLoading by remember { mutableStateOf(false) }
             var progress by remember { mutableStateOf<Progress?>(null) }

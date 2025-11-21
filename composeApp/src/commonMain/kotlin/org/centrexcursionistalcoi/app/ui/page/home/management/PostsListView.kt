@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.home.management
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.localizedDate
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
@@ -38,15 +40,17 @@ fun PostsListView(
     posts: List<ReferencedPost>?,
     departments: List<Department>?,
     onCreate: (title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdate: (postId: Uuid, title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdate: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) -> Job,
 ) {
     ListView(
         windowSizeClass = windowSizeClass,
         items = posts,
         itemIdProvider = { it.id },
         itemDisplayName = { it.title },
+        itemSupportingContent = { Text(it.localizedDate()) },
         emptyItemsText = stringResource(Res.string.management_no_posts),
         isCreatingSupported = true,
+        createTitle = stringResource(Res.string.management_post_create),
         editItemContent = { post ->
             var isLoading by remember { mutableStateOf(false) }
             var progress by remember { mutableStateOf<Progress?>(null) }
@@ -98,7 +102,12 @@ fun PostsListView(
                             progress = it
                         }
                     } else {
-                        onUpdate(post.id, title, department, content) {
+                        onUpdate(
+                            post.id,
+                            title.takeIf { it != post.title },
+                            department.takeIf { it?.id != post.department?.id },
+                            content.takeIf { it.toMarkdown() != post.content },
+                        ) {
                             progress = it
                         }
                     }
@@ -116,9 +125,15 @@ fun PostsListView(
             text = post.title,
             style = MaterialTheme.typography.titleLarge,
         )
-        Text(
-            text = stringResource(Res.string.post_by, post.department?.displayName ?: stringResource(Res.string.post_department_generic)),
-        )
+        Row {
+            Text(
+                text = stringResource(Res.string.post_by, post.department?.displayName ?: stringResource(Res.string.post_department_generic)),
+            )
+            Text(" - ")
+            Text(
+                text = post.localizedDate(),
+            )
+        }
 
         Text(
             text = post.content,
