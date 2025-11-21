@@ -62,6 +62,7 @@ fun PostsListView(
     departments: List<Department>?,
     onCreate: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
     onUpdate: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
+    onDelete: (ReferencedPost) -> Job,
 ) {
     ListView(
         windowSizeClass = windowSizeClass,
@@ -72,6 +73,7 @@ fun PostsListView(
         emptyItemsText = stringResource(Res.string.management_no_posts),
         isCreatingSupported = true,
         createTitle = stringResource(Res.string.management_post_create),
+        onDeleteRequest = onDelete,
         editItemContent = { post ->
             var isLoading by remember { mutableStateOf(false) }
             var progress by remember { mutableStateOf<Progress?>(null) }

@@ -101,6 +101,7 @@ fun ManagementPage(
         posts = posts,
         onCreatePost = model::createPost,
         onUpdatePost = model::updatePost,
+        onDeletePost = model::delete,
     )
 }
 
@@ -138,6 +139,7 @@ private fun ManagementPage(
     posts: List<ReferencedPost>?,
     onCreatePost: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
     onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
+    onDeletePost: (ReferencedPost) -> Job,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
@@ -182,7 +184,7 @@ private fun ManagementPage(
 
             MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
 
-            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost)
+            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 
             MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
                 windowSizeClass,

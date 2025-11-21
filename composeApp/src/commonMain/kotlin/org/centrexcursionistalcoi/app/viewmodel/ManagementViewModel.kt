@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.doAsync
@@ -148,6 +149,12 @@ class ManagementViewModel : ViewModel() {
             val contentMarkdown = content?.toMarkdown()
 
             PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
+        }
+    }
+
+    fun delete(post: ReferencedPost) = launch {
+        doAsync {
+            PostsRemoteRepository.delete(post.id)
         }
     }
 }
