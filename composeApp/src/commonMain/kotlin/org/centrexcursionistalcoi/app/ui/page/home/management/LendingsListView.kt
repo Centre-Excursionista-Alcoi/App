@@ -24,6 +24,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -92,7 +93,7 @@ fun LendingsListView(
         }
     }
 
-    if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
+    if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded && windowSizeClass.heightSizeClass >= WindowHeightSizeClass.Medium) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.width(400.dp)) {
                 LendingsCalendar(
