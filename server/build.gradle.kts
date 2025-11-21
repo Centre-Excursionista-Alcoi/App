@@ -113,6 +113,10 @@ dependencies {
     // Firebase Admin
     implementation(libs.firebase.admin)
 
+    // Telegram bot
+    implementation(libs.telegram.bot)
+    implementation(libs.retrofit.core)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)

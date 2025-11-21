@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
@@ -108,6 +109,11 @@ fun Route.postsRoutes() {
                             it[post] = postEntity.id
                         }
                     }
+                }
+            }.also { postEntity ->
+                Telegram.launch {
+                    val post = Database { postEntity.toData() }
+                    Telegram.sendPost(post)
                 }
             }
         },
