@@ -1,9 +1,11 @@
 package org.centrexcursionistalcoi.app.utils
 
-enum class FileType {
-    PNG,
-    JPEG,
-    PDF
+import io.ktor.http.ContentType
+
+enum class FileType(val contentType: ContentType) {
+    PNG(ContentType.Image.PNG),
+    JPEG(ContentType.Image.JPEG),
+    PDF(ContentType.Application.Pdf)
 }
 
 // PNG: 89 50 4E 47 0D 0A 1A 0A

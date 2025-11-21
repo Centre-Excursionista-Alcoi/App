@@ -7,6 +7,7 @@ import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.table.Files
+import org.centrexcursionistalcoi.app.utils.detectFileType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -34,7 +35,14 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
      * The content type of the file. Defaults to `application/octet-stream` if not set.
      */
     var contentType: ContentType
-        get() = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
+        get() {
+            val type = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
+            if (type == ContentType.Application.OctetStream) {
+                val detected = detectFileType(bytes)
+                return detected?.contentType ?: ContentType.Application.OctetStream
+            }
+            return type
+        }
         set(value) { type = value.toString() }
 
     fun toData(): FileWithContext = FileWithContext(

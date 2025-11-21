@@ -71,10 +71,11 @@ interface ImageContainerEntity {
         } else {
             if (image != null) image?.delete()
 
-        image = FileEntity.new {
-            this.name = file.name ?: "${this.id}_file"
-            this.contentType = file.contentType ?: ContentType.Application.OctetStream
-            this.bytes = file.bytes
+            image = FileEntity.new {
+                this.name = file.name ?: "${this.id}_file"
+                this.contentType = file.contentType ?: ContentType.Application.OctetStream
+                this.bytes = file.bytes
+            }
         }
     }
 }

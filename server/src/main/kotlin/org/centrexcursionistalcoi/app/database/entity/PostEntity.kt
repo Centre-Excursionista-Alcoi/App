@@ -45,7 +45,7 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Post,
         content = content,
         department = department?.id?.value?.toKotlinUuid(),
         link = link,
-        files = files.map { it.id.value.toKotlinUuid() },
+        files = files.map { it.toData() },
     )
 
     context(_: JdbcTransaction)
