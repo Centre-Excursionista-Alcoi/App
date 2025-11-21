@@ -118,6 +118,9 @@ kotlin {
             // QR Code Scanner
             implementation(libs.kscan)
 
+            // For rendering Markdown
+            implementation(libs.bundles.markdownRenderer)
+
             // Runtime permission management
             // FIXME: Currently not implemented for Desktop: https://github.com/reyazoct/Kmm-Permissions/issues/2
             // implementation(libs.kmm.permission)

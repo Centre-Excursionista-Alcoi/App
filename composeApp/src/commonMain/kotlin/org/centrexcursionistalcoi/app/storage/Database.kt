@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.storage
 import app.cash.sqldelight.db.SqlDriver
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -52,7 +53,12 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             JsonAdapter(LendingMemory.serializer()),
             UUIDAdapter,
         ),
-        Posts.Adapter(UUIDAdapter, InstantAdapter, UUIDAdapter),
+        Posts.Adapter(
+            UUIDAdapter,
+            InstantAdapter,
+            UUIDAdapter,
+            JsonAdapter(ListSerializer(Uuid.serializer()))
+        ),
         ReceivedItems.Adapter(
             UUIDAdapter,
             UUIDAdapter,

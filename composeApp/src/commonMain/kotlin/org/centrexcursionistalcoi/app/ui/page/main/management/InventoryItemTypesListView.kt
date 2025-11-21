@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home.management
+package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home.profile
+package org.centrexcursionistalcoi.app.ui.page.main.profile
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row

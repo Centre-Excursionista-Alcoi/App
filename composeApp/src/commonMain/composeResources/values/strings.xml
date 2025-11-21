@@ -39,6 +39,7 @@
         <item quantity="one">%1$d item: %2$s</item>
         <item quantity="other">%1$d items: %2$s</item>
     </plurals>
+    <string name="home_posts">Posts</string>
 
     <string name="force_sync">Force Sync</string>
 
@@ -419,6 +420,8 @@
     <string name="management_post_create">Create Post</string>
     <string name="post_by">By %1$s</string>
     <string name="post_title">Title</string>
+    <string name="post_link">Link</string>
+    <string name="post_upload_images">Upload Images</string>
     <string name="post_department">Department</string>
     <string name="post_department_generic">Directive</string>
 

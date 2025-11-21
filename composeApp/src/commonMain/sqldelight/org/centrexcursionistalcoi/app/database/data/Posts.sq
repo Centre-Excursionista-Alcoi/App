@@ -1,4 +1,5 @@
 import kotlin.Boolean;
+import kotlin.collections.List;
 import kotlin.uuid.Uuid;
 import kotlin.time.Instant;
 
@@ -7,11 +8,13 @@ CREATE TABLE Posts (
     date INTEGER AS Instant NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    department TEXT AS Uuid REFERENCES Departments(id)
+    department TEXT AS Uuid REFERENCES Departments(id),
+    link TEXT,
+    files TEXT AS List<Uuid>
 );
 
 insert:
-INSERT INTO Posts (id, date, title, content, department) VALUES (?, ?, ?, ?, ?);
+INSERT INTO Posts (id, date, title, content, department, link, files) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Posts WHERE id = ?;
@@ -23,4 +26,4 @@ deleteById:
 DELETE FROM Posts WHERE id = ?;
 
 update:
-UPDATE Posts SET date = ?, title = ?, content = ?, department = ? WHERE id = ?;
+UPDATE Posts SET date = ?, title = ?, content = ?, department = ?, link = ?, files = ? WHERE id = ?;

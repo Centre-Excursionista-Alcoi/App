@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home.management
+package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.ui.page.home.profile.InsurancesListCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
 import org.jetbrains.compose.resources.stringResource

@@ -16,7 +16,7 @@ data class ReferencedPost(
     val files: List<Uuid>,
 
     override val referencedEntity: Post
-): ReferencedEntity<Uuid, Post>() {
+): ReferencedEntity<Uuid, Post>(), ImageFileListContainer {
     companion object {
         fun Post.referenced(departments: List<Department>) = ReferencedPost(
             id = this.id,
@@ -29,4 +29,6 @@ data class ReferencedPost(
             referencedEntity = this
         )
     }
+
+    override val images: List<Uuid> = files
 }

@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.ui.page.home
+package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,10 +37,10 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
-import org.centrexcursionistalcoi.app.ui.page.home.profile.FEMECVAccountCard
-import org.centrexcursionistalcoi.app.ui.page.home.profile.InsurancesListCard
-import org.centrexcursionistalcoi.app.ui.page.home.profile.NoInsurancesCard
-import org.centrexcursionistalcoi.app.ui.page.home.profile.PersonalInformationCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.FEMECVAccountCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.NoInsurancesCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.PersonalInformationCard
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.jetbrains.compose.resources.painterResource
 

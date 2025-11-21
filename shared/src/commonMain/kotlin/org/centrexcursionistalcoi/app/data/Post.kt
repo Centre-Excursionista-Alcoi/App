@@ -18,7 +18,7 @@ data class Post(
     val department: Uuid?,
     val link: String?,
     val files: List<Uuid>,
-): Entity<Uuid> {
+): Entity<Uuid>, ImageFileListContainer {
     override fun toMap(): Map<String, Any?> {
         return mapOf(
             "id" to id.takeIf { it.isZero() },
@@ -30,4 +30,6 @@ data class Post(
             "files" to files,
         )
     }
+
+    override val images: List<Uuid> = files
 }

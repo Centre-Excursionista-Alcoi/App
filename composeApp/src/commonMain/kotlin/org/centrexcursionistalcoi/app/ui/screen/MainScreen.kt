@@ -78,14 +78,14 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
-import org.centrexcursionistalcoi.app.ui.page.home.HomePage
-import org.centrexcursionistalcoi.app.ui.page.home.LendingsPage
-import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_DEPARTMENTS
-import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_INVENTORY
-import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_LENDINGS
-import org.centrexcursionistalcoi.app.ui.page.home.MANAGEMENT_PAGE_USERS
-import org.centrexcursionistalcoi.app.ui.page.home.ManagementPage
-import org.centrexcursionistalcoi.app.ui.page.home.ProfilePage
+import org.centrexcursionistalcoi.app.ui.page.main.HomePage
+import org.centrexcursionistalcoi.app.ui.page.main.LendingsPage
+import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_DEPARTMENTS
+import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_INVENTORY
+import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_LENDINGS
+import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_USERS
+import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage
+import org.centrexcursionistalcoi.app.ui.page.main.ProfilePage
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
@@ -530,6 +530,7 @@ private fun MainScreenPagerContent(
                 lendings,
                 onLendingClick,
                 onOtherUserLendingClick,
+                posts,
             )
 
             Page.LENDINGS -> LendingsPage(

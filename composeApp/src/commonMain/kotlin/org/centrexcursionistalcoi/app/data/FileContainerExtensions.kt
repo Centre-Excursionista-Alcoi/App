@@ -3,8 +3,10 @@ package org.centrexcursionistalcoi.app.data
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import kotlin.uuid.Uuid
@@ -65,15 +67,20 @@ suspend fun DocumentFileContainer.readFile(progressNotifier: ProgressNotifier? =
 }
 
 /**
- * Returns the paths for the image file associated with this ImageFileContainer.
+ * Returns the paths for the image file with the given UUID.
  * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param uuid The UUID of the file to fetch.
+ * @param className The class name of the calling class, `null` if unknown.
  * @param progressNotifier Optional ProgressNotifier to track download progress.
  * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
- * @throws IllegalStateException if the image file is not found and uuid cannot be inferred.
  */
-suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
-    val uuid = image ?: throw IllegalStateException("No image associated with this container.")
-    val path = joinPaths(IMAGES_PATH, this::class.simpleName ?: "generic", uuid.toString())
+private suspend fun fetchImageFilePath(
+    uuid: Uuid,
+    className: String?,
+    progressNotifier: ProgressNotifier? = null,
+    downloadIfNotExists: Boolean = true
+): String {
+    val path = joinPaths(IMAGES_PATH, className ?: "generic", uuid.toString())
     if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Image file not found at path ($path). UUID could not be inferred.")
@@ -83,8 +90,26 @@ suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNoti
     return path
 }
 
+/**
+ * Returns the paths for the image file associated with this ImageFileContainer.
+ * If the file does not exist locally, it will be downloaded from the remote repository.
+ * @param progressNotifier Optional ProgressNotifier to track download progress.
+ * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
+ * @throws IllegalStateException if the image file is not found and uuid cannot be inferred.
+ */
+suspend fun ImageFileContainer.fetchImageFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
+    val uuid = image ?: throw IllegalStateException("No image associated with this container.")
+    return fetchImageFilePath(uuid, this::class.simpleName, progressNotifier, downloadIfNotExists)
+}
+
 suspend fun ImageFileContainer.imageFile(progressNotifier: ProgressNotifier? = null): ByteArray? = image?.let { uuid ->
     val path = fetchImageFilePath(progressNotifier)
+    return FileSystem.read(path)
+}
+
+suspend fun ImageFileListContainer.imageFile(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): ByteArray? {
+    if (!images.contains(uuid)) throw IllegalArgumentException("Could not find image $uuid in container")
+    val path = fetchImageFilePath(uuid, this::class.simpleName, progressNotifier, downloadIfNotExists)
     return FileSystem.read(path)
 }
 
@@ -191,6 +216,38 @@ fun ImageFileContainer?.rememberImageFile(
             } catch (e: IllegalStateException) {
                 Napier.w(e) { "Image file not found." }
                 withContext(Dispatchers.Main) { state.value = ByteArray(0) }
+            }
+        }
+    }
+    return state
+}
+
+/**
+ * Loads the image files of this container asynchronously.
+ * @param scope The scope to use for launching the coroutines that load the images.
+ * @param dispatcher The dispatcher to use for the coroutines.
+ * @return An [SnapshotStateMap] that holds the UUIDs of the images as keys, and their loaded data as values.
+ * When loading the images, values will be null. Once loaded, if the array is empty, the image was not found, or could not be loaded.
+ */
+@Composable
+@OptIn(DelicateCoroutinesApi::class)
+fun ImageFileListContainer?.rememberImageFiles(
+    scope: CoroutineScope = GlobalScope,
+    dispatcher: CoroutineDispatcher = defaultAsyncDispatcher,
+): SnapshotStateMap<Uuid, ByteArray?> {
+    val state = mutableStateMapOf<Uuid, ByteArray?>()
+    LaunchedEffect(this) {
+        if (this@rememberImageFiles == null) return@LaunchedEffect
+        for (image in images) {
+            scope.launch(dispatcher) {
+                withContext(Dispatchers.Main) { state[image] = null }
+                try {
+                    val bytes = imageFile(uuid = image)
+                    withContext(Dispatchers.Main) { state[image] = bytes }
+                } catch (e: IllegalArgumentException) {
+                    Napier.w(e) { "Image file not found." }
+                    withContext(Dispatchers.Main) { state[image] = ByteArray(0) }
+                }
             }
         }
     }

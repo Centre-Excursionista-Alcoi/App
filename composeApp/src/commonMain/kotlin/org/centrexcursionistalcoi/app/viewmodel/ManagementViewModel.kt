@@ -112,19 +112,42 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
-    fun createPost(title: String, department: Department?, content: RichTextState, progressNotifier: (Progress) -> Unit) = launch {
+    fun createPost(
+        title: String,
+        department: Department?,
+        content: RichTextState,
+        link: String,
+        files: List<PlatformFile>,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
         doAsync {
             val contentMarkdown = content.toMarkdown()
 
-            PostsRemoteRepository.create(title, contentMarkdown, department?.id, progressNotifier)
+            PostsRemoteRepository.create(
+                title,
+                contentMarkdown,
+                department?.id,
+                link.takeUnless { it.isBlank() },
+                files,
+                progressNotifier
+            )
         }
     }
 
-    fun updatePost(postId: Uuid, title: String?, department: Department?, content: RichTextState?, progressNotifier: (Progress) -> Unit) = launch {
+    fun updatePost(
+        postId: Uuid,
+        title: String?,
+        department: Department?,
+        content: RichTextState?,
+        link: String?,
+        removedFiles: List<Uuid>,
+        files: List<PlatformFile>,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, progressNotifier,)
+            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
         }
     }
 }
