@@ -11,7 +11,6 @@ import kotlin.uuid.Uuid
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.data.FileWithContext.Companion.wrapFile
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
@@ -37,34 +36,9 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                             is Float -> json.encodeToString(ListSerializer(Float.serializer()), value as List<Float>)
                             is Double -> json.encodeToString(ListSerializer(Double.serializer()), value as List<Double>)
                             is Boolean -> json.encodeToString(ListSerializer(Boolean.serializer()), value as List<Boolean>)
-                            is Uuid -> {
-                                if (this@toFormData is ImageFileListContainer) {
-                                    // The container contains a list of image files, so we need to serialize them as such
-                                    val files = mutableListOf<FileWithContext>()
-                                    for (file in value) {
-                                        file as Uuid
-                                        val data = if (InMemoryFileAllocator.contains(file)) {
-                                            // New item, file is in memory
-                                            InMemoryFileAllocator.delete(file)?.toFileWithContext()
-                                        } else {
-                                            // Existing item, read file from filesystem
-                                            val bytes = FileSystem.read(file.toString())
-                                            bytes.wrapFile(id = file)
-                                        }
-                                        if (data == null) {
-                                            Napier.e { "ImageFileListContainer data is null for key: $key, uuid: $file" }
-                                            continue
-                                        }
-                                        files += data
-                                    }
-                                    json.encodeToString(ListSerializer(FileWithContext.serializer()), files)
-                                } else {
-                                    json.encodeToString(ListSerializer(Uuid.serializer()), value as List<Uuid>)
-                                }
-                            }
+                            is FileWithContext -> json.encodeToString(ListSerializer(FileWithContext.serializer()), value as List<FileWithContext>)
                             else -> {
-                                Napier.e(tag = "toFormData") { "Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}" }
-                                return@forEach
+                                error("Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}")
                             }
                         }
                         append(key, jsonArray)
@@ -95,7 +69,7 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                         },
                     )
                 }
-                else -> Napier.e(tag = "toFormData") { "Unsupported type at $key: ${value::class.simpleName ?: "N/A"}" }
+                else -> error("Unsupported type at $key: ${value::class.simpleName ?: "N/A"}")
             }
         }
     }
