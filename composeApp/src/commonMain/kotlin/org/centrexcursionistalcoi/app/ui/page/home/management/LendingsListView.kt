@@ -219,7 +219,7 @@ private fun LendingsLazyColumn(
                 Lending.Status.RETURNED -> true
                 else -> false
             }
-        }?.sortedBy { it.from }
+        }?.sortedByDescending { it.from }
         if (!activeLendings.isNullOrEmpty()) {
             item("active_lendings") {
                 Text(
