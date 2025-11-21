@@ -12,7 +12,7 @@ object Files : UUIDTable("files") {
     val type = varchar("type", 255).nullable()
     val name = varchar("name", 255).nullable()
 
-    val lastModified = timestamp("last_modified").defaultExpression(CurrentTimestamp)
+    val lastModified = timestamp("lastModified").defaultExpression(CurrentTimestamp)
 
     val rules = json("rules", json, FileReadWriteRules.serializer()).nullable()
 }
