@@ -16,6 +16,8 @@ data class Post(
     val title: String,
     val content: String,
     val department: Uuid?,
+    val link: String?,
+    val files: List<Uuid>,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> {
         return mapOf(
@@ -24,6 +26,8 @@ data class Post(
             "title" to title,
             "content" to content,
             "department" to department,
+            "link" to link,
+            "files" to files,
         )
     }
 }
