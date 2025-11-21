@@ -38,8 +38,9 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         get() {
             val type = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
             if (type == ContentType.Application.OctetStream) {
-                val detected = detectFileType(bytes)
-                return detected?.contentType ?: ContentType.Application.OctetStream
+                return detectFileType(bytes)?.contentType?.also { contentType ->
+                    this.type = contentType.toString()
+                } ?: ContentType.Application.OctetStream
             }
             return type
         }

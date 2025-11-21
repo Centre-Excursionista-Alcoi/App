@@ -66,7 +66,7 @@ class FileRequestData : Closeable {
         return Database {
             FileEntity.new {
                 this.name = originalFileName ?: "unknown"
-                this.contentType = contentType
+                this.contentType = this@FileRequestData.contentType ?: ContentType.Application.OctetStream
                 this.bytes = baos.toByteArray()
             }
         }.also { if (close) close() }
