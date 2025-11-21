@@ -9,6 +9,8 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJobLogic
 
 object PushNotifierListener : NotifierManager.Listener {
     override fun onNewToken(token: String) {
@@ -32,6 +34,14 @@ object PushNotifierListener : NotifierManager.Listener {
                         SyncLendingBackgroundJobLogic.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
                     ),
                     logic = SyncLendingBackgroundJobLogic,
+                )
+            } else if (notification is PushNotification.NewPost) {
+                Napier.d { "Received new post notification. ID: ${notification.postId}" }
+                BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
+                    input = mapOf(
+                        SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
+                    ),
+                    logic = SyncPostBackgroundJobLogic,
                 )
             }
 

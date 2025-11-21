@@ -12,12 +12,32 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
 object LocalNotifications {
-    fun showNotification(notificationTitleRes: StringResource, notificationBodyResource: StringResource, data: Map<String, *>) {
+    fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
+        CoroutineScope(defaultAsyncDispatcher).launch {
+            val notifier = NotifierManager.getLocalNotifier()
+
+            notifier.notify {
+                id = Random.nextInt()
+                title = notificationTitle
+                body = notificationBody
+                payloadData = data.mapValues { (_, value) ->
+                    when (value) {
+                        is String -> value
+                        is Number -> value.toString()
+                        is Boolean -> value.toString()
+                        else -> value.toString()
+                    }
+                }
+            }
+        }
+    }
+
+    fun showNotification(notificationTitleRes: StringResource, notificationBodyRes: StringResource, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
             val notifier = NotifierManager.getLocalNotifier()
 
             val notificationTitle = getString(notificationTitleRes)
-            val notificationBody = getString(notificationBodyResource)
+            val notificationBody = getString(notificationBodyRes)
 
             notifier.notify {
                 id = Random.nextInt()

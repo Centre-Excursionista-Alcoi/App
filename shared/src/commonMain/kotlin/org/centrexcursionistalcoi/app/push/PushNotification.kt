@@ -17,6 +17,7 @@ sealed interface PushNotification {
             val lendingId = (data["lendingId"] as? String?)?.toUuidOrNull()
             val userSub = data["userSub"] as? String?
             val isSelf = (data["isSelf"] as? String?)?.toBoolean()
+            val postId = (data["postId"] as? String?)?.toUuidOrNull()
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -56,6 +57,10 @@ sealed interface PushNotification {
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingPartiallyReturned push notification data")
                     isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingPartiallyReturned push notification data")
                     LendingPartiallyReturned(lendingId, userSub, isSelf)
+                }
+                NewPost.TYPE -> {
+                    postId ?: throw IllegalArgumentException("Missing or invalid postId field in NewPost push notification data")
+                    NewPost(postId)
                 }
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
@@ -185,5 +190,18 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
+    }
+
+    @Serializable
+    class NewPost(
+        val postId: Uuid,
+    ) : PushNotification {
+        companion object {
+            const val TYPE = "NewPost"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = mapOf("postId" to postId.toString())
     }
 }

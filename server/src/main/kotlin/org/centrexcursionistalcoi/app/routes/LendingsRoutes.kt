@@ -209,7 +209,7 @@ fun Route.lendingsRoutes() {
                 """.trimIndent()
             )
         }
-        Push.send {
+        Push.launch {
             Push.sendAdminPushNotification(lendingEntity.newNotification())
         }
 
@@ -309,7 +309,7 @@ fun Route.lendingsRoutes() {
         Database { lending.delete() }
 
         // Send push notification to the owner of the lending asynchronously
-        Push.send {
+        Push.launch {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.cancelledNotification()
@@ -338,7 +338,7 @@ fun Route.lendingsRoutes() {
         }
 
         // Send Push Notification asynchronously
-        Push.send {
+        Push.launch {
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
                 notification = lending.confirmedNotification()
@@ -394,7 +394,7 @@ fun Route.lendingsRoutes() {
         }
 
         // Send Push Notification asynchronously
-        Push.send {
+        Push.launch {
             Push.sendAdminPushNotification(lending.takenNotification(false))
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
@@ -479,7 +479,7 @@ fun Route.lendingsRoutes() {
             }
 
             // Send Push Notification asynchronously
-            Push.send {
+            Push.launch {
                 Push.sendAdminPushNotification(
                     notification = lending.returnedNotification(false)
                 )
@@ -491,7 +491,7 @@ fun Route.lendingsRoutes() {
 
             call.respond(HttpStatusCode.NoContent)
         } else {
-            Push.send {
+            Push.launch {
                 Push.sendAdminPushNotification(lending.partialReturnNotification(false))
             }
 
@@ -690,7 +690,7 @@ fun Route.lendingsRoutes() {
                 attachments = fileAttachments,
             )
         }
-        Push.send {
+        Push.launch {
             Push.sendAdminPushNotification(
                 notification = lending.memoryAddedNotification()
             )
@@ -723,7 +723,7 @@ fun Route.lendingsRoutes() {
             lending.memorySubmittedAt = Instant.now()
         }
 
-        Push.send {
+        Push.launch {
             Push.sendAdminPushNotification(lending.memoryAddedNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },

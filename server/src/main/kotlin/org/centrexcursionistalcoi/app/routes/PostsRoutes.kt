@@ -4,6 +4,7 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
@@ -12,7 +13,10 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
@@ -108,6 +112,18 @@ fun Route.postsRoutes() {
                             it[post] = postEntity.id
                         }
                     }
+                }
+            }.also { postEntity ->
+                Push.launch {
+                    Push.sendPushNotificationToAll(
+                        PushNotification.NewPost(
+                            postId = postEntity.id.value.toKotlinUuid(),
+                        )
+                    )
+                }
+                Telegram.launch {
+                    val post = Database { postEntity.toData() }
+                    Telegram.sendPost(post)
                 }
             }
         },
