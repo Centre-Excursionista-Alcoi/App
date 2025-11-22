@@ -82,6 +82,11 @@ fun Route.configureAuthRoutes() {
             return@post call.respondError(Error.NIFNotRegistered())
         }
 
+        // Make sure the user doesn't already have a password set
+        if (existingReference.password != null) {
+            return@post call.respondError(Error.UserAlreadyRegistered())
+        }
+
         // Update the user's password
         val hashedPassword = Passwords.hash(password)
         Database {
