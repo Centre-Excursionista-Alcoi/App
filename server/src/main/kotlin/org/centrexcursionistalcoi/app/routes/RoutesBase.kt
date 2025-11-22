@@ -65,6 +65,12 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     base: String,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
+    /**
+     * Creates a new entity from the provided [MultiPartData].
+     * @throws NullPointerException if a required argument is missing.
+     * @throws IllegalArgumentException if an argument is malformed.
+     * @throws NoSuchElementException if a referenced entity is not found.
+     */
     noinline creator: suspend (MultiPartData) -> EE,
     /**
      * If null, the PATCH endpoint will not be created.
@@ -87,6 +93,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     entityClass: EntityClass<EID, EE>,
     entityKClass: KClass<EE>,
     idTypeConverter: (String) -> EID?,
+    /**
+     * Creates a new entity from the provided [MultiPartData].
+     * @throws NullPointerException if a required argument is missing.
+     * @throws IllegalArgumentException if an argument is malformed.
+     * @throws NoSuchElementException if a referenced entity is not found.
+     */
     creator: suspend (MultiPartData) -> EE,
     /**
      * If null, the PATCH endpoint will not be created.
