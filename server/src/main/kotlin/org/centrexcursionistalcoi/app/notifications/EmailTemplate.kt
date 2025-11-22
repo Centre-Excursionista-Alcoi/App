@@ -9,6 +9,11 @@ import org.centrexcursionistalcoi.app.translation.TranslationsList
 abstract class EmailTemplate(name: String) {
     protected val translationsBook = TranslationsBook("email", name)
 
+    fun subject(locale: Locale): String {
+        val list = translationsBook[locale]
+        return list["subject"]
+    }
+
     fun render(locale: Locale, args: Map<String, String>): String {
         val list = translationsBook[locale]
         val redactor = EmailRedactor(locale, list)
