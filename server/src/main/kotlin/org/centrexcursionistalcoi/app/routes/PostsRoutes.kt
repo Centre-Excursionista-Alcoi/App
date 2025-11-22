@@ -38,6 +38,9 @@ fun Route.postsRoutes() {
             if (session == null) {
                 // Not logged in, only show public posts (without department)
                 PostEntity.find { Posts.department eq null }
+            } else if (session.isAdmin()) {
+                // If admin, show all posts
+                PostEntity.all()
             } else {
                 // Logged in, show public posts, and posts for the user's department
                 val userDepartments = transaction {
