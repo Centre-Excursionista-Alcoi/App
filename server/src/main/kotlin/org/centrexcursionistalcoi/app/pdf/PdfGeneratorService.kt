@@ -123,7 +123,7 @@ object PdfGeneratorService {
                 contentStream.endText()
 
                 // If a department is given, and it has an image, draw it on the right hand side
-                val department = memory.department
+                val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
                 if (department?.image != null) {
                     val deptImageBytes = photoProvider(department.image!!.toJavaUuid())
                     val deptImage = PDImageXObject.createFromByteArray(document, deptImageBytes, department.displayName)

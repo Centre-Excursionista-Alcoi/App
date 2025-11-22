@@ -9,8 +9,9 @@ import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.LendingMemory
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUuid
 
@@ -42,8 +43,9 @@ class TestPdfGeneratorService {
             displayName = "Inventory Item",
             description = "Description",
             categories = emptyList(),
+            department = null,
             image = null,
-        )
+        ).referenced(emptyList())
 
         File("document.pdf").outputStream().use { outputStream ->
             PdfGeneratorService.generateLendingPdf(

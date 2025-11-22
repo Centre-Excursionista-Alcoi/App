@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.data
 
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.exception.InventoryItemTypeNotFoundException
 import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
 
 @Serializable
@@ -16,6 +17,12 @@ data class ReferencedInventoryItemType(
     override val referencedEntity: InventoryItemType
 ): ReferencedEntity<Uuid, InventoryItemType>(), ImageFileContainer {
     companion object {
+        /**
+         * Gets an [ReferencedInventoryItemType] from a list by its [id].
+         * @throws InventoryItemTypeNotFoundException if no type with the given [id] is found.
+         */
+        fun List<ReferencedInventoryItemType>.getType(id: Uuid): ReferencedInventoryItemType = this.firstOrNull { it.id == id } ?: throw InventoryItemTypeNotFoundException(id)
+
         fun InventoryItemType.referenced(departments: List<Department>) = ReferencedInventoryItemType(
             id = this.id,
             displayName = this.displayName,

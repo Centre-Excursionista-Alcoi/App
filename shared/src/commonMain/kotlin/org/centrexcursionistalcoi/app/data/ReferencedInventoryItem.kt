@@ -8,12 +8,12 @@ import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 data class ReferencedInventoryItem(
     override val id: Uuid,
     val variation: String?,
-    val type: InventoryItemType,
+    val type: ReferencedInventoryItemType,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray?,
     override val referencedEntity: InventoryItem
 ): ReferencedEntity<Uuid, InventoryItem>() {
     companion object {
-        fun InventoryItem.referenced(type: InventoryItemType) = ReferencedInventoryItem(
+        fun InventoryItem.referenced(type: ReferencedInventoryItemType) = ReferencedInventoryItem(
             id = this.id,
             variation = this.variation,
             type = type,

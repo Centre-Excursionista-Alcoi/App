@@ -28,6 +28,7 @@ import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.LendingMemory
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -619,18 +620,17 @@ fun Route.lendingsRoutes() {
         // Generate the PDF file for the memory
         val baos = ByteArrayOutputStream()
         baos.use { output ->
+            val departments = Database { DepartmentEntity.all().map { it.toData() } }
             PdfGeneratorService.generateLendingPdf(
                 memory.referenced(
                     users = Database {
                         UserReferenceEntity.find { UserReferences.sub inList memory.memberUsers }.map { it.toData(null, null, null) }
                     },
-                    departments = listOfNotNull(
-                        Database { department?.toData() }
-                    ),
+                    departments = departments,
                 ),
                 itemsUsed = Database {
                     lending.items.map { item ->
-                        item.toData().referenced(item.type.toData())
+                        item.toData().referenced(item.type.toData().referenced(departments))
                     }
                 },
                 submittedBy = userReference.fullName,
