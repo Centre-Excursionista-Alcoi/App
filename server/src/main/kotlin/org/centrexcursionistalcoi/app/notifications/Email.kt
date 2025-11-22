@@ -15,10 +15,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
@@ -84,5 +86,12 @@ object Email {
                 throw IllegalStateException("Failed to send email (${response.status}): ${response.bodyAsText()}")
             }
         }
+    }
+
+    @ExperimentalXmlUtilApi
+    suspend fun sendTemplate(to: List<MailerSendEmail>, template: EmailTemplate, args: Map<String, String>, locale: Locale) {
+        val subject = template.subject(locale)
+        val textHtml = template.render(locale, args)
+        sendEmail(to, subject, textHtml)
     }
 }
