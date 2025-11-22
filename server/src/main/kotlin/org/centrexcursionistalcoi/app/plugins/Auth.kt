@@ -151,4 +151,6 @@ fun Route.configureAuthRoutes() {
 
         call.respond(HttpStatusCode.Accepted)
     }
+
+    // TODO: reset_password?request_id=...
 }
