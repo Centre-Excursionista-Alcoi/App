@@ -31,6 +31,7 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
+import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
@@ -76,6 +77,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * @param amount The number of items to allocate.
      * @return A list of UUIDs representing the allocated inventory items.
      * @throws CannotAllocateEnoughItemsException if there are not enough items available to allocate.
+     * @throws NoValidInsuranceForPeriodException if the user does not have valid insurance for the specified period.
      * @throws ServerException for other allocation failures.
      */
     suspend fun allocate(typeId: Uuid, from: LocalDate, to: LocalDate, amount: Int): List<Uuid> {
@@ -99,6 +101,9 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
                         ?.filter { it.isNotEmpty() }
                         ?.map { Uuid.parse(it) }
                     throw CannotAllocateEnoughItemsException(typeId, availableItemIds, amount)
+                }
+                Error.ERROR_USER_DOES_NOT_HAVE_INSURANCE -> {
+                    throw NoValidInsuranceForPeriodException()
                 }
 
                 else -> {
