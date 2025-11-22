@@ -242,12 +242,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             getOrCreateItem()
 
-            FakeUser.provideEntity()
+            val user = FakeUser.provideEntity()
 
             // Existing lending from 2025-10-10 to 2025-10-15
-            val user = FakeAdminUser.provideEntity()
+            val adminUser = FakeAdminUser.provideEntity()
             LendingEntity.new {
-                this.userSub = user
+                this.userSub = adminUser
                 this.from = LocalDate.of(2025, 10, 10)
                 this.to = LocalDate.of(2025, 10, 15)
                 this.notes = "Existing lending"
