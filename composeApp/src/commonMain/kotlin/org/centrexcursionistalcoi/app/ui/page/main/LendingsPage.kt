@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Remove
@@ -77,6 +78,7 @@ fun LendingsPage(
     windowSizeClass: WindowSizeClass,
 
     profile: ProfileResponse,
+    onAddInsuranceRequested: () -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
@@ -90,6 +92,7 @@ fun LendingsPage(
 ) {
     val scrollState = rememberLazyGridState()
     val isRegisteredForLendings = profile.lendingUser != null
+    val hasAnInsurance = profile.activeInsurances().isNotEmpty()
 
     var selectedCategories by remember { mutableStateOf<List<String>>(emptyList()) }
 
@@ -125,6 +128,30 @@ fun LendingsPage(
                         onClick = onLendingSignUpRequested,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp).padding(horizontal = 16.dp)
                     ) { Text(stringResource(Res.string.lending_signup_action)) }
+                }
+            }
+        } else if (!hasAnInsurance) {
+            item("lending_no_insurance", span = { GridItemSpan(maxLineSpan) }) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
+                        Icon(Icons.Default.HealthAndSafety, null, modifier = Modifier.padding(end = 16.dp))
+                        Text(
+                            text = stringResource(Res.string.lending_no_active_insurances_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.lending_no_active_insurances_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    )
+                    OutlinedButton(
+                        onClick = onAddInsuranceRequested,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp).padding(horizontal = 16.dp)
+                    ) { Text(stringResource(Res.string.lending_no_active_insurances_action)) }
                 }
             }
         } else {

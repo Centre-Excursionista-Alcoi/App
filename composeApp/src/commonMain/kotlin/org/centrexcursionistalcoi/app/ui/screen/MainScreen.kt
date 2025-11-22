@@ -284,6 +284,14 @@ private fun MainScreenContent(
         }
     }
 
+    fun onAddInsuranceRequested() {
+        // Navigate to profile page
+        scope.launch {
+            val profilePageIndex = navigationItems.keys.indexOf(Page.PROFILE)
+            pager.animateScrollToPage(profilePageIndex)
+        }
+    }
+
     Scaffold(
         topBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
@@ -411,6 +419,7 @@ private fun MainScreenContent(
                         onNotificationPermissionRequest,
                         onNotificationPermissionDenyRequest,
                         profile,
+                        ::onAddInsuranceRequested,
                         windowSizeClass,
                         departments,
                         lendings,
@@ -450,6 +459,7 @@ private fun MainScreenContent(
                             onNotificationPermissionRequest,
                             onNotificationPermissionDenyRequest,
                             profile,
+                            ::onAddInsuranceRequested,
                             windowSizeClass,
                             departments,
                             lendings,
@@ -491,7 +501,10 @@ private fun MainScreenPagerContent(
     notificationPermissionResult: NotificationPermissionResult?,
     onNotificationPermissionRequest: () -> Unit,
     onNotificationPermissionDenyRequest: () -> Unit,
+
     profile: ProfileResponse,
+    onAddInsuranceRequested: () -> Unit,
+
     windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
@@ -536,6 +549,7 @@ private fun MainScreenPagerContent(
             Page.LENDINGS -> LendingsPage(
                 windowSizeClass,
                 profile,
+                onAddInsuranceRequested,
                 inventoryItems,
                 onItemTypeDetailsRequested,
                 lendings,
