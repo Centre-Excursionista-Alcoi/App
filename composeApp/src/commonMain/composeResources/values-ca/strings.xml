@@ -389,4 +389,7 @@
     <string name="post_upload_images">Pujar Imatges</string>
     <string name="post_department">Secció</string>
     <string name="post_department_generic">Directiva</string>
+    <string name="management_inventory_item_type_department">Secció</string>
+    <string name="lending_creation_error_insurance_title">No tens cap segur vàlid</string>
+    <string name="lending_creation_error_insurance">No tens cap segur vàlid per al període seleccionat.</string>
 </resources>
