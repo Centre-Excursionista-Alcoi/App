@@ -4,7 +4,7 @@ import io.ktor.http.Url
 import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
@@ -55,7 +55,7 @@ sealed interface Destination {
         constructor(lending: ReferencedLending): this(lending.id)
     }
     @Serializable @SerialName("itemTypeDetails") data class ItemTypeDetails(val typeId: Uuid, val displayName: String) : Destination {
-        constructor(type: InventoryItemType): this(type.id, type.displayName)
+        constructor(type: ReferencedInventoryItemType): this(type.id, type.displayName)
     }
 
     /**

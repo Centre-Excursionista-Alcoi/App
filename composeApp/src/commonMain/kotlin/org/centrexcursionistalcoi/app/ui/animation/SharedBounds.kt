@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package org.centrexcursionistalcoi.app.ui.animation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext

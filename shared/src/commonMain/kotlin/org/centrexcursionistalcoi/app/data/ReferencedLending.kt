@@ -5,9 +5,9 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
 import kotlinx.serialization.Serializable
-import org.centrexcursionistalcoi.app.data.InventoryItemType.Companion.getType
 import org.centrexcursionistalcoi.app.data.Lending.Status
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.getType
 import org.centrexcursionistalcoi.app.data.UserData.Companion.getUser
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
@@ -37,9 +37,9 @@ data class ReferencedLending(
     val items: List<ReferencedInventoryItem>,
 
     override val referencedEntity: Lending
-): ReferencedEntity<Uuid, Lending>(), FileContainer, SubReferencedFileContainer {
+) : ReferencedEntity<Uuid, Lending>(), FileContainer, SubReferencedFileContainer {
     companion object {
-        fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<InventoryItemType>) = ReferencedLending(
+        fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<ReferencedInventoryItemType>) = ReferencedLending(
             id = this.id,
             user = users.getUser(userSub),
             timestamp = this.timestamp,
@@ -57,7 +57,10 @@ data class ReferencedLending(
             from = this.from,
             to = this.to,
             notes = this.notes,
-            items = this.items.map { item -> item.referenced(inventoryItemTypes.getType(item.type)) },
+            items = this.items.map { item ->
+                val type = inventoryItemTypes.getType(item.type)
+                item.referenced(type)
+            },
             referencedEntity = this,
         )
     }

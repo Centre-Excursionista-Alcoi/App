@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -80,14 +80,14 @@ class MainViewModel: ViewModel() {
         ProfileRemoteRepository.synchronize()
     }
 
-    fun addItemToShoppingList(type: InventoryItemType) {
+    fun addItemToShoppingList(type: ReferencedInventoryItemType) {
         val currentList = _shoppingList.value.toMutableMap()
         val currentAmount = currentList[type.id] ?: 0
         currentList[type.id] = currentAmount + 1
         _shoppingList.value = currentList
     }
 
-    fun removeItemFromShoppingList(type: InventoryItemType) {
+    fun removeItemFromShoppingList(type: ReferencedInventoryItemType) {
         val currentList = _shoppingList.value.toMutableMap()
         val currentAmount = currentList[type.id] ?: 0
         if (currentAmount > 0) {

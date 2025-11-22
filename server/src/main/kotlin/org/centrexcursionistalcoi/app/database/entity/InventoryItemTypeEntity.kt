@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import java.util.UUID
 import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
@@ -19,6 +20,9 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
     var displayName by InventoryItemTypes.displayName
     var description by InventoryItemTypes.description
     var categories by InventoryItemTypes.categories
+
+    var department by DepartmentEntity optionalReferencedOn InventoryItemTypes.department
+
     override var image by FileEntity optionalReferencedOn InventoryItemTypes.image
 
     context(_: JdbcTransaction)
@@ -27,6 +31,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
         displayName = displayName,
         description = description,
         categories = categories,
+        department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid()
     )
 
@@ -35,6 +40,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataCon
         request.displayName?.let { displayName = it }
         request.description?.let { description = it }
         request.categories?.let { categories = it }
+        request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         updateOrSetImage(request.image)
     }
 }

@@ -18,15 +18,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CreateInventoryItemDialog(
-    type: InventoryItemType? = null,
-    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
+    type: ReferencedInventoryItemType? = null,
+    onCreate: (variation: String, type: ReferencedInventoryItemType, amount: Int) -> Job,
     onDismissRequested: () -> Unit
 ) {
     CreateInventoryItemDialog(
@@ -39,8 +39,8 @@ fun CreateInventoryItemDialog(
 
 @Composable
 fun CreateInventoryItemDialog(
-    types: List<InventoryItemType>? = null,
-    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
+    types: List<ReferencedInventoryItemType>? = null,
+    onCreate: (variation: String, type: ReferencedInventoryItemType, amount: Int) -> Job,
     onDismissRequested: () -> Unit
 ) {
     CreateInventoryItemDialog(
@@ -53,9 +53,9 @@ fun CreateInventoryItemDialog(
 
 @Composable
 private fun CreateInventoryItemDialog(
-    type: InventoryItemType? = null,
-    types: List<InventoryItemType>? = null,
-    onCreate: (variation: String, type: InventoryItemType, amount: Int) -> Job,
+    type: ReferencedInventoryItemType? = null,
+    types: List<ReferencedInventoryItemType>? = null,
+    onCreate: (variation: String, type: ReferencedInventoryItemType, amount: Int) -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }

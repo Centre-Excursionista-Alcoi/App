@@ -58,9 +58,9 @@ import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -79,14 +79,14 @@ fun LendingsPage(
     profile: ProfileResponse,
 
     inventoryItems: List<ReferencedInventoryItem>?,
-    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
 
     shoppingList: Map<Uuid, Int>,
-    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
 ) {
     val scrollState = rememberLazyGridState()
     val isRegisteredForLendings = profile.lendingUser != null
@@ -221,7 +221,7 @@ fun LendingsPage(
 
 @Composable
 fun LendingItem_Small(
-    type: InventoryItemType,
+    type: ReferencedInventoryItemType,
     items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
     onAddItemToShoppingListRequest: () -> Unit,
@@ -320,7 +320,7 @@ fun LendingItem_Small(
 
 @Composable
 fun LendingItem_Large(
-    type: InventoryItemType,
+    type: ReferencedInventoryItemType,
     items: List<ReferencedInventoryItem>,
     selectedAmount: Int,
     onAddItemToShoppingListRequest: () -> Unit,

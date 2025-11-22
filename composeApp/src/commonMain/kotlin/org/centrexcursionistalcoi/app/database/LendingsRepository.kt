@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
@@ -38,7 +39,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
         val users = usersQueries.selectAll().awaitAsList()
         val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
-        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems)
+        val departments = DepartmentsRepository.selectAll()
+        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
     }
 
     override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedLending?> {
@@ -48,6 +50,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
         val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
+        val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
         @Suppress("UNCHECKED_CAST")
         return combine(
             lendingFlow,
@@ -56,6 +59,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             inventoryItemTypesFlow,
             usersQueries,
             receivedItemsFlow,
+            departments,
         ) { flows ->
             val lending = flows[0] as Lendings?
             val items = flows[1] as List<LendingItems>
@@ -63,7 +67,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
             val users = flows[4] as List<Users>
             val receivedItems = flows[5] as List<ReceivedItems>
-            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems)
+            val departments = flows[6] as List<Department>
+            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
         }
     }
 
@@ -74,6 +79,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
         val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
+        val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
         @Suppress("UNCHECKED_CAST")
         return combine(
             lendingsFlow,
@@ -82,6 +88,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             inventoryItemTypesFlow,
             usersQueries,
             receivedItemsFlow,
+            departments
         ) { flows ->
             val lendings = flows[0] as List<Lendings>
             val items = flows[1] as List<LendingItems>
@@ -89,9 +96,10 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
             val users = flows[4] as List<Users>
             val receivedItems = flows[5] as List<ReceivedItems>
+            val departments = flows[6] as List<Department>
             lendings.map { lending ->
                 val relatedItems = items.filter { it.lendingId == lending.id }
-                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems)
+                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
             }
         }
     }
@@ -103,9 +111,10 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
         val users = usersQueries.selectAll().awaitAsList()
         val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
+        val departments = DepartmentsRepository.selectAll()
         return lendings.map { lending ->
             val relatedItems = items.filter { it.lendingId == lending.id }
-            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems)
+            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
         }
     }
 
@@ -215,6 +224,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         inventoryItemTypes: List<InventoryItemTypes>,
         users: List<Users>,
         receivedItems: List<ReceivedItems>,
+        departments: List<Department>,
     ) = Lending(
         id = id,
         userSub = userSub,
@@ -236,6 +246,6 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }
     ).referenced(
         users.map { it.toUser() },
-        inventoryItemTypes.map { it.toInventoryItemType() }
+        inventoryItemTypes.map { it.toInventoryItemType(departments) }
     )
 }

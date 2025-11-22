@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -45,7 +46,7 @@ import org.centrexcursionistalcoi.app.ui.utils.currentOrThrow
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun <T> ListCard(
     list: List<T>?,
