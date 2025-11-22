@@ -38,11 +38,13 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
@@ -134,6 +136,17 @@ fun Route.lendingsRoutes() {
         val userReferenceEntity = Database { UserReferenceEntity.findById(session.sub) }
         if (userReferenceEntity == null) {
             call.respondError(Error.UserReferenceNotFound())
+            return@postWithLock
+        }
+
+        // Make sure the user has an active insurance
+        val validInsurances = Database {
+            UserInsuranceEntity
+                .find { (UserInsurances.userSub eq session.sub) and (UserInsurances.validFrom lessEq from) and (UserInsurances.validTo greaterEq to) }
+                .count()
+        }
+        if (validInsurances <= 0) {
+            call.respondError(Error.UserDoesNotHaveInsurance())
             return@postWithLock
         }
 
@@ -787,6 +800,17 @@ fun Route.lendingsRoutes() {
         val userNotSignedUpForLending = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.empty() }
         if (userNotSignedUpForLending) {
             call.respondError(Error.UserNotSignedUpForLending())
+            return@getWithLock
+        }
+
+        // Make sure the user has an active insurance
+        val validInsurances = Database {
+            UserInsuranceEntity
+                .find { (UserInsurances.userSub eq session.sub) and (UserInsurances.validFrom lessEq from) and (UserInsurances.validTo greaterEq to) }
+                .count()
+        }
+        if (validInsurances <= 0) {
+            call.respondError(Error.UserDoesNotHaveInsurance())
             return@getWithLock
         }
 
