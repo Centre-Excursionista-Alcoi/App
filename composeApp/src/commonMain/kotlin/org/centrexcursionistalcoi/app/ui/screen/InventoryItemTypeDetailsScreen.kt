@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
@@ -57,7 +57,7 @@ fun InventoryItemTypeDetailsScreen(
 fun InventoryItemTypeDetailsScreen(
     typeDisplayName: String,
     typeId: Uuid,
-    type: InventoryItemType?,
+    type: ReferencedInventoryItemType?,
     onBack: () -> Unit
 ) {
     Scaffold(

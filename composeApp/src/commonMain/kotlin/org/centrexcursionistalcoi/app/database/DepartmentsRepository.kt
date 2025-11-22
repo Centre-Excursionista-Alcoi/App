@@ -55,7 +55,7 @@ object DepartmentsRepository : DatabaseRepository<Department, Uuid>() {
         queries.deleteById(id)
     }
 
-    private fun Departments.toDepartment() = Department(
+    fun Departments.toDepartment() = Department(
         id = id,
         displayName = displayName,
         image = imageFile

@@ -61,6 +61,7 @@
     <string name="management_inventory_item_type_description">Description</string>
     <string name="management_inventory_item_type_category">Category</string>
     <string name="management_inventory_item_type_categories">Categories</string>
+    <string name="management_inventory_item_type_department">Department</string>
     <string name="management_inventory_item_type_identifiers">Identifiers</string>
     <string name="management_inventory_item_type_image">Select Image</string>
 

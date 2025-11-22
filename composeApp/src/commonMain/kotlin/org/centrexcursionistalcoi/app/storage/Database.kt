@@ -40,7 +40,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
     return Database(
         driver,
         Departments.Adapter(UUIDAdapter, UUIDAdapter),
-        InventoryItemTypes.Adapter(UUIDAdapter, ListStringAdapter, UUIDAdapter),
+        InventoryItemTypes.Adapter(UUIDAdapter, ListStringAdapter, UUIDAdapter, UUIDAdapter),
         InventoryItems.Adapter(UUIDAdapter, UUIDAdapter),
         LendingItems.Adapter(UUIDAdapter, UUIDAdapter),
         Lendings.Adapter(

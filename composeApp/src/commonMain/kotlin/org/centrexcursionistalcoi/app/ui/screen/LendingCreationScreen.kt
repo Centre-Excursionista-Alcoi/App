@@ -52,8 +52,8 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
@@ -130,7 +130,7 @@ private fun LendingCreationScreen(
     onRemoveItemTypeFromShoppingList: (Uuid) -> Unit,
     onResetShoppingList: () -> Unit,
     inventoryItems: List<ReferencedInventoryItem>?,
-    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypes: List<ReferencedInventoryItemType>?,
     from: LocalDate?,
     onFromChange: (LocalDate) -> Unit,
     to: LocalDate?,

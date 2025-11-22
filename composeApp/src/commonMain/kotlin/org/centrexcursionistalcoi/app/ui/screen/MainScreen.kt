@@ -67,9 +67,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
@@ -101,7 +101,7 @@ fun MainScreen(
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
-    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
     model: MainViewModel = viewModel { MainViewModel() }
@@ -215,17 +215,17 @@ private fun MainScreenContent(
 
     users: List<UserData>?,
 
-    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
 
     shoppingList: ShoppingList,
-    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
     onShoppingListConfirmed: () -> Unit,
 
     isSyncing: Boolean,
@@ -507,17 +507,17 @@ private fun MainScreenPagerContent(
 
     users: List<UserData>?,
 
-    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onItemTypeDetailsRequested: (InventoryItemType) -> Unit,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
 
     shoppingList: Map<Uuid, Int>,
-    onAddItemToShoppingListRequest: (InventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (InventoryItemType) -> Unit,
+    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {

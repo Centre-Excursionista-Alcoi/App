@@ -7,11 +7,14 @@ CREATE TABLE InventoryItemTypes (
     displayName TEXT NOT NULL,
     description TEXT DEFAULT NULL,
     categories TEXT AS List<String> DEFAULT NULL,
-    image TEXT AS Uuid DEFAULT NULL
+    department TEXT AS Uuid DEFAULT NULL,
+    image TEXT AS Uuid DEFAULT NULL,
+
+    FOREIGN KEY (department) REFERENCES Departments(id)
 );
 
 insert:
-INSERT INTO InventoryItemTypes (id, displayName, description, categories, image) VALUES (?, ?, ?, ?, ?);
+INSERT INTO InventoryItemTypes (id, displayName, description, categories, department, image) VALUES (?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM InventoryItemTypes WHERE id = ?;
@@ -26,4 +29,4 @@ deleteById:
 DELETE FROM InventoryItemTypes WHERE id = ?;
 
 update:
-UPDATE InventoryItemTypes SET displayName = ?, description = ?, categories = ?, image = ? WHERE id = ?;
+UPDATE InventoryItemTypes SET displayName = ?, description = ?, categories = ?, department = ?, image = ? WHERE id = ?;

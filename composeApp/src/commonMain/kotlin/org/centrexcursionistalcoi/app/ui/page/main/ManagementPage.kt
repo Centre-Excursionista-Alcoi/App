@@ -23,8 +23,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
@@ -66,7 +66,7 @@ fun ManagementPage(
 
     users: List<UserData>?,
 
-    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -126,12 +126,12 @@ private fun ManagementPage(
     users: List<UserData>?,
     onPromote: (UserData) -> Job,
 
-    inventoryItemTypes: List<InventoryItemType>?,
+    inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onDeleteInventoryItemType: (InventoryItemType) -> Job,
-    onCreateInventoryItem: (variation: String, InventoryItemType, amount: Int) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onDeleteInventoryItemType: (ReferencedInventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 
     inventoryItems: List<ReferencedInventoryItem>?,
@@ -191,6 +191,7 @@ private fun ManagementPage(
                 selectedItemId,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
+                departments,
                 inventoryItems,
                 onCreateInventoryItemType,
                 onUpdateInventoryItemType,

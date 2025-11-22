@@ -7,8 +7,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
@@ -64,25 +64,25 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
-    fun createInventoryItemType(displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = launch {
+    fun createInventoryItemType(displayName: String, description: String, categories: List<String>, department: Department?, imageFile: PlatformFile?) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, imageFile)
+            InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, department, imageFile)
         }
     }
 
-    fun updateInventoryItemType(id: Uuid, displayName: String, description: String, categories: List<String>, imageFile: PlatformFile?) = launch {
+    fun updateInventoryItemType(id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, imageFile: PlatformFile?) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.update(id, displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, imageFile)
+            InventoryItemTypesRemoteRepository.update(id, displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, department, imageFile)
         }
     }
 
-    fun delete(inventoryItemType: InventoryItemType) = launch {
+    fun delete(inventoryItemType: ReferencedInventoryItemType) = launch {
         doAsync {
             InventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
         }
     }
 
-    fun createInventoryItem(variation: String, type: InventoryItemType, amount: Int) = launch {
+    fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) = launch {
         doAsync {
             InventoryItemsRemoteRepository.create(variation, type.id, amount)
         }

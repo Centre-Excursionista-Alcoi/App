@@ -34,6 +34,7 @@ fun <T> DropdownField(
     enabled: Boolean = true,
     itemToString: @Composable (T?) -> String = { it?.toString() ?: "" },
     itemDescriptionToString: (@Composable (T?) -> String)? = null,
+    itemLeadingContent: (@Composable (T?) -> Unit)? = null,
     supportingText: String? = null,
     allowNull: Boolean = false,
     nullText: String? = stringResource(Res.string.none),
@@ -53,6 +54,9 @@ fun <T> DropdownField(
             label = { Text(label) },
             supportingText = (supportingText ?: itemDescriptionToString?.invoke(value))?.let {
                 { Text(it) }
+            },
+            leadingIcon = itemLeadingContent?.let {
+                { it(value) }
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled) },
             modifier = modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)

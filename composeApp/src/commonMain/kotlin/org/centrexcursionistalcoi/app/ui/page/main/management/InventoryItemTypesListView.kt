@@ -39,13 +39,15 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
@@ -56,20 +58,21 @@ import org.jetbrains.compose.resources.stringResource
 fun InventoryItemTypesListView(
     windowSizeClass: WindowSizeClass,
     selectedItemId: Uuid?,
-    types: List<InventoryItemType>?,
+    types: List<ReferencedInventoryItemType>?,
     allCategories: Set<String>,
+    departments: List<Department>?,
     items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, image: PlatformFile?) -> Job,
-    onDelete: (InventoryItemType) -> Job,
-    onCreateInventoryItem: (variation: String, InventoryItemType, amount: Int) -> Job,
+    onCreate: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onDelete: (ReferencedInventoryItemType) -> Job,
+    onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
 ) {
     val selectedItemIndex = remember(selectedItemId, types) {
         types?.indexOfFirst { it.id == selectedItemId }
     }
 
-    var creatingInventoryItem by remember { mutableStateOf<InventoryItemType?>(null) }
+    var creatingInventoryItem by remember { mutableStateOf<ReferencedInventoryItemType?>(null) }
     creatingInventoryItem?.let { type ->
         CreateInventoryItemDialog(
             type = type,
@@ -124,11 +127,13 @@ fun InventoryItemTypesListView(
             var categories by remember { mutableStateOf(type?.categories ?: emptyList()) }
             var displayName by remember { mutableStateOf(type?.displayName ?: "") }
             var description by remember { mutableStateOf(type?.description ?: "") }
+            var department by remember { mutableStateOf<Department?>(type?.department) }
 
             val isDirty = if (type == null) true else
                 displayName != type.displayName ||
                         description != type.description ||
                         categories != type.categories ||
+                        department != type.department ||
                         image != null
 
             FormImagePicker(
@@ -158,6 +163,27 @@ fun InventoryItemTypesListView(
                 enabled = !isLoading,
             )
 
+            DropdownField(
+                value = department,
+                onValueChange = { department = it },
+                label = stringResource(Res.string.management_inventory_item_type_department),
+                options = departments.orEmpty(),
+                itemToString = { it?.displayName ?: stringResource(Res.string.none) },
+                itemLeadingContent = {
+                    it?.let { department ->
+                        val image by department.rememberImageFile()
+                        AsyncByteImage(
+                            bytes = image,
+                            contentDescription = department.displayName,
+                            modifier = Modifier.size(24.dp).clip(RoundedCornerShape(4.dp))
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                enabled = !isLoading && !departments.isNullOrEmpty(),
+                allowNull = true,
+            )
+
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -175,9 +201,9 @@ fun InventoryItemTypesListView(
                 onClick = {
                     isLoading = true
                     val job = if (type == null) {
-                        onCreate(displayName, description, categories, image)
+                        onCreate(displayName, description, categories, department, image)
                     } else {
-                        onUpdate(type.id, displayName, description, categories, image)
+                        onUpdate(type.id, displayName, description, categories, department, image)
                     }
                     job.invokeOnCompletion {
                         isLoading = false
@@ -195,6 +221,14 @@ fun InventoryItemTypesListView(
                 bytes = image,
                 contentDescription = type.displayName,
                 modifier = Modifier.size(128.dp).clip(RoundedCornerShape(12.dp))
+            )
+        }
+
+        type.department?.let { department ->
+            Text(
+                text = department.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
         }
 

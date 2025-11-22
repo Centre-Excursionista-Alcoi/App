@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -126,7 +127,7 @@ fun MainApp(
 }
 
 @Composable
-@OptIn(ExperimentalSettingsApi::class)
+@OptIn(ExperimentalSettingsApi::class, ExperimentalSharedTransitionApi::class)
 fun App(
     afterLoad: Destination? = null,
     onNavHostReady: suspend (NavController) -> Unit = {}
@@ -296,6 +297,7 @@ fun App(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 context(scope: SharedTransitionScope)
 inline fun <reified D: Destination> NavGraphBuilder.destination(
     noinline content: @Composable (D) -> Unit
