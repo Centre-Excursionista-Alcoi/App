@@ -96,4 +96,20 @@ fun Route.configureAuthRoutes() {
         // Success, respond accordingly
         call.respond(HttpStatusCode.OK)
     }
+
+    post("/lost_password") {
+        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+
+        val parameters = call.receiveParameters()
+        val nif = parameters["nif"]?.trim()?.uppercase()
+        val password = parameters["password"]?.trim()?.toCharArray()
+
+        if (nif == null) return@post call.respondError(Error.MissingArgument("nif"))
+
+        // check that the user exists
+        val existingReference = Database { UserReferenceEntity.findByNif(nif) }
+        if (existingReference == null) {
+            return@post call.respondError(Error.NIFNotRegistered())
+        }
+    }
 }
