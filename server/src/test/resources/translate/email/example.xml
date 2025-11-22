@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <translations>
-    <item name="greeting">Welcome, %s</item>
+    <item name="greeting">Welcome, %1$s</item>
     <item name="message">This is a test email.</item>
 </translations>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <translations>
     <item name="key">Value</item>
-    <item name="key_string">Value %s</item>
-    <item name="key_decimal">Value %d</item>
+    <item name="key_string">Value %1$s</item>
+    <item name="key_decimal">Value %1$d</item>
 </translations>
