@@ -34,6 +34,7 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.error.Error
@@ -211,17 +212,42 @@ class TestLendingsRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_create_lending_conflicts() = runApplicationTest(
+    fun test_create_lending_noInsurance() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             getOrCreateItem()
 
             FakeUser.provideEntity()
+        },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 1) }
+
+        // New lending starting on the day existing one starts
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-10")
+                append("to", "2025-10-12")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertError(Error.UserDoesNotHaveInsurance())
+        }
+    }
+
+    @Test
+    fun test_create_lending_conflicts() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val user = FakeUser.provideEntity()
 
             // Existing lending from 2025-10-10 to 2025-10-15
-            val user = FakeAdminUser.provideEntity()
+            val adminUser = FakeAdminUser.provideEntity()
             LendingEntity.new {
-                this.userSub = user
+                this.userSub = adminUser
                 this.from = LocalDate.of(2025, 10, 10)
                 this.to = LocalDate.of(2025, 10, 15)
                 this.notes = "Existing lending"
@@ -230,6 +256,15 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     it[item] = exampleItemId
                     it[lending] = lendingEntity.id
                 }
+            }
+
+            // Add insurance for the user
+            UserInsuranceEntity.new {
+                userSub = user
+                validFrom = LocalDate.of(2025, 1, 1)
+                validTo = LocalDate.of(2025, 12, 31)
+                insuranceCompany = "Insurance Co"
+                policyNumber = "POL123456"
             }
         },
         finally = { today = { LocalDate.now() } },
@@ -335,6 +370,15 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     this.receivedAt = LocalDate.of(2025, 10, 4).atStartOfDay().toInstant(ZoneOffset.UTC)
                 }
             }
+
+            // Add insurance for the user
+            UserInsuranceEntity.new {
+                userSub = user
+                validFrom = LocalDate.of(2025, 1, 1)
+                validTo = LocalDate.of(2025, 12, 31)
+                insuranceCompany = "Insurance Co"
+                policyNumber = "POL123456"
+            }
         },
         finally = { today = { LocalDate.now() } },
     ) {
@@ -363,7 +407,18 @@ class TestLendingsRoutes : ApplicationTestBase() {
         assertNotNull(item)
 
         // The reference user must exist in the database
-        Database { FakeUser.provideEntity() }
+        val user = Database { FakeUser.provideEntity() }
+
+        // Add insurance for the user
+        Database {
+            UserInsuranceEntity.new {
+                userSub = user
+                validFrom = LocalDate.of(2025, 1, 1)
+                validTo = LocalDate.of(2025, 12, 31)
+                insuranceCompany = "Insurance Co"
+                policyNumber = "POL123456"
+            }
+        }
 
         today = { LocalDate.of(2025, 10, 8) }
 

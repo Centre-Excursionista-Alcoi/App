@@ -157,6 +157,8 @@
     <string name="lending_creation_error_allocation_none">None available.</string>
     <string name="lending_creation_error_allocation_title">Cannot allocate enough items</string>
     <string name="lending_creation_error_allocation">Please, check for errors above, and modify your request accordingly.</string>
+    <string name="lending_creation_error_insurance_title">You don't have a valid insurance</string>
+    <string name="lending_creation_error_insurance">You don't have a valid insurance for the specified period.</string>
 
     <string name="lending_not_confirmed">Not Confirmed</string>
     <string name="lending_pending_pickup">Pending Pickup</string>

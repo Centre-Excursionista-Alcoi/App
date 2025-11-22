@@ -55,6 +55,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
+import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
@@ -324,8 +325,26 @@ private fun LendingCreationScreen(
                     }
                 }
 
+                val hasNoValidInsuranceForPeriodException = errors.any { it is NoValidInsuranceForPeriodException }
+                if (hasNoValidInsuranceForPeriodException) {
+                    item(
+                        key = "error-insurance"
+                    ) {
+                        CardWithIcon(
+                            icon = Icons.Default.ErrorOutline,
+                            title = stringResource(Res.string.lending_creation_error_insurance_title),
+                            message = stringResource(Res.string.lending_creation_error_insurance),
+                            modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            ),
+                        )
+                    }
+                }
+
                 itemsIndexed(
-                    errors.filterNot { it is CannotAllocateEnoughItemsException },
+                    errors.filterNot { it is CannotAllocateEnoughItemsException || it is NoValidInsuranceForPeriodException },
                     { i, _ -> "error-$i" }
                 ) { _, error ->
                     CardWithIcon(

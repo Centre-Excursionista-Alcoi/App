@@ -426,6 +426,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("UserDoesNotHaveInsurance")
+    class UserDoesNotHaveInsurance(): Error {
+        override val code: Int = ERROR_USER_DOES_NOT_HAVE_INSURANCE
+        override val description: String = "The user doesn't have a valid and active insurance."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -464,6 +474,7 @@ sealed interface Error {
         const val ERROR_USER_NOT_SIGNED_UP_FOR_LENDING = 34
         const val ERROR_LENDING_NOT_CONFIRMED = 35
         const val ERROR_USER_ALREADY_REGISTERED = 36
+        const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -503,6 +514,7 @@ sealed interface Error {
             ERROR_USER_NOT_SIGNED_UP_FOR_LENDING -> UserNotSignedUpForLending.serializer()
             ERROR_LENDING_NOT_CONFIRMED -> LendingNotConfirmed.serializer()
             ERROR_USER_ALREADY_REGISTERED -> UserAlreadyRegistered.serializer()
+            ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             else -> null
         }
     }

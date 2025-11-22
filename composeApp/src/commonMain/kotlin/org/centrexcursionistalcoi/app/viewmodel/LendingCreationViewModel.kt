@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
+import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 
@@ -131,6 +132,11 @@ class LendingCreationViewModel(
             } catch (e: IllegalArgumentException) {
                 // Some other error
                 Napier.e(e) { "Failed to allocate $typeId" }
+                addError(e)
+                _allocatedItems.emit(emptyList())
+            } catch (e: NoValidInsuranceForPeriodException) {
+                // No valid insurance
+                Napier.e(e) { "The user doesn't have a valid insurance for the given date range." }
                 addError(e)
                 _allocatedItems.emit(emptyList())
             }
