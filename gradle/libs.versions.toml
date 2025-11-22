@@ -57,6 +57,7 @@ telegram-bot = "6.3.0"
 # {"message":"client version 1.32 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version"}
 testcontainers = "1.21.3"
 turbine = "1.2.1"
+xmlutil = "0.91.3"
 zoomable = "2.9.0"
 
 [libraries]
@@ -146,6 +147,7 @@ telegram-bot = { module = "io.github.kotlin-telegram-bot.kotlin-telegram-bot:tel
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
 
 [bundles]

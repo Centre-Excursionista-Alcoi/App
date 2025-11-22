@@ -64,6 +64,9 @@ dependencies {
     // CSV serialization
     implementation(libs.kotlinx.serializationCsv)
 
+    // XML serialization
+    implementation(libs.xmlutil.serialization)
+
     // Ktor serialization
     implementation(libs.ktor.serialization.kotlinxJson)
 
