@@ -10,7 +10,8 @@ import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
 data class Department(
     override val id: Uuid,
     val displayName: String,
-    @Serializable(NullableUUIDSerializer::class) override val image: Uuid? = null
+    @Serializable(NullableUUIDSerializer::class) override val image: Uuid? = null,
+    val members: List<DepartmentMemberInfo>,
 ) : Entity<Uuid>, ImageFileContainer {
     companion object {
         /**
@@ -26,7 +27,8 @@ data class Department(
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "displayName" to displayName,
-        "image" to image?.let { FileReference(it) }
+        "image" to image?.let { FileReference(it) },
+        "members" to members.map { it.toMap() },
     )
 
     override fun equals(other: Any?): Boolean {

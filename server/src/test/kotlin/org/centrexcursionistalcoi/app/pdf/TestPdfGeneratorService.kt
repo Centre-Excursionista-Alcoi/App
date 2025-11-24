@@ -24,6 +24,7 @@ class TestPdfGeneratorService {
             id = "52c09ab7-fe66-4a1a-a202-1a6124614490".toUuid(),
             displayName = "Escalada",
             image = departmentImageFileId,
+            members = emptyList(),
         )
 
         val memoryImageFileUuid = "b566d457-0226-49da-bb2f-f89971878c30".toUuid()

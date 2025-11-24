@@ -20,9 +20,10 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
+        id = id.value.toKotlinUuid(),
         userSub = userSub.value,
         departmentId = department.id.value.toKotlinUuid(),
-        confirmed = confirmed
+        confirmed = confirmed,
     )
 
     fun confirmedNotification() = Database {
