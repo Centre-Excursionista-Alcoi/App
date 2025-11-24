@@ -19,7 +19,8 @@ data class UserInsurance(
     val validFrom: LocalDate,
     val validTo: LocalDate,
     val documentId: Uuid?,
-    val femecvLicense: LicenseData? = null
+    val femecvLicense: LicenseData? = null,
+    val cardImage: String? = null,
 ): Entity<Uuid>, FileContainer {
     override val files: Map<String, Uuid?> = mapOf("documentId" to documentId)
 
@@ -30,7 +31,9 @@ data class UserInsurance(
         "policyNumber" to policyNumber,
         "validFrom" to validFrom.toString(),
         "validTo" to validTo.toString(),
-        "documentId" to documentId?.let { FileReference(it) }
+        "documentId" to documentId?.let { FileReference(it) },
+        "femecvLicense" to femecvLicense,
+        "cardImage" to cardImage,
     )
 
     fun isActive(clock: Clock = Clock.System): Boolean {

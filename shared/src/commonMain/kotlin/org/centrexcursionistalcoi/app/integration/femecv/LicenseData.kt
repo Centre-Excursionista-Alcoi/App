@@ -14,4 +14,5 @@ data class LicenseData(
     val subCategoryId: Int,
     val validFrom: LocalDate,
     val validTo: LocalDate,
+    val imageUrl: String?,
 )
