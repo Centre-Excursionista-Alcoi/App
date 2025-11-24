@@ -300,6 +300,10 @@
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
+    <string name="personal_info_disabled_reason">Reason: %1$s</string>
+    <string name="personal_info_disabled_reason_baixa">The user status is "Baixa" in the database.</string>
+    <string name="personal_info_disabled_reason_pendent">The user status is "Pendent" in the database.</string>
+    <string name="personal_info_disabled_reason_removed">The user is no longer in the database.</string>
     <string name="personal_info_full_name">Full Name</string>
     <string name="personal_info_email">Email</string>
     <string name="personal_info_email_none">The user doesn't have a valid email.</string>

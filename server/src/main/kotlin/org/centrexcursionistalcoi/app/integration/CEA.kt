@@ -50,6 +50,18 @@ object CEA : PeriodicWorker(period = 1.days) {
          * Whether the member is disabled (not "alta").
          */
         val isDisabled = status.trim().equals("alta", true).not()
+
+        val disabledReason = if (isDisabled) {
+            if (status.equals("baixa", true)) {
+                "status_baixa"
+            } else if (status.equals("pendent", true)) {
+                "status_pendent"
+            } else {
+                "status_unknown"
+            }
+        } else {
+            null
+        }
     }
 
     /**
@@ -91,6 +103,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                     existingEntity.fullName = member.fullName.trim('_')
                     existingEntity.email = member.email
                     existingEntity.isDisabled = member.isDisabled
+                    existingEntity.disableReason = member.disabledReason
                 }
                 userSubList.add(existingEntity.sub.value)
                 logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
@@ -104,7 +117,9 @@ object CEA : PeriodicWorker(period = 1.days) {
                         fullName = member.fullName.trim('_')
                         email = member.email
                         groups = listOf("cea_member")
+
                         isDisabled = member.isDisabled
+                        disableReason = member.disabledReason
 
                         lastUpdate = now()
                     }
@@ -119,6 +134,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         for (entity in memberNifs) {
             Database {
                 entity.isDisabled = true
+                entity.disableReason = "not_in_cea_members"
             }
             logger.trace("Disabled member NIF=${entity.nif}, sub=${entity.sub.value}")
         }

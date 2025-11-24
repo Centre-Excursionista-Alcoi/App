@@ -36,6 +36,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
     var groups by UserReferences.groups
 
     var isDisabled by UserReferences.isDisabled
+    var disableReason by UserReferences.disableReason
 
     var password by UserReferences.password
 
@@ -53,6 +54,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
         insurances = insurances.orEmpty(),
         departments = departments.orEmpty(),
         isDisabled = isDisabled,
+        disableReason = disableReason,
     )
 
     suspend fun refreshFEMECVData() {
