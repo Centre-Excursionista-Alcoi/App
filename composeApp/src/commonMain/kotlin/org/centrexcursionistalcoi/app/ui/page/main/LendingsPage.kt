@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Pending
@@ -39,9 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -75,8 +74,10 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
+import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -106,32 +107,17 @@ fun LendingsPage(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        PrimaryTabRow(pagerState.currentPage) {
-            for ((index, department) in departments.withIndex()) {
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    }
-                ) {
-                    Text(department.displayName)
-                }
-            }
-            if (itemsWithoutDepartmentExist) {
-                Tab(
-                    selected = pagerState.currentPage == departments.size,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(departments.size)
-                        }
-                    }
-                ) {
-                    Text(stringResource(Res.string.lending_category_without_department))
-                }
-            }
-        }
+        AdaptiveTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            tabs = departments.map { TabData(it.displayName) } +
+                    if (itemsWithoutDepartmentExist)
+                        listOf(TabData(stringResource(Res.string.lending_category_without_department), Icons.Default.Category))
+                    else
+                        emptyList(),
+            onTabSelected = { index ->
+                scope.launch { pagerState.animateScrollToPage(index) }
+            },
+        )
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth().weight(1f)
@@ -601,6 +587,7 @@ fun LendingItem(
                     Pair(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn)
                 }
             }
+
             Lending.Status.RETURNED -> Pair(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd)
             else -> null
         }
