@@ -446,6 +446,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Gone
     }
 
+    @Serializable
+    @SerialName("UserDoesNotHaveAnEmail")
+    class UserDoesNotHaveAnEmail(): Error {
+        override val code: Int = ERROR_USER_DOES_NOT_HAVE_AN_EMAIL
+        override val description: String = "The user doesn't have an email set."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.UnprocessableEntity
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -486,6 +496,7 @@ sealed interface Error {
         const val ERROR_USER_ALREADY_REGISTERED = 36
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
         const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
+        const val ERROR_USER_DOES_NOT_HAVE_AN_EMAIL = 39
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -527,6 +538,7 @@ sealed interface Error {
             ERROR_USER_ALREADY_REGISTERED -> UserAlreadyRegistered.serializer()
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
+            ERROR_USER_DOES_NOT_HAVE_AN_EMAIL -> UserDoesNotHaveAnEmail.serializer()
             else -> null
         }
     }

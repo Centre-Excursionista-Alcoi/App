@@ -143,6 +143,7 @@ fun Route.configureAuthRoutes() {
         if (userReference == null) {
             return@post call.respondError(Error.NIFNotRegistered())
         }
+        val email = userReference.email ?: return@post call.respondError(Error.UserDoesNotHaveAnEmail())
 
         // Create a new request
         val request = Database {
@@ -157,7 +158,7 @@ fun Route.configureAuthRoutes() {
 
         Email.sendTemplate(
             to = listOf(
-                MailerSendEmail(userReference.email, userReference.fullName)
+                MailerSendEmail(email, userReference.fullName)
             ),
             template = EmailTemplate.LostPassword,
             locale = locale,
@@ -210,6 +211,8 @@ fun Route.configureAuthRoutes() {
             UserReferenceEntity.findById(userId)
         } ?: return@post respondError(Error.InvalidArgument("request_id"))
 
+        val email = userReference.email ?: return@post respondError(Error.UserDoesNotHaveAnEmail())
+
         // update the user's password
         val hashedPassword = Passwords.hash(newPassword)
         Database {
@@ -225,7 +228,7 @@ fun Route.configureAuthRoutes() {
         val locale = call.request.locale()
         Email.sendTemplate(
             to = listOf(
-                MailerSendEmail(userReference.email, userReference.fullName)
+                MailerSendEmail(email, userReference.fullName)
             ),
             template = EmailTemplate.PasswordChangedNotification,
             locale = locale,

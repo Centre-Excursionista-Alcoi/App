@@ -1,0 +1,16 @@
+-- Remove old Users table and its index
+DROP INDEX idx_users_isDisabled;
+DROP TABLE Users;
+
+-- Re-create the Users table with new schema
+CREATE TABLE Users(
+    sub TEXT NOT NULL PRIMARY KEY,
+    fullName TEXT NOT NULL,
+    email TEXT,
+    groups TEXT AS List<String> NOT NULL,
+    departments TEXT AS List<DepartmentMemberInfo> NOT NULL,
+    lendingUser TEXT AS LendingUser DEFAULT NULL,
+    insurances TEXT AS List<UserInsurance> NOT NULL,
+    isDisabled INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_users_isDisabled ON Users(isDisabled);

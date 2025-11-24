@@ -164,9 +164,10 @@ fun UsersListView(
         )
 
         ReadOnlyFormField(
-            value = user.email,
+            value = user.email ?: stringResource(Res.string.none),
             label = stringResource(Res.string.personal_info_email),
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            error = stringResource(Res.string.personal_info_email_none).takeIf { user.email == null },
         )
 
         user.lendingUser?.let { lendingUser ->

@@ -6,7 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun ReadOnlyFormField(value: String, label: String, modifier: Modifier = Modifier) {
+fun ReadOnlyFormField(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    error: String? = null,
+) {
     OutlinedTextField(
         value = value,
         onValueChange = {},
@@ -14,5 +19,9 @@ fun ReadOnlyFormField(value: String, label: String, modifier: Modifier = Modifie
         singleLine = true,
         readOnly = true,
         modifier = modifier,
+        isError = error != null,
+        supportingText = error?.let {
+            { Text(it) }
+        },
     )
 }
