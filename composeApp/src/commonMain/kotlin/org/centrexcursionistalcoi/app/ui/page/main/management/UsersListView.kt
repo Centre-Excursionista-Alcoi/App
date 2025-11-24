@@ -153,7 +153,25 @@ fun UsersListView(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+            Text(
+                text = stringResource(
+                    Res.string.personal_info_disabled_reason,
+                    stringResource(
+                        when (user.disableReason) {
+                            "status_baixa" -> Res.string.personal_info_disabled_reason_baixa
+                            "status_pendent" -> Res.string.personal_info_disabled_reason_pendent
+                            "status_unknown" -> Res.string.unknown
+                            "not_in_cea_members" -> Res.string.personal_info_disabled_reason_removed
+                            else -> Res.string.unknown
+                        }
+                    )
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
             )
         }
 
