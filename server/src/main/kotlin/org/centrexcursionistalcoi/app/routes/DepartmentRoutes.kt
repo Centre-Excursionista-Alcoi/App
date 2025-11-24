@@ -157,7 +157,7 @@ fun Route.departmentsRoutes() {
         )
     }
 
-    // Allows an admin to confirm a join request
+    // Allows an admin to confirm and deny join requests
     post("/departments/{id}/confirm/{requestId}") {
         val (_, department) = departmentRequest(true) ?: return@post
 
@@ -196,5 +196,39 @@ fun Route.departmentsRoutes() {
         }
 
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
+    }
+    post("/departments/{id}/deny/{requestId}") {
+        val (_, department) = departmentRequest(true) ?: return@post
+
+        val requestId = call.parameters["requestId"]?.toUUIDOrNull()
+        if (requestId == null) {
+            call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.id eq requestId) and (DepartmentMembers.departmentId eq department.id) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respondText("Join request not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        Database {
+            // Denied request, delete the member entry
+            member.delete()
+        }
+
+        Push.launch {
+            Push.sendPushNotification(
+                userSub = member.userSub.value,
+                notification = member.deniedNotification(),
+                includeAdmins = true,
+            )
+        }
+
+        call.respondText("Join request denied", status = HttpStatusCode.OK)
     }
 }
