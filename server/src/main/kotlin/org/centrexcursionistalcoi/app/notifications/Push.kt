@@ -150,28 +150,17 @@ object Push {
         }
     }
 
-    suspend fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification, includeAdmins: Boolean = true) {
+    suspend fun sendPushNotification(userSub: String, notification: PushNotification, includeAdmins: Boolean = true) {
         sendLocalPushNotification(
             notification = notification,
-            userSub = reference.sub.value,
+            userSub = userSub,
             includeAdmins = includeAdmins,
         )
 
         if (pushFCMConfigured) {
-            var tokens = Database {
-                FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq reference.id }.map { it.token.value }
+            val tokens = Database {
+                FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq userSub }.map { it.token.value }
             }
-            if (includeAdmins) {
-                val adminTokens = Database {
-                    UserReferenceEntity.all()
-                        // Filter admins, and exclude the given reference
-                        .filter { it.groups.contains(ADMIN_GROUP_NAME) && it.sub != reference.sub }
-                        .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
-                        .map { it.token.value }
-                }
-                tokens = tokens + adminTokens
-            }
-
             sendFCMPushNotification(
                 tokens,
                 mapOf(
@@ -179,7 +168,37 @@ object Push {
                     *notification.toMap().toList().toTypedArray()
                 )
             )
+
+            if (includeAdmins) {
+                val adminTokens = Database {
+                    UserReferenceEntity.all()
+                        // Filter admins, and exclude the given reference
+                        .filter { it.groups.contains(ADMIN_GROUP_NAME) && it.sub.value != userSub }
+                        .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
+                        .map { it.token.value }
+                }
+                val adminNotification = if (notification is PushNotification.TargetedNotification) {
+                    notification.notSelf()
+                } else {
+                    notification
+                }
+                sendFCMPushNotification(
+                    adminTokens,
+                    mapOf(
+                        "type" to adminNotification.type,
+                        *adminNotification.toMap().toList().toTypedArray()
+                    )
+                )
+            }
         }
+    }
+
+    suspend fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification, includeAdmins: Boolean = true) {
+        sendPushNotification(
+            userSub = reference.sub.value,
+            notification = notification,
+            includeAdmins = includeAdmins,
+        )
     }
 
     suspend fun sendPushNotificationToAll(notification: PushNotification) {

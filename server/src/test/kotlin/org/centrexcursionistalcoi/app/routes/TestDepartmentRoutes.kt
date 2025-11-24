@@ -126,38 +126,29 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_requests_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/requests")
+    fun test_members_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/members")
 
     @Test
-    fun test_requests_notAdmin() = runApplicationTest(
-        shouldLogIn = LoginType.USER
-    ) {
-        client.get("/departments/abc/requests").apply {
-            assertStatusCode(HttpStatusCode.Forbidden)
-        }
-    }
-
-    @Test
-    fun test_requests_malformedId() = runApplicationTest(
+    fun test_members_malformedId() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.get("/departments/abc/requests").apply {
+        client.get("/departments/abc/members").apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
 
     @Test
-    fun test_requests_departmentNotFound() = runApplicationTest(
+    fun test_members_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.get("/departments/$departmentId/requests").apply {
+        client.get("/departments/$departmentId/members").apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
 
     @Test
-    fun test_requests_correct() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
+    fun test_members_notAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             val mockDepartment = DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
@@ -182,6 +173,43 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 assertEquals(FakeUser.SUB, request.userSub)
                 // ID is non-deterministic, just check it's not zero
                 assertFalse(request.requestId.isZero())
+            }
+        }
+    }
+
+    @Test
+    fun test_members_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new {
+                userSub = FakeUser.provideEntity().id
+                department = mockDepartment
+                confirmed = false
+            }
+            DepartmentMemberEntity.new {
+                userSub = FakeAdminUser.provideEntity().id
+                department = mockDepartment
+                confirmed = true
+            }
+        }
+    ) {
+        client.get("/departments/$departmentId/members").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(DepartmentJoinRequest.serializer().list()) { requests ->
+                assertEquals(2, requests.size)
+                requests[0].let { request ->
+                    assertEquals(FakeUser.SUB, request.userSub)
+                    // ID is non-deterministic, just check it's not zero
+                    assertFalse(request.requestId.isZero())
+                }
+                requests[1].let { request ->
+                    assertEquals(FakeAdminUser.SUB, request.userSub)
+                    // ID is non-deterministic, just check it's not zero
+                    assertFalse(request.requestId.isZero())
+                }
             }
         }
     }

@@ -51,6 +51,7 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         PushNotification.LendingConfirmed(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+            isSelf = true,
         )
     }
 
@@ -58,6 +59,7 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         PushNotification.LendingCancelled(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+            isSelf = true,
         )
     }
 

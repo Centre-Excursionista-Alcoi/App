@@ -18,7 +18,7 @@ class TestPush {
         Push.flow(adminSession).test {
             // push notification includes admins, will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "def",
                 includeAdmins = true,
             )
@@ -31,7 +31,7 @@ class TestPush {
 
             // push notification doesn't include admins, and sub doesn't match. Won't be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "def",
                 includeAdmins = false,
             )
@@ -42,7 +42,7 @@ class TestPush {
 
             // push notification doesn't include admins, and sub matches. Will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "abc",
                 includeAdmins = false,
             )

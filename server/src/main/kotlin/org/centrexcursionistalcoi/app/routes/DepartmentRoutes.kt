@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -185,6 +186,15 @@ fun Route.departmentsRoutes() {
         Database {
             member.confirmed = true
         }
+
+        Push.launch {
+            Push.sendPushNotification(
+                userSub = member.userSub.value,
+                notification = member.confirmedNotification(),
+                includeAdmins = true,
+            )
+        }
+
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
     }
 }

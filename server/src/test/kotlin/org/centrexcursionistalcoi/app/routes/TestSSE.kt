@@ -50,7 +50,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification includes admins, will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "other",
                 includeAdmins = true,
             )
@@ -73,7 +73,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification doesn't include admins, and sub doesn't match. Won't be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "other",
                 includeAdmins = false,
             )
@@ -85,7 +85,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification doesn't include admins, and sub matches. Will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
                 userSub = "test-user-id-456",
                 includeAdmins = false,
             )
