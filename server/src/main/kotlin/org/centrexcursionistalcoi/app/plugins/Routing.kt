@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
+import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.version
 
@@ -68,6 +69,10 @@ fun Application.configureRouting() {
 
         route("/webdav") {
             webDavRoutes()
+        }
+
+        route(".well-known") {
+            wellKnownRoutes()
         }
 
         get("/logout") {
