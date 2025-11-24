@@ -26,6 +26,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
     val groups = array("groups", TextColumnType()).default(emptyList())
 
     val isDisabled = bool("is_disabled").default(false)
+    val disableReason = text("disableReason").nullable()
 
     /**
      * Hashed password using BCrypt.

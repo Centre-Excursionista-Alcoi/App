@@ -32,5 +32,6 @@ object FakeUser {
         lendingUser = null,
         insurances = emptyList(),
         isDisabled = false,
+        disableReason = null,
     )
 }

@@ -16,6 +16,14 @@ data class UserData(
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>,
     val isDisabled: Boolean,
+    /**
+     * Options: null if not disabled, otherwise:
+     * - `status_baixa`: The status of the user is "Baixa".
+     * - `status_pendent`: The status of the user is "Pendent".
+     * - `status_unknown`: The status of the user is unknown.
+     * - `not_in_cea_members`: The user is not in the CEA members list.
+     */
+    val disableReason: String?,
 ): Entity<String>, SubReferencedFileContainer {
     companion object {
         /**
