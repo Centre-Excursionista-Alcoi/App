@@ -26,7 +26,6 @@ class PlatformInitializerViewModel(url: Url?): ViewModel() {
             if (url != null) {
                 Napier.d { "Processing destination for url: $url" }
                 _startDestination.value = Destination.fromUrl(url)
-                    ?.also { Napier.i { "Start destination: $it" } }
             }
 
             SSENotificationsListener.startListening()

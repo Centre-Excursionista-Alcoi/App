@@ -38,13 +38,25 @@ sealed interface Destination {
                     Main(showingAdminLendingsScreen = true)
                 }
             }
+            if (url.segments[0] == "reset_password") {
+                // Reset password request redirection from email
+                val success = url.parameters["success"]?.toBoolean() ?: false
+                return if (success) {
+                    Login(changedPassword = true)
+                } else {
+                    val requestId = url.parameters["request_id"] ?: return null
+                    External.ResetPassword(requestId)
+                }
+            }
             return null
         }
     }
 
     @Serializable @SerialName("loading") data object Loading : Destination
     @Serializable @SerialName("logout") data object Logout : Destination
-    @Serializable @SerialName("login") data object Login : Destination
+    @Serializable @SerialName("login") data class Login(
+        val changedPassword: Boolean = false,
+    ) : Destination
     @Serializable @SerialName("main") data class Main(
         val showingAdminItemTypeId: Uuid? = null,
         val showingAdminLendingsScreen: Boolean = false,
@@ -82,5 +94,14 @@ sealed interface Destination {
 
     @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
         constructor(lending: ReferencedLending): this(lending.id)
+    }
+
+    /**
+     * Redirections from external links.
+     */
+    object External {
+        @Serializable @SerialName("reset_password") data class ResetPassword(
+            @SerialName("request_id") val requestId: String,
+        ) : Destination
     }
 }

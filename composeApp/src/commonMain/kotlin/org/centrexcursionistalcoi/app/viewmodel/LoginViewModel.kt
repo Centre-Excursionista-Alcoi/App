@@ -45,4 +45,19 @@ class LoginViewModel : ErrorViewModel() {
             _isLoading.emit(false)
         }
     }
+
+    fun forgotPassword(nif: String, afterRequest: () -> Unit) = viewModelScope.launch {
+        try {
+            _isLoading.emit(true)
+            clearError()
+
+            AuthBackend.forgotPassword(nif)
+
+            doMain { afterRequest() }
+        } catch (e: ServerException) {
+            setError(e)
+        } finally {
+            _isLoading.emit(false)
+        }
+    }
 }

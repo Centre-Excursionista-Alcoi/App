@@ -4,13 +4,14 @@ import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import org.centrexcursionistalcoi.app.translation.DocumentRedactor
 
 @OptIn(ExperimentalXmlUtilApi::class)
 class TestEmailTemplate {
     @Test
     fun `test render`() {
         val template = object : EmailTemplate("example") {
-            override fun EmailRedactor.render(args: Map<String, String>): String = """
+            override fun DocumentRedactor.render(args: Map<String, String?>): String = """
             <html>
                 <body>
                     <p>${t("greeting", args["userName"])}</p>

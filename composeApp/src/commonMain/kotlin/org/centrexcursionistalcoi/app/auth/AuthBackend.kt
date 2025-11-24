@@ -71,4 +71,18 @@ object AuthBackend {
             throw error.toThrowable()
         }
     }
+
+    suspend fun forgotPassword(nif: String) {
+        val response = getHttpClient().submitForm(
+            url = "/lost_password",
+            formParameters = parameters {
+                append("nif", nif)
+            }
+        )
+        if (response.status.isSuccess()) {
+            Napier.d { "Forgot password request successful." }
+        } else {
+            throw response.bodyAsError().toThrowable()
+        }
+    }
 }

@@ -436,6 +436,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
     }
 
+    @Serializable
+    @SerialName("PasswordResetRequestExpired")
+    class PasswordResetRequestExpired(): Error {
+        override val code: Int = ERROR_PASSWORD_RESET_REQUEST_EXPIRED
+        override val description: String = "The request has expired."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Gone
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -475,6 +485,7 @@ sealed interface Error {
         const val ERROR_LENDING_NOT_CONFIRMED = 35
         const val ERROR_USER_ALREADY_REGISTERED = 36
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
+        const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -515,6 +526,7 @@ sealed interface Error {
             ERROR_LENDING_NOT_CONFIRMED -> LendingNotConfirmed.serializer()
             ERROR_USER_ALREADY_REGISTERED -> UserAlreadyRegistered.serializer()
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
+            ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
             else -> null
         }
     }
