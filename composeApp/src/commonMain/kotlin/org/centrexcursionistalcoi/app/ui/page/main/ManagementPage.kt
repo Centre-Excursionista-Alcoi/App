@@ -154,11 +154,11 @@ private fun ManagementPage(
     AdaptiveTabRow(
         selectedTabIndex = pagerState.currentPage,
         tabs = listOf(
-            TabData(Res.string.management_lendings, Icons.Default.Inventory2),
-            TabData(Res.string.management_departments, Icons.Default.Category),
-            TabData(Res.string.management_users, Icons.Default.Face),
-            TabData(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed),
-            TabData(Res.string.management_inventory,  Icons.Default.Inventory),
+            TabData.fromResources(Res.string.management_lendings, Icons.Default.Inventory2),
+            TabData.fromResources(Res.string.management_departments, Icons.Default.Category),
+            TabData.fromResources(Res.string.management_users, Icons.Default.Face),
+            TabData.fromResources(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed),
+            TabData.fromResources(Res.string.management_inventory,  Icons.Default.Inventory),
         ),
         onTabSelected = { index ->
             scope.launch { pagerState.animateScrollToPage(index) }

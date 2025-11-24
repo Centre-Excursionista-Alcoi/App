@@ -14,33 +14,46 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 data class TabData(
-    val titleRes: StringResource,
-    val icon: ImageVector,
-    val contentDescription: StringResource? = titleRes,
+    val title: String,
+    val icon: ImageVector? = null,
+    val contentDescription: String? = title,
 ) {
-    @Composable
-    fun TabWithIcon(selected: Boolean, onClick: () -> Unit) {
-        Tab(
-            selected = selected,
-            onClick = onClick,
-            icon = { Icon(icon, contentDescription?.let { stringResource(it) }) },
-            text = { Text(stringResource(titleRes)) }
+    companion object {
+        @Composable
+        fun fromResources(
+            titleRes: StringResource,
+            icon: ImageVector? = null,
+            contentDescription: StringResource? = titleRes,
+        ) = TabData(
+            title = stringResource(titleRes),
+            icon = icon,
+            contentDescription = contentDescription?.let { stringResource(it) },
         )
     }
 
     @Composable
-    fun TabWithoutIcon(selected: Boolean, onClick: () -> Unit) {
+    private fun TabWithIcon(selected: Boolean, onClick: () -> Unit) {
         Tab(
             selected = selected,
             onClick = onClick,
-            text = { Text(stringResource(titleRes)) }
+            icon = { Icon(icon!!, contentDescription) },
+            text = { Text(title) }
+        )
+    }
+
+    @Composable
+    private fun TabWithoutIcon(selected: Boolean, onClick: () -> Unit) {
+        Tab(
+            selected = selected,
+            onClick = onClick,
+            text = { Text(title) }
         )
     }
 
     @Composable
     fun AdaptiveTab(windowSizeClass: WindowSizeClass, selected: Boolean, onClick: () -> Unit) {
         val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
-        if (isCompact) {
+        if (isCompact || icon == null) {
             TabWithoutIcon(selected, onClick)
         } else {
             TabWithIcon(selected, onClick)

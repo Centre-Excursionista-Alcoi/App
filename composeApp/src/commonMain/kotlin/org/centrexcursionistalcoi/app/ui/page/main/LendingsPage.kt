@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
@@ -46,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +62,8 @@ import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
@@ -68,13 +73,75 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
+import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LendingsPage(
+    windowSizeClass: WindowSizeClass,
+
+    profile: ProfileResponse,
+    onAddInsuranceRequested: () -> Unit,
+
+    inventoryItems: List<ReferencedInventoryItem>?,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
+
+    lendings: List<ReferencedLending>?,
+    onLendingSignUpRequested: () -> Unit,
+
+    shoppingList: Map<Uuid, Int>,
+    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+) {
+    val departments = inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList()
+    val itemsWithoutDepartmentExist = inventoryItems?.any { it.type.department == null } == true
+
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState { departments.size + (if (itemsWithoutDepartmentExist) 1 else 0) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        AdaptiveTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            tabs = departments.map { TabData(it.displayName) } +
+                    if (itemsWithoutDepartmentExist)
+                        listOf(TabData(stringResource(Res.string.lending_category_without_department)))
+                    else
+                        emptyList(),
+            onTabSelected = { index ->
+                scope.launch { pagerState.animateScrollToPage(index) }
+            },
+        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) { page ->
+            // if null, show items without department
+            val department: Department? = departments.getOrNull(page)
+
+            LendingsPage_Content(
+                windowSizeClass = windowSizeClass,
+                profile = profile,
+                onAddInsuranceRequested = onAddInsuranceRequested,
+                inventoryItems = inventoryItems?.filter { it.type.department == department },
+                onItemTypeDetailsRequested = onItemTypeDetailsRequested,
+                lendings = lendings,
+                onLendingSignUpRequested = onLendingSignUpRequested,
+                shoppingList = shoppingList,
+                onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
+                onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LendingsPage_Content(
     windowSizeClass: WindowSizeClass,
 
     profile: ProfileResponse,
@@ -519,6 +586,7 @@ fun LendingItem(
                     Pair(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn)
                 }
             }
+
             Lending.Status.RETURNED -> Pair(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd)
             else -> null
         }
