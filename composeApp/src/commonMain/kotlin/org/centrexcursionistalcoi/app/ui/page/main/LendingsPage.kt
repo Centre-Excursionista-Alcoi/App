@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
@@ -37,7 +39,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -46,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +64,8 @@ import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
@@ -75,6 +82,81 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LendingsPage(
+    windowSizeClass: WindowSizeClass,
+
+    profile: ProfileResponse,
+    onAddInsuranceRequested: () -> Unit,
+
+    inventoryItems: List<ReferencedInventoryItem>?,
+    onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
+
+    lendings: List<ReferencedLending>?,
+    onLendingSignUpRequested: () -> Unit,
+
+    shoppingList: Map<Uuid, Int>,
+    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+) {
+    val departments = inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList()
+    val itemsWithoutDepartmentExist = inventoryItems?.any { it.type.department == null } == true
+
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState { departments.size + (if (itemsWithoutDepartmentExist) 1 else 0) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        PrimaryTabRow(pagerState.currentPage) {
+            for ((index, department) in departments.withIndex()) {
+                Tab(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    }
+                ) {
+                    Text(department.displayName)
+                }
+            }
+            if (itemsWithoutDepartmentExist) {
+                Tab(
+                    selected = pagerState.currentPage == departments.size,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(departments.size)
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.lending_category_without_department))
+                }
+            }
+        }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) { page ->
+            // if null, show items without department
+            val department: Department? = departments.getOrNull(page)
+
+            LendingsPage_Content(
+                windowSizeClass = windowSizeClass,
+                profile = profile,
+                onAddInsuranceRequested = onAddInsuranceRequested,
+                inventoryItems = inventoryItems?.filter { it.type.department == department },
+                onItemTypeDetailsRequested = onItemTypeDetailsRequested,
+                lendings = lendings,
+                onLendingSignUpRequested = onLendingSignUpRequested,
+                shoppingList = shoppingList,
+                onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
+                onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LendingsPage_Content(
     windowSizeClass: WindowSizeClass,
 
     profile: ProfileResponse,
