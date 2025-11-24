@@ -7,6 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
 import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
@@ -42,6 +44,14 @@ object PushNotifierListener : NotifierManager.Listener {
                         SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
                     ),
                     logic = SyncPostBackgroundJobLogic,
+                )
+            } else if (notification is PushNotification.DepartmentJoinRequestUpdated) {
+                Napier.d { "Received department join request update notification for request ID: ${notification.requestId}" }
+                BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
+                    input = mapOf(
+                        SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                    ),
+                    logic = SyncDepartmentBackgroundJobLogic,
                 )
             }
 

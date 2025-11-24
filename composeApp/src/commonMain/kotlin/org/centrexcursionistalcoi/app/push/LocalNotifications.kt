@@ -61,7 +61,7 @@ object LocalNotifications {
         when (notification) {
             is PushNotification.LendingConfirmed -> {
                 // Only show if the notification is for the current user
-                if (profile?.sub != notification.userSub) {
+                if (!notification.isSelf) {
                     Napier.d { "Ignoring lending confirmed notification for another user: ${notification.userSub}" }
                     return
                 }
@@ -74,7 +74,7 @@ object LocalNotifications {
             }
             is PushNotification.LendingCancelled -> {
                 // Only show if the notification is for the current user
-                if (profile?.sub != notification.userSub) {
+                if (!notification.isSelf) {
                     Napier.d { "Ignoring lending cancelled notification for another user: ${notification.userSub}" }
                     return
                 }
@@ -86,7 +86,7 @@ object LocalNotifications {
                 )
             }
             is PushNotification.LendingTaken -> {
-                if (profile?.sub != notification.userSub) {
+                if (!notification.isSelf) {
                     // The lending is for another user, the logged-in user is an admin
                     showNotification(
                         Res.string.notification_lending_given_title,
@@ -103,7 +103,7 @@ object LocalNotifications {
                 }
             }
             is PushNotification.LendingReturned -> {
-                if (profile?.sub != notification.userSub) {
+                if (!notification.isSelf) {
                     // The lending is for another user, the logged-in user is an admin
                     showNotification(
                         Res.string.notification_lending_returned_other_title,
@@ -120,11 +120,33 @@ object LocalNotifications {
                 }
             }
             is PushNotification.LendingPartiallyReturned -> {
-                if (profile?.sub == notification.userSub) {
+                if (!notification.isSelf) {
                     // The lending is for the current user
                     showNotification(
                         Res.string.notification_lending_returned_partial_title,
                         Res.string.notification_lending_returned_partial_message,
+                        data
+                    )
+                }
+            }
+
+            is PushNotification.DepartmentJoinRequestUpdated -> {
+                // Only show if the notification is for the current user
+                if (!notification.isSelf) {
+                    Napier.d { "Ignoring join updated notification for another user: ${notification.userSub}" }
+                    return
+                }
+
+                if (notification.isConfirmed) {
+                    showNotification(
+                        Res.string.notification_join_request_approved_title,
+                        Res.string.notification_join_request_approved_message,
+                        data
+                    )
+                } else {
+                    showNotification(
+                        Res.string.notification_join_request_denied_title,
+                        Res.string.notification_join_request_denied_message,
                         data
                     )
                 }

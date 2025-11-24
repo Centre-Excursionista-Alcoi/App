@@ -226,6 +226,7 @@ sealed interface PushNotification {
     @Serializable
     class DepartmentJoinRequestUpdated(
         val requestId: Uuid,
+        val departmentId: Uuid,
         override val userSub: String,
         override val isSelf: Boolean,
         val isConfirmed: Boolean,
@@ -236,8 +237,8 @@ sealed interface PushNotification {
 
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "isConfirmed" to isConfirmed.toString())
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString(), "isConfirmed" to isConfirmed.toString())
 
-        override fun notSelf() = DepartmentJoinRequestUpdated(requestId, userSub, isSelf = false, isConfirmed)
+        override fun notSelf() = DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isSelf = false, isConfirmed)
     }
 }

@@ -380,6 +380,10 @@
     <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
     <string name="notification_lending_returned_partial_title">Lending Partially Returned</string>
     <string name="notification_lending_returned_partial_message">You have returned some items of your lending. Please, remember to return the remaining items as soon as possible.</string>
+    <string name="notification_join_request_denied_title">Department Join Request Denied</string>
+    <string name="notification_join_request_denied_message">Your request to join a department has been denied.</string>
+    <string name="notification_join_request_approved_title">Department Join Request Approved</string>
+    <string name="notification_join_request_approved_message">Your request to join a department has been approved.</string>
 
     <string name="nfc_write_success">NFC written successfully</string>
     <string name="nfc_error_read_only">NFC tag is read-only</string>
