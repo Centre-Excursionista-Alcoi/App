@@ -156,7 +156,7 @@ fun App(
                         }
                     },
                     onNotLoggedIn = {
-                        navController.navigate(Destination.Login) {
+                        navController.navigate(Destination.Login()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
                             }
@@ -164,8 +164,11 @@ fun App(
                     },
                 )
             }
-            destination<Destination.Login> {
+            destination<Destination.Login> { route ->
+                val changedPassword = route.changedPassword
+
                 LoginScreen(
+                    changedPassword = changedPassword,
                     onLoginSuccess = {
                         navController.navigate(Destination.Loading) {
                             popUpTo(navController.graph.id) {

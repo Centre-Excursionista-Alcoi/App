@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.utils
 
+import java.security.SecureRandom
 import java.util.UUID
-import kotlin.random.Random
 
 /**
  * Tries to convert the string to a UUID.
@@ -26,6 +26,6 @@ fun String.toUUID() = UUID.fromString(this)
 fun generateRandomString(length: Int = 12): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     return (1..length)
-        .map { chars[Random.nextInt(chars.length)] }
+        .map { chars[SecureRandom().nextInt(chars.length)] }
         .joinToString("")
 }

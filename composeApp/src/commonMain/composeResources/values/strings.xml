@@ -12,6 +12,13 @@
 
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_action">Login</string>
+    <string name="login_password_changed_title">Password updated!</string>
+    <string name="login_password_changed_message">You can now log in with your new password.</string>
+    <string name="login_forgot_password">Password forgotten?</string>
+    <string name="login_forgot_password_dialog_title">Have you forgotten your password?</string>
+    <string name="login_forgot_password_dialog_message">Enter your NIF, and if you have been registered before, you will receive an email to update your password.</string>
+    <string name="login_forgot_password_dialog_action">Send Email</string>
+    <string name="login_forgot_password_success_title">Please, check your inbox.</string>
 
     <string name="register_title">Register an Account</string>
     <string name="register_action">Register</string>

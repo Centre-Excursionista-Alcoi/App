@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,11 +25,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -43,17 +50,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LoginScreen(
+    changedPassword: Boolean = false,
     model: LoginViewModel = viewModel { LoginViewModel() },
     onLoginSuccess: () -> Unit,
 ) {
@@ -63,8 +73,10 @@ fun LoginScreen(
     LoginScreen(
         isLoading = isLoading,
         error = error,
+        changedPassword = changedPassword,
         onLoginRequest = { nif, password -> model.login(nif, password, onLoginSuccess) },
         onRegisterRequest = { nif, password -> model.register(nif, password, onLoginSuccess) },
+        onForgotPassword = { nif, ar -> model.forgotPassword(nif, ar) },
         onClearErrors = model::clearError,
     )
 }
@@ -74,12 +86,29 @@ fun LoginScreen(
 private fun LoginScreen(
     isLoading: Boolean,
     error: Throwable?,
+    changedPassword: Boolean,
     onLoginRequest: (nif: String, password: String) -> Unit,
     onRegisterRequest: (nif: String, password: String) -> Unit,
+    onForgotPassword: (nif: String, afterRequest: () -> Unit) -> Job,
     onClearErrors: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val state = rememberPagerState { 2 }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showingChangedPasswordDialog by remember { mutableStateOf(changedPassword) }
+    if (showingChangedPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showingChangedPasswordDialog = false },
+            title = { Text(stringResource(Res.string.login_password_changed_title)) },
+            text = { Text(stringResource(Res.string.login_password_changed_message)) },
+            confirmButton = {
+                TextButton(onClick = { showingChangedPasswordDialog = false }) {
+                    Text(stringResource(Res.string.close))
+                }
+            }
+        )
+    }
 
     Scaffold { paddingValues ->
         HorizontalPager(
@@ -105,7 +134,15 @@ private fun LoginScreen(
                                 state.animateScrollToPage(1)
                             }
                         },
+                        onForgotPassword = {
+                            onForgotPassword(it.toString()) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(getString(Res.string.login_forgot_password_success_title))
+                                }
+                            }
+                        },
                     )
+
                     1 -> LoginScreen_Register(
                         isLoading = isLoading,
                         error = error,
@@ -146,6 +183,8 @@ fun LoginScreen_Form(
     onSwitch: () -> Unit,
     submitText: String,
     onSubmit: () -> Unit,
+    auxText: String? = null,
+    onAux: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     Image(
@@ -194,6 +233,13 @@ fun LoginScreen_Form(
     }
 
     Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+        if (auxText != null) {
+            TextButton(
+                enabled = !isLoading,
+                onClick = onAux,
+                modifier = Modifier.weight(1f).padding(end = 4.dp)
+            ) { Text(auxText) }
+        }
         OutlinedButton(
             enabled = !isLoading,
             onClick = onSwitch,
@@ -212,12 +258,47 @@ fun LoginScreen_Login(
     isLoading: Boolean = false,
     error: Throwable? = null,
     onLoginRequest: (nif: CharSequence, password: CharSequence) -> Unit,
-    onRegisterRequest: () -> Unit
+    onRegisterRequest: () -> Unit,
+    onForgotPassword: (nif: CharSequence) -> Job,
 ) {
     val nif = rememberTextFieldState()
     val password = rememberTextFieldState()
 
     val valid = nif.text.isNotBlank() && password.text.isNotBlank()
+
+    var showingForgotPasswordDialog by remember { mutableStateOf(false) }
+    if (showingForgotPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showingForgotPasswordDialog = false },
+            title = { Text(stringResource(Res.string.login_forgot_password_dialog_title)) },
+            text = {
+                Column {
+                    Text(stringResource(Res.string.login_forgot_password_dialog_message))
+                    OutlinedTextField(
+                        state = nif,
+                        enabled = !isLoading,
+                        label = { Text(stringResource(Res.string.nif)) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showingForgotPasswordDialog = false
+                    onForgotPassword(nif.text).invokeOnCompletion {
+                        showingForgotPasswordDialog = false
+                    }
+                }) {
+                    Text(stringResource(Res.string.login_forgot_password_dialog_action))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showingForgotPasswordDialog = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
 
     LoginScreen_Form(
         isLoading = isLoading,
@@ -229,7 +310,9 @@ fun LoginScreen_Login(
         submitText = stringResource(Res.string.login_action),
         onSubmit = {
             onLoginRequest(nif.text, password.text)
-        }
+        },
+        auxText = stringResource(Res.string.login_forgot_password),
+        onAux = { showingForgotPasswordDialog = true }
     ) {
         OutlinedTextField(
             state = nif,

@@ -35,6 +35,7 @@ import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -146,6 +147,7 @@ fun Route.configureAuthRoutes() {
         // Create a new request
         val request = Database {
             RecoverPasswordRequests.insert {
+                it[this.id] = generateRandomString(128)
                 it[this.user] = userReference.id
                 it[this.redirectTo] = redirectTo
             }
