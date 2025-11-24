@@ -13,13 +13,14 @@ CREATE TABLE Users(
     departments TEXT AS List<DepartmentMemberInfo> NOT NULL,
     lendingUser TEXT AS LendingUser DEFAULT NULL,
     insurances TEXT AS List<UserInsurance> NOT NULL,
-    isDisabled INTEGER AS Boolean NOT NULL DEFAULT 0
+    isDisabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    disableReason TEXT DEFAULT NULL
 );
 
 CREATE INDEX idx_users_isDisabled ON Users(isDisabled);
 
 insert:
-INSERT INTO Users(sub, fullName, email, groups, departments, lendingUser, insurances, isDisabled) VALUES(?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Users(sub, fullName, email, groups, departments, lendingUser, insurances, isDisabled, disableReason) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Users WHERE sub = ?;
@@ -31,4 +32,4 @@ deleteById:
 DELETE FROM Users WHERE sub = ?;
 
 update:
-UPDATE Users SET fullName = ?, email = ?, groups = ?, departments = ?, lendingUser = ?, insurances = ?, isDisabled = ? WHERE sub = ?;
+UPDATE Users SET fullName = ?, email = ?, groups = ?, departments = ?, lendingUser = ?, insurances = ?, isDisabled = ?, disableReason = ? WHERE sub = ?;
