@@ -106,6 +106,7 @@ object FEMECV {
             var validFrom = document.selectFirst(".tempsCompromisInici")?.text()?.takeIf { it.isNotBlank() }?.let { LocalDate.parse(it) }
             var validTo = document.selectFirst(".tempsCompromisFi")?.text()?.takeIf { it.isNotBlank() }?.let { LocalDate.parse(it) }
 
+            var isFullYear = false
             if (validFrom == null || validTo == null) {
                 val modalityNameRegex = "FEMECV (20\\d{2})".toRegex()
                 val modalityNameMatches = modalityNameRegex.find(modalityName.orEmpty())
@@ -113,6 +114,7 @@ object FEMECV {
                 if (modalityYear != null) {
                     validFrom = LocalDate(modalityYear, 1, 1)
                     validTo = LocalDate(modalityYear, 12, 31)
+                    isFullYear = true
                 }
             }
 
@@ -128,6 +130,11 @@ object FEMECV {
                 validTo = validTo ?: throw FEMECVException("Valid to date not found for license #$id"),
                 categoryId = categoryId?.toIntOrNull() ?: throw FEMECVException("Category ID not found for license #$id"),
                 subCategoryId = subCategoryId ?: throw FEMECVException("Subcategory ID not found for license #$id"),
+                imageUrl = if (isFullYear) {
+                    "/profile/femecvSync/image/${validFrom.year}"
+                } else {
+                    null
+                },
             ) to certificate
         } else {
             throw FEMECVException("Failed to retrieve license #$id, status code: ${response.status}")

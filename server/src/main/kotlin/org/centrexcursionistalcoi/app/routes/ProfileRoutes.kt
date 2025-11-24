@@ -5,11 +5,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import kotlin.time.toKotlinInstant
@@ -219,6 +222,16 @@ fun Route.profileRoutes() {
         }
 
         call.respond(HttpStatusCode.NoContent)
+    }
+    get("/profile/femecvSync/image/{year}") {
+        val yearParam = call.parameters["year"] ?: return@get respondError(Error.MissingArgument("year"))
+        val year = yearParam.toIntOrNull() ?: return@get respondError(Error.InvalidArgument("year", "Must be a valid year"))
+
+        this::class.java.getResourceAsStream("/insurances/femecv/$year.png")?.use { stream ->
+            call.respondBytesWriter(ContentType.Image.PNG) {
+                stream.toByteReadChannel().copyTo(this)
+            }
+        } ?: call.respond(HttpStatusCode.NotFound)
     }
     post("/profile/fcmToken") {
         val session = getUserSessionOrFail() ?: return@post
