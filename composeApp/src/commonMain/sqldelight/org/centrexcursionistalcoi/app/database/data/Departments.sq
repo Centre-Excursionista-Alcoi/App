@@ -1,15 +1,18 @@
+import kotlin.collections.List;
 import kotlin.uuid.Uuid;
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo;
 
 CREATE TABLE Departments (
   id TEXT AS Uuid PRIMARY KEY NOT NULL,
   displayName TEXT NOT NULL,
-  imageFile TEXT AS Uuid DEFAULT NULL
+  imageFile TEXT AS Uuid DEFAULT NULL,
+  members TEXT AS List<DepartmentMemberInfo> DEFAULT "[]"
 );
 
 CREATE INDEX idx_Departments_displayName ON Departments(displayName);
 
 insert:
-INSERT INTO Departments (id, displayName, imageFile) VALUES (?, ?, ?);
+INSERT INTO Departments (id, displayName, imageFile, members) VALUES (?, ?, ?, ?);
 
 get:
 SELECT * FROM Departments WHERE id = ? LIMIT 1;
@@ -21,4 +24,4 @@ deleteById:
 DELETE FROM Departments WHERE id = ?;
 
 update:
-UPDATE Departments SET displayName = ?, imageFile = ? WHERE id = ?;
+UPDATE Departments SET displayName = ?, imageFile = ?, members = ? WHERE id = ?;

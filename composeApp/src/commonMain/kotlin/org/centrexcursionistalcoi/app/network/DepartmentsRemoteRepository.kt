@@ -18,6 +18,6 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
 
         Napier.i { "Creating a new department: displayName=\"${displayName}\", imageUuid=${imageUuid}" }
 
-        create(Department(Uuid.Zero, displayName, imageUuid?.id), progressNotifier)
+        create(Department(Uuid.Zero, displayName, imageUuid?.id, emptyList()), progressNotifier)
     }
 }
