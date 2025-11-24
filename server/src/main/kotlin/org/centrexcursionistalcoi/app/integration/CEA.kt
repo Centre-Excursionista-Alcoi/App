@@ -23,11 +23,13 @@ import org.centrexcursionistalcoi.app.PeriodicWorker
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
+import org.jetbrains.exposed.v1.core.notInList
 import org.slf4j.LoggerFactory
 
 object CEA : PeriodicWorker(period = 1.days) {
@@ -44,7 +46,10 @@ object CEA : PeriodicWorker(period = 1.days) {
         @SerialName("Correu electrònic")
         val email: String?,
     ) {
-        val isDisabled = status.lowercase() != "alta"
+        /**
+         * Whether the member is disabled (not "alta").
+         */
+        val isDisabled = status.trim().equals("alta", true).not()
     }
 
     /**
@@ -71,6 +76,7 @@ object CEA : PeriodicWorker(period = 1.days) {
     fun synchronizeWithDatabase(members: List<Member>) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
+        val userSubList = mutableListOf<String>()
         for (member in members) {
             val isNifValid = NIFValidation.validate(member.nif)
             if (!isNifValid) {
@@ -82,10 +88,11 @@ object CEA : PeriodicWorker(period = 1.days) {
             if (existingEntity != null) {
                 // Update existing member
                 Database {
-                    existingEntity.fullName = member.fullName
+                    existingEntity.fullName = member.fullName.trim('_')
                     existingEntity.email = member.email
                     existingEntity.isDisabled = member.isDisabled
                 }
+                userSubList.add(existingEntity.sub.value)
                 logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
             } else {
                 // Create new member
@@ -94,7 +101,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                     UserReferenceEntity.new(randomSub) {
                         nif = member.nif
                         memberNumber = member.number.toUInt()
-                        fullName = member.fullName
+                        fullName = member.fullName.trim('_')
                         email = member.email
                         groups = listOf("cea_member")
                         isDisabled = member.isDisabled
@@ -102,8 +109,18 @@ object CEA : PeriodicWorker(period = 1.days) {
                         lastUpdate = now()
                     }
                 }
+                userSubList.add(randomSub)
                 logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
             }
+        }
+        logger.debug("Disabling not found users...")
+        // Disable users not in the CEA members list
+        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList } }
+        for (entity in memberNifs) {
+            Database {
+                entity.isDisabled = true
+            }
+            logger.trace("Disabled member NIF=${entity.nif}, sub=${entity.sub.value}")
         }
         logger.info("Synchronization complete.")
     }
