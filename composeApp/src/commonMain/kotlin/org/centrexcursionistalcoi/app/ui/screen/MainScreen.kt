@@ -67,6 +67,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
@@ -134,6 +135,8 @@ fun MainScreen(
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
+            onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
+            onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingClick = onLendingClick,
@@ -203,6 +206,8 @@ private fun MainScreenContent(
     onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
+    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -422,6 +427,8 @@ private fun MainScreenContent(
                         ::onAddInsuranceRequested,
                         windowSizeClass,
                         departments,
+                        onApproveDepartmentJoinRequest,
+                        onDenyDepartmentJoinRequest,
                         lendings,
                         onLendingSignUpRequested,
                         onLendingClick,
@@ -462,6 +469,8 @@ private fun MainScreenContent(
                             ::onAddInsuranceRequested,
                             windowSizeClass,
                             departments,
+                            onApproveDepartmentJoinRequest,
+                            onDenyDepartmentJoinRequest,
                             lendings,
                             onLendingSignUpRequested,
                             onLendingClick,
@@ -508,6 +517,8 @@ private fun MainScreenPagerContent(
     windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
+    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -544,6 +555,10 @@ private fun MainScreenPagerContent(
                 onLendingClick,
                 onOtherUserLendingClick,
                 posts,
+                departments,
+                onApproveDepartmentJoinRequest,
+                onDenyDepartmentJoinRequest,
+                users,
             )
 
             Page.LENDINGS -> LendingsPage(

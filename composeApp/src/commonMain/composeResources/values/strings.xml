@@ -208,6 +208,11 @@
     <string name="management_pending_memory_lendings">Lendings pending memory</string>
     <string name="management_completed_lendings">Completed lendings</string>
 
+    <string name="management_other_users_join_requests">Department Join Requests</string>
+    <string name="management_department_join_request">wants to join</string>
+    <string name="management_department_join_request_deny">Deny</string>
+    <string name="management_department_join_request_approve">Approve</string>
+
     <string name="management_lending_title">Lending Management</string>
 
     <string name="management_pickup_screen">Lending Pickup</string>
