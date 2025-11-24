@@ -258,9 +258,9 @@ fun ActivityMemoryEditor_Preview() {
         isSaving = false,
         saveProgress = null,
         users = listOf(
-            UserData("000", "Alice", "alice@example.com", emptyList(), emptyList(), null, emptyList(), false),
-            UserData("001", "Bob", "bob@example.com", emptyList(), emptyList(), null, emptyList(), false),
-            UserData("002", "Charlie", "charlie@example.com", emptyList(), emptyList(), null, emptyList(), false),
+            UserData("000", "Alice", "alice@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
+            UserData("001", "Bob", "bob@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
+            UserData("002", "Charlie", "charlie@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
         ),
         onSave = { _, _, _, _, _, _ -> },
         onBack = {},
