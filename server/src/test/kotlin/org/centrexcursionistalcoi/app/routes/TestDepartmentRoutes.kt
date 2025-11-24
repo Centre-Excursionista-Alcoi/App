@@ -14,13 +14,12 @@ import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertStatusCode
-import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
+import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.serialization.list
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
 
@@ -175,11 +174,11 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId/requests").apply {
+        client.get("/departments/$departmentId/members").apply {
             assertStatusCode(HttpStatusCode.OK)
-            assertBody(DepartmentJoinRequestsResponse.serializer()) { response ->
-                assertEquals(1, response.requests.size)
-                val request = response.requests[0]
+            assertBody(DepartmentJoinRequest.serializer().list()) { requests ->
+                assertEquals(1, requests.size)
+                val request = requests[0]
                 assertEquals(FakeUser.SUB, request.userSub)
                 // ID is non-deterministic, just check it's not zero
                 assertFalse(request.requestId.isZero())

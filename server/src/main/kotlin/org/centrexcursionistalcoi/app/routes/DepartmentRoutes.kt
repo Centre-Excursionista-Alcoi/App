@@ -13,7 +13,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
-import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
+import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -131,17 +132,26 @@ fun Route.departmentsRoutes() {
         }
     }
 
-    // Allows an admin to view pending join requests
-    get("/departments/{id}/requests") {
-        val (_, department) = departmentRequest(true) ?: return@get
+    get("/departments/{id}/members") {
+        val (session, department) = departmentRequest() ?: return@get
 
         val pendingRequests = Database {
-            DepartmentMemberEntity
-                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.confirmed eq false) }
-                .map { DepartmentJoinRequestsResponse.Request(it.userSub.value, it.id.value.toKotlinUuid()) }
+            if (session.isAdmin()) {
+                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
+            } else {
+                // There should only be one match or none
+                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq session.sub) }
+            }
+                .map { entity ->
+                    DepartmentJoinRequest(
+                        entity.userSub.value,
+                        entity.department.id.value.toKotlinUuid(),
+                        entity.id.value.toKotlinUuid()
+                    )
+                }
         }
         call.respondText(
-            json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),
+            json.encodeToString(DepartmentJoinRequest.serializer().list(), pendingRequests),
             ContentType.Application.Json,
         )
     }
