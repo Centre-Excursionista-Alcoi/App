@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Pending
@@ -111,7 +110,7 @@ fun LendingsPage(
             selectedTabIndex = pagerState.currentPage,
             tabs = departments.map { TabData(it.displayName) } +
                     if (itemsWithoutDepartmentExist)
-                        listOf(TabData(stringResource(Res.string.lending_category_without_department), Icons.Default.Category))
+                        listOf(TabData(stringResource(Res.string.lending_category_without_department)))
                     else
                         emptyList(),
             onTabSelected = { index ->
