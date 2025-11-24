@@ -22,7 +22,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
     val memberNumber = uinteger("member").uniqueIndex()
 
     val fullName = text("full_name")
-    val email = text("email")
+    val email = text("email").nullable()
     val groups = array("groups", TextColumnType()).default(emptyList())
 
     val isDisabled = bool("is_disabled").default(false)

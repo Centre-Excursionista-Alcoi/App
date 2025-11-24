@@ -42,7 +42,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         @SerialName("NIF/NIE")
         val nif: String,
         @SerialName("Correu electrònic")
-        val email: String,
+        val email: String?,
     ) {
         val isDisabled = status.lowercase() != "alta"
     }

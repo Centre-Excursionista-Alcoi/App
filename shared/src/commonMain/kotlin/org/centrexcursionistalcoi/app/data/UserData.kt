@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 data class UserData(
     val sub: String,
     val fullName: String,
-    val email: String,
+    val email: String?,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,
     val lendingUser: LendingUser?,
@@ -53,7 +53,7 @@ data class UserData(
      * Strips sensitive information from the user data.
      * @return A new [UserData] instance with sensitive fields removed.
      */
-    fun strip(): UserData = copy(email = "\u0000", departments = emptyList(), lendingUser = null, insurances = emptyList())
+    fun strip(): UserData = copy(email = null, departments = emptyList(), lendingUser = null, insurances = emptyList())
 
     override val referencedFiles: List<Triple<String, Uuid?, String>>
         get() {

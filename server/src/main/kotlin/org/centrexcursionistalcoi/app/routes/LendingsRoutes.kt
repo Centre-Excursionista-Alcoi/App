@@ -71,6 +71,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -197,10 +198,10 @@ fun Route.lendingsRoutes() {
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
         Email.launch {
             val emails = Database {
-                UserReferenceEntity.all()
+                UserReferenceEntity.find { UserReferences.email neq null }
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
+                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
@@ -670,8 +671,8 @@ fun Route.lendingsRoutes() {
         // Notify administrators that a new memory has been uploaded
         Email.launch {
             val emails = Database {
-                UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
+                UserReferenceEntity.find { UserReferences.email neq null and UserReferences.groups.contains(ADMIN_GROUP_NAME) }
+                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
             }
 
             val fileAttachments = mutableListOf<MailerSendAttachment>()
