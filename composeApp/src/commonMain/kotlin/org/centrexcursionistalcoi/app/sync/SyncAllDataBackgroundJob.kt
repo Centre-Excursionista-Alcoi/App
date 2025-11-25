@@ -38,11 +38,17 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             Napier.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
+            // Departments does not depend on any other entity, so we sync it first
             DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            // Users does not depend on any other entity
             UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            // Posts requires Departments
+            PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            // Inventory Item Types requires Departments
+            InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            // Inventory Items requires Inventory Item Types
+            InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+            // Lendings requires Users, Inventory Item Types and Inventory Items
             LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
 
             settings.putLong("lastSync", now.epochSeconds)
