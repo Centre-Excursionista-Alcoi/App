@@ -10,6 +10,7 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
+import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
@@ -39,6 +40,8 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
     var department by DepartmentEntity optionalReferencedOn Events.department
     var image by FileEntity optionalReferencedOn Events.image
 
+    val userReferences by UserReferenceEntity via EventMembers
+
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value.toKotlinUuid(),
@@ -51,6 +54,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
         requiresConfirmation = requiresConfirmation,
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid(),
+        userSubList = userReferences.map { it.sub.value },
     )
 
     context(_: JdbcTransaction)

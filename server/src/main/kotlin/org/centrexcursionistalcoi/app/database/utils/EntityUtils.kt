@@ -33,8 +33,10 @@ import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.StringColumnType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.UIntegerColumnType
 import org.jetbrains.exposed.v1.core.UUIDColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
+import org.jetbrains.exposed.v1.crypt.EncryptedBinaryColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
 import org.jetbrains.exposed.v1.dao.DaoEntityID
 import org.jetbrains.exposed.v1.dao.Entity
@@ -102,10 +104,11 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                 logger.debug("- ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
-                    is EncryptedVarCharColumnType -> continue // Encrypted columns should not be serialized
+                    is EncryptedVarCharColumnType, is EncryptedBinaryColumnType -> continue // Encrypted columns should not be serialized
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
                     is BooleanColumnType -> element<Boolean>(column.name, isOptional = type.nullable)
                     is IntegerColumnType -> element<Int>(column.name, isOptional = type.nullable)
+                    is UIntegerColumnType -> element<UInt>(column.name, isOptional = type.nullable)
                     is DoubleColumnType -> element<Double>(column.name, isOptional = type.nullable)
                     is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
@@ -187,6 +190,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is IntegerColumnType -> {
                             encodeIntElement(descriptor, idx, typeValue as Int)
+                        }
+                        is UIntegerColumnType -> {
+                            encodeLongElement(descriptor, idx, (typeValue as UInt).toLong())
                         }
                         is DoubleColumnType -> {
                             encodeDoubleElement(descriptor, idx, typeValue as Double)
