@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.page.main.profile
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -49,15 +50,10 @@ fun DepartmentsListCard(
             text = {
                 LazyColumn {
                     items(departments.orEmpty()) { department ->
-                        ListItem(
-                            leadingContent = {
-                                val imageFile by department.rememberImageFile()
-                                AsyncByteImage(imageFile)
-                            },
-                            headlineContent = {
-                                Text(department.displayName)
-                            },
-                            modifier = Modifier.clickable {
+                        val imageFile by department.rememberImageFile()
+                        AsyncByteImage(
+                            imageFile,
+                            modifier = Modifier.aspectRatio(1f).clickable(enabled = !isLoading) {
                                 isLoading = true
                                 onJoinDepartmentRequested(department).invokeOnCompletion {
                                     isLoading = false
