@@ -82,14 +82,19 @@ class LoadingViewModel(
         try {
             // Try to fetch the profile to see if the session is still valid
             if (syncAll(progressNotifier = progressNotifier)) {
-                Napier.d { "Scheduling periodic sync..." }
-                BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
-                    input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
-                    requiresInternet = true,
-                    uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-                    repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
-                    logic = SyncAllDataBackgroundJobLogic,
-                )
+                if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
+                    Napier.d { "Database migration, running synchronization..." }
+                    SyncAllDataBackgroundJobLogic.syncAll(progressNotifier)
+                } else {
+                    Napier.d { "Scheduling periodic sync..." }
+                    BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+                        input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
+                        requiresInternet = true,
+                        uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                        repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
+                        logic = SyncAllDataBackgroundJobLogic,
+                    )
+                }
 
                 _progress.value = null
                 withContext(Dispatchers.Main) { onLoggedIn() }
