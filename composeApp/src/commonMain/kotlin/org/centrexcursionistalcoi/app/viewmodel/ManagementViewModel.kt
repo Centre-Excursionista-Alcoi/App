@@ -148,7 +148,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
+            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link?.takeUnless { it.isBlank() }, files, removedFiles, progressNotifier)
         }
     }
 
