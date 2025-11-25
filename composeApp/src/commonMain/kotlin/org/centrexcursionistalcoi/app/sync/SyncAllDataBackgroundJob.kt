@@ -6,12 +6,14 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
 
 expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
@@ -29,29 +31,26 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
      */
     val periodicSyncInterval = 4.hours
 
+    fun databaseVersionUpgrade(): Boolean {
+        val lastSyncVersion = settings.getLongOrNull("lastSyncVersion")?.toInt()
+        return lastSyncVersion == null || lastSyncVersion < Database.Schema.version
+    }
+
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val forceSync = input[EXTRA_FORCE_SYNC]?.toBoolean() ?: false
 
         val lastSync = settings.getLongOrNull("lastSync")?.let { Instant.fromEpochSeconds(it) }
         val now = Clock.System.now()
-        return if (forceSync || lastSync == null || lastSync.until(now, DateTimeUnit.SECOND) > SYNC_EVERY_SECONDS) {
+        return if (
+            forceSync ||
+            lastSync == null ||
+            databaseVersionUpgrade() ||
+            lastSync.until(now, DateTimeUnit.SECOND) > SYNC_EVERY_SECONDS
+        ) {
             Napier.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
-            // Departments does not depend on any other entity, so we sync it first
-            DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            // Users does not depend on any other entity
-            UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            // Posts requires Departments
-            PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            // Inventory Item Types requires Departments
-            InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            // Inventory Items requires Inventory Item Types
-            InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-            // Lendings requires Users, Inventory Item Types and Inventory Items
-            LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
-
-            settings.putLong("lastSync", now.epochSeconds)
+            syncAll(progressNotifier)
 
             SyncResult.Success()
         } else {
@@ -59,5 +58,23 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
 
             SyncResult.Success()
         }
+    }
+
+    suspend fun syncAll(progressNotifier: ProgressNotifier? = null) {
+        // Departments does not depend on any other entity, so we sync it first
+        DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Users does not depend on any other entity
+        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Posts requires Departments
+        PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Inventory Item Types requires Departments
+        InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Inventory Items requires Inventory Item Types
+        InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Lendings requires Users, Inventory Item Types and Inventory Items
+        LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+
+        settings.putLong("lastSync", Clock.System.now().epochSeconds)
+        settings.putLong("lastSyncVersion", Database.Schema.version)
     }
 }
