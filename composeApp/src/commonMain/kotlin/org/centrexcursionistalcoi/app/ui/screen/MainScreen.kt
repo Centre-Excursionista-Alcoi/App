@@ -137,6 +137,7 @@ fun MainScreen(
             departments = departments,
             onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
             onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
+            onJoinDepartmentRequested = model::requestJoinDepartment,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingClick = onLendingClick,
@@ -208,6 +209,7 @@ private fun MainScreenContent(
     departments: List<Department>?,
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onJoinDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -429,6 +431,7 @@ private fun MainScreenContent(
                         departments,
                         onApproveDepartmentJoinRequest,
                         onDenyDepartmentJoinRequest,
+                        onJoinDepartmentRequested,
                         lendings,
                         onLendingSignUpRequested,
                         onLendingClick,
@@ -471,6 +474,7 @@ private fun MainScreenContent(
                             departments,
                             onApproveDepartmentJoinRequest,
                             onDenyDepartmentJoinRequest,
+                            onJoinDepartmentRequested,
                             lendings,
                             onLendingSignUpRequested,
                             onLendingClick,
@@ -519,6 +523,7 @@ private fun MainScreenPagerContent(
     departments: List<Department>?,
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onJoinDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -596,6 +601,8 @@ private fun MainScreenPagerContent(
                 onCreateInsurance,
                 onFEMECVConnectRequested,
                 onFEMECVDisconnectRequested,
+                departments,
+                onJoinDepartmentRequested,
             )
         }
     }

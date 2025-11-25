@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -123,5 +124,9 @@ class MainViewModel: ViewModel() {
 
     fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
         DepartmentsRemoteRepository.denyJoinRequest(request)
+    }
+
+    fun requestJoinDepartment(department: Department) = launch {
+        DepartmentsRemoteRepository.requestJoin(department.id)
     }
 }

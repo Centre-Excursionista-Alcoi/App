@@ -55,4 +55,19 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
+
+    suspend fun requestJoin(departmentId: Uuid) {
+        Napier.i { "Requesting to join department: departmentId=$departmentId" }
+
+        val response = httpClient.post("/departments/$departmentId/join")
+        if (response.status.isSuccess()) {
+            Napier.i { "Join request sent successfully." }
+            update(departmentId) // Refresh department data
+        } else {
+            // Try to decode the error
+            val error = response.bodyAsError()
+            Napier.e { "Failed to send join request: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+        }
+    }
 }

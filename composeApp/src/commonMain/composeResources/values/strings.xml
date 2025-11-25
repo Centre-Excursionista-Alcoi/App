@@ -185,6 +185,11 @@
 
     <string name="active_insurances_title">Active Insurances</string>
 
+    <string name="departments_title">Departments</string>
+    <string name="departments_join_choose">Choose a department</string>
+    <string name="departments_member_none">You are not a member of any department.</string>
+    <string name="departments_member_pending">Request pending.</string>
+
     <string name="management_no_departments">No departments</string>
     <string name="management_no_users">No users</string>
     <string name="management_no_item_types">No item types</string>
