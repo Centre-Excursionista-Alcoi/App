@@ -10,8 +10,12 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
+import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -19,14 +23,32 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/types",
         entityClass = InventoryItemTypeEntity,
         idTypeConverter = { UUID.fromString(it) },
+        listProvider = { session ->
+            if (session == null) EmptySizedIterable()
+            else if (session.isAdmin()) InventoryItemTypeEntity.all()
+            else {
+                val userDepartments = transaction {
+                    DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) }
+                        .map { it.department.id.value }
+                }
+                InventoryItemTypeEntity.find {
+                    (InventoryItemTypes.department eq null) or (InventoryItemTypes.department inList userDepartments)
+                }
+            }
+        },
         creator = { formParameters ->
             var displayName: String? = null
             var description: String? = null
@@ -95,6 +117,24 @@ fun Route.inventoryRoutes() {
         base = "inventory/items",
         entityClass = InventoryItemEntity,
         idTypeConverter = { UUID.fromString(it) },
+        listProvider = { session ->
+            if (session == null) EmptySizedIterable()
+            else if (session.isAdmin()) InventoryItemEntity.all()
+            else {
+                val userDepartments = transaction {
+                    DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) }
+                        .map { it.department.id.value }
+                }
+                val itemTypesForDepartments = transaction {
+                    InventoryItemTypeEntity.find {
+                        (InventoryItemTypes.department eq null) or (InventoryItemTypes.department inList userDepartments)
+                    }.map { it.id.value }
+                }
+                InventoryItemEntity.find {
+                    InventoryItems.type inList itemTypesForDepartments
+                }
+            }
+        },
         creator = { formParameters ->
             var variation: String? = null
             var type: UUID? = null
