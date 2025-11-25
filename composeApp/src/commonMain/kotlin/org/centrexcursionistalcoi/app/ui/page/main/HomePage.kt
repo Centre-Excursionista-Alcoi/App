@@ -24,12 +24,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
@@ -49,6 +54,12 @@ fun HomePage(
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
 
     posts: List<ReferencedPost>?,
+
+    departments: List<Department>?,
+    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+
+    users: List<UserData>?,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
@@ -184,6 +195,35 @@ fun HomePage(
                     contentType = { "non-completed-lending" },
                 ) { lending ->
                     LendingItem(lending) { onOtherUserLendingClick(lending) }
+                }
+            }
+
+            val pendingJoinRequests = departments
+                ?.map { it.members }
+                ?.filter { members -> members.any { !it.confirmed } }
+                ?.flatten()
+            if (!pendingJoinRequests.isNullOrEmpty()) {
+                stickyHeader {
+                    Text(
+                        text = stringResource(Res.string.management_other_users_join_requests),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                    )
+                }
+                items(
+                    items = pendingJoinRequests.filterNot { it.confirmed },
+                    key = { "join_request_${it.id}" },
+                    contentType = { "pending-join-request" },
+                ) { request ->
+                    val department = departments.find { dept -> dept.members.any { it.id == request.id } } ?: return@items
+                    val userData = users?.find { it.sub == request.userSub } ?: return@items
+
+                    DepartmentPendingJoinRequest(
+                        userData = userData,
+                        department = department,
+                        onApprove = { onApproveDepartmentJoinRequest(request) },
+                        onDeny = { onDenyDepartmentJoinRequest(request) },
+                    )
                 }
             }
         }

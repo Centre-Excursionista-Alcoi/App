@@ -42,13 +42,15 @@ object DepartmentsRepository : DatabaseRepository<Department, Uuid>() {
     override suspend fun insert(item: Department) = queries.insert(
         id = item.id,
         displayName = item.displayName,
-        imageFile = item.image
+        imageFile = item.image,
+        members = item.members,
     )
 
     override suspend fun update(item: Department) = queries.update(
         id = item.id,
         displayName = item.displayName,
-        imageFile = item.image
+        imageFile = item.image,
+        members = item.members,
     )
 
     override suspend fun delete(id: Uuid) {
@@ -58,6 +60,7 @@ object DepartmentsRepository : DatabaseRepository<Department, Uuid>() {
     fun Departments.toDepartment() = Department(
         id = id,
         displayName = displayName,
-        image = imageFile
+        image = imageFile,
+        members = members.orEmpty(),
     )
 }

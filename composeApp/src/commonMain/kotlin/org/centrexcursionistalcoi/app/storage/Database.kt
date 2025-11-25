@@ -39,7 +39,11 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
     val driver = driverFactory.createDriver()
     return Database(
         driver,
-        Departments.Adapter(UUIDAdapter, UUIDAdapter),
+        Departments.Adapter(
+            UUIDAdapter,
+            UUIDAdapter,
+            JsonAdapter(ListSerializer(DepartmentMemberInfo.serializer()))
+        ),
         InventoryItemTypes.Adapter(UUIDAdapter, ListStringAdapter, UUIDAdapter, UUIDAdapter),
         InventoryItems.Adapter(UUIDAdapter, UUIDAdapter),
         LendingItems.Adapter(UUIDAdapter, UUIDAdapter),

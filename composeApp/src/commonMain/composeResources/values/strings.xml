@@ -185,6 +185,11 @@
 
     <string name="active_insurances_title">Active Insurances</string>
 
+    <string name="departments_title">Departments</string>
+    <string name="departments_join_choose">Choose a department</string>
+    <string name="departments_member_none">You are not a member of any department.</string>
+    <string name="departments_member_pending">Request pending.</string>
+
     <string name="management_no_departments">No departments</string>
     <string name="management_no_users">No users</string>
     <string name="management_no_item_types">No item types</string>
@@ -207,6 +212,11 @@
     <string name="management_pending_return_lendings">Lendings pending return</string>
     <string name="management_pending_memory_lendings">Lendings pending memory</string>
     <string name="management_completed_lendings">Completed lendings</string>
+
+    <string name="management_other_users_join_requests">Department Join Requests</string>
+    <string name="management_department_join_request">wants to join</string>
+    <string name="management_department_join_request_deny">Deny</string>
+    <string name="management_department_join_request_approve">Approve</string>
 
     <string name="management_lending_title">Lending Management</string>
 
@@ -375,6 +385,10 @@
     <string name="notification_lending_returned_other_message">A user has returned the items of a lending.</string>
     <string name="notification_lending_returned_partial_title">Lending Partially Returned</string>
     <string name="notification_lending_returned_partial_message">You have returned some items of your lending. Please, remember to return the remaining items as soon as possible.</string>
+    <string name="notification_join_request_denied_title">Department Join Request Denied</string>
+    <string name="notification_join_request_denied_message">Your request to join a department has been denied.</string>
+    <string name="notification_join_request_approved_title">Department Join Request Approved</string>
+    <string name="notification_join_request_approved_message">Your request to join a department has been approved.</string>
 
     <string name="nfc_write_success">NFC written successfully</string>
     <string name="nfc_error_read_only">NFC tag is read-only</string>

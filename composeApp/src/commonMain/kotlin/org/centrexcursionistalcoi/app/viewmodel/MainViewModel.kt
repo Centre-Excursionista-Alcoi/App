@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import io.github.aakira.napier.Napier
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -18,8 +17,8 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -75,7 +74,7 @@ class MainViewModel: ViewModel() {
         _notificationPermissionResult.value = null
     }
 
-    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = launch {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
         ProfileRemoteRepository.synchronize()
     }
@@ -101,11 +100,11 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun sync() = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun sync() = launch {
         LoadingViewModel.syncAll(force = true)
     }
 
-    fun connectFEMECV(username: String, password: CharArray) = viewModelScope.async<Throwable?>(defaultAsyncDispatcher) {
+    fun connectFEMECV(username: String, password: CharArray) = async<Throwable?> {
         try {
             ProfileRemoteRepository.connectFEMECV(username, password)
             null
@@ -115,7 +114,19 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun disconnectFEMECV() = viewModelScope.launch(defaultAsyncDispatcher) {
+    fun disconnectFEMECV() = launch {
         ProfileRemoteRepository.disconnectFEMECV()
+    }
+
+    fun approveDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
+        DepartmentsRemoteRepository.confirmJoinRequest(request)
+    }
+
+    fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
+        DepartmentsRemoteRepository.denyJoinRequest(request)
+    }
+
+    fun requestJoinDepartment(department: Department) = launch {
+        DepartmentsRemoteRepository.requestJoin(department.id)
     }
 }

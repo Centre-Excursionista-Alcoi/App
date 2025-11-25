@@ -13,17 +13,19 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
-import org.centrexcursionistalcoi.app.data.DepartmentJoinRequestsResponse
+import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -131,22 +133,31 @@ fun Route.departmentsRoutes() {
         }
     }
 
-    // Allows an admin to view pending join requests
-    get("/departments/{id}/requests") {
-        val (_, department) = departmentRequest(true) ?: return@get
+    get("/departments/{id}/members") {
+        val (session, department) = departmentRequest() ?: return@get
 
         val pendingRequests = Database {
-            DepartmentMemberEntity
-                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.confirmed eq false) }
-                .map { DepartmentJoinRequestsResponse.Request(it.userSub.value, it.id.value.toKotlinUuid()) }
+            if (session.isAdmin()) {
+                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
+            } else {
+                // There should only be one match or none
+                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq session.sub) }
+            }
+                .map { entity ->
+                    DepartmentJoinRequest(
+                        entity.userSub.value,
+                        entity.department.id.value.toKotlinUuid(),
+                        entity.id.value.toKotlinUuid()
+                    )
+                }
         }
         call.respondText(
-            json.encodeToString(DepartmentJoinRequestsResponse.serializer(), DepartmentJoinRequestsResponse(pendingRequests)),
+            json.encodeToString(DepartmentJoinRequest.serializer().list(), pendingRequests),
             ContentType.Application.Json,
         )
     }
 
-    // Allows an admin to confirm a join request
+    // Allows an admin to confirm and deny join requests
     post("/departments/{id}/confirm/{requestId}") {
         val (_, department) = departmentRequest(true) ?: return@post
 
@@ -175,6 +186,49 @@ fun Route.departmentsRoutes() {
         Database {
             member.confirmed = true
         }
+
+        Push.launch {
+            Push.sendPushNotification(
+                userSub = member.userSub.value,
+                notification = member.confirmedNotification(),
+                includeAdmins = true,
+            )
+        }
+
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
+    }
+    post("/departments/{id}/deny/{requestId}") {
+        val (_, department) = departmentRequest(true) ?: return@post
+
+        val requestId = call.parameters["requestId"]?.toUUIDOrNull()
+        if (requestId == null) {
+            call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
+            return@post
+        }
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.id eq requestId) and (DepartmentMembers.departmentId eq department.id) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respondText("Join request not found", status = HttpStatusCode.NotFound)
+            return@post
+        }
+
+        Database {
+            // Denied request, delete the member entry
+            member.delete()
+        }
+
+        Push.launch {
+            Push.sendPushNotification(
+                userSub = member.userSub.value,
+                notification = member.deniedNotification(),
+                includeAdmins = true,
+            )
+        }
+
+        call.respondText("Join request denied", status = HttpStatusCode.OK)
     }
 }

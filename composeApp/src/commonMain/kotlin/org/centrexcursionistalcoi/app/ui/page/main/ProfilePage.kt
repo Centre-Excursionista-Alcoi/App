@@ -34,9 +34,11 @@ import androidx.compose.ui.unit.sp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.FEMECVAccountCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.NoInsurancesCard
@@ -55,6 +57,8 @@ fun ColumnScope.ProfilePage(
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
     onFEMECVDisconnectRequested: () -> Job,
+    departments: List<Department>?,
+    onJoinDepartmentRequested: (Department) -> Job,
 ) {
     val activeInsurances = remember(profile) { profile.activeInsurances() }
 
@@ -134,6 +138,14 @@ fun ColumnScope.ProfilePage(
                 profile = profile,
                 onConnectRequested = onFEMECVConnectRequested,
                 onDisconnectRequested = onFEMECVDisconnectRequested,
+            )
+        }
+
+        item("departments") {
+            DepartmentsListCard(
+                profile,
+                departments,
+                onJoinDepartmentRequested,
             )
         }
     }

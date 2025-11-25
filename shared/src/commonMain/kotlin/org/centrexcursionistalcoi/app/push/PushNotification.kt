@@ -33,12 +33,14 @@ sealed interface PushNotification {
                 LendingConfirmed.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingConfirmed push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingConfirmed push notification data")
-                    LendingConfirmed(lendingId, userSub)
+                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingConfirmed push notification data")
+                    LendingConfirmed(lendingId, userSub, isSelf)
                 }
                 LendingCancelled.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingCancelled push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingCancelled push notification data")
-                    LendingCancelled(lendingId, userSub)
+                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingCancelled push notification data")
+                    LendingCancelled(lendingId, userSub, isSelf)
                 }
                 LendingTaken.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingTaken push notification data")
@@ -71,26 +73,32 @@ sealed interface PushNotification {
 
     fun toMap(): Map<String, String>
 
-    @Serializable
-    sealed interface LendingUpdated : PushNotification {
+    sealed interface TargetedNotification : PushNotification {
         /**
-         * The ID of the lending that was updated/created.
-         */
-        val lendingId: Uuid
-
-        /**
-         * The userSub of the user related to the lending.
+         * The userSub of the user related to the notification.
          */
         val userSub: String
 
         /**
          * Alias for checking whether [userSub] corresponds to the current user.
          *
-         * Determines whether the notification is about the current user's lending or someone else's (received by an admin, for example).
+         * Determines whether the notification is about the current user or someone else (received by an admin, for example).
          */
         val isSelf: Boolean
 
-        override fun toMap(): Map<String, String> = mapOf("lendingId" to lendingId.toString(), "userSub" to userSub, "isSelf" to isSelf.toString())
+        override fun toMap(): Map<String, String> = mapOf("userSub" to userSub, "isSelf" to isSelf.toString())
+
+        fun notSelf(): TargetedNotification
+    }
+
+    @Serializable
+    sealed interface LendingUpdated : TargetedNotification {
+        /**
+         * The ID of the lending that was updated/created.
+         */
+        val lendingId: Uuid
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("lendingId" to lendingId.toString())
     }
 
     @Serializable
@@ -106,6 +114,8 @@ sealed interface PushNotification {
 
         // For new lending requests, we always consider it as not self, since users don't receive notifications about new lendings
         override val isSelf: Boolean = false
+
+        override fun notSelf() = this // never self
     }
 
     @Serializable
@@ -121,12 +131,15 @@ sealed interface PushNotification {
 
         // For memory uploads, we always consider it as not self, since users don't receive notifications about their own uploads
         override val isSelf: Boolean = false
+
+        override fun notSelf() = this // never self
     }
 
     @Serializable
     class LendingCancelled(
         override val lendingId: Uuid,
         override val userSub: String,
+        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingCancelled"
@@ -134,14 +147,14 @@ sealed interface PushNotification {
 
         override val type: String = TYPE
 
-        // For lending cancellations, we always consider it as self, since users only receive notifications about their own cancellations
-        override val isSelf: Boolean = true
+        override fun notSelf() = LendingCancelled(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
     class LendingConfirmed(
         override val lendingId: Uuid,
         override val userSub: String,
+        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingConfirmed"
@@ -149,8 +162,7 @@ sealed interface PushNotification {
 
         override val type: String = TYPE
 
-        // For lending confirmations, we always consider it as self, since users only receive notifications about their own confirmations
-        override val isSelf: Boolean = true
+        override fun notSelf() = LendingConfirmed(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
@@ -164,6 +176,8 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
+
+        override fun notSelf() = LendingTaken(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
@@ -177,6 +191,8 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
+
+        override fun notSelf() = LendingPartiallyReturned(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
@@ -190,6 +206,8 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
+
+        override fun notSelf() = LendingReturned(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
@@ -203,5 +221,24 @@ sealed interface PushNotification {
         override val type: String = TYPE
 
         override fun toMap(): Map<String, String> = mapOf("postId" to postId.toString())
+    }
+
+    @Serializable
+    class DepartmentJoinRequestUpdated(
+        val requestId: Uuid,
+        val departmentId: Uuid,
+        override val userSub: String,
+        override val isSelf: Boolean,
+        val isConfirmed: Boolean,
+    ) : TargetedNotification {
+        companion object {
+            const val TYPE = "DepartmentJoinRequestUpdated"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString(), "isConfirmed" to isConfirmed.toString())
+
+        override fun notSelf() = DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isSelf = false, isConfirmed)
     }
 }
