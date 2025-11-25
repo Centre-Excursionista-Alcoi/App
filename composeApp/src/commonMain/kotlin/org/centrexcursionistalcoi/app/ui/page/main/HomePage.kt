@@ -199,7 +199,7 @@ fun HomePage(
             }
 
             val pendingJoinRequests = departments
-                ?.map { it.members }
+                ?.map { it.members.orEmpty() }
                 ?.filter { members -> members.any { !it.confirmed } }
                 ?.flatten()
             if (!pendingJoinRequests.isNullOrEmpty()) {
@@ -215,7 +215,7 @@ fun HomePage(
                     key = { "join_request_${it.id}" },
                     contentType = { "pending-join-request" },
                 ) { request ->
-                    val department = departments.find { dept -> dept.members.any { it.id == request.id } } ?: return@items
+                    val department = departments.find { dept -> dept.members.orEmpty().any { it.id == request.id } } ?: return@items
                     val userData = users?.find { it.sub == request.userSub } ?: return@items
 
                     DepartmentPendingJoinRequest(
