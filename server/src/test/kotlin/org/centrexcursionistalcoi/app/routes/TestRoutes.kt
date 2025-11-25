@@ -91,7 +91,6 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Inventory Item Types",
             baseUrl = "/inventory/types",
-            listLoginType = LoginType.ADMIN,
             requiredCreationValuesProvider = mapOf("displayName" to { "Test Item Type" }),
             optionalCreationValuesProvider = mapOf(
                 "description" to { "This is a test description for the item" },
@@ -110,7 +109,6 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Inventory Items",
             baseUrl = "/inventory/items",
-            listLoginType = LoginType.ADMIN,
             requiredCreationValuesProvider = mapOf("type" to { testItemTypeId }),
             optionalCreationValuesProvider = mapOf(
                 "variation" to { "This is a test variation for the item" },
