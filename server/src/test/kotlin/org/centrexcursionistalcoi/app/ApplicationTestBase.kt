@@ -27,9 +27,7 @@ import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.AES
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 abstract class ApplicationTestBase {
@@ -40,8 +38,9 @@ abstract class ApplicationTestBase {
          * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
+        disablePush: Boolean = true,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
-    ) = runApplicationTest(shouldLogIn, { }, userEntityPatches) { block(it) }
+    ) = runApplicationTest(shouldLogIn, { }, userEntityPatches, disablePush) { block(it) }
 
     fun <DIB> runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
@@ -50,6 +49,7 @@ abstract class ApplicationTestBase {
          * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
+        disablePush: Boolean = true,
         finally: suspend () -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
@@ -59,7 +59,7 @@ abstract class ApplicationTestBase {
         AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
 
         // Disable push notifications during tests
-        Push.disable = true
+        Push.disable = disablePush
 
         try {
             val dib = databaseInitBlock?.let { Database(it) }

@@ -3,11 +3,14 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.client.plugins.sse.sse
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.push.PushNotification
@@ -19,6 +22,7 @@ class TestSSE : ApplicationTestBase() {
     @Test
     fun `test events - admin`() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
+        disablePush = false,
     ) {
         var connectionEstablished = false
         var type: String? = null
@@ -42,7 +46,9 @@ class TestSSE : ApplicationTestBase() {
 
         try {
             // wait for connection to be established
-            while (!connectionEstablished) delay(10)
+            withTimeout(10.seconds) {
+                while (!connectionEstablished) delay(10)
+            }
             delay(50) // wait for the event to be received
             assertEquals("connection", type, "Didn't receive the connection event.") // initial connection event
             type = null // reset for next tests
@@ -100,6 +106,8 @@ class TestSSE : ApplicationTestBase() {
                 assertEquals(Uuid.Zero.toString(), notificationData["lendingId"])
                 assertEquals("xyz", notificationData["userSub"])
             }
+        } catch(_: TimeoutCancellationException) {
+            throw AssertionError("Connection was not established in time.")
         } finally {
             job.cancel()
         }
