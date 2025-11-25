@@ -12,8 +12,7 @@ import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
-import org.jetbrains.exposed.v1.javatime.date
-import org.jetbrains.exposed.v1.javatime.time
+import org.jetbrains.exposed.v1.javatime.datetime
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
@@ -22,8 +21,8 @@ object Events : UUIDTable("events"), ViaLink<UUID, EventEntity, String, UserRefe
     val created = timestamp("created").defaultExpression(CurrentTimestamp)
     val updated = timestamp("updated").defaultExpression(CurrentTimestamp)
 
-    val date = date("date")
-    val time = time("time").nullable()
+    val start = datetime("start")
+    val end = datetime("end").nullable()
 
     val place = text("place")
 

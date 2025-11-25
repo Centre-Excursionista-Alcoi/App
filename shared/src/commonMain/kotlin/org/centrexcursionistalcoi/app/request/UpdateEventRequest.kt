@@ -1,16 +1,15 @@
 package org.centrexcursionistalcoi.app.request
 
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.FileWithContext
 
 @Serializable
 data class UpdateEventRequest(
-    val date: LocalDate? = null,
-    val time: LocalTime? = null,
+    val start: LocalDateTime? = null,
+    val end: LocalDateTime? = null,
     val place: String? = null,
     val title: String? = null,
     val description: String? = null,
@@ -20,8 +19,8 @@ data class UpdateEventRequest(
     val image: FileWithContext? = null,
 ): UpdateEntityRequest<Uuid, Event> {
     override fun isEmpty(): Boolean {
-        return date == null &&
-            time == null &&
+        return start == null &&
+            end == null &&
             place.isNullOrEmpty() &&
             title.isNullOrEmpty() &&
             description.isNullOrEmpty() &&

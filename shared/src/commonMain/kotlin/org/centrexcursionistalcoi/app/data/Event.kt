@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.data
 
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Event(
     override val id: Uuid,
-    val date: LocalDate,
-    val time: LocalTime?,
+    val start: LocalDateTime,
+    val end: LocalDateTime?,
     val place: String,
     val title: String,
     val description: String?,
@@ -27,8 +26,8 @@ data class Event(
 
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
-        "date" to date,
-        "time" to time,
+        "start" to start,
+        "end" to end,
         "place" to place,
         "title" to title,
         "description" to description,

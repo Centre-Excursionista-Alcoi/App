@@ -3,60 +3,36 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
-import java.time.LocalDate
+import io.ktor.server.routing.get
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.uuid.toKotlinUuid
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.slf4j.LoggerFactory
-
-private val logger = LoggerFactory.getLogger("EventsRoutes")
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
         base = "events",
         entityClass = EventEntity,
         idTypeConverter = { UUID.fromString(it) },
-        listProvider = { session ->
-            if (session == null) {
-                // Not logged in, only show public events (without department)
-                logger.debug("Unauthenticated user, fetching public events...")
-                EventEntity.find { Events.department eq null }
-            } else if (session.isAdmin()) {
-                // If admin, show all events
-                logger.debug("Admin user ${session.sub} fetching all events...")
-                EventEntity.all()
-            } else {
-                // Logged in, show public events, and events for the user's department
-                logger.debug("Fetching events for user ${session.sub}")
-                logger.debug("Fetching user departments for user ${session.sub}")
-                val userDepartments = transaction {
-                    DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
-                        .map { it.department.id.value }
-                }
-                logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
-                EventEntity.find {
-                    (Events.department eq null) or (Events.department inList userDepartments)
-                }
-            }
-        },
+        listProvider = { session -> EventEntity.forSession(session) },
         creator = { formParameters ->
-            var date: LocalDate? = null
-            var time: LocalTime? = null
+            var start: LocalDateTime? = null
+            var end: LocalDateTime? = null
             var place: String? = null
             var title: String? = null
             var description: String? = null
@@ -69,8 +45,8 @@ fun Route.eventsRoutes() {
                 when (partData) {
                     is PartData.FormItem -> {
                         when (partData.name) {
-                            "date" -> date = LocalDate.parse(partData.value)
-                            "time" -> time = LocalTime.parse(partData.value)
+                            "start" -> start = LocalDateTime.parse(partData.value)
+                            "end" -> end = LocalDateTime.parse(partData.value)
                             "place" -> place = partData.value
                             "title" -> title = partData.value
                             "description" -> description = partData.value
@@ -89,7 +65,7 @@ fun Route.eventsRoutes() {
                 }
             }
 
-            date ?: throw NullPointerException("Missing date")
+            start ?: throw NullPointerException("Missing start")
             place ?: throw NullPointerException("Missing place")
             title ?: throw NullPointerException("Missing title")
 
@@ -101,8 +77,8 @@ fun Route.eventsRoutes() {
 
             Database {
                 EventEntity.new {
-                    this.date = date
-                    this.time = time
+                    this.start = start
+                    this.end = end
                     this.place = place
                     this.title = title
                     this.description = description
@@ -140,4 +116,28 @@ fun Route.eventsRoutes() {
         },
         updater = UpdateEventRequest.serializer(),
     )
+    get("/events/calendar") {
+        val session = call.getUserSession()
+        val events = EventEntity.forSession(session)
+
+        val sb = StringBuilder()
+        sb.append("BEGIN:VCALENDAR\r\n")
+        sb.append("VERSION:2.0\r\n")
+        sb.append("PRODID:-//Centre Excursionista d'Alcoi//Events Calendar//EN\r\n")
+        for (event in events) {
+            val eventData = Database { event.toData() }
+            sb.append("BEGIN:VEVENT\r\n")
+            sb.append("UID:${eventData.id}\r\n")
+            // example: 20231025T120000Z
+            val formattedStart = eventData.start.toJavaLocalDateTime().format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+            val formattedEnd = (eventData.end?.toJavaLocalDateTime() ?: LocalDateTime.of(eventData.start.date.toJavaLocalDate(), LocalTime.of(23, 59))).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+            sb.append("DTSTART:$formattedStart\r\n")
+            sb.append("DTEND:$formattedEnd\r\n")
+            sb.append("SUMMARY:${eventData.title}\r\n")
+            sb.append("DESCRIPTION:${eventData.description}\r\n")
+            sb.append("LOCATION:${eventData.place}\r\n")
+            sb.append("END:VEVENT\r\n")
+        }
+        sb.append("END:VCALENDAR\r\n")
+    }
 }

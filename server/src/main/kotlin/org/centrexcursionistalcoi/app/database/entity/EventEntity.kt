@@ -4,30 +4,58 @@ import java.util.UUID
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaLocalTime
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.slf4j.LoggerFactory
 
 class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
-    companion object: UUIDEntityClass<EventEntity>(Events)
+    companion object: UUIDEntityClass<EventEntity>(Events) {
+        private val logger = LoggerFactory.getLogger("EventEntity")
+
+        fun forSession(session: UserSession?) = if (session == null) {
+            // Not logged in, only show public events (without department)
+            logger.debug("Unauthenticated user, fetching public events...")
+            find { Events.department eq null }
+        } else if (session.isAdmin()) {
+            // If admin, show all events
+            logger.debug("Admin user ${session.sub} fetching all events...")
+            all()
+        } else {
+            // Logged in, show public events, and events for the user's department
+            logger.debug("Fetching events for user ${session.sub}")
+            logger.debug("Fetching user departments for user ${session.sub}")
+            val userDepartments = transaction {
+                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                    .map { it.department.id.value }
+            }
+            logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
+            find {
+                (Events.department eq null) or (Events.department inList userDepartments)
+            }
+        }
+    }
 
     val created by Events.created
     var updated by Events.updated
     private set
 
-    var date by Events.date
-    var time by Events.time
+    var start by Events.start
+    var end by Events.end
 
     var place by Events.place
 
@@ -45,8 +73,8 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value.toKotlinUuid(),
-        date = date.toKotlinLocalDate(),
-        time = time?.toKotlinLocalTime(),
+        start = start.toKotlinLocalDateTime(),
+        end = end?.toKotlinLocalDateTime(),
         place = place,
         title = title,
         description = description,
@@ -59,8 +87,8 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateEventRequest) {
-        request.date?.let { date = it.toJavaLocalDate() }
-        request.time?.let { time = it.toJavaLocalTime() }
+        request.start?.let { start = it.toJavaLocalDateTime() }
+        request.end?.let { end = it.toJavaLocalDateTime() }
         request.place?.let { place = it }
         request.title?.let { title = it }
         request.description?.let { description = it }
