@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.ConfigProvider
+import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.Post
 import org.slf4j.LoggerFactory
 
@@ -54,6 +55,29 @@ object Telegram : ConfigProvider(), Closeable {
         bot.sendMessage(
             chatId = chatId!!,
             text = post.content,
+        )
+    }
+
+    fun sendEvent(event: Event) {
+        val bot = bot ?: return
+
+        val message = buildString {
+            append("New Event:\n")
+            append("*${event.title}*\n")
+            append("_${event.place}_\n")
+            append("Date: ${event.date}\n")
+            event.time?.let {
+                append("Time: $it\n")
+            }
+            event.description?.let {
+                append("\n$it\n")
+            }
+        }
+
+        bot.sendMessage(
+            chatId = chatId!!,
+            text = message,
+            parseMode = com.github.kotlintelegrambot.entities.ParseMode.MARKDOWN,
         )
     }
 }

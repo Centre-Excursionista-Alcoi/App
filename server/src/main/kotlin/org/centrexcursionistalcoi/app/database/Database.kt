@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
@@ -48,6 +49,7 @@ object Database {
         ReceivedItems,
         RecoverPasswordRequests,
         FCMRegistrationTokens,
+        Events,
     )
     private var database: JdbcDatabase? = null
 

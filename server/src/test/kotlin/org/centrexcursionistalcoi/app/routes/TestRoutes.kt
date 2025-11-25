@@ -1,24 +1,25 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.Month
 import java.util.Random
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.FileWithContext.Companion.wrapFile
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
-import org.centrexcursionistalcoi.app.test.*
-import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.DynamicTest
@@ -28,6 +29,7 @@ class TestRoutes : ApplicationTestBase() {
     private val testDepartmentId = "2c8876a9-ff7e-4dd8-b39c-dd270631b9d2".toUUID()
     private val testItemTypeId = "3a305821-03f2-4ca8-98c8-ffe64e262cf7".toUUID()
     private val testItemId = "3c509110-2115-4fd7-b3d5-20692cb935e5".toUUID()
+    private val testEventId = "cfa60697-5166-4e9e-881e-51e32de2e10f".toUUID()
     private val random = Random(0)
 
     /** Regexp for UUIDv4 */
@@ -50,7 +52,6 @@ class TestRoutes : ApplicationTestBase() {
                     displayName = "Test Department"
                 }
             },
-            invalidEntityId = Uuid.Zero.toJavaUuid(),
         ),
         runTestsOnRoute(
             title = "Posts",
@@ -86,7 +87,6 @@ class TestRoutes : ApplicationTestBase() {
                     content = "Content for Test Post."
                 }
             },
-            invalidEntityId = Uuid.Zero.toJavaUuid(),
         ),
         runTestsOnRoute(
             title = "Inventory Item Types",
@@ -104,7 +104,6 @@ class TestRoutes : ApplicationTestBase() {
                     displayName = "Test Item Type"
                 }
             },
-            invalidEntityId = Uuid.Zero.toJavaUuid(),
         ),
         runTestsOnRoute(
             title = "Inventory Items",
@@ -128,7 +127,44 @@ class TestRoutes : ApplicationTestBase() {
                     type = InventoryItemTypeEntity[testItemTypeId]
                 }
             },
-            invalidEntityId = Uuid.Zero.toJavaUuid(),
+        ),
+        runTestsOnRoute(
+            title = "Events",
+            baseUrl = "/events",
+            requiredCreationValuesProvider = mapOf(
+                "date" to { LocalDate.of(2025, Month.OCTOBER, 10) },
+                "title" to { "Test Event" },
+                "place" to { "Test Place" },
+            ),
+            optionalCreationValuesProvider = mapOf(
+                "time" to { LocalTime.of(10, 15) },
+                "description" to { "This is a test event description." },
+                "department" to { testDepartmentId },
+                "maxPeople" to { 50 },
+                "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile("square.png", ContentType.Image.PNG) }
+            ),
+            defaultCreationValuesProvider = mapOf(
+                "requiresConfirmation" to ProvidedRouteTests.DefaultValue(true) { false },
+            ),
+            filterEntitiesForListLoginType = { it.department == null },
+            locationRegex = "/events/$uuidv4+".toRegex(),
+            entityClass = EventEntity,
+            dataEntitySerializer = Event.serializer(),
+            foreignTypesAssociations = mapOf(
+                "department" to DepartmentEntity,
+            ),
+            auxiliaryEntitiesProvider = {
+                DepartmentEntity.new(testDepartmentId) {
+                    displayName = "Test Department"
+                }
+            },
+            stubEntityProvider = {
+                EventEntity.new(testEventId) {
+                    date = LocalDate.of(2025, Month.OCTOBER, 10)
+                    title = "Test Event"
+                    place = "Test Place"
+                }
+            },
         ),
     ).flatten()
 }

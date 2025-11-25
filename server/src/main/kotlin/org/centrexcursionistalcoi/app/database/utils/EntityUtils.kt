@@ -45,6 +45,7 @@ import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.ULongEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
+import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -109,6 +110,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
+                    is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
@@ -197,6 +199,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is JavaLocalDateColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as LocalDate).toString())
+                        }
+                        is JavaLocalTimeColumnType -> {
+                            encodeStringElement(descriptor, idx, typeValue.toString())
                         }
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())

@@ -14,10 +14,20 @@ import org.slf4j.LoggerFactory
 private val logger = LoggerFactory.getLogger("SSE")
 
 fun Application.configureSSE() {
+    if (Push.disable) {
+        logger.info("Push notifications are disabled; SSE will not be configured.")
+        return
+    }
+
     install(SSE)
 }
 
 fun Route.configureSSERoutes() {
+    if (Push.disable) {
+        logger.info("Push notifications are disabled; SSE routes will not be added.")
+        return
+    }
+
     sse("/events") {
         val session = call.sessions.get<UserSession>()
         if (session == null) {

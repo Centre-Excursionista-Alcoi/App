@@ -16,6 +16,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import java.lang.reflect.InvocationTargetException
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.temporal.Temporal
+import java.util.Random
 import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
@@ -28,6 +32,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -42,13 +48,13 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
+import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.dao.EntityClass
@@ -58,6 +64,8 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.assertInstanceOf
+import kotlinx.datetime.LocalDate as KotlinLocalDate
+import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 object ProvidedRouteTests {
@@ -181,6 +189,7 @@ object ProvidedRouteTests {
                 is Number -> member.call(this, value)
                 is Boolean -> member.call(this, value)
                 is ByteArray -> member.call(this, value)
+                is Temporal -> member.call(this, value)
                 is FileWithContext -> {
                     // For FileBytesWrapper, the setter is a FileEntity. We have to create a FileEntity first.
                     val fileEntity = transaction {
@@ -225,6 +234,11 @@ object ProvidedRouteTests {
         baseUrl: String,
 
         listLoginType: LoginType = LoginType.USER,
+        /**
+         * If the given [listLoginType] variates the entities that are listed, this filter can be used
+         * to filter them accordingly.
+         */
+        filterEntitiesForListLoginType: JdbcTransaction.(EE) -> Boolean = { true },
         modificationsLoginType: LoginType = LoginType.ADMIN,
 
         /**
@@ -236,7 +250,7 @@ object ProvidedRouteTests {
 
         requiredCreationValuesProvider: Map<String, () -> Any>,
         optionalCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
-        defaultCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+        defaultCreationValuesProvider: Map<String, DefaultValue> = emptyMap(),
 
         locationRegex: Regex,
         entityClass: UUIDEntityClass<EE>,
@@ -252,13 +266,6 @@ object ProvidedRouteTests {
         stubEntityProvider: JdbcTransaction.() -> EE,
 
         /**
-         * An ID that is guaranteed to not exist in the database.
-         *
-         * Used in tests that require a non-existing entity ID.
-         */
-        invalidEntityId: UUID,
-
-        /**
          * If this test requires some auxiliary entities (foreign keys, etc.), they can be created here.
          */
         auxiliaryEntitiesProvider: JdbcTransaction.() -> Unit = {},
@@ -270,11 +277,14 @@ object ProvidedRouteTests {
          */
         foreignTypesAssociations: Map<String, EntityClass<*, *>> = emptyMap(),
 
+        seed: Long = 0,
+
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> = runTestsOnRoute(
         title = title,
         baseUrl = baseUrl,
         listLoginType = listLoginType,
+        filterEntitiesForListLoginType = filterEntitiesForListLoginType,
         modificationsLoginType = modificationsLoginType,
         userEntityPatches = userEntityPatches,
         requiredCreationValuesProvider = requiredCreationValuesProvider,
@@ -285,19 +295,25 @@ object ProvidedRouteTests {
         idTypeConverter = { it.toUUID() },
         exposedIdTypeConverter = { it.toJavaUuid() },
         stubEntityProvider = stubEntityProvider,
-        invalidEntityId = invalidEntityId,
+        invalidEntityId = Uuid.Zero.toJavaUuid(),
         auxiliaryEntitiesProvider = auxiliaryEntitiesProvider,
         foreignTypesAssociations = foreignTypesAssociations,
+        seed = seed,
         dataEntitySerializer = dataEntitySerializer
     )
 
     @OptIn(InternalSerializationApi::class)
     context(_: ApplicationTestBase)
-    fun <EID: Any, EE: ExposedEntity<EID>, TID: Any, ET: Entity<TID>> runTestsOnRoute(
+    fun <EID: Comparable<EID>, EE: ExposedEntity<EID>, TID: Comparable<TID>, ET: Entity<TID>> runTestsOnRoute(
         title: String,
         baseUrl: String,
 
         listLoginType: LoginType = LoginType.USER,
+        /**
+         * If the given [listLoginType] variates the entities that are listed, this filter can be used
+         * to filter them accordingly.
+         */
+        filterEntitiesForListLoginType: JdbcTransaction.(EE) -> Boolean = { true },
         modificationsLoginType: LoginType = LoginType.ADMIN,
 
         /**
@@ -309,7 +325,7 @@ object ProvidedRouteTests {
 
         requiredCreationValuesProvider: Map<String, () -> Any>,
         optionalCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
-        defaultCreationValuesProvider: Map<String, () -> Any> = emptyMap(),
+        defaultCreationValuesProvider: Map<String, DefaultValue> = emptyMap(),
 
         locationRegex: Regex,
         entityClass: EntityClass<EID, EE>,
@@ -352,11 +368,15 @@ object ProvidedRouteTests {
          */
         foreignTypesAssociations: Map<String, EntityClass<*, *>> = emptyMap(),
 
+        seed: Long = 0,
+
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> {
+        val seededRandom = Random(seed)
+
         fun provideRequiredCreationValues(): Map<String, Any> = requiredCreationValuesProvider.mapValues { (_, provider) -> provider() }
         fun provideOptionalCreationValues(): Map<String, Any> = optionalCreationValuesProvider.mapValues { (_, provider) -> provider() }
-        fun provideDefaultCreationValues(): Map<String, Any> = defaultCreationValuesProvider.mapValues { (_, provider) -> provider() }
+        fun provideDefaultCreationValues(): Map<String, ProvidedDefaultValue> = defaultCreationValuesProvider.mapValues { (_, provider) -> provider(seededRandom) }
 
         fun fetchFromDatabaseAndCheckFields(
             id: EID,
@@ -452,6 +472,10 @@ object ProvidedRouteTests {
                         } else if (expected is ByteArray) {
                             assertInstanceOf<ByteArray>(actual, "Expected value for $name should be a ByteArray")
                             assertContentEquals(expected, actual, "Field $name contents does not match")
+                        } else if (expected is LocalDate && actual is KotlinLocalDate) {
+                            assertEquals(expected, actual.toJavaLocalDate(), "Date $name does not match")
+                        } else if (expected is LocalTime && actual is KotlinLocalTime) {
+                            assertEquals(expected, actual.toJavaLocalTime(), "Time $name does not match")
                         } else {
                             assertEquals(expected, actual, "Field $name does not match")
                         }
@@ -493,6 +517,7 @@ object ProvidedRouteTests {
             } skipIf (listLoginType != LoginType.ADMIN),
             "$title - Test fetching list" withEntities auxiliaryEntitiesProvider runs {
                 Database.init(TEST_URL) // initialize the database
+                Push.disable = true     // disable push notifications
 
                 // Insert some data into the database to be fetched
                 val entities = mutableListOf<EE>()
@@ -501,7 +526,7 @@ object ProvidedRouteTests {
                     entities += entityClass.new {
                         for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                         // Also fill default values
-                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider.default, foreignTypesAssociations)
                     }
                 }
                 // One with each optional value
@@ -513,17 +538,27 @@ object ProvidedRouteTests {
                             // Fill the optional value
                             populate(name, valueProvider, foreignTypesAssociations)
                             // Also fill default values
-                            for ((dName, dValueProvider) in provideDefaultCreationValues()) populate(dName, dValueProvider, foreignTypesAssociations)
+                            for ((dName, dValueProvider) in provideDefaultCreationValues()) populate(dName, dValueProvider.default, foreignTypesAssociations)
                         }
                     }
                 }
-                // And one with all optional values
+                // One with each default value
+                for ((name, valueProvider) in provideDefaultCreationValues()) {
+                    Database {
+                        entities += entityClass.new {
+                            // Fill all required values
+                            for ((rName, rValueProvider) in provideRequiredCreationValues()) populate(rName, rValueProvider, foreignTypesAssociations)
+                            // Fill the provided default value
+                            populate(name, valueProvider.value, foreignTypesAssociations)
+                        }
+                    }
+                }
+                // And one with all optional and provided default values
                 Database {
                     entities += entityClass.new {
                         for ((name, valueProvider) in provideRequiredCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
                         for ((name, valueProvider) in provideOptionalCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
-                        // Also fill default values
-                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider, foreignTypesAssociations)
+                        for ((name, valueProvider) in provideDefaultCreationValues()) populate(name, valueProvider.value, foreignTypesAssociations)
                     }
                 }
 
@@ -531,12 +566,23 @@ object ProvidedRouteTests {
                     client.get(baseUrl).apply {
                         assertStatusCode(HttpStatusCode.OK)
                         assertBody(dataEntitySerializer.list()) { list ->
-                            val receivedIds = list.map { it.id.let(exposedIdTypeConverter) }
-                            val expectedIds = entities.map { it.id.value }
-                            assertContentEquals(expectedIds, receivedIds, "Received IDs do not match expected IDs")
+                            val expectedIds = Database {
+                                entities
+                                    .filter { filterEntitiesForListLoginType(it) }
+                                    .map { it.id.value }
+                            }
+                            val actualIds = list.map { it.id.let(exposedIdTypeConverter) }
+                            assertContentEquals(
+                                expectedIds,
+                                actualIds,
+                                "Received IDs do not match expected IDs.\n\tReceived IDs: ${actualIds}\n\tExpected IDs: $expectedIds"
+                            )
                         }
                     }
                 }
+            } after {
+                // Re-enable push notifications
+                Push.disable = false
             },
 
             "$title - Test create when not logged in" runs {
@@ -744,4 +790,16 @@ object ProvidedRouteTests {
             },
         ).mapNotNull { it.createDynamicTest() }
     }
+
+    class DefaultValue(
+        val default: Any,
+        val provider: (seededRandom: Random) -> Any,
+    ) {
+        operator fun invoke(seededRandom: Random): ProvidedDefaultValue = ProvidedDefaultValue(default, provider(seededRandom))
+    }
+
+    class ProvidedDefaultValue(
+        val default: Any,
+        val value: Any,
+    )
 }

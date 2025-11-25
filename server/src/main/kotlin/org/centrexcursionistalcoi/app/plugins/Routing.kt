@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
+import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
@@ -62,6 +63,7 @@ fun Application.configureRouting() {
 
         profileRoutes()
         departmentsRoutes()
+        eventsRoutes()
         postsRoutes()
         usersRoutes()
         inventoryRoutes()

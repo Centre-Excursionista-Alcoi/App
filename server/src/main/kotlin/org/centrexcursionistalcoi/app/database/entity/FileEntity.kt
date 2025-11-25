@@ -13,14 +13,42 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.slf4j.LoggerFactory
 
 class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<FileEntity>(Files) {
+        private val logger = LoggerFactory.getLogger(FileEntity::class.java)
+
         context(_: JdbcTransaction)
-        fun from(withContext: FileWithContext) = new(withContext.id?.toJavaUuid() ?: UUID.randomUUID()) {
+        fun newFrom(withContext: FileWithContext) = new(withContext.id?.toJavaUuid() ?: UUID.randomUUID()) {
             bytes = withContext.bytes
             type = withContext.contentType?.toString()
             name = withContext.name
+        }
+
+        context(tr: JdbcTransaction)
+        fun updateOrCreate(from: FileWithContext, onDelete: JdbcTransaction.(FileEntity) -> Unit = {}): FileEntity? {
+            if (from.isEmpty()) {
+                // No bytes given, remove existing file
+                val fileId = from.id?.toJavaUuid()
+                if (fileId != null) {
+                    // Remove file
+                    findById(fileId)?.let {
+                        logger.info("Removing file $fileId from entity...")
+                        onDelete(tr, it)
+                        it.delete()
+                    } ?: run {
+                        logger.warn("Asked to remove file $fileId from entity, but file does not exist, ignoring")
+                    }
+                } else {
+                    // Asked to remove, but no id given, ignore
+                    logger.warn("Asked to remove file from entity, but no id given, ignoring")
+                }
+                return null
+            } else {
+                // Create a new file
+                return newFrom(from)
+            }
         }
     }
 

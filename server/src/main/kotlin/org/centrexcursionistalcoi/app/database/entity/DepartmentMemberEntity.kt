@@ -6,13 +6,20 @@ import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.push.PushNotification
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers)
+    companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers) {
+        context(_: JdbcTransaction)
+        fun getUserDepartments(userSub: String, isConfirmed: Boolean = true) =
+            find { (DepartmentMembers.userSub eq userSub) and (DepartmentMembers.confirmed eq isConfirmed) }
+                .toList()
+    }
 
     var department by DepartmentEntity referencedOn DepartmentMembers.departmentId
     var userSub by DepartmentMembers.userSub
