@@ -24,7 +24,6 @@ import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.InformationCard
@@ -32,22 +31,22 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * A card displaying a list of departments the user is part of, with an option to join new ones.
- * @param profile The user's profile information.
+ * @param userSub The unique identifier of the user.
  * @param departments The list of all departments, not just the joined ones.
  * @param onJoinDepartmentRequested A callback invoked when the user requests to join a department.
  */
 @Composable
 fun DepartmentsListCard(
-    profile: ProfileResponse,
+    userSub: String,
     departments: List<Department>?,
-    onJoinDepartmentRequested: (Department) -> Job,
+    onJoinDepartmentRequested: ((Department) -> Job)?,
 ) {
-    val userDepartments = remember(profile, departments) {
-        departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == profile.sub } != null }.orEmpty()
+    val userDepartments = remember(userSub, departments) {
+        departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == userSub } != null }.orEmpty()
     }
 
     var requestedDepartmentJoin by remember { mutableStateOf(false) }
-    if (requestedDepartmentJoin) {
+    if (requestedDepartmentJoin && onJoinDepartmentRequested != null) {
         var isLoading by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { if (!isLoading) requestedDepartmentJoin = false },
@@ -89,10 +88,10 @@ fun DepartmentsListCard(
             icon = Icons.Default.Add,
             contentDescription = stringResource(Res.string.insurance_add_title),
             onClick = { requestedDepartmentJoin = true }
-        )
+        ).takeIf { onJoinDepartmentRequested != null }
     ) {
         for (department in userDepartments) {
-            val memberInfo = department.members?.find { it.userSub == profile.sub } ?: continue
+            val memberInfo = department.members?.find { it.userSub == userSub } ?: continue
             ListItem(
                 leadingContent = {
                     val imageFile by department.rememberImageFile()
