@@ -189,6 +189,9 @@ kotlin {
 
                 // Reflection support
                 implementation(kotlin("reflect"))
+
+                // In-App Update check
+                implementation(libs.android.appUpdate)
             }
         }
 

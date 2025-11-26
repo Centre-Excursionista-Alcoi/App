@@ -2,6 +2,7 @@
 # View compatibility in: https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html
 #noinspection AndroidGradlePluginVersion
 agp = "8.11.1"
+android-appUpdate = "2.1.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -62,6 +63,7 @@ zoomable = "2.9.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+android-appUpdate = { module = "com.google.android.play:app-update-ktx", version.ref = "android-appUpdate" }
 android-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugaring" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }

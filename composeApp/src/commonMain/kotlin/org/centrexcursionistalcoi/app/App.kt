@@ -33,10 +33,14 @@ import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
 import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
@@ -138,6 +142,13 @@ fun App(
     errorState?.let { error ->
         ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
     }
+
+    val updateAvailable by PlatformAppUpdates.updateAvailable.collectAsState(initial = false)
+    val updateProgress by PlatformAppUpdates.updateProgress.collectAsState(initial = null)
+    val restartRequired by PlatformAppUpdates.restartRequired.collectAsState(initial = false)
+    if (updateAvailable && updateProgress == null) UpdateAvailableDialog()
+    if (updateProgress != null && !restartRequired) UpdateProgressDialog()
+    if (restartRequired) UpdateRestartRequiredDialog()
 
     SharedTransitionLayout {
         NavHost(
