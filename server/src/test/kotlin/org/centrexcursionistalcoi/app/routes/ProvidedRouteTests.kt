@@ -16,6 +16,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import java.lang.reflect.InvocationTargetException
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
@@ -41,12 +43,12 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
 import org.centrexcursionistalcoi.app.utils.toJsonElement
@@ -528,6 +530,21 @@ object ProvidedRouteTests {
                 }
 
                 runApplicationTest(shouldLogIn = LoginType.USER, userEntityPatches = userEntityPatches) {
+                    val entityClass = entities.first()::class
+                    val isLastUpdateEntity = entityClass.supertypes
+                        .map { it.toString() }
+                        .find { it.endsWith("LastUpdateEntity") } != null
+                    if (isLastUpdateEntity) {
+                        client.get(baseUrl) {
+                            val time = now().plus(1, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC).toLocalDateTime()
+                            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(time))
+                        }.apply {
+                            assertStatusCode(HttpStatusCode.NotModified)
+                        }
+                    } else {
+                        error("Entity (${entityClass.simpleName}) is not a LastUpdateEntity.")
+                    }
+
                     client.get(baseUrl).apply {
                         assertStatusCode(HttpStatusCode.OK)
                         assertBody(dataEntitySerializer.list()) { list ->

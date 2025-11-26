@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.Instant
 import java.util.UUID
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
@@ -8,10 +7,14 @@ import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.Post
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
+import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
+import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -21,13 +24,13 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.slf4j.LoggerFactory
 
-class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
+class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
     companion object : UUIDEntityClass<PostEntity>(Posts)
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     val date by Posts.date
-    var lastUpdate by Posts.lastUpdate
+    override var lastUpdate by Posts.lastUpdate
 
     var title by Posts.title
     var content by Posts.content
@@ -78,6 +81,10 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Post,
                 FileEntity.from(fileWithContext)
             }
         }
-        lastUpdate = Instant.now()
+    }
+
+    override suspend fun updated() {
+        notifyUpdateForEntity(Companion, id)
+        Database { lastUpdate = now() }
     }
 }
