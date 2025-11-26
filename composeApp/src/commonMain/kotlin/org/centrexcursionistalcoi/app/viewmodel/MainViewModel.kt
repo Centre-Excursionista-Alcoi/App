@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,12 +26,17 @@ import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionRe
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
 class MainViewModel: ViewModel() {
+    companion object {
+        private val log = logging()
+    }
+
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
         .stateFlow()
-        .map { it == BackgroundJobState.RUNNING }
+        .map { it in listOf(BackgroundJobState.ENQUEUED, BackgroundJobState.RUNNING) }
         .stateInViewModel()
 
     val profile = ProfileRepository.profile.stateInViewModel()
@@ -101,7 +106,13 @@ class MainViewModel: ViewModel() {
     }
 
     fun sync() = launch {
-        LoadingViewModel.syncAll(force = true)
+        log.d { "Scheduling data sync..." }
+        BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+            input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "true"),
+            requiresInternet = true,
+            uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+            logic = SyncAllDataBackgroundJobLogic,
+        )
     }
 
     fun connectFEMECV(username: String, password: CharArray) = async<Throwable?> {
@@ -109,7 +120,7 @@ class MainViewModel: ViewModel() {
             ProfileRemoteRepository.connectFEMECV(username, password)
             null
         } catch (e: ServerException) {
-            Napier.e(e) { "Could not connect to FEMECV." }
+            log.e(e) { "Could not connect to FEMECV." }
             e
         }
     }

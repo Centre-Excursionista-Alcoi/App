@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.push
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
 
 object SSENotificationsListener {
+    private val log = logging()
+
     private var job: Job? = null
 
     private val _isConnected = MutableStateFlow(false)
@@ -50,19 +52,19 @@ object SSENotificationsListener {
         _sseException.value = null
 
         if (!PlatformSSEConfiguration.enableSSE) {
-            Napier.w(tag = "SSE") { "SSE is disabled on this platform." }
+            log.w(tag = "SSE") { "SSE is disabled on this platform." }
             return
         }
         if (job != null) {
-            Napier.d(tag = "SSE") { "SSE already configured." }
+            log.d(tag = "SSE") { "SSE already configured." }
             return
         }
 
-        Napier.d { "Setting up SSE..." }
+        log.d { "Setting up SSE..." }
         job = CoroutineScope(defaultAsyncDispatcher).launch {
             try {
                 client.sse("/events") {
-                    Napier.i(tag = "SSE") { "Listening for events." }
+                    log.i(tag = "SSE") { "Listening for events." }
                     _isConnected.value = true
                     while (true) {
                         incoming.collect { event ->
@@ -72,19 +74,19 @@ object SSENotificationsListener {
                             }?.toMap() ?: emptyMap()
 
                             if (type == "connection") {
-                                Napier.d(tag = "SSE") { "Received connection event." }
+                                log.d(tag = "SSE") { "Received connection event." }
                                 return@collect
                             }
 
-                            Napier.d(tag = "SSE") { "Received SSE notification. Type=$type, Data=$data" }
+                            log.d(tag = "SSE") { "Received SSE notification. Type=$type, Data=$data" }
                             try {
                                 val notification = PushNotification.fromData(
                                     data + ("type" to type)
                                 )
-                                Napier.d(tag = "SSE") { "Notification: $notification" }
+                                log.d(tag = "SSE") { "Notification: $notification" }
 
                                 if (notification is PushNotification.LendingUpdated) {
-                                    Napier.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
+                                    log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
                                     BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
                                         input = mapOf(
                                             SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString(),
@@ -96,14 +98,14 @@ object SSENotificationsListener {
 
                                 LocalNotifications.showPushNotification(notification, data)
                             } catch (e: IllegalArgumentException) {
-                                Napier.e(e, tag = "SSE") { "Received an invalid SSE notification." }
+                                log.e(e, tag = "SSE") { "Received an invalid SSE notification." }
                             }
                         }
                     }
                 }
                 _isConnected.value = false
             } catch (e: SSEClientException) {
-                Napier.e(e, tag = "SSE") { "Connection failed." }
+                log.e(e, tag = "SSE") { "Connection failed." }
                 _sseException.value = e
             }
         }

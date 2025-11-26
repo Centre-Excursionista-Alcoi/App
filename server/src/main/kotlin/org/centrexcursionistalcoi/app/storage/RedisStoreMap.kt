@@ -5,10 +5,15 @@ import io.github.crackthecodeabhi.kreds.connection.newClient
 
 class RedisStoreMap(endpoint: String) : StoreMap {
     companion object {
-        fun fromEnvOrNull(): RedisStoreMap? {
+        @Volatile
+        private var envInstance: RedisStoreMap? = null
+
+        fun fromEnvOrNull(): RedisStoreMap? = envInstance ?: synchronized(this) {
             val endpoint = System.getenv("REDIS_ENDPOINT") ?: return null
-            return RedisStoreMap(endpoint)
+            return RedisStoreMap(endpoint).also { envInstance = it }
         }
+
+        val fromEnv: StoreMap by lazy { fromEnvOrNull() ?: InMemoryStoreMap() }
     }
 
     private val client = newClient(Endpoint.from(endpoint))

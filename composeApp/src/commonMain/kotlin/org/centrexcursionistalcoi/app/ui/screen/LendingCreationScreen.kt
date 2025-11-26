@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
@@ -65,6 +65,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+
+private val log = logging()
 
 @Composable
 fun LendingCreationScreen(
@@ -85,7 +87,7 @@ fun LendingCreationScreen(
 
     LaunchedEffect(shoppingList) {
         if (shoppingList.isEmpty()) {
-            Napier.i { "Shopping list is empty, going back..." }
+            log.i { "Shopping list is empty, going back..." }
             onBackRequested()
         }
     }

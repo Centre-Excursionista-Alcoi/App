@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.platform
 
 import android.content.Intent
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
 import java.io.File
@@ -10,6 +10,8 @@ import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
 actual object PlatformShareLogic : PlatformProvider {
+    private val log = logging()
+
     actual override val isSupported: Boolean = true
 
     actual fun share(path: String, contentType: ContentType) {
@@ -27,7 +29,7 @@ actual object PlatformShareLogic : PlatformProvider {
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))
-        } ?: Napier.e { "Sharing not supported for $path as $contentType" }
+        } ?: log.e { "Sharing not supported for $path as $contentType" }
     }
 
     actual fun share(text: String) {
@@ -40,6 +42,6 @@ actual object PlatformShareLogic : PlatformProvider {
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))
-        } ?: Napier.e { "Sharing not supported for text" }
+        } ?: log.e { "Sharing not supported for text" }
     }
 }

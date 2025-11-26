@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.doMain
 import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
 class LoginViewModel : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
@@ -18,6 +19,7 @@ class LoginViewModel : ErrorViewModel() {
             _isLoading.emit(true)
 
             AuthBackend.login(nif, password)
+            ProfileRemoteRepository.synchronize()
 
             doMain { afterLogin() }
         } catch (e: ServerException) {
@@ -36,7 +38,7 @@ class LoginViewModel : ErrorViewModel() {
             AuthBackend.register(nif, password)
 
             // If successful, log in
-            AuthBackend.login(nif, password)
+            login(nif, password, afterLogin).join()
 
             doMain { afterLogin() }
         } catch (e: ServerException) {

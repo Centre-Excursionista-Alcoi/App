@@ -101,7 +101,7 @@ kotlin {
             implementation(libs.kmm.settings.serialization)
 
             // Logging
-            implementation(libs.napier)
+            implementation(libs.logging)
 
             implementation(libs.kotlinx.serializationJson)
 
@@ -189,6 +189,9 @@ kotlin {
 
                 // Reflection support
                 implementation(kotlin("reflect"))
+
+                // In-App Update check
+                implementation(libs.android.appUpdate)
             }
         }
 

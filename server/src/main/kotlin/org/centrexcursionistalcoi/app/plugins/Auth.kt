@@ -1,11 +1,15 @@
 package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.plugins.origin
+import io.ktor.server.request.contentType
 import io.ktor.server.request.host
 import io.ktor.server.request.port
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
@@ -29,6 +33,7 @@ import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.WebTemplate
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 import org.centrexcursionistalcoi.app.routes.assertContentType
@@ -59,6 +64,10 @@ fun login(nif: String, password: CharArray): Error? {
         return Error.IncorrectPasswordOrNIF()
     }
 
+    if (existingReference.isDisabled) {
+        return Error.UserIsDisabled()
+    }
+
     val passwordHash = existingReference.password ?: return Error.PasswordNotSet()
 
     // verify password
@@ -72,11 +81,29 @@ fun login(nif: String, password: CharArray): Error? {
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     post("/login") {
-        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+        getUserSession()?.let {
+            return@post call.respond(HttpStatusCode.OK)
+        }
 
-        val parameters = call.receiveParameters()
-        val nif = parameters["nif"]?.trim()?.uppercase()
-        val password = parameters["password"]?.trim()?.toCharArray()
+        val contentType = call.request.contentType()
+        val (nif, password) = when {
+            contentType.match(ContentType.Application.FormUrlEncoded) -> {
+                val parameters = call.receiveParameters()
+                val nif = parameters["nif"]?.trim()?.uppercase()
+                val password = parameters["password"]?.trim()?.toCharArray()
+                nif to password
+            }
+            else -> {
+                val credentials = call.request.basicAuthenticationCredentials()
+                if (credentials == null) {
+                    call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
+                    return@post call.respondError(Error.IncorrectPasswordOrNIF())
+                }
+                val nif = credentials.name.trim().uppercase()
+                val password = credentials.password.trim().toCharArray()
+                nif to password
+            }
+        }
 
         if (nif == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
         if (password == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())

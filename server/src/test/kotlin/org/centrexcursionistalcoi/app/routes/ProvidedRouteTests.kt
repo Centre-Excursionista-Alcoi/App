@@ -21,6 +21,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.Temporal
 import java.util.Random
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
@@ -49,6 +51,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
@@ -572,6 +575,21 @@ object ProvidedRouteTests {
                 }
 
                 runApplicationTest(shouldLogIn = LoginType.USER, userEntityPatches = userEntityPatches) {
+                    val entityClass = entities.first()::class
+                    val isLastUpdateEntity = entityClass.supertypes
+                        .map { it.toString() }
+                        .find { it.endsWith("LastUpdateEntity") } != null
+                    if (isLastUpdateEntity) {
+                        client.get(baseUrl) {
+                            val time = now().plus(1, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC).toLocalDateTime()
+                            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(time))
+                        }.apply {
+                            assertStatusCode(HttpStatusCode.NotModified)
+                        }
+                    } else {
+                        error("Entity (${entityClass.simpleName}) is not a LastUpdateEntity.")
+                    }
+
                     client.get(baseUrl).apply {
                         assertStatusCode(HttpStatusCode.OK)
                         assertBody(dataEntitySerializer.list()) { list ->

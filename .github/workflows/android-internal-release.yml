@@ -66,6 +66,43 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
+      - name: Determine In-App Update Priority
+        id: determine_priority
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Default priority
+            let priority = 2;
+            
+            // Get the list of PRs associated with the current commit
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            
+            // Check if there is at least one PR associated (Merge from PR)
+            if (prs.length > 0) {
+              // We usually take the first one if multiple exist for the same commit
+              const pr = prs[0];
+              const labels = pr.labels.map(label => label.name);
+            
+              console.log(`Found PR #${pr.number} with labels: ${labels.join(', ')}`);
+            
+              const highPriorityLabels = ['migration', 'important', 'security'];
+            
+              if (labels.some(l => highPriorityLabels.includes(l))) {
+                priority = 4;
+              } else if (labels.includes('app')) {
+                priority = 3;
+              }
+            } else {
+              console.log('No PR associated with this commit (Direct push). Using default priority.');
+            }
+            
+            console.log(`Setting inAppUpdatePriority to: ${priority}`);
+            core.setOutput('priority', priority);
+
       - name: Decode Keystore
         run: |
           echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} > keystore.txt
@@ -110,6 +147,20 @@ jobs:
           name: AAB Artifact
           path: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
 
+      - name: Upload ProGuard Mappings
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install sentry-cli if not present (or use a docker container that has it)
+          curl -sL https://sentry.io/get-cli/ | bash
+
+          # Upload the mapping file
+          sentry-cli upload-proguard \
+            --android-manifest composeApp/src/androidMain/AndroidManifest.xml \
+            composeApp/build/outputs/mapping/release/mapping.txt
+
       - name: Upload to Play Store
         id: upload_play_store
         uses: r0adkll/upload-google-play@v1.1.3
@@ -118,7 +169,6 @@ jobs:
           packageName: org.centrexcursionistalcoi.app
           releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
           track: "internal"
-          inAppUpdatePriority: 2
-          # mappingFile: ./base/build/outputs/mapping/release/mapping.txt
-          # whatsNewDirectory: ./changelog
+          # Priority is now pulled from the output of the 'determine_priority' step
+          inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed

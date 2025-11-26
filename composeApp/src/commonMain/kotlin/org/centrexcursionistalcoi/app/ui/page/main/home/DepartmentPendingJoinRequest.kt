@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.ui.page.main.home
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -18,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
@@ -38,12 +41,17 @@ fun DepartmentPendingJoinRequest(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = userData.fullName,
+                    modifier = Modifier.padding(start = 8.dp, top = 8.dp),
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = stringResource(Res.string.management_department_join_request)
+                    text = stringResource(Res.string.management_department_join_request),
+                    modifier = Modifier.padding(start = 8.dp),
                 )
                 Text(
                     text = department.displayName,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                    fontWeight = FontWeight.Bold,
                 )
             }
             IconButton(

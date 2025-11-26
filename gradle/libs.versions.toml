@@ -2,11 +2,12 @@
 # View compatibility in: https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html
 #noinspection AndroidGradlePluginVersion
 agp = "8.11.1"
+android-appUpdate = "2.1.0"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 android-desugaring = "2.1.5"
-androidx-activity = "1.11.0"
+androidx-activity = "1.12.0"
 androidx-browser = "1.9.0"
 androidx-lifecycle = "2.9.6"
 androidx-navigation = "2.9.1"
@@ -24,6 +25,7 @@ filekit = "0.12.0"
 firebase-admin = "9.7.0"
 gms = "4.4.4"
 h2 = "2.4.240"
+km-logging = "2.1.0"
 kmm-notifier = "1.6.0"
 kmm-permission = "0.15.0"
 kmm-settings = "1.3.0"
@@ -43,7 +45,6 @@ localina = "1.0.0-alpha3"
 logback = "1.5.21"
 markdown-renderer = "0.38.1"
 mockk = "1.14.6"
-napier = "2.7.1"
 pdfbox = "2.0.30"
 postgresql = "42.7.8"
 qrose = "1.0.1"
@@ -62,6 +63,7 @@ zoomable = "2.9.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+android-appUpdate = { module = "com.google.android.play:app-update-ktx", version.ref = "android-appUpdate" }
 android-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugaring" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -125,11 +127,11 @@ ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor" }
 ktor-server-testHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
 localina = { module = "io.github.sudarshanmhasrup.localina:localina", version.ref = "localina" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logging = { module = "com.diamondedge:logging", version.ref = "km-logging" }
 markdownRenderer-core = { module = "com.mikepenz:multiplatform-markdown-renderer", version.ref = "markdown-renderer" }
 markdownRenderer-coil3 = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3", version.ref = "markdown-renderer" }
 markdownRenderer-m3 = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 qrose-twod = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }

@@ -143,7 +143,7 @@ fun ColumnScope.ProfilePage(
 
         item("departments") {
             DepartmentsListCard(
-                profile,
+                profile.sub,
                 departments,
                 onJoinDepartmentRequested,
             )

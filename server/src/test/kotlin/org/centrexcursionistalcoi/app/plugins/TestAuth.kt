@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.security.Passwords
-import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class TestAuth: ApplicationTestBase() {
@@ -79,9 +79,9 @@ class TestAuth: ApplicationTestBase() {
 
 
     @Test
-    fun test_login_contentType() = runApplicationTest {
+    fun test_login_empty() = runApplicationTest {
         val response = client.post("/login")
-        response.assertStatusCode(HttpStatusCode.BadRequest)
+        response.assertError(Error.IncorrectPasswordOrNIF())
     }
 
     @Test

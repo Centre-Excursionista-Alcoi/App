@@ -14,6 +14,6 @@ data class UpdatePostRequest(
     val files: List<FileWithContext>? = null,
 ): UpdateEntityRequest<Uuid, Post> {
     override fun isEmpty(): Boolean {
-        return title.isNullOrEmpty() && content.isNullOrEmpty() && department == null && link.isNullOrBlank() && files.isNullOrEmpty()
+        return title.isNullOrEmpty() && content.isNullOrEmpty() && department == null && link == null && files.isNullOrEmpty()
     }
 }

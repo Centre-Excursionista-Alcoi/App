@@ -4,13 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.PointerEventType
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.PointerEventFlow
+
+private val log = logging()
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
@@ -23,7 +25,7 @@ actual fun PlatformBackHandler(
             CoroutineScope(Dispatchers.Main).launch {
                 PointerEventFlow.flow.filterNotNull().filter { it.type == PointerEventType.Press }.collect { event ->
                     if (event.button?.index == 5 /* Back button */) {
-                        Napier.d { "Back button pressed. Invoking onBack callback." }
+                        log.d { "Back button pressed. Invoking onBack callback." }
                         onBack()
                     }
                 }

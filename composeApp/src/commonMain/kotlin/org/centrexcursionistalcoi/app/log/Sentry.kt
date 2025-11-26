@@ -1,6 +1,8 @@
-package org.centrexcursionistalcoi.app
+package org.centrexcursionistalcoi.app.log
 
+import com.diamondedge.logging.KmLogging
 import io.sentry.kotlin.multiplatform.Sentry
+import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
@@ -47,5 +49,9 @@ fun initializeSentry() {
             maskAllText = false
             maskAllImages = false
         }
+    }
+
+    if (BuildKonfig.SENTRY_DSN != null) {
+        KmLogging.addLogger(SentryLogger())
     }
 }

@@ -21,8 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
+import com.diamondedge.logging.logging
 import com.russhwolf.settings.ExperimentalSettingsApi
-import io.github.aakira.napier.Napier
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
@@ -33,10 +33,14 @@ import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
 import org.centrexcursionistalcoi.app.nav.UuidNavType
+import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
+import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
 import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
@@ -51,6 +55,8 @@ import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+
+private val log = logging()
 
 @Composable
 fun MainApp(
@@ -74,7 +80,7 @@ fun MainApp(
 
             LaunchedEffect(Unit) {
                 settings.getStringOrNull(SETTINGS_LANGUAGE)?.let { lang ->
-                    Napier.i { "Setting locale to: $lang" }
+                    log.i { "Setting locale to: $lang" }
                     LocaleUpdater.updateLocale(lang)
                 }
             }
@@ -139,6 +145,13 @@ fun App(
         ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
     }
 
+    val updateAvailable by PlatformAppUpdates.updateAvailable.collectAsState(initial = false)
+    val updateProgress by PlatformAppUpdates.updateProgress.collectAsState(initial = null)
+    val restartRequired by PlatformAppUpdates.restartRequired.collectAsState(initial = false)
+    if (updateAvailable && updateProgress == null) UpdateAvailableDialog()
+    if (updateProgress != null && !restartRequired) UpdateProgressDialog()
+    if (restartRequired) UpdateRestartRequiredDialog()
+
     SharedTransitionLayout {
         NavHost(
             navController = navController,
@@ -148,7 +161,7 @@ fun App(
             destination<Destination.Loading> {
                 LoadingScreen(
                     onLoggedIn = {
-                        Napier.i { "User is logged in. Navigating to: $afterLoad" }
+                        log.i { "User is logged in. Navigating to: $afterLoad" }
                         navController.navigate(afterLoad ?: Destination.Main()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true

@@ -456,6 +456,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.UnprocessableEntity
     }
 
+    @Serializable
+    @SerialName("UserIsDisabled")
+    class UserIsDisabled(): Error {
+        override val code: Int = ERROR_USER_IS_DISABLED
+        override val description: String = "The user is disabled."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -497,6 +507,7 @@ sealed interface Error {
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
         const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
         const val ERROR_USER_DOES_NOT_HAVE_AN_EMAIL = 39
+        const val ERROR_USER_IS_DISABLED = 40
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -539,6 +550,7 @@ sealed interface Error {
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
             ERROR_USER_DOES_NOT_HAVE_AN_EMAIL -> UserDoesNotHaveAnEmail.serializer()
+            ERROR_USER_IS_DISABLED -> UserIsDisabled.serializer()
             else -> null
         }
     }

@@ -22,6 +22,7 @@ import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
+import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Error
@@ -31,6 +32,8 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
+import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
@@ -142,6 +145,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     get("/$base") {
         val session = getUserSession()
+        handleIfModifiedForType(entityClass) ?: return@get
         val list = Database { listProvider(session).toList() }
 
         call.respondText(ContentType.Application.Json) {
@@ -151,6 +155,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     get("/$base/{id}") {
         val id = getId() ?: return@get
+        handleIfModified(entityClass, id) ?: return@get
         val item = assertEntity(id) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
@@ -183,6 +188,10 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             return@post
         }
 
+        if (item is LastUpdateEntity) {
+            item.updated()
+        }
+
         call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")
         call.respondText("$base created", status = HttpStatusCode.Created)
     }
@@ -213,6 +222,10 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         @Suppress("UNCHECKED_CAST")
         val patcher = item as EntityPatcher<UER>
         Database { patcher.patch(request) }
+
+        if (item is LastUpdateEntity) {
+            item.updated()
+        }
 
         call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")
         call.respondText("$base created", status = HttpStatusCode.OK)

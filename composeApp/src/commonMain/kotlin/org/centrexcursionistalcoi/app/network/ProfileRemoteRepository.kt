@@ -1,11 +1,10 @@
 package org.centrexcursionistalcoi.app.network
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
@@ -13,6 +12,7 @@ import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.centrexcursionistalcoi.app.storage.settings
 
 object ProfileRemoteRepository {
+    private val log = logging()
+
     private val httpClient by lazy { getHttpClient() }
 
     /**
@@ -33,13 +35,9 @@ object ProfileRemoteRepository {
      * @throws ResourceNotModifiedException if the profile has not changed since the last fetch.
      */
     suspend fun getProfile(progressNotifier: ProgressNotifier? = null): ProfileResponse? {
-        val lastProfileSync = settings.getLongOrNull(SETTINGS_LAST_PROFILE_SYNC)
         val response = httpClient.get("/profile") {
             progressNotifier?.let { monitorDownloadProgress(it) }
-
-            if (lastProfileSync != null) {
-                headers.append(HttpHeaders.IfModifiedSince, HttpDateFormatter.format(lastProfileSync))
-            }
+            ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
         }
         val status = response.status
         if (status == HttpStatusCode.NotModified) {
@@ -100,21 +98,36 @@ object ProfileRemoteRepository {
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 
+    /**
+     * Synchronizes the user's profile with the server.
+     * @param progressNotifier Optional notifier to monitor download progress.
+     * @return `true` if the user is logged in and the profile was updated, `false` if not logged in.
+     * @throws InternetAccessNotAvailable if there is no internet connection.
+     * @throws Exception for other errors.
+     */
     suspend fun synchronize(progressNotifier: ProgressNotifier? = null): Boolean {
         try {
             val profile = getProfile(progressNotifier)
             if (profile != null) {
-                Napier.d { "User is logged in, updating cached profile data..." }
+                log.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
                 return true
             } else {
-                Napier.i { "User is not logged in" }
+                log.i { "User is not logged in" }
                 ProfileRepository.clear()
                 return false
             }
         } catch (_: ResourceNotModifiedException) {
-            Napier.d { "Profile not modified, no update needed." }
+            log.d { "Profile not modified, no update needed." }
             return true
+        } catch (e: Exception) {
+            if (isNoConnectionError(e)) {
+                log.w { "No internet connection, cannot synchronize profile." }
+                throw InternetAccessNotAvailable()
+            } else {
+                log.e(e) { "Error synchronizing profile" }
+                throw e
+            }
         }
     }
 

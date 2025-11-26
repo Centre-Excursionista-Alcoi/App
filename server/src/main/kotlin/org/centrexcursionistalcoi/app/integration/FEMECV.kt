@@ -18,7 +18,6 @@ import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
-import org.centrexcursionistalcoi.app.storage.InMemoryStoreMap
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
@@ -26,8 +25,8 @@ import org.slf4j.LoggerFactory
 object FEMECV {
     private val logger = LoggerFactory.getLogger(FEMECV::class.java)
 
-    private val cookiesStoreMap = RedisStoreMap.fromEnvOrNull() ?: InMemoryStoreMap()
-    private val cookiesStorage = cookiesStoreMap.asCookiesStorage()
+    private val cookiesStoreMap by lazy { RedisStoreMap.fromEnv }
+    private val cookiesStorage by lazy { cookiesStoreMap.asCookiesStorage() }
 
     /**
      * Number of days after which the cached licenses should be refreshed.

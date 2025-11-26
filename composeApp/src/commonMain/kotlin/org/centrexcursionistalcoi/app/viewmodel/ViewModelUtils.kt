@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+private val log = logging()
 
 context(vm: ViewModel)
 fun <T> Flow<T>.stateInViewModel(
@@ -30,7 +32,7 @@ fun ViewModel.launch(
     try {
         block()
     } catch (e: Exception) {
-        Napier.e(e) { "Error in ViewModel coroutine." }
+        log.e(e) { "Error in ViewModel coroutine." }
         throw e
     }
 }

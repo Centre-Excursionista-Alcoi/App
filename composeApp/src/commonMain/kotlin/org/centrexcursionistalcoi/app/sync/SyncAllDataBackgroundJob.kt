@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.sync
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
@@ -20,6 +21,8 @@ import org.centrexcursionistalcoi.app.storage.settings
 expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
 
 object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
+    private val log = logging()
+
     const val EXTRA_FORCE_SYNC = "force_sync"
 
     /** Run sync every hour */
@@ -48,20 +51,23 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             databaseVersionUpgrade() ||
             lastSync.until(now, DateTimeUnit.SECOND) > SYNC_EVERY_SECONDS
         ) {
-            Napier.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
+            log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
             syncAll(progressNotifier)
 
             SyncResult.Success()
         } else {
-            Napier.d { "Last sync was less than $SYNC_EVERY_SECONDS seconds ago, skipping synchronization." }
+            log.d { "Last sync was less than $SYNC_EVERY_SECONDS seconds ago, skipping synchronization." }
 
             SyncResult.Success()
         }
     }
 
     suspend fun syncAll(progressNotifier: ProgressNotifier? = null) {
+        // First, synchronize the user profile
+        ProfileRemoteRepository.synchronize(progressNotifier)
+
         // Departments does not depend on any other entity, so we sync it first
         DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
         // Users does not depend on any other entity

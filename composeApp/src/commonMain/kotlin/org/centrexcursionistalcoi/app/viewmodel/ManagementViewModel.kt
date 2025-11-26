@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.diamondedge.logging.logging
 import com.mohamedrejeb.richeditor.model.RichTextState
-import io.github.aakira.napier.Napier
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
@@ -26,6 +26,10 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 
 class ManagementViewModel : ViewModel() {
+    companion object {
+        private val log = logging()
+    }
+    
     fun createDepartment(displayName: String, imageFile: PlatformFile?, progressNotifier: ProgressNotifier?) = launch {
         try {
             doAsync {
@@ -33,9 +37,9 @@ class ManagementViewModel : ViewModel() {
                 DepartmentsRemoteRepository.create(displayName, image, progressNotifier)
             }
         } catch (e: ServerException) {
-            Napier.e(e) { "Could not create department." }
+            log.e(e) { "Could not create department." }
         } catch (e: Exception) {
-            Napier.e(e) { "Could not create department due to an unexpected error." }
+            log.e(e) { "Could not create department due to an unexpected error." }
         }
     }
 
@@ -97,7 +101,7 @@ class ManagementViewModel : ViewModel() {
     fun promote(user: UserData) = launch {
         doAsync {
             UsersRemoteRepository.promote(user.sub)
-            UsersRemoteRepository.update(user.sub)
+            UsersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
         }
     }
 
@@ -148,7 +152,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link?.takeUnless { it.isBlank() }, files, removedFiles, progressNotifier)
+            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
         }
     }
 

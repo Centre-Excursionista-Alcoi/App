@@ -1,11 +1,11 @@
 package org.centrexcursionistalcoi.app
 
 import android.app.Application
+import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
-import io.github.aakira.napier.DebugAntilog
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.storage.DriverFactory
 import org.centrexcursionistalcoi.app.storage.createDatabase
@@ -14,6 +14,8 @@ import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 
 class AppBase : Application() {
     companion object {
+        private val log = logging()
+        
         var instance: AppBase? = null
             private set
     }
@@ -22,8 +24,6 @@ class AppBase : Application() {
         super.onCreate()
 
         instance = this
-
-        Napier.base(DebugAntilog())
 
         initializeSentry()
 
@@ -39,7 +39,7 @@ class AppBase : Application() {
         )
 
         NotifierManager.setLogger { message ->
-            Napier.d(message, tag = "NotifierManager")
+            log.d(tag = "NotifierManager") { message }
         }
 
         NotifierManager.addListener(PushNotifierListener)

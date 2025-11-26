@@ -11,13 +11,14 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Antilog
-import io.github.aakira.napier.LogLevel
-import io.github.aakira.napier.Napier
-import io.sentry.kotlin.multiplatform.Sentry
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.centrexcursionistalcoi.app.log.initializeSentry
+import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates.checkForUpdates
 import org.jetbrains.compose.resources.painterResource
+
+private val log = logging()
 
 object PointerEventFlow {
     private val mutableFlow = MutableStateFlow<PointerEvent?>(null)
@@ -28,21 +29,9 @@ object PointerEventFlow {
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    // Initialize the logging library
-    Napier.base(
-        object : Antilog() {
-            override fun performLog(priority: LogLevel, tag: String?, throwable: Throwable?, message: String?) {
-                val out = if (priority == LogLevel.ERROR) System.err else System.out
-                out.println("[$priority] ${tag.orEmpty()}: ${message.orEmpty()}")
-                if (throwable != null) {
-                    throwable.printStackTrace()
-                    Sentry.captureException(throwable)
-                }
-            }
-        }
-    )
-
     initializeSentry()
+
+    checkForUpdates()
 
     application {
         Window(
@@ -56,7 +45,7 @@ fun main() {
             Box(
                 modifier = Modifier.pointerInput(Unit) {
                     awaitPointerEventScope {
-                        Napier.d { "Listening for pointer events..." }
+                        log.d { "Listening for pointer events..." }
                         while (true) {
                             val event = awaitPointerEvent()
                             PointerEventFlow.tryEmit(event)

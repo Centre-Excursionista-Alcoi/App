@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import io.github.aakira.napier.Napier
 
 @Composable
 fun clickInteractionSource(onClick: suspend () -> Unit) = remember { MutableInteractionSource() }

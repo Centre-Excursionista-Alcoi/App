@@ -7,7 +7,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import androidx.core.content.IntentCompat
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.centrexcursionistalcoi.app.exception.NfcException
 import org.centrexcursionistalcoi.app.exception.NfcTagFormatNotSupportedException
@@ -18,6 +18,7 @@ import org.centrexcursionistalcoi.app.exception.NfcTagMemorySmallException
  * A singleton utility object for handling NFC read and write operations.
  */
 object NfcUtils {
+    private val log = logging()
 
     /**
      * Reads NDEF messages from a standard NFC tag intent.
@@ -75,7 +76,7 @@ object NfcUtils {
         mimeType: String = NfcPayload.MIME_TYPE_GENERIC,
     ) {
         val record = if (mimeType == "text/plain") {
-            Napier.d { "Writing tag as plain-text." }
+            log.d { "Writing tag as plain-text." }
                 NdefRecord.createTextRecord("en", String(data, Charsets.UTF_8))
         } else {
             NdefRecord.createMime(mimeType, data)
@@ -83,7 +84,7 @@ object NfcUtils {
         val ndefMessage = NdefMessage(
             arrayOf(record)
         )
-        Napier.d { "Writing Ndef tag (${ndefMessage.byteArrayLength} bytes) with type $mimeType." }
+        log.d { "Writing Ndef tag (${ndefMessage.byteArrayLength} bytes) with type $mimeType." }
         try {
             Ndef.get(tag)?.let { tagTech ->
                 tagTech.connect()

@@ -24,6 +24,7 @@ import org.jetbrains.exposed.v1.json.json
 object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, InventoryItemEntity>, CustomTableSerializer<UUID, LendingEntity> {
     val userSub = reference("userSub", UserReferences, onDelete = ReferenceOption.CASCADE)
     val timestamp = timestamp("timestamp").defaultExpression(CurrentTimestamp)
+    val lastUpdate = timestamp("lastUpdate").defaultExpression(CurrentTimestamp)
     val from = date("from")
     val to = date("to")
 

@@ -4,20 +4,25 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
-import io.github.aakira.napier.Napier
 import io.ktor.http.Url
+import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import tech.kotlinlang.permission.PermissionInitiation
 
 class MainActivity : NfcIntentHandlerActivity() {
+    private val appUpdateResultLauncher = PlatformAppUpdates.registerForActivityResult(this)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         instance = this
 
         PermissionInitiation.setActivity(this)
+
+        PlatformAppUpdates.initialize(this, appUpdateResultLauncher)
 
         NotifierManager.onCreateOrOnNewIntent(intent)
 
@@ -32,10 +37,13 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onResume() {
         super.onResume()
         instance = this
+
+        PlatformAppUpdates.checkForUpdates(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        PlatformAppUpdates.stop()
         instance = null
     }
 
@@ -53,7 +61,7 @@ class MainActivity : NfcIntentHandlerActivity() {
             return PushNotification.fromData(data)
         } catch (_: IllegalArgumentException) {
             // Ignore invalid push notification data
-            Napier.d { "Got intent with extras, but no valid push notification could be inferred." }
+            log.d { "Got intent with extras, but no valid push notification could be inferred." }
             return null
         }
     }
@@ -65,6 +73,8 @@ class MainActivity : NfcIntentHandlerActivity() {
     }
 
     companion object {
+        private val log = logging()
+
         var instance: MainActivity? = null
             private set
     }

@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
 import kotlin.time.ExperimentalTime
@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -27,38 +26,36 @@ class LoadingViewModel(
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
     companion object {
-        suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
-            Napier.d { "Synchronizing profile..." }
-            val syncedProfile = ProfileRemoteRepository.synchronize(progressNotifier)
-            return if (syncedProfile) {
-                Napier.d { "User is logged in" }
-                val profile = ProfileRepository.getProfile()!!
+        private val log = logging()
 
-                Napier.d { "Updating Sentry user context..." }
+        suspend fun syncAll(force: Boolean = false): Boolean {
+            log.d { "Fetching locally stored profile data." }
+            ProfileRepository.getProfile()?.let { profile ->
+                log.d { "Updating Sentry user context..." }
                 Sentry.setUser(
                     User().apply {
                         id = profile.sub
                         email = profile.email
                     }
                 )
-
-                Napier.d { "Scheduling data sync..." }
-                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
-                    input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
-                    requiresInternet = true,
-                    uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-                    logic = SyncAllDataBackgroundJobLogic,
-                )
-
-                Napier.d { "Renovating FCM token if required" }
-                FCMTokenManager.renovate()
-
-                Napier.d { "Load finished!" }
-                true
-            } else {
-                Napier.i { "User is not logged in" }
-                false
+            } ?: run {
+                log.d { "Profile not locally stored, logging out..." }
+                return false
             }
+
+            log.d { "Scheduling data sync..." }
+            BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+                input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
+                requiresInternet = true,
+                uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                logic = SyncAllDataBackgroundJobLogic,
+            )
+
+            log.d { "Renovating FCM token if required" }
+            FCMTokenManager.renovate()
+
+            log.d { "Load finished!" }
+            return true
         }
     }
 
@@ -76,17 +73,17 @@ class LoadingViewModel(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
-        Napier.d { "Checking if user is logged in..." }
+        log.d { "Loading app content..." }
         _error.value = null
 
         try {
             // Try to fetch the profile to see if the session is still valid
-            if (syncAll(progressNotifier = progressNotifier)) {
+            if (syncAll()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
-                    Napier.d { "Database migration, running synchronization..." }
+                    log.d { "Database migration, running synchronization..." }
                     SyncAllDataBackgroundJobLogic.syncAll(progressNotifier)
                 } else {
-                    Napier.d { "Scheduling periodic sync..." }
+                    log.d { "Scheduling periodic sync..." }
                     BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                         input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                         requiresInternet = true,
@@ -108,7 +105,7 @@ class LoadingViewModel(
                 withContext(Dispatchers.Main) { onNotLoggedIn() }
             }
         } catch (e: Exception) {
-            Napier.e("Error while loading.", e)
+            log.e(e) { "Error while loading." }
             _progress.value = null
             _error.value = e
         }

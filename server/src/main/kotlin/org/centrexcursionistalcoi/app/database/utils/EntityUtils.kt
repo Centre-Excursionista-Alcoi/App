@@ -52,6 +52,8 @@ import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+private val ignoreColumns = listOf("lastUpdate")
+
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer(), entity)
 }
@@ -102,6 +104,10 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
             logger.debug("Columns for $tableName:")
             for (column in columns) {
                 logger.debug("- ${column.name}, Type: ${column.columnType::class.simpleName}, Nullable: ${column.columnType.nullable}")
+                if (ignoreColumns.contains(column.name)) {
+                    logger.debug("\t- Ignoring column \"${column.name}\": in ignoreColumns")
+                    continue
+                }
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
                     is EncryptedVarCharColumnType, is EncryptedBinaryColumnType -> continue // Encrypted columns should not be serialized
@@ -143,6 +149,10 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
             encoder.encodeStructure(descriptor) {
                 for (column in columns) {
                     val columnName = column.name
+                    if (ignoreColumns.contains(columnName)) {
+                        logger.debug("\t- Ignoring column \"${columnName}\": in ignoreColumns")
+                        continue
+                    }
                     val idx = descriptor.getElementIndex(columnName)
                     val className = value::class.simpleName
                     val members = value::class.members

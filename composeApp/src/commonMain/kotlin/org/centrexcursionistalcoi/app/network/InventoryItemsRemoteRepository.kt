@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.http.isSuccess
@@ -13,10 +13,12 @@ import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
 
 object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
     "/inventory/items",
+    SETTINGS_LAST_INVENTORY_ITEMS_SYNC,
     InventoryItem.serializer(),
     InventoryItemsRepository,
     remoteToLocalIdConverter = { it },
@@ -25,6 +27,8 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
         item.referenced(type)
     },
 ) {
+    private val log = logging()
+
     suspend fun create(variation: String?, type: Uuid, nfcId: ByteArray?, progressNotifier: ProgressNotifier? = null) {
         create(InventoryItem(Uuid.Zero, variation, type, nfcId), progressNotifier)
     }
@@ -41,11 +45,11 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
                 progressNotifier?.let { monitorUploadProgress(it) }
             }
         }
-        Napier.i("Created $amount inventory items of type $type with variation '$variation'")
+        log.i { "Created $amount inventory items of type $type with variation '$variation'" }
         val correctCount = requests.count { it.status.isSuccess() }
         val failureCount = requests.size - correctCount
-        Napier.d { "$correctCount were created successfully. There were $failureCount failures." }
-        Napier.d { "Synchronizing completely with server..." }
+        log.d { "$correctCount were created successfully. There were $failureCount failures." }
+        log.d { "Synchronizing completely with server..." }
         synchronizeWithDatabase(progressNotifier)
     }
 

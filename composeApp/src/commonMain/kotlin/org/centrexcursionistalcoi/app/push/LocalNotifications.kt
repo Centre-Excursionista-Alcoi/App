@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.push
 
 import cea_app.composeapp.generated.resources.*
+import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
-import io.github.aakira.napier.Napier
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -12,6 +12,8 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
 object LocalNotifications {
+    private val log = logging()
+
     fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
             val notifier = NotifierManager.getLocalNotifier()
@@ -62,7 +64,7 @@ object LocalNotifications {
             is PushNotification.LendingConfirmed -> {
                 // Only show if the notification is for the current user
                 if (!notification.isSelf) {
-                    Napier.d { "Ignoring lending confirmed notification for another user: ${notification.userSub}" }
+                    log.d { "Ignoring lending confirmed notification for another user: ${notification.userSub}" }
                     return
                 }
 
@@ -75,7 +77,7 @@ object LocalNotifications {
             is PushNotification.LendingCancelled -> {
                 // Only show if the notification is for the current user
                 if (!notification.isSelf) {
-                    Napier.d { "Ignoring lending cancelled notification for another user: ${notification.userSub}" }
+                    log.d { "Ignoring lending cancelled notification for another user: ${notification.userSub}" }
                     return
                 }
 
@@ -133,7 +135,7 @@ object LocalNotifications {
             is PushNotification.DepartmentJoinRequestUpdated -> {
                 // Only show if the notification is for the current user
                 if (!notification.isSelf) {
-                    Napier.d { "Ignoring join updated notification for another user: ${notification.userSub}" }
+                    log.d { "Ignoring join updated notification for another user: ${notification.userSub}" }
                     return
                 }
 
@@ -162,7 +164,7 @@ object LocalNotifications {
             }
 
             else -> {
-                Napier.w { "Received an unhandled notification: ${notification.type}" }
+                log.w { "Received an unhandled notification: ${notification.type}" }
             }
         }
     }

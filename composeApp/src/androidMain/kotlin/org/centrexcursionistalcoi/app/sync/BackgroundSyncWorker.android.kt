@@ -5,8 +5,10 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.process.Progress
+
+private val log = logging()
 
 actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
     protected abstract val logicInstance: Logic
@@ -54,12 +56,12 @@ actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(ap
         @Suppress("UNCHECKED_CAST")
         return with(logicInstance) {
             try {
-                Napier.d { "Running ${logicInstance::class.simpleName} with input: $input" }
-                Napier.d { "Input data: ${inputData.keyValueMap.keys}" }
+                log.d { "Running ${logicInstance::class.simpleName} with input: $input" }
+                log.d { "Input data: ${inputData.keyValueMap.keys}" }
 
                 context.run(input).toWorkerResult()
             } catch (e: Exception) {
-                Napier.e(e) { "Worker failed." }
+                log.e(e) { "Worker failed." }
                 Result.failure(
                     workDataOf(
                         RESULT_EXCEPTION_TYPE to e::class.simpleName,
