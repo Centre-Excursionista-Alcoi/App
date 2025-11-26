@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -27,13 +26,9 @@ class LoadingViewModel(
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
     companion object {
-        suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null): Boolean {
-            Napier.d { "Synchronizing profile..." }
-            val syncedProfile = ProfileRemoteRepository.synchronize(progressNotifier)
-            return if (syncedProfile) {
-                Napier.d { "User is logged in" }
-                val profile = ProfileRepository.getProfile()!!
-
+        suspend fun syncAll(force: Boolean = false): Boolean {
+            Napier.d { "User is logged in" }
+            ProfileRepository.getProfile()?.let { profile ->
                 Napier.d { "Updating Sentry user context..." }
                 Sentry.setUser(
                     User().apply {
@@ -41,24 +36,24 @@ class LoadingViewModel(
                         email = profile.email
                     }
                 )
-
-                Napier.d { "Scheduling data sync..." }
-                BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
-                    input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
-                    requiresInternet = true,
-                    uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-                    logic = SyncAllDataBackgroundJobLogic,
-                )
-
-                Napier.d { "Renovating FCM token if required" }
-                FCMTokenManager.renovate()
-
-                Napier.d { "Load finished!" }
-                true
-            } else {
-                Napier.i { "User is not logged in" }
-                false
+            } ?: run {
+                Napier.d { "Profile not found, logging out..." }
+                return false
             }
+
+            Napier.d { "Scheduling data sync..." }
+            BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+                input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
+                requiresInternet = true,
+                uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+                logic = SyncAllDataBackgroundJobLogic,
+            )
+
+            Napier.d { "Renovating FCM token if required" }
+            FCMTokenManager.renovate()
+
+            Napier.d { "Load finished!" }
+            return true
         }
     }
 
@@ -81,7 +76,7 @@ class LoadingViewModel(
 
         try {
             // Try to fetch the profile to see if the session is still valid
-            if (syncAll(progressNotifier = progressNotifier)) {
+            if (syncAll()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
                     Napier.d { "Database migration, running synchronization..." }
                     SyncAllDataBackgroundJobLogic.syncAll(progressNotifier)

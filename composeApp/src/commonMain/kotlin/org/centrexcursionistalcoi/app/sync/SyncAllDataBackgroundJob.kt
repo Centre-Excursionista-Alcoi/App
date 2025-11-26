@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
@@ -61,6 +62,9 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     }
 
     suspend fun syncAll(progressNotifier: ProgressNotifier? = null) {
+        // First, synchronize the user profile
+        ProfileRemoteRepository.synchronize(progressNotifier)
+
         // Departments does not depend on any other entity, so we sync it first
         DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
         // Users does not depend on any other entity
