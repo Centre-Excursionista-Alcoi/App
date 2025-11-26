@@ -402,7 +402,7 @@
     <string name="lending_category_without_department">Club</string>
     <string name="departments_title">Seccions</string>
     <string name="departments_join_choose">Tria una secció</string>
-    <string name="departments_member_none">No eres membre de cap secció.</string>
+    <string name="departments_member_none">Membre de cap secció.</string>
     <string name="departments_member_pending">Sol·licitud pendent.</string>
     <string name="management_other_users_join_requests">Sol·licituds d\'unió de Seccions</string>
     <string name="management_department_join_request">vol unir-se a</string>
@@ -417,4 +417,11 @@
     <string name="notification_join_request_denied_message">La teua sol·licitud per a unir-te a una secció ha sigut denegada.</string>
     <string name="notification_join_request_approved_title">Sol·licitud d\'unió a secció aprovada</string>
     <string name="notification_join_request_approved_message">La teua sol·licitud d\'unió a una secció ha sigut aprovada.</string>
+    <string name="update_available_title">Actualització Disponible</string>
+    <string name="update_available_message">Una nova versió de l\'app està disponible. Per favor, actualitza a l\'última versió per a tenir una millor experiència.</string>
+    <string name="update_available_action">Actualitza</string>
+    <string name="update_download_progress_title">Descarregant Actualització</string>
+    <string name="update_restart_required_title">Reinici Necessari</string>
+    <string name="update_restart_required_message">L\'actualització s\'ha descarregat. Per favor, reinicia l\'app per aplicar-la.</string>
+    <string name="update_restart_required_action">Reinicia</string>
 </resources>
