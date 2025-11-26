@@ -28,3 +28,5 @@ const val SETTINGS_LANGUAGE = "language"
 const val SETTINGS_PRIVACY_ERRORS = "report_errors"
 const val SETTINGS_PRIVACY_ANALYTICS = "share_analytics"
 const val SETTINGS_PRIVACY_SESSION_REPLAY = "session_replay"
+
+const val MANAGEMENT_TOGGLE_COMPLETED_LENDINGS = "management_toggle_completed_lendings"
