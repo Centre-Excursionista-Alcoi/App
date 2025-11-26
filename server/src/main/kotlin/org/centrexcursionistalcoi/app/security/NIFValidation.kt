@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.security
 
 object NIFValidation {
-    fun validate(nif: String): Boolean {
+    fun validate(nif: String?): Boolean {
+        nif ?: return false
+
         val upperNif = nif.trim().uppercase()
 
         // Comprobación de longitud

@@ -52,10 +52,12 @@ object CEA : PeriodicWorker(period = 1.days) {
         /**
          * Whether the member is disabled (not "alta").
          */
-        val isDisabled = status?.trim()?.equals("alta", true)?.not() ?: true
+        val isDisabled = !NIFValidation.validate(nif) || status?.trim()?.equals("alta", true)?.not() ?: true
 
         val disabledReason = if (isDisabled) {
-            if (status.equals("baixa", true)) {
+            if (!NIFValidation.validate(nif)) {
+                "invalid_nif"
+            } else if (status.equals("baixa", true)) {
                 "status_baixa"
             } else if (status.equals("pendent", true)) {
                 "status_pendent"
@@ -112,12 +114,6 @@ object CEA : PeriodicWorker(period = 1.days) {
             member.number!!
             member.nif!!
             member.fullName!!
-
-            val isNifValid = NIFValidation.validate(member.nif)
-            if (!isNifValid) {
-                logger.warn("Invalid NIF for member number=${member.number}, NIF=${member.nif}. Skipping.")
-                continue
-            }
 
             val existingEntity = Database { UserReferenceEntity.findByNif(member.nif) }
             if (existingEntity != null) {
