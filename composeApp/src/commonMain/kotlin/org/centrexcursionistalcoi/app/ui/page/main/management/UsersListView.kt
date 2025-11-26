@@ -167,6 +167,7 @@ fun UsersListView(
                             "status_pendent" -> Res.string.personal_info_disabled_reason_pendent
                             "status_unknown" -> Res.string.unknown
                             "not_in_cea_members" -> Res.string.personal_info_disabled_reason_removed
+                            "invalid_nif" -> Res.string.personal_info_disabled_reason_invalid_nif
                             else -> Res.string.unknown
                         }
                     )
