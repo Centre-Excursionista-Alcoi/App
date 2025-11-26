@@ -147,6 +147,20 @@ jobs:
           name: AAB Artifact
           path: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
 
+      - name: Upload ProGuard Mappings
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install sentry-cli if not present (or use a docker container that has it)
+          curl -sL https://sentry.io/get-cli/ | bash
+
+          # Upload the mapping file
+          sentry-cli upload-proguard \
+            --android-manifest composeApp/src/androidMain/AndroidManifest.xml \
+            composeApp/build/outputs/mapping/release/mapping.txt
+
       - name: Upload to Play Store
         id: upload_play_store
         uses: r0adkll/upload-google-play@v1.1.3

@@ -195,6 +195,19 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: ./gradlew :composeApp:bundleRelease :composeApp:assembleRelease
 
+      - name: Upload ProGuard Mappings
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install sentry-cli if not present (or use a docker container that has it)
+          curl -sL https://sentry.io/get-cli/ | bash
+
+          # Upload the mapping file
+          sentry-cli upload-proguard \
+            --android-manifest composeApp/src/androidMain/AndroidManifest.xml \
+            composeApp/build/outputs/mapping/release/mapping.txt
       - name: Create Sentry release - Android
         uses: getsentry/action-release@v3
         env:
