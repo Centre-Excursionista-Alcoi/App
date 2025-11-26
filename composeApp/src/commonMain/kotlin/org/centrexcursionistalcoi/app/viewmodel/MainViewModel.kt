@@ -26,12 +26,13 @@ import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionRe
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 
 class MainViewModel: ViewModel() {
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
         .stateFlow()
-        .map { it == BackgroundJobState.RUNNING }
+        .map { it in listOf(BackgroundJobState.ENQUEUED, BackgroundJobState.RUNNING) }
         .stateInViewModel()
 
     val profile = ProfileRepository.profile.stateInViewModel()
@@ -101,7 +102,13 @@ class MainViewModel: ViewModel() {
     }
 
     fun sync() = launch {
-        LoadingViewModel.syncAll(force = true)
+        Napier.d { "Scheduling data sync..." }
+        BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+            input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "true"),
+            requiresInternet = true,
+            uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
+            logic = SyncAllDataBackgroundJobLogic,
+        )
     }
 
     fun connectFEMECV(username: String, password: CharArray) = async<Throwable?> {
