@@ -82,7 +82,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
         place = place,
         title = title,
         description = description,
-        maxPeople = maxPeople,
+        maxPeople = maxPeople?.toLong(),
         requiresConfirmation = requiresConfirmation,
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid(),
