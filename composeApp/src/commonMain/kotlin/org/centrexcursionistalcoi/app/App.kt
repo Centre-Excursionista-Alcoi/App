@@ -21,8 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
+import com.diamondedge.logging.logging
 import com.russhwolf.settings.ExperimentalSettingsApi
-import io.github.aakira.napier.Napier
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
@@ -56,6 +56,8 @@ import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 
+private val log = logging()
+
 @Composable
 fun MainApp(
     url: Url? = null,
@@ -78,7 +80,7 @@ fun MainApp(
 
             LaunchedEffect(Unit) {
                 settings.getStringOrNull(SETTINGS_LANGUAGE)?.let { lang ->
-                    Napier.i { "Setting locale to: $lang" }
+                    log.i { "Setting locale to: $lang" }
                     LocaleUpdater.updateLocale(lang)
                 }
             }
@@ -159,7 +161,7 @@ fun App(
             destination<Destination.Loading> {
                 LoadingScreen(
                     onLoggedIn = {
-                        Napier.i { "User is logged in. Navigating to: $afterLoad" }
+                        log.i { "User is logged in. Navigating to: $afterLoad" }
                         navController.navigate(afterLoad ?: Destination.Main()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true

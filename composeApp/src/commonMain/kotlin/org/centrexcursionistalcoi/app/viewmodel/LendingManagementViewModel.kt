@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -23,6 +23,9 @@ import org.ncgroup.kscan.Barcode
 class LendingManagementViewModel(
     private val lendingId: Uuid,
 ): ErrorViewModel() {
+    companion object {
+        private val log = logging()
+    }
 
     val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
 
@@ -53,7 +56,7 @@ class LendingManagementViewModel(
         nfcReaderJob = launch {
             while (true) {
                 val payload = PlatformNFC.readNFC() ?: continue
-                Napier.d("NFC tag read: $payload")
+                log.d { "NFC tag read: $payload" }
                 payload.uuid()?.let { uuid ->
                     onScan(uuid)
                 }
@@ -90,12 +93,12 @@ class LendingManagementViewModel(
     fun confirmLending() = launch {
         try {
             doAsync {
-                Napier.i { "Confirming lending..." }
+                log.i { "Confirming lending..." }
                 LendingsRemoteRepository.confirm(lendingId)
-                Napier.i { "Lending has been confirmed." }
+                log.i { "Lending has been confirmed." }
             }
         } catch (e: ServerException) {
-            Napier.e("Error confirming lending", e)
+            log.e(e) { "Error confirming lending" }
             setError(e)
         }
     }
@@ -103,12 +106,12 @@ class LendingManagementViewModel(
     fun deleteLending() = launch {
         try {
             doAsync {
-                Napier.i { "Deleting lending..." }
+                log.i { "Deleting lending..." }
                 LendingsRemoteRepository.delete(lendingId)
-                Napier.i { "Lending has been deleted." }
+                log.i { "Lending has been deleted." }
             }
         } catch (e: ServerException) {
-            Napier.e("Error deleting lending", e)
+            log.e(e) { "Error deleting lending" }
             setError(e)
         }
     }
@@ -116,12 +119,12 @@ class LendingManagementViewModel(
     fun skipMemory() = launch {
         try {
             doAsync {
-                Napier.i { "Skipping memory for lending..." }
+                log.i { "Skipping memory for lending..." }
                 LendingsRemoteRepository.skipMemory(lendingId)
-                Napier.i { "Memory has been skipped for lending." }
+                log.i { "Memory has been skipped for lending." }
             }
         } catch (e: ServerException) {
-            Napier.e("Error skipping memory for lending", e)
+            log.e(e) { "Error skipping memory for lending" }
             setError(e)
         }
     }
@@ -167,28 +170,28 @@ class LendingManagementViewModel(
         val lending = lending.value ?: return
         val item = lending.items.find { it.id == itemId }
         if (item == null) {
-            Napier.e { "Could not find item $itemId" }
+            log.e { "Could not find item $itemId" }
             _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
             return
         }
 
         _scannedItems.value += item.id
         _dismissedItems.value -= item.id
-        Napier.i { "Item ${item.id} scanned successfully." }
+        log.i { "Item ${item.id} scanned successfully." }
     }
 
     private suspend fun processScan(tagId: ByteArray) {
         val lending = lending.value ?: return
         val item = lending.items.find { it.nfcId.contentEquals(tagId) }
         if (item == null) {
-            Napier.e { "Could not find item for tag: ${tagId}" }
+            log.e { "Could not find item for tag: ${tagId}" }
             _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
             return
         }
 
         _scannedItems.value += item.id
         _dismissedItems.value -= item.id
-        Napier.i { "Item ${item.id} scanned successfully." }
+        log.i { "Item ${item.id} scanned successfully." }
     }
 
 
@@ -201,13 +204,13 @@ class LendingManagementViewModel(
             doAsync {
                 val dismissedItems = dismissedItems.value
 
-                Napier.i { "Marking lending as picked up..." }
-                Napier.d { "Dismissing ${dismissedItems.size} items: ${dismissedItems.joinToString()}" }
+                log.i { "Marking lending as picked up..." }
+                log.d { "Dismissing ${dismissedItems.size} items: ${dismissedItems.joinToString()}" }
                 LendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
-                Napier.i { "Lending has been marked as picked up." }
+                log.i { "Lending has been marked as picked up." }
             }
         } catch (e: ServerException) {
-            Napier.e("Error picking up lending", e)
+            log.e(e) { "Error picking up lending" }
             setError(e)
         }
     }
@@ -229,7 +232,7 @@ class LendingManagementViewModel(
                 val lending = lending.value ?: return@collect
                 if (lending.status() != Lending.Status.TAKEN) {
                     // Only load received items for taken lendings
-                    Napier.i { "Lending is not taken, skipping received items load." }
+                    log.i { "Lending is not taken, skipping received items load." }
                     // No need to keep collecting
                     cancel()
                     return@collect
@@ -237,10 +240,10 @@ class LendingManagementViewModel(
 
                 if (receivedItems == null) return@collect
                 val lendingItems = lending.items.map { it.id }
-                Napier.i { "Received items updated: ${receivedItems.size} / ${lendingItems.size} items received." }
+                log.i { "Received items updated: ${receivedItems.size} / ${lendingItems.size} items received." }
                 val receivedItemsIds = receivedItems.map { it.itemId }
-                Napier.d { "Lending items:  ${lendingItems.joinToString()}" }
-                Napier.d { "Received items: ${receivedItemsIds.joinToString()}" }
+                log.d { "Lending items:  ${lendingItems.joinToString()}" }
+                log.d { "Received items: ${receivedItemsIds.joinToString()}" }
                 setScannedItems(receivedItemsIds.toSet())
                 setDismissedItems(lendingItems.filter { it !in receivedItemsIds }.toSet())
                 // Stop collecting once items have been loaded
@@ -252,18 +255,18 @@ class LendingManagementViewModel(
     fun `return`() = launch {
         try {
             doAsync {
-                Napier.i { "Returning lending..." }
+                log.i { "Returning lending..." }
                 val scannedItems = scannedItems.value
                 val notes = scannedItemsNotes.value.filterKeys { it in scannedItems }
-                Napier.d { "Selected ${scannedItems.size} / ${lending.value?.items?.size} items" }
+                log.d { "Selected ${scannedItems.size} / ${lending.value?.items?.size} items" }
                 LendingsRemoteRepository.`return`(
                     lendingId,
                     scannedItems.map { it to notes[it] }
                 )
-                Napier.i { "Return of lending has been received." }
+                log.i { "Return of lending has been received." }
             }
         } catch (e: ServerException) {
-            Napier.e("Error returning lending", e)
+            log.e(e) { "Error returning lending" }
             setError(e)
         }
     }

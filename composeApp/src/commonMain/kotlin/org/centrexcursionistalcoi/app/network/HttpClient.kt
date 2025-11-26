@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import androidx.annotation.VisibleForTesting
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -17,6 +17,8 @@ import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 import org.centrexcursionistalcoi.app.storage.settings
+
+private val log = logging()
 
 private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()) {
     defaultRequest {
@@ -40,7 +42,7 @@ fun HttpClientConfig<*>.configureLogging() {
     install(Logging) {
         logger = object : Logger {
             override fun log(message: String) {
-                Napier.v(message)
+                log.v { message }
             }
         }
         level = LogLevel.HEADERS

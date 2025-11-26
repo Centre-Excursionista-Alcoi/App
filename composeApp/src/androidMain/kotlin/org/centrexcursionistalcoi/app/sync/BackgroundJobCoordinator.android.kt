@@ -13,7 +13,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.await
 import androidx.work.workDataOf
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import java.time.Duration
 import java.util.UUID
 import kotlin.time.toJavaDuration
@@ -22,6 +22,8 @@ import kotlin.uuid.toJavaUuid
 import kotlinx.coroutines.flow.mapNotNull
 
 actual object BackgroundJobCoordinator {
+    private val log = logging()
+
     var workManager: WorkManager? = null
         private set
 
@@ -66,7 +68,7 @@ actual object BackgroundJobCoordinator {
             )
             .build()
 
-        Napier.d { "Scheduling ${WorkerType::class.simpleName} with id $id..." }
+        log.d { "Scheduling ${WorkerType::class.simpleName} with id $id..." }
         return if (uniqueName != null) {
             when (request) {
                 is PeriodicWorkRequest -> {

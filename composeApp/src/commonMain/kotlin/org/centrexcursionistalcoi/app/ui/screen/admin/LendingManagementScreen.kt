@@ -79,7 +79,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -112,6 +112,8 @@ import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerView
+
+private val log = logging()
 
 @Composable
 fun LendingManagementScreen(
@@ -397,19 +399,19 @@ private fun LendingPickupReturnScreen(
                 is BarcodeResult.OnSuccess -> {
                     val data = result.barcode.data
                     scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_read, data)) }
-                    Napier.i { "Barcode: ${result.barcode.data}, format: ${result.barcode.format}" }
+                    log.i { "Barcode: ${result.barcode.data}, format: ${result.barcode.format}" }
                     onScanCode(result.barcode)
                     showingScanner = false
                 }
 
                 is BarcodeResult.OnFailed -> {
-                    Napier.e(result.exception) { "Could not read barcode." }
+                    log.e(result.exception) { "Could not read barcode." }
                     scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_error)) }
                     showingScanner = false
                 }
 
                 BarcodeResult.OnCanceled -> {
-                    Napier.d { "Scan cancelled" }
+                    log.d { "Scan cancelled" }
                     showingScanner = false
                 }
             }

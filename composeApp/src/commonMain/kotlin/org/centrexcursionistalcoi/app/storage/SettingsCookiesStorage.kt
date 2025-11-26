@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.storage
 
+import com.diamondedge.logging.logging
 import com.russhwolf.settings.Settings
-import io.github.aakira.napier.Napier
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.fillDefaults
 import io.ktor.client.plugins.cookies.matches
@@ -23,6 +23,8 @@ class SettingsCookiesStorage(
 ) : CookiesStorage {
     companion object {
         val Default = SettingsCookiesStorage(settings)
+        
+        private val log = logging()
     }
 
     @Serializable
@@ -56,7 +58,7 @@ class SettingsCookiesStorage(
     override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
         with(cookie) {
             if (name.isBlank()) {
-                Napier.w { "Tried to store a cookie without name ($requestUrl): $cookie" }
+                log.w { "Tried to store a cookie without name ($requestUrl): $cookie" }
                 return
             }
         }
@@ -73,7 +75,7 @@ class SettingsCookiesStorage(
                     CookieWithTimestamp(cookie.fillDefaults(requestUrl), createdAt)
                 )
             )
-            Napier.d { "Stored cookie: ${cookie.name}" }
+            log.d { "Stored cookie: ${cookie.name}" }
 
             cookie.maxAgeOrExpires(createdAt)?.let {
                 if (oldestCookie.load() > it) {

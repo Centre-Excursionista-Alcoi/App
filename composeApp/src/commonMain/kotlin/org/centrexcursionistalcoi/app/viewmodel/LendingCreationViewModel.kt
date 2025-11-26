@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +24,10 @@ import org.centrexcursionistalcoi.app.typing.ShoppingList
 class LendingCreationViewModel(
     private val originalShoppingList: ShoppingList
 ) : ViewModel() {
+    companion object {
+        private val log = logging()
+    }
+    
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
@@ -79,7 +83,7 @@ class LendingCreationViewModel(
             _shoppingList.value = shoppingList
             allocateItems()
         } else {
-            Napier.w { "Cannot add more items of type $typeId to shopping list. Reached max available amount: $maxItemAmount" }
+            log.w { "Cannot add more items of type $typeId to shopping list. Reached max available amount: $maxItemAmount" }
         }
     }
 
@@ -95,7 +99,7 @@ class LendingCreationViewModel(
             _shoppingList.value = shoppingList
             allocateItems()
         } else {
-            Napier.w { "Cannot remove items of type $typeId from shopping list. Amount is already zero." }
+            log.w { "Cannot remove items of type $typeId from shopping list. Amount is already zero." }
         }
     }
 
@@ -106,7 +110,7 @@ class LendingCreationViewModel(
             _shoppingList.value = shoppingList
             allocateItems()
         } else {
-            Napier.w { "Cannot remove items of type $typeId from shopping list. Type not present." }
+            log.w { "Cannot remove items of type $typeId from shopping list. Type not present." }
         }
     }
 
@@ -120,23 +124,23 @@ class LendingCreationViewModel(
         val allocatedItemsIds = mutableListOf<Uuid>()
         for ((typeId, amount) in shoppingList.value) {
             try {
-                Napier.i { "Trying to allocate x$amount of $typeId from $from to $to..." }
+                log.i { "Trying to allocate x$amount of $typeId from $from to $to..." }
                 val items = LendingsRemoteRepository.allocate(typeId, from, to, amount)
-                Napier.d { "Items allocated. IDs: $items" }
+                log.d { "Items allocated. IDs: $items" }
                 allocatedItemsIds.addAll(items)
             } catch (e: CannotAllocateEnoughItemsException) {
                 // Not enough items available
-                Napier.e(e) { "Not enough items available for the given date range." }
+                log.e(e) { "Not enough items available for the given date range." }
                 addError(e)
                 _allocatedItems.emit(emptyList())
             } catch (e: IllegalArgumentException) {
                 // Some other error
-                Napier.e(e) { "Failed to allocate $typeId" }
+                log.e(e) { "Failed to allocate $typeId" }
                 addError(e)
                 _allocatedItems.emit(emptyList())
             } catch (e: NoValidInsuranceForPeriodException) {
                 // No valid insurance
-                Napier.e(e) { "The user doesn't have a valid insurance for the given date range." }
+                log.e(e) { "The user doesn't have a valid insurance for the given date range." }
                 addError(e)
                 _allocatedItems.emit(emptyList())
             }
@@ -153,24 +157,24 @@ class LendingCreationViewModel(
         val allocatedItems = allocatedItemsIds.map { uuid ->
             inventoryItems.first { it.id == uuid }
         }
-        Napier.i { "Allocated ${allocatedItems.size} items successfully." }
+        log.i { "Allocated ${allocatedItems.size} items successfully." }
         _allocatedItems.emit(allocatedItems)
     }
 
     fun createLending(onSuccess: () -> Unit) {
-        val from = from.value ?: return Napier.w { "From date not set" }
-        val to = to.value ?: return Napier.w { "To date not set" }
-        val items = allocatedItems.value ?: return Napier.w { "Items allocation not ready" }
+        val from = from.value ?: return log.w { "From date not set" }
+        val to = to.value ?: return log.w { "To date not set" }
+        val items = allocatedItems.value ?: return log.w { "Items allocation not ready" }
 
         viewModelScope.launch(defaultAsyncDispatcher) {
             val itemIds = items.map { it.id }
 
             try {
                 LendingsRemoteRepository.create(from, to, itemIds, null)
-                Napier.i { "Lending created" }
+                log.i { "Lending created" }
                 withContext(Dispatchers.Main) { onSuccess() }
             } catch (e: Exception) {
-                Napier.e(e) { "Failed to create lending." }
+                log.e(e) { "Failed to create lending." }
                 addError(e)
             }
         }

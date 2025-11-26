@@ -9,13 +9,16 @@ import android.nfc.tech.Ndef
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 
 abstract class NfcIntentHandlerActivity : ComponentActivity() {
+    companion object {
+        private val log = logging()
+    }
 
     protected var nfcAdapter: NfcAdapter? = null
     protected var pendingIntent: PendingIntent? = null
@@ -28,12 +31,12 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Napier.d { "Getting NFC adapter..." }
+        log.d { "Getting NFC adapter..." }
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
         if (nfcAdapter == null) {
-            Napier.e { "NFC not available" }
+            log.e { "NFC not available" }
         } else {
-            Napier.d { "Preparing Activity for NFC support..." }
+            log.d { "Preparing Activity for NFC support..." }
 
             // Create a PendingIntent to handle NFC intents
             val intent = Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -56,7 +59,7 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
         intentFiltersArray ?: return
 
         // Enable foreground dispatch to intercept NFC tags
-        Napier.d { "Enabling NFC foreground dispatch..." }
+        log.d { "Enabling NFC foreground dispatch..." }
         nfcAdapter?.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techList)
     }
 
@@ -64,7 +67,7 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
         super.onPause()
         // Disable foreground dispatch when the activity is not in the foreground
         nfcAdapter?.disableForegroundDispatch(this)?.also {
-            Napier.d { "Disabled NFC foreground dispatch" }
+            log.d { "Disabled NFC foreground dispatch" }
         }
     }
 
@@ -81,7 +84,7 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
             NfcAdapter.ACTION_TAG_DISCOVERED == action
         ) {
 
-            Napier.d { "Handling NFC intent..." }
+            log.d { "Handling NFC intent..." }
 
             // Store the tag for writing
             val tag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -93,7 +96,7 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
 
             if (tag != null) {
                 // Handle write
-                PlatformNFC.writeContinuation?.resume(tag) ?: Napier.v { "There's no pending write continuation." }
+                PlatformNFC.writeContinuation?.resume(tag) ?: log.v { "There's no pending write continuation." }
 
                 // Handle read
                 val techList = tag.techList.map { it.substringAfterLast('.') }
@@ -115,8 +118,8 @@ abstract class NfcIntentHandlerActivity : ComponentActivity() {
                     return
                 }
 
-                Napier.d { "Read NFC tag: $payload" }
-                PlatformNFC.readContinuation?.resume(payload) ?: Napier.v { "There's no pending read continuation." }
+                log.d { "Read NFC tag: $payload" }
+                PlatformNFC.readContinuation?.resume(payload) ?: log.v { "There's no pending read continuation." }
             }
         }
     }

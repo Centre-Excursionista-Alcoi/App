@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.sync
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -20,6 +20,8 @@ import org.centrexcursionistalcoi.app.storage.settings
 expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
 
 object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
+    private val log = logging()
+
     const val EXTRA_FORCE_SYNC = "force_sync"
 
     /** Run sync every hour */
@@ -48,14 +50,14 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             databaseVersionUpgrade() ||
             lastSync.until(now, DateTimeUnit.SECOND) > SYNC_EVERY_SECONDS
         ) {
-            Napier.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
+            log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
             syncAll(progressNotifier)
 
             SyncResult.Success()
         } else {
-            Napier.d { "Last sync was less than $SYNC_EVERY_SECONDS seconds ago, skipping synchronization." }
+            log.d { "Last sync was less than $SYNC_EVERY_SECONDS seconds ago, skipping synchronization." }
 
             SyncResult.Success()
         }

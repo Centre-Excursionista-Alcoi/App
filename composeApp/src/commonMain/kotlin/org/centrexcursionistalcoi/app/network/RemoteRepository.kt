@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.delete
@@ -40,6 +40,8 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+
+private val log = logging()
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
@@ -116,7 +118,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         } else {
             val error = response.bodyAsError()
             if (error is Error.EntityNotFound) {
-                Napier.e { "$name #${url.substringAfterLast('/')} was not found." }
+                log.e { "$name #${url.substringAfterLast('/')} was not found." }
                 return null
             } else {
                 throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
@@ -185,7 +187,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             // Delete items that are not in the server response
             val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
 
-            Napier.d {
+            log.d {
                 "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
             }
 
@@ -199,9 +201,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             progress?.invoke(Progress.LocalDBRead)
             val all = repository.selectAll()
-            Napier.i { "There are ${all.size} $name" }
+            log.i { "There are ${all.size} $name" }
         } catch (_: ResourceNotModifiedException) {
-            Napier.i { "Resource not modified. No need to refresh." }
+            log.i { "Resource not modified. No need to refresh." }
         }
     }
 
@@ -227,7 +229,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 if (fileUuid != null) {
                     downloadFile(fileUuid, path, progressNotifier)
                 } else {
-                    Napier.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
+                    log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
             is ImageFileContainer -> {
@@ -236,7 +238,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 if (fileUuid != null) {
                     downloadFile(fileUuid, path, progressNotifier)
                 } else {
-                    Napier.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
+                    log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
             is FileContainer -> {
@@ -271,13 +273,13 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
                 downloadFileForEntity(item, progressNotifier)
             } catch (e: IllegalStateException) {
-                Napier.e { "${e.message} Synchronizing completely with server..." }
+                log.e { "${e.message} Synchronizing completely with server..." }
                 synchronizeWithDatabase(progressNotifier)
             }
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
-            Napier.e { "Failed to create $name: $error" }
+            log.e { "Failed to create $name: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
@@ -290,7 +292,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     ) {
         check(isPatchSupported) { "Patching this entity type is not supported" }
 
-        Napier.d { "Patching $name#$id: $request" }
+        log.d { "Patching $name#$id: $request" }
         val response = httpClient.patch("$endpoint/$id") {
             contentType(ContentType.Application.Json)
             val body = json.encodeToString(serializer, request)
@@ -311,9 +313,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             downloadFileForEntity(item, progressNotifier)
         } else {
             val error = response.bodyAsError()
-            Napier.e { "Failed to update $name#$id: $error" }
+            log.e { "Failed to update $name#$id: $error" }
             if (error is Error.MalformedRequest) {
-                Napier.e { "Request was malformed: ${json.encodeToString(serializer, request)}" }
+                log.e { "Request was malformed: ${json.encodeToString(serializer, request)}" }
             }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
@@ -322,12 +324,12 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.delete("$endpoint/$id")
         if (response.status.isSuccess()) {
-            Napier.i { "Deleted $name with ID $id" }
+            log.i { "Deleted $name with ID $id" }
             progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.delete(remoteToLocalIdConverter(id))
         } else {
             val error = response.bodyAsError()
-            Napier.e { "Failed to delete $name#$id: $error" }
+            log.e { "Failed to delete $name#$id: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
@@ -347,20 +349,20 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             httpClient: HttpClient = getHttpClient(),
             progressNotifier: ProgressNotifier? = null
         ) {
-            Napier.d { "Downloading $uuid..." }
+            log.d { "Downloading $uuid..." }
             val channel = httpClient.get("/download/$uuid") {
                 progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
             }.let {
                 if (!it.status.isSuccess()) {
                     val error = it.bodyAsError()
-                    Napier.e { "Failed to download file with ID $uuid: $error" }
+                    log.e { "Failed to download file with ID $uuid: $error" }
                     throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
                 }
                 it.bodyAsChannel()
             }
-            Napier.v { "Writing file..." }
+            log.v { "Writing file..." }
             FileSystem.write(path, channel, progressNotifier)
-            Napier.d { "File $uuid stored." }
+            log.d { "File $uuid stored." }
         }
     }
 }

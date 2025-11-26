@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.utils.io.ByteReadChannel
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,6 +23,8 @@ import org.centrexcursionistalcoi.app.network.RemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+
+private val log = logging()
 
 private fun joinPaths(vararg parts: String): String = parts.joinToString(SystemPathSeparator.toString())
 
@@ -46,7 +48,7 @@ suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: Progre
     if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Document file not found at path ($path). UUID could not be inferred.")
-        Napier.d { "Tried to read non-existing file. Downloading..." }
+        log.d { "Tried to read non-existing file. Downloading..." }
         RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }
     return path
@@ -84,7 +86,7 @@ private suspend fun fetchImageFilePath(
     if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Image file not found at path ($path). UUID could not be inferred.")
-        Napier.d { "Tried to read non-existing file. Downloading..." }
+        log.d { "Tried to read non-existing file. Downloading..." }
         RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }
     return path
@@ -139,7 +141,7 @@ suspend fun FileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNo
     if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Generic file not found at path ($path). UUID could not be inferred.")
-        Napier.d { "Tried to read non-existing file. Downloading..." }
+        log.d { "Tried to read non-existing file. Downloading..." }
         RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }
     return path
@@ -179,7 +181,7 @@ suspend fun SubReferencedFileContainer.fetchSubReferencedFilePath(uuid: Uuid, pr
     if (!FileSystem.exists(path) && downloadIfNotExists) {
         val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
             ?: throw IllegalStateException("Sub-referenced file not found at path ($path). UUID could not be inferred.")
-        Napier.d { "Tried to read non-existing file. Downloading..." }
+        log.d { "Tried to read non-existing file. Downloading..." }
         RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }
     return path
@@ -214,7 +216,7 @@ fun ImageFileContainer?.rememberImageFile(
                 val bytes = this@rememberImageFile?.imageFile()
                 withContext(Dispatchers.Main) { state.value = bytes }
             } catch (e: IllegalStateException) {
-                Napier.w(e) { "Image file not found." }
+                log.w(e) { "Image file not found." }
                 withContext(Dispatchers.Main) { state.value = ByteArray(0) }
             }
         }
@@ -245,7 +247,7 @@ fun ImageFileListContainer?.rememberImageFiles(
                     val bytes = imageFile(uuid = image)
                     withContext(Dispatchers.Main) { state[image] = bytes }
                 } catch (e: IllegalArgumentException) {
-                    Napier.w(e) { "Image file not found." }
+                    log.w(e) { "Image file not found." }
                     withContext(Dispatchers.Main) { state[image] = ByteArray(0) }
                 }
             }

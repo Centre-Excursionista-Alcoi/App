@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.auth
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.http.isSuccess
@@ -18,6 +18,8 @@ import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
 
 object AuthBackend {
+    private val log = logging()
+    
     suspend fun register(nif: String, password: String) {
         val response = getHttpClient().submitForm(
             url = "/register",
@@ -27,7 +29,7 @@ object AuthBackend {
             }
         )
         if (response.status.isSuccess()) {
-            Napier.d { "Registration successful." }
+            log.d { "Registration successful." }
         } else {
             throw response.bodyAsError().toThrowable()
         }
@@ -42,7 +44,7 @@ object AuthBackend {
             }
         )
         if (response.status.isSuccess()) {
-            Napier.d { "Login successful." }
+            log.d { "Login successful." }
         } else {
             throw response.bodyAsError().toThrowable()
         }
@@ -51,7 +53,7 @@ object AuthBackend {
     suspend fun logout() {
         val response = getHttpClient().get("/logout")
         if (response.status.isSuccess()) {
-            Napier.d { "Logged out. Removing all data..." }
+            log.d { "Logged out. Removing all data..." }
             // order is important due to foreign key constraints
             LendingsRepository.deleteAll()
             InventoryItemsRepository.deleteAll()
@@ -59,15 +61,15 @@ object AuthBackend {
             PostsRepository.deleteAll()
             UsersRepository.deleteAll()
             DepartmentsRepository.deleteAll()
-            Napier.d { "Removing all files..." }
-            FileSystem.deleteAll().also { Napier.v { "$it files were deleted." } }
-            Napier.d { "Revoking FCM token..." }
+            log.d { "Removing all files..." }
+            FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
+            log.d { "Revoking FCM token..." }
             FCMTokenManager.revoke()
-            Napier.d { "Removing all settings..." }
+            log.d { "Removing all settings..." }
             settings.clear()
         } else {
             val error = response.bodyAsError()
-            Napier.d { "Logout failed (${response.status}): $error" }
+            log.d { "Logout failed (${response.status}): $error" }
             throw error.toThrowable()
         }
     }
@@ -80,7 +82,7 @@ object AuthBackend {
             }
         )
         if (response.status.isSuccess()) {
-            Napier.d { "Forgot password request successful." }
+            log.d { "Forgot password request successful." }
         } else {
             throw response.bodyAsError().toThrowable()
         }

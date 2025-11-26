@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
-import io.github.aakira.napier.Napier
 import io.ktor.http.Url
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
@@ -61,7 +61,7 @@ class MainActivity : NfcIntentHandlerActivity() {
             return PushNotification.fromData(data)
         } catch (_: IllegalArgumentException) {
             // Ignore invalid push notification data
-            Napier.d { "Got intent with extras, but no valid push notification could be inferred." }
+            log.d { "Got intent with extras, but no valid push notification could be inferred." }
             return null
         }
     }
@@ -73,6 +73,8 @@ class MainActivity : NfcIntentHandlerActivity() {
     }
 
     companion object {
+        private val log = logging()
+
         var instance: MainActivity? = null
             private set
     }

@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.storage
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
@@ -12,6 +12,8 @@ import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 
 object InMemoryFileAllocator {
+    private val log = logging()
+
     private val files = mutableMapOf<Uuid, Data>()
 
     class Data(
@@ -25,7 +27,7 @@ object InMemoryFileAllocator {
 
     fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Data {
         val uuid = uuid ?: Uuid.random()
-        Napier.i { "Allocated a file of ${bytes.size} bytes at $uuid" }
+        log.i { "Allocated a file of ${bytes.size} bytes at $uuid" }
         files[uuid] = Data(bytes, contentType, Clock.System.now(), uuid)
         return Data(bytes, contentType, Clock.System.now(), uuid)
     }

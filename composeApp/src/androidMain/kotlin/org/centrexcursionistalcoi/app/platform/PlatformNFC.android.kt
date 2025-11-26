@@ -4,7 +4,7 @@ import android.content.pm.PackageManager
 import android.nfc.Tag
 import android.widget.Toast
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
@@ -21,6 +21,8 @@ import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
 
 actual object PlatformNFC : PlatformProvider {
+    private val log = logging()
+
     actual override val isSupported: Boolean get() {
         val context = MainActivity.instance ?: return false
         val pm = context.packageManager
@@ -58,28 +60,28 @@ actual object PlatformNFC : PlatformProvider {
             val responseMessage: String = try {
                 val uuid = message.toUuidOrNull()
                 if (uuid != null) {
-                    Napier.d { "Writing tag as UUID..." }
+                    log.d { "Writing tag as UUID..." }
 
                     // Get the byte array representation of the UUID
                     val data = uuid.toByteArray()
 
                     NfcUtils.writeNdefTag(data, tag, NfcPayload.MIME_TYPE_UUID)
                 } else {
-                    Napier.d { "Writing tag as plain text..." }
+                    log.d { "Writing tag as plain text..." }
                     NfcUtils.writeNdefTag(message, tag)
                 }
                 getString(Res.string.nfc_write_success)
             } catch (e: NfcTagIsReadOnlyException) {
-                Napier.e(e) { "NFC tag is read-only." }
+                log.e(e) { "NFC tag is read-only." }
                 getString(Res.string.nfc_error_read_only)
             } catch (e: NfcTagMemorySmallException) {
-                Napier.e(e) { "NFC tag doesn't have enough memory." }
+                log.e(e) { "NFC tag doesn't have enough memory." }
                 getString(Res.string.nfc_error_too_small)
             } catch (e: NfcTagFormatNotSupportedException) {
-                Napier.e(e) { "NFC tag doesn't support the ${e.format} format." }
+                log.e(e) { "NFC tag doesn't support the ${e.format} format." }
                 getString(Res.string.nfc_error_format_unsupported, e.format)
             } catch (e: NfcException) {
-                Napier.e(e) { "An unknown error occurred while writing the NFC tag." }
+                log.e(e) { "An unknown error occurred while writing the NFC tag." }
                 getString(Res.string.nfc_error_unknown, e.message ?: e::class.simpleName ?: "NfcException")
             }
             val context = MainActivity.instance ?: return

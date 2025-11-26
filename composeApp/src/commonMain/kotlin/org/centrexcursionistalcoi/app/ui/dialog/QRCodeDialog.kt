@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.oned.BarcodeType
 import io.github.alexzhirkevich.qrose.oned.rememberBarcodePainter
@@ -52,6 +52,8 @@ import org.jetbrains.compose.resources.stringResource
 private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
 private val Code128Regex = Regex("^[\\x00-\\x7F]+$")
 
+private val log = logging()
+
 @Composable
 fun QRCodeDialog(
     value: String,
@@ -71,7 +73,7 @@ fun QRCodeDialog(
                 } else {
                     val nfcValue = PlatformNFC.readNFC()
                     if (nfcValue != null) {
-                        Napier.d { "Read NFC: $nfcValue" }
+                        log.d { "Read NFC: $nfcValue" }
                         onReadNfc(nfcValue)
                     }
                     readingNFC = false

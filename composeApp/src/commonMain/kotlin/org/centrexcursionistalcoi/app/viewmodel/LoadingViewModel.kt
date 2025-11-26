@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
 import kotlin.time.ExperimentalTime
@@ -26,10 +26,12 @@ class LoadingViewModel(
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
     companion object {
+        private val log = logging()
+
         suspend fun syncAll(force: Boolean = false): Boolean {
-            Napier.d { "Fetching locally stored profile data." }
+            log.d { "Fetching locally stored profile data." }
             ProfileRepository.getProfile()?.let { profile ->
-                Napier.d { "Updating Sentry user context..." }
+                log.d { "Updating Sentry user context..." }
                 Sentry.setUser(
                     User().apply {
                         id = profile.sub
@@ -37,11 +39,11 @@ class LoadingViewModel(
                     }
                 )
             } ?: run {
-                Napier.d { "Profile not locally stored, logging out..." }
+                log.d { "Profile not locally stored, logging out..." }
                 return false
             }
 
-            Napier.d { "Scheduling data sync..." }
+            log.d { "Scheduling data sync..." }
             BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                 input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
                 requiresInternet = true,
@@ -49,10 +51,10 @@ class LoadingViewModel(
                 logic = SyncAllDataBackgroundJobLogic,
             )
 
-            Napier.d { "Renovating FCM token if required" }
+            log.d { "Renovating FCM token if required" }
             FCMTokenManager.renovate()
 
-            Napier.d { "Load finished!" }
+            log.d { "Load finished!" }
             return true
         }
     }
@@ -71,17 +73,17 @@ class LoadingViewModel(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
-        Napier.d { "Loading app content..." }
+        log.d { "Loading app content..." }
         _error.value = null
 
         try {
             // Try to fetch the profile to see if the session is still valid
             if (syncAll()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
-                    Napier.d { "Database migration, running synchronization..." }
+                    log.d { "Database migration, running synchronization..." }
                     SyncAllDataBackgroundJobLogic.syncAll(progressNotifier)
                 } else {
-                    Napier.d { "Scheduling periodic sync..." }
+                    log.d { "Scheduling periodic sync..." }
                     BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
                         input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                         requiresInternet = true,
@@ -103,7 +105,7 @@ class LoadingViewModel(
                 withContext(Dispatchers.Main) { onNotLoggedIn() }
             }
         } catch (e: Exception) {
-            Napier.e("Error while loading.", e)
+            log.e(e) { "Error while loading." }
             _progress.value = null
             _error.value = e
         }

@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.data
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.forms.formData
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -14,6 +14,8 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+
+private val log = logging()
 
 @OptIn(InternalSerializationApi::class)
 fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
@@ -58,7 +60,7 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                         FileSystem.read(value.uuid.toString())
                     }
                     if (data == null) {
-                        Napier.e { "FileReference data is null for key: $key, uuid: ${value.uuid}" }
+                        log.e { "FileReference data is null for key: $key, uuid: ${value.uuid}" }
                         return@forEach
                     }
                     append(

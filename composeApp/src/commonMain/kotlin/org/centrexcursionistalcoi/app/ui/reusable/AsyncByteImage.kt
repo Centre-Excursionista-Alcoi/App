@@ -18,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
+
+private val log = logging()
 
 @Composable
 fun AsyncByteImage(
@@ -45,7 +47,7 @@ fun AsyncByteImage(
             val state by painter.state.collectAsState()
             when (state) {
                 is AsyncImagePainter.State.Error -> {
-                    Napier.e((state as AsyncImagePainter.State.Error).result.throwable) {
+                    log.e((state as AsyncImagePainter.State.Error).result.throwable) {
                         "Could not load image."
                     }
                     Text(

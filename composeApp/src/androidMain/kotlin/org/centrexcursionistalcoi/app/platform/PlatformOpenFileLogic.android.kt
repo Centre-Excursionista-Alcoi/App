@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.platform
 
 import android.content.Intent
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
 import java.io.File
@@ -10,6 +10,8 @@ import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 
 actual object PlatformOpenFileLogic : PlatformProvider {
+    private val log = logging()
+
     actual override val isSupported: Boolean = true
 
     actual fun open(path: String, contentType: ContentType) {
@@ -27,6 +29,6 @@ actual object PlatformOpenFileLogic : PlatformProvider {
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))
-        } ?: Napier.e { "View not supported for $path as $contentType" }
+        } ?: log.e { "View not supported for $path as $contentType" }
     }
 }

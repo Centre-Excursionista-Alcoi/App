@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.sync
 
 import androidx.compose.runtime.mutableStateMapOf
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 actual object BackgroundJobCoordinator {
+    private val log = logging()
 
     private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
     private val jobStateIdMutex = Mutex()
@@ -103,7 +104,7 @@ actual object BackgroundJobCoordinator {
             }
             emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
         } catch (e: Throwable) {
-            Napier.e(e) { "Job failed." }
+            log.e(e) { "Job failed." }
             emitState(id, uniqueName, BackgroundJobState.FAILED)
         }
     }

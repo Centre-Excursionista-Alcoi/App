@@ -1,10 +1,12 @@
 package org.centrexcursionistalcoi.app.database
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+
+private val log = logging()
 
 interface Repository<T : Entity<IdType>, IdType: Any> {
     fun selectAllAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<T>>
@@ -41,7 +43,7 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
      */
     suspend fun deleteAll() {
         val entities = selectAll()
-        Napier.d { "Deleting all ${entities.size} items..." }
+        log.d { "Deleting all ${entities.size} items..." }
         deleteByIdList(entities.map { it.id })
     }
 }

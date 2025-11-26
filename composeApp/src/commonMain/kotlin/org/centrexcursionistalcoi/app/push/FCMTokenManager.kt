@@ -1,11 +1,13 @@
 package org.centrexcursionistalcoi.app.push
 
+import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
-import io.github.aakira.napier.Napier
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.storage.settings
 
 object FCMTokenManager {
+    private val log = logging()
+
     /**
      * Renovate the FCM token if needed.
      * The token is obtained from the [NotifierManager].
@@ -24,7 +26,7 @@ object FCMTokenManager {
     suspend fun renovate(newToken: String) {
         val oldToken = settings.getStringOrNull("fcm_token")
         if (oldToken == newToken) {
-            Napier.d { "Won't renovate token, already registered: $oldToken" }
+            log.d { "Won't renovate token, already registered: $oldToken" }
             return
         }
         revoke()
@@ -33,7 +35,7 @@ object FCMTokenManager {
             FCMTokenRemote.registerNewToken(newToken)
             settings.putString("fcm_token", newToken)
         } catch (e: ServerException) {
-            Napier.e(e) { "Could not register FCM token." }
+            log.e(e) { "Could not register FCM token." }
         }
     }
 
@@ -52,7 +54,7 @@ object FCMTokenManager {
             settings.remove("fcm_token")
             true
         } catch (e: ServerException) {
-            Napier.e(e) { "Could not revoke FCM token." }
+            log.e(e) { "Could not revoke FCM token." }
             false
         }
     }

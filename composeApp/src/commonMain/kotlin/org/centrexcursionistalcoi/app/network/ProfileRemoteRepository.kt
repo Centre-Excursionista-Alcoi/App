@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.centrexcursionistalcoi.app.storage.settings
 
 object ProfileRemoteRepository {
+    private val log = logging()
+
     private val httpClient by lazy { getHttpClient() }
 
     /**
@@ -107,23 +109,23 @@ object ProfileRemoteRepository {
         try {
             val profile = getProfile(progressNotifier)
             if (profile != null) {
-                Napier.d { "User is logged in, updating cached profile data..." }
+                log.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)
                 return true
             } else {
-                Napier.i { "User is not logged in" }
+                log.i { "User is not logged in" }
                 ProfileRepository.clear()
                 return false
             }
         } catch (_: ResourceNotModifiedException) {
-            Napier.d { "Profile not modified, no update needed." }
+            log.d { "Profile not modified, no update needed." }
             return true
         } catch (e: Exception) {
             if (isNoConnectionError(e)) {
-                Napier.w("No internet connection, cannot synchronize profile.")
+                log.w { "No internet connection, cannot synchronize profile." }
                 throw InternetAccessNotAvailable()
             } else {
-                Napier.e("Error synchronizing profile", e)
+                log.e(e) { "Error synchronizing profile" }
                 throw e
             }
         }

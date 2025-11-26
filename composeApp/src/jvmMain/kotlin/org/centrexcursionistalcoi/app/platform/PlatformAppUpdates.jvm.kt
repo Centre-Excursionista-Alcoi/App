@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.prepareGet
@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.network.getHttpClient
 
 actual object PlatformAppUpdates {
+    private val log = logging()
 
     private const val GITHUB_OWNER = "Centre-Excursionista-Alcoi"
     private const val GITHUB_REPO = "App"
@@ -74,18 +75,18 @@ actual object PlatformAppUpdates {
                     if (isNewerVersion(BuildKonfig.VERSION_NAME, remoteVersion)) {
                         val matchingAsset = findAssetForCurrentOs(assets, remoteVersion)
                         if (matchingAsset != null) {
-                            Napier.d { "Update available! Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
+                            log.d { "Update available! Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
                             updateAssetUrl = matchingAsset
                             _updateAvailable.value = true
                         } else {
-                            Napier.d { "No suitable update asset found for current OS. Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
+                            log.d { "No suitable update asset found for current OS. Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
                         }
                     } else {
-                        Napier.d { "No updates available. Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
+                        log.d { "No updates available. Current version: ${BuildKonfig.VERSION_NAME}, Remote version: $remoteVersion" }
                     }
                 }
             } catch (e: Exception) {
-                Napier.e("Could not check for updates.", e)
+                log.e(e) { "Could not check for updates." }
             }
         }
     }
@@ -135,7 +136,7 @@ actual object PlatformAppUpdates {
                 launchInstaller(targetFile)
 
             } catch (e: Exception) {
-                Napier.e(e) { "Could not start update." }
+                log.e(e) { "Could not start update." }
                 _updateProgress.value = null // Reset on failure
             }
         }
@@ -173,12 +174,12 @@ actual object PlatformAppUpdates {
                         // Fallback: Use terminal?
                         // It's hard to auto-install .deb without sudo password prompt.
                         // We assume the user environment handles the file open.
-                        Napier.e("Could not launch installer automatically.", e)
+                        log.e(e) { "Could not launch installer automatically." }
                     }
                 }
             }
         } catch (e: Exception) {
-            Napier.e("Could not launch installer.", e)
+            log.e(e) { "Could not launch installer." }
         }
     }
 
@@ -216,7 +217,7 @@ actual object PlatformAppUpdates {
             val file = File("/etc/os-release")
             if (file.exists()) file.readText() else ""
         } catch (e: Exception) {
-            Napier.e("Could not get linux release info.", e)
+            log.e(e) { "Could not get linux release info." }
             ""
         }
     }

@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
-import io.github.aakira.napier.Napier
+import com.diamondedge.logging.logging
 import io.ktor.client.request.post
 import io.ktor.http.isSuccess
 import kotlin.uuid.Uuid
@@ -20,55 +20,57 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
     Department.serializer(),
     DepartmentsRepository
 ) {
+    private val log = logging()
+
     suspend fun create(displayName: String, image: ByteArray?, progressNotifier: ProgressNotifier? = null) {
         val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
 
-        Napier.i { "Creating a new department: displayName=\"${displayName}\", imageUuid=${imageUuid}" }
+        log.i { "Creating a new department: displayName=\"${displayName}\", imageUuid=${imageUuid}" }
 
         create(Department(Uuid.Zero, displayName, imageUuid?.id, emptyList()), progressNotifier)
     }
 
     suspend fun confirmJoinRequest(request: DepartmentMemberInfo) {
-        Napier.i { "Confirming join request: departmentId=${request.departmentId}, requestId=${request.id}" }
+        log.i { "Confirming join request: departmentId=${request.departmentId}, requestId=${request.id}" }
 
         val response = httpClient.post("/departments/${request.departmentId}/confirm/${request.id}")
         if (response.status.isSuccess()) {
-            Napier.i { "Join request confirmed successfully." }
+            log.i { "Join request confirmed successfully." }
             update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
-            Napier.e { "Failed to confirm join request: $error" }
+            log.e { "Failed to confirm join request: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
     suspend fun denyJoinRequest(request: DepartmentMemberInfo) {
-        Napier.i { "Denying join request: departmentId=${request.departmentId}, requestId=${request.id}" }
+        log.i { "Denying join request: departmentId=${request.departmentId}, requestId=${request.id}" }
 
         val response = httpClient.post("/departments/${request.departmentId}/deny/${request.id}")
         if (response.status.isSuccess()) {
-            Napier.i { "Join request denied successfully." }
+            log.i { "Join request denied successfully." }
             update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
-            Napier.e { "Failed to deny join request: $error" }
+            log.e { "Failed to deny join request: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
     suspend fun requestJoin(departmentId: Uuid) {
-        Napier.i { "Requesting to join department: departmentId=$departmentId" }
+        log.i { "Requesting to join department: departmentId=$departmentId" }
 
         val response = httpClient.post("/departments/$departmentId/join")
         if (response.status.isSuccess()) {
-            Napier.i { "Join request sent successfully." }
+            log.i { "Join request sent successfully." }
             update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
-            Napier.e { "Failed to send join request: $error" }
+            log.e { "Failed to send join request: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
