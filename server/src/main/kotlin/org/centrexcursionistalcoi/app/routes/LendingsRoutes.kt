@@ -66,14 +66,18 @@ import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.notInSubQuery
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
 
@@ -137,6 +141,13 @@ fun Route.lendingsRoutes() {
         val userReferenceEntity = Database { UserReferenceEntity.findById(session.sub) }
         if (userReferenceEntity == null) {
             call.respondError(Error.UserReferenceNotFound())
+            return@postWithLock
+        }
+
+        // Make sure the user is signed up for lending
+        val userNotSignedUpForLending = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.empty() }
+        if (userNotSignedUpForLending) {
+            call.respondError(Error.UserNotSignedUpForLending())
             return@postWithLock
         }
 
@@ -821,11 +832,33 @@ fun Route.lendingsRoutes() {
             return@getWithLock
         }
 
-        val lendingEntitiesForRange = Database { LendingEntity.find { (Lendings.from greaterEq from) and (Lendings.to lessEq to) } }
+        val usageCount = LendingItems.lending.count()
         val availableItems = Database {
-            InventoryItemEntity.find { InventoryItems.type eq typeId }.filter { item ->
-                !lendingEntitiesForRange.conflictsWith(from, to, listOf(item))
-            }.toList()
+            // 1. Define the "Conflict" Subquery
+            // This selects the IDs of all items that are currently "busy"
+            // based on your exact conflictsWith logic:
+            // - Not returned
+            // - Date overlap (StartA <= EndB) and (EndA >= StartB)
+            val busyItemIds = LendingItems.innerJoin(Lendings)
+                .select(LendingItems.item)
+                .where {
+                    (Lendings.returned eq false) and
+                            (Lendings.from lessEq to) and
+                            (Lendings.to greaterEq from)
+                }
+
+            // 2. Main Query
+            val query = InventoryItems.leftJoin(LendingItems)
+                .select(InventoryItems.columns)
+                .where {
+                    (InventoryItems.type eq typeId) and
+                            (InventoryItems.id notInSubQuery busyItemIds) // Filter conflicts here
+                }
+                .groupBy(InventoryItems.id)
+                .orderBy(usageCount, SortOrder.ASC)
+
+            // 3. Execute and Wrap
+            InventoryItemEntity.wrapRows(query).toList()
         }
         if (availableItems.size < amount) {
             call.response.header("CEA-Available-Items", availableItems.joinToString(",") { it.id.value.toString() })
