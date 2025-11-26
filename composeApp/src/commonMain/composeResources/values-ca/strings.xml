@@ -424,4 +424,5 @@
     <string name="update_restart_required_title">Reinici Necessari</string>
     <string name="update_restart_required_message">L\'actualització s\'ha descarregat. Per favor, reinicia l\'app per aplicar-la.</string>
     <string name="update_restart_required_action">Reinicia</string>
+    <string name="personal_info_disabled_reason_invalid_nif">L\'usuari té un NIF invàlid.</string>
 </resources>
