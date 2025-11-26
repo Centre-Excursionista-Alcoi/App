@@ -456,4 +456,12 @@
     <string name="post_department">Department</string>
     <string name="post_department_generic">Directive</string>
 
+    <string name="update_available_title">Update Available</string>
+    <string name="update_available_message">A new version of the app is available. Please, update to the latest version for the best experience.</string>
+    <string name="update_available_action">Update Now</string>
+    <string name="update_download_progress_title">Downloading Update</string>
+    <string name="update_restart_required_title">Restart Required</string>
+    <string name="update_restart_required_message">The update has been downloaded. Please, restart the app to apply the update.</string>
+    <string name="update_restart_required_action">Restart Now</string>
+
 </resources>

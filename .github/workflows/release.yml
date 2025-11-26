@@ -65,6 +65,98 @@ jobs:
       # Refresh the version name again just in case
       - name: Update version name
         run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+
+      - name: Determine In-App Update Priority
+        id: determine_priority
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let priority = 2;
+            const currentVersion = context.payload.release.name;
+            const currentTag = context.payload.release.tag_name;
+            
+            console.log(`Current Version Name: ${currentVersion}`);
+            
+            // 1. Check Version Increment (Major vs Minor)
+            try {
+              // Fetch recent releases to find the previous one
+              const releases = await github.rest.repos.listReleases({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 10
+              });
+            
+              // Filter out the current release and any drafts/prereleases to find the "previous" stable release
+              const sortedReleases = releases.data
+                .filter(r => !r.draft && !r.prerelease && r.tag_name !== currentTag)
+                .sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+            
+              if (sortedReleases.length > 0) {
+                const previousVersion = sortedReleases[0].name;
+                console.log(`Previous Version: ${previousVersion}`);
+            
+                // Simple regex to extract Major.Minor
+                const versionRegex = /^v?(\d+)\.(\d+)/;
+                const currentMatch = currentVersion.match(versionRegex);
+                const prevMatch = previousVersion.match(versionRegex);
+            
+                if (currentMatch && prevMatch) {
+                  const currMajor = parseInt(currentMatch[1]);
+                  const currMinor = parseInt(currentMatch[2]);
+                  const prevMajor = parseInt(prevMatch[1]);
+                  const prevMinor = parseInt(prevMatch[2]);
+            
+                  if (currMajor > prevMajor) {
+                    priority = 4;
+                    console.log("Major version increase detected. Setting priority to 4.");
+                  } else if (currMinor > prevMinor) {
+                    priority = 3;
+                    console.log("Minor version increase detected. Setting priority to 3.");
+                  }
+                }
+              } else {
+                console.log("No previous release found to compare versions.");
+              }
+            } catch (err) {
+              console.log("Error checking version history: " + err);
+            }
+            
+            // 2. Check PR Labels (Only if priority is not already maxed out at 4)
+            if (priority < 4) {
+              try {
+                // Get PRs associated with the release commit/tag
+                const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: context.sha,
+                });
+            
+                const highPriorityLabels = ['migration', 'important', 'security'];
+            
+                for (const pr of prs) {
+                  const labels = pr.labels.map(l => l.name);
+                  console.log(`Checking PR #${pr.number} labels: ${labels.join(', ')}`);
+            
+                  if (labels.some(l => highPriorityLabels.includes(l))) {
+                    priority = 4;
+                    console.log("High priority label found. Elevating priority to 4.");
+                    break; // Efficiency: Don't check rest if max priority reached
+                  } else if (labels.includes('app')) {
+                    // Only upgrade to 3 if we are at 2. If we are already at 3 (due to minor version), stay at 3.
+                    if (priority < 3) {
+                      priority = 3;
+                      console.log("'app' label found. Elevating priority to 3.");
+                    }
+                  }
+                }
+              } catch (err) {
+                console.log("Error checking PR labels: " + err);
+              }
+            }
+            
+            console.log(`Final Calculated Priority: ${priority}`);
+            core.setOutput('priority', priority);
+
       - name: Clean quote backslashes
         id: clean_backslash
         run: bash ./scripts/clean-backslash.sh
@@ -128,9 +220,8 @@ jobs:
           packageName: org.centrexcursionistalcoi.app
           releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
           track: "beta"
-          inAppUpdatePriority: 2
-          # mappingFile: ./base/build/outputs/mapping/release/mapping.txt
-          # whatsNewDirectory: ./changelog
+          # Priority is dynamically set by the previous script step
+          inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed
 
   build-desktop:
