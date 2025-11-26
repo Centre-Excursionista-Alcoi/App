@@ -182,7 +182,7 @@ private fun ManagementPage(
 
             MANAGEMENT_PAGE_DEPARTMENTS -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
 
-            MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, onPromote)
+            MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, departments, onPromote)
 
             MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 

@@ -26,7 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
@@ -37,6 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 fun UsersListView(
     windowSizeClass: WindowSizeClass,
     users: List<UserData>?,
+    departments: List<Department>?,
     onPromote: (UserData) -> Job,
 ) {
     var promotingUser by remember { mutableStateOf<UserData?>(null) }
@@ -199,5 +202,11 @@ fun UsersListView(
         if (user.insurances.isNotEmpty()) {
             InsurancesListCard(user.insurances)
         }
+
+        DepartmentsListCard(
+            userSub = user.sub,
+            departments = departments,
+            onJoinDepartmentRequested = null,
+        )
     }
 }
