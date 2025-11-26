@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
 import java.util.Random
@@ -160,7 +161,7 @@ class TestRoutes : ApplicationTestBase() {
             },
             stubEntityProvider = {
                 EventEntity.new(testEventId) {
-                    date = LocalDate.of(2025, Month.OCTOBER, 10)
+                    start = LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15)
                     title = "Test Event"
                     place = "Test Place"
                 }
