@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app
 
 import android.app.Application
+import com.diamondedge.logging.FixedLogLevel
+import com.diamondedge.logging.KmLogging
+import com.diamondedge.logging.PlatformLogger
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
@@ -22,6 +25,7 @@ class AppBase : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        KmLogging.addLogger(PlatformLogger(FixedLogLevel(true)))
 
         instance = this
 
