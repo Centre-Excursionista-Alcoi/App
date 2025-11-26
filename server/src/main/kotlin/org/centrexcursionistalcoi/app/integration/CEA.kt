@@ -13,6 +13,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
+import java.io.File
 import kotlin.time.Duration.Companion.days
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -253,6 +254,9 @@ object CEA : PeriodicWorker(period = 1.days) {
                 // Remove empty lines
                 .filter { line -> line.isNotEmpty() }
                 .joinToString("\n")
+
+            logger.info("Storing downloaded file...")
+            File("/cea_members.csv").writeText(cleanedData)
 
             logger.info("CEA members data downloaded. Parsing...")
             val members = parse(cleanedData)
