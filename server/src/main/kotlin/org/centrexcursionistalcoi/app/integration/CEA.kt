@@ -149,8 +149,12 @@ object CEA : PeriodicWorker(period = 1.days) {
         }
         logger.debug("Disabling not found users...")
         // Disable users not in the CEA members list
-        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList } }
+        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList }.toList() }
         for (entity in memberNifs) {
+            if (entity.nif == "87654321X") {
+                // Skip test user
+                continue
+            }
             Database {
                 entity.isDisabled = true
                 entity.disableReason = "not_in_cea_members"
