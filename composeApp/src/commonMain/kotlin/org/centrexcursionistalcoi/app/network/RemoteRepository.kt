@@ -149,42 +149,46 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null) {
-        val remoteList = getAll(progress) // all entries from the remote server
+        try {
+            val remoteList = getAll(progress) // all entries from the remote server
 
-        progress?.invoke(Progress.LocalDBRead)
-        val localList = repository.selectAll() // all entries from the local database
+            progress?.invoke(Progress.LocalDBRead)
+            val localList = repository.selectAll() // all entries from the local database
 
-        progress?.invoke(Progress.DataProcessing)
-        val toUpdate = mutableListOf<LocalEntity>()
-        val toInsert = mutableListOf<LocalEntity>()
-        for (item in remoteList) {
-            if (localList.find { it.id == item.id } != null) {
-                toUpdate += item
-            } else {
-                toInsert += item
+            progress?.invoke(Progress.DataProcessing)
+            val toUpdate = mutableListOf<LocalEntity>()
+            val toInsert = mutableListOf<LocalEntity>()
+            for (item in remoteList) {
+                if (localList.find { it.id == item.id } != null) {
+                    toUpdate += item
+                } else {
+                    toInsert += item
+                }
             }
+            // IDs of items that should remain in the database
+            val existingIds = toUpdate.map { it.id } + toInsert.map { it.id }
+
+            // Delete items that are not in the server response
+            val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
+
+            Napier.d {
+                "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
+            }
+
+            progress?.invoke(Progress.LocalDBWrite)
+            // Insert new items
+            repository.insert(toInsert)
+            // Update existing items
+            repository.update(toUpdate)
+            // Delete removed items
+            repository.deleteByIdList(toDelete)
+
+            progress?.invoke(Progress.LocalDBRead)
+            val all = repository.selectAll()
+            Napier.i { "There are ${all.size} $name" }
+        } catch (_: ResourceNotModifiedException) {
+            Napier.i { "Resource not modified. No need to refresh." }
         }
-        // IDs of items that should remain in the database
-        val existingIds = toUpdate.map { it.id } + toInsert.map { it.id }
-
-        // Delete items that are not in the server response
-        val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
-
-        Napier.d {
-            "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
-        }
-
-        progress?.invoke(Progress.LocalDBWrite)
-        // Insert new items
-        repository.insert(toInsert)
-        // Update existing items
-        repository.update(toUpdate)
-        // Delete removed items
-        repository.deleteByIdList(toDelete)
-
-        progress?.invoke(Progress.LocalDBRead)
-        val all = repository.selectAll()
-        Napier.i { "There are ${all.size} $name" }
     }
 
     /**
