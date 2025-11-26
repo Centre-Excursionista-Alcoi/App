@@ -36,20 +36,20 @@ object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
-        val number: Int,
+        val number: Int?,
         @SerialName("Estat")
-        val status: String,
+        val status: String?,
         @SerialName("Nom i cognoms")
-        val fullName: String,
+        val fullName: String?,
         @SerialName("NIF/NIE")
-        val nif: String,
+        val nif: String?,
         @SerialName("Correu electrònic")
         val email: String?,
     ) {
         /**
          * Whether the member is disabled (not "alta").
          */
-        val isDisabled = status.trim().equals("alta", true).not()
+        val isDisabled = status?.trim()?.equals("alta", true)?.not() ?: true
 
         val disabledReason = if (isDisabled) {
             if (status.equals("baixa", true)) {
@@ -90,6 +90,19 @@ object CEA : PeriodicWorker(period = 1.days) {
         logger.debug("Fetching all existing members...")
         val userSubList = mutableListOf<String>()
         for (member in members) {
+            if (member.number == null) {
+                logger.warn("Member has no number. Skipping.")
+                continue
+            }
+            if (member.nif == null) {
+                logger.warn("Member #${member.number} has no NIF. Skipping.")
+                continue
+            }
+            if (member.fullName == null) {
+                logger.warn("Member #${member.number} has no full name. Skipping.")
+                continue
+            }
+
             val isNifValid = NIFValidation.validate(member.nif)
             if (!isNifValid) {
                 logger.warn("Invalid NIF for member number=${member.number}, NIF=${member.nif}. Skipping.")
@@ -234,8 +247,15 @@ object CEA : PeriodicWorker(period = 1.days) {
             logger.info("Starting CEA members synchronization...")
             val data = download()
 
+            logger.info("Cleaning up data...")
+            val cleanedData = data.split("\n")
+                .map { line -> line.trim() }
+                // Remove empty lines
+                .filter { line -> line.isNotEmpty() }
+                .joinToString("\n")
+
             logger.info("CEA members data downloaded. Parsing...")
-            val members = parse(data)
+            val members = parse(cleanedData)
 
             logger.info("CEA members data parsed. Synchronizing with database...")
             synchronizeWithDatabase(members)
