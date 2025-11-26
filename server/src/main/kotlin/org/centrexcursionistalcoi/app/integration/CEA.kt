@@ -12,6 +12,8 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
+import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import java.io.File
 import kotlin.time.Duration.Companion.days
@@ -198,13 +200,14 @@ object CEA : PeriodicWorker(period = 1.days) {
         val password = System.getenv("CEA_PASSWORD")
             ?: throw IllegalStateException("CEA_PASSWORD environment variable is not set.")
 
+        val cookiesStorage = AcceptAllCookiesStorage()
         val client = HttpClient {
             defaultRequest {
                 url("https://centrexcursionistalcoi.org")
             }
             install(ContentNegotiation)
             install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
+                storage = cookiesStorage
             }
             install(Logging) {
                 level = LogLevel.HEADERS
@@ -238,7 +241,29 @@ object CEA : PeriodicWorker(period = 1.days) {
             )
         }
 
-        val nonce = generateNonce()
+        val ceaPageResponse = client.get("/wp-admin/admin.php?page=cea-members&tab-filter-status=0")
+        val exportUrl = if (ceaPageResponse.status.isSuccess()) {
+            val bodyText = ceaPageResponse.bodyAsText()
+            val urlRegex = "https://centrexcursionistalcoi\\.org/wp-admin/admin\\.php\\?page=cea-members&tab-filter-status=0&action=export&nonce=[0-9a-f]{10}".toRegex()
+            val matchResult = urlRegex.find(bodyText)
+            if (matchResult != null) {
+                val exportUrl = matchResult.value
+                logger.debug("Found export URL: $exportUrl")
+                exportUrl
+            } else {
+                logger.error("Failed to find export URL in CEA members page.")
+                throw IllegalArgumentException("Failed to find export URL in CEA members page.")
+            }
+        } else {
+            logger.error("Failed to access CEA members page. Status: ${ceaPageResponse.status}")
+            throw HttpResponseException(
+                "Failed to access CEA members page.",
+                loginResponse.status.value,
+                loginResponse.bodyAsText(),
+            )
+        }
+
+        /*val nonce = generateNonce()
         logger.debug("Exporting CEA members data (nonce=$nonce)...")
         val exportResponse = client.get("/wp-admin/admin.php?page=cea-members&tab-filter-status=0&action=export&nonce=$nonce")
         if (exportResponse.status == HttpStatusCode.OK) {
@@ -250,6 +275,20 @@ object CEA : PeriodicWorker(period = 1.days) {
                 "Failed to export data from the CEA website.",
                 loginResponse.status.value,
                 loginResponse.bodyAsText(),
+            )
+        }*/
+
+        logger.debug("Exporting CEA members data from $exportUrl ...")
+        val exportResponse = client.get(Url(exportUrl))
+        if (exportResponse.status == HttpStatusCode.OK) {
+            logger.debug("Downloaded CEA members data successfully.")
+            return exportResponse.bodyAsText()
+        } else {
+            logger.error("Failed to export CEA members data. Status: ${exportResponse.status}")
+            throw HttpResponseException(
+                "Failed to export data from the CEA website.",
+                exportResponse.status.value,
+                exportResponse.bodyAsText(),
             )
         }
     }
