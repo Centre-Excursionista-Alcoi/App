@@ -123,6 +123,8 @@ fun Route.departmentsRoutes() {
                     this.confirmed = confirmed
                 }
             }
+            department.updated()
+
             if (confirmed) {
                 call.response.header("CEA-Info", "member")
                 call.respondText("You have joined the department.", status = HttpStatusCode.OK)
