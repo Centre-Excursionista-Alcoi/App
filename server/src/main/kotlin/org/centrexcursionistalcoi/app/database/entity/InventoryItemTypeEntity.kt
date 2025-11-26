@@ -44,7 +44,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
     context(_: JdbcTransaction)
     override fun patch(request: UpdateInventoryItemTypeRequest) {
         request.displayName?.let { displayName = it }
-        request.description?.let { description = it }
+        request.description?.let { description = it.takeUnless { value -> value.isBlank() } }
         request.categories?.let { categories = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         updateOrSetImage(request.image)

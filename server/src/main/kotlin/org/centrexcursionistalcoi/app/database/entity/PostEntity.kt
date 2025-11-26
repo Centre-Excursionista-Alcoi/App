@@ -58,7 +58,7 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
         request.department?.let {
             department = DepartmentEntity.findById(it.toJavaUuid())
         }
-        request.link?.let { link = it }
+        request.link?.let { link = it.takeUnless { value -> value.isBlank() } }
         request.files?.forEach { fileWithContext ->
             if (fileWithContext.isEmpty()) {
                 // No bytes given, remove existing file

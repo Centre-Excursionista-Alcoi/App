@@ -12,7 +12,7 @@ data class UpdateInventoryItemRequest(
     @Serializable(Base64Serializer::class) val nfcId: ByteArray? = null,
 ): UpdateEntityRequest<Uuid, InventoryItem> {
     override fun isEmpty(): Boolean {
-        return variation.isNullOrEmpty() && type == null && nfcId == null
+        return variation == null && type == null && nfcId == null
     }
 
     override fun equals(other: Any?): Boolean {
