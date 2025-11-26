@@ -83,6 +83,46 @@ fun HomePage(
             }
         }
 
+        if (isRegisteredForLendings && notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
+            item("notification_permission", contentType = "permission", span = { GridItemSpan(maxLineSpan) }) {
+                CardWithIcon(
+                    title = stringResource(Res.string.permission_notification_title),
+                    message = stringResource(Res.string.permission_notification_message),
+                    icon = Icons.Default.Notifications,
+                    contentDescription = stringResource(Res.string.permission_notification_title),
+                    modifier = Modifier.padding(bottom = 12.dp),
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f).padding(end = 4.dp),
+                        onClick = onNotificationPermissionDenyRequest,
+                    ) {
+                        Icon(Icons.Default.Close, stringResource(Res.string.permission_deny))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(Res.string.permission_deny))
+                    }
+                    if (notificationPermissionResult == NotificationPermissionResult.NotAllowed) {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            onClick = { permissionHelper.openSettings() },
+                        ) {
+                            Icon(Icons.Default.Settings, stringResource(Res.string.permission_settings))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(Res.string.permission_settings))
+                        }
+                    } else {
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            onClick = onNotificationPermissionRequest,
+                        ) {
+                            Icon(Icons.Default.Security, stringResource(Res.string.permission_grant))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(Res.string.permission_grant))
+                        }
+                    }
+                }
+            }
+        }
+
         if (!posts.isNullOrEmpty()) {
             stickyHeader {
                 Text(
@@ -101,46 +141,6 @@ fun HomePage(
 
         // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings
         if (isRegisteredForLendings) {
-            if (notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
-                item("notification_permission", contentType = "permission", span = { GridItemSpan(maxLineSpan) }) {
-                    CardWithIcon(
-                        title = stringResource(Res.string.permission_notification_title),
-                        message = stringResource(Res.string.permission_notification_message),
-                        icon = Icons.Default.Notifications,
-                        contentDescription = stringResource(Res.string.permission_notification_title),
-                        modifier = Modifier.padding(bottom = 12.dp),
-                    ) {
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f).padding(end = 4.dp),
-                            onClick = onNotificationPermissionDenyRequest,
-                        ) {
-                            Icon(Icons.Default.Close, stringResource(Res.string.permission_deny))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(Res.string.permission_deny))
-                        }
-                        if (notificationPermissionResult == NotificationPermissionResult.NotAllowed) {
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f).padding(start = 4.dp),
-                                onClick = { permissionHelper.openSettings() },
-                            ) {
-                                Icon(Icons.Default.Settings, stringResource(Res.string.permission_settings))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(Res.string.permission_settings))
-                            }
-                        } else {
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f).padding(start = 4.dp),
-                                onClick = onNotificationPermissionRequest,
-                            ) {
-                                Icon(Icons.Default.Security, stringResource(Res.string.permission_grant))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(Res.string.permission_grant))
-                            }
-                        }
-                    }
-                }
-            }
-
             val activeLendings = userLendings
                 ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
                 ?.sortedByDescending { it.from }
