@@ -268,7 +268,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 append("items", exampleItemId.toString())
             }
         ).apply {
-            assertError(Error.UserDoesNotHaveInsurance())
+            assertError(Error.UserNotSignedUpForLending())
         }
     }
 
