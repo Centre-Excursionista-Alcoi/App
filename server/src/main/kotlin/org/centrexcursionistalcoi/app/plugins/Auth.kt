@@ -59,6 +59,10 @@ fun login(nif: String, password: CharArray): Error? {
         return Error.IncorrectPasswordOrNIF()
     }
 
+    if (existingReference.isDisabled) {
+        return Error.UserIsDisabled()
+    }
+
     val passwordHash = existingReference.password ?: return Error.PasswordNotSet()
 
     // verify password
