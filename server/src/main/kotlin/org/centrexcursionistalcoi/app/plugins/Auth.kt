@@ -3,7 +3,9 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.plugins.origin
+import io.ktor.server.request.contentType
 import io.ktor.server.request.host
 import io.ktor.server.request.port
 import io.ktor.server.request.receiveParameters
@@ -78,13 +80,26 @@ fun login(nif: String, password: CharArray): Error? {
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     post("/login") {
-        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+        val contentType = call.request.contentType()
+        val (nif, password) = when {
+            contentType.match(ContentType.Application.FormUrlEncoded) -> {
+                val parameters = call.receiveParameters()
+                val nif = parameters["nif"]?.trim()?.uppercase()
+                val password = parameters["password"]?.trim()?.toCharArray()
+                nif to password
+            }
+            else -> {
+                val credentials = call.request.basicAuthenticationCredentials()
+                if (credentials == null) {
+                    call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
+                    return@post call.respondError(Error.IncorrectPasswordOrNIF())
+                }
+                val nif = credentials.name.trim().uppercase()
+                val password = credentials.password.trim().toCharArray()
+                nif to password
+            }
+        }
 
-        val parameters = call.receiveParameters()
-        val nif = parameters["nif"]?.trim()?.uppercase()
-        val password = parameters["password"]?.trim()?.toCharArray()
-
-        if (nif == null || password == null) call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
         if (nif == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
         if (password == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
 
