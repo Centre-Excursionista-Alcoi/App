@@ -27,7 +27,7 @@ class LoadingViewModel(
 ) : ViewModel() {
     companion object {
         suspend fun syncAll(force: Boolean = false): Boolean {
-            Napier.d { "User is logged in" }
+            Napier.d { "Fetching locally stored profile data." }
             ProfileRepository.getProfile()?.let { profile ->
                 Napier.d { "Updating Sentry user context..." }
                 Sentry.setUser(
@@ -37,7 +37,7 @@ class LoadingViewModel(
                     }
                 )
             } ?: run {
-                Napier.d { "Profile not found, logging out..." }
+                Napier.d { "Profile not locally stored, logging out..." }
                 return false
             }
 
@@ -71,7 +71,7 @@ class LoadingViewModel(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
-        Napier.d { "Checking if user is logged in..." }
+        Napier.d { "Loading app content..." }
         _error.value = null
 
         try {
