@@ -28,11 +28,13 @@ import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
@@ -212,6 +214,40 @@ class TestLendingsRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_create_lending_notSignedUpForLendings() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            val user = FakeUser.provideEntity()
+
+            // Register user for lendings
+            Database {
+                LendingUserEntity.new {
+                    userSub = user.sub
+                    phoneNumber = "123456789"
+                    sports = listOf(Sports.HIKING)
+                }
+            }
+        },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 1) }
+
+        // New lending starting on the day existing one starts
+        client.submitForm(
+            "/inventory/lendings",
+            parameters {
+                append("from", "2025-10-10")
+                append("to", "2025-10-12")
+                append("items", exampleItemId.toString())
+            }
+        ).apply {
+            assertError(Error.UserDoesNotHaveInsurance())
+        }
+    }
+
+    @Test
     fun test_create_lending_noInsurance() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
@@ -255,6 +291,15 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 LendingItems.insert {
                     it[item] = exampleItemId
                     it[lending] = lendingEntity.id
+                }
+            }
+
+            // Register user for lendings
+            Database {
+                LendingUserEntity.new {
+                    userSub = user.sub
+                    phoneNumber = "123456789"
+                    sports = listOf(Sports.HIKING)
                 }
             }
 
@@ -371,6 +416,15 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 }
             }
 
+            // Register user for lendings
+            Database {
+                LendingUserEntity.new {
+                    userSub = user.sub
+                    phoneNumber = "123456789"
+                    sports = listOf(Sports.HIKING)
+                }
+            }
+
             // Add insurance for the user
             UserInsuranceEntity.new {
                 userSub = user
@@ -408,6 +462,15 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
         // The reference user must exist in the database
         val user = Database { FakeUser.provideEntity() }
+
+        // Register user for lendings
+        Database {
+            LendingUserEntity.new {
+                userSub = user.sub
+                phoneNumber = "123456789"
+                sports = listOf(Sports.HIKING)
+            }
+        }
 
         // Add insurance for the user
         Database {
@@ -458,6 +521,47 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 assertEquals(1, lending.items.size)
                 assertEquals(item.id.value, lending.items[0].id.toJavaUuid())
             }
+        }
+    }
+
+
+    @Test
+    fun test_allocate_lending_correct() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            getOrCreateItem()
+
+            // The reference user must exist in the database
+            val user = Database { FakeUser.provideEntity() }
+
+            // Register user for lendings
+            Database {
+                LendingUserEntity.new {
+                    userSub = user.sub
+                    phoneNumber = "123456789"
+                    sports = listOf(Sports.HIKING)
+                }
+            }
+
+            // Add insurance for the user
+            Database {
+                UserInsuranceEntity.new {
+                    userSub = user
+                    validFrom = LocalDate.of(2025, 1, 1)
+                    validTo = LocalDate.of(2025, 12, 31)
+                    insuranceCompany = "Insurance Co"
+                    policyNumber = "POL123456"
+                }
+            }
+        },
+        finally = { today = { LocalDate.now() } },
+    ) {
+        today = { LocalDate.of(2025, 10, 8) }
+
+        client.get(
+            "/inventory/types/$exampleItemTypeId/allocate?from=2025-10-10&to=2025-10-11&amount=1",
+        ).run {
+            assertStatusCode(HttpStatusCode.OK)
         }
     }
 
