@@ -17,6 +17,7 @@ import io.github.aakira.napier.Napier
 import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates.checkForUpdates
 import org.jetbrains.compose.resources.painterResource
 
 object PointerEventFlow {
@@ -43,6 +44,8 @@ fun main() {
     )
 
     initializeSentry()
+
+    checkForUpdates()
 
     application {
         Window(
