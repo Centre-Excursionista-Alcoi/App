@@ -53,7 +53,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
-            syncAll(progressNotifier)
+            syncAll(forceSync, progressNotifier)
 
             SyncResult.Success()
         } else {
@@ -63,22 +63,22 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         }
     }
 
-    suspend fun syncAll(progressNotifier: ProgressNotifier? = null) {
+    suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null) {
         // First, synchronize the user profile
-        ProfileRemoteRepository.synchronize(progressNotifier)
+        ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
         // Departments does not depend on any other entity, so we sync it first
-        DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Users does not depend on any other entity
-        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Posts requires Departments
-        PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        PostsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Inventory Item Types requires Departments
-        InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Inventory Items requires Inventory Item Types
-        InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Lendings requires Users, Inventory Item Types and Inventory Items
-        LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         settings.putLong("lastSync", Clock.System.now().epochSeconds)
         settings.putLong("lastSyncVersion", Database.Schema.version)

@@ -164,9 +164,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         return item
     }
 
-    suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null) {
+    suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false) {
         try {
-            val remoteList = getAll(progress) // all entries from the remote server
+            val remoteList = getAll(progress, ignoreIfModifiedSince) // all entries from the remote server
 
             progress?.invoke(Progress.LocalDBRead)
             val localList = repository.selectAll() // all entries from the local database

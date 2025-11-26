@@ -31,13 +31,14 @@ object ProfileRemoteRepository {
     /**
      * Gets the user's profile from the server.
      * @param progressNotifier Optional notifier to monitor download progress.
+     * @param ignoreIfModifiedSince If true, ignores the "If-Modified-Since" header.
      * @return The user's profile if logged in, null if not logged in.
      * @throws ResourceNotModifiedException if the profile has not changed since the last fetch.
      */
-    suspend fun getProfile(progressNotifier: ProgressNotifier? = null): ProfileResponse? {
+    suspend fun getProfile(progressNotifier: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): ProfileResponse? {
         val response = httpClient.get("/profile") {
             progressNotifier?.let { monitorDownloadProgress(it) }
-            ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
+            if (!ignoreIfModifiedSince) ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
         }
         val status = response.status
         if (status == HttpStatusCode.NotModified) {
@@ -101,13 +102,14 @@ object ProfileRemoteRepository {
     /**
      * Synchronizes the user's profile with the server.
      * @param progressNotifier Optional notifier to monitor download progress.
+     * @param ignoreIfModifiedSince If true, ignores the "If-Modified-Since" header.
      * @return `true` if the user is logged in and the profile was updated, `false` if not logged in.
      * @throws InternetAccessNotAvailable if there is no internet connection.
      * @throws Exception for other errors.
      */
-    suspend fun synchronize(progressNotifier: ProgressNotifier? = null): Boolean {
+    suspend fun synchronize(progressNotifier: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): Boolean {
         try {
-            val profile = getProfile(progressNotifier)
+            val profile = getProfile(progressNotifier, ignoreIfModifiedSince)
             if (profile != null) {
                 log.d { "User is logged in, updating cached profile data..." }
                 ProfileRepository.update(profile)

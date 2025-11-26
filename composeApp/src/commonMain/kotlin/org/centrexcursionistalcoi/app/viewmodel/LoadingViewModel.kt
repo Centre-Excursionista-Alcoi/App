@@ -81,7 +81,7 @@ class LoadingViewModel(
             if (syncAll()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
-                    SyncAllDataBackgroundJobLogic.syncAll(progressNotifier)
+                    SyncAllDataBackgroundJobLogic.syncAll(true, progressNotifier)
                 } else {
                     log.d { "Scheduling periodic sync..." }
                     BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
