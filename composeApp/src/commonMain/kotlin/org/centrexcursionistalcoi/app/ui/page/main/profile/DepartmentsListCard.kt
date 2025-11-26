@@ -42,6 +42,10 @@ fun DepartmentsListCard(
     departments: List<Department>?,
     onJoinDepartmentRequested: (Department) -> Job,
 ) {
+    val userDepartments = remember(profile, departments) {
+        departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == profile.sub } != null }.orEmpty()
+    }
+
     var requestedDepartmentJoin by remember { mutableStateOf(false) }
     if (requestedDepartmentJoin) {
         var isLoading by remember { mutableStateOf(false) }
@@ -50,7 +54,12 @@ fun DepartmentsListCard(
             title = { Text(stringResource(Res.string.departments_join_choose)) },
             text = {
                 LazyColumn {
-                    items(departments.orEmpty()) { department ->
+                    items(
+                        departments
+                            // Filter departments the user is already a member of (in userDepartments)
+                            ?.filter { dept -> userDepartments.find { it.id == dept.id } == null }
+                            .orEmpty()
+                    ) { department ->
                         val imageFile by department.rememberImageFile()
                         AsyncByteImage(
                             imageFile,
@@ -82,9 +91,6 @@ fun DepartmentsListCard(
             onClick = { requestedDepartmentJoin = true }
         )
     ) {
-        val userDepartments = remember(profile, departments) {
-            departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == profile.sub } != null }.orEmpty()
-        }
         for (department in userDepartments) {
             val memberInfo = department.members?.find { it.userSub == profile.sub } ?: continue
             ListItem(
