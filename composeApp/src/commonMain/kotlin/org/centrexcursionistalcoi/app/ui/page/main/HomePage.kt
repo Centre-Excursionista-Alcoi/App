@@ -67,6 +67,16 @@ fun HomePage(
 
     val userLendings = lendings?.filter { it.user.sub == profile.sub }
 
+    val nonCompletedLendings = lendings
+        .takeIf { isAdmin }
+        ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+        .orEmpty()
+    val pendingJoinRequests = departments
+        .takeIf { isAdmin }
+        ?.map { it.members.orEmpty() }
+        ?.filter { members -> members.any { !it.confirmed } }
+        ?.flatten()
+
     AdaptiveVerticalGrid(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
@@ -128,7 +138,7 @@ fun HomePage(
                 Text(
                     text = stringResource(Res.string.home_posts),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
                 )
             }
             items(posts) { post ->
@@ -180,7 +190,6 @@ fun HomePage(
         }
 
         if (isAdmin) {
-            val nonCompletedLendings = lendings?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }.orEmpty()
             if (nonCompletedLendings.isNotEmpty()) {
                 stickyHeader {
                     Text(
@@ -198,16 +207,12 @@ fun HomePage(
                 }
             }
 
-            val pendingJoinRequests = departments
-                ?.map { it.members.orEmpty() }
-                ?.filter { members -> members.any { !it.confirmed } }
-                ?.flatten()
             if (!pendingJoinRequests.isNullOrEmpty()) {
                 stickyHeader {
                     Text(
                         text = stringResource(Res.string.management_other_users_join_requests),
                         style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
                     )
                 }
                 items(
@@ -215,7 +220,7 @@ fun HomePage(
                     key = { "join_request_${it.id}" },
                     contentType = { "pending-join-request" },
                 ) { request ->
-                    val department = departments.find { dept -> dept.members.orEmpty().any { it.id == request.id } } ?: return@items
+                    val department = departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } } ?: return@items
                     val userData = users?.find { it.sub == request.userSub } ?: return@items
 
                     DepartmentPendingJoinRequest(
