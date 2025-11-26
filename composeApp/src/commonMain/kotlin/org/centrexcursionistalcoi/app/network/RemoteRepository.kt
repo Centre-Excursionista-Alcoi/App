@@ -94,7 +94,11 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * @return The local entity converted from the remote entity, or `null` if not found.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
-    private suspend fun getUrl(url: String, progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): LocalEntity? {
+    private suspend fun getUrl(
+        url: String,
+        progress: ProgressNotifier? = null,
+        ignoreIfModifiedSince: Boolean = false,
+    ): LocalEntity? {
         val response = httpClient.get(url) {
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
@@ -124,10 +128,15 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * Fetches the entity with the given ID from the remote server.
      * @param id The ID of the remote entity to fetch.
      * @param progress An optional progress notifier to report progress.
+     * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
      * @return The local entity converted from the remote entity, or `null` if not found.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
-    suspend fun get(id: RemoteIdType, progress: ProgressNotifier? = null): LocalEntity? = getUrl("$endpoint/$id", progress)
+    suspend fun get(
+        id: RemoteIdType,
+        progress: ProgressNotifier? = null,
+        ignoreIfModifiedSince: Boolean = false,
+    ): LocalEntity? = getUrl("$endpoint/$id", progress, ignoreIfModifiedSince)
 
     /**
      * Fetches the entity with the given ID from the remote server and updates or inserts it into the local database.
@@ -136,11 +145,16 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * This does not update any associated files; use [synchronizeWithDatabase] for a full sync.
      * @param id The ID of the remote entity to fetch.
      * @param progressNotifier An optional progress notifier to report progress.
+     * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      * @return The fetched local entity, or `null` if it could not be retrieved.
      */
-    suspend fun update(id: RemoteIdType, progressNotifier: ProgressNotifier? = null): LocalEntity? {
-        val item = get(id, progressNotifier)
+    suspend fun update(
+        id: RemoteIdType,
+        progressNotifier: ProgressNotifier? = null,
+        ignoreIfModifiedSince: Boolean = false,
+    ): LocalEntity? {
+        val item = get(id, progressNotifier, ignoreIfModifiedSince)
         if (item != null) {
             progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.insertOrUpdate(item)

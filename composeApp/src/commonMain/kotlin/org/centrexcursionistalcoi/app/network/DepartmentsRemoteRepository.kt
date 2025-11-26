@@ -34,7 +34,7 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
         val response = httpClient.post("/departments/${request.departmentId}/confirm/${request.id}")
         if (response.status.isSuccess()) {
             Napier.i { "Join request confirmed successfully." }
-            update(request.departmentId) // Refresh department data
+            update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
@@ -49,7 +49,7 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
         val response = httpClient.post("/departments/${request.departmentId}/deny/${request.id}")
         if (response.status.isSuccess()) {
             Napier.i { "Join request denied successfully." }
-            update(request.departmentId) // Refresh department data
+            update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()
@@ -64,7 +64,7 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
         val response = httpClient.post("/departments/$departmentId/join")
         if (response.status.isSuccess()) {
             Napier.i { "Join request sent successfully." }
-            update(departmentId) // Refresh department data
+            update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error
             val error = response.bodyAsError()

@@ -97,7 +97,7 @@ class ManagementViewModel : ViewModel() {
     fun promote(user: UserData) = launch {
         doAsync {
             UsersRemoteRepository.promote(user.sub)
-            UsersRemoteRepository.update(user.sub)
+            UsersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
         }
     }
 
