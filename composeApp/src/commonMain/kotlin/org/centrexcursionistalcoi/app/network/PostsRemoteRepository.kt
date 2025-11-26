@@ -13,10 +13,12 @@ import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_POSTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
 
 object PostsRemoteRepository: RemoteRepository<Uuid, ReferencedPost, Uuid, Post>(
     "/posts",
+    SETTINGS_LAST_POSTS_SYNC,
     Post.serializer(),
     PostsRepository,
     remoteToLocalIdConverter = { it },

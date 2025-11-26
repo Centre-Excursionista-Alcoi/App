@@ -5,7 +5,6 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
@@ -33,13 +32,9 @@ object ProfileRemoteRepository {
      * @throws ResourceNotModifiedException if the profile has not changed since the last fetch.
      */
     suspend fun getProfile(progressNotifier: ProgressNotifier? = null): ProfileResponse? {
-        val lastProfileSync = settings.getLongOrNull(SETTINGS_LAST_PROFILE_SYNC)
         val response = httpClient.get("/profile") {
             progressNotifier?.let { monitorDownloadProgress(it) }
-
-            if (lastProfileSync != null) {
-                headers.append(HttpHeaders.IfModifiedSince, HttpDateFormatter.format(lastProfileSync))
-            }
+            ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
         }
         val status = response.status
         if (status == HttpStatusCode.NotModified) {

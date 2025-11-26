@@ -10,10 +10,13 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
+import org.centrexcursionistalcoi.app.storage.settings
 
 private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()) {
     defaultRequest {
@@ -41,5 +44,17 @@ fun HttpClientConfig<*>.configureLogging() {
             }
         }
         level = LogLevel.HEADERS
+    }
+}
+
+/**
+ * Adds an `If-Modified-Since` header to the request if a last sync time is stored in settings.
+ * @param lastSyncSettingsKey The settings key where the last sync time is stored.
+ */
+fun HttpRequestBuilder.ifModifiedSince(lastSyncSettingsKey: String) {
+    val lastSync = settings.getLongOrNull(lastSyncSettingsKey)
+
+    if (lastSync != null) {
+        headers.append(HttpHeaders.IfModifiedSince, HttpDateFormatter.format(lastSync))
     }
 }
