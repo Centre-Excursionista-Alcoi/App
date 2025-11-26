@@ -8,6 +8,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
@@ -67,6 +68,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         UsersRemoteRepository.synchronizeWithDatabase(progressNotifier)
         // Posts requires Departments
         PostsRemoteRepository.synchronizeWithDatabase(progressNotifier)
+        // Events requires Departments and Users
+        EventsRemoteRepository.synchronizeWithDatabase(progressNotifier)
         // Inventory Item Types requires Departments
         InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier)
         // Inventory Items requires Inventory Item Types

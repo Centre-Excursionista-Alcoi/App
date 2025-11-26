@@ -65,9 +65,9 @@ object Telegram : ConfigProvider(), Closeable {
             append("New Event:\n")
             append("*${event.title}*\n")
             append("_${event.place}_\n")
-            append("Date: ${event.date}\n")
-            event.time?.let {
-                append("Time: $it\n")
+            append("Start: ${event.start}\n")
+            event.end?.let {
+                append("End: ${it}\n")
             }
             event.description?.let {
                 append("\n$it\n")

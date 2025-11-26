@@ -376,7 +376,7 @@ buildkonfig {
         buildConfigField(
             type = STRING,
             name = "SERVER_URL",
-            value = "https://server.cea.arnaumora.com",
+            value = System.getenv("SERVER_URL") ?: "https://server.cea.arnaumora.com",
         )
         buildConfigField(
             type = STRING,

@@ -12,7 +12,7 @@ data class Event(
     val place: String,
     val title: String,
     val description: String?,
-    val maxPeople: Int?,
+    val maxPeople: Long?,
     val requiresConfirmation: Boolean,
     val department: Uuid?,
     override val image: Uuid?,

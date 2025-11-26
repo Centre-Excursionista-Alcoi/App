@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
@@ -13,8 +14,10 @@ import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.UUIDEntity
@@ -24,7 +27,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
-    companion object: UUIDEntityClass<EventEntity>(Events) {
+    companion object : UUIDEntityClass<EventEntity>(Events) {
         private val logger = LoggerFactory.getLogger("EventEntity")
 
         fun forSession(session: UserSession?) = if (session == null) {
@@ -44,15 +47,16 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
                     .map { it.department.id.value }
             }
             logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
+            val now = now().atOffset(ZoneOffset.UTC).toLocalDateTime()
             find {
-                (Events.department eq null) or (Events.department inList userDepartments)
+                (Events.end greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
             }
         }
     }
 
     val created by Events.created
     var updated by Events.updated
-    private set
+        private set
 
     var start by Events.start
     var end by Events.end
