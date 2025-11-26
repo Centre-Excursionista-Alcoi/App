@@ -12,6 +12,7 @@ import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
@@ -95,6 +96,13 @@ object ProfileRemoteRepository {
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
 
+    /**
+     * Synchronizes the user's profile with the server.
+     * @param progressNotifier Optional notifier to monitor download progress.
+     * @return `true` if the user is logged in and the profile was updated, `false` if not logged in.
+     * @throws InternetAccessNotAvailable if there is no internet connection.
+     * @throws Exception for other errors.
+     */
     suspend fun synchronize(progressNotifier: ProgressNotifier? = null): Boolean {
         try {
             val profile = getProfile(progressNotifier)
@@ -110,6 +118,14 @@ object ProfileRemoteRepository {
         } catch (_: ResourceNotModifiedException) {
             Napier.d { "Profile not modified, no update needed." }
             return true
+        } catch (e: Exception) {
+            if (isNoConnectionError(e)) {
+                Napier.w("No internet connection, cannot synchronize profile.")
+                throw InternetAccessNotAvailable()
+            } else {
+                Napier.e("Error synchronizing profile", e)
+                throw e
+            }
         }
     }
 
