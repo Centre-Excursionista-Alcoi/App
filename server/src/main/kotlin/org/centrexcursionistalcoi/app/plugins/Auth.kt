@@ -1,11 +1,13 @@
 package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.host
 import io.ktor.server.request.port
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
@@ -82,6 +84,7 @@ fun Route.configureAuthRoutes() {
         val nif = parameters["nif"]?.trim()?.uppercase()
         val password = parameters["password"]?.trim()?.toCharArray()
 
+        if (nif == null || password == null) call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
         if (nif == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
         if (password == null) return@post call.respondError(Error.IncorrectPasswordOrNIF())
 
