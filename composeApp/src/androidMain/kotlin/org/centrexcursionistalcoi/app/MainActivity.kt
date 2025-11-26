@@ -22,7 +22,7 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         PermissionInitiation.setActivity(this)
 
-        PlatformAppUpdates.initialize(this)
+        PlatformAppUpdates.initialize(this, appUpdateResultLauncher)
 
         NotifierManager.onCreateOrOnNewIntent(intent)
 
@@ -38,7 +38,7 @@ class MainActivity : NfcIntentHandlerActivity() {
         super.onResume()
         instance = this
 
-        PlatformAppUpdates.checkForUpdates(this, appUpdateResultLauncher)
+        PlatformAppUpdates.checkForUpdates(this)
     }
 
     override fun onDestroy() {
