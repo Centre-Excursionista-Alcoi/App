@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.WebTemplate
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 import org.centrexcursionistalcoi.app.routes.assertContentType
@@ -80,6 +81,10 @@ fun login(nif: String, password: CharArray): Error? {
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     post("/login") {
+        getUserSession()?.let {
+            return@post call.respond(HttpStatusCode.OK)
+        }
+
         val contentType = call.request.contentType()
         val (nif, password) = when {
             contentType.match(ContentType.Application.FormUrlEncoded) -> {
