@@ -37,15 +37,15 @@ object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
-        val number: Int?,
+        val number: Int? = null,
         @SerialName("Estat")
-        val status: String?,
+        val status: String? = null,
         @SerialName("Nom i cognoms")
-        val fullName: String?,
+        val fullName: String? = null,
         @SerialName("NIF/NIE")
-        val nif: String?,
+        val nif: String? = null,
         @SerialName("Correu electrònic")
-        val email: String?,
+        val email: String? = null,
     ) {
         /**
          * Whether the member is disabled (not "alta").
@@ -63,6 +63,22 @@ object CEA : PeriodicWorker(period = 1.days) {
         } else {
             null
         }
+    }
+
+    fun List<Member>.filterInvalid() = filter { member ->
+        if (member.number == null) {
+            logger.warn("Member has no number. Skipping.")
+            return@filter false
+        }
+        if (member.nif == null) {
+            logger.warn("Member #${member.number} has no NIF. Skipping.")
+            return@filter false
+        }
+        if (member.fullName == null) {
+            logger.warn("Member #${member.number} has no full name. Skipping.")
+            return@filter false
+        }
+        true
     }
 
     /**
@@ -90,19 +106,10 @@ object CEA : PeriodicWorker(period = 1.days) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
         val userSubList = mutableListOf<String>()
-        for (member in members) {
-            if (member.number == null) {
-                logger.warn("Member has no number. Skipping.")
-                continue
-            }
-            if (member.nif == null) {
-                logger.warn("Member #${member.number} has no NIF. Skipping.")
-                continue
-            }
-            if (member.fullName == null) {
-                logger.warn("Member #${member.number} has no full name. Skipping.")
-                continue
-            }
+        for (member in members.filterInvalid()) {
+            member.number!!
+            member.nif!!
+            member.fullName!!
 
             val isNifValid = NIFValidation.validate(member.nif)
             if (!isNifValid) {
