@@ -54,10 +54,10 @@ object AuthBackend {
             Napier.d { "Logged out. Removing all data..." }
             // order is important due to foreign key constraints
             LendingsRepository.deleteAll()
-            UsersRepository.deleteAll()
             InventoryItemsRepository.deleteAll()
             InventoryItemTypesRepository.deleteAll()
             PostsRepository.deleteAll()
+            UsersRepository.deleteAll()
             DepartmentsRepository.deleteAll()
             Napier.d { "Removing all files..." }
             FileSystem.deleteAll().also { Napier.v { "$it files were deleted." } }
