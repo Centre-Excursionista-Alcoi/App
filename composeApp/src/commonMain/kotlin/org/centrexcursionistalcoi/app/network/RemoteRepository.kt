@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -38,6 +39,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.settings
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
@@ -72,6 +74,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         if (status == HttpStatusCode.NotModified) {
             throw ResourceNotModifiedException()
         } else if (status.isSuccess()) {
+            val currentTime = Clock.System.now()
+            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(ListSerializer(serializer), raw)
             return remoteEntity.map { remoteToLocalEntityConverter(it) }
@@ -98,6 +103,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         if (status == HttpStatusCode.NotModified) {
             throw ResourceNotModifiedException()
         } else if (status.isSuccess()) {
+            val currentTime = Clock.System.now()
+            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)
             return remoteToLocalEntityConverter(remoteEntity)
