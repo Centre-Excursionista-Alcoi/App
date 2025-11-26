@@ -14,6 +14,8 @@ val HttpHeaders.CEAInfo: String get() = "CEA-Info"
 val HttpHeaders.CEAWebDAVMessage: String get() = "CEA-WebDAV-Message"
 val HttpHeaders.CEAWebDAVNormalizedPath: String get() = "CEA-WebDAV-NormalizedPath"
 
+val ifModifiedSinceFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
+
 /**
  * Parses the 'If-Modified-Since' header from the request and returns it as an [Instant], or null if the header is not present.
  *
@@ -31,9 +33,8 @@ val HttpHeaders.CEAWebDAVNormalizedPath: String get() = "CEA-WebDAV-NormalizedPa
  */
 fun ApplicationRequest.ifModifiedSince(): ZonedDateTime? {
     val header = this.headers[HttpHeaders.IfModifiedSince] ?: return null
-    val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
     return try {
-        LocalDateTime.parse(header, formatter).atZone(ZoneOffset.UTC)
+        LocalDateTime.parse(header, ifModifiedSinceFormatter).atZone(ZoneOffset.UTC)
     } catch (_: DateTimeParseException) {
         null
     }

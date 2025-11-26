@@ -13,6 +13,13 @@ val settings: ObservableSettings = Settings().makeObservable()
  */
 const val SETTINGS_LAST_PROFILE_SYNC = "last_profile_sync"
 
+const val SETTINGS_LAST_DEPARTMENTS_SYNC = "last_departments_sync"
+const val SETTINGS_LAST_INVENTORY_ITEMS_SYNC = "last_inventory_items_sync"
+const val SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC = "last_inventory_item_types_sync"
+const val SETTINGS_LAST_LENDINGS_SYNC = "last_lendings_sync"
+const val SETTINGS_LAST_POSTS_SYNC = "last_posts_sync"
+const val SETTINGS_LAST_USERS_SYNC = "last_users_sync"
+
 /**
  * Key for storing the selected language in the settings.
  */

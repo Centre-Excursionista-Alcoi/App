@@ -37,9 +37,11 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
 
 object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
+    SETTINGS_LAST_LENDINGS_SYNC,
     Lending.serializer(),
     LendingsRepository,
     remoteToLocalIdConverter = { it },

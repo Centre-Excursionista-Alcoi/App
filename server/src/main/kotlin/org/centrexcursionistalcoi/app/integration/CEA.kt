@@ -120,8 +120,6 @@ object CEA : PeriodicWorker(period = 1.days) {
 
                         isDisabled = member.isDisabled
                         disableReason = member.disabledReason
-
-                        lastUpdate = now()
                     }
                 }
                 userSubList.add(randomSub)

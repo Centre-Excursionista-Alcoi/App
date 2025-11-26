@@ -30,12 +30,12 @@ import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
-import org.centrexcursionistalcoi.app.ifModifiedSince
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
@@ -44,18 +44,9 @@ fun Route.profileRoutes() {
     get("/profile") {
         val session = getUserSessionOrFail() ?: return@get
 
+        handleIfModified(UserReferenceEntity, session.sub) ?: return@get
+
         val reference = Database { UserReferenceEntity[session.sub] }
-
-        // Handle If-Modified-Since header
-        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()
-        if (ifModifiedSince != null) {
-            val refLastUpdate = Database { reference.lastUpdate }
-            if (refLastUpdate <= ifModifiedSince) {
-                call.respond(HttpStatusCode.NotModified)
-                return@get
-            }
-        }
-
         try {
             if (reference.femecvUsername != null && reference.femecvPassword != null) {
                 val lastSync = reference.femecvLastSync
@@ -188,9 +179,8 @@ fun Route.profileRoutes() {
         Database {
             userReference.femecvUsername = username
             userReference.femecvPassword = password
-
-            userReference.lastUpdate = now()
         }
+        userReference.updated()
 
         try {
             userReference.refreshFEMECVData()

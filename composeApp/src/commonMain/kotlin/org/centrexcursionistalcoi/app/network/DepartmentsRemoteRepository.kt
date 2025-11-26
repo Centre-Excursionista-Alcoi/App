@@ -11,10 +11,12 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
 
 object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>(
     "/departments",
+    SETTINGS_LAST_DEPARTMENTS_SYNC,
     Department.serializer(),
     DepartmentsRepository
 ) {

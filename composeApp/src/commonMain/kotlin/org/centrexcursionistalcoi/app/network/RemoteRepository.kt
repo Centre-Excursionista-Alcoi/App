@@ -12,8 +12,10 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -29,6 +31,7 @@ import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
+import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -36,9 +39,11 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.settings
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
+    private val lastSyncSettingsKey: String,
     private val serializer: KSerializer<RemoteEntity>,
     private val repository: Repository<LocalEntity, LocalIdType>,
     private val isCreationSupported: Boolean = true,
@@ -53,11 +58,25 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     // Remove null fields to avoid issues with missing fields in the local model
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
 
-    suspend fun getAll(progress: ProgressNotifier? = null): List<LocalEntity> {
+    /**
+     * Fetches all entities from the remote server.
+     * @param progress An optional progress notifier to report progress.
+     * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
+     * @return A list of local entities converted from the remote entities.
+     * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
+     */
+    suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<LocalEntity> {
         val response = httpClient.get(endpoint) {
             progress?.let { monitorDownloadProgress(it) }
+            if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
         }
-        if (response.status.isSuccess()) {
+        val status = response.status
+        if (status == HttpStatusCode.NotModified) {
+            throw ResourceNotModifiedException()
+        } else if (status.isSuccess()) {
+            val currentTime = Clock.System.now()
+            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(ListSerializer(serializer), raw)
             return remoteEntity.map { remoteToLocalEntityConverter(it) }
@@ -67,11 +86,26 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         }
     }
 
-    private suspend fun getUrl(url: String, progress: ProgressNotifier? = null): LocalEntity? {
+    /**
+     * Fetches the entity with the given URL from the remote server.
+     * @param url The URL of the remote entity to fetch.
+     * @param progress An optional progress notifier to report progress.
+     * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
+     * @return The local entity converted from the remote entity, or `null` if not found.
+     * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
+     */
+    private suspend fun getUrl(url: String, progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): LocalEntity? {
         val response = httpClient.get(url) {
             progress?.let { monitorDownloadProgress(it) }
+            if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
         }
-        if (response.status.isSuccess()) {
+        val status = response.status
+        if (status == HttpStatusCode.NotModified) {
+            throw ResourceNotModifiedException()
+        } else if (status.isSuccess()) {
+            val currentTime = Clock.System.now()
+            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)
             return remoteToLocalEntityConverter(remoteEntity)
@@ -86,6 +120,13 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         }
     }
 
+    /**
+     * Fetches the entity with the given ID from the remote server.
+     * @param id The ID of the remote entity to fetch.
+     * @param progress An optional progress notifier to report progress.
+     * @return The local entity converted from the remote entity, or `null` if not found.
+     * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
+     */
     suspend fun get(id: RemoteIdType, progress: ProgressNotifier? = null): LocalEntity? = getUrl("$endpoint/$id", progress)
 
     /**
@@ -95,6 +136,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * This does not update any associated files; use [synchronizeWithDatabase] for a full sync.
      * @param id The ID of the remote entity to fetch.
      * @param progressNotifier An optional progress notifier to report progress.
+     * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      * @return The fetched local entity, or `null` if it could not be retrieved.
      */
     suspend fun update(id: RemoteIdType, progressNotifier: ProgressNotifier? = null): LocalEntity? {
@@ -204,7 +246,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val location = response.headers[HttpHeaders.Location]
                 checkNotNull(location) { "Creation didn't return any location for the new item." }
 
-                val item = getUrl(location, progressNotifier)
+                val item = getUrl(location, progressNotifier, ignoreIfModifiedSince = true)
                 checkNotNull(item) { "Could not retrieve the created item from the server." }
                 progressNotifier?.invoke(Progress.LocalDBWrite)
                 repository.insert(item)
@@ -243,7 +285,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val location = response.headers[HttpHeaders.Location]
             checkNotNull(location) { "Patch didn't return any location for the new item." }
 
-            val item = getUrl(location)
+            val item = getUrl(location, ignoreIfModifiedSince = true)
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
             progressNotifier?.invoke(Progress.LocalDBWrite)
             repository.update(item)

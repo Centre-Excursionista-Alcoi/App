@@ -11,10 +11,12 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
 
 object InventoryItemTypesRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
     "/inventory/types",
+    SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC,
     InventoryItemType.serializer(),
     InventoryItemTypesRepository,
     remoteToLocalIdConverter = { it },

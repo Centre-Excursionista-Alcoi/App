@@ -7,10 +7,12 @@ import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -19,7 +21,7 @@ import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
+class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdateEntity {
     companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
         context(_: JdbcTransaction)
         fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
@@ -27,7 +29,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
 
     var sub by UserReferences.sub
 
-    var lastUpdate by UserReferences.lastUpdate
+    override var lastUpdate by UserReferences.lastUpdate
 
     var nif by UserReferences.nif
     var memberNumber by UserReferences.memberNumber
@@ -89,12 +91,20 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id) {
                 }
             }
         }
-        Database { lastUpdate = now() }
+        updated()
     }
 
     context(_: JdbcTransaction)
     fun addFCMRegistrationToken(token: String, deviceId: String? = null) = FCMRegistrationTokenEntity.new(token) {
         this.user = this@UserReferenceEntity
         this.deviceId = deviceId
+    }
+
+    /**
+     * Notifies that this entity has been updated by storing the current timestamp in Redis, and updating the lastUpdate field.
+     */
+    override suspend fun updated() {
+        notifyUpdateForEntity(Companion, id)
+        Database { lastUpdate = now() }
     }
 }

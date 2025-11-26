@@ -7,9 +7,11 @@ import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_USERS_SYNC
 
 object UsersRemoteRepository : SymmetricRemoteRepository<String, UserData>(
     "/users",
+    SETTINGS_LAST_USERS_SYNC,
     UserData.serializer(),
     UsersRepository
 ) {
