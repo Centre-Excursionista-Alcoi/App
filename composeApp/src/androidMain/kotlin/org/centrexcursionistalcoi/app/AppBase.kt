@@ -39,7 +39,7 @@ class AppBase : Application() {
         )
 
         NotifierManager.setLogger { message ->
-            log.d(message, tag = "NotifierManager")
+            log.d(tag = "NotifierManager") { message }
         }
 
         NotifierManager.addListener(PushNotifierListener)

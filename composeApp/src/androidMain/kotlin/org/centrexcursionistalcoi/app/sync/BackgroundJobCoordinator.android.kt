@@ -22,7 +22,7 @@ import kotlin.uuid.toJavaUuid
 import kotlinx.coroutines.flow.mapNotNull
 
 actual object BackgroundJobCoordinator {
-    private val log = logging()
+    val log = logging()
 
     var workManager: WorkManager? = null
         private set
