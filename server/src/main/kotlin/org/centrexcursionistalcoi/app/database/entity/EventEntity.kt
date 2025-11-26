@@ -1,12 +1,11 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.table.EventMembers
@@ -47,9 +46,9 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
                     .map { it.department.id.value }
             }
             logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
-            val now = now().atOffset(ZoneOffset.UTC).toLocalDateTime()
+            val now = now()
             find {
-                (Events.end greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
+                (Events.start greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
             }
         }
     }
@@ -77,12 +76,12 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value.toKotlinUuid(),
-        start = start.toKotlinLocalDateTime(),
-        end = end?.toKotlinLocalDateTime(),
+        start = start.toKotlinInstant(),
+        end = end?.toKotlinInstant(),
         place = place,
         title = title,
         description = description,
-        maxPeople = maxPeople?.toLong(),
+        maxPeople = maxPeople,
         requiresConfirmation = requiresConfirmation,
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid(),
@@ -91,8 +90,8 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateEventRequest) {
-        request.start?.let { start = it.toJavaLocalDateTime() }
-        request.end?.let { end = it.toJavaLocalDateTime() }
+        request.start?.let { start = it.toJavaInstant() }
+        request.end?.let { end = it.toJavaInstant() }
         request.place?.let { place = it }
         request.title?.let { title = it }
         request.description?.let { description = it }

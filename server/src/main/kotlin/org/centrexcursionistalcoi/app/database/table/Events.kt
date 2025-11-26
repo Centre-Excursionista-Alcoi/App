@@ -12,7 +12,6 @@ import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
-import org.jetbrains.exposed.v1.javatime.datetime
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
@@ -21,15 +20,15 @@ object Events : UUIDTable("events"), ViaLink<UUID, EventEntity, String, UserRefe
     val created = timestamp("created").defaultExpression(CurrentTimestamp)
     val updated = timestamp("updated").defaultExpression(CurrentTimestamp)
 
-    val start = datetime("start")
-    val end = datetime("end").nullable()
+    val start = timestamp("start")
+    val end = timestamp("end").nullable()
 
     val place = text("place")
 
     val title = text("title")
     val description = text("description").nullable()
 
-    val maxPeople = integer("maxPeople").nullable()
+    val maxPeople = long("maxPeople").nullable()
     val requiresConfirmation = bool("requiresConfirmation").default(false)
 
     val department = optReference("department", Departments)

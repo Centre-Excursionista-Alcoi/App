@@ -1,19 +1,20 @@
 package org.centrexcursionistalcoi.app.request
 
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.FileWithContext
+import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
 data class UpdateEventRequest(
-    val start: LocalDateTime? = null,
-    val end: LocalDateTime? = null,
+    @Serializable(InstantSerializer::class) val start: Instant? = null,
+    @Serializable(InstantSerializer::class) val end: Instant? = null,
     val place: String? = null,
     val title: String? = null,
     val description: String? = null,
-    val maxPeople: Int? = null,
+    val maxPeople: Long? = null,
     val requiresConfirmation: Boolean? = null,
     val department: Uuid? = null,
     val image: FileWithContext? = null,

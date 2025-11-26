@@ -1,14 +1,15 @@
 package org.centrexcursionistalcoi.app.data
 
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
 data class Event(
     override val id: Uuid,
-    val start: LocalDateTime,
-    val end: LocalDateTime?,
+    @Serializable(InstantSerializer::class) val start: Instant,
+    @Serializable(InstantSerializer::class) val end: Instant?,
     val place: String,
     val title: String,
     val description: String?,

@@ -4,13 +4,16 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.uuid.toKotlinUuid
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
@@ -31,12 +34,12 @@ fun Route.eventsRoutes() {
         idTypeConverter = { UUID.fromString(it) },
         listProvider = { session -> EventEntity.forSession(session) },
         creator = { formParameters ->
-            var start: LocalDateTime? = null
-            var end: LocalDateTime? = null
+            var start: Instant? = null
+            var end: Instant? = null
             var place: String? = null
             var title: String? = null
             var description: String? = null
-            var maxPeople: Int? = null
+            var maxPeople: Long? = null
             var requiresConfirmation = false
             var departmentId: UUID? = null
             val image = FileRequestData()
@@ -45,12 +48,12 @@ fun Route.eventsRoutes() {
                 when (partData) {
                     is PartData.FormItem -> {
                         when (partData.name) {
-                            "start" -> start = LocalDateTime.parse(partData.value)
-                            "end" -> end = LocalDateTime.parse(partData.value)
+                            "start" -> start = partData.value.toLong().let(Instant::ofEpochMilli)
+                            "end" -> end = partData.value.toLong().let(Instant::ofEpochMilli)
                             "place" -> place = partData.value
                             "title" -> title = partData.value
                             "description" -> description = partData.value
-                            "maxPeople" -> maxPeople = partData.value.toIntOrNull()
+                            "maxPeople" -> maxPeople = partData.value.toLongOrNull()
                             "requiresConfirmation" -> requiresConfirmation = partData.value.toBoolean()
                             "department" -> departmentId = partData.value.toUUIDOrNull()
                             "image" -> {
@@ -129,8 +132,11 @@ fun Route.eventsRoutes() {
             sb.append("BEGIN:VEVENT\r\n")
             sb.append("UID:${eventData.id}\r\n")
             // example: 20231025T120000Z
-            val formattedStart = eventData.start.toJavaLocalDateTime().format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
-            val formattedEnd = (eventData.end?.toJavaLocalDateTime() ?: LocalDateTime.of(eventData.start.date.toJavaLocalDate(), LocalTime.of(23, 59))).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+            val formattedStart = eventData.start.toLocalDateTime(TimeZone.currentSystemDefault()).toJavaLocalDateTime().format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+            val formattedEnd = (
+                    eventData.end?.toLocalDateTime(TimeZone.currentSystemDefault())?.toJavaLocalDateTime()
+                        ?: LocalDateTime.of(eventData.start.toLocalDateTime(TimeZone.currentSystemDefault()).date.toJavaLocalDate(), LocalTime.of(23, 59))
+                    ).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
             sb.append("DTSTART:$formattedStart\r\n")
             sb.append("DTEND:$formattedEnd\r\n")
             sb.append("SUMMARY:${eventData.title}\r\n")

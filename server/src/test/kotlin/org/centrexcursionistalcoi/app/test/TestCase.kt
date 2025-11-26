@@ -1,7 +1,10 @@
 package org.centrexcursionistalcoi.app.test
 
+import java.time.Instant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
+import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.junit.jupiter.api.DynamicTest
@@ -73,12 +76,13 @@ data class TestCase<EID: Any, EE: ExposedEntity<EID>>(
         return this.copy(block = block)
     }
 
-    fun createDynamicTest(): DynamicTest? {
+    fun createDynamicTest(at: Instant?): DynamicTest? {
         if (skip) return null
         requireNotNull(block) { "No block has been provided." }
         return DynamicTest.dynamicTest(name) {
             var context: TestCaseContext<EID, EE>? = null
             try {
+                at?.let { now = { it } }
                 before?.invoke()
                 if (!Database.isInitialized()) Database.init(TEST_URL)
                 auxiliaryEntitiesProvider?.let { Database { it() } }
@@ -88,6 +92,7 @@ data class TestCase<EID: Any, EE: ExposedEntity<EID>>(
             } finally {
                 context?.entity?.let { Database { it.delete() } }
                 after?.invoke()
+                resetTimeFunctions()
             }
         }
     }

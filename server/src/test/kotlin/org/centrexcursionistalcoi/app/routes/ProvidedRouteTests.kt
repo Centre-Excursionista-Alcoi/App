@@ -16,6 +16,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import java.lang.reflect.InvocationTargetException
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.Temporal
@@ -30,6 +31,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.toJavaInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
@@ -64,6 +66,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.assertInstanceOf
+import kotlin.time.Instant as KotlinInstant
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
@@ -171,6 +174,7 @@ object ProvidedRouteTests {
                 ).also { println("- $key: byte array (size=${value.bytes.size})") }
                 is Number -> append(key, value).also { println("- $key: $value") }
                 is Boolean -> append(key, value).also { println("- $key: $value") }
+                is Instant -> append(key, value.toEpochMilli()).also { println("- $key: $value") }
                 null -> {}
                 else -> append(key, value.toString()).also { println("- $key: $value") }
             }
@@ -232,6 +236,7 @@ object ProvidedRouteTests {
     fun <EE: UUIDEntity, ET: Entity<Uuid>> runTestsOnRoute(
         title: String,
         baseUrl: String,
+        now: java.time.Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
         /**
@@ -283,6 +288,7 @@ object ProvidedRouteTests {
     ): List<DynamicTest> = runTestsOnRoute(
         title = title,
         baseUrl = baseUrl,
+        now = now,
         listLoginType = listLoginType,
         filterEntitiesForListLoginType = filterEntitiesForListLoginType,
         modificationsLoginType = modificationsLoginType,
@@ -307,6 +313,7 @@ object ProvidedRouteTests {
     fun <EID: Comparable<EID>, EE: ExposedEntity<EID>, TID: Comparable<TID>, ET: Entity<TID>> runTestsOnRoute(
         title: String,
         baseUrl: String,
+        now: java.time.Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
         /**
@@ -476,6 +483,8 @@ object ProvidedRouteTests {
                             assertEquals(expected, actual.toJavaLocalDate(), "Date $name does not match")
                         } else if (expected is LocalTime && actual is KotlinLocalTime) {
                             assertEquals(expected, actual.toJavaLocalTime(), "Time $name does not match")
+                        } else if (expected is Instant && actual is KotlinInstant) {
+                            assertEquals(expected, actual.toJavaInstant(), "Instant $name does not match")
                         } else {
                             assertEquals(expected, actual, "Field $name does not match")
                         }
@@ -788,7 +797,7 @@ object ProvidedRouteTests {
                     }
                 }
             },
-        ).mapNotNull { it.createDynamicTest() }
+        ).mapNotNull { it.createDynamicTest(at = now) }
     }
 
     class DefaultValue(

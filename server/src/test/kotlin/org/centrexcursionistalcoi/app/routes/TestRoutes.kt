@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
+import java.time.ZoneOffset
 import java.util.Random
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
@@ -132,16 +133,17 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Events",
             baseUrl = "/events",
+            now = LocalDateTime.of(LocalDate.of(2025, Month.SEPTEMBER, 1), LocalTime.of(12, 0)).toInstant(ZoneOffset.UTC),
             requiredCreationValuesProvider = mapOf(
-                "date" to { LocalDate.of(2025, Month.OCTOBER, 10) },
+                "start" to { LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15).toInstant(ZoneOffset.UTC) },
                 "title" to { "Test Event" },
                 "place" to { "Test Place" },
             ),
             optionalCreationValuesProvider = mapOf(
-                "time" to { LocalTime.of(10, 15) },
+                "end" to { LocalDateTime.of(2025, Month.OCTOBER, 11, 12, 50).toInstant(ZoneOffset.UTC) },
                 "description" to { "This is a test event description." },
                 "department" to { testDepartmentId },
-                "maxPeople" to { 50 },
+                "maxPeople" to { 50L },
                 "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile("square.png", ContentType.Image.PNG) }
             ),
             defaultCreationValuesProvider = mapOf(
@@ -161,7 +163,7 @@ class TestRoutes : ApplicationTestBase() {
             },
             stubEntityProvider = {
                 EventEntity.new(testEventId) {
-                    start = LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15)
+                    start = LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15).toInstant(ZoneOffset.UTC)
                     title = "Test Event"
                     place = "Test Place"
                 }
