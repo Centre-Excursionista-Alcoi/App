@@ -7,6 +7,7 @@ import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
@@ -16,23 +17,32 @@ import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Application")
 
 var today: () -> LocalDate = { LocalDate.now() }
-    @VisibleForTesting
-    set
+    private set
 
 var now: () -> Instant = { Instant.now() }
-    @VisibleForTesting
-    set
+    private set
+
+@TestOnly
+internal fun mockTime(instant: Instant) {
+    now = { instant }
+    DatabaseNowExpression.mockTime(instant)
+}
+
+@TestOnly
+internal fun mockTime(date: LocalDate) {
+    today = { date }
+}
 
 @TestOnly
 internal fun resetTimeFunctions() {
     today = { LocalDate.now() }
     now = { Instant.now() }
+    DatabaseNowExpression.reset()
 }
 
 fun main() {

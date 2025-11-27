@@ -21,7 +21,7 @@ data class ReferencedEvent(
     /**
      * All the users that have confirmed assistance to the event.
      */
-    val usersList: List<UserData>,
+    val userReferences: List<UserData>,
 
     override val referencedEntity: Event
 ): ReferencedEntity<Uuid, Event>(), ImageFileContainer {
@@ -37,7 +37,7 @@ data class ReferencedEvent(
             requiresConfirmation = this.requiresConfirmation,
             department = departments.firstOrNull { it.id == this.department },
             image = this.image,
-            usersList = users.filter { it.sub in this.userSubList },
+            userReferences = users.filter { it.sub in this.userReferences },
             referencedEntity = this
         )
     }

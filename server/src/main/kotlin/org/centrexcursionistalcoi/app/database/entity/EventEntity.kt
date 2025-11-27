@@ -87,7 +87,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         requiresConfirmation = requiresConfirmation,
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid(),
-        userSubList = userReferences.map { it.sub.value },
+        userReferences = userReferences.map { it.sub.value },
     )
 
     context(_: JdbcTransaction)

@@ -16,6 +16,8 @@ import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import java.time.Instant
+import java.time.LocalDate
 import javax.crypto.spec.IvParameterSpec
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,16 +36,20 @@ abstract class ApplicationTestBase {
 
     fun runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
+        mockDate: LocalDate? = null,
+        mockNow: Instant? = null,
         /**
          * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         disablePush: Boolean = true,
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<Unit>) -> Unit
-    ) = runApplicationTest(shouldLogIn, { }, userEntityPatches, disablePush) { block(it) }
+    ) = runApplicationTest(shouldLogIn, mockDate, mockNow, { }, userEntityPatches, disablePush) { block(it) }
 
     fun <DIB> runApplicationTest(
         shouldLogIn: LoginType = LoginType.NONE,
+        mockDate: LocalDate? = null,
+        mockNow: Instant? = null,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
         /**
          * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER] or [LoginType.ADMIN]).
@@ -53,6 +59,9 @@ abstract class ApplicationTestBase {
         finally: suspend () -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
+        mockDate?.let(::mockTime)
+        mockNow?.let(::mockTime)
+
         Database.init(TEST_URL)
 
         AES.secretKey = AES.generateKey()
@@ -128,6 +137,8 @@ abstract class ApplicationTestBase {
 
             Database.clear()
             finally()
+
+            resetTimeFunctions()
         }
     }
 

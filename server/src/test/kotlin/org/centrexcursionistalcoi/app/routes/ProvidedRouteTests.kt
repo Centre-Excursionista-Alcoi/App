@@ -53,7 +53,6 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
@@ -239,7 +238,7 @@ object ProvidedRouteTests {
     fun <EE: UUIDEntity, ET: Entity<Uuid>> runTestsOnRoute(
         title: String,
         baseUrl: String,
-        now: java.time.Instant? = null,
+        now: Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
         /**
@@ -529,7 +528,6 @@ object ProvidedRouteTests {
             } skipIf (listLoginType != LoginType.ADMIN),
             "$title - Test fetching list" withEntities auxiliaryEntitiesProvider runs {
                 Database.init(TEST_URL) // initialize the database
-                Push.disable = true     // disable push notifications
 
                 // Insert some data into the database to be fetched
                 val entities = mutableListOf<EE>()
@@ -607,9 +605,6 @@ object ProvidedRouteTests {
                         }
                     }
                 }
-            } after {
-                // Re-enable push notifications
-                Push.disable = false
             },
 
             "$title - Test create when not logged in" runs {

@@ -27,7 +27,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.mockTime
 import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
@@ -54,7 +54,7 @@ class TestProfileRoutes : ApplicationTestBase() {
     fun test_conditionalHeaders_ifModifiedSince() {
         try {
             // GMT: Tuesday 20 October 2015 0:00:00
-            now = { Instant.ofEpochSecond(1445299200) }
+            mockTime(Instant.ofEpochSecond(1445299200))
 
             runApplicationTest(
                 shouldLogIn = LoginType.USER,

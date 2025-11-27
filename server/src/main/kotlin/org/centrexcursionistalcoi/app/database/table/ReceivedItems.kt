@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 object ReceivedItems : UUIDTable() {
@@ -11,5 +11,5 @@ object ReceivedItems : UUIDTable() {
     val notes = text("notes").nullable()
 
     val receivedBy = reference("receivedBy", UserReferences)
-    val receivedAt = timestamp("receivedAt").defaultExpression(CurrentTimestamp)
+    val receivedAt = timestamp("receivedAt").defaultExpression(DatabaseNowExpression)
 }
