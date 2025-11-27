@@ -16,4 +16,10 @@ class TestVersion {
             assertTrue("Each part of the version should be a positive integer: index $idx => $part") { number >= 0 }
         }
     }
+
+    @Test
+    fun `test version code is integer`() {
+        // If not integer, the getter will throw an exception
+        versionCode
+    }
 }
