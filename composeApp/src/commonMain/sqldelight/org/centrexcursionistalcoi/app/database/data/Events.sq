@@ -1,0 +1,34 @@
+import kotlin.Boolean;
+import kotlin.String;
+import kotlin.collections.List;
+import kotlin.uuid.Uuid;
+import kotlin.time.Instant;
+
+CREATE TABLE Events (
+    id TEXT AS Uuid NOT NULL PRIMARY KEY,
+    start INTEGER AS Instant NOT NULL,
+    end INTEGER AS Instant,
+    place TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    maxPeople INTEGER,
+    requiresConfirmation INTEGER AS Boolean NOT NULL DEFAULT 0,
+    department TEXT AS Uuid,
+    image TEXT AS Uuid,
+    userReferences TEXT AS List<String> NOT NULL
+);
+
+insert:
+INSERT INTO Events (id, start, end, place, title, description, maxPeople, requiresConfirmation, department, image, userReferences) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM Events WHERE id = ? LIMIT 1;
+
+selectAll:
+SELECT * FROM Events ORDER BY id;
+
+deleteById:
+DELETE FROM Events WHERE id = ?;
+
+update:
+UPDATE Events SET start = ?, end = ?, place = ?, title = ?, description = ?, maxPeople = ?, requiresConfirmation = ?, department = ?, image = ?, userReferences = ? WHERE id = ?;

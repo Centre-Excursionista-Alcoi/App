@@ -7,6 +7,8 @@ import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.EventMembers
+import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
@@ -22,8 +24,11 @@ import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils.sortTablesByReferences
+import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcConnectionImpl
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -31,7 +36,7 @@ import org.slf4j.LoggerFactory
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
-    val tables = arrayOf(
+    private val tables = listOf(
         Files,
         ConfigTable,
         Departments,
@@ -48,7 +53,9 @@ object Database {
         ReceivedItems,
         RecoverPasswordRequests,
         FCMRegistrationTokens,
-    )
+        Events,
+        EventMembers,
+    ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 
     const val URL = "jdbc:sqlite:file:test?mode=memory&cache=shared" // In-memory SQLite database
@@ -62,13 +69,6 @@ object Database {
 
     fun isInitialized(): Boolean = database != null
 
-    private fun connect(
-        url: String,
-        driver: String,
-        user: String,
-        password: String
-    ) = JdbcDatabase.connect(url, driver, user, password)
-
     @TestOnly
     @VisibleForTesting
     fun initializeConnection(
@@ -80,7 +80,7 @@ object Database {
         logger.info("Initializing database with url: $url")
         val driver = driver ?: DriverManager.getDriver(url).javaClass.name
         logger.debug("Using driver: $driver")
-        database = connect(url, driver, username, password)
+        database = JdbcDatabase.connect(url, driver, username, password)
     }
 
     fun init(
@@ -94,8 +94,26 @@ object Database {
         }
 
         logger.info("Creating database schema if not exists")
-        transaction(database) {
-            SchemaUtils.create(*tables)
+        for (table in tables) {
+            transaction(database) {
+                logger.debug("Ensuring table ${table.tableName} exists")
+                if (table.exists()) {
+                    logger.debug("Table ${table.tableName} exists, skipping creation")
+                } else {
+                    for (statement in SchemaUtils.createStatements(table)) {
+                        try {
+                            exec(statement)
+                        } catch (e: ExposedSQLException) {
+                            if (e.message?.contains("already exists") == true) {
+                                // this may also be thrown if an ALTER query is run and it already exists
+                                logger.warn("Table ${table.tableName} already exists, skipping creation")
+                            } else {
+                                throw e
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         val version = Database { ConfigEntity[ConfigEntity.DatabaseVersion] }
@@ -129,8 +147,8 @@ object Database {
     fun clear() {
         if (database == null) return
         this {
+            val tables = tables.reversed().toTypedArray()
             SchemaUtils.drop(*tables)
-            SchemaUtils.create(*tables)
         }
         database = null
     }

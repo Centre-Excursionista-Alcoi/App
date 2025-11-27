@@ -67,7 +67,7 @@ object SSENotificationsListener {
         log.d { "Setting up SSE..." }
         job = CoroutineScope(defaultAsyncDispatcher).launch {
             try {
-                client.sse("/events") {
+                client.sse("/sse") {
                     log.i(tag = "SSE") { "Listening for events." }
                     _isConnected.value = true
                     while (true) {

@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
+import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
@@ -25,6 +26,7 @@ import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.version
+import org.centrexcursionistalcoi.app.versionCode
 
 fun Application.configureRouting() {
     routing {
@@ -62,6 +64,7 @@ fun Application.configureRouting() {
 
         profileRoutes()
         departmentsRoutes()
+        eventsRoutes()
         postsRoutes()
         usersRoutes()
         inventoryRoutes()
@@ -85,8 +88,11 @@ fun Application.configureRouting() {
             val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilli() ?: 0L
 
             call.respond(ServerInfo(
-                version = version,
-                databaseVersion = databaseVersion,
+                version = ServerInfo.Version(
+                    version = version,
+                    databaseVersion = databaseVersion,
+                    code = versionCode,
+                ),
                 lastCEASync = lastCEASync,
             ))
         }

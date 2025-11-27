@@ -13,7 +13,6 @@ import androidx.compose.ui.window.rememberWindowState
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.FixedLogLevel
 import com.diamondedge.logging.KmLogging
-import com.diamondedge.logging.PrintLogger
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +31,7 @@ object PointerEventFlow {
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    KmLogging.setLoggers(PrintLogger(FixedLogLevel(true)))
+    KmLogging.setLoggers(JvmLogger(FixedLogLevel(true)))
 
     initializeSentry()
 

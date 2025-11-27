@@ -18,6 +18,7 @@ sealed interface PushNotification {
             val userSub = data["userSub"] as? String?
             val isSelf = (data["isSelf"] as? String?)?.toBoolean()
             val postId = (data["postId"] as? String?)?.toUuidOrNull()
+            val eventId = (data["eventId"] as? String?)?.toUuidOrNull()
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -63,6 +64,10 @@ sealed interface PushNotification {
                 NewPost.TYPE -> {
                     postId ?: throw IllegalArgumentException("Missing or invalid postId field in NewPost push notification data")
                     NewPost(postId)
+                }
+                NewEvent.TYPE -> {
+                    eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in NewEvent push notification data")
+                    NewEvent(eventId)
                 }
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
@@ -240,5 +245,18 @@ sealed interface PushNotification {
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString(), "isConfirmed" to isConfirmed.toString())
 
         override fun notSelf() = DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isSelf = false, isConfirmed)
+    }
+
+    @Serializable
+    class NewEvent(
+        val eventId: Uuid,
+    ) : PushNotification {
+        companion object {
+            const val TYPE = "NewEvent"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = mapOf("eventId" to eventId.toString())
     }
 }

@@ -19,7 +19,7 @@ class LoginViewModel : ErrorViewModel() {
             _isLoading.emit(true)
 
             AuthBackend.login(nif, password)
-            ProfileRemoteRepository.synchronize()
+            ProfileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
             doMain { afterLogin() }
         } catch (e: ServerException) {

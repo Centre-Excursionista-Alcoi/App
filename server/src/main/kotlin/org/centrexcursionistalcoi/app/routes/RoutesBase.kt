@@ -37,7 +37,10 @@ import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import org.slf4j.LoggerFactory
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
+
+private val logger = LoggerFactory.getLogger("RoutesBase")
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
     val requestContentType = call.request.contentType()
@@ -73,6 +76,7 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * @throws NullPointerException if a required argument is missing.
      * @throws IllegalArgumentException if an argument is malformed.
      * @throws NoSuchElementException if a referenced entity is not found.
+     * @throws NumberFormatException if a numeric argument is malformed.
      */
     noinline creator: suspend (MultiPartData) -> EE,
     /**
@@ -101,6 +105,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * @throws NullPointerException if a required argument is missing.
      * @throws IllegalArgumentException if an argument is malformed.
      * @throws NoSuchElementException if a referenced entity is not found.
+     * @throws NumberFormatException if a numeric argument is malformed.
      */
     creator: suspend (MultiPartData) -> EE,
     /**
@@ -165,14 +170,21 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val multipart = call.receiveMultipart()
         val item = try {
             creator(multipart)
-        } catch (_: NullPointerException) {
+        } catch (e: NullPointerException) {
+            logger.error("Missing argument during entity creation", e)
             respondError(Error.MissingArgument())
             return@post
-        } catch (_: IllegalArgumentException) {
+        } catch (e: IllegalArgumentException) {
+            logger.error("Illegal argument during entity creation", e)
             respondError(Error.MalformedRequest())
             return@post
-        } catch (_: NoSuchElementException) {
+        } catch (e: NoSuchElementException) {
+            logger.error("Referenced entity not found during entity creation", e)
             respondError(Error.EntityNotFound(entityKClass, "N/A"))
+            return@post
+        } catch (e: NumberFormatException) {
+            logger.error("Number format exception during entity creation", e)
+            respondError(Error.MalformedRequest())
             return@post
         }
 
@@ -198,7 +210,8 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val body = call.receiveText()
         val request = try {
             json.decodeFromString(updater, body)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.error("Failed to decode update request. Body: $body", e)
             respondError(Error.MalformedRequest())
             return@patch
         }

@@ -44,7 +44,6 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
-import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.utils.toUuid
@@ -184,11 +183,9 @@ class TestLendingsRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_datesInPast() = runApplicationTest(
         shouldLogIn = LoginType.USER,
+        mockDate = LocalDate.of(2025, 10, 8),
         databaseInitBlock = { getOrCreateItem() },
-        finally = { today = { LocalDate.now() } },
     ) {
-        today = { LocalDate.of(2025, 10, 8) }
-
         // Both dates in past
         client.submitForm(
             "/inventory/lendings",
@@ -230,10 +227,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 }
             }
         },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 8),
     ) {
-        today = { LocalDate.of(2025, 10, 1) }
-
         // New lending starting on the day existing one starts
         client.submitForm(
             "/inventory/lendings",
@@ -255,10 +250,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             FakeUser.provideEntity()
         },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 8),
     ) {
-        today = { LocalDate.of(2025, 10, 1) }
-
         // New lending starting on the day existing one starts
         client.submitForm(
             "/inventory/lendings",
@@ -312,10 +305,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 policyNumber = "POL123456"
             }
         },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 1),
     ) {
-        today = { LocalDate.of(2025, 10, 1) }
-
         fun HttpResponse.delete() {
             val location = headers[HttpHeaders.Location]
             assertNotNull(location, "Missing Location header in response")
@@ -434,10 +425,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 policyNumber = "POL123456"
             }
         },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 8),
     ) {
-        today = { LocalDate.of(2025, 10, 5) }
-
         // New lending without having submitted memory for previous lending
         client.submitForm(
             "/inventory/lendings",
@@ -455,7 +444,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     fun test_create_lending_correct() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { getOrCreateItem() },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 8),
     ) { context ->
         val item = context.dibResult
         assertNotNull(item)
@@ -482,8 +471,6 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 policyNumber = "POL123456"
             }
         }
-
-        today = { LocalDate.of(2025, 10, 8) }
 
         // Single item
         val location = client.submitForm(
@@ -554,10 +541,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 }
             }
         },
-        finally = { today = { LocalDate.now() } },
+        mockDate = LocalDate.of(2025, 10, 8),
     ) {
-        today = { LocalDate.of(2025, 10, 8) }
-
         client.get(
             "/inventory/types/$exampleItemTypeId/allocate?from=2025-10-10&to=2025-10-11&amount=1",
         ).run {

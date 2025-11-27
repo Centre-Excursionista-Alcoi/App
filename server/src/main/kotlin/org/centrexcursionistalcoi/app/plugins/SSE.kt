@@ -14,11 +14,21 @@ import org.slf4j.LoggerFactory
 private val logger = LoggerFactory.getLogger("SSE")
 
 fun Application.configureSSE() {
+    if (Push.disable) {
+        logger.info("Push notifications are disabled; SSE will not be configured.")
+        return
+    }
+
     install(SSE)
 }
 
 fun Route.configureSSERoutes() {
-    sse("/events") {
+    if (Push.disable) {
+        logger.info("Push notifications are disabled; SSE routes will not be added.")
+        return
+    }
+
+    sse("/sse") {
         val session = call.sessions.get<UserSession>()
         if (session == null) {
             logger.debug("User tried to connect to SSE without a valid session.")

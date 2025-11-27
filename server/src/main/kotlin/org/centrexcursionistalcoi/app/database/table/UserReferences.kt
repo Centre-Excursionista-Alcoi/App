@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.TextColumnType
@@ -7,7 +8,6 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.crypt.encryptedBinary
 import org.jetbrains.exposed.v1.crypt.encryptedVarchar
-import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 object UserReferences : IdTable<String>(name = "user_references") {
@@ -15,7 +15,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     override val id: Column<EntityID<String>> get() = sub
 
-    val lastUpdate = timestamp("last_update").defaultExpression(CurrentTimestamp)
+    val lastUpdate = timestamp("last_update").defaultExpression(DatabaseNowExpression)
 
     val nif = text("nif").uniqueIndex()
 

@@ -26,7 +26,7 @@ class TestInfo : ApplicationTestBase() {
             val response = client.get("/info")
             assertTrue(response.status.isSuccess())
             val body = response.bodyAsJson(ServerInfo.serializer())
-            assertEquals(123, body.databaseVersion)
+            assertEquals(123, body.version.databaseVersion)
             assertEquals(1763531703000L, body.lastCEASync)
         } finally {
             unmockkObject(ConfigEntity.DatabaseVersion, ConfigEntity.LastCEASync)

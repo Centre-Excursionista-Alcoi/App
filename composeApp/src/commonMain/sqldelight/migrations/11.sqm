@@ -1,0 +1,13 @@
+CREATE TABLE Events (
+    id TEXT NOT NULL PRIMARY KEY,
+    start TEXT NOT NULL,
+    end TEXT,
+    place TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    maxPeople INTEGER,
+    requiresConfirmation INTEGER NOT NULL DEFAULT 0,
+    department TEXT,
+    image TEXT,
+    userReferences TEXT AS List<String> NOT NULL
+);

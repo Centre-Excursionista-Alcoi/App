@@ -133,8 +133,14 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModifiedForType(enti
             if (lastUpdate <= ifModifiedSince) {
                 call.respond(HttpStatusCode.NotModified)
                 return null
+            } else {
+                logger.debug("Entity type {} modified since {} (lastUpdate: {})", entity.table.tableName, ifModifiedSince, lastUpdate)
             }
+        } else {
+            logger.debug("No If-Modified-Since header provided")
         }
+    } else {
+        logger.warn("Could not determine lastUpdate for entity type ${entity.table.tableName}")
     }
     return Unit
 }

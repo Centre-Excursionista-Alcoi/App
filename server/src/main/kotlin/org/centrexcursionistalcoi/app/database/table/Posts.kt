@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database.table
 
 import java.util.UUID
 import kotlinx.serialization.SerializationStrategy
+import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.utils.ViaLink
@@ -12,7 +13,7 @@ import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 object Posts : UUIDTable("posts"), ViaLink<UUID, PostEntity, UUID, FileEntity> {
-    val date = timestamp("date").defaultExpression(CurrentTimestamp)
+    val date = timestamp("date").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(CurrentTimestamp)
 
     val title = varchar("title", 255)

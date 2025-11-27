@@ -1,9 +1,13 @@
 package org.centrexcursionistalcoi.app.test
 
+import java.time.Instant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.Database.TEST_URL
+import org.centrexcursionistalcoi.app.mockTime
+import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.exists
 import org.junit.jupiter.api.DynamicTest
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
@@ -73,12 +77,13 @@ data class TestCase<EID: Any, EE: ExposedEntity<EID>>(
         return this.copy(block = block)
     }
 
-    fun createDynamicTest(): DynamicTest? {
+    fun createDynamicTest(at: Instant?): DynamicTest? {
         if (skip) return null
         requireNotNull(block) { "No block has been provided." }
         return DynamicTest.dynamicTest(name) {
             var context: TestCaseContext<EID, EE>? = null
             try {
+                at?.let(::mockTime)
                 before?.invoke()
                 if (!Database.isInitialized()) Database.init(TEST_URL)
                 auxiliaryEntitiesProvider?.let { Database { it() } }
@@ -86,8 +91,16 @@ data class TestCase<EID: Any, EE: ExposedEntity<EID>>(
                 context = TestCaseContext(entity)
                 block(context)
             } finally {
-                context?.entity?.let { Database { it.delete() } }
+                context?.entity?.let { entity ->
+                    Database {
+                        if (!entity.id.table.exists()) return@Database
+                        println("Cleaning up entity ${entity::class.simpleName} with ID ${entity.id.value}")
+                        entity.delete()
+                    }
+                }
+                Database.clear()
                 after?.invoke()
+                resetTimeFunctions()
             }
         }
     }

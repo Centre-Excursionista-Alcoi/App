@@ -5,6 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.MulticastMessage
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
@@ -21,6 +23,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.slf4j.LoggerFactory
 
 object Push {
@@ -199,6 +202,53 @@ object Push {
             notification = notification,
             includeAdmins = includeAdmins,
         )
+    }
+
+    suspend fun sendPushNotificationToDepartment(
+        notification: PushNotification,
+        departmentId: UUID,
+        includeAdmins: Boolean = true,
+    ) {
+        val references = Database {
+            DepartmentEntity.findById(departmentId)
+                ?.members
+                ?.filter { it.confirmed }
+                ?.map { it.userSub.value }
+                .orEmpty()
+        }
+        for (reference in references) {
+            sendLocalPushNotification(
+                notification = notification,
+                userSub = reference,
+                includeAdmins = includeAdmins,
+            )
+        }
+
+        if (pushFCMConfigured) {
+            var tokens = Database {
+                FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user inList references }.map { it.token.value }
+            }
+            if (includeAdmins) {
+                val adminReferences = Database {
+                    UserReferenceEntity.all()
+                        // Filter admins, and exclude the department members
+                        .filter { it.groups.contains(ADMIN_GROUP_NAME) && !references.contains(it.sub.value) }
+                }
+                val adminTokens = Database {
+                    adminReferences.flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
+                        .map { it.token.value }
+                }
+                tokens += adminTokens
+            }
+
+            sendFCMPushNotification(
+                tokens,
+                mapOf(
+                    "type" to notification.type,
+                    *notification.toMap().toList().toTypedArray()
+                )
+            )
+        }
     }
 
     suspend fun sendPushNotificationToAll(notification: PushNotification) {

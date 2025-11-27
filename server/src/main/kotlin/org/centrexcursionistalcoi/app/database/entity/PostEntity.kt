@@ -60,25 +60,8 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
         }
         request.link?.let { link = it.takeUnless { value -> value.isBlank() } }
         request.files?.forEach { fileWithContext ->
-            if (fileWithContext.isEmpty()) {
-                // No bytes given, remove existing file
-                val fileId = fileWithContext.id?.toJavaUuid()
-                if (fileId != null) {
-                    // Remove file
-                    FileEntity.findById(fileId)?.let {
-                        logger.info("Removing file $fileId from post $id")
-                        PostFiles.deleteWhere { (PostFiles.post eq id) and (PostFiles.file eq fileId) }
-                        it.delete()
-                    } ?: run {
-                        logger.warn("Asked to remove file $fileId from post $id, but file does not exist, ignoring")
-                    }
-                } else {
-                    // Asked to remove, but no id given, ignore
-                    logger.warn("Asked to remove file from post $id, but no id given, ignoring")
-                }
-            } else {
-                // Create a new file
-                FileEntity.from(fileWithContext)
+            FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
+                PostFiles.deleteWhere { (PostFiles.post eq this@PostEntity.id) and (PostFiles.file eq fileEntity.id) }
             }
         }
     }

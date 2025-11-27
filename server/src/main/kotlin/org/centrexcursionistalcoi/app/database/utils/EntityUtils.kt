@@ -33,8 +33,10 @@ import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.StringColumnType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.UIntegerColumnType
 import org.jetbrains.exposed.v1.core.UUIDColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
+import org.jetbrains.exposed.v1.crypt.EncryptedBinaryColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
 import org.jetbrains.exposed.v1.dao.DaoEntityID
 import org.jetbrains.exposed.v1.dao.Entity
@@ -45,6 +47,7 @@ import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.ULongEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
+import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -107,14 +110,16 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                 }
                 when (val type = column.columnType) {
                     is EntityIDColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // EntityIDs are serialized as Strings
-                    is EncryptedVarCharColumnType -> continue // Encrypted columns should not be serialized
+                    is EncryptedVarCharColumnType, is EncryptedBinaryColumnType -> continue // Encrypted columns should not be serialized
                     is StringColumnType -> element<String>(column.name, isOptional = type.nullable)
                     is BooleanColumnType -> element<Boolean>(column.name, isOptional = type.nullable)
                     is IntegerColumnType -> element<Int>(column.name, isOptional = type.nullable)
+                    is UIntegerColumnType -> element<UInt>(column.name, isOptional = type.nullable)
                     is DoubleColumnType -> element<Double>(column.name, isOptional = type.nullable)
                     is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
+                    is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
                     is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
@@ -196,6 +201,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         is IntegerColumnType -> {
                             encodeIntElement(descriptor, idx, typeValue as Int)
                         }
+                        is UIntegerColumnType -> {
+                            encodeLongElement(descriptor, idx, (typeValue as UInt).toLong())
+                        }
                         is DoubleColumnType -> {
                             encodeDoubleElement(descriptor, idx, typeValue as Double)
                         }
@@ -207,6 +215,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is JavaLocalDateColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as LocalDate).toString())
+                        }
+                        is JavaLocalTimeColumnType -> {
+                            encodeStringElement(descriptor, idx, typeValue.toString())
                         }
                         is UUIDColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as UUID).toString())

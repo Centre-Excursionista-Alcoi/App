@@ -1,0 +1,31 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Desktop - Local Server" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="SERVER_URL" value="http://127.0.0.1:8080" />
+        </map>
+      </option>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$/composeApp" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="-DmainClass=org.centrexcursionistalcoi.app.MainKt --quiet" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value="jvmRun" />
+        </list>
+      </option>
+      <option name="vmOptions" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <RunAsTest>false</RunAsTest>
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Run Server" run_configuration_type="GradleRunConfiguration" />
+    </method>
+  </configuration>
+</component>
