@@ -67,7 +67,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5 # Updated to v5 (latest stable)
         with:
           commit_message: 'Updated Version Code'
-          file_pattern: 'composeApp/version.properties'
+          file_pattern: 'version.properties'
           branch: master
 
   # 3. Android Jobs (Only runs if android files changed)
