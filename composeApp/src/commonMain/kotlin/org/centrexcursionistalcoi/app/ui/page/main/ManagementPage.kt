@@ -6,6 +6,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Feed
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Inventory2
@@ -22,7 +23,9 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
@@ -31,6 +34,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
@@ -44,7 +48,8 @@ const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
 const val MANAGEMENT_PAGE_USERS = 2
 const val MANAGEMENT_PAGE_POSTS = 3
-const val MANAGEMENT_PAGE_INVENTORY = 4
+const val MANAGEMENT_PAGE_EVENTS = 4
+const val MANAGEMENT_PAGE_INVENTORY = 5
 
 @Composable
 fun ManagementPage(
@@ -54,7 +59,7 @@ fun ManagementPage(
     /**
      * The currently selected item in the format Pair(pageIndex, itemId?).
      *
-     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_INVENTORY].
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_EVENTS], [MANAGEMENT_PAGE_INVENTORY].
      */
     selectedItem: Pair<Int, Uuid?>?,
 
@@ -72,6 +77,8 @@ fun ManagementPage(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
+
+    events: List<ReferencedEvent>?,
 
     model: ManagementViewModel = viewModel { ManagementViewModel() },
 ) {
@@ -102,6 +109,10 @@ fun ManagementPage(
         onCreatePost = model::createPost,
         onUpdatePost = model::updatePost,
         onDeletePost = model::delete,
+        events = events,
+        onCreateEvent = model::createEvent,
+        onUpdateEvent = model::updateEvent,
+        onDeleteEvent = model::delete,
     )
 }
 
@@ -140,6 +151,11 @@ private fun ManagementPage(
     onCreatePost: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
     onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
     onDeletePost: (ReferencedPost) -> Job,
+
+    events: List<ReferencedEvent>?,
+    onCreateEvent: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdateEvent: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
+    onDeleteEvent: (ReferencedEvent) -> Job,
 ) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
@@ -158,6 +174,7 @@ private fun ManagementPage(
             TabData.fromResources(Res.string.management_departments, Icons.Default.Category),
             TabData.fromResources(Res.string.management_users, Icons.Default.Face),
             TabData.fromResources(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed),
+            TabData.fromResources(Res.string.management_events, Icons.Default.Event),
             TabData.fromResources(Res.string.management_inventory,  Icons.Default.Inventory),
         ),
         onTabSelected = { index ->
@@ -185,6 +202,8 @@ private fun ManagementPage(
             MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, departments, onPromote)
 
             MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
+
+            MANAGEMENT_PAGE_EVENTS -> EventsListView(windowSizeClass, events, departments, onCreateEvent, onUpdateEvent, onDeleteEvent)
 
             MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
                 windowSizeClass,

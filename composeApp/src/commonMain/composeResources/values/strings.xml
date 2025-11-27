@@ -59,6 +59,7 @@
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
     <string name="management_posts">Posts</string>
+    <string name="management_events">Events</string>
     <string name="management_inventory">Inventory</string>
 
     <string name="management_department_create">Create Department</string>
@@ -196,6 +197,7 @@
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
     <string name="management_no_posts">No posts</string>
+    <string name="management_no_events">No events</string>
 
     <plurals name="management_items_amount">
         <item quantity="one">%1$d item</item>
@@ -461,5 +463,17 @@
     <string name="update_restart_required_title">Restart Required</string>
     <string name="update_restart_required_message">The update has been downloaded. Please, restart the app to apply the update.</string>
     <string name="update_restart_required_action">Restart Now</string>
+
+    <string name="management_event_create">Create Event</string>
+    <string name="event_by">Organized by: %1$s</string>
+    <string name="event_department_generic">Directive</string>
+    <string name="event_date_no_end">Date: %1$s</string>
+    <string name="event_date_with_end">Date: from %1$s to %2$s</string>
+    <string name="event_max_people">Max people: %1$d</string>
+    <string name="event_requires_confirmation">Requires assistance confirmation.</string>
+    <string name="event_title">Title</string>
+    <string name="event_description">Description</string>
+    <string name="event_department">Department</string>
+    <string name="event_place">Place</string>
 
 </resources>
