@@ -28,7 +28,7 @@ fun Route.configureSSERoutes() {
         return
     }
 
-    sse("/events") {
+    sse("/sse") {
         val session = call.sessions.get<UserSession>()
         if (session == null) {
             logger.debug("User tried to connect to SSE without a valid session.")

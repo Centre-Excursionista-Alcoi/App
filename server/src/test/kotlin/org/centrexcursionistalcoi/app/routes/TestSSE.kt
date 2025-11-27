@@ -29,7 +29,7 @@ class TestSSE : ApplicationTestBase() {
         var data: Map<String, String>? = null
 
         val job = CoroutineScope(Job()).launch {
-            client.sse("/events") {
+            client.sse("/sse") {
                 connectionEstablished = true
                 println("Connection Established!")
                 while (true) {
