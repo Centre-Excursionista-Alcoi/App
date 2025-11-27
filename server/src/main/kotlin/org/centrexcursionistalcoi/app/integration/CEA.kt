@@ -12,7 +12,10 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
+import io.ktor.http.isSuccess
 import io.ktor.http.parameters
+import java.io.File
 import kotlin.time.Duration.Companion.days
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -36,23 +39,25 @@ object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
-        val number: Int,
+        val number: Int? = null,
         @SerialName("Estat")
-        val status: String,
+        val status: String? = null,
         @SerialName("Nom i cognoms")
-        val fullName: String,
+        val fullName: String? = null,
         @SerialName("NIF/NIE")
-        val nif: String,
+        val nif: String? = null,
         @SerialName("Correu electrònic")
-        val email: String?,
+        val email: String? = null,
     ) {
         /**
          * Whether the member is disabled (not "alta").
          */
-        val isDisabled = status.trim().equals("alta", true).not()
+        val isDisabled = !NIFValidation.validate(nif) || status?.trim()?.equals("alta", true)?.not() ?: true
 
         val disabledReason = if (isDisabled) {
-            if (status.equals("baixa", true)) {
+            if (!NIFValidation.validate(nif)) {
+                "invalid_nif"
+            } else if (status.equals("baixa", true)) {
                 "status_baixa"
             } else if (status.equals("pendent", true)) {
                 "status_pendent"
@@ -62,6 +67,22 @@ object CEA : PeriodicWorker(period = 1.days) {
         } else {
             null
         }
+    }
+
+    fun List<Member>.filterInvalid() = filter { member ->
+        if (member.number == null) {
+            logger.warn("Member has no number. Skipping.")
+            return@filter false
+        }
+        if (member.nif == null) {
+            logger.warn("Member #${member.number} has no NIF. Skipping.")
+            return@filter false
+        }
+        if (member.fullName == null) {
+            logger.warn("Member #${member.number} has no full name. Skipping.")
+            return@filter false
+        }
+        true
     }
 
     /**
@@ -89,12 +110,10 @@ object CEA : PeriodicWorker(period = 1.days) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
         val userSubList = mutableListOf<String>()
-        for (member in members) {
-            val isNifValid = NIFValidation.validate(member.nif)
-            if (!isNifValid) {
-                logger.warn("Invalid NIF for member number=${member.number}, NIF=${member.nif}. Skipping.")
-                continue
-            }
+        for (member in members.filterInvalid()) {
+            member.number!!
+            member.nif!!
+            member.fullName!!
 
             val existingEntity = Database { UserReferenceEntity.findByNif(member.nif) }
             if (existingEntity != null) {
@@ -128,8 +147,12 @@ object CEA : PeriodicWorker(period = 1.days) {
         }
         logger.debug("Disabling not found users...")
         // Disable users not in the CEA members list
-        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList } }
+        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList }.toList() }
         for (entity in memberNifs) {
+            if (entity.nif == "87654321X") {
+                // Skip test user
+                continue
+            }
             Database {
                 entity.isDisabled = true
                 entity.disableReason = "not_in_cea_members"
@@ -173,13 +196,14 @@ object CEA : PeriodicWorker(period = 1.days) {
         val password = System.getenv("CEA_PASSWORD")
             ?: throw IllegalStateException("CEA_PASSWORD environment variable is not set.")
 
+        val cookiesStorage = AcceptAllCookiesStorage()
         val client = HttpClient {
             defaultRequest {
                 url("https://centrexcursionistalcoi.org")
             }
             install(ContentNegotiation)
             install(HttpCookies) {
-                storage = AcceptAllCookiesStorage()
+                storage = cookiesStorage
             }
             install(Logging) {
                 level = LogLevel.HEADERS
@@ -213,7 +237,29 @@ object CEA : PeriodicWorker(period = 1.days) {
             )
         }
 
-        val nonce = generateNonce()
+        val ceaPageResponse = client.get("/wp-admin/admin.php?page=cea-members&tab-filter-status=0")
+        val exportUrl = if (ceaPageResponse.status.isSuccess()) {
+            val bodyText = ceaPageResponse.bodyAsText()
+            val urlRegex = "https://centrexcursionistalcoi\\.org/wp-admin/admin\\.php\\?page=cea-members&tab-filter-status=0&action=export&nonce=[0-9a-f]{10}".toRegex()
+            val matchResult = urlRegex.find(bodyText)
+            if (matchResult != null) {
+                val exportUrl = matchResult.value
+                logger.debug("Found export URL: $exportUrl")
+                exportUrl
+            } else {
+                logger.error("Failed to find export URL in CEA members page.")
+                throw IllegalArgumentException("Failed to find export URL in CEA members page.")
+            }
+        } else {
+            logger.error("Failed to access CEA members page. Status: ${ceaPageResponse.status}")
+            throw HttpResponseException(
+                "Failed to access CEA members page.",
+                loginResponse.status.value,
+                loginResponse.bodyAsText(),
+            )
+        }
+
+        /*val nonce = generateNonce()
         logger.debug("Exporting CEA members data (nonce=$nonce)...")
         val exportResponse = client.get("/wp-admin/admin.php?page=cea-members&tab-filter-status=0&action=export&nonce=$nonce")
         if (exportResponse.status == HttpStatusCode.OK) {
@@ -226,6 +272,20 @@ object CEA : PeriodicWorker(period = 1.days) {
                 loginResponse.status.value,
                 loginResponse.bodyAsText(),
             )
+        }*/
+
+        logger.debug("Exporting CEA members data from $exportUrl ...")
+        val exportResponse = client.get(Url(exportUrl))
+        if (exportResponse.status == HttpStatusCode.OK) {
+            logger.debug("Downloaded CEA members data successfully.")
+            return exportResponse.bodyAsText()
+        } else {
+            logger.error("Failed to export CEA members data. Status: ${exportResponse.status}")
+            throw HttpResponseException(
+                "Failed to export data from the CEA website.",
+                exportResponse.status.value,
+                exportResponse.bodyAsText(),
+            )
         }
     }
 
@@ -234,8 +294,18 @@ object CEA : PeriodicWorker(period = 1.days) {
             logger.info("Starting CEA members synchronization...")
             val data = download()
 
+            logger.info("Cleaning up data...")
+            val cleanedData = data.split("\n")
+                .map { line -> line.trim() }
+                // Remove empty lines
+                .filter { line -> line.isNotEmpty() }
+                .joinToString("\n")
+
+            logger.info("Storing downloaded file...")
+            File("/cea_members.csv").writeText(cleanedData)
+
             logger.info("CEA members data downloaded. Parsing...")
-            val members = parse(data)
+            val members = parse(cleanedData)
 
             logger.info("CEA members data parsed. Synchronizing with database...")
             synchronizeWithDatabase(members)

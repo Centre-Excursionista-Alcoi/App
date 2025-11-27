@@ -39,8 +39,6 @@ class LoginViewModel : ErrorViewModel() {
 
             // If successful, log in
             login(nif, password, afterLogin).join()
-
-            doMain { afterLogin() }
         } catch (e: ServerException) {
             setError(e)
         } finally {

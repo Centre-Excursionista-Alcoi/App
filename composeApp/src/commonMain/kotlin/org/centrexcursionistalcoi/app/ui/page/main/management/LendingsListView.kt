@@ -1,8 +1,10 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +18,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -29,12 +33,14 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -58,6 +64,8 @@ import com.kizitonwose.calendar.core.minusMonths
 import com.kizitonwose.calendar.core.now
 import com.kizitonwose.calendar.core.plusDays
 import com.kizitonwose.calendar.core.plusMonths
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.coroutines.getBooleanFlow
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.datetime.DayOfWeek
@@ -67,6 +75,8 @@ import kotlinx.datetime.YearMonth
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.storage.MANAGEMENT_TOGGLE_COMPLETED_LENDINGS
+import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.page.main.LendingItem
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
@@ -205,12 +215,18 @@ private fun LendingManagementScreenContent_ExtraContent(
 }
 
 @Composable
+@OptIn(ExperimentalSettingsApi::class)
 private fun LendingsLazyColumn(
     lendings: List<ReferencedLending>?,
     selectedLending: ReferencedLending?,
     modifier: Modifier = Modifier,
     onClick: (ReferencedLending) -> Unit
 ) {
+    val toggleCompletedLendings by settings.getBooleanFlow(MANAGEMENT_TOGGLE_COMPLETED_LENDINGS, false).collectAsState(initial = false)
+    val completedLendingsIndicatorRotation by animateFloatAsState(
+        targetValue = if (toggleCompletedLendings) 0f else 90f
+    )
+
     LazyColumn(modifier = modifier) {
         val activeLendings = lendings?.filter {
             when (it.status()) {
@@ -247,14 +263,30 @@ private fun LendingsLazyColumn(
         }?.sortedByDescending { it.from }
         if (!completedLendings.isNullOrEmpty()) {
             item("completed_lendings_header") {
-                Text(
-                    text = stringResource(Res.string.management_complete_lendings),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            settings.putBoolean(MANAGEMENT_TOGGLE_COMPLETED_LENDINGS, !toggleCompletedLendings)
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.management_complete_lendings),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier.rotate(completedLendingsIndicatorRotation),
+                    )
+                }
             }
-            items(completedLendings, key = { it.id }) { lending ->
-                LendingItem(lending, isActive = selectedLending?.id == lending.id) { onClick(lending) }
+            if (!toggleCompletedLendings) {
+                items(completedLendings, key = { it.id }) { lending ->
+                    LendingItem(lending, isActive = selectedLending?.id == lending.id) { onClick(lending) }
+                }
             }
         }
     }

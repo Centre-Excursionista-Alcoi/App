@@ -20,8 +20,12 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.network.configureLogging
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJobLogic
 
 object SSENotificationsListener {
     private val log = logging()
@@ -93,6 +97,22 @@ object SSENotificationsListener {
                                             SyncLendingBackgroundJobLogic.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
                                         ),
                                         logic = SyncLendingBackgroundJobLogic,
+                                    )
+                                } else if (notification is PushNotification.NewPost) {
+                                    log.d { "Received new post notification for post ID: ${notification.postId}" }
+                                    BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
+                                        input = mapOf(
+                                            SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
+                                        ),
+                                        logic = SyncPostBackgroundJobLogic,
+                                    )
+                                } else if (notification is PushNotification.DepartmentJoinRequestUpdated) {
+                                    log.d { "Received department update notification for department ID: ${notification.departmentId}" }
+                                    BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
+                                        input = mapOf(
+                                            SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                                        ),
+                                        logic = SyncDepartmentBackgroundJobLogic,
                                     )
                                 }
 

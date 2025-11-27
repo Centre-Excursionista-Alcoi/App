@@ -1,3 +1,5 @@
 ﻿"Núm. soci/a",Estat,"Formulari d'alta",Quota,Foto,"Nom i cognoms",Malnom,NIF/NIE,"Correu electrònic","De quines seccions vols rebre informació?",Adreça,CP,Localitat,Província,"Telèfon fixe",Mòbil,"Data de naixement","Autorització paterna","Autorització de drets de fotografia","Mare/pare/tutora/tutor núm. 1","Mare/pare/tutora/tutor núm. 2","Tipus de pagament","Núm. de compte",Notes,Alta
 1956,Alta,Administració,Adult/a,No,"Usuari Exemple 1",,12345678Z,mail1@example.com,,"C/ Alcoi, 14",03802,Alcoi,Alacant,123456789,789456123,11/03/1975,No,No,0,0,Automàtic,ESXXXXXXXXXXXXXXXXXXXXXX,"Observacions: XXX",
 2943,Alta,Administració,Adult/a,No,"Usuari Exemple 2",,87654321X,mail2@example.com,,"C/ Alcoi, 14",03802,Alcoi,Alacant,987654321,456789123,29/11/2002,No,No,0,0,Automàtic,ESXXXXXXXXXXXXXXXXXXXXXX,"Observacions: XXX",
+
+123,Baixa,Unknown,Adult/a,No,,,,,,,,,,,,,,,,,,,,,,,
