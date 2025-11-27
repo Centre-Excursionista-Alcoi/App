@@ -19,10 +19,10 @@ import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.temporal.Temporal
-import java.util.Random
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
+import java.util.Random
 import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
@@ -316,7 +316,7 @@ object ProvidedRouteTests {
     fun <EID: Comparable<EID>, EE: ExposedEntity<EID>, TID: Comparable<TID>, ET: Entity<TID>> runTestsOnRoute(
         title: String,
         baseUrl: String,
-        now: java.time.Instant? = null,
+        now: Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
         /**
@@ -581,7 +581,7 @@ object ProvidedRouteTests {
                         .find { it.endsWith("LastUpdateEntity") } != null
                     if (isLastUpdateEntity) {
                         client.get(baseUrl) {
-                            val time = now().plus(1, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC).toLocalDateTime()
+                            val time = org.centrexcursionistalcoi.app.now().plus(1, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC).toLocalDateTime()
                             headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(time))
                         }.apply {
                             assertStatusCode(HttpStatusCode.NotModified)
