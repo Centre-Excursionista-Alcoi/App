@@ -18,7 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 object Events : UUIDTable("events"), ViaLink<UUID, EventEntity, String, UserReferenceEntity>, CustomTableSerializer<UUID, EventEntity> {
     val created = timestamp("created").defaultExpression(CurrentTimestamp)
-    val updated = timestamp("updated").defaultExpression(CurrentTimestamp)
+    val lastUpdate = timestamp("lastUpdate").defaultExpression(CurrentTimestamp)
 
     val start = timestamp("start")
     val end = timestamp("end").nullable()

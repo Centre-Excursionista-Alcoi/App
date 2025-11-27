@@ -7,12 +7,15 @@ import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.Event
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
+import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
+import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -25,7 +28,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
-class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
+class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UUIDEntityClass<EventEntity>(Events) {
         private val logger = LoggerFactory.getLogger("EventEntity")
 
@@ -54,8 +57,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
     }
 
     val created by Events.created
-    var updated by Events.updated
-        private set
+    override var lastUpdate by Events.lastUpdate
 
     var start by Events.start
     var end by Events.end
@@ -99,7 +101,10 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<Even
         request.requiresConfirmation?.let { requiresConfirmation = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         request.image?.let { image = FileEntity.updateOrCreate(it) }
+    }
 
-        updated = now()
+    override suspend fun updated() {
+        notifyUpdateForEntity(Companion, id)
+        Database { lastUpdate = now() }
     }
 }
