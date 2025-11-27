@@ -15,7 +15,6 @@ import org.centrexcursionistalcoi.app.database.adapters.InstantAdapter
 import org.centrexcursionistalcoi.app.database.adapters.JsonAdapter
 import org.centrexcursionistalcoi.app.database.adapters.ListStringAdapter
 import org.centrexcursionistalcoi.app.database.adapters.LocalDateAdapter
-import org.centrexcursionistalcoi.app.database.adapters.LocalDateTimeAdapter
 import org.centrexcursionistalcoi.app.database.adapters.UUIDAdapter
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.database.data.Events
@@ -48,8 +47,8 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
         ),
         Events.Adapter(
             UUIDAdapter,
-            LocalDateTimeAdapter,
-            LocalDateTimeAdapter,
+            InstantAdapter,
+            InstantAdapter,
             UUIDAdapter,
             UUIDAdapter,
             JsonAdapter(ListSerializer(String.serializer()))

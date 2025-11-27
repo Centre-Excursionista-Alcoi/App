@@ -36,7 +36,7 @@ class MainViewModel: ViewModel() {
 
     val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
         .stateFlow()
-        .map { it in listOf(BackgroundJobState.ENQUEUED, BackgroundJobState.RUNNING) }
+        .map { it in listOf(BackgroundJobState.RUNNING) }
         .stateInViewModel()
 
     val profile = ProfileRepository.profile.stateInViewModel()

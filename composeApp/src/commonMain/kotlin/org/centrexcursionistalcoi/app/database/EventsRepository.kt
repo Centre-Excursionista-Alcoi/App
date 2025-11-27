@@ -55,11 +55,11 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         place = item.place,
         title = item.title,
         description = item.description,
-        maxPeople = item.maxPeople?.toLong(),
+        maxPeople = item.maxPeople,
         requiresConfirmation = item.requiresConfirmation,
         department = item.department?.id,
         image = item.image,
-        userSubList = item.usersList.map { it.sub },
+        userReferences = item.userReferences.map { it.sub },
     )
 
     override suspend fun update(item: ReferencedEvent) = queries.update(
@@ -68,11 +68,11 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         place = item.place,
         title = item.title,
         description = item.description,
-        maxPeople = item.maxPeople?.toLong(),
+        maxPeople = item.maxPeople,
         requiresConfirmation = item.requiresConfirmation,
         department = item.department?.id,
         image = item.image,
-        userSubList = item.usersList.map { it.sub },
+        userReferences = item.userReferences.map { it.sub },
         id = item.id,
     )
 
@@ -91,6 +91,6 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         requiresConfirmation = requiresConfirmation,
         department = department,
         image = image,
-        userSubList = userSubList,
+        userReferences = userReferences,
     ).referenced(departments, users)
 }

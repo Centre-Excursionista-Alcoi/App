@@ -9,5 +9,5 @@ CREATE TABLE Events (
     requiresConfirmation INTEGER NOT NULL DEFAULT 0,
     department TEXT,
     image TEXT,
-    userSubList TEXT AS List<String> NOT NULL
+    userReferences TEXT AS List<String> NOT NULL
 );

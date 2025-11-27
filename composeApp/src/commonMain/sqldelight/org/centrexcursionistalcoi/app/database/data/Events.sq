@@ -2,12 +2,12 @@ import kotlin.Boolean;
 import kotlin.String;
 import kotlin.collections.List;
 import kotlin.uuid.Uuid;
-import kotlinx.datetime.LocalDateTime;
+import kotlin.time.Instant;
 
 CREATE TABLE Events (
     id TEXT AS Uuid NOT NULL PRIMARY KEY,
-    start TEXT AS LocalDateTime NOT NULL,
-    end TEXT AS LocalDateTime,
+    start INTEGER AS Instant NOT NULL,
+    end INTEGER AS Instant,
     place TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
@@ -15,11 +15,11 @@ CREATE TABLE Events (
     requiresConfirmation INTEGER AS Boolean NOT NULL DEFAULT 0,
     department TEXT AS Uuid,
     image TEXT AS Uuid,
-    userSubList TEXT AS List<String> NOT NULL
+    userReferences TEXT AS List<String> NOT NULL
 );
 
 insert:
-INSERT INTO Events (id, start, end, place, title, description, maxPeople, requiresConfirmation, department, image, userSubList) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Events (id, start, end, place, title, description, maxPeople, requiresConfirmation, department, image, userReferences) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Events WHERE id = ? LIMIT 1;
@@ -31,4 +31,4 @@ deleteById:
 DELETE FROM Events WHERE id = ?;
 
 update:
-UPDATE Events SET start = ?, end = ?, place = ?, title = ?, description = ?, maxPeople = ?, requiresConfirmation = ?, department = ?, image = ?, userSubList = ? WHERE id = ?;
+UPDATE Events SET start = ?, end = ?, place = ?, title = ?, description = ?, maxPeople = ?, requiresConfirmation = ?, department = ?, image = ?, userReferences = ? WHERE id = ?;
