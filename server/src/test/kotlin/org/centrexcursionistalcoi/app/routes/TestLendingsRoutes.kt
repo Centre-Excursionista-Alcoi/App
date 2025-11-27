@@ -305,7 +305,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 policyNumber = "POL123456"
             }
         },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate.of(2025, 10, 1),
     ) {
         fun HttpResponse.delete() {
             val location = headers[HttpHeaders.Location]
