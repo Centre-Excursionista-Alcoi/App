@@ -35,11 +35,13 @@ val versionProperties = readProperties("version.properties", rootProject.rootDir
 group = "org.centrexcursionistalcoi.app"
 version = versionProperties.getProperty("VERSION_NAME") ?: error("VERSION_NAME not found in version.properties")
 
+val versionCode = versionProperties.getProperty("VERSION_CODE") ?: error("VERSION_CODE not found in version.properties")
+
 application {
     mainClass.set("org.centrexcursionistalcoi.app.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment", "-Dapp.version=$version")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment", "-Dapp.version=$version", "-Dapp.versionCode=$versionCode")
 }
 
 kotlin {
@@ -138,6 +140,7 @@ tasks.test {
     useJUnitPlatform()
 
     systemProperty("app.version", version)
+    systemProperty("app.versionCode", versionCode)
 }
 
 // Regular (thin) JAR

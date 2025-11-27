@@ -18,12 +18,14 @@ import io.ktor.http.isSuccess
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileContainer
 import org.centrexcursionistalcoi.app.data.ImageFileContainer
+import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.data.fetchImageFilePath
 import org.centrexcursionistalcoi.app.data.filePaths
@@ -38,6 +40,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.response.bodyAsJson
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
 
@@ -53,12 +56,37 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private val remoteToLocalIdConverter: (RemoteIdType) -> LocalIdType,
     private val remoteToLocalEntityConverter: suspend (RemoteEntity) -> LocalEntity,
 ) {
+    /**
+     * The version code since which this endpoint is available.
+     *
+     * If not null, this can be used to check compatibility with the server.
+     */
+    protected open val availableSinceVersionCode: Int? = null
+
     private val name = endpoint.trim(' ', '/')
 
     protected val httpClient = getHttpClient()
 
     // Remove null fields to avoid issues with missing fields in the local model
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
+
+    private suspend fun endpointSupported(): Boolean {
+        availableSinceVersionCode?.let { availableSince ->
+            try {
+                val serverInfo = httpClient.get("/info").bodyAsJson(ServerInfo.serializer())
+                val versionCode = serverInfo.version.code
+                if (versionCode < availableSince) {
+                    log.w { "$name endpoint is not available in version $versionCode (available since $availableSince)" }
+                    return false
+                }
+            } catch (e: SerializationException) {
+                // versionCode was added on version 2.0.14, so older servers may not have it. The server is considered not compatible.
+                log.e(e) { "Could not determine server version. Assuming $name endpoint is not supported." }
+                return false
+            }
+        }
+        return true
+    }
 
     /**
      * Fetches all entities from the remote server.
@@ -68,6 +96,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<LocalEntity> {
+        if (!endpointSupported()) return emptyList()
+
         val response = httpClient.get(endpoint) {
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
@@ -101,6 +131,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
     ): LocalEntity? {
+        if (!endpointSupported()) return null
+
         val response = httpClient.get(url) {
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
@@ -253,6 +285,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
     suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
+        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
 
         val formData = item.toFormData()
         val response = httpClient.submitFormWithBinaryData(
@@ -291,6 +324,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         progressNotifier: ProgressNotifier? = null,
     ) {
         check(isPatchSupported) { "Patching this entity type is not supported" }
+        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
 
         log.d { "Patching $name#$id: $request" }
         val response = httpClient.patch("$endpoint/$id") {
@@ -322,6 +356,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) {
+        if (!endpointSupported()) return
+
         val response = httpClient.delete("$endpoint/$id")
         if (response.status.isSuccess()) {
             log.i { "Deleted $name with ID $id" }

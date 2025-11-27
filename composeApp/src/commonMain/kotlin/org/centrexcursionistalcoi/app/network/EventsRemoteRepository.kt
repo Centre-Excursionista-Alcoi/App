@@ -20,4 +20,6 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
         val users = UsersRepository.selectAll()
         event.referenced(departments, users)
     },
-)
+) {
+    override val availableSinceVersionCode: Int = 285
+}

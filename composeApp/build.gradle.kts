@@ -32,10 +32,9 @@ fun readProperties(fileName: String, root: File = projectDir): Properties? {
     }
 }
 
-val versionProperties = readProperties("version.properties")!!
-val baseVersionProperties = readProperties("version.properties", rootDir)!!
+val versionProperties = readProperties("version.properties", rootDir)!!
 
-val appVersionName: String = baseVersionProperties.getProperty("VERSION_NAME")
+val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
 val credentialsProperties = readProperties("credentials.properties", rootDir)
