@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.network.Server
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -75,6 +76,8 @@ class LoadingViewModel(
     ) = viewModelScope.launch(defaultAsyncDispatcher) {
         log.d { "Loading app content..." }
         _error.value = null
+
+        Server.loadInfo()
 
         try {
             // Try to fetch the profile to see if the session is still valid

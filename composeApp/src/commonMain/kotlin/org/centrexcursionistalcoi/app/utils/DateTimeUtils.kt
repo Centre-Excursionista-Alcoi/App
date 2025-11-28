@@ -2,9 +2,15 @@ package org.centrexcursionistalcoi.app.utils
 
 import androidx.compose.runtime.Composable
 import cea_app.composeapp.generated.resources.*
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
 fun LocalTime.withoutSeconds(): LocalTime {
@@ -39,3 +45,24 @@ val MonthNames.Companion.localizedNames: MonthNames
         stringResource(Res.string.months_november),
         stringResource(Res.string.months_december),
     )
+
+@Composable
+fun localizedInstantAsDateTime(instant: Instant): String {
+    val localizedDayOfWeekNames = DayOfWeekNames.localizedNames
+    val localizedMonthNames = MonthNames.localizedNames
+    val format = LocalDateTime.Format {
+        hour()
+        char(':')
+        minute()
+        char(' ')
+
+        dayOfWeek(localizedDayOfWeekNames)
+        chars(", ")
+        day()
+        char(' ')
+        monthName(localizedMonthNames)
+        char(' ')
+        year()
+    }
+    return instant.toLocalDateTime(TimeZone.currentSystemDefault()).format(format)
+}

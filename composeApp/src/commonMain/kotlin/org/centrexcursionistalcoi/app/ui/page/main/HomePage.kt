@@ -28,6 +28,7 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
@@ -35,6 +36,7 @@ import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
+import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
@@ -60,6 +62,8 @@ fun HomePage(
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 
     users: List<UserData>?,
+
+    events: List<ReferencedEvent>?,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = profile.lendingUser != null
@@ -133,20 +137,15 @@ fun HomePage(
             }
         }
 
-        if (!posts.isNullOrEmpty()) {
-            stickyHeader {
-                Text(
-                    text = stringResource(Res.string.home_posts),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                )
+        items(posts.orEmpty() + events.orEmpty()) { postOrEvent ->
+            if (postOrEvent is ReferencedPost) {
+                PostItem(postOrEvent)
+            } else if (postOrEvent is ReferencedEvent) {
+                EventItem(postOrEvent)
             }
-            items(posts) { post ->
-                PostItem(post)
-            }
-            item(key = "posts_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
-                Spacer(Modifier.height(16.dp))
-            }
+        }
+        item(key = "posts_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
+            Spacer(Modifier.height(16.dp))
         }
 
         // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings

@@ -439,3 +439,7 @@ dependencies {
     coreLibraryDesugaring(libs.android.desugaring)
     debugImplementation(compose.uiTooling)
 }
+
+configurations.configureEach {
+    exclude(group = "org.jetbrains.compose.material", module = "material")
+}
