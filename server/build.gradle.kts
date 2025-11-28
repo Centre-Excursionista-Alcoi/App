@@ -132,7 +132,10 @@ dependencies {
 
 fun Manifest.configureAppManifest() {
     attributes(
-        "Implementation-Version" to version
+        "Implementation-Version" to versionCode,
+        "Implementation-Vendor" to "Centre Excursionista d'Alcoi",
+        "Specification-Title" to "Centre Excursionista d'Alcoi Server",
+        "Specification-Version" to version,
     )
 }
 
