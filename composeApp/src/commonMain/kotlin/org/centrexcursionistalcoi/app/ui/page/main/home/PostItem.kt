@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Feed
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.*
@@ -40,6 +41,7 @@ fun PostItem(post: ReferencedPost) {
     val uriHandler = LocalUriHandler.current
 
     FeedItem(
+        icon = Icons.AutoMirrored.Filled.Feed,
         title = post.title,
         dateString = post.localizedDate(),
         content = post.content,

@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.ui.page.main.home
 
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +21,7 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 fun EventItem(event: ReferencedEvent) {
     FeedItem(
+        icon = Icons.Default.Event,
         title = event.title,
         dateString = event.localizedDateRange(),
         content = event.description,
