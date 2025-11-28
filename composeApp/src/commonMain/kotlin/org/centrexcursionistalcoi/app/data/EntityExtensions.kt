@@ -18,10 +18,9 @@ import kotlin.time.Instant
 
 private val log = logging()
 
-@OptIn(InternalSerializationApi::class)
-fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
+fun Map<String, Any?>.toFormData(): List<PartData> {
     return formData {
-        toMap().forEach { (key, value) ->
+        forEach { (key, value) ->
             when (value) {
                 null -> { /* ignore null values */ }
                 is String -> append(key, value)
@@ -77,4 +76,10 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
             }
         }
     }
+}
+
+
+@OptIn(InternalSerializationApi::class)
+fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
+    return toMap().toFormData()
 }

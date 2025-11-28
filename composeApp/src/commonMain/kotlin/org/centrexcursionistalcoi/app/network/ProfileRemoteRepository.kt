@@ -1,8 +1,10 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
+import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -11,6 +13,9 @@ import io.ktor.http.parameters
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.UserInsurance
+import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
@@ -20,6 +25,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.centrexcursionistalcoi.app.storage.settings
 
@@ -83,18 +89,22 @@ object ProfileRemoteRepository {
         policyNumber: String,
         validFrom: LocalDate,
         validTo: LocalDate,
+        document: PlatformFile?,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val response = httpClient.submitForm(
+        val documentFile = document?.let { InMemoryFileAllocator.put(it) }
+
+        val response = httpClient.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
-                append("insuranceCompany", company)
-                append("policyNumber", policyNumber)
-                append("validFrom", validFrom.toString())
-                append("validTo", validTo.toString())
-            }
+            formData = mapOf(
+                "insuranceCompany" to company,
+                "policyNumber" to policyNumber,
+                "validFrom" to validFrom.toString(),
+                "validTo" to validTo.toString(),
+                "document" to documentFile,
+            ).toFormData()
         ) {
-            progressNotifier?.let { monitorUploadProgress(it) }
+            monitorUploadProgress(progressNotifier)
         }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
     }
