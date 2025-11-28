@@ -22,7 +22,7 @@ fun ReferencedEvent.localizedDateRange(): String {
     val startStr = localizedInstantAsDateTime(start)
     val endStr = end?.let { localizedInstantAsDateTime(it) }
     return if (endStr != null) {
-        stringResource(Res.string.event_date_with_end, startStr)
+        stringResource(Res.string.event_date_with_end, startStr, endStr)
     } else {
         stringResource(Res.string.event_date_no_end, startStr)
     }
