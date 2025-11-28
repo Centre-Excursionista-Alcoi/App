@@ -46,7 +46,6 @@
         <item quantity="one">%1$d item: %2$s</item>
         <item quantity="other">%1$d items: %2$s</item>
     </plurals>
-    <string name="home_posts">Posts</string>
 
     <string name="force_sync">Force Sync</string>
 
