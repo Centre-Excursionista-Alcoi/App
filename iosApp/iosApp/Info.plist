@@ -5,7 +5,7 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.13</string>
+	<string>2.0.14</string>
 	<key>CFBundleURLSchemes</key>
 	<array>
 		<string>cea</string>
