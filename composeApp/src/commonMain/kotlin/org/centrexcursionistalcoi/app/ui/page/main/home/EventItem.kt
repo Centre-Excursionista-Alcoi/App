@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.page.main.home
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Event
@@ -37,6 +39,8 @@ fun EventItem(event: ReferencedEvent) {
                     canBeMaximized = true,
                 )
             }
+
+            Spacer(Modifier.height(56.dp))
         }
     )
 }
