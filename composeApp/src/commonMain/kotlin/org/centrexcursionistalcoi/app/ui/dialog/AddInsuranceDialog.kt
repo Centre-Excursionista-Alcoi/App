@@ -17,11 +17,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.*
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitType
 import kotlinx.coroutines.Job
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilePicker
 import org.jetbrains.compose.resources.stringResource
 
-typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) -> Job
+typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) -> Job
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +36,7 @@ fun AddInsuranceDialog(
     var policyNumber by remember { mutableStateOf("") }
     var validFrom by remember { mutableStateOf("") }
     var validTo by remember { mutableStateOf("") }
+    var document by remember { mutableStateOf<PlatformFile?>(null) }
 
     val isFromValid = try {
         LocalDate.parse(validFrom)
@@ -116,13 +120,28 @@ fun AddInsuranceDialog(
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                FormFilePicker(
+                    label = stringResource(Res.string.insurance_document),
+                    file = document,
+                    onFilePicked = { document = it },
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    pickerType = FileKitType.File("pdf"),
+                )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     isLoading = true
-                    onCreate(insuranceCompany, policyNumber, LocalDate.parse(validFrom), LocalDate.parse(validTo)).invokeOnCompletion {
+                    onCreate(
+                        insuranceCompany,
+                        policyNumber,
+                        LocalDate.parse(validFrom),
+                        LocalDate.parse(validTo),
+                        document,
+                    ).invokeOnCompletion {
                         isLoading = false
                         if (it == null) onDismissRequest()
                     }

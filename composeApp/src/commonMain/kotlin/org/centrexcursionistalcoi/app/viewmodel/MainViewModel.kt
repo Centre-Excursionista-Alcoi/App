@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.diamondedge.logging.logging
+import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,8 +83,8 @@ class MainViewModel: ViewModel() {
         _notificationPermissionResult.value = null
     }
 
-    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate) = launch {
-        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo)
+    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) = launch {
+        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, document)
         ProfileRemoteRepository.synchronize()
     }
 
