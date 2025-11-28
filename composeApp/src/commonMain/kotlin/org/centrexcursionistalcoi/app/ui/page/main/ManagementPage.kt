@@ -31,8 +31,11 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
 import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
@@ -50,6 +53,69 @@ const val MANAGEMENT_PAGE_USERS = 2
 const val MANAGEMENT_PAGE_POSTS = 3
 const val MANAGEMENT_PAGE_EVENTS = 4
 const val MANAGEMENT_PAGE_INVENTORY = 5
+
+private sealed class ManagementPage(
+    private val key: String,
+    val tabData: @Composable () -> TabData,
+) {
+    object Lendings : ManagementPage(
+        key = "lendings",
+        tabData = { TabData.fromResources(Res.string.management_lendings, Icons.Default.Inventory2) }
+    )
+
+    object Departments : ManagementPage(
+        key = "departments",
+        tabData = { TabData.fromResources(Res.string.management_departments, Icons.Default.Category) }
+    )
+
+    object Users : ManagementPage(
+        key = "users",
+        tabData = { TabData.fromResources(Res.string.management_users, Icons.Default.Face) }
+    )
+
+    object Posts : ManagementPage(
+        key = "posts",
+        tabData = { TabData.fromResources(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed) }
+    )
+
+    object Events : ManagementPage(
+        key = "events",
+        tabData = { TabData.fromResources(Res.string.management_events, Icons.Default.Event) }
+    )
+
+    object Inventory : ManagementPage(
+        key = "inventory",
+        tabData = { TabData.fromResources(Res.string.management_inventory,  Icons.Default.Inventory) }
+    )
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ManagementPage) return false
+        if (key != other.key) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return key.hashCode()
+    }
+
+
+    companion object {
+        val all = listOfNotNull(
+            Lendings,
+            Departments,
+            Users,
+            Posts,
+            Events.takeIf { EventsRemoteRepository.endpointSupported() },
+            Inventory,
+        )
+
+        fun List<ManagementPage>.forIndex(index: Int): ManagementPage {
+            return this[index]
+        }
+    }
+}
 
 @Composable
 fun ManagementPage(
@@ -169,14 +235,7 @@ private fun ManagementPage(
 
     AdaptiveTabRow(
         selectedTabIndex = pagerState.currentPage,
-        tabs = listOf(
-            TabData.fromResources(Res.string.management_lendings, Icons.Default.Inventory2),
-            TabData.fromResources(Res.string.management_departments, Icons.Default.Category),
-            TabData.fromResources(Res.string.management_users, Icons.Default.Face),
-            TabData.fromResources(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed),
-            TabData.fromResources(Res.string.management_events, Icons.Default.Event),
-            TabData.fromResources(Res.string.management_inventory,  Icons.Default.Inventory),
-        ),
+        tabs = ManagementPage.all.map { it.tabData() },
         onTabSelected = { index ->
             scope.launch { pagerState.animateScrollToPage(index) }
         },
@@ -184,9 +243,10 @@ private fun ManagementPage(
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-    ) { page ->
+    ) { index ->
+        val page = ManagementPage.all.forIndex(index)
         when (page) {
-            MANAGEMENT_PAGE_LENDINGS -> LendingsListView(
+            ManagementPage.Lendings -> LendingsListView(
                 windowSizeClass,
                 snackbarHostState,
                 lendings,
@@ -197,15 +257,15 @@ private fun ManagementPage(
                 onReceiveRequested
             )
 
-            MANAGEMENT_PAGE_DEPARTMENTS -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
+            ManagementPage.Departments -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
 
-            MANAGEMENT_PAGE_USERS -> UsersListView(windowSizeClass, users, departments, onPromote)
+            ManagementPage.Users -> UsersListView(windowSizeClass, users, departments, onPromote)
 
-            MANAGEMENT_PAGE_POSTS -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
+            ManagementPage.Posts -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 
-            MANAGEMENT_PAGE_EVENTS -> EventsListView(windowSizeClass, events, departments, onCreateEvent, onUpdateEvent, onDeleteEvent)
+            ManagementPage.Events -> EventsListView(windowSizeClass, events, departments, onCreateEvent, onUpdateEvent, onDeleteEvent)
 
-            MANAGEMENT_PAGE_INVENTORY -> InventoryItemTypesListView(
+            ManagementPage.Inventory -> InventoryItemTypesListView(
                 windowSizeClass,
                 selectedItemId,
                 inventoryItemTypes,

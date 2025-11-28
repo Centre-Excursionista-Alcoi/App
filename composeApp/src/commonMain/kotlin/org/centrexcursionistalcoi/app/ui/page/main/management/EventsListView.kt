@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
@@ -46,9 +49,14 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
+import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
+import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
+import org.centrexcursionistalcoi.app.ui.reusable.form.FormSwitchRow
 import org.centrexcursionistalcoi.app.ui.utils.optional
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +76,7 @@ fun EventsListView(
         itemDisplayName = { it.title },
         itemSupportingContent = { Text(it.localizedDateRange()) },
         emptyItemsText = stringResource(Res.string.management_no_events),
-        isCreatingSupported = false, // todo: implement creation
+        isCreatingSupported = true,
         createTitle = stringResource(Res.string.management_event_create),
         onDeleteRequest = onDelete,
         editItemContent = { event ->
@@ -121,10 +129,54 @@ fun EventsListView(
                 value = place,
                 onValueChange = { place = it },
                 label = { Text(stringResource(Res.string.event_place)) },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            place = "Centre Excursionista Alcoi\nDiego Fernàndez Montañés, 3. Alcoi 03801 (Alacant)"
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.icon_monochrome),
+                            contentDescription = stringResource(Res.string.event_place_cea),
+                            tint = LocalContentColor.current,
+                        )
+                    }
+                },
+            )
+
+            DateTimePickerFormField(
+                value = start,
+                onValueChange = { start = it },
+                label = stringResource(Res.string.event_start),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                enabled = !isLoading,
+            )
+            DateTimePickerFormField(
+                value = end,
+                onValueChange = { end = it },
+                label = stringResource(Res.string.event_end).optional(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                enabled = !isLoading,
+            )
+
+            OutlinedTextField(
+                value = maxPeople,
+                onValueChange = { value ->
+                    value.toIntOrNull() ?: return@OutlinedTextField
+                    maxPeople = value
+                },
+                label = { Text(stringResource(Res.string.event_max_people).optional()) },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
-            // TODO: start, end date-time pickers, max people and requires confirmation fields
+            FormSwitchRow(
+                checked = requiresConfirmation,
+                onCheckedChange = { requiresConfirmation = it },
+                label = stringResource(Res.string.event_requires_confirmation),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                enabled = !isLoading,
+            )
 
             DropdownField(
                 value = department,
@@ -157,7 +209,17 @@ fun EventsListView(
                 onClick = {
                     isLoading = true
                     val job = if (event == null) {
-                        onCreate(start!!, end, place, title, description, maxPeople, requiresConfirmation, department, image) {
+                        onCreate(
+                            start!!,
+                            end,
+                            place,
+                            title,
+                            description,
+                            maxPeople,
+                            requiresConfirmation,
+                            department,
+                            image
+                        ) {
                             progress = it
                         }
                     } else {
@@ -199,7 +261,10 @@ fun EventsListView(
         )
         Row {
             Text(
-                text = stringResource(Res.string.event_by, event.department?.displayName ?: stringResource(Res.string.event_department_generic)),
+                text = stringResource(
+                    Res.string.event_by,
+                    event.department?.displayName ?: stringResource(Res.string.event_department_generic)
+                ),
             )
             Text(" - ")
             Text(

@@ -448,6 +448,8 @@
     <string name="months_november">November</string>
     <string name="months_december">December</string>
 
+    <string name="time_picker_title">Pick a Time</string>
+
     <string name="management_post_create">Create Post</string>
     <string name="post_by">By %1$s</string>
     <string name="post_title">Title</string>
@@ -475,5 +477,8 @@
     <string name="event_description">Description</string>
     <string name="event_department">Department</string>
     <string name="event_place">Place</string>
+    <string name="event_place_cea">Centre Excursionista d'Alcoi</string>
+    <string name="event_start">Start</string>
+    <string name="event_end">End</string>
 
 </resources>
