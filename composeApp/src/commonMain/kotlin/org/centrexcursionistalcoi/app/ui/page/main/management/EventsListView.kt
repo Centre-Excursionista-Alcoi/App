@@ -32,6 +32,7 @@ import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import com.mikepenz.markdown.m3.Markdown
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -286,11 +287,11 @@ fun EventsListView(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.People,
-                    contentDescription = stringResource(Res.string.event_max_people, it),
+                    contentDescription = stringResource(Res.string.event_max_people_value, it),
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 Text(
-                    text = stringResource(Res.string.event_max_people, it),
+                    text = stringResource(Res.string.event_max_people_value, it),
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
@@ -303,9 +304,8 @@ fun EventsListView(
         }
 
         event.description?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
+            Markdown(
+                content = it,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }

@@ -470,7 +470,8 @@
     <string name="event_department_generic">Directive</string>
     <string name="event_date_no_end">Date: %1$s</string>
     <string name="event_date_with_end">Date: from %1$s to %2$s</string>
-    <string name="event_max_people">Max people: %1$d</string>
+    <string name="event_max_people_value">Max people: %1$d</string>
+    <string name="event_max_people">Max people:</string>
     <string name="event_requires_confirmation">Requires assistance confirmation.</string>
     <string name="event_title">Title</string>
     <string name="event_description">Description</string>
@@ -479,5 +480,6 @@
     <string name="event_place_cea">Centre Excursionista d'Alcoi</string>
     <string name="event_start">Start</string>
     <string name="event_end">End</string>
+    <string name="event_add_to_calendar">Add to Calendar</string>
 
 </resources>

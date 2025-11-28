@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.main.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -19,8 +20,7 @@ fun FeedItem(
     title: String,
     dateString: String,
     content: String?,
-    publisherText: String,
-    dialogBelowTitle: @Composable ColumnScope.() -> Unit = {},
+    dialogHeadline: @Composable ColumnScope.() -> Unit,
     dialogBottom: @Composable ColumnScope.() -> Unit = {},
 ) {
     var showingDialog by remember { mutableStateOf(false) }
@@ -28,31 +28,23 @@ fun FeedItem(
         ModalBottomSheet(
             onDismissRequest = { showingDialog = false },
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp),
-            )
-            Row(modifier = Modifier.padding(horizontal = 8.dp)) {
+            Column(Modifier.padding(8.dp)) {
                 Text(
-                    text = publisherText,
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
                 )
-                Text(" - ")
-                Text(
-                    text = dateString,
-                )
-            }
-            dialogBelowTitle()
+                dialogHeadline()
 
-            if (content != null) {
-                Markdown(
-                    content = content,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                    imageTransformer = Coil3ImageTransformerImpl,
-                )
-            }
+                if (content != null) {
+                    Markdown(
+                        content = content,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        imageTransformer = Coil3ImageTransformerImpl,
+                    )
+                }
 
-            dialogBottom()
+                dialogBottom()
+            }
         }
     }
 

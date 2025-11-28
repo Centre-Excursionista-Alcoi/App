@@ -45,8 +45,19 @@ fun PostItem(post: ReferencedPost) {
         title = post.title,
         dateString = post.localizedDate(),
         content = post.content,
-        publisherText = stringResource(Res.string.post_by, post.department?.displayName ?: stringResource(Res.string.post_department_generic)),
-        dialogBelowTitle = {
+        dialogHeadline = {
+            val publisherText = stringResource(Res.string.post_by, post.department?.displayName ?: stringResource(Res.string.post_department_generic))
+
+            Row(modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(
+                    text = publisherText,
+                )
+                Text(" - ")
+                Text(
+                    text = post.localizedDate(),
+                )
+            }
+
             post.link?.let { link ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).clickable { uriHandler.openUri(link) },
