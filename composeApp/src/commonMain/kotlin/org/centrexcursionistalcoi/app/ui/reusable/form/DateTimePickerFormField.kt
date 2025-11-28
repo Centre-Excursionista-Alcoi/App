@@ -9,8 +9,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.isInputValid
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,51 +24,74 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.*
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.char
 import org.centrexcursionistalcoi.app.ui.reusable.clickInteractionSource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun DatePickerFormField(
-    value: LocalDate?,
-    onValueChange: (LocalDate) -> Unit,
+fun DateTimePickerFormField(
+    value: LocalDateTime?,
+    onValueChange: (LocalDateTime) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    noValueString: String = "----/--/--",
+    noValueString: String = "----/--/-- --:--",
     selectableDates: SelectableDates = DatePickerDefaults.AllDates,
-    formatter: DateTimeFormat<LocalDate> = LocalDate.Formats.ISO,
-    /**
-     * If provided, allows selecting a date range when no date is selected.
-     */
-    onRangeSelected: ((ClosedRange<LocalDate>) -> Unit)? = null,
+    formatter: DateTimeFormat<LocalDateTime> = LocalDateTime.Format {
+        year()
+        char('/')
+        monthNumber()
+        char('/')
+        day()
+        char(' ')
+
+        hour()
+        char(':')
+        minute()
+    },
 ) {
-    var showingDialog by remember { mutableStateOf(false) }
-    val showingRange = showingDialog && onRangeSelected != null && value == null
-    val showingPicker = showingDialog && !showingRange
+    var date by remember(value) { mutableStateOf(value?.date) }
+    var time by remember(value) { mutableStateOf(value?.time) }
+
+    var showingDateDialog by remember { mutableStateOf(false) }
+    var showingTimeDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(enabled) {
         if (!enabled) {
-            showingDialog = false
+            showingDateDialog = false
+            showingTimeDialog = false
         }
     }
 
-    if (showingPicker) {
+    fun onValueChange() {
+        date?.let { date ->
+            time?.let { time ->
+                onValueChange(LocalDateTime(date, time))
+            }
+        }
+    }
+
+    if (showingDateDialog) {
         val state = rememberDatePickerState(
-            initialSelectedDateMillis = value?.toEpochDays()?.times(24 * 60 * 60 * 1000),
+            initialSelectedDateMillis = date?.toEpochDays()?.times(24 * 60 * 60 * 1000),
             selectableDates = selectableDates,
         )
 
         DatePickerDialog(
-            onDismissRequest = { showingDialog = false },
+            onDismissRequest = { showingDateDialog = false },
             confirmButton = {
                 TextButton(
                     enabled = state.selectedDateMillis != null,
                     onClick = {
                         val selectedDate = LocalDate.fromEpochDays(state.selectedDateMillis!! / (24 * 60 * 60 * 1000))
-                        onValueChange(selectedDate)
-                        showingDialog = false
+                        date = selectedDate
+                        onValueChange()
+                        showingDateDialog = false
+                        showingTimeDialog = true
                     }
                 ) {
                     Text(stringResource(Res.string.confirm))
@@ -77,29 +104,30 @@ fun DatePickerFormField(
         }
     }
 
-    if (showingRange) {
-        val state = rememberDateRangePickerState(
-            selectableDates = selectableDates,
+    if (showingTimeDialog) {
+        val state = rememberTimePickerState(
+            initialHour = time?.hour ?: 0,
+            initialMinute = time?.minute ?: 0,
         )
 
-        DatePickerDialog(
-            onDismissRequest = { showingDialog = false },
+        TimePickerDialog(
+            onDismissRequest = { showingTimeDialog = false },
             confirmButton = {
                 TextButton(
-                    enabled = state.selectedStartDateMillis != null && state.selectedEndDateMillis != null,
+                    enabled = state.isInputValid,
                     onClick = {
-                        val selectedStartDate = LocalDate.fromEpochDays(state.selectedStartDateMillis!! / (24 * 60 * 60 * 1000))
-                        val selectedEndDate = LocalDate.fromEpochDays(state.selectedEndDateMillis!! / (24 * 60 * 60 * 1000))
-                        onRangeSelected(selectedStartDate..selectedEndDate)
-                        showingDialog = false
+                        time = LocalTime(state.hour, state.minute)
+                        onValueChange()
+                        showingTimeDialog = false
                     }
                 ) {
                     Text(stringResource(Res.string.confirm))
                 }
-            }
+            },
+            title = { Text(stringResource(Res.string.time_picker_title)) },
         ) {
-            DateRangePicker(
-                state = state
+            TimePicker(
+                state = state,
             )
         }
     }
@@ -112,7 +140,7 @@ fun DatePickerFormField(
         modifier = modifier,
         label = { Text(label) },
         interactionSource = clickInteractionSource {
-            showingDialog = true
+            showingDateDialog = true
         },
     )
 }

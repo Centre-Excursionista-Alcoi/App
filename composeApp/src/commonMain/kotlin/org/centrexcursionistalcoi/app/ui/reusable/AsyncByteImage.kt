@@ -1,24 +1,42 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.diamondedge.logging.logging
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
+import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.jetbrains.compose.resources.stringResource
 
 private val log = logging()
 
@@ -28,6 +46,7 @@ fun AsyncByteImage(
     contentDescription: String? = null,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    canBeMaximized: Boolean = false,
 ) {
     Box(modifier) {
         if (bytes == null) {
@@ -69,10 +88,46 @@ fun AsyncByteImage(
 
                 else -> {
                     // Success
+                    var showingDialog by remember { mutableStateOf(false) }
+                    if (showingDialog) {
+                        Dialog(
+                            onDismissRequest = { showingDialog = false },
+                            properties = DialogProperties(
+                                usePlatformDefaultWidth = false
+                            )
+                        ) {
+                            val zoomState = rememberZoomState(contentSize = painter.intrinsicSize)
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                IconButton(
+                                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp).zIndex(1f),
+                                    onClick = { showingDialog = false },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = stringResource(Res.string.close),
+                                        tint = Color.White
+                                    )
+                                }
+
+                                Image(
+                                    painter = painter,
+                                    contentDescription = contentDescription,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.fillMaxSize().zoomable(zoomState)
+                                )
+                            }
+                        }
+                    }
+
                     Image(
                         painter = painter,
                         contentDescription = contentDescription,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().then(
+                            if (canBeMaximized)
+                                Modifier.clickable { showingDialog = true }
+                            else
+                                Modifier
+                        ),
                         contentScale = contentScale,
                     )
                 }

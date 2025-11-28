@@ -14,6 +14,7 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import kotlin.time.Instant
 
 private val log = logging()
 
@@ -28,6 +29,7 @@ fun <Id: Any> Entity<Id>.toFormData(): List<PartData> {
                 is Number -> append(key, value)
                 is Boolean -> append(key, value)
                 is ByteArray -> append(key, value)
+                is Instant -> append(key, value.toEpochMilliseconds())
                 is List<*> -> {
                     if (value.isNotEmpty()) {
                         @Suppress("UNCHECKED_CAST")

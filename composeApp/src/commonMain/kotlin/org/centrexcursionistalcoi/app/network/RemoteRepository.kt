@@ -70,19 +70,25 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     // Remove null fields to avoid issues with missing fields in the local model
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
 
-    private suspend fun endpointSupported(): Boolean {
+    /**
+     * Checks if the endpoint is supported by the connected server.
+     *
+     * Uses [availableSinceVersionCode] and [Server.info] to determine compatibility.
+     * @return `true` if the endpoint is supported, `false` otherwise.
+     */
+    fun endpointSupported(): Boolean {
         availableSinceVersionCode?.let { availableSince ->
-            try {
-                val serverInfo = httpClient.get("/info").bodyAsJson(ServerInfo.serializer())
-                val versionCode = serverInfo.version.code
+            val info = Server.info
+            if (info == null) {
+                // versionCode was added on version 2.0.14, so older servers may not have it. The server is considered not compatible.
+                log.e { "Could not determine server version. Assuming $name endpoint is not supported." }
+                return false
+            } else {
+                val versionCode = info.version.code
                 if (versionCode < availableSince) {
                     log.w { "$name endpoint is not available in version $versionCode (available since $availableSince)" }
                     return false
                 }
-            } catch (e: SerializationException) {
-                // versionCode was added on version 2.0.14, so older servers may not have it. The server is considered not compatible.
-                log.e(e) { "Could not determine server version. Assuming $name endpoint is not supported." }
-                return false
             }
         }
         return true

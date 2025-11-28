@@ -69,6 +69,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
@@ -115,6 +116,7 @@ fun MainScreen(
     val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
     val posts by model.posts.collectAsState()
+    val events by model.events.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
     val shoppingList by model.shoppingList.collectAsState()
     val notificationPermissionResult by model.notificationPermissionResult.collectAsState()
@@ -153,6 +155,7 @@ fun MainScreen(
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             inventoryItems = inventoryItems,
             posts = posts,
+            events = events,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -229,6 +232,8 @@ private fun MainScreenContent(
     inventoryItems: List<ReferencedInventoryItem>?,
 
     posts: List<ReferencedPost>?,
+
+    events: List<ReferencedEvent>?,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
@@ -445,6 +450,7 @@ private fun MainScreenContent(
                         onItemTypeDetailsRequested,
                         inventoryItems,
                         posts,
+                        events,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
@@ -488,6 +494,7 @@ private fun MainScreenContent(
                             onItemTypeDetailsRequested,
                             inventoryItems,
                             posts,
+                            events,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
@@ -544,6 +551,8 @@ private fun MainScreenPagerContent(
 
     posts: List<ReferencedPost>?,
 
+    events: List<ReferencedEvent>? = null,
+
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
@@ -564,6 +573,7 @@ private fun MainScreenPagerContent(
                 onApproveDepartmentJoinRequest,
                 onDenyDepartmentJoinRequest,
                 users,
+                events,
             )
 
             Page.LENDINGS -> LendingsPage(
@@ -592,6 +602,7 @@ private fun MainScreenPagerContent(
                 inventoryItemTypesCategories,
                 inventoryItems,
                 posts,
+                events,
             )
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 

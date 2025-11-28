@@ -6,7 +6,9 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlin.uuid.Uuid
+import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
@@ -16,6 +18,7 @@ import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
@@ -159,6 +162,74 @@ class ManagementViewModel : ViewModel() {
     fun delete(post: ReferencedPost) = launch {
         doAsync {
             PostsRemoteRepository.delete(post.id)
+        }
+    }
+
+    fun createEvent(
+        start: LocalDateTime,
+        end: LocalDateTime?,
+        place: String,
+        title: String,
+        description: RichTextState,
+        maxPeople: String,
+        requiresConfirmation: Boolean,
+        department: Department?,
+        image: PlatformFile?,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
+        doAsync {
+            val descriptionMarkdown = description.toMarkdown()
+
+            EventsRemoteRepository.create(
+                start,
+                end,
+                place,
+                title,
+                descriptionMarkdown,
+                maxPeople,
+                requiresConfirmation,
+                department?.id,
+                image,
+                progressNotifier
+            )
+        }
+    }
+
+    fun updateEvent(
+        eventId: Uuid,
+        start: LocalDateTime?,
+        end: LocalDateTime?,
+        place: String?,
+        title: String?,
+        description: RichTextState?,
+        maxPeople: String?,
+        requiresConfirmation: Boolean?,
+        department: Department?,
+        image: PlatformFile?,
+        progressNotifier: (Progress) -> Unit
+    ) = launch {
+        doAsync {
+            val descriptionMarkdown = description?.toMarkdown()
+
+            EventsRemoteRepository.update(
+                eventId,
+                start,
+                end,
+                place,
+                title,
+                descriptionMarkdown,
+                maxPeople,
+                requiresConfirmation,
+                department?.id,
+                image,
+                progressNotifier
+            )
+        }
+    }
+
+    fun delete(post: ReferencedEvent) = launch {
+        doAsync {
+            EventsRemoteRepository.delete(post.id)
         }
     }
 }

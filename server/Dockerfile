@@ -6,7 +6,6 @@ ENV GRADLE_USER_HOME=/home/gradle/cache_home
 COPY *.gradle.kts gradle.properties /home/gradle/app/
 COPY server/build.gradle.kts gradle.properties /home/gradle/app/server/
 COPY gradle /home/gradle/app/gradle
-COPY version.properties /home/gradle/app/
 
 # Since we have excluded the composeApp source folder, we have to use a modified version of the build.gradle.kts file,
 # which doesn't use any Android/Compose dependencies.
@@ -38,6 +37,7 @@ RUN sed -i '/^include(":composeApp")$/d' /home/gradle/app/settings.gradle.kts
 
 # Create a dummy version.properties file
 RUN echo 'VERSION_NAME=0.0.0' >> /home/gradle/app/version.properties
+RUN echo 'VERSION_CODE=0' >> /home/gradle/app/version.properties
 
 WORKDIR /home/gradle/app
 RUN gradle clean build -i --stacktrace
