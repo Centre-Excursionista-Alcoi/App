@@ -573,6 +573,7 @@ private fun MainScreenPagerContent(
                 onApproveDepartmentJoinRequest,
                 onDenyDepartmentJoinRequest,
                 users,
+                events,
             )
 
             Page.LENDINGS -> LendingsPage(
