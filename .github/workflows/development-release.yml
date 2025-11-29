@@ -199,7 +199,7 @@ jobs:
     needs: [ increase_version_code, check_changes ]
     # Run if 'app' filter matched
     if: ${{ needs.check_changes.outputs.app == 'true' }}
-    runs-on: macos-14
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v4
