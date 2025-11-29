@@ -31,11 +31,13 @@ jobs:
         with:
           filters: |
             app:
+              - '.github/workflows/development-release.yml'
               - 'composeApp/**'
               - '*.gradle.kts'
               - '*.properties'
               - 'gradle/**'
             server:
+              - '.github/workflows/development-release.yml'
               - 'server/**'
               - '*.gradle.kts'
               - '*.properties'
@@ -246,11 +248,6 @@ jobs:
           # We use github.run_number to ensure every upload is unique.
           # Apple REJECTS uploads with duplicate build numbers.
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" iosApp/iosApp/Info.plist
-
-      # --- Build & Archive ---
-      # Explicit KMP Build first to ensure frameworks are ready
-      - name: Build KMP Framework
-        run: ./gradlew :shared:embedAndSignAppleFrameworkForXcode
 
       - name: Archive iOS App
         run: |
