@@ -338,7 +338,7 @@ jobs:
           echo "Uploading to App Store Connect..."
           xcrun altool --upload-app \
             --type ios \
-            --file "build/output/iosApp.ipa" \
+            --file "$PWD/build/output/iosApp.ipa" \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
 
