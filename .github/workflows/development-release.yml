@@ -322,6 +322,13 @@ jobs:
             -exportOptionsPlist iosApp/ExportOptions.plist \
             -exportPath $PWD/build/output
 
+      - name: IPA Artifact
+        id: aab_artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: IPA Artifact
+          path: build/output/*.ipa
+          
       # --- Upload to App Store Connect ---
       - name: Upload to App Store Connect
         env:
@@ -329,6 +336,21 @@ jobs:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
+          # 1. Debug: Print what files were actually exported
+          echo "Listing exported files:"
+          ls -R build/output
+
+          # 2. Find the IPA file path dynamically
+          # This looks inside build/output for any file ending in .ipa
+          IPA_PATH=$(find build/output -name "*.ipa" | head -n 1)
+
+          if [ -z "$IPA_PATH" ]; then
+            echo "Error: No IPA file found in build/output"
+            exit 1
+          fi
+
+          echo "Found IPA at: $IPA_PATH"
+          
           # 1. Create the AuthKey file from the Secret
           mkdir -p ~/.private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$API_KEY_ID.p8
@@ -341,13 +363,6 @@ jobs:
             --file "$PWD/build/output/iosApp.ipa" \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
-
-      # --- (Optional) Attach IPA to GitHub Release ---
-      - name: Upload IPA to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: build/output/iosApp.ipa
 
   # 4. Server Jobs (Only runs if server files changed)
   run_tests:
