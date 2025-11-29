@@ -259,6 +259,7 @@ jobs:
 
       - name: Install CocoaPods
         run: |
+          ./gradlew :composeApp:generateDummyFramework
           cd iosApp
           pod install --repo-update
 
