@@ -22,7 +22,7 @@ jobs:
     name: Check Changed Paths
     runs-on: ubuntu-latest
     outputs:
-      android: ${{ steps.filter.outputs.android }}
+      app: ${{ steps.filter.outputs.app }}
       server: ${{ steps.filter.outputs.server }}
     steps:
       - uses: actions/checkout@v6
@@ -30,7 +30,7 @@ jobs:
         id: filter
         with:
           filters: |
-            android:
+            app:
               - 'composeApp/**'
               - '*.gradle.kts'
               - '*.properties'
@@ -46,7 +46,7 @@ jobs:
     name: Increase Version Code
     needs: check_changes
     runs-on: ubuntu-latest
-    if: ${{ needs.check_changes.outputs.android == 'true' || needs.check_changes.outputs.server == 'true' }}
+    if: ${{ needs.check_changes.outputs.app == 'true' || needs.check_changes.outputs.server == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6 # Note: v5 is not released yet, defaulted to v4
@@ -70,12 +70,12 @@ jobs:
           file_pattern: 'version.properties'
           branch: master
 
-  # 3. Android Jobs (Only runs if android files changed)
+  # 3. Android Jobs (Only runs if app files changed)
   publish_internal_release:
-    name: Publish Internal Release
+    name: Android - Publish Internal Release
     needs: [increase_version_code, check_changes]
-    # Run if 'android' filter matched
-    if: ${{ needs.check_changes.outputs.android == 'true' }}
+    # Run if 'app' filter matched
+    if: ${{ needs.check_changes.outputs.app == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -191,6 +191,144 @@ jobs:
           track: "internal"
           inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed
+
+  publish_testflight_release:
+    name: iOS - Publish Testflight Release
+    needs: [ increase_version_code, check_changes ]
+    # Run if 'app' filter matched
+    if: ${{ needs.check_changes.outputs.app == 'true' }}
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Setup Environment ---
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      # --- Install Signing Assets ---
+      - name: Install Certificate and Profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      # --- Versioning Logic ---
+      - name: Update Version and Build Number
+        run: |
+          # 1. Update Build Number (CFBundleVersion)
+          # We use github.run_number to ensure every upload is unique.
+          # Apple REJECTS uploads with duplicate build numbers.
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" iosApp/iosApp/Info.plist
+
+      # --- Build & Archive ---
+      # Explicit KMP Build first to ensure frameworks are ready
+      - name: Build KMP Framework
+        run: ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+
+      - name: Archive iOS App
+        run: |
+          xcodebuild -workspace iosApp/iosApp.xcworkspace \
+            -scheme iosApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $PWD/build/iosApp.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="CEA App" \
+            DEVELOPMENT_TEAM="UQSVPP37UL" \
+            clean archive
+
+      - name: Generate ExportOptions.plist
+        env:
+          TEAM_ID: "UQSVPP37UL"
+          BUNDLE_ID: "org.centrexcursionistalcoi.app"
+          PROFILE_NAME: "CEA App"
+        run: |
+          cat <<EOF > iosApp/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+          
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+          
+              <key>signingStyle</key>
+              <string>manual</string>
+          
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>$BUNDLE_ID</key>
+                  <string>$PROFILE_NAME</string>
+              </dict>
+          
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $PWD/build/iosApp.xcarchive \
+            -exportOptionsPlist iosApp/ExportOptions.plist \
+            -exportPath $PWD/build/output
+
+      # --- Upload to App Store Connect ---
+      - name: Upload to App Store Connect
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          # 1. Create the AuthKey file from the Secret
+          mkdir -p ~/.private_keys
+          echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$API_KEY_ID.p8
+          
+          # 2. Validate and Upload
+          # 'altool' is the standard command line tool for this provided by Xcode.
+          echo "Uploading to App Store Connect..."
+          xcrun altool --upload-app \
+            --type ios \
+            --file "build/output/iosApp.ipa" \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
+
+      # --- (Optional) Attach IPA to GitHub Release ---
+      - name: Upload IPA to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/output/iosApp.ipa
 
   # 4. Server Jobs (Only runs if server files changed)
   run_tests:
