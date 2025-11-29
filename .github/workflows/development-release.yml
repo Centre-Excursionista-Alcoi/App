@@ -216,6 +216,14 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: iosApp/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       # --- Install Signing Assets ---
       - name: Install Certificate and Profile
         env:
@@ -248,6 +256,11 @@ jobs:
           # We use github.run_number to ensure every upload is unique.
           # Apple REJECTS uploads with duplicate build numbers.
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" iosApp/iosApp/Info.plist
+
+      - name: Install CocoaPods
+        run: |
+          cd iosApp
+          pod install --repo-update
 
       - name: Archive iOS App
         run: |
