@@ -425,4 +425,24 @@
     <string name="update_restart_required_message">L\'actualització s\'ha descarregat. Per favor, reinicia l\'app per aplicar-la.</string>
     <string name="update_restart_required_action">Reinicia</string>
     <string name="personal_info_disabled_reason_invalid_nif">L\'usuari té un NIF invàlid.</string>
+    <string name="management_events">Esdeveniments</string>
+    <string name="insurance_document">Document</string>
+    <string name="management_no_events">Cap esdeveniment</string>
+    <string name="time_picker_title">Tria una hora</string>
+    <string name="file_picker_pick">Tria un arxiu</string>
+    <string name="management_event_create">Crear Esdeveniment</string>
+    <string name="event_by">Organitzat per: %1$s</string>
+    <string name="event_department_generic">Directiva</string>
+    <string name="event_date_no_end">Data: %1$s</string>
+    <string name="event_date_with_end">Data: des de %1$s fins a %2$s</string>
+    <string name="event_max_people">Assistència Màxima:</string>
+    <string name="event_requires_confirmation">Requereix confirmació d\'assistència.</string>
+    <string name="event_title">Títol</string>
+    <string name="event_description">Descripció</string>
+    <string name="event_department">Secció</string>
+    <string name="event_place">Lloc</string>
+    <string name="event_place_cea">Centre Excursionista d\'Alcoi</string>
+    <string name="event_start">Inici</string>
+    <string name="event_end">Final</string>
+    <string name="event_add_to_calendar">Afegir al Calendari</string>
 </resources>
