@@ -1,5 +1,6 @@
 import os
 import os.path as path
+from xcodeUtils import replace_plist_property
 
 root = path.join(path.dirname(__file__), '..')
 versionFile = path.join(root, "version.properties")
@@ -9,6 +10,7 @@ if not path.exists(versionFile):
     exit(1)
 
 new_lines = None
+code = 0
 
 # Read the file line by line, and replace the version code with the next one
 with open(versionFile) as f:
@@ -34,3 +36,7 @@ else:
     os.remove(versionFile)
     with open(versionFile, "w") as f:
         f.writelines(new_lines)
+
+
+plist_file = path.join(root, "iosApp", "iosApp", "Info.plist")
+replace_plist_property(plist_file, "CFBundleVersion", str(code))

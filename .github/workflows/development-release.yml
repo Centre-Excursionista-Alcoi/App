@@ -257,14 +257,6 @@ jobs:
         run: |
           echo -n "$GOOGLE_SERVICE_PLIST_BASE64" | base64 --decode -o iosApp/GoogleService-Info.plist
 
-      # --- Versioning Logic ---
-      - name: Update Version and Build Number
-        run: |
-          # 1. Update Build Number (CFBundleVersion)
-          # We use github.run_number to ensure every upload is unique.
-          # Apple REJECTS uploads with duplicate build numbers.
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" iosApp/iosApp/Info.plist
-
       - name: Install CocoaPods
         run: |
           ./gradlew :composeApp:generateDummyFramework
