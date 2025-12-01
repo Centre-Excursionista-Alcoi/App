@@ -58,8 +58,6 @@ object LocalNotifications {
     }
 
     fun showPushNotification(notification: PushNotification, data: Map<String, *>) {
-        val profile = ProfileRepository.getProfile()
-
         when (notification) {
             is PushNotification.LendingConfirmed -> {
                 // Only show if the notification is for the current user
