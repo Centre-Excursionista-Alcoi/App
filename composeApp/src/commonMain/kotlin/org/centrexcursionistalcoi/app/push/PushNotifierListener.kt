@@ -30,31 +30,42 @@ object PushNotifierListener : NotifierManager.Listener {
 
         try {
             val notification = PushNotification.fromData(data)
-            if (notification is PushNotification.LendingUpdated) {
-                log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
-                BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
-                    input = mapOf(
-                        SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString(),
-                        SyncLendingBackgroundJobLogic.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
-                    ),
-                    logic = SyncLendingBackgroundJobLogic,
-                )
-            } else if (notification is PushNotification.NewPost) {
-                log.d { "Received new post notification. ID: ${notification.postId}" }
-                BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
-                    input = mapOf(
-                        SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
-                    ),
-                    logic = SyncPostBackgroundJobLogic,
-                )
-            } else if (notification is PushNotification.DepartmentJoinRequestUpdated) {
-                log.d { "Received department join request update notification for request ID: ${notification.requestId}" }
-                BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
-                    input = mapOf(
-                        SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
-                    ),
-                    logic = SyncDepartmentBackgroundJobLogic,
-                )
+            when (notification) {
+                is PushNotification.LendingUpdated -> {
+                    log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
+                        input = mapOf(
+                            SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString(),
+                            SyncLendingBackgroundJobLogic.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
+                        ),
+                        logic = SyncLendingBackgroundJobLogic,
+                    )
+                }
+
+                is PushNotification.NewPost -> {
+                    log.d { "Received new post notification. ID: ${notification.postId}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
+                        input = mapOf(
+                            SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
+                        ),
+                        logic = SyncPostBackgroundJobLogic,
+                    )
+                }
+
+                is PushNotification.DepartmentJoinRequestUpdated -> {
+                    log.d { "Received department join request update notification for request ID: ${notification.requestId}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
+                        input = mapOf(
+                            SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                        ),
+                        logic = SyncDepartmentBackgroundJobLogic,
+                    )
+                }
+
+                else -> {
+                    // No background sync needed
+                    log.d { "Received push notification: $notification" }
+                }
             }
 
             LocalNotifications.showPushNotification(notification, data)
