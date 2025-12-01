@@ -58,6 +58,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormSwitchRow
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -287,11 +288,11 @@ fun EventsListView(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.People,
-                    contentDescription = stringResource(Res.string.event_max_people_value, it),
+                    contentDescription = stringResource(Res.string.event_max_people),
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 Text(
-                    text = stringResource(Res.string.event_max_people_value, it),
+                    text = pluralStringResource(Res.plurals.event_max_people_value, it.toInt(), it),
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
