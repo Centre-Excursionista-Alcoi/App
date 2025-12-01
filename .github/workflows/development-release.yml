@@ -69,7 +69,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v7 # Updated to v5 (latest stable)
         with:
           commit_message: 'Updated Version Code'
-          file_pattern: 'version.properties'
+          file_pattern: 'version.properties iosApp/iosApp/Info.plist'
           branch: master
 
   # 3. Android Jobs (Only runs if app files changed)
