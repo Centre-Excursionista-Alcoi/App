@@ -468,11 +468,14 @@
     <string name="update_restart_required_message">The update has been downloaded. Please, restart the app to apply the update.</string>
     <string name="update_restart_required_action">Restart Now</string>
 
+    <string name="date_with_time_range">%1$s, from %2$s to %3$s</string>
+    <string name="date_with_time">%1$s at %2$s</string>
+    <string name="date_from">From: %1$s</string>
+    <string name="date_until">Until: %1$s</string>
+
     <string name="management_event_create">Create Event</string>
     <string name="event_by">Organized by: %1$s</string>
     <string name="event_department_generic">Directive</string>
-    <string name="event_date_no_end">Date: %1$s</string>
-    <string name="event_date_with_end">Date: from %1$s to %2$s</string>
     <plurals name="event_max_people_value">
         <item quantity="one">Max people: %1$d person</item>
         <item quantity="other">Max people: %1$d people</item>

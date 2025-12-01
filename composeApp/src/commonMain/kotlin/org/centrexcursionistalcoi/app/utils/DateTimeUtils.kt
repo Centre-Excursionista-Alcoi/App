@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.utils
 
 import androidx.compose.runtime.Composable
 import cea_app.composeapp.generated.resources.*
+import kotlinx.datetime.LocalDate
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -48,14 +49,14 @@ val MonthNames.Companion.localizedNames: MonthNames
 
 @Composable
 fun localizedInstantAsDateTime(instant: Instant): String {
+    return localizedDateTime(instant.toLocalDateTime())
+}
+
+@Composable
+fun localizedLocalDate(date: LocalDate): String {
     val localizedDayOfWeekNames = DayOfWeekNames.localizedNames
     val localizedMonthNames = MonthNames.localizedNames
-    val format = LocalDateTime.Format {
-        hour()
-        char(':')
-        minute()
-        char(' ')
-
+    val format = LocalDate.Format {
         dayOfWeek(localizedDayOfWeekNames)
         chars(", ")
         day()
@@ -64,5 +65,38 @@ fun localizedInstantAsDateTime(instant: Instant): String {
         char(' ')
         year()
     }
-    return instant.toLocalDateTime(TimeZone.currentSystemDefault()).format(format)
+    return date.format(format)
 }
+
+@Composable
+fun localizedDateWithTime(date: LocalDate, time: LocalTime): String {
+    val localizedDate = localizedLocalDate(date)
+    return stringResource(Res.string.date_with_time, localizedDate, time.toString())
+}
+
+@Composable
+fun localizedDateTime(dateTime: LocalDateTime): String {
+    return localizedDateWithTime(dateTime.date, dateTime.time)
+}
+
+@Composable
+fun localizedDateWithTimeRange(date: LocalDate, fromTime: LocalTime, toTime: LocalTime): String {
+    val localizedDate = localizedLocalDate(date)
+    return stringResource(Res.string.date_with_time_range, localizedDate, fromTime.toString(), toTime.toString())
+}
+
+/**
+ * Returns true if this [Instant] occurs on the same calendar day as [other] in the specified [timeZone].
+ */
+fun Instant.isSameDayAs(other: Instant, timeZone: TimeZone = TimeZone.currentSystemDefault()): Boolean {
+    val thisDateTime = this.toLocalDateTime(timeZone)
+    val otherDateTime = other.toLocalDateTime(timeZone)
+    return thisDateTime.year == otherDateTime.year &&
+        thisDateTime.month == otherDateTime.month &&
+        thisDateTime.day == otherDateTime.day
+}
+
+/**
+ * Converts this [Instant] to a [LocalDateTime] in the system's current default time zone.
+ */
+fun Instant.toLocalDateTime() = this.toLocalDateTime(TimeZone.currentSystemDefault())
