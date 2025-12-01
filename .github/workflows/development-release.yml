@@ -202,7 +202,7 @@ jobs:
     runs-on: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # --- Setup Environment ---
       - name: Setup Gradle
@@ -217,7 +217,7 @@ jobs:
           cache: 'gradle'
 
       - name: Cache CocoaPods
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: iosApp/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
