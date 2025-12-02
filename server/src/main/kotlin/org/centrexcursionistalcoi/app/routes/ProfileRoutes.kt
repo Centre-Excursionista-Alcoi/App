@@ -2,6 +2,9 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -34,6 +37,7 @@ import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.jetbrains.exposed.v1.core.and
@@ -120,31 +124,48 @@ fun Route.profileRoutes() {
     }
     post("/profile/insurances") {
         val session = getUserSessionOrFail() ?: return@post
+        assertContentType() ?: return@post
 
-        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
+        var insuranceCompany: String? = null
+        var policyNumber: String? = null
+        var validFrom: String? = null
+        var validTo: String? = null
+        val document = FileRequestData()
 
-        val parameters = call.receiveParameters()
-        val insuranceCompany = parameters["insuranceCompany"]
-        val policyNumber = parameters["policyNumber"]
-        val validFrom = parameters["validFrom"]
-        val validTo = parameters["validTo"]
+        call.receiveMultipart().forEachPart { partData ->
+            if (partData is PartData.FormItem) {
+                when (partData.name) {
+                    "insuranceCompany" -> insuranceCompany = partData.value
+                    "policyNumber" -> policyNumber = partData.value
+                    "validFrom" -> validFrom = partData.value
+                    "validTo" -> validTo = partData.value
+                    "document" -> document.populate(partData)
+                }
+            } else if (partData is PartData.FileItem) {
+                when (partData.name) {
+                    "document" -> document.populate(partData)
+                }
+            }
+        }
 
-        if (insuranceCompany.isNullOrBlank()) return@post call.respondText("Insurance company is required", status = HttpStatusCode.BadRequest)
-        if (policyNumber.isNullOrBlank()) return@post call.respondText("Policy number is required", status = HttpStatusCode.BadRequest)
-        if (validFrom.isNullOrBlank()) return@post call.respondText("Valid until date is required", status = HttpStatusCode.BadRequest)
-        if (validTo.isNullOrBlank()) return@post call.respondText("Valid from date is required", status = HttpStatusCode.BadRequest)
+        if (insuranceCompany.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("insuranceCompany"))
+        if (policyNumber.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("policyNumber"))
+        if (validFrom.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("validFrom"))
+        if (validTo.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("validTo"))
+        if (document.isEmpty()) return@post call.respondError(Error.MissingArgument("document"))
 
         val validFromDate = try {
             java.time.LocalDate.parse(validFrom)
         } catch (_: DateTimeParseException) {
-            return@post call.respondText("Valid from date is not valid", status = HttpStatusCode.BadRequest)
+            return@post call.respondError(Error.InvalidArgument("validFrom", "Must be a valid date"))
         }
         val validToDate = try {
             java.time.LocalDate.parse(validTo)
         } catch (_: DateTimeParseException) {
-            return@post call.respondText("Valid until date is not valid", status = HttpStatusCode.BadRequest)
+            return@post call.respondError(Error.InvalidArgument("validTo", "Must be a valid date"))
         }
 
+        val documentFile = document.newEntity()
         Database {
             UserInsuranceEntity.new {
                 userSub = Database { UserReferenceEntity[session.sub] }
@@ -152,10 +173,11 @@ fun Route.profileRoutes() {
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
                 this.validTo = validToDate
+                this.document = documentFile
             }
         }
 
-        call.respondText("OK", status = HttpStatusCode.Created)
+        call.respond(HttpStatusCode.NoContent)
     }
     post("/profile/femecvSync") {
         val session = getUserSessionOrFail() ?: return@post
