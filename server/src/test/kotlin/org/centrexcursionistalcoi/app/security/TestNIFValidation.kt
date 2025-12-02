@@ -1,10 +1,18 @@
 package org.centrexcursionistalcoi.app.security
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TestNIFValidation {
+    @Test
+    fun `test calculate letter`() {
+        assertEquals(null, NIFValidation.calculateLetter("invalid"))
+        assertEquals(null, NIFValidation.calculateLetter("1234567"))
+        assertEquals('X', NIFValidation.calculateLetter("87654321"))
+    }
+
     @Test
     fun `test dni`() {
         assertFalse { NIFValidation.validate("invalid") }
