@@ -301,7 +301,14 @@ jobs:
         env:
           GOOGLE_SERVICE_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_PLIST_BASE64 }}
         run: |
-          echo -n "$GOOGLE_SERVICE_PLIST_BASE64" | base64 --decode -o iosApp/GoogleService-Info.plist
+          rm iosApp/iosApp/GoogleService-Info.plist
+          printf '%s\n' "$GOOGLE_SERVICE_PLIST_BASE64" | base64 --decode > iosApp/iosApp/GoogleService-Info.plist
+      - name: Verify GoogleService-Info.plist integrity
+        env:
+          GOOGLE_SERVICE_INFO_SHA256: 2dffdbd64e2c8d027a2b3f51199afa60f1a6414e5bac4ead873674f6490ddcd6
+        run: |
+          cd iosApp/iosApp
+          echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | | shasum -a 256 -c -
 
       - name: Install CocoaPods
         run: |
