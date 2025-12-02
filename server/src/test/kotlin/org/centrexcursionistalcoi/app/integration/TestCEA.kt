@@ -8,15 +8,15 @@ import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.integration.CEA.filterInvalid
 
 class TestCEA {
-     @Test
-     fun `test download`() = runTest {
-         System.getenv("CEA_USERNAME") ?: return@runTest println("Skipping CEA download test. CEA_USERNAME not set.")
-         System.getenv("CEA_PASSWORD") ?: return@runTest println("Skipping CEA download test. CEA_PASSWORD not set.")
+    @Test
+    fun `test download`() = runTest {
+        System.getenv("CEA_USERNAME") ?: return@runTest println("Skipping CEA download test. CEA_USERNAME not set.")
+        System.getenv("CEA_PASSWORD") ?: return@runTest println("Skipping CEA download test. CEA_PASSWORD not set.")
 
-         val csv = CEA.download()
-         val lines = csv.lines()
-         assertTrue("Malformed CSV Response.\n\tLine 1: ${lines[0]}") { lines[0].contains("Núm. soci/a") }
-     }
+        val csv = CEA.download()
+        val lines = csv.lines()
+        assertTrue("Malformed CSV Response.\n\tLine 1: ${lines[0]}") { lines[0].contains("Núm. soci/a") }
+    }
 
     @Test
     fun `test parse`() {
@@ -37,5 +37,16 @@ class TestCEA {
             assertEquals("87654321X", member.nif)
             assertEquals("mail2@example.com", member.email)
         }
+    }
+
+    @Test
+    fun `test cleanupMembersNIF`() {
+        val members = listOf(
+            CEA.Member(1, "Alta", "Test User 1", "12345678Z", "test1@example.com"),
+            CEA.Member(2, "Alta", "Test User 2", "87654321 ", "test2@example.com"),
+        )
+        val cleanedMembers = CEA.cleanupMembersNIF(members)
+        assertEquals("12345678Z", cleanedMembers[0].nif)
+        assertEquals("87654321X", cleanedMembers[1].nif)
     }
 }

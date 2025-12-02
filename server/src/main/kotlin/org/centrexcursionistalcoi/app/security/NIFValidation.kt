@@ -1,6 +1,22 @@
 package org.centrexcursionistalcoi.app.security
 
 object NIFValidation {
+    private val letrasControl = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+    fun calculateLetter(nif: String?): Char? {
+        nif ?: return null
+
+        val upperNif = nif.trim().uppercase()
+
+        // Comprobación de longitud
+        if (upperNif.length != 8) return null
+
+        // Verificar que los números sean válidos
+        val numero = upperNif.toLongOrNull() ?: return null
+
+        return letrasControl[(numero % 23).toInt()]
+    }
+
     fun validate(nif: String?): Boolean {
         nif ?: return false
 
@@ -29,7 +45,6 @@ object NIFValidation {
         // Verificar que los números sean válidos
         val numero = numeroParte.toLongOrNull() ?: return false
 
-        val letrasControl = "TRWAGMYFPDXBNJZSQVHLCKE"
         val letraEsperada = letrasControl[(numero % 23).toInt()]
 
         return letraEsperada == letraControl

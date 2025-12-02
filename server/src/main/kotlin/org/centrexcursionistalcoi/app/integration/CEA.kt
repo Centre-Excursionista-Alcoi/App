@@ -106,6 +106,26 @@ object CEA : PeriodicWorker(period = 1.days) {
         }.decodeFromString(Member.serializer().list(), data)
     }
 
+    /**
+     * Cleans up the members' NIFs by correcting invalid letters.
+     * @param members The list of members to clean up.
+     * @return A new list of members with corrected NIFs.
+     */
+    fun cleanupMembersNIF(members: List<Member>) = members.map { member ->
+        if (!NIFValidation.validate(member.nif)) {
+            val letter = NIFValidation.calculateLetter(member.nif)
+            if (letter != null) {
+                val cleanedNif = member.nif!!.dropLast(1) + letter
+                logger.info("Corrected NIF for member #${member.number}: ${member.nif} -> $cleanedNif")
+                member.copy(nif = cleanedNif)
+            } else {
+                member
+            }
+        } else {
+            member
+        }
+    }
+
     fun synchronizeWithDatabase(members: List<Member>) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
@@ -305,7 +325,10 @@ object CEA : PeriodicWorker(period = 1.days) {
             File("/cea_members.csv").writeText(cleanedData)
 
             logger.info("CEA members data downloaded. Parsing...")
-            val members = parse(cleanedData)
+            var members = parse(cleanedData)
+
+            logger.info("Cleaning up members' NIFs...")
+            members = cleanupMembersNIF(members)
 
             logger.info("CEA members data parsed. Synchronizing with database...")
             synchronizeWithDatabase(members)
