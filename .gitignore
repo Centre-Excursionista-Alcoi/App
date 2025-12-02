@@ -24,3 +24,5 @@ GoogleService-Info.plist
 credentials.properties
 keys/
 .venv
+bundle/
+sentry-debug-meta.properties

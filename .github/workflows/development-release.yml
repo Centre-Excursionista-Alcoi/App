@@ -155,6 +155,24 @@ jobs:
         id: clean_backslash
         run: bash ./scripts/clean-backslash.sh
 
+      # Set up Sentry UUIDs and create properties file
+      - name: Generate UUIDs
+        id: uuids
+        run: |
+          echo "source_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
+          echo "proguard_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
+      - name: Create Sentry Properties File
+        run: |
+          # Define the target path
+          ASSETS_DIR="composeApp/src/androidMain/assets"
+          mkdir -p $ASSETS_DIR
+          
+          # Write the properties file
+          echo "io.sentry.bundle-ids=${{ steps.uuids.outputs.source_uuid }}" > $ASSETS_DIR/sentry-debug-meta.properties
+          echo "io.sentry.ProguardUuids=${{ steps.uuids.outputs.proguard_uuid }}" >> $ASSETS_DIR/sentry-debug-meta.properties
+          
+          cat $ASSETS_DIR/sentry-debug-meta.properties
+
       - name: Build AAB
         id: build_aab
         env:
@@ -172,15 +190,20 @@ jobs:
           name: AAB Artifact
           path: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
 
-      - name: Upload ProGuard Mappings
+      - name: Sentry - Upload Source Bundle
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli debug-files bundle-jvm --output bundle --debug-id ${{ steps.uuids.outputs.source_uuid }} composeApp/src/ --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+          sentry-cli debug-files upload --type jvm bundle/${{ steps.uuids.outputs.source_uuid }}.zip --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+      - name: Sentry - Upload ProGuard Mapping
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
           sentry-cli upload-proguard \
-            --android-manifest composeApp/src/androidMain/AndroidManifest.xml \
+            --uuid ${{ steps.uuids.outputs.proguard_uuid }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
             composeApp/build/outputs/mapping/release/mapping.txt
 
       - name: Upload to Play Store
