@@ -156,12 +156,12 @@ jobs:
         run: bash ./scripts/clean-backslash.sh
 
       # Set up Sentry UUIDs and create properties file
-      - name: Generate UUIDs
+      - name: Sentry - Generate UUIDs
         id: uuids
         run: |
           echo "source_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
           echo "proguard_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
-      - name: Create Sentry Properties File
+      - name: Sentry - Create Properties File
         run: |
           # Define the target path
           ASSETS_DIR="composeApp/src/androidMain/assets"
@@ -199,12 +199,18 @@ jobs:
           cp -R composeApp/src/commonMain/kotlin/. build/sentry-sources/
           cp -R composeApp/src/androidMain/kotlin/. build/sentry-sources/
           
+          # Install sentry-cli
+          curl -sL https://sentry.io/get-cli/ | bash
+          
           sentry-cli debug-files bundle-jvm --output bundle --debug-id ${{ steps.uuids.outputs.source_uuid }} build/sentry-sources/ --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
           sentry-cli debug-files upload --type jvm bundle/${{ steps.uuids.outputs.source_uuid }}.zip --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
       - name: Sentry - Upload ProGuard Mapping
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
+          # Install sentry-cli
+          curl -sL https://sentry.io/get-cli/ | bash
+          
           sentry-cli upload-proguard \
             --uuid ${{ steps.uuids.outputs.proguard_uuid }} \
             --org ${{ secrets.SENTRY_ORG }} \
