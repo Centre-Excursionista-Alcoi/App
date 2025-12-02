@@ -185,6 +185,24 @@ jobs:
           cd composeApp
           echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
+      # Set up Sentry UUIDs and create properties file
+      - name: Sentry - Generate UUIDs
+        id: uuids
+        run: |
+          echo "source_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
+          echo "proguard_uuid=$(uuidgen)" >> $GITHUB_OUTPUT
+      - name: Sentry - Create Properties File
+        run: |
+          # Define the target path
+          ASSETS_DIR="composeApp/src/androidMain/assets"
+          mkdir -p $ASSETS_DIR
+          
+          # Write the properties file
+          echo "io.sentry.bundle-ids=${{ steps.uuids.outputs.source_uuid }}" > $ASSETS_DIR/sentry-debug-meta.properties
+          echo "io.sentry.ProguardUuids=${{ steps.uuids.outputs.proguard_uuid }}" >> $ASSETS_DIR/sentry-debug-meta.properties
+          
+          cat $ASSETS_DIR/sentry-debug-meta.properties
+
       - name: Build AAB
         id: build_aab
         env:
@@ -195,18 +213,31 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: ./gradlew :composeApp:bundleRelease :composeApp:assembleRelease
 
-      - name: Upload ProGuard Mappings
+      - name: Sentry - Upload Source Bundle
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          # Install sentry-cli if not present (or use a docker container that has it)
+          # Simulate Android source structure for Sentry
+          mkdir -p build/sentry-sources
+          cp -R composeApp/src/commonMain/kotlin/. build/sentry-sources/
+          cp -R composeApp/src/androidMain/kotlin/. build/sentry-sources/
+          
+          # Install sentry-cli
           curl -sL https://sentry.io/get-cli/ | bash
-
-          # Upload the mapping file
+          
+          sentry-cli debug-files bundle-jvm --output bundle --debug-id ${{ steps.uuids.outputs.source_uuid }} build/sentry-sources/ --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+          sentry-cli debug-files upload --type jvm bundle/${{ steps.uuids.outputs.source_uuid }}.zip --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+      - name: Sentry - Upload ProGuard Mapping
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          # Install sentry-cli
+          curl -sL https://sentry.io/get-cli/ | bash
+          
           sentry-cli upload-proguard \
-            --android-manifest composeApp/src/androidMain/AndroidManifest.xml \
+            --uuid ${{ steps.uuids.outputs.proguard_uuid }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
             composeApp/build/outputs/mapping/release/mapping.txt
 
       - name: Release AAB & APK
