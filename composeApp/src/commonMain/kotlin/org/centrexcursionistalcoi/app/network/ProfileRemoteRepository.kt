@@ -13,8 +13,6 @@ import io.ktor.http.parameters
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.data.UserInsurance
-import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.data.toFormData
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
@@ -92,7 +90,7 @@ object ProfileRemoteRepository {
         document: PlatformFile?,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val documentFile = document?.let { InMemoryFileAllocator.put(it) }
+        val documentFile = document?.let { InMemoryFileAllocator.put(it).toFileReference() }
 
         val response = httpClient.submitFormWithBinaryData(
             "/profile/insurances",

@@ -21,6 +21,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import kotlinx.coroutines.Job
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilePicker
 import org.jetbrains.compose.resources.stringResource
 
@@ -34,23 +35,11 @@ fun AddInsuranceDialog(
 ) {
     var insuranceCompany by remember { mutableStateOf("") }
     var policyNumber by remember { mutableStateOf("") }
-    var validFrom by remember { mutableStateOf("") }
-    var validTo by remember { mutableStateOf("") }
+    var validFrom by remember { mutableStateOf<LocalDate?>(null) }
+    var validTo by remember { mutableStateOf<LocalDate?>(null) }
     var document by remember { mutableStateOf<PlatformFile?>(null) }
 
-    val isFromValid = try {
-        LocalDate.parse(validFrom)
-        true
-    } catch (_: IllegalArgumentException) {
-        false
-    }
-    val isToValid = try {
-        LocalDate.parse(validTo)
-        true
-    } catch (_: IllegalArgumentException) {
-        false
-    }
-    val isValid = insuranceCompany.isNotBlank() && policyNumber.isNotBlank() && isFromValid && isToValid
+    val isValid = insuranceCompany.isNotBlank() && policyNumber.isNotBlank() && validFrom != null && validTo != null
     var isLoading by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -100,25 +89,19 @@ fun AddInsuranceDialog(
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
+                DatePickerFormField(
                     value = validFrom,
                     onValueChange = { validFrom = it },
-                    label = { Text(stringResource(Res.string.insurance_start_date)) },
-                    placeholder = { Text("yyyy-MM-dd") },
-                    maxLines = 1,
-                    singleLine = true,
+                    label = stringResource(Res.string.insurance_start_date),
+                    modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
+                DatePickerFormField(
                     value = validTo,
                     onValueChange = { validTo = it },
-                    label = { Text(stringResource(Res.string.insurance_end_date)) },
-                    placeholder = { Text("yyyy-MM-dd") },
-                    maxLines = 1,
-                    singleLine = true,
+                    label = stringResource(Res.string.insurance_end_date),
+                    modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth()
                 )
 
                 FormFilePicker(
@@ -138,8 +121,8 @@ fun AddInsuranceDialog(
                     onCreate(
                         insuranceCompany,
                         policyNumber,
-                        LocalDate.parse(validFrom),
-                        LocalDate.parse(validTo),
+                        validFrom!!,
+                        validTo!!,
                         document,
                     ).invokeOnCompletion {
                         isLoading = false
