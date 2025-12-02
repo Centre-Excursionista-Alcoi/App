@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
@@ -81,6 +82,20 @@ fun HomePage(
         ?.filter { members -> members.any { !it.confirmed } }
         ?.flatten()
 
+    val eventsAndPosts = remember(events, posts) {
+        val combined = mutableListOf<Any>()
+        if (!posts.isNullOrEmpty()) combined.addAll(posts)
+        if (!events.isNullOrEmpty()) combined.addAll(events)
+        combined.sortByDescending {
+            when (it) {
+                is ReferencedPost -> it.date
+                is ReferencedEvent -> it.start
+                else -> throw IllegalArgumentException("Unknown type in eventsAndPosts")
+            }
+        }
+        combined
+    }
+
     AdaptiveVerticalGrid(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
@@ -137,7 +152,7 @@ fun HomePage(
             }
         }
 
-        items(posts.orEmpty() + events.orEmpty()) { postOrEvent ->
+        items(eventsAndPosts) { postOrEvent ->
             if (postOrEvent is ReferencedPost) {
                 PostItem(postOrEvent)
             } else if (postOrEvent is ReferencedEvent) {
