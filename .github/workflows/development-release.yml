@@ -194,7 +194,12 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          sentry-cli debug-files bundle-jvm --output bundle --debug-id ${{ steps.uuids.outputs.source_uuid }} composeApp/src/ --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+          # Simulate Android source structure for Sentry
+          mkdir -p build/sentry-sources
+          cp -R composeApp/src/commonMain/kotlin/. build/sentry-sources/
+          cp -R composeApp/src/androidMain/kotlin/. build/sentry-sources/
+          
+          sentry-cli debug-files bundle-jvm --output bundle --debug-id ${{ steps.uuids.outputs.source_uuid }} build/sentry-sources/ --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
           sentry-cli debug-files upload --type jvm bundle/${{ steps.uuids.outputs.source_uuid }}.zip --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
       - name: Sentry - Upload ProGuard Mapping
         env:
