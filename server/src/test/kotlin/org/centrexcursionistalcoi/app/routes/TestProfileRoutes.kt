@@ -1,15 +1,19 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.parameters
+import io.ktor.http.headers
 import io.ktor.http.parametersOf
 import java.time.Instant
 import java.time.LocalDate
+import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -19,6 +23,7 @@ import kotlin.test.assertTrue
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertBadRequest
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Sports
@@ -214,45 +219,92 @@ class TestProfileRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
     ) {
         // Missing all fields
-        client.submitForm("/profile/insurances").assertBadRequest()
+        client.submitFormWithBinaryData("/profile/insurances", formData()).assertBadRequest()
 
         // Missing insuranceCompany
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
                 append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).assertBadRequest()
 
         // Missing policyNumber
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("validFrom", "2025-01-01")
                 append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).assertBadRequest()
 
         // Missing validFrom
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).assertBadRequest()
 
         // Missing validTo
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
+            }
+        ).assertBadRequest()
+
+        // Missing document
+        client.submitFormWithBinaryData(
+            "/profile/insurances",
+            formData {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
             }
         ).assertBadRequest()
     }
@@ -262,24 +314,42 @@ class TestProfileRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
     ) {
         // Invalid validFrom
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validFrom", "invalid-date")
                 append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).assertBadRequest()
 
         // Invalid validTo
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
                 append("validTo", "invalid-date")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).assertBadRequest()
     }
@@ -289,16 +359,25 @@ class TestProfileRoutes : ApplicationTestBase() {
     fun test_insurances_post_correct() = runApplicationTest(
         shouldLogIn = LoginType.USER,
     ) {
-        client.submitForm(
+        client.submitFormWithBinaryData(
             "/profile/insurances",
-            formParameters = parameters {
+            formData {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
                 append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
             }
         ).apply {
-            assertStatusCode(HttpStatusCode.Created)
+            assertStatusCode(HttpStatusCode.NoContent)
         }
 
         // Check it is in the database
