@@ -446,6 +446,17 @@ jobs:
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
 
+      - name: Sentry - Upload iOS Debug Files (dSYMs & Source)
+        run: |
+          DSYM_PATH="$PWD/iosApp/build/iosApp.xcarchive/dSYMs"
+          
+          sentry-cli debug-files upload \
+            --include-sources \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            "$DSYM_PATH"
+
   sentry-ios:
     name: Release iOS to Sentry
     runs-on: ubuntu-latest
