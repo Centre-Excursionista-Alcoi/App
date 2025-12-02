@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,7 +47,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 
-const val MANAGEMENT_PAGE_COUNT = 5
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
 const val MANAGEMENT_PAGE_USERS = 2
@@ -224,7 +224,8 @@ private fun ManagementPage(
     onDeleteEvent: (ReferencedEvent) -> Job,
 ) {
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { MANAGEMENT_PAGE_COUNT }
+    val pages = remember { ManagementPage.all }
+    val pagerState = rememberPagerState { pages.size }
 
     val selectedItemId = selectedItem?.second
     LaunchedEffect(selectedItem) {
@@ -235,7 +236,7 @@ private fun ManagementPage(
 
     AdaptiveTabRow(
         selectedTabIndex = pagerState.currentPage,
-        tabs = ManagementPage.all.map { it.tabData() },
+        tabs = pages.map { it.tabData() },
         onTabSelected = { index ->
             scope.launch { pagerState.animateScrollToPage(index) }
         },
@@ -244,7 +245,7 @@ private fun ManagementPage(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
     ) { index ->
-        val page = ManagementPage.all.forIndex(index)
+        val page = pages.forIndex(index)
         when (page) {
             ManagementPage.Lendings -> LendingsListView(
                 windowSizeClass,
