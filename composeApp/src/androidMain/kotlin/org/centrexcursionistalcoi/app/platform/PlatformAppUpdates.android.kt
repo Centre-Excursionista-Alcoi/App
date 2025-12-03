@@ -18,6 +18,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 
 actual object PlatformAppUpdates {
     private val log = logging()
@@ -44,20 +45,24 @@ actual object PlatformAppUpdates {
                     0f
                 }
             }
+
             InstallStatus.DOWNLOADED -> {
                 log.i { "An update has been downloaded. Prompting user to complete the update." }
                 _restartRequired.value = true
             }
+
             InstallStatus.INSTALLING -> {
                 log.i { "Update is being installed..." }
                 _updateProgress.value = 1f
             }
+
             InstallStatus.INSTALLED -> {
                 log.i { "Update installed successfully." }
                 _updateAvailable.value = false
                 _updateProgress.value = null
                 _restartRequired.value = false
             }
+
             else -> {
                 log.w { "Update install state: $state" }
             }
@@ -85,10 +90,12 @@ actual object PlatformAppUpdates {
                 log.i { "App update flow completed successfully." }
                 _updateAvailable.value = false
             }
+
             Activity.RESULT_CANCELED -> {
                 log.w { "App update flow was canceled by the user." }
                 _updateAvailable.value = true
             }
+
             else -> {
                 log.e { "App update flow failed with result code: ${result.resultCode}" }
                 _updateAvailable.value = true
@@ -133,7 +140,7 @@ actual object PlatformAppUpdates {
                 } else {
                     log.d { "An update is available, but priority is low. Won't ask the user." }
                 }
-            } else if(updateAvailability == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+            } else if (updateAvailability == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
                 appUpdateManager.startUpdateFlowForResult(
                     appUpdateInfo,
                     resultLauncher,
@@ -161,5 +168,7 @@ actual object PlatformAppUpdates {
     actual fun onRestartRequested() {
         log.i { "User requested app restart to complete the update." }
         appUpdateManager.completeUpdate()
+            .addOnSuccessListener { log.i { "Restarting app..." } }
+            .addOnFailureListener { GlobalAsyncErrorHandler.setError(it) }
     }
 }
