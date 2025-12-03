@@ -54,7 +54,7 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.confirmed = false
             }
             LendingUserEntity.new {
-                this.userSub = fakeUser.sub
+                this.userSub = fakeUser
                 this.sports = listOf(Sports.HIKING)
                 this.phoneNumber = "123456789"
             }
@@ -148,12 +148,12 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
 
             LendingUserEntity.new("ae1a777d-04b8-4712-b126-51a3aa39bb81".toUUID()) {
-                this.userSub = fakeUser.sub
+                this.userSub = fakeUser
                 this.sports = listOf(Sports.HIKING)
                 this.phoneNumber = "123456789"
             }
             LendingUserEntity.new {
-                this.userSub = fakeUser2.sub
+                this.userSub = fakeUser2
                 this.sports = listOf(Sports.CLIMBING)
                 this.phoneNumber = "987654321"
             }

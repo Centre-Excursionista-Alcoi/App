@@ -221,7 +221,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Register user for lendings
             Database {
                 LendingUserEntity.new {
-                    userSub = user.sub
+                    userSub = user
                     phoneNumber = "123456789"
                     sports = listOf(Sports.HIKING)
                 }
@@ -290,7 +290,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Register user for lendings
             Database {
                 LendingUserEntity.new {
-                    userSub = user.sub
+                    userSub = user
                     phoneNumber = "123456789"
                     sports = listOf(Sports.HIKING)
                 }
@@ -410,7 +410,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Register user for lendings
             Database {
                 LendingUserEntity.new {
-                    userSub = user.sub
+                    userSub = user
                     phoneNumber = "123456789"
                     sports = listOf(Sports.HIKING)
                 }
@@ -455,7 +455,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         // Register user for lendings
         Database {
             LendingUserEntity.new {
-                userSub = user.sub
+                userSub = user
                 phoneNumber = "123456789"
                 sports = listOf(Sports.HIKING)
             }
@@ -524,7 +524,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Register user for lendings
             Database {
                 LendingUserEntity.new {
-                    userSub = user.sub
+                    userSub = user
                     phoneNumber = "123456789"
                     sports = listOf(Sports.HIKING)
                 }

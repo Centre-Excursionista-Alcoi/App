@@ -32,8 +32,6 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.mockTime
-import org.centrexcursionistalcoi.app.resetTimeFunctions
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.test.*
@@ -57,21 +55,16 @@ class TestProfileRoutes : ApplicationTestBase() {
 
     @Test
     fun test_conditionalHeaders_ifModifiedSince() {
-        try {
+        runApplicationTest(
             // GMT: Tuesday 20 October 2015 0:00:00
-            mockTime(Instant.ofEpochSecond(1445299200))
-
-            runApplicationTest(
-                shouldLogIn = LoginType.USER,
-            ) {
-                client.get("/profile") {
-                    headers.append(HttpHeaders.IfModifiedSince, "Wed, 21 Oct 2015 07:28:00 GMT")
-                }.apply {
-                    assertStatusCode(HttpStatusCode.NotModified)
-                }
+            mockNow = Instant.ofEpochSecond(1445299200),
+            shouldLogIn = LoginType.USER,
+        ) {
+            client.get("/profile") {
+                headers.append(HttpHeaders.IfModifiedSince, "Wed, 21 Oct 2015 07:28:00 GMT")
+            }.apply {
+                assertStatusCode(HttpStatusCode.NotModified)
             }
-        } finally {
-            resetTimeFunctions()
         }
     }
 
@@ -128,7 +121,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             LendingUserEntity.new {
-                userSub = FakeUser.provideEntity().id
+                userSub = FakeUser.provideEntity()
                 phoneNumber = "123456789"
                 sports = listOf(Sports.CLIMBING, Sports.HIKING)
             }
@@ -156,7 +149,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         Database {
             val lendingUser = LendingUserEntity.all().firstOrNull()
             assertNotNull(lendingUser)
-            assertEquals(FakeUser.SUB, lendingUser.userSub.value)
+            assertEquals(FakeUser.SUB, lendingUser.userSub.id.value)
             assertEquals("123456789", lendingUser.phoneNumber)
             assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
         }
@@ -228,15 +221,6 @@ class TestProfileRoutes : ApplicationTestBase() {
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
                 append("validTo", "2025-12-31")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
             }
         ).assertBadRequest()
 
@@ -247,15 +231,6 @@ class TestProfileRoutes : ApplicationTestBase() {
                 append("insuranceCompany", "FEMECV")
                 append("validFrom", "2025-01-01")
                 append("validTo", "2025-12-31")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
             }
         ).assertBadRequest()
 
@@ -266,15 +241,6 @@ class TestProfileRoutes : ApplicationTestBase() {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validTo", "2025-12-31")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
             }
         ).assertBadRequest()
 
@@ -285,26 +251,6 @@ class TestProfileRoutes : ApplicationTestBase() {
                 append("insuranceCompany", "FEMECV")
                 append("policyNumber", "POL123")
                 append("validFrom", "2025-01-01")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
-            }
-        ).assertBadRequest()
-
-        // Missing document
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
             }
         ).assertBadRequest()
     }

@@ -107,13 +107,15 @@ fun Route.profileRoutes() {
         if (phoneNumber.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("phoneNumber"))
         if (sports.isNullOrEmpty()) return@post call.respondError(Error.MissingArgument("sports"))
 
+        val userReference = Database { UserReferenceEntity[session.sub] }
         Database {
             LendingUserEntity.new {
-                userSub = Database { UserReferenceEntity[session.sub].id }
+                userSub = userReference
                 this.phoneNumber = phoneNumber
                 this.sports = sports
             }
         }
+        userReference.updated()
 
         call.respond(HttpStatusCode.Created)
     }

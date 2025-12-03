@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 class LendingUserEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverter<LendingUser, Uuid> {
     companion object : UUIDEntityClass<LendingUserEntity>(LendingUsers)
 
-    var userSub by LendingUsers.userSub
+    var userSub by UserReferenceEntity referencedOn LendingUsers.userSub
 
     var phoneNumber by LendingUsers.phoneNumber
 
@@ -24,7 +24,7 @@ class LendingUserEntity(id: EntityID<UUID>) : UUIDEntity(id), EntityDataConverte
     context(_: JdbcTransaction)
     override fun toData(): LendingUser = LendingUser(
         id = id.value.toKotlinUuid(),
-        sub = userSub.value,
+        sub = userSub.id.value,
         phoneNumber = phoneNumber,
         sports = sports,
     )

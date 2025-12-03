@@ -20,9 +20,12 @@ import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.slf4j.LoggerFactory
 
 class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdateEntity {
     companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
+        private val logger = LoggerFactory.getLogger(UserReferenceEntity::class.java)
+
         context(_: JdbcTransaction)
         fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
     }
@@ -104,7 +107,9 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
      * Notifies that this entity has been updated by storing the current timestamp in Redis, and updating the lastUpdate field.
      */
     override suspend fun updated() {
+        val now = now()
         notifyUpdateForEntity(Companion, id)
-        Database { lastUpdate = now() }
+        Database { lastUpdate = now }
+        logger.debug("Updating lastUpdate for UserReferenceEntity#{}: {}", id, now)
     }
 }
