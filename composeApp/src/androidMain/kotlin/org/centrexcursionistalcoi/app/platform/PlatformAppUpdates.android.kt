@@ -99,6 +99,10 @@ actual object PlatformAppUpdates {
             else -> {
                 log.e { "App update flow failed with result code: ${result.resultCode}" }
                 _updateAvailable.value = true
+
+                GlobalAsyncErrorHandler.setError(
+                    RuntimeException("App update flow failed with result code: ${result.resultCode}"),
+                )
             }
         }
     }
