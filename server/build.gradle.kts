@@ -122,6 +122,9 @@ dependencies {
     implementation(libs.telegram.bot)
     implementation(libs.retrofit.core)
 
+    // S3 Storage bucket access
+    implementation(awssdk.services.s3)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)

@@ -6,6 +6,7 @@ import io.ktor.server.netty.Netty
 import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
@@ -16,6 +17,7 @@ import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.storage.StorageBucket
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
 
@@ -47,6 +49,10 @@ internal fun resetTimeFunctions() {
 
 fun main() {
     logger.info("Starting Centre Excursionista d'Alcoi server version $version")
+
+    runBlocking { StorageBucket.init() }
+
+    return
 
     // Initialize Sentry error tracking if DSN is provided
     System.getenv("SENTRY_DSN")?.let { dsn ->
