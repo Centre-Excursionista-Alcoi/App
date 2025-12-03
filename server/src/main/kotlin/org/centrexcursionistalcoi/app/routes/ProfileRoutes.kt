@@ -165,10 +165,12 @@ fun Route.profileRoutes() {
             return@post call.respondError(Error.InvalidArgument("validTo", "Must be a valid date"))
         }
 
+        val userReference = Database { UserReferenceEntity[session.sub] }
+
         val documentFile = document.takeIf { it.isNotEmpty() }?.newEntity()
         Database {
             UserInsuranceEntity.new {
-                userSub = Database { UserReferenceEntity[session.sub] }
+                userSub = userReference
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
@@ -176,6 +178,7 @@ fun Route.profileRoutes() {
                 this.document = documentFile
             }
         }
+        userReference.updated()
 
         call.respond(HttpStatusCode.NoContent)
     }
