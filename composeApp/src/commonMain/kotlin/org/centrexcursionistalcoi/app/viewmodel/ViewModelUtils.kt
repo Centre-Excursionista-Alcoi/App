@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -44,12 +45,13 @@ fun ViewModel.launch(
 fun <T> ViewModel.async(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> T
-) = viewModelScope.async(Dispatchers.Main, start) {
+): Deferred<T?> = viewModelScope.async(Dispatchers.Main, start) {
     try {
         block()
     } catch (e: Exception) {
         log.e(e) { "Error in ViewModel coroutine." }
         GlobalAsyncErrorHandler.setError(e)
+        null
     }
 }
 
