@@ -345,7 +345,7 @@ jobs:
           GOOGLE_SERVICE_INFO_SHA256: 2dffdbd64e2c8d027a2b3f51199afa60f1a6414e5bac4ead873674f6490ddcd6
         run: |
           cd iosApp/iosApp
-          echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | | shasum -a 256 -c -
+          echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | shasum -a 256 -c -
 
       - name: Install CocoaPods
         run: |
