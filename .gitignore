@@ -20,9 +20,11 @@ iosApp/Pods
 iosApp/Podfile.lock
 keystore.jks
 google-services.json
-GoogleService-Info.plist
 credentials.properties
 keys/
 .venv
+<<<<<<< Updated upstream
 bundle/
 sentry-debug-meta.properties
+=======
+>>>>>>> Stashed changes
