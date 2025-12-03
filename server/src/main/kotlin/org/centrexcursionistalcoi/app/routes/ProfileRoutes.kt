@@ -43,6 +43,7 @@ import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
+import java.time.LocalDate
 
 fun Route.profileRoutes() {
     get("/profile") {
@@ -106,13 +107,15 @@ fun Route.profileRoutes() {
         if (phoneNumber.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("phoneNumber"))
         if (sports.isNullOrEmpty()) return@post call.respondError(Error.MissingArgument("sports"))
 
+        val userReference = Database { UserReferenceEntity[session.sub] }
         Database {
             LendingUserEntity.new {
-                userSub = Database { UserReferenceEntity[session.sub].id }
+                userSub = userReference
                 this.phoneNumber = phoneNumber
                 this.sports = sports
             }
         }
+        userReference.updated()
 
         call.respond(HttpStatusCode.Created)
     }
@@ -152,23 +155,24 @@ fun Route.profileRoutes() {
         if (policyNumber.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("policyNumber"))
         if (validFrom.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("validFrom"))
         if (validTo.isNullOrBlank()) return@post call.respondError(Error.MissingArgument("validTo"))
-        if (document.isEmpty()) return@post call.respondError(Error.MissingArgument("document"))
 
         val validFromDate = try {
-            java.time.LocalDate.parse(validFrom)
+            LocalDate.parse(validFrom)
         } catch (_: DateTimeParseException) {
             return@post call.respondError(Error.InvalidArgument("validFrom", "Must be a valid date"))
         }
         val validToDate = try {
-            java.time.LocalDate.parse(validTo)
+            LocalDate.parse(validTo)
         } catch (_: DateTimeParseException) {
             return@post call.respondError(Error.InvalidArgument("validTo", "Must be a valid date"))
         }
 
-        val documentFile = document.newEntity()
+        val userReference = Database { UserReferenceEntity[session.sub] }
+
+        val documentFile = document.takeIf { it.isNotEmpty() }?.newEntity()
         Database {
             UserInsuranceEntity.new {
-                userSub = Database { UserReferenceEntity[session.sub] }
+                userSub = userReference
                 this.insuranceCompany = insuranceCompany
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
@@ -176,6 +180,7 @@ fun Route.profileRoutes() {
                 this.document = documentFile
             }
         }
+        userReference.updated()
 
         call.respond(HttpStatusCode.NoContent)
     }

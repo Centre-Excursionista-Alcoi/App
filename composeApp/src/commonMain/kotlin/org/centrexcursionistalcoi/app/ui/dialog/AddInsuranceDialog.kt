@@ -2,11 +2,13 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -23,6 +26,7 @@ import kotlinx.coroutines.Job
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilePicker
+import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
 typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) -> Job
@@ -105,12 +109,18 @@ fun AddInsuranceDialog(
                 )
 
                 FormFilePicker(
-                    label = stringResource(Res.string.insurance_document),
+                    label = stringResource(Res.string.insurance_document).optional(),
                     file = document,
                     onFilePicked = { document = it },
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     pickerType = FileKitType.File("pdf"),
+                )
+
+                Text(
+                    text = stringResource(Res.string.insurance_add_info),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
             }
         },

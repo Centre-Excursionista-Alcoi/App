@@ -55,6 +55,7 @@ import org.centrexcursionistalcoi.app.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
@@ -416,7 +417,7 @@ fun Route.lendingsRoutes() {
         Database {
             lending.taken = true
             lending.givenBy = userReference.id
-            lending.givenAt = Instant.now()
+            lending.givenAt = now()
         }
 
         // Send Push Notification asynchronously
@@ -488,7 +489,7 @@ fun Route.lendingsRoutes() {
                     this.item = item
                     this.notes = request.returnedItems.find { it.itemId == item.id.value.toKotlinUuid() }?.notes
                     this.receivedBy = userReference
-                    this.receivedAt = Instant.now()
+                    this.receivedAt = now()
                 }
             }
         }
@@ -618,12 +619,11 @@ fun Route.lendingsRoutes() {
 
         // If given, make sure the department exists
         val department = departmentId?.let { id ->
-            val department = Database { DepartmentEntity.findById(id.toJavaUuid()) }
-            if (department == null) {
-                respondError(Error.EntityNotFound(DepartmentEntity::class, id.toString()))
-                return@post
-            }
-            department
+            Database { DepartmentEntity.findById(id.toJavaUuid()) }
+        }
+        if (department == null) {
+            respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId.toString()))
+            return@post
         }
 
         // Store all attachments
@@ -674,7 +674,7 @@ fun Route.lendingsRoutes() {
 
         Database {
             lending.memorySubmitted = true
-            lending.memorySubmittedAt = Instant.now()
+            lending.memorySubmittedAt = now()
             lending.memory = memory
             lending.memoryPdf = pdfDocumentEntity
         }
@@ -745,7 +745,7 @@ fun Route.lendingsRoutes() {
 
         Database {
             lending.memorySubmitted = true
-            lending.memorySubmittedAt = Instant.now()
+            lending.memorySubmittedAt = now()
         }
 
         Push.launch {

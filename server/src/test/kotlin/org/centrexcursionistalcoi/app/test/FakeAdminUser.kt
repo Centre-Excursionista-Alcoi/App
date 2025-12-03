@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.test
 
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.now
@@ -22,7 +23,6 @@ object FakeAdminUser {
             email = EMAIL
             groups = GROUPS
             memberNumber = MEMBER_NUMBER
-            lastUpdate = now()
-        }
+        }.also { runBlocking { it.updated() } }
     }
 }

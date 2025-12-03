@@ -183,6 +183,7 @@
     <string name="insurance_end_date">End Date</string>
     <string name="insurance_document">Document</string>
     <string name="insurance_view_document">View Document</string>
+    <string name="insurance_add_info">When adding an insurance here, you guarantee that the information provided is true and complete. You will be held responsible for any inaccuracies.</string>
 
     <string name="active_insurances_title">Active Insurances</string>
 

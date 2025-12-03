@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 
 private val log = logging()
 
@@ -33,7 +35,7 @@ fun ViewModel.launch(
         block()
     } catch (e: Exception) {
         log.e(e) { "Error in ViewModel coroutine." }
-        throw e
+        GlobalAsyncErrorHandler.setError(e)
     }
 }
 
@@ -43,7 +45,15 @@ fun ViewModel.launch(
 fun <T> ViewModel.async(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> T
-) = viewModelScope.async(Dispatchers.Main, start, block)
+): Deferred<T?> = viewModelScope.async(Dispatchers.Main, start) {
+    try {
+        block()
+    } catch (e: Exception) {
+        log.e(e) { "Error in ViewModel coroutine." }
+        GlobalAsyncErrorHandler.setError(e)
+        null
+    }
+}
 
 /**
  * Launches a new coroutine in the UI thread.
@@ -58,5 +68,12 @@ fun ViewModel.launchWithLock(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
 ) = viewModelScope.launch(Dispatchers.Main, start) {
-    lock.withLock { block() }
+    lock.withLock {
+        try {
+            block()
+        } catch (e: Exception) {
+            log.e(e) { "Error in ViewModel coroutine." }
+            GlobalAsyncErrorHandler.setError(e)
+        }
+    }
 }

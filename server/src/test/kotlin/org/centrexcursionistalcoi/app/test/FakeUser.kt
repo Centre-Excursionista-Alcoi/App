@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.test
 
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.now
@@ -20,8 +21,7 @@ object FakeUser {
         email = EMAIL
         groups = GROUPS
         memberNumber = MEMBER_NUMBER
-        lastUpdate = now()
-    }
+    }.also { runBlocking { it.updated() } }
 
     fun data(): UserData = UserData(
         sub = SUB,
