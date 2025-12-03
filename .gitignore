@@ -23,8 +23,5 @@ google-services.json
 credentials.properties
 keys/
 .venv
-<<<<<<< Updated upstream
 bundle/
 sentry-debug-meta.properties
-=======
->>>>>>> Stashed changes
