@@ -31,3 +31,6 @@ const val SETTINGS_PRIVACY_ANALYTICS = "share_analytics"
 const val SETTINGS_PRIVACY_SESSION_REPLAY = "session_replay"
 
 const val MANAGEMENT_TOGGLE_COMPLETED_LENDINGS = "management_toggle_completed_lendings"
+
+/** Stores the server info in cache for situations where Internet is not available. */
+const val SETTINGS_SERVER_INFO = "server_info"
