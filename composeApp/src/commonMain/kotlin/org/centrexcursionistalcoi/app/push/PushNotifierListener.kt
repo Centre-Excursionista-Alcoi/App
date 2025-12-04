@@ -33,12 +33,9 @@ object PushNotifierListener : NotifierManager.Listener {
             when (notification) {
                 is PushNotification.LendingUpdated -> {
                     log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
-                    BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
-                        input = mapOf(
-                            SyncLendingBackgroundJobLogic.EXTRA_LENDING_ID to notification.lendingId.toString(),
-                            SyncLendingBackgroundJobLogic.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
-                        ),
-                        logic = SyncLendingBackgroundJobLogic,
+                    SyncLendingBackgroundJobLogic.scheduleAsync(
+                        lendingId = notification.lendingId,
+                        isRemoval = false,
                     )
                 }
 

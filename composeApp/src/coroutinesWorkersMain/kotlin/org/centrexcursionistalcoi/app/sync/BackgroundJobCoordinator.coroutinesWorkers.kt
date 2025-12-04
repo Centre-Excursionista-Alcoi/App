@@ -78,6 +78,7 @@ actual object BackgroundJobCoordinator {
         repeatInterval: Duration?,
         logic: BackgroundSyncWorkerLogic,
     ) {
+        log.info { "Scheduling background job $id (uniqueName=$uniqueName, repeatInterval=$repeatInterval). Input: $input" }
         CoroutineScope(Dispatchers.IO).launch {
             if (repeatInterval != null) {
                 while (true) {

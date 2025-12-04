@@ -2,7 +2,9 @@ package org.centrexcursionistalcoi.app.sync
 
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import kotlin.uuid.Uuid
 
 expect class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgroundJobLogic>
 
@@ -18,11 +20,18 @@ object SyncLendingBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         if (isRemoval) {
             LendingsRepository.delete(lendingId)
         } else {
-            val lending = LendingsRemoteRepository.get(lendingId, progressNotifier)
+            LendingsRemoteRepository.update(lendingId)
                 ?: return SyncResult.Failure("Lending with ID $lendingId not found on server")
-            LendingsRepository.insertOrUpdate(lending)
         }
 
         return SyncResult.Success()
     }
+
+    fun scheduleAsync(lendingId: Uuid, isRemoval: Boolean) = BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
+        input = mapOf(
+            EXTRA_LENDING_ID to lendingId.toString(),
+            EXTRA_IS_REMOVAL to isRemoval.toString(),
+        ),
+        logic = SyncLendingBackgroundJobLogic,
+    )
 }
