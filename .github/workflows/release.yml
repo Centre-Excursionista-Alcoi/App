@@ -280,6 +280,8 @@ jobs:
 
     needs: [update-version-name]
 
+    if: false  # Temporarily disabled due to issues with GoogleService-Info.plist not being found on runtime
+
     steps:
       - uses: actions/checkout@v6
 
