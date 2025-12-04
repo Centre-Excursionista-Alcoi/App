@@ -448,6 +448,8 @@ jobs:
 
       - name: Sentry - Upload iOS Debug Files (dSYMs & Source)
         run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          
           DSYM_PATH="$PWD/iosApp/build/iosApp.xcarchive/dSYMs"
           
           sentry-cli debug-files upload \
