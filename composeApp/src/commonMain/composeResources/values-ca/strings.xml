@@ -435,7 +435,7 @@
     <string name="event_department_generic">Directiva</string>
     <string name="event_date_no_end">Data: %1$s</string>
     <string name="event_date_with_end">Data: des de %1$s fins a %2$s</string>
-    <string name="event_max_people">Assistència Màxima:</string>
+    <string name="event_max_people">Assistència Màxima</string>
     <string name="event_requires_confirmation">Requereix confirmació d\'assistència.</string>
     <string name="event_title">Títol</string>
     <string name="event_description">Descripció</string>
@@ -445,4 +445,14 @@
     <string name="event_start">Inici</string>
     <string name="event_end">Final</string>
     <string name="event_add_to_calendar">Afegir al Calendari</string>
+    <string name="insurance_add_info">En afegir un segur, guaranteixes que la informació introduïda és correcta i completa. Seràs el responsable de qualsevol inexactitud.</string>
+    <string name="date_with_time_range">%1$s, des de %2$s fins a %3$s</string>
+    <string name="date_with_time">%1$s a les %2$s</string>
+    <string name="date_from">Des de: %1$s</string>
+    <string name="date_until">Fins a: %1$s</string>
+    <plurals name="event_max_people_value">
+        <item quantity="one">Assistència màxima: %1$d persona</item>
+        <item quantity="many">Assistència màxima: %1$d persones</item>
+        <item quantity="other">Assistència màxima: %1$d persones</item>
+    </plurals>
 </resources>
