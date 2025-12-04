@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -13,9 +11,11 @@ import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 data class TabData(
     val title: String,
     val icon: ImageVector? = null,
+    val filledIcon: ImageVector? = icon,
     val contentDescription: String? = title,
 ) {
     companion object {
@@ -23,10 +23,12 @@ data class TabData(
         fun fromResources(
             titleRes: StringResource,
             icon: ImageVector? = null,
+            filledIcon: ImageVector? = icon,
             contentDescription: StringResource? = titleRes,
         ) = TabData(
             title = stringResource(titleRes),
             icon = icon,
+            filledIcon = filledIcon,
             contentDescription = contentDescription?.let { stringResource(it) },
         )
     }
@@ -36,7 +38,14 @@ data class TabData(
         Tab(
             selected = selected,
             onClick = onClick,
-            icon = { Icon(icon!!, contentDescription) },
+            icon = {
+                AnimatedContent(selected) {
+                    Icon(
+                        imageVector = if (it) filledIcon!! else icon!!,
+                        contentDescription = contentDescription
+                    )
+                }
+            },
             text = { Text(title) }
         )
     }

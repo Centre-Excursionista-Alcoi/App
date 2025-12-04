@@ -1,19 +1,9 @@
 package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -26,16 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
@@ -117,7 +102,7 @@ fun HomePage(
                 CardWithIcon(
                     title = stringResource(Res.string.permission_notification_title),
                     message = stringResource(Res.string.permission_notification_message),
-                    icon = Icons.Default.Notifications,
+                    icon = MaterialSymbols.Notifications,
                     contentDescription = stringResource(Res.string.permission_notification_title),
                     modifier = Modifier.padding(bottom = 12.dp),
                 ) {
@@ -125,7 +110,7 @@ fun HomePage(
                         modifier = Modifier.weight(1f).padding(end = 4.dp),
                         onClick = onNotificationPermissionDenyRequest,
                     ) {
-                        Icon(Icons.Default.Close, stringResource(Res.string.permission_deny))
+                        Icon(MaterialSymbols.Close, stringResource(Res.string.permission_deny))
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(Res.string.permission_deny))
                     }
@@ -134,7 +119,7 @@ fun HomePage(
                             modifier = Modifier.weight(1f).padding(start = 4.dp),
                             onClick = { permissionHelper.openSettings() },
                         ) {
-                            Icon(Icons.Default.Settings, stringResource(Res.string.permission_settings))
+                            Icon(MaterialSymbols.Settings, stringResource(Res.string.permission_settings))
                             Spacer(Modifier.width(4.dp))
                             Text(stringResource(Res.string.permission_settings))
                         }
@@ -143,7 +128,7 @@ fun HomePage(
                             modifier = Modifier.weight(1f).padding(start = 4.dp),
                             onClick = onNotificationPermissionRequest,
                         ) {
-                            Icon(Icons.Default.Security, stringResource(Res.string.permission_grant))
+                            Icon(MaterialSymbols.Security, stringResource(Res.string.permission_grant))
                             Spacer(Modifier.width(4.dp))
                             Text(stringResource(Res.string.permission_grant))
                         }

@@ -1,50 +1,10 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Article
-import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
-import androidx.compose.material.icons.automirrored.filled.LastPage
-import androidx.compose.material.icons.automirrored.filled.NoteAdd
-import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.FirstPage
-import androidx.compose.material.icons.filled.FreeCancellation
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Numbers
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -53,8 +13,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -65,6 +23,7 @@ import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
@@ -74,6 +33,8 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 @Composable
 fun LendingDetailsScreen(
@@ -131,7 +92,7 @@ private fun LendingDetailsScreen(
                             IconButton(
                                 onClick = { showingCancelConfirmation = true },
                             ) {
-                                Icon(Icons.Default.FreeCancellation, stringResource(Res.string.lending_details_cancel))
+                                Icon(MaterialSymbols.FreeCancellation, stringResource(Res.string.lending_details_cancel))
                             }
                         }
                     }
@@ -145,7 +106,7 @@ private fun LendingDetailsScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CheckCircle,
+                                imageVector = MaterialSymbols.CheckCircle,
                                 contentDescription = stringResource(Res.string.lending_details_complete),
                                 tint = Color(0xFF58F158),
                                 modifier = Modifier.padding(end = 8.dp),
@@ -165,7 +126,7 @@ private fun LendingDetailsScreen(
                     CardWithIcon(
                         title = stringResource(Res.string.lending_details_confirmation_pending_title),
                         message = stringResource(Res.string.lending_details_confirmation_pending_message),
-                        icon = Icons.Default.Pending,
+                        icon = MaterialSymbols.Pending,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -181,7 +142,7 @@ private fun LendingDetailsScreen(
                     CardWithIcon(
                         title = stringResource(Res.string.lending_details_pickup_pending_title),
                         message = stringResource(Res.string.lending_details_pickup_pending_message),
-                        icon = Icons.Default.Inventory2,
+                        icon = MaterialSymbols.Inventory2,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -199,7 +160,7 @@ private fun LendingDetailsScreen(
                     CardWithIcon(
                         title = stringResource(Res.string.lending_details_incomplete_return_title),
                         message = stringResource(Res.string.lending_details_incomplete_return_message),
-                        icon = Icons.AutoMirrored.Default.AssignmentReturn,
+                        icon = MaterialSymbols.AssignmentReturn,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -210,7 +171,7 @@ private fun LendingDetailsScreen(
                     CardWithIcon(
                         title = stringResource(Res.string.lending_details_return_pending_title),
                         message = stringResource(Res.string.lending_details_return_pending_message),
-                        icon = Icons.AutoMirrored.Default.AssignmentReturn,
+                        icon = MaterialSymbols.AssignmentReturn,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -226,7 +187,7 @@ private fun LendingDetailsScreen(
                     CardWithIcon(
                         title = stringResource(Res.string.lending_details_memory_pending_title),
                         message = stringResource(Res.string.lending_details_memory_pending_message),
-                        icon = Icons.AutoMirrored.Filled.NoteAdd,
+                        icon = MaterialSymbols.NoteAdd,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
                         colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -270,13 +231,13 @@ fun GeneralLendingDetails(
             modifier = Modifier.padding(12.dp)
         )
         DataRow(
-            icon = Icons.Default.Numbers,
+            icon = MaterialSymbols.Numbers,
             titleRes = Res.string.lending_details_id,
             text = lending.id.toString(),
         )
 
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 8.dp)) {
-            Icon(Icons.Default.FirstPage, null, Modifier.padding(end = 8.dp))
+            Icon(MaterialSymbols.FirstPage, null, Modifier.padding(end = 8.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     text = stringResource(Res.string.lending_details_from),
@@ -287,7 +248,7 @@ fun GeneralLendingDetails(
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
-            Icon(Icons.AutoMirrored.Default.LastPage, null, Modifier.padding(end = 8.dp))
+            Icon(MaterialSymbols.LastPage, null, Modifier.padding(end = 8.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     text = stringResource(Res.string.lending_details_until),
@@ -302,7 +263,7 @@ fun GeneralLendingDetails(
 
         lending.notes?.let { notes ->
             DataRow(
-                icon = Icons.AutoMirrored.Default.Notes,
+                icon = MaterialSymbols.Notes,
                 titleRes = Res.string.lending_details_notes,
                 text = notes,
             )
@@ -410,7 +371,7 @@ fun MemoryActions(
             onClick = onEditorRequest,
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.Article,
+                imageVector = MaterialSymbols.Article,
                 contentDescription = stringResource(Res.string.memory_editor)
             )
             Spacer(Modifier.size(8.dp))
@@ -450,7 +411,7 @@ fun MemoryViewButtons(
                     fpm.shareFile { lending.fetchFilePath(memoryPdf) }
                 },
             ) {
-                Icon(Icons.Default.Share, stringResource(Res.string.share))
+                Icon(MaterialSymbols.Share, stringResource(Res.string.share))
             }
         }
         if (PlatformOpenFileLogic.isSupported) {

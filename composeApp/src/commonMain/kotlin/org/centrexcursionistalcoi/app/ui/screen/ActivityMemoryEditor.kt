@@ -1,39 +1,13 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.UploadFile
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -48,11 +22,11 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
@@ -61,6 +35,7 @@ import org.centrexcursionistalcoi.app.utils.unaccent
 import org.centrexcursionistalcoi.app.viewmodel.ActivityMemoryEditorViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.uuid.Uuid
 
 @Composable
 fun ActivityMemoryEditor(
@@ -111,7 +86,7 @@ fun ActivityMemoryEditor(
                     IconButton(
                         onClick = onBack,
                     ) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = stringResource(Res.string.back))
+                        Icon(MaterialSymbols.ArrowBack, contentDescription = stringResource(Res.string.back))
                     }
                 },
                 title = { Text(stringResource(Res.string.memory_editor_title)) },
@@ -121,7 +96,7 @@ fun ActivityMemoryEditor(
                         onClick = { onSave(place, memberUsers, externalUsers, sport, state, files) }
                     ) {
                         Icon(
-                            Icons.Default.CloudUpload,
+                            MaterialSymbols.Upload,
                             stringResource(Res.string.memory_editor_save)
                         )
                     }
@@ -169,7 +144,7 @@ fun ActivityMemoryEditor(
                         onClick = { memberUsers -= user },
                         label = { Text(user.fullName) },
                         trailingIcon = {
-                            Icon(Icons.Default.Remove, stringResource(Res.string.remove))
+                            Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
                         },
                         modifier = Modifier.padding(horizontal = 4.dp),
                     )
@@ -226,7 +201,7 @@ fun ActivityMemoryEditor(
                 onClick = { imagePicker.launch() },
                 enabled = !isSaving,
             ) {
-                Icon(Icons.Default.UploadFile, stringResource(Res.string.memory_editor_upload_image))
+                Icon(MaterialSymbols.AttachFile, stringResource(Res.string.memory_editor_upload_image))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(Res.string.memory_editor_upload_image))
             }
@@ -238,7 +213,7 @@ fun ActivityMemoryEditor(
                         onClick = { files -= file },
                         label = { Text(file.name) },
                         trailingIcon = {
-                            Icon(Icons.Default.Remove, stringResource(Res.string.remove))
+                            Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
                         },
                         modifier = Modifier.padding(horizontal = 4.dp),
                     )

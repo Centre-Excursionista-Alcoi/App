@@ -17,21 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.CallMade
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.filled.ContactPhone
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
@@ -97,6 +82,21 @@ import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
 import org.centrexcursionistalcoi.app.ui.icons.Whatsapp
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Call
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CallMade
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Cancel
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Check
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircle
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircleFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ContactPhone
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Help
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.KeyboardDoubleArrowRight
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Nfc
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.QrCodeScanner
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
@@ -257,7 +257,7 @@ private fun LendingManagementScreen(
                         IconButton(
                             onClick = { showingDeleteConfirmation = true },
                         ) {
-                            Icon(Icons.Default.Delete, stringResource(Res.string.lending_details_delete))
+                            Icon(MaterialSymbols.Delete, stringResource(Res.string.lending_details_delete))
                         }
                     }
                     val isComplete = lending.status() == Lending.Status.MEMORY_SUBMITTED
@@ -270,7 +270,7 @@ private fun LendingManagementScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CheckCircle,
+                                imageVector = MaterialSymbols.CheckCircle,
                                 contentDescription = stringResource(Res.string.lending_details_complete),
                                 tint = Color(0xFF58F158),
                                 modifier = Modifier.padding(end = 8.dp),
@@ -316,7 +316,7 @@ fun LazyListScope.lendingManagementScreenContent(
                         onConfirmRequest().invokeOnCompletion { isConfirming = false }
                     },
                 ) {
-                    Icon(Icons.Default.Check, stringResource(Res.string.confirm))
+                    Icon(MaterialSymbols.Check, stringResource(Res.string.confirm))
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(Res.string.confirm))
                 }
@@ -445,7 +445,7 @@ private fun LendingPickupReturnScreen(
                             }
                         },
                     ) {
-                        Icon(Icons.Default.QrCodeScanner, null)
+                        Icon(MaterialSymbols.QrCodeScanner, null)
                     }
                     TooltipBox(
                         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
@@ -457,7 +457,7 @@ private fun LendingPickupReturnScreen(
                         IconButton(
                             onClick = { showingDeleteConfirmation = true },
                         ) {
-                            Icon(Icons.Default.Delete, stringResource(Res.string.lending_details_delete))
+                            Icon(MaterialSymbols.Delete, stringResource(Res.string.lending_details_delete))
                         }
                     }
                 },
@@ -538,7 +538,7 @@ private fun AnimatedVisibilityScope.LendingFAB(
                 }
             ) {
                 Icon(
-                    Icons.Default.Check,
+                    MaterialSymbols.Check,
                     stringResource(Res.string.management_pickup_screen_confirm),
                     Modifier.sharedBounds(rememberSharedContentState("icon"), this@LendingFAB),
                 )
@@ -560,7 +560,7 @@ private fun AnimatedVisibilityScope.LendingFAB(
                     onClick = { showingSkipWarning = true }
                 ) {
                     Icon(
-                        Icons.Default.KeyboardDoubleArrowRight,
+                        MaterialSymbols.KeyboardDoubleArrowRight,
                         stringResource(Res.string.management_pickup_screen_skip),
                         Modifier.sharedBounds(rememberSharedContentState("icon"), this@LendingFAB),
                     )
@@ -584,7 +584,7 @@ private fun GeneralLendingDetailsExtra(
     val lendingUser = user.lendingUser!!
 
     DataRow(
-        icon = Icons.Default.Face,
+        icon = MaterialSymbols.Face,
         titleRes = Res.string.lending_details_user,
         text = user.fullName,
     )
@@ -599,7 +599,7 @@ private fun GeneralLendingDetailsExtra(
                 }
             }
         ) {
-            Icon(Icons.Default.ContactPhone, stringResource(Res.string.lending_details_copy_number))
+            Icon(MaterialSymbols.ContactPhone, stringResource(Res.string.lending_details_copy_number))
             Text(stringResource(Res.string.lending_details_copy_number), Modifier.weight(1f).padding(start = 8.dp))
         }
         OutlinedButton(
@@ -608,7 +608,7 @@ private fun GeneralLendingDetailsExtra(
                 uriHandler.openUri("mailto:${lending.user.email}")
             }
         ) {
-            Icon(Icons.Default.Email, stringResource(Res.string.lending_details_email))
+            Icon(MaterialSymbols.Mail, stringResource(Res.string.lending_details_email))
             Text(stringResource(Res.string.lending_details_email), Modifier.weight(1f).padding(start = 8.dp))
         }
     }
@@ -629,7 +629,7 @@ private fun GeneralLendingDetailsExtra(
                 uriHandler.openUri("tel:$internationalPhone")
             }
         ) {
-            Icon(Icons.Default.Call, stringResource(Res.string.lending_details_call_user))
+            Icon(MaterialSymbols.Call, stringResource(Res.string.lending_details_call_user))
             Text(stringResource(Res.string.lending_details_call_user), Modifier.weight(1f).padding(start = 8.dp))
         }
         if (isMobilePhone) {
@@ -650,7 +650,7 @@ private fun GeneralLendingDetailsExtra(
     if (givenBy != null && givenAt != null) {
         val givenAt = givenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { "${it.date} ${it.time}" }
         DataRow(
-            icon = Icons.AutoMirrored.Filled.CallMade,
+            icon = MaterialSymbols.CallMade,
             title = stringResource(Res.string.management_lending_given_by_title),
             text = stringResource(Res.string.management_lending_given_by_date, givenBy.fullName, givenAt),
         )
@@ -671,7 +671,7 @@ private fun GeneralLendingDetailsExtra(
             .toList()
             .joinToString("\n") { (type, items) -> "- ${type.displayName} (${items.size})" }
         DataRow(
-            icon = Icons.AutoMirrored.Filled.CallMade,
+            icon = MaterialSymbols.CallMade,
             title = stringResource(Res.string.management_lending_returned_to_title, returnedTo),
             text = stringResource(Res.string.management_lending_returned_to_data, receivedAtStr, items),
         )
@@ -700,7 +700,7 @@ private fun LendingPickupReturnContent(
                 modifier = Modifier.fillMaxWidth().padding(12.dp)
             ) {
                 Icon(
-                    Icons.Default.Nfc,
+                    MaterialSymbols.Nfc,
                     contentDescription = null,
                     modifier = Modifier
                         .padding(top = 16.dp, end = 16.dp, start = 4.dp)
@@ -783,11 +783,11 @@ private fun ScanItemListItem(
         )
         Icon(
             imageVector = if (scanned) {
-                Icons.Default.CheckCircleOutline
+                MaterialSymbols.CheckCircle
             } else if (dismissed) {
-                Icons.Default.RemoveCircleOutline
+                MaterialSymbols.Cancel
             } else {
-                Icons.AutoMirrored.Default.HelpOutline
+                MaterialSymbols.Help
             },
             contentDescription = null,
             tint = if (scanned) {

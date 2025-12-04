@@ -1,37 +1,23 @@
 package org.centrexcursionistalcoi.app.ui.page.main.profile
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.SyncAlt
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
-import io.ktor.util.toCharArray
+import io.ktor.util.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CloudOff
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CloudSync
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.InformationCard
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.jetbrains.compose.resources.painterResource
@@ -141,7 +127,7 @@ fun FEMECVAccountCard(
                     }
                 },
             ) {
-                Icon(imageVector = Icons.Default.CloudOff, contentDescription = stringResource(Res.string.femecv_sync_disable))
+                Icon(imageVector = MaterialSymbols.CloudOff, contentDescription = stringResource(Res.string.femecv_sync_disable))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(Res.string.femecv_sync_disable))
             }
@@ -150,7 +136,7 @@ fun FEMECVAccountCard(
                 onClick = { showLoginDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Icon(imageVector = Icons.Default.SyncAlt, contentDescription = stringResource(Res.string.femecv_sync_enable))
+                Icon(imageVector = MaterialSymbols.CloudSync, contentDescription = stringResource(Res.string.femecv_sync_enable))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(Res.string.femecv_sync_enable))
             }

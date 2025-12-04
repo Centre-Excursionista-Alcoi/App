@@ -5,28 +5,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.HealthAndSafety
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.active_insurances_title
+import cea_app.composeapp.generated.resources.insurance
+import cea_app.composeapp.generated.resources.insurance_add_title
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.InsuranceDialog
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
 import org.centrexcursionistalcoi.app.ui.icons.FEMECV
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.InformationCard
 import org.jetbrains.compose.resources.stringResource
 
@@ -48,7 +43,7 @@ fun InsurancesListCard(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         action = if (onAddInsuranceRequested != null) {
             IconAction(
-                icon = Icons.Default.Add,
+                icon = MaterialSymbols.Add,
                 contentDescription = stringResource(Res.string.insurance_add_title),
                 onClick = onAddInsuranceRequested
             )
@@ -63,7 +58,7 @@ fun InsurancesListCard(
                         if (insurance.insuranceCompany == "FEMECV")
                             BrandIcons.FEMECV
                         else
-                            Icons.Default.HealthAndSafety,
+                            MaterialSymbols.HealthAndSafety,
                         stringResource(Res.string.insurance),
                         modifier = Modifier.size(32.dp)
                     )

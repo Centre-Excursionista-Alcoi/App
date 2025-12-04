@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,6 +33,8 @@ import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.displayName
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArrowBack
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
 import org.centrexcursionistalcoi.app.viewmodel.LendingSignUpViewModel
@@ -65,7 +65,7 @@ private fun LendingUserSignUpPage(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBackRequested) {
-                        Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = stringResource(Res.string.back))
+                        Icon(imageVector = MaterialSymbols.ArrowBack, contentDescription = stringResource(Res.string.back))
                     }
                 },
                 title = { Text(stringResource(Res.string.lending_signup_title)) },

@@ -21,15 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.AssignmentReturn
-import androidx.compose.material.icons.automirrored.filled.NoteAdd
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.HealthAndSafety
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CardDefaults
@@ -73,6 +64,15 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AssignmentReturn
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NoteAdd
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Pending
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
@@ -184,7 +184,7 @@ private fun LendingsPage_Content(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
-                        Icon(Icons.Default.Badge, null, modifier = Modifier.padding(end = 16.dp))
+                        Icon(MaterialSymbols.Badge, null, modifier = Modifier.padding(end = 16.dp))
                         Text(
                             text = stringResource(Res.string.lending_signup_required),
                             style = MaterialTheme.typography.bodyMedium,
@@ -203,7 +203,7 @@ private fun LendingsPage_Content(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp).padding(horizontal = 16.dp)) {
-                        Icon(Icons.Default.HealthAndSafety, null, modifier = Modifier.padding(end = 16.dp))
+                        Icon(MaterialSymbols.HealthAndSafety, null, modifier = Modifier.padding(end = 16.dp))
                         Text(
                             text = stringResource(Res.string.lending_no_active_insurances_title),
                             style = MaterialTheme.typography.bodyMedium,
@@ -388,7 +388,7 @@ fun LendingItem_Small(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Remove,
+                                imageVector = MaterialSymbols.Remove,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
@@ -401,7 +401,7 @@ fun LendingItem_Small(
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            imageVector = MaterialSymbols.Add,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
@@ -459,7 +459,7 @@ fun LendingItem_Large(
                         onClick = { onRemoveItemFromShoppingListRequest() }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Remove,
+                            imageVector = MaterialSymbols.Remove,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
@@ -471,7 +471,7 @@ fun LendingItem_Large(
                     onClick = { onAddItemToShoppingListRequest() }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = MaterialSymbols.Add,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -553,12 +553,12 @@ fun LendingItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth().padding(8.dp),
         ) {
-            Icon(Icons.Default.CalendarStartOutline, null)
+            Icon(MaterialSymbols.CalendarStartOutline, null)
             Text(
                 text = lending.from.toString(),
                 modifier = Modifier.weight(1f).padding(start = 4.dp, end = 12.dp)
             )
-            Icon(Icons.Default.CalendarEndOutline, null)
+            Icon(MaterialSymbols.CalendarEndOutline, null)
             Text(
                 text = lending.to.toString(),
                 modifier = Modifier.weight(1f).padding(start = 4.dp)
@@ -576,18 +576,18 @@ fun LendingItem(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         )
         val badge = when (lending.status()) {
-            Lending.Status.REQUESTED -> Pair(Res.string.lending_not_confirmed, Icons.Default.Pending)
-            Lending.Status.CONFIRMED -> Pair(Res.string.lending_pending_pickup, Icons.Default.Inventory2)
+            Lending.Status.REQUESTED -> Pair(Res.string.lending_not_confirmed, MaterialSymbols.Pending)
+            Lending.Status.CONFIRMED -> Pair(Res.string.lending_pending_pickup, MaterialSymbols.Inventory2)
             Lending.Status.TAKEN -> {
                 val returnStarted = lending.receivedItems.isNotEmpty()
                 if (returnStarted) {
-                    Pair(Res.string.lending_pending_return_partial, Icons.AutoMirrored.Default.AssignmentReturn)
+                    Pair(Res.string.lending_pending_return_partial, MaterialSymbols.AssignmentReturn)
                 } else {
-                    Pair(Res.string.lending_pending_return, Icons.AutoMirrored.Default.AssignmentReturn)
+                    Pair(Res.string.lending_pending_return, MaterialSymbols.AssignmentReturn)
                 }
             }
 
-            Lending.Status.RETURNED -> Pair(Res.string.lending_pending_memory, Icons.AutoMirrored.Default.NoteAdd)
+            Lending.Status.RETURNED -> Pair(Res.string.lending_pending_memory, MaterialSymbols.NoteAdd)
             else -> null
         }
         badge?.let { (labelRes, icon) ->

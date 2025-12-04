@@ -2,25 +2,14 @@ package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.none
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.RadioButtonChecked
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.RadioButtonUnchecked
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -81,7 +70,7 @@ fun <T> DropdownField(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = if (value == null) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                            imageVector = if (value == null) MaterialSymbols.RadioButtonChecked else MaterialSymbols.RadioButtonUnchecked,
                             contentDescription = if (value == null) "Selected" else "Not selected"
                         )
                     },
@@ -106,7 +95,7 @@ fun <T> DropdownField(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                            imageVector = if (isSelected) MaterialSymbols.RadioButtonChecked else MaterialSymbols.RadioButtonUnchecked,
                             contentDescription = if (isSelected) "Selected" else "Not selected"
                         )
                     },

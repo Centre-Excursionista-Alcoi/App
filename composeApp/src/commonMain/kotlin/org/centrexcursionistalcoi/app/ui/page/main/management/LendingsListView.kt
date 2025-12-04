@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -77,6 +74,9 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.storage.MANAGEMENT_TOGGLE_COMPLETED_LENDINGS
 import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.page.main.LendingItem
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
@@ -153,7 +153,7 @@ fun LendingsListView(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item {
                     TooltipIconButton(
-                        imageVector = Icons.Default.Close,
+                        imageVector = MaterialSymbols.Close,
                         tooltip = stringResource(Res.string.close),
                     ) { selectedLending = null }
                 }
@@ -277,7 +277,7 @@ private fun LendingsLazyColumn(
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
-                        imageVector = Icons.Default.ChevronRight,
+                        imageVector = MaterialSymbols.ChevronRight,
                         contentDescription = null,
                         modifier = Modifier.rotate(completedLendingsIndicatorRotation),
                     )

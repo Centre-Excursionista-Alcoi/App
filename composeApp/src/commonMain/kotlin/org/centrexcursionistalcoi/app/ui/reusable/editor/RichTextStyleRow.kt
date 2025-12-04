@@ -5,23 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
-import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
-import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.FormatAlignCenter
-import androidx.compose.material.icons.outlined.FormatBold
-import androidx.compose.material.icons.outlined.FormatItalic
-import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.FormatSize
-import androidx.compose.material.icons.outlined.FormatStrikethrough
-import androidx.compose.material.icons.outlined.FormatUnderlined
-import androidx.compose.material.icons.outlined.Spellcheck
-import androidx.compose.material.icons.outlined.TextDecrease
-import androidx.compose.material.icons.outlined.TextIncrease
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +19,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Circle
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Code
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignCenter
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignLeft
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignRight
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatBold
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatItalic
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatListBulleted
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatListNumbered
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatSize
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatStrikethrough
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatUnderlined
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Spellcheck
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.TextDecrease
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.TextIncrease
 
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -59,7 +58,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Left,
-                icon = Icons.AutoMirrored.Outlined.FormatAlignLeft
+                icon = MaterialSymbols.FormatAlignLeft
             )
         }
 
@@ -74,7 +73,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Center,
-                icon = Icons.Outlined.FormatAlignCenter
+                icon = MaterialSymbols.FormatAlignCenter
             )
         }
 
@@ -89,7 +88,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Right,
-                icon = Icons.AutoMirrored.Outlined.FormatAlignRight
+                icon = MaterialSymbols.FormatAlignRight
             )
         }
 
@@ -104,7 +103,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.fontWeight == FontWeight.Bold,
-                icon = Icons.Outlined.FormatBold
+                icon = MaterialSymbols.FormatBold
             )
         }
 
@@ -119,7 +118,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.fontStyle == FontStyle.Italic,
-                icon = Icons.Outlined.FormatItalic
+                icon = MaterialSymbols.FormatItalic
             )
         }
 
@@ -134,7 +133,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true,
-                icon = Icons.Outlined.FormatUnderlined
+                icon = MaterialSymbols.FormatUnderlined
             )
         }
 
@@ -149,7 +148,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true,
-                icon = Icons.Outlined.FormatStrikethrough
+                icon = MaterialSymbols.FormatStrikethrough
             )
         }
 
@@ -164,7 +163,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.fontSize == 28.sp,
-                icon = Icons.Outlined.FormatSize
+                icon = MaterialSymbols.FormatSize
             )
         }
 
@@ -179,7 +178,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.color == Color.Red,
-                icon = Icons.Filled.Circle,
+                icon = MaterialSymbols.Circle,
                 tint = Color.Red
             )
         }
@@ -195,7 +194,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentSpanStyle.background == Color.Yellow,
-                icon = Icons.Outlined.Circle,
+                icon = MaterialSymbols.Circle,
                 tint = Color.Yellow
             )
         }
@@ -216,7 +215,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.isUnorderedList,
-                icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
+                icon = MaterialSymbols.FormatListBulleted,
             )
         }
 
@@ -227,7 +226,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.isOrderedList,
-                icon = Icons.Outlined.FormatListNumbered,
+                icon = MaterialSymbols.FormatListNumbered,
             )
         }
 
@@ -237,7 +236,7 @@ fun RichTextStyleRow(
                     state.increaseListLevel()
                 },
                 enabled = enabled && state.canIncreaseListLevel,
-                icon = Icons.Outlined.TextIncrease,
+                icon = MaterialSymbols.TextIncrease,
             )
         }
 
@@ -247,7 +246,7 @@ fun RichTextStyleRow(
                     state.decreaseListLevel()
                 },
                 enabled = enabled && state.canDecreaseListLevel,
-                icon = Icons.Outlined.TextDecrease,
+                icon = MaterialSymbols.TextDecrease,
             )
         }
 
@@ -267,7 +266,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.currentRichSpanStyle is SpellCheck,
-                icon = Icons.Outlined.Spellcheck,
+                icon = MaterialSymbols.Spellcheck,
             )
         }
 
@@ -278,7 +277,7 @@ fun RichTextStyleRow(
                 },
                 enabled = enabled,
                 isSelected = state.isCodeSpan,
-                icon = Icons.Outlined.Code,
+                icon = MaterialSymbols.Code,
             )
         }
     }

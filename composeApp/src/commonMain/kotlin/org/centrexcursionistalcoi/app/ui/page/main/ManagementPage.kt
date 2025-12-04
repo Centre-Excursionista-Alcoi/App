@@ -3,13 +3,6 @@ package org.centrexcursionistalcoi.app.ui.page.main
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Feed
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
@@ -32,10 +25,22 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.EventFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.InventoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Newsmode
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NewsmodeFilled
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
 import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
@@ -60,32 +65,32 @@ private sealed class ManagementPage(
 ) {
     object Lendings : ManagementPage(
         key = "lendings",
-        tabData = { TabData.fromResources(Res.string.management_lendings, Icons.Default.Inventory2) }
+        tabData = { TabData.fromResources(Res.string.management_lendings, MaterialSymbols.Inventory2, MaterialSymbols.Inventory2Filled) }
     )
 
     object Departments : ManagementPage(
         key = "departments",
-        tabData = { TabData.fromResources(Res.string.management_departments, Icons.Default.Category) }
+        tabData = { TabData.fromResources(Res.string.management_departments, MaterialSymbols.Category, MaterialSymbols.CategoryFilled) }
     )
 
     object Users : ManagementPage(
         key = "users",
-        tabData = { TabData.fromResources(Res.string.management_users, Icons.Default.Face) }
+        tabData = { TabData.fromResources(Res.string.management_users, MaterialSymbols.Face, MaterialSymbols.FaceFilled) }
     )
 
     object Posts : ManagementPage(
         key = "posts",
-        tabData = { TabData.fromResources(Res.string.management_posts, Icons.AutoMirrored.Filled.Feed) }
+        tabData = { TabData.fromResources(Res.string.management_posts, MaterialSymbols.Newsmode, MaterialSymbols.NewsmodeFilled) }
     )
 
     object Events : ManagementPage(
         key = "events",
-        tabData = { TabData.fromResources(Res.string.management_events, Icons.Default.Event) }
+        tabData = { TabData.fromResources(Res.string.management_events, MaterialSymbols.Event, MaterialSymbols.EventFilled) }
     )
 
     object Inventory : ManagementPage(
         key = "inventory",
-        tabData = { TabData.fromResources(Res.string.management_inventory,  Icons.Default.Inventory) }
+        tabData = { TabData.fromResources(Res.string.management_inventory,  MaterialSymbols.Inventory, MaterialSymbols.InventoryFilled) }
     )
 
 

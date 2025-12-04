@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +39,9 @@ import org.centrexcursionistalcoi.app.ui.data.DialogContext
 import org.centrexcursionistalcoi.app.ui.data.DialogContextImpl
 import org.centrexcursionistalcoi.app.ui.data.IconAction
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.utils.currentOrThrow
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -118,7 +118,7 @@ fun <T> ListCard(
             onCreate?.let { create ->
                 IconButton(
                     onClick = create
-                ) { Icon(Icons.Default.Add, stringResource(Res.string.create)) }
+                ) { Icon(MaterialSymbols.Add, stringResource(Res.string.create)) }
             }
         }
         if (list == null) {
@@ -157,7 +157,7 @@ fun <T> ListCard(
                                 IconButton(
                                     onClick = { deleting = item }
                                 ) {
-                                    Icon(Icons.Default.Delete, stringResource(Res.string.delete))
+                                    Icon(MaterialSymbols.Delete, stringResource(Res.string.delete))
                                 }
                             }
                             if (trailingContent != null) {

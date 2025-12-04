@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +36,10 @@ import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
 import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Language
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Web
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsCategory
@@ -83,7 +83,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 SettingsOptionsRow(
                     title = stringResource(Res.string.settings_language),
                     options = availableLanguages,
-                    icon = Icons.Default.Language,
+                    icon = MaterialSymbols.Language,
                     onOptionSelected = { (lang) ->
                         settings.putString(SETTINGS_LANGUAGE, lang)
                         LocaleUpdater.updateLocale(lang)
@@ -178,7 +178,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             modifier = Modifier.weight(1f),
                             onClick = { uriHandler.openUri("https://arnyminerz.com") },
                         ) {
-                            Icon(Icons.Default.Web, null, modifier = Modifier.padding(end = 8.dp))
+                            Icon(MaterialSymbols.Web, null, modifier = Modifier.padding(end = 8.dp))
                             Text(stringResource(Res.string.settings_dev_credit_website))
                         }
                         Spacer(Modifier.width(8.dp))
@@ -186,7 +186,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                             modifier = Modifier.weight(1f),
                             onClick = { uriHandler.openUri("mailto:arnyminerz@proton.me") },
                         ) {
-                            Icon(Icons.Default.Email, null, modifier = Modifier.padding(end = 8.dp))
+                            Icon(MaterialSymbols.Mail, null, modifier = Modifier.padding(end = 8.dp))
                             Text(stringResource(Res.string.settings_dev_credit_email))
                         }
                     }

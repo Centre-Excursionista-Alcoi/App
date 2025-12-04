@@ -20,15 +20,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,6 +51,15 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Edit
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FilterList
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FilterListOff
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Sort
 import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
@@ -328,7 +328,7 @@ fun <T> ListView_ListColumn(
                 Row {
                     AnimatedVisibility(search.isNotEmpty()) {
                         TooltipIconButton(
-                            imageVector = Icons.Default.Close,
+                            imageVector = MaterialSymbols.Close,
                             tooltip = stringResource(Res.string.clear),
                             positioning = TooltipAnchorPosition.Left,
                             onClick = { search = "" }
@@ -336,7 +336,7 @@ fun <T> ListView_ListColumn(
                     }
                     if (isCreatingSupported && onCreateRequested != null) {
                         TooltipIconButton(
-                            imageVector = Icons.Default.Add,
+                            imageVector = MaterialSymbols.Add,
                             tooltip = stringResource(Res.string.create),
                             positioning = TooltipAnchorPosition.Left,
                             onClick = onCreateRequested,
@@ -344,7 +344,7 @@ fun <T> ListView_ListColumn(
                     }
                     if (filters.isNotEmpty()) {
                         DropdownIconButton(
-                            imageVector = if (activeFilters.isEmpty()) Icons.Default.FilterListOff else Icons.Default.FilterList,
+                            imageVector = if (activeFilters.isEmpty()) MaterialSymbols.FilterListOff else MaterialSymbols.FilterList,
                             items = filters.keys,
                             selectedItems = activeFilters,
                             onItemClicked = { filterKey ->
@@ -360,7 +360,7 @@ fun <T> ListView_ListColumn(
                         )
                     }
                     DropdownIconButton(
-                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                        imageVector = MaterialSymbols.Sort,
                         items = sortByOptions,
                         selection = sortBy,
                         toString = { it.label() },
@@ -409,7 +409,7 @@ fun <T> ListView_ListColumn(
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             itemTrailingContent?.invoke(this, item)
-                            Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            Icon(MaterialSymbols.ChevronRight, contentDescription = null)
                         }
                     },
                     modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onSelectedItemChange(item) },
@@ -474,7 +474,7 @@ fun ListView_Content(
                 IconButton(
                     onClick = onCloseRequested,
                 ) {
-                    Icon(Icons.Default.Close, stringResource(Res.string.close))
+                    Icon(MaterialSymbols.Close, stringResource(Res.string.close))
                 }
                 Text(
                     text = itemDisplayName,
@@ -484,7 +484,7 @@ fun ListView_Content(
                 if (isEditSupported) {
                     if (!isEditing) {
                         TooltipIconButton(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = MaterialSymbols.Edit,
                             tooltip = stringResource(Res.string.edit),
                             positioning = TooltipAnchorPosition.Left,
                             onClick = onEditRequest,
@@ -493,7 +493,7 @@ fun ListView_Content(
                 }
                 if (onDeleteRequest != null) {
                     TooltipIconButton(
-                        imageVector = Icons.Default.Delete,
+                        imageVector = MaterialSymbols.Delete,
                         tooltip = stringResource(Res.string.delete),
                         positioning = TooltipAnchorPosition.Left,
                         onClick = onDeleteRequest,

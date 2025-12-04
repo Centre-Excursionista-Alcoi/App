@@ -14,8 +14,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -54,6 +52,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
@@ -214,7 +214,7 @@ fun LoginScreen_Form(
             ),
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Icon(imageVector = Icons.Default.Error, contentDescription = null, modifier = Modifier.padding(8.dp))
+                Icon(imageVector = MaterialSymbols.Error, contentDescription = null, modifier = Modifier.padding(8.dp))
 
                 val serverException = error as? ServerException
                 val message = if (serverException != null) {

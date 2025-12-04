@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +42,9 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Nfc
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Print
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.utils.modIf
 import org.jetbrains.compose.resources.stringResource
@@ -93,7 +93,7 @@ fun QRCodeDialog(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.Nfc, null, modifier = Modifier.size(64.dp).padding(16.dp))
+                    Icon(MaterialSymbols.Nfc, null, modifier = Modifier.size(64.dp).padding(16.dp))
                 }
             },
             confirmButton = {
@@ -185,7 +185,7 @@ private fun ImageDisplay(
                         PlatformPrinter.printImage(imageData)
                     }
                 ) {
-                    Icon(Icons.Default.Print, null)
+                    Icon(MaterialSymbols.Print, null)
                 }
             }
             // TODO: Implement sharing QR codes and barcodes

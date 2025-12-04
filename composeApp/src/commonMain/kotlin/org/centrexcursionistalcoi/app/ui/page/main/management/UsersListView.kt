@@ -2,11 +2,6 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddModerator
-import androidx.compose.material.icons.filled.HealthAndSafety
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
@@ -28,6 +23,12 @@ import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AddModerator
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.PersonOff
 import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
@@ -86,7 +87,7 @@ fun UsersListView(
         itemTrailingContent = { user ->
             if (user.isDisabled) {
                 TooltipIconButton(
-                    imageVector = Icons.Default.PersonOff,
+                    imageVector = MaterialSymbols.PersonOff,
                     tooltip = stringResource(Res.string.management_user_disabled),
                     enabled = false,
                     positioning = TooltipAnchorPosition.Left,
@@ -95,7 +96,7 @@ fun UsersListView(
             }
             if (user.lendingUser != null) {
                 TooltipIconButton(
-                    imageVector = Icons.Default.Inventory2,
+                    imageVector = MaterialSymbols.Inventory,
                     tooltip = stringResource(Res.string.management_user_signed_up_for_lendings),
                     enabled = false,
                     positioning = TooltipAnchorPosition.Left,
@@ -105,7 +106,7 @@ fun UsersListView(
             val hasActiveInsurances = user.insurances.any { it.isActive() }
             if (hasActiveInsurances) {
                 TooltipIconButton(
-                    imageVector = Icons.Default.HealthAndSafety,
+                    imageVector = MaterialSymbols.HealthAndSafety,
                     tooltip = stringResource(Res.string.management_user_has_insurance),
                     enabled = false,
                     positioning = TooltipAnchorPosition.Left,
@@ -117,7 +118,7 @@ fun UsersListView(
             if (user.isDisabled) return@ListView
             if (!user.isAdmin()) {
                 TooltipIconButton(
-                    imageVector = Icons.Default.AddModerator,
+                    imageVector = MaterialSymbols.AddModerator,
                     tooltip = stringResource(Res.string.management_promote_user),
                     positioning = TooltipAnchorPosition.Left,
                     onClick = { promotingUser = user },

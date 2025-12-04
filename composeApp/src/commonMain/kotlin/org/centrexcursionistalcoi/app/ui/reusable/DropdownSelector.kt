@@ -1,23 +1,12 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Checkbox
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckboxUnchecked
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +55,7 @@ fun <T> DropdownSelector(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank,
+                            imageVector = if (isSelected) MaterialSymbols.Checkbox else MaterialSymbols.CheckboxUnchecked,
                             contentDescription = if (isSelected) "Selected" else "Not selected"
                         )
                     },

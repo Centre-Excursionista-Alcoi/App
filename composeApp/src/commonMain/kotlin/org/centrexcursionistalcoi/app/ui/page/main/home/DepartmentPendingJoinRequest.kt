@@ -4,27 +4,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.management_department_join_request
+import cea_app.composeapp.generated.resources.management_department_join_request_approve
+import cea_app.composeapp.generated.resources.management_department_join_request_deny
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Check
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -62,7 +61,7 @@ fun DepartmentPendingJoinRequest(
                 }
             ) {
                 Icon(
-                    Icons.Default.Close,
+                    MaterialSymbols.Close,
                     stringResource(Res.string.management_department_join_request_deny),
                     tint = Color(0xFFE32C2C),
                 )
@@ -75,7 +74,7 @@ fun DepartmentPendingJoinRequest(
                 }
             ) {
                 Icon(
-                    Icons.Default.Check,
+                    MaterialSymbols.Check,
                     stringResource(Res.string.management_department_join_request_approve),
                     tint = Color(0xff4caf50),
                 )

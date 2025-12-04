@@ -1,43 +1,11 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircleOutline
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -59,12 +25,15 @@ import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodExcepti
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -153,7 +122,7 @@ private fun LendingCreationScreen(
                     IconButton(
                         onClick = onBackRequested
                     ) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, stringResource(Res.string.back))
+                        Icon(MaterialSymbols.ArrowBack, stringResource(Res.string.back))
                     }
                 },
                 actions = {
@@ -162,7 +131,7 @@ private fun LendingCreationScreen(
                             onClick = onResetShoppingList,
                             content = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Default.Undo,
+                                    imageVector = MaterialSymbols.Undo,
                                     contentDescription = stringResource(Res.string.lending_creation_reset)
                                 )
                             }
@@ -176,7 +145,7 @@ private fun LendingCreationScreen(
                 ExtendedFloatingActionButton(
                     onClick = onCreateLendingRequest,
                 ) {
-                    Icon(Icons.Default.AddCircleOutline, null)
+                    Icon(MaterialSymbols.AddCircle, null)
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(Res.string.lending_creation_action))
                 }
@@ -270,19 +239,19 @@ private fun LendingCreationScreen(
                                 if (itemError != null && itemError.availableItems.isNullOrEmpty()) {
                                     AssistChip(
                                         onClick = { onRemoveItemTypeFromShoppingList(typeId) },
-                                        label = { Icon(Icons.Default.Delete, null) },
+                                        label = { Icon(MaterialSymbols.Delete, null) },
                                         modifier = Modifier.padding(end = 4.dp),
                                     )
                                 } else {
                                     AssistChip(
                                         onClick = { onRemoveItemFromShoppingList(typeId) },
-                                        label = { Icon(Icons.Default.Remove, null) },
+                                        label = { Icon(MaterialSymbols.Remove, null) },
                                         modifier = Modifier.padding(end = 4.dp),
                                     )
                                     AssistChip(
                                         enabled = canAddMore,
                                         onClick = { onAddItemToShoppingList(typeId) },
-                                        label = { Icon(Icons.Default.Add, null) },
+                                        label = { Icon(MaterialSymbols.Add, null) },
                                     )
                                 }
                             }
@@ -298,7 +267,7 @@ private fun LendingCreationScreen(
             }
             item("warning") {
                 CardWithIcon(
-                    icon = Icons.Default.Info,
+                    icon = MaterialSymbols.Info,
                     title = stringResource(Res.string.lending_creation_warning_title),
                     message = stringResource(Res.string.lending_creation_warning_message),
                     modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
@@ -315,7 +284,7 @@ private fun LendingCreationScreen(
                         key = "error-allocation"
                     ) {
                         CardWithIcon(
-                            icon = Icons.Default.ErrorOutline,
+                            icon = MaterialSymbols.Error,
                             title = stringResource(Res.string.lending_creation_error_allocation_title),
                             message = stringResource(Res.string.lending_creation_error_allocation),
                             modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
@@ -333,7 +302,7 @@ private fun LendingCreationScreen(
                         key = "error-insurance"
                     ) {
                         CardWithIcon(
-                            icon = Icons.Default.ErrorOutline,
+                            icon = MaterialSymbols.Error,
                             title = stringResource(Res.string.lending_creation_error_insurance_title),
                             message = stringResource(Res.string.lending_creation_error_insurance),
                             modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(top = 12.dp).padding(horizontal = 12.dp),
@@ -350,7 +319,7 @@ private fun LendingCreationScreen(
                     { i, _ -> "error-$i" }
                 ) { _, error ->
                     CardWithIcon(
-                        icon = Icons.Default.ErrorOutline,
+                        icon = MaterialSymbols.Error,
                         title = stringResource(Res.string.lending_creation_error_title),
                         message = error.message?.let { message ->
                             stringResource(Res.string.lending_creation_error_message, message)

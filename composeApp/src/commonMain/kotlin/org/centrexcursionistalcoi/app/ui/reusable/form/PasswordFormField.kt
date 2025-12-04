@@ -3,9 +3,6 @@ package org.centrexcursionistalcoi.app.ui.reusable.form
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedSecureTextField
@@ -22,6 +19,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import cea_app.composeapp.generated.resources.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Visibility
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.VisibilityOff
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -49,7 +49,7 @@ fun PasswordFormField(
                 onClick = { displayingPassword = !displayingPassword }
             ) {
                 Icon(
-                    if (displayingPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    if (displayingPassword) MaterialSymbols.VisibilityOff else MaterialSymbols.Visibility,
                     stringResource(if (displayingPassword) Res.string.password_hide else Res.string.password_show)
                 )
             }

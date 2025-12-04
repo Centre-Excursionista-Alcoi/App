@@ -1,0 +1,69 @@
+package org.centrexcursionistalcoi.app.ui.icons.materialsymbols
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.unit.dp
+
+val MaterialSymbols.Checkbox: ImageVector
+    get() {
+        if (_Checkbox != null) {
+            return _Checkbox!!
+        }
+        _Checkbox = ImageVector.Builder(
+            name = "Checkbox",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 960f,
+            viewportHeight = 960f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveToRelative(424f, 536f)
+                lineToRelative(-86f, -86f)
+                quadToRelative(-11f, -11f, -28f, -11f)
+                reflectiveQuadToRelative(-28f, 11f)
+                quadToRelative(-11f, 11f, -11f, 28f)
+                reflectiveQuadToRelative(11f, 28f)
+                lineToRelative(114f, 114f)
+                quadToRelative(12f, 12f, 28f, 12f)
+                reflectiveQuadToRelative(28f, -12f)
+                lineToRelative(226f, -226f)
+                quadToRelative(11f, -11f, 11f, -28f)
+                reflectiveQuadToRelative(-11f, -28f)
+                quadToRelative(-11f, -11f, -28f, -11f)
+                reflectiveQuadToRelative(-28f, 11f)
+                lineTo(424f, 536f)
+                close()
+                moveTo(200f, 840f)
+                quadToRelative(-33f, 0f, -56.5f, -23.5f)
+                reflectiveQuadTo(120f, 760f)
+                verticalLineToRelative(-560f)
+                quadToRelative(0f, -33f, 23.5f, -56.5f)
+                reflectiveQuadTo(200f, 120f)
+                horizontalLineToRelative(560f)
+                quadToRelative(33f, 0f, 56.5f, 23.5f)
+                reflectiveQuadTo(840f, 200f)
+                verticalLineToRelative(560f)
+                quadToRelative(0f, 33f, -23.5f, 56.5f)
+                reflectiveQuadTo(760f, 840f)
+                lineTo(200f, 840f)
+                close()
+                moveTo(200f, 760f)
+                horizontalLineToRelative(560f)
+                verticalLineToRelative(-560f)
+                lineTo(200f, 200f)
+                verticalLineToRelative(560f)
+                close()
+                moveTo(200f, 200f)
+                verticalLineToRelative(560f)
+                verticalLineToRelative(-560f)
+                close()
+            }
+        }.build()
+
+        return _Checkbox!!
+    }
+
+@Suppress("ObjectPropertyName")
+private var _Checkbox: ImageVector? = null

@@ -5,10 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Feed
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +28,10 @@ import net.engawapg.lib.zoomable.zoomable
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.localizedDate
 import org.centrexcursionistalcoi.app.data.rememberImageFiles
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Link
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Newsmode
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.jetbrains.compose.resources.stringResource
 
@@ -41,7 +41,7 @@ fun PostItem(post: ReferencedPost) {
     val uriHandler = LocalUriHandler.current
 
     FeedItem(
-        icon = Icons.AutoMirrored.Filled.Feed,
+        icon = MaterialSymbols.Newsmode,
         title = post.title,
         dateString = post.localizedDate(),
         content = post.content,
@@ -63,7 +63,7 @@ fun PostItem(post: ReferencedPost) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).clickable { uriHandler.openUri(link) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Link, null, tint = Color(0xff267ae8))
+                    Icon(MaterialSymbols.Link, null, tint = Color(0xff267ae8))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = link,
@@ -99,7 +99,7 @@ fun PostItem(post: ReferencedPost) {
                                         onClick = { showingDialog = false },
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Close,
+                                            imageVector = MaterialSymbols.Close,
                                             contentDescription = stringResource(Res.string.close),
                                             tint = Color.White
                                         )

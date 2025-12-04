@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -15,15 +16,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SupervisorAccount
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -80,6 +72,19 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HomeFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Logout
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Receipt
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccount
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccountFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Sync
 import org.centrexcursionistalcoi.app.ui.page.main.HomePage
 import org.centrexcursionistalcoi.app.ui.page.main.LendingsPage
 import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_DEPARTMENTS
@@ -170,27 +175,60 @@ private enum class Page {
 
 private class NavigationItem(
     val icon: ImageVector,
+    val filledIcon: ImageVector,
     val label: StringResource,
     val enabled: Boolean = true,
     val tooltip: StringResource? = null,
-)
+) {
+    @Composable
+    fun Icon(isSelected: Boolean) {
+        AnimatedContent(isSelected) { selected ->
+            Icon(
+                if (selected) filledIcon else icon,
+                stringResource(label)
+            )
+        }
+    }
+}
 
 private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Page, NavigationItem> {
     return mutableMapOf<Page, NavigationItem>().apply {
-        put(Page.HOME, NavigationItem(Icons.Default.Home, Res.string.nav_home))
+        put(
+            Page.HOME,
+            NavigationItem(
+                icon = MaterialSymbols.Home,
+                filledIcon = MaterialSymbols.HomeFilled,
+                label = Res.string.nav_home
+            )
+        )
         put(
             Page.LENDINGS,
             NavigationItem(
-                icon = Icons.Default.Inventory2,
+                icon = MaterialSymbols.Inventory2,
+                filledIcon = MaterialSymbols.Inventory2Filled,
                 label = Res.string.nav_lendings,
                 enabled = !anyActiveLending,
                 tooltip = Res.string.nav_lendings_disabled.takeIf { anyActiveLending }
             )
         )
         if (isAdmin) {
-            put(Page.MANAGEMENT, NavigationItem(Icons.Default.SupervisorAccount, Res.string.nav_management))
+            put(
+                Page.MANAGEMENT,
+                NavigationItem(
+                    icon = MaterialSymbols.SupervisorAccount,
+                    filledIcon = MaterialSymbols.SupervisorAccountFilled,
+                    label = Res.string.nav_management
+                )
+            )
         }
-        put(Page.PROFILE, NavigationItem(Icons.Default.Face, Res.string.nav_profile))
+        put(
+            Page.PROFILE,
+            NavigationItem(
+                icon = MaterialSymbols.Face,
+                filledIcon = MaterialSymbols.FaceFilled,
+                label = Res.string.nav_profile
+            )
+        )
     }.toMap()
 }
 
@@ -325,12 +363,12 @@ private fun MainScreenContent(
                             IconButton(
                                 onClick = onSettingsRequested
                             ) {
-                                Icon(Icons.Default.Settings, stringResource(Res.string.settings))
+                                Icon(MaterialSymbols.Settings, stringResource(Res.string.settings))
                             }
                             IconButton(
                                 onClick = { showingLogoutDialog = true }
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.Logout, stringResource(Res.string.logout))
+                                Icon(MaterialSymbols.Logout, stringResource(Res.string.logout))
                             }
                         }
                     }
@@ -376,7 +414,7 @@ private fun MainScreenContent(
                     onClick = onShoppingListConfirmed,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Receipt,
+                        imageVector = MaterialSymbols.Receipt,
                         contentDescription = stringResource(Res.string.shopping_list_view)
                     )
                     Spacer(Modifier.padding(4.dp))
@@ -639,6 +677,7 @@ private fun ColumnScope.NavigationRailItems(
     }
 
     for ((index, item) in navigationItems.values.withIndex()) {
+        val isSelected = pager.currentPage == index
         if (item.tooltip != null) {
             TooltipBox(
                 state = rememberTooltipState(),
@@ -648,20 +687,20 @@ private fun ColumnScope.NavigationRailItems(
                 }
             ) {
                 NavigationRailItem(
-                    selected = pager.currentPage == index,
+                    selected = isSelected,
                     onClick = { scope.launch { pager.animateScrollToPage(index) } },
                     enabled = item.enabled,
                     label = { Text(stringResource(item.label)) },
-                    icon = { Icon(item.icon, stringResource(item.label)) }
+                    icon = { item.Icon(isSelected) }
                 )
             }
         } else {
             NavigationRailItem(
-                selected = pager.currentPage == index,
+                selected = isSelected,
                 onClick = { scope.launch { pager.animateScrollToPage(index) } },
                 enabled = item.enabled,
                 label = { Text(stringResource(item.label)) },
-                icon = { Icon(item.icon, stringResource(item.label)) }
+                icon = { item.Icon(isSelected) }
             )
         }
     }
@@ -676,7 +715,7 @@ private fun ColumnScope.NavigationRailItems(
         NavigationRailItem(
             selected = false,
             onClick = onSettingsRequested,
-            icon = { Icon(Icons.Default.Settings, stringResource(Res.string.settings)) }
+            icon = { Icon(MaterialSymbols.Settings, stringResource(Res.string.settings)) }
         )
     }
     TooltipBox(
@@ -689,7 +728,7 @@ private fun ColumnScope.NavigationRailItems(
         NavigationRailItem(
             selected = false,
             onClick = onLogoutRequested,
-            icon = { Icon(Icons.AutoMirrored.Default.Logout, stringResource(Res.string.logout)) }
+            icon = { Icon(MaterialSymbols.Logout, stringResource(Res.string.logout)) }
         )
     }
     TooltipBox(
@@ -703,7 +742,7 @@ private fun ColumnScope.NavigationRailItems(
             selected = false,
             enabled = !isSyncing,
             onClick = onSyncRequested,
-            icon = { Icon(Icons.Default.Sync, stringResource(Res.string.force_sync)) }
+            icon = { Icon(MaterialSymbols.Sync, stringResource(Res.string.force_sync)) }
         )
     }
 }

@@ -1,13 +1,14 @@
 package org.centrexcursionistalcoi.app.ui.icons.material
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 
-val Icons.Filled.CalendarStartOutline: ImageVector
+@Suppress("UnusedReceiverParameter")
+val MaterialSymbols.CalendarStartOutline: ImageVector
     get() {
         if (_CalendarStartOutline != null) {
             return _CalendarStartOutline!!

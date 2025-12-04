@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +45,9 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.localizedDate
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Link
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
@@ -137,7 +137,7 @@ fun PostsListView(
                 enabled = !isLoading,
                 onClick = { filePicker.launch() },
             ) {
-                Icon(Icons.Default.FileUpload, stringResource(Res.string.post_upload_images))
+                Icon(MaterialSymbols.AttachFile, stringResource(Res.string.post_upload_images))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(Res.string.post_upload_images))
             }
@@ -209,7 +209,7 @@ fun PostsListView(
                 modifier = Modifier.clickable { uriHandler.openUri(link) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Link, null, tint = Color(0xff267ae8))
+                Icon(MaterialSymbols.Link, null, tint = Color(0xff267ae8))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = link,

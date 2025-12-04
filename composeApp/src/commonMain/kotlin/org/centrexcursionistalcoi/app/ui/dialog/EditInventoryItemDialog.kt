@@ -2,24 +2,15 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Undo
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
@@ -60,11 +51,11 @@ fun EditInventoryItemDialog(
                         if (nfcId != null) {
                             IconButton(
                                 onClick = { nfcId = null }
-                            ) { Icon(Icons.Default.Remove, stringResource(Res.string.remove)) }
+                            ) { Icon(MaterialSymbols.Remove, stringResource(Res.string.remove)) }
                         } else {
                             IconButton(
                                 onClick = { nfcId = item.nfcId }
-                            ) { Icon(Icons.AutoMirrored.Default.Undo, stringResource(Res.string.undo)) }
+                            ) { Icon(MaterialSymbols.Undo, stringResource(Res.string.undo)) }
                         }
                     }
                 )
