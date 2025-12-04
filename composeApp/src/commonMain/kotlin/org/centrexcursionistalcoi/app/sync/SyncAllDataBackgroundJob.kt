@@ -35,6 +35,9 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
      */
     val periodicSyncInterval = 4.hours
 
+    /**
+     * Checks if the database version has been upgraded since the last sync.
+     */
     fun databaseVersionUpgrade(): Boolean {
         val lastSyncVersion = settings.getLongOrNull("lastSyncVersion")?.toInt()
         return lastSyncVersion == null || lastSyncVersion < Database.Schema.version

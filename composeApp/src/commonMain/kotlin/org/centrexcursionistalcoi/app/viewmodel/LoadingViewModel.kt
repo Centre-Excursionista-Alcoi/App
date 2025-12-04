@@ -28,36 +28,6 @@ class LoadingViewModel(
 ) : ViewModel() {
     companion object {
         private val log = logging()
-
-        suspend fun syncAll(force: Boolean = false): Boolean {
-            log.d { "Fetching locally stored profile data." }
-            ProfileRepository.getProfile()?.let { profile ->
-                log.d { "Updating Sentry user context..." }
-                Sentry.setUser(
-                    User().apply {
-                        id = profile.sub
-                        email = profile.email
-                    }
-                )
-            } ?: run {
-                log.d { "Profile not locally stored, logging out..." }
-                return false
-            }
-
-            log.d { "Scheduling data sync..." }
-            BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
-                input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "$force"),
-                requiresInternet = true,
-                uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-                logic = SyncAllDataBackgroundJobLogic,
-            )
-
-            log.d { "Renovating FCM token if required" }
-            FCMTokenManager.renovate()
-
-            log.d { "Load finished!" }
-            return true
-        }
     }
 
     private val _progress = MutableStateFlow<Progress?>(null)
@@ -81,7 +51,7 @@ class LoadingViewModel(
 
         try {
             // Try to fetch the profile to see if the session is still valid
-            if (syncAll()) {
+            if (isUserProfileValid()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
                     SyncAllDataBackgroundJobLogic.syncAll(true, progressNotifier)
@@ -112,6 +82,35 @@ class LoadingViewModel(
             _progress.value = null
             _error.value = e
         }
+    }
+
+    /**
+     * Returns true if the user should stay logged in, false otherwise.
+     *
+     * This function fetches the locally stored profile data. If the profile is found,
+     * it updates the Sentry user context and renovates the FCM token if required. If the
+     * profile is not found, it indicates that the user should be logged out.
+     */
+    private suspend fun isUserProfileValid(): Boolean {
+        log.d { "Fetching locally stored profile data." }
+        ProfileRepository.getProfile()?.let { profile ->
+            log.d { "Updating Sentry user context..." }
+            Sentry.setUser(
+                User().apply {
+                    id = profile.sub
+                    email = profile.email
+                }
+            )
+        } ?: run {
+            log.d { "Profile not locally stored, logging out..." }
+            return false
+        }
+
+        log.d { "Renovating FCM token if required" }
+        FCMTokenManager.renovate()
+
+        log.d { "Load finished!" }
+        return true
     }
 
     init {
