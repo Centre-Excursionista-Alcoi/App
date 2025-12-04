@@ -16,6 +16,8 @@ import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.io.files.Path
+import org.centrexcursionistalcoi.app.log.FileLogger
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates.checkForUpdates
 import org.jetbrains.compose.resources.painterResource
@@ -31,7 +33,10 @@ object PointerEventFlow {
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    KmLogging.setLoggers(JvmLogger(FixedLogLevel(true)))
+    KmLogging.setLoggers(
+        JvmLogger(FixedLogLevel(true)),
+        FileLogger(Path("app.log")),
+    )
 
     initializeSentry()
 

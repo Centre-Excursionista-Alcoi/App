@@ -25,3 +25,4 @@ keys/
 .venv
 bundle/
 sentry-debug-meta.properties
+*.log
