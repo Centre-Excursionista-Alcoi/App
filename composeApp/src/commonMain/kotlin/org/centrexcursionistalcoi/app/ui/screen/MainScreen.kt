@@ -5,47 +5,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Badge
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -54,51 +23,24 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HomeFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Logout
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Receipt
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccount
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccountFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Sync
-import org.centrexcursionistalcoi.app.ui.page.main.HomePage
-import org.centrexcursionistalcoi.app.ui.page.main.LendingsPage
-import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_DEPARTMENTS
-import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_INVENTORY
-import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_LENDINGS
-import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_USERS
-import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage
-import org.centrexcursionistalcoi.app.ui.page.main.ProfilePage
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.page.main.*
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.uuid.Uuid
 
 @Composable
 fun MainScreen(
@@ -379,8 +321,9 @@ private fun MainScreenContent(
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
                 NavigationBar {
                     for ((index, item) in navigationItems.values.withIndex()) {
+                        val isSelected = pager.currentPage == index
                         NavigationBarItem(
-                            selected = pager.currentPage == index,
+                            selected = isSelected,
                             enabled = item.enabled,
                             onClick = { scope.launch { pager.animateScrollToPage(index) } },
                             label = { Text(stringResource(item.label)) },
@@ -393,10 +336,10 @@ private fun MainScreenContent(
                                             PlainTooltip { Text(stringResource(item.tooltip)) }
                                         }
                                     ) {
-                                        Icon(item.icon, stringResource(item.label))
+                                        item.Icon(isSelected)
                                     }
                                 } else {
-                                    Icon(item.icon, stringResource(item.label))
+                                    item.Icon(isSelected)
                                 }
                             }
                         )
