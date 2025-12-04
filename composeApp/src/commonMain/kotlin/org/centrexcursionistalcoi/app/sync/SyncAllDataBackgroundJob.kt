@@ -23,6 +23,9 @@ expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgrou
 object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     private val log = logging()
 
+    private const val SETTINGS_LAST_SYNC = "lastSync"
+    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncVersion"
+
     const val EXTRA_FORCE_SYNC = "force_sync"
 
     /** Run sync every hour */
@@ -39,14 +42,14 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
      * Checks if the database version has been upgraded since the last sync.
      */
     fun databaseVersionUpgrade(): Boolean {
-        val lastSyncVersion = settings.getLongOrNull("lastSyncVersion")?.toInt()
+        val lastSyncVersion = settings.getLongOrNull(SETTINGS_LAST_SYNC_VERSION)?.toInt()
         return lastSyncVersion == null || lastSyncVersion < Database.Schema.version
     }
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val forceSync = input[EXTRA_FORCE_SYNC]?.toBoolean() ?: false
 
-        val lastSync = settings.getLongOrNull("lastSync")?.let { Instant.fromEpochSeconds(it) }
+        val lastSync = settings.getLongOrNull(SETTINGS_LAST_SYNC)?.let { Instant.fromEpochSeconds(it) }
         val now = Clock.System.now()
         return if (
             forceSync ||
@@ -86,7 +89,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         // Lendings requires Users, Inventory Item Types and Inventory Items
         LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
-        settings.putLong("lastSync", Clock.System.now().epochSeconds)
-        settings.putLong("lastSyncVersion", Database.Schema.version)
+        settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
+        settings.putLong(SETTINGS_LAST_SYNC_VERSION, Database.Schema.version)
     }
 }

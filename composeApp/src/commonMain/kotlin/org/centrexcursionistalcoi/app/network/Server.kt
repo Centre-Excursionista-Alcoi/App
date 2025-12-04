@@ -16,6 +16,11 @@ object Server {
     var info: ServerInfo? = null
         private set
 
+    /**
+     * Loads the server info from the `/info` endpoint and stores it into [info].
+     *
+     * If the request fails, it tries to load the info from local settings.
+     */
     suspend fun loadInfo() {
         try {
             val serverInfo = httpClient.get("/info").bodyAsJson(ServerInfo.serializer())

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.doMain
 import org.centrexcursionistalcoi.app.network.Server
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -67,7 +68,7 @@ class LoadingViewModel(
                 }
 
                 _progress.value = null
-                withContext(Dispatchers.Main) { onLoggedIn() }
+                doMain { onLoggedIn() }
             } else {
                 // Clear Sentry user context
                 Sentry.configureScope { scope ->
@@ -75,7 +76,7 @@ class LoadingViewModel(
                 }
 
                 _progress.value = null
-                withContext(Dispatchers.Main) { onNotLoggedIn() }
+                doMain { onNotLoggedIn() }
             }
         } catch (e: Exception) {
             log.e(e) { "Error while loading." }
