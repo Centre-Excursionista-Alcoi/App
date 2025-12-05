@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.*
@@ -112,5 +113,14 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
     override suspend fun updated() {
         notifyUpdateForEntity(Companion, id)
         Database { lastUpdate = now() }
+    }
+
+    fun assistanceConfirmedNotification(session: UserSession, isSelf: Boolean): PushNotification.EventAssistanceUpdated = Database {
+        PushNotification.EventAssistanceUpdated(
+            eventId = this@EventEntity.id.value.toKotlinUuid(),
+            userSub = session.sub,
+            isSelf = isSelf,
+            isConfirmed = true,
+        )
     }
 }

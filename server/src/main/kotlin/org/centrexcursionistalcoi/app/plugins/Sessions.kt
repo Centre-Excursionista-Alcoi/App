@@ -7,6 +7,7 @@ import io.ktor.server.sessions.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
@@ -71,6 +72,13 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
     }
 
     fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
+
+    /**
+     * Gets the [UserReferenceEntity] associated with this session user's sub.
+     */
+    fun getReference() = Database {
+        UserReferenceEntity.findById(sub)
+    }
 }
 
 fun Application.configureSessions(isTesting: Boolean, isDevelopment: Boolean) {

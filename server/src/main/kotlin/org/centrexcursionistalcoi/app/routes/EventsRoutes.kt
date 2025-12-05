@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
@@ -9,15 +11,20 @@ import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -143,5 +150,42 @@ fun Route.eventsRoutes() {
             sb.append("END:VEVENT\r\n")
         }
         sb.append("END:VCALENDAR\r\n")
+    }
+
+    post("/events/{id}/confirm") {
+        val session = getUserSessionOrFail() ?: return@post
+        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@post call.respondError(Error.InvalidArgument("id"))
+
+        // Make sure the event exists
+        val event = Database {
+            EventEntity.findById(eventId)
+        } ?: return@post call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
+
+        // Make sure the user reference exists
+        session.getReference() ?: return@post call.respondError(Error.UserReferenceNotFound())
+
+        Database {
+            EventMembers.insert {
+                it[this.event] = eventId
+                it[this.userReference] = session.sub
+            }
+        }
+        event.updated()
+
+        Push.launch {
+            val department = event.department
+            if (department != null) {
+                Push.sendPushNotificationToDepartment(
+                    event.assistanceConfirmedNotification(session, true),
+                    department.id.value,
+                )
+            } else {
+                Push.sendPushNotificationToAll(
+                    event.assistanceConfirmedNotification(session, true),
+                )
+            }
+        }
+
+        call.respond(HttpStatusCode.NoContent)
     }
 }
