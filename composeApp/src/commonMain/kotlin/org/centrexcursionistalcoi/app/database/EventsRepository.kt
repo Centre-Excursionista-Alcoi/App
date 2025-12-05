@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.database
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -14,6 +13,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.data.Events
 import org.centrexcursionistalcoi.app.storage.databaseInstance
+import kotlin.uuid.Uuid
 
 object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
     override val queries by lazy { databaseInstance.eventsQueries }
@@ -57,6 +57,7 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         description = item.description,
         maxPeople = item.maxPeople,
         requiresConfirmation = item.requiresConfirmation,
+        requiresInsurance = item.requiresInsurance,
         department = item.department?.id,
         image = item.image,
         userReferences = item.userReferences.map { it.sub },
@@ -70,6 +71,7 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         description = item.description,
         maxPeople = item.maxPeople,
         requiresConfirmation = item.requiresConfirmation,
+        requiresInsurance = item.requiresInsurance,
         department = item.department?.id,
         image = item.image,
         userReferences = item.userReferences.map { it.sub },
@@ -89,6 +91,7 @@ object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
         description = description,
         maxPeople = maxPeople,
         requiresConfirmation = requiresConfirmation,
+        requiresInsurance = requiresInsurance,
         department = department,
         image = image,
         userReferences = userReferences,

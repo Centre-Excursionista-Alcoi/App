@@ -13,13 +13,14 @@ CREATE TABLE Events (
     description TEXT,
     maxPeople INTEGER,
     requiresConfirmation INTEGER AS Boolean NOT NULL DEFAULT 0,
+    requiresInsurance INTEGER AS Boolean NOT NULL DEFAULT 0,
     department TEXT AS Uuid,
     image TEXT AS Uuid,
     userReferences TEXT AS List<String> NOT NULL
 );
 
 insert:
-INSERT INTO Events (id, start, end, place, title, description, maxPeople, requiresConfirmation, department, image, userReferences) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Events (id, start, end, place, title, description, maxPeople, requiresConfirmation, requiresInsurance, department, image, userReferences) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Events WHERE id = ? LIMIT 1;
@@ -31,4 +32,4 @@ deleteById:
 DELETE FROM Events WHERE id = ?;
 
 update:
-UPDATE Events SET start = ?, end = ?, place = ?, title = ?, description = ?, maxPeople = ?, requiresConfirmation = ?, department = ?, image = ?, userReferences = ? WHERE id = ?;
+UPDATE Events SET start = ?, end = ?, place = ?, title = ?, description = ?, maxPeople = ?, requiresConfirmation = ?, requiresInsurance = ?, department = ?, image = ?, userReferences = ? WHERE id = ?;

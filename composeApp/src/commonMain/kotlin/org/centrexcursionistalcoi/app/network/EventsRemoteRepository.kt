@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -16,6 +15,7 @@ import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_EVENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import kotlin.uuid.Uuid
 
 object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Event>(
     "/events",
@@ -39,6 +39,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
         description: String,
         maxPeople: String,
         requiresConfirmation: Boolean,
+        requiresInsurance: Boolean,
         departmentId: Uuid?,
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
@@ -55,6 +56,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
                 description = description.takeIf { it.isNotBlank() },
                 maxPeople = maxPeople.takeIf { it.isNotBlank() }?.toLongOrNull(),
                 requiresConfirmation = requiresConfirmation,
+                requiresInsurance = requiresInsurance,
                 department = departmentId,
                 image = inMemoryImage?.id,
                 userReferences = emptyList(),
@@ -72,6 +74,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
         description: String?,
         maxPeople: String?,
         requiresConfirmation: Boolean?,
+        requiresInsurance: Boolean?,
         departmentId: Uuid?,
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
@@ -88,6 +91,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
                 description = description?.takeIf { it.isNotBlank() },
                 maxPeople = maxPeople?.takeIf { it.isNotBlank() }?.toLongOrNull(),
                 requiresConfirmation = requiresConfirmation,
+                requiresInsurance = requiresInsurance,
                 department = departmentId,
                 image = inMemoryImage?.toFileWithContext(),
             ),

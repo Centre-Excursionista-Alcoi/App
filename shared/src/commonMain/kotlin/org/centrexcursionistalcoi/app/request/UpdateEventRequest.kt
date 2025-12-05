@@ -1,11 +1,11 @@
 package org.centrexcursionistalcoi.app.request
 
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Serializable
 data class UpdateEventRequest(
@@ -16,6 +16,7 @@ data class UpdateEventRequest(
     val description: String? = null,
     val maxPeople: Long? = null,
     val requiresConfirmation: Boolean? = null,
+    val requiresInsurance: Boolean? = null,
     val department: Uuid? = null,
     val image: FileWithContext? = null,
 ): UpdateEntityRequest<Uuid, Event> {
@@ -27,6 +28,7 @@ data class UpdateEventRequest(
             description.isNullOrEmpty() &&
             maxPeople == null &&
             requiresConfirmation == null &&
+            requiresInsurance == null &&
             department == null &&
             (image == null || image.isEmpty())
     }

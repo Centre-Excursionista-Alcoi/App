@@ -166,6 +166,7 @@ class ManagementViewModel : ViewModel() {
         description: RichTextState,
         maxPeople: String,
         requiresConfirmation: Boolean,
+        requiresInsurance: Boolean,
         department: Department?,
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
@@ -181,6 +182,7 @@ class ManagementViewModel : ViewModel() {
                 descriptionMarkdown,
                 maxPeople,
                 requiresConfirmation,
+                requiresInsurance,
                 department?.id,
                 image,
                 progressNotifier
@@ -197,6 +199,7 @@ class ManagementViewModel : ViewModel() {
         description: RichTextState?,
         maxPeople: String?,
         requiresConfirmation: Boolean?,
+        requiresInsurance: Boolean?,
         department: Department?,
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
@@ -213,6 +216,7 @@ class ManagementViewModel : ViewModel() {
                 descriptionMarkdown,
                 maxPeople,
                 requiresConfirmation,
+                requiresInsurance,
                 department?.id,
                 image,
                 progressNotifier
