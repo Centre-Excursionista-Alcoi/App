@@ -47,7 +47,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         /**
          * Whether the member is disabled (not "alta").
          */
-        val isDisabled = !NIFValidation.validate(nif) || status?.trim()?.equals("alta", true)?.not() ?: true
+        val isDisabled = !NIFValidation.validate(nif) || !EmailValidation.validate(email) || status?.trim()?.equals("alta", true)?.not() ?: true
 
         val disabledReason = if (isDisabled) {
             if (!NIFValidation.validate(nif)) {
