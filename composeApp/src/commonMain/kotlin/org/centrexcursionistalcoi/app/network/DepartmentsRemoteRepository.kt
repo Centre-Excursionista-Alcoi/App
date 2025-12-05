@@ -1,9 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.post
-import io.ktor.http.isSuccess
-import kotlin.uuid.Uuid
+import io.ktor.client.request.*
+import io.ktor.http.*
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -13,6 +12,7 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import kotlin.uuid.Uuid
 
 object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>(
     "/departments",
@@ -71,6 +71,36 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
             // Try to decode the error
             val error = response.bodyAsError()
             log.e { "Failed to send join request: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+        }
+    }
+
+    suspend fun leave(departmentId: Uuid) {
+        log.i { "Leaving department $departmentId..." }
+
+        val response = httpClient.post("/departments/$departmentId/leave")
+        if (response.status.isSuccess()) {
+            log.i { "Left department successfully" }
+            update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
+        } else {
+            // Try to decode the error
+            val error = response.bodyAsError()
+            log.e { "Failed to leave department: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+        }
+    }
+
+    suspend fun kick(departmentId: Uuid, sub: String) {
+        log.i { "Kicking user $sub from department $departmentId..." }
+
+        val response = httpClient.post("/departments/$departmentId/leave/$sub")
+        if (response.status.isSuccess()) {
+            log.i { "Kicked from department successfully" }
+            update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
+        } else {
+            // Try to decode the error
+            val error = response.bodyAsError()
+            log.e { "Failed to kick from department: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }

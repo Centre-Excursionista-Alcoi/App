@@ -36,6 +36,7 @@ fun DepartmentsListCard(
     userSub: String,
     departments: List<Department>?,
     onJoinDepartmentRequested: ((Department) -> Job)?,
+    onLeaveDepartmentRequested: ((Department) -> Job)? = null,
 ) {
     val userDepartments = remember(userSub, departments) {
         departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == userSub } != null }.orEmpty()
@@ -70,8 +71,39 @@ fun DepartmentsListCard(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { if (!isLoading) requestedDepartmentJoin = false }) {
+                TextButton(enabled = !isLoading, onClick = { requestedDepartmentJoin = false }) {
                     Text(stringResource(Res.string.close))
+                }
+            }
+        )
+    }
+
+    var leavingDepartment by remember { mutableStateOf<Department?>(null) }
+    leavingDepartment?.let { department ->
+        var isLoading by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isLoading) leavingDepartment = null },
+            title = { Text(stringResource(Res.string.departments_leave_title)) },
+            text = {
+                Text(stringResource(Res.string.departments_leave_message, department.displayName))
+            },
+            dismissButton = {
+                TextButton(enabled = !isLoading, onClick = { leavingDepartment = null }) {
+                    Text(stringResource(Res.string.close))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isLoading,
+                    onClick = {
+                        isLoading = true
+                        onLeaveDepartmentRequested?.invoke(department)?.invokeOnCompletion {
+                            isLoading = false
+                            leavingDepartment = null
+                        }
+                    }
+                ) {
+                    Text(stringResource(Res.string.departments_leave))
                 }
             }
         )
@@ -100,7 +132,8 @@ fun DepartmentsListCard(
                     if (!memberInfo.confirmed) {
                         Text(stringResource(Res.string.departments_member_pending))
                     }
-                }
+                },
+                modifier = Modifier.clickable { leavingDepartment = department },
             )
         }
         if (userDepartments.isEmpty()) {
