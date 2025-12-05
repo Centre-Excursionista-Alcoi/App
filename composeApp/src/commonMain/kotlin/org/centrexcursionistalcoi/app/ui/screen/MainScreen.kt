@@ -84,6 +84,7 @@ fun MainScreen(
             onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
             onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
             onJoinDepartmentRequested = model::requestJoinDepartment,
+            onLeaveDepartmentRequested = model::leaveDepartment,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingClick = onLendingClick,
@@ -193,6 +194,7 @@ private fun MainScreenContent(
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onJoinDepartmentRequested: (Department) -> Job,
+    onLeaveDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -418,6 +420,7 @@ private fun MainScreenContent(
                         onApproveDepartmentJoinRequest,
                         onDenyDepartmentJoinRequest,
                         onJoinDepartmentRequested,
+                        onLeaveDepartmentRequested,
                         lendings,
                         onLendingSignUpRequested,
                         onLendingClick,
@@ -462,6 +465,7 @@ private fun MainScreenContent(
                             onApproveDepartmentJoinRequest,
                             onDenyDepartmentJoinRequest,
                             onJoinDepartmentRequested,
+                            onLeaveDepartmentRequested,
                             lendings,
                             onLendingSignUpRequested,
                             onLendingClick,
@@ -512,6 +516,7 @@ private fun MainScreenPagerContent(
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onJoinDepartmentRequested: (Department) -> Job,
+    onLeaveDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
@@ -595,6 +600,7 @@ private fun MainScreenPagerContent(
                 onFEMECVDisconnectRequested,
                 departments,
                 onJoinDepartmentRequested,
+                onLeaveDepartmentRequested,
             )
         }
     }

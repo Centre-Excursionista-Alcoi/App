@@ -1,27 +1,21 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.CEAInfo
-import org.centrexcursionistalcoi.app.assertBody
-import org.centrexcursionistalcoi.app.assertStatusCode
+import io.ktor.client.request.*
+import io.ktor.http.*
+import org.centrexcursionistalcoi.app.*
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
+import org.junit.jupiter.api.assertNull
+import kotlin.test.*
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
@@ -316,5 +310,97 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         val entity = Database { DepartmentMemberEntity.findById(joinRequestId) }
         assertNotNull(entity)
         assertTrue { entity.confirmed }
+    }
+
+
+    @Test
+    fun test_leave_notMember() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/leave").apply {
+            assertSuccess()
+        }
+    }
+
+    @Test
+    fun test_leave_correct() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userSub = FakeUser.provideEntity().id
+                department = mockDepartment
+                confirmed = true
+            }
+        }
+    ) { context ->
+        context.dibResult!!
+
+        client.post("/departments/$departmentId/leave").apply {
+            assertSuccess()
+        }
+
+        val entity = Database { DepartmentMemberEntity.findById(context.dibResult.id) }
+        assertNull(entity)
+    }
+
+
+    @Test
+    fun test_kick_forbidden() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+            assertError(Error.NotAnAdmin())
+        }
+    }
+
+    @Test
+    fun test_kick_notMember() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+            assertError(Error.EntityNotFound(DepartmentMemberEntity::class, FakeUser.SUB))
+        }
+    }
+
+    @Test
+    fun test_kick_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userSub = FakeUser.provideEntity().id
+                department = mockDepartment
+                confirmed = true
+            }
+        }
+    ) { context ->
+        context.dibResult!!
+
+        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+            assertSuccess()
+        }
+
+        val entity = Database { DepartmentMemberEntity.findById(context.dibResult.id) }
+        assertNull(entity)
     }
 }

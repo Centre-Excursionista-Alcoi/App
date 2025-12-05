@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.push
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import kotlin.uuid.Uuid
 
 @Serializable
 sealed interface PushNotification {
@@ -245,6 +245,28 @@ sealed interface PushNotification {
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString(), "isConfirmed" to isConfirmed.toString())
 
         override fun notSelf() = DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isSelf = false, isConfirmed)
+    }
+
+    /**
+     * Notifies a user that they have been kicked from a department.
+     */
+    @Serializable
+    class DepartmentKicked(
+        val requestId: Uuid,
+        val departmentId: Uuid,
+        override val userSub: String,
+    ) : TargetedNotification {
+        companion object {
+            const val TYPE = "DepartmentKicked"
+        }
+
+        override val isSelf: Boolean = true
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString())
+
+        override fun notSelf() = this // always self
     }
 
     @Serializable

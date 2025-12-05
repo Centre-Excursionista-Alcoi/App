@@ -5,28 +5,15 @@ import com.diamondedge.logging.logging
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
-import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.network.*
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import kotlin.uuid.Uuid
 
 class ManagementViewModel : ViewModel() {
     companion object {
@@ -68,6 +55,12 @@ class ManagementViewModel : ViewModel() {
     fun delete(department: Department) = launch {
         doAsync {
             DepartmentsRemoteRepository.delete(department.id)
+        }
+    }
+
+    fun kickFromDepartment(userData: UserData, department: Department) = launch {
+        doAsync {
+            DepartmentsRemoteRepository.kick(department.id, userData.sub)
         }
     }
 

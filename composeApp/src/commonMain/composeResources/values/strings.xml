@@ -194,6 +194,12 @@
     <string name="departments_join_choose">Choose a department</string>
     <string name="departments_member_none">Not a member of any department.</string>
     <string name="departments_member_pending">Request pending.</string>
+    <string name="departments_leave_title">Leaving department</string>
+    <string name="departments_leave_message">Are you sure that you want to leave the department %1$s.</string>
+    <string name="departments_leave">Leave</string>
+    <string name="departments_kick_title">Kicking from department</string>
+    <string name="departments_kick_message">Are you sure that you want to kick the user from the department %1$s.</string>
+    <string name="departments_kick">Kick</string>
 
     <string name="management_no_departments">No departments</string>
     <string name="management_no_users">No users</string>
