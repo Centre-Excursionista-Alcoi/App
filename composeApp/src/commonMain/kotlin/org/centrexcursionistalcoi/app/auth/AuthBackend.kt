@@ -1,16 +1,10 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.PostsRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import org.centrexcursionistalcoi.app.database.*
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -20,11 +14,11 @@ import org.centrexcursionistalcoi.app.storage.settings
 object AuthBackend {
     private val log = logging()
     
-    suspend fun register(nif: String, password: String) {
+    suspend fun register(email: String, password: String) {
         val response = getHttpClient().submitForm(
             url = "/register",
             formParameters = parameters {
-                append("nif", nif)
+                append("email", email)
                 append("password", password)
             }
         )
@@ -35,11 +29,11 @@ object AuthBackend {
         }
     }
 
-    suspend fun login(nif: String, password: String) {
+    suspend fun login(email: String, password: String) {
         val response = getHttpClient().submitForm(
             url = "/login",
             formParameters = parameters {
-                append("nif", nif)
+                append("email", email)
                 append("password", password)
             }
         )
@@ -74,11 +68,11 @@ object AuthBackend {
         }
     }
 
-    suspend fun forgotPassword(nif: String) {
+    suspend fun forgotPassword(email: String) {
         val response = getHttpClient().submitForm(
             url = "/lost_password",
             formParameters = parameters {
-                append("nif", nif)
+                append("email", email)
             }
         )
         if (response.status.isSuccess()) {

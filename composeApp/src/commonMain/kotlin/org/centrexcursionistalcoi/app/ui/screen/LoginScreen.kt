@@ -2,37 +2,13 @@ package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -41,7 +17,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,6 +31,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
+import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -74,9 +50,9 @@ fun LoginScreen(
         isLoading = isLoading,
         error = error,
         changedPassword = changedPassword,
-        onLoginRequest = { nif, password -> model.login(nif, password, onLoginSuccess) },
-        onRegisterRequest = { nif, password -> model.register(nif, password, onLoginSuccess) },
-        onForgotPassword = { nif, ar -> model.forgotPassword(nif, ar) },
+        onLoginRequest = { email, password -> model.login(email, password, onLoginSuccess) },
+        onRegisterRequest = { email, password -> model.register(email, password, onLoginSuccess) },
+        onForgotPassword = { email, ar -> model.forgotPassword(email, ar) },
         onClearErrors = model::clearError,
     )
 }
@@ -87,9 +63,9 @@ private fun LoginScreen(
     isLoading: Boolean,
     error: Throwable?,
     changedPassword: Boolean,
-    onLoginRequest: (nif: String, password: String) -> Unit,
-    onRegisterRequest: (nif: String, password: String) -> Unit,
-    onForgotPassword: (nif: String, afterRequest: () -> Unit) -> Job,
+    onLoginRequest: (email: String, password: String) -> Unit,
+    onRegisterRequest: (email: String, password: String) -> Unit,
+    onForgotPassword: (email: String, afterRequest: () -> Unit) -> Job,
     onClearErrors: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -218,11 +194,10 @@ fun LoginScreen_Form(
 
                 val serverException = error as? ServerException
                 val message = if (serverException != null) {
-                    // TODO: Localize errors
                     when (serverException.errorCode) {
-                        Error.ERROR_PASSWORD_NOT_SET -> "Password not set. Please register."
-                        Error.ERROR_INCORRECT_PASSWORD_OR_NIF -> "Incorrect NIF or password."
-                        else -> "Server error: ${serverException.message ?: "Unknown error"}"
+                        Error.ERROR_PASSWORD_NOT_SET -> stringResource(Res.string.login_error_password_not_set)
+                        Error.ERROR_INCORRECT_PASSWORD_OR_EMAIL -> stringResource(Res.string.login_error_invalid_credentials)
+                        else -> stringResource(Res.string.login_error_unknown, serverException.message ?: unknown())
                     }
                 } else {
                     error.toString()
@@ -257,14 +232,14 @@ fun LoginScreen_Form(
 fun LoginScreen_Login(
     isLoading: Boolean = false,
     error: Throwable? = null,
-    onLoginRequest: (nif: CharSequence, password: CharSequence) -> Unit,
+    onLoginRequest: (email: CharSequence, password: CharSequence) -> Unit,
     onRegisterRequest: () -> Unit,
-    onForgotPassword: (nif: CharSequence) -> Job,
+    onForgotPassword: (email: CharSequence) -> Job,
 ) {
-    val nif = rememberTextFieldState()
+    val email = rememberTextFieldState()
     val password = rememberTextFieldState()
 
-    val valid = nif.text.isNotBlank() && password.text.isNotBlank()
+    val valid = email.text.isNotBlank() && password.text.isNotBlank()
 
     var showingForgotPasswordDialog by remember { mutableStateOf(false) }
     if (showingForgotPasswordDialog) {
@@ -275,9 +250,9 @@ fun LoginScreen_Login(
                 Column {
                     Text(stringResource(Res.string.login_forgot_password_dialog_message))
                     OutlinedTextField(
-                        state = nif,
+                        state = email,
                         enabled = !isLoading,
-                        label = { Text(stringResource(Res.string.nif)) },
+                        label = { Text(stringResource(Res.string.email)) },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     )
                 }
@@ -285,7 +260,7 @@ fun LoginScreen_Login(
             confirmButton = {
                 TextButton(onClick = {
                     showingForgotPasswordDialog = false
-                    onForgotPassword(nif.text).invokeOnCompletion {
+                    onForgotPassword(email.text).invokeOnCompletion {
                         showingForgotPasswordDialog = false
                     }
                 }) {
@@ -309,23 +284,23 @@ fun LoginScreen_Login(
         onSwitch = onRegisterRequest,
         submitText = stringResource(Res.string.login_action),
         onSubmit = {
-            onLoginRequest(nif.text, password.text)
+            onLoginRequest(email.text, password.text)
         },
         auxText = stringResource(Res.string.login_forgot_password),
         onAux = { showingForgotPasswordDialog = true }
     ) {
         OutlinedTextField(
-            state = nif,
+            state = email,
             enabled = !isLoading,
-            label = { Text(stringResource(Res.string.nif)) },
+            label = { Text(stringResource(Res.string.email)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
                 .padding(top = 4.dp)
                 .semantics {
-                    contentType = ContentType.Username
+                    contentType = ContentType.EmailAddress
                 },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         )
         PasswordFormField(
             state = password,
@@ -346,13 +321,13 @@ fun LoginScreen_Register(
     isLoading: Boolean = false,
     error: Throwable? = null,
     onLoginRequest: () -> Unit,
-    onRegisterRequest: (nif: CharSequence, password: CharSequence) -> Unit,
+    onRegisterRequest: (email: CharSequence, password: CharSequence) -> Unit,
 ) {
-    val nif = rememberTextFieldState()
+    val email = rememberTextFieldState()
     val password = rememberTextFieldState()
     val passwordConfirm = rememberTextFieldState()
 
-    val valid = nif.text.isNotBlank() &&
+    val valid = email.text.isNotBlank() &&
             password.text.isNotBlank() &&
             password.text == passwordConfirm.text
 
@@ -365,11 +340,11 @@ fun LoginScreen_Register(
         onSwitch = onLoginRequest,
         submitText = stringResource(Res.string.register_action),
         onSubmit = {
-            onRegisterRequest(nif.text, password.text)
+            onRegisterRequest(email.text, password.text)
         }
     ) {
         OutlinedTextField(
-            state = nif,
+            state = email,
             enabled = !isLoading,
             label = { Text(stringResource(Res.string.nif)) },
             modifier = Modifier
@@ -377,9 +352,9 @@ fun LoginScreen_Register(
                 .padding(horizontal = 8.dp)
                 .padding(top = 4.dp)
                 .semantics {
-                    contentType = ContentType.Username
+                    contentType = ContentType.EmailAddress
                 },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         )
         PasswordFormField(
             state = password,
