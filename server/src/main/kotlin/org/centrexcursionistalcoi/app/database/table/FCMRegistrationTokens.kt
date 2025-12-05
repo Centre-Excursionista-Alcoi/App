@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 object FCMRegistrationTokens : IdTable<String>() {
-    override val id: Column<EntityID<String>> = varchar("token", 512).entityId()
+    override val id: Column<EntityID<String>> = varchar("token", 512).entityId().uniqueIndex()
     /** Alias for [id]. */
     val token get() = id
 
