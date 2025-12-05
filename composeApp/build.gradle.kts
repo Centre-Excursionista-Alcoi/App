@@ -173,6 +173,7 @@ kotlin {
             dependsOn(phonesMain)
             dependencies {
                 implementation(compose.preview)
+                implementation(libs.androidx.appcompat)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.ktor.client.android)
 

@@ -8,14 +8,14 @@ import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.diamondedge.logging.logging
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
-abstract class NfcIntentHandlerActivity : ComponentActivity() {
+abstract class NfcIntentHandlerActivity : AppCompatActivity() {
     companion object {
         private val log = logging()
     }
