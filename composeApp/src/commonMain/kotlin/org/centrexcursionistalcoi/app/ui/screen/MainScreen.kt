@@ -1,9 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -124,7 +121,10 @@ private class NavigationItem(
 ) {
     @Composable
     fun Icon(isSelected: Boolean) {
-        AnimatedContent(isSelected) { selected ->
+        AnimatedContent(
+            targetState = isSelected,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) { selected ->
             Icon(
                 if (selected) filledIcon else icon,
                 stringResource(label)
