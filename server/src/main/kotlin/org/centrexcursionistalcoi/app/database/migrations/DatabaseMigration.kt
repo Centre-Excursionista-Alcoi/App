@@ -15,6 +15,8 @@ interface DatabaseMigration {
             V1, V2, V3,
         )
 
+        const val VERSION = 3
+
         /**
          * Finds the next migration starting from the given version.
          * @param from The current database version.

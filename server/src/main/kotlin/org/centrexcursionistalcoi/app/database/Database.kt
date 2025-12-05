@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database
 
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
+import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration.Companion.VERSION
 import org.centrexcursionistalcoi.app.database.table.*
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
@@ -45,8 +46,6 @@ object Database {
 
     @TestOnly
     const val TEST_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;"
-
-    const val VERSION = 3
 
     private val logger = LoggerFactory.getLogger(Database::class.java)
 
@@ -105,12 +104,12 @@ object Database {
             Database {
                 ConfigEntity[ConfigEntity.DatabaseVersion] = VERSION
             }
-        } else if (version < VERSION) {
-            error("Database version $version is older than application version $VERSION. Migration not implemented.")
         } else if (version > VERSION) {
+            error("Database version $version is newer than expected one ($VERSION). Backwards migration not possible.")
+        } else if (version < VERSION) {
             var migration = DatabaseMigration.next(version)
             if (migration != null) {
-                logger.info("Database version $version is newer than application version $VERSION. Running migration...")
+                logger.info("Database version $version is older than expected one ($VERSION). Running migration...")
                 while (migration != null) {
                     logger.info("Migrating database from version ${migration.from} to ${migration.to}")
                     Database {
