@@ -27,10 +27,6 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
         private val logger = LoggerFactory.getLogger(UserReferenceEntity::class.java)
 
-        @Deprecated("Do not authenticate with NIF, use email.", ReplaceWith("findByEmail"))
-        context(_: JdbcTransaction)
-        fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
-
         /**
          * Finds a user by their email address, case-insensitively.
          */

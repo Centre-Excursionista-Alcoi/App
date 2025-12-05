@@ -1,29 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.withCharset
-import io.ktor.server.auth.basicAuthenticationCredentials
-import io.ktor.server.request.header
-import io.ktor.server.request.path
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.RoutingHandler
-import io.ktor.server.routing.get
-import io.ktor.server.routing.head
-import io.ktor.server.routing.method
-import io.ktor.server.routing.options
-import io.ktor.server.routing.route
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import io.ktor.http.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import org.centrexcursionistalcoi.app.CEAWebDAVMessage
 import org.centrexcursionistalcoi.app.CEAWebDAVNormalizedPath
 import org.centrexcursionistalcoi.app.database.Database
@@ -32,6 +14,8 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.login
 import org.slf4j.LoggerFactory
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 private val logger = LoggerFactory.getLogger("WebDAV")
 
@@ -76,7 +60,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
             return false
         }
 
-        val session = Database { UserSession.fromNif(basicAuth.name) }
+        val session = Database { UserSession.fromEmail(basicAuth.name) }
         if (!session.isAdmin()) {
             logger.error("WebDAV access denied for non-admin user (${session.sub})")
             call.response.header(HttpHeaders.CEAWebDAVMessage, "You are not an admin")

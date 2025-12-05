@@ -27,19 +27,6 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
     companion object {
         const val COOKIE_NAME = "USER_SESSION"
 
-        @Deprecated("Do not authenticate with NIF, use email.", ReplaceWith("fromEmail"))
-        context(_: JdbcTransaction)
-        fun fromNif(nif: String) = UserReferenceEntity.findByNif(nif)?.let { reference ->
-            val email = reference.email ?: error("User with NIF $nif has no email")
-
-            UserSession(
-                sub = reference.sub.value,
-                fullName = reference.fullName,
-                email = email,
-                groups = reference.groups,
-            )
-        } ?: error("User with NIF $nif not found")
-
         /**
          * Creates a UserSession from an email address, checking that the user exists.
          * @param email Email Address of the user
