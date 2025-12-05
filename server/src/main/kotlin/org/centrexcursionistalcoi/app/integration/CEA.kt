@@ -28,6 +28,7 @@ import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.notInList
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.sql.SQLException
 import kotlin.time.Duration.Companion.days
 
 object CEA : PeriodicWorker(period = 1.days) {
@@ -119,37 +120,46 @@ object CEA : PeriodicWorker(period = 1.days) {
         logger.debug("Fetching all existing members...")
         val userSubList = mutableListOf<String>()
         for (member in members.filterInvalid()) {
-            member.number!!
-            member.fullName!!
+            try {
+                member.number!!
+                member.fullName!!
 
-            val existingEntity = if (member.email != null) Database { UserReferenceEntity.findByEmail(member.email) } else null
-            if (existingEntity != null) {
-                // Update existing member
-                Database {
-                    existingEntity.fullName = member.fullName.trim('_')
-                    existingEntity.email = member.email
-                    existingEntity.isDisabled = member.isDisabled
-                    existingEntity.disableReason = member.disabledReason
-                }
-                userSubList.add(existingEntity.sub.value)
-                logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
-            } else {
-                // Create new member
-                val randomSub = generateRandomString(16)
-                Database {
-                    UserReferenceEntity.new(randomSub) {
-                        nif = member.nif
-                        memberNumber = member.number.toUInt()
-                        fullName = member.fullName.trim('_')
-                        email = member.email
-                        groups = listOf("cea_member")
+                val existingEntity = if (member.email != null) Database { UserReferenceEntity.findByEmailOrNif(member.email, member.nif) } else null
+                if (existingEntity != null) {
+                    // Update existing member
+                    Database {
+                        existingEntity.nif = member.nif
+                        existingEntity.memberNumber = member.number.toUInt()
+                        existingEntity.fullName = member.fullName.trim('_')
+                        existingEntity.email = member.email
 
-                        isDisabled = member.isDisabled
-                        disableReason = member.disabledReason
+                        existingEntity.isDisabled = member.isDisabled
+                        existingEntity.disableReason = member.disabledReason
                     }
+                    userSubList.add(existingEntity.sub.value)
+                    logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+                } else {
+                    // Create new member
+                    val randomSub = generateRandomString(16)
+                    Database {
+                        UserReferenceEntity.new(randomSub) {
+                            nif = member.nif
+                            memberNumber = member.number.toUInt()
+                            fullName = member.fullName.trim('_')
+                            email = member.email
+                            groups = listOf("cea_member")
+
+                            isDisabled = member.isDisabled
+                            disableReason = member.disabledReason
+                        }
+                    }
+                    userSubList.add(randomSub)
+                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
                 }
-                userSubList.add(randomSub)
-                logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+            } catch (e: SQLException) {
+                logger.error("Database error while processing member NIF=${member.nif}, number=${member.number}", e)
+            } catch (e: Exception) {
+                logger.error("Unexpected error while processing member NIF=${member.nif}, number=${member.number}", e)
             }
         }
         logger.debug("Disabling not found users...")

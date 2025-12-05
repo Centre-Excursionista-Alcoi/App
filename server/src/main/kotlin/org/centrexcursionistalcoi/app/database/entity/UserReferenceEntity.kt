@@ -28,11 +28,30 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
         private val logger = LoggerFactory.getLogger(UserReferenceEntity::class.java)
 
         /**
+         * Finds a user by their nif, case-insensitively.
+         */
+        context(_: JdbcTransaction)
+        fun findByNif(nif: String): UserReferenceEntity? =
+            find { UserReferences.nif.upperCase() eq nif.uppercase() }.limit(1).firstOrNull()
+
+        /**
          * Finds a user by their email address, case-insensitively.
          */
         context(_: JdbcTransaction)
         fun findByEmail(email: String): UserReferenceEntity? =
             find { UserReferences.email.upperCase() eq email.uppercase() }.limit(1).firstOrNull()
+
+        /**
+         * Finds a user by either their email or nif, case-insensitively.
+         * Returns null if both [email] and [nif] are null.
+         */
+        context(_: JdbcTransaction)
+        fun findByEmailOrNif(email: String?, nif: String?): UserReferenceEntity? {
+            if (email == null && nif == null) return null
+            email?.let { findByEmail(it) }?.let { return it }
+            nif?.let { findByNif(it) }?.let { return it }
+            return null
+        }
     }
 
     var sub by UserReferences.sub
