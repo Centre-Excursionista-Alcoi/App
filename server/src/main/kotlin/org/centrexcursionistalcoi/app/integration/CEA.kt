@@ -71,10 +71,6 @@ object CEA : PeriodicWorker(period = 1.days) {
             logger.warn("Member has no number. Skipping.")
             return@filter false
         }
-        if (member.email == null) {
-            logger.warn("Member #${member.number} has no email. Skipping.")
-            return@filter false
-        }
         if (member.fullName == null) {
             logger.warn("Member #${member.number} has no full name. Skipping.")
             return@filter false
@@ -129,10 +125,9 @@ object CEA : PeriodicWorker(period = 1.days) {
         val userSubList = mutableListOf<String>()
         for (member in members.filterInvalid()) {
             member.number!!
-            member.email!!
             member.fullName!!
 
-            val existingEntity = Database { UserReferenceEntity.findByEmail(member.email) }
+            val existingEntity = if (member.email != null) Database { UserReferenceEntity.findByEmail(member.email) } else null
             if (existingEntity != null) {
                 // Update existing member
                 Database {
