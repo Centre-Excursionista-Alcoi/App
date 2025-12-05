@@ -1,9 +1,21 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.UUID
+import kotlin.time.Clock.System.now
+import kotlin.time.toJavaInstant
+import kotlin.uuid.toKotlinUuid
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
@@ -11,8 +23,10 @@ import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.Telegram
@@ -23,14 +37,15 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.*
-import kotlin.uuid.toKotlinUuid
+import org.jetbrains.exposed.v1.jdbc.selectAll
+
+private val eventAssistanceMutex = Mutex()
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
@@ -152,17 +167,64 @@ fun Route.eventsRoutes() {
         sb.append("END:VCALENDAR\r\n")
     }
 
-    post("/events/{id}/confirm") {
-        val session = getUserSessionOrFail() ?: return@post
-        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@post call.respondError(Error.InvalidArgument("id"))
+    postWithLock("/events/{id}/confirm", eventAssistanceMutex) {
+        val session = getUserSessionOrFail() ?: return@postWithLock
+        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
 
         // Make sure the event exists
         val event = Database {
             EventEntity.findById(eventId)
-        } ?: return@post call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
+        } ?: return@postWithLock call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
+
+        // Make sure the event is in the future
+        val now = now().toJavaInstant()
+        if (event.start < now) {
+            return@postWithLock call.respondError(Error.EventInThePast())
+        }
 
         // Make sure the user reference exists
-        session.getReference() ?: return@post call.respondError(Error.UserReferenceNotFound())
+        session.getReference() ?: return@postWithLock call.respondError(Error.UserReferenceNotFound())
+
+        // Check that the user has not already been confirmed for the event
+        val alreadyConfirmed = Database {
+            EventMembers.selectAll()
+                .where { (EventMembers.event eq eventId) and (EventMembers.userReference eq session.sub) }
+                .count()
+        }
+        if (alreadyConfirmed > 0) {
+            call.respondError(Error.AssistanceAlreadyConfirmed())
+            return@postWithLock
+        }
+
+        // If the event requires insurance, check that the user has a valid insurance for the event dates
+        if (event.requiresInsurance) {
+            val from = LocalDateTime.ofInstant(event.start, ZoneId.systemDefault()).toLocalDate()
+            val to = if (event.end != null) {
+                LocalDateTime.ofInstant(event.end!!, ZoneId.systemDefault()).toLocalDate()
+            } else {
+                from
+            }
+            val validInsurances = Database {
+                UserInsuranceEntity
+                    .find { (UserInsurances.userSub eq session.sub) and (UserInsurances.validFrom lessEq from) and (UserInsurances.validTo greaterEq to) }
+                    .count()
+            }
+            if (validInsurances <= 0) {
+                call.respondError(Error.UserDoesNotHaveInsurance())
+                return@postWithLock
+            }
+        }
+
+        // Check that the event is not full
+        if (event.maxPeople != null) {
+            val currentMembers = Database {
+                EventMembers.selectAll().where { EventMembers.event eq eventId }.count()
+            }
+            if (currentMembers >= event.maxPeople!!) {
+                call.respondError(Error.EventFull())
+                return@postWithLock
+            }
+        }
 
         Database {
             EventMembers.insert {
@@ -182,6 +244,46 @@ fun Route.eventsRoutes() {
             } else {
                 Push.sendPushNotificationToAll(
                     event.assistanceConfirmedNotification(session, true),
+                )
+            }
+        }
+
+        call.respond(HttpStatusCode.NoContent)
+    }
+    postWithLock("/events/{id}/reject", eventAssistanceMutex) {
+        val session = getUserSessionOrFail() ?: return@postWithLock
+        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
+
+        // Make sure the event exists
+        val event = Database {
+            EventEntity.findById(eventId)
+        } ?: return@postWithLock call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
+
+        // Make sure the event is in the future
+        val now = now().toJavaInstant()
+        if (event.start < now) {
+            return@postWithLock call.respondError(Error.EventInThePast())
+        }
+
+        // Make sure the user reference exists
+        session.getReference() ?: return@postWithLock call.respondError(Error.UserReferenceNotFound())
+
+        // Remove the user from the event members if they were confirmed
+        Database {
+            EventMembers.deleteWhere { (EventMembers.event eq eventId) and (EventMembers.userReference eq session.sub) }
+        }
+        event.updated()
+
+        Push.launch {
+            val department = event.department
+            if (department != null) {
+                Push.sendPushNotificationToDepartment(
+                    event.assistanceRejectedNotification(session, true),
+                    department.id.value,
+                )
+            } else {
+                Push.sendPushNotificationToAll(
+                    event.assistanceRejectedNotification(session, true),
                 )
             }
         }

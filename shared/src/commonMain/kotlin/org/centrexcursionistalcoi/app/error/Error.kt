@@ -1,14 +1,15 @@
 package org.centrexcursionistalcoi.app.error
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import kotlin.reflect.KClass
+import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.serializer.ContentTypeSerializer
 import org.centrexcursionistalcoi.app.serializer.HttpStatusCodeSerializer
-import kotlin.reflect.KClass
-import kotlin.uuid.Uuid
 
 @Serializable
 sealed interface Error {
@@ -455,6 +456,36 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
     }
 
+    @Serializable
+    @SerialName("EventFull")
+    class EventFull(): Error {
+        override val code: Int = ERROR_EVENT_FULL
+        override val description: String = "The event is already full."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("AssistanceAlreadyConfirmed")
+    class AssistanceAlreadyConfirmed(): Error {
+        override val code: Int = ERROR_ASSISTANCE_ALREADY_CONFIRMED
+        override val description: String = "You have already confirmed your assistance."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
+    @SerialName("EventInThePast")
+    class EventInThePast(): Error {
+        override val code: Int = ERROR_EVENT_IN_THE_PAST
+        override val description: String = "The event is in the past."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -495,8 +526,10 @@ sealed interface Error {
         const val ERROR_USER_ALREADY_REGISTERED = 36
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
         const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
-        const val ___UNASSIGNED = 39
+        const val ERROR_EVENT_FULL = 39
         const val ERROR_USER_IS_DISABLED = 40
+        const val ERROR_ASSISTANCE_ALREADY_CONFIRMED = 41
+        const val ERROR_EVENT_IN_THE_PAST = 42
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -539,6 +572,9 @@ sealed interface Error {
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
             ERROR_USER_IS_DISABLED -> UserIsDisabled.serializer()
+            ERROR_EVENT_FULL -> EventFull.serializer()
+            ERROR_ASSISTANCE_ALREADY_CONFIRMED -> AssistanceAlreadyConfirmed.serializer()
+            ERROR_EVENT_IN_THE_PAST -> EventInThePast.serializer()
             else -> null
         }
     }
