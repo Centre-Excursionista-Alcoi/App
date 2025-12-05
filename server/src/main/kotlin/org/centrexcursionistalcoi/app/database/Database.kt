@@ -1,27 +1,8 @@
 package org.centrexcursionistalcoi.app.database
 
-import java.sql.DriverManager
-import java.sql.Types
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
-import org.centrexcursionistalcoi.app.database.table.ConfigTable
-import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
-import org.centrexcursionistalcoi.app.database.table.Departments
-import org.centrexcursionistalcoi.app.database.table.EventMembers
-import org.centrexcursionistalcoi.app.database.table.Events
-import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
-import org.centrexcursionistalcoi.app.database.table.Files
-import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
-import org.centrexcursionistalcoi.app.database.table.InventoryItems
-import org.centrexcursionistalcoi.app.database.table.LendingItems
-import org.centrexcursionistalcoi.app.database.table.LendingUsers
-import org.centrexcursionistalcoi.app.database.table.Lendings
-import org.centrexcursionistalcoi.app.database.table.PostFiles
-import org.centrexcursionistalcoi.app.database.table.Posts
-import org.centrexcursionistalcoi.app.database.table.ReceivedItems
-import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
-import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.database.table.UserReferences
+import org.centrexcursionistalcoi.app.database.table.*
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -33,6 +14,8 @@ import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcConnectionImpl
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.sql.DriverManager
+import java.sql.Types
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
@@ -63,7 +46,7 @@ object Database {
     @TestOnly
     const val TEST_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;"
 
-    const val VERSION = 2
+    const val VERSION = 3
 
     private val logger = LoggerFactory.getLogger(Database::class.java)
 
@@ -207,6 +190,19 @@ object Database {
                 is Float -> statement.setFloat(idx + 1, arg)
                 is Double -> statement.setDouble(idx + 1, arg)
                 is ByteArray -> statement.setBytes(idx + 1, arg)
+                is Array<*> -> statement.setArray(
+                    idx + 1,
+                    conn.createArrayOf(
+                        when {
+                            arg.isEmpty() -> "text" // default to text[] for empty arrays
+                            arg[0] is String -> "text"
+                            arg[0] is Int -> "integer"
+                            arg[0] is Long -> "bigint"
+                            else -> error("Unsupported array argument type: ${arg[0]?.javaClass?.name}")
+                        },
+                        arg,
+                    ),
+                )
                 null -> statement.setNull(idx + 1, Types.NULL)
                 else -> error("Unsupported argument type: ${arg.javaClass.name}")
             }

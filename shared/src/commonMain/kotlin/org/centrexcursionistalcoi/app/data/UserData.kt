@@ -1,15 +1,18 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.exception.UserNotFoundException
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import kotlin.uuid.Uuid
 
 @Serializable
 data class UserData(
     val sub: String,
     val fullName: String,
+    /**
+     * In theory, never `null`. However, allows `null` in order to strip sensitive info for non-admin users.
+     */
     val email: String?,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,

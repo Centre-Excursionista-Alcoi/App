@@ -6,7 +6,7 @@
 
     <string name="welcome">Welcome back %1$s</string>
 
-    <string name="nif">NIF</string>
+    <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
 
@@ -16,9 +16,12 @@
     <string name="login_password_changed_message">You can now log in with your new password.</string>
     <string name="login_forgot_password">Password forgotten?</string>
     <string name="login_forgot_password_dialog_title">Have you forgotten your password?</string>
-    <string name="login_forgot_password_dialog_message">Enter your NIF, and if you have been registered before, you will receive an email to update your password.</string>
+    <string name="login_forgot_password_dialog_message">Enter your email, and if you have been registered before, you will receive an email to update your password.</string>
     <string name="login_forgot_password_dialog_action">Send Email</string>
     <string name="login_forgot_password_success_title">Please, check your inbox.</string>
+    <string name="login_error_unknown">Server error: $1$s</string>
+    <string name="login_error_password_not_set">You have not set your password yet, please, register first.</string>
+    <string name="login_error_invalid_credentials">Your email or password is not valid. Please, check with an administrator that the email you have in the database is the correct one.</string>
 
     <string name="register_title">Register an Account</string>
     <string name="register_action">Register</string>

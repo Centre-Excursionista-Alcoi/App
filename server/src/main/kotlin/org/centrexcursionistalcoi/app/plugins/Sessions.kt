@@ -1,16 +1,10 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.install
-import io.ktor.server.response.header
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.sessions.SessionTransportTransformerEncrypt
-import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.cookie
-import io.ktor.server.sessions.get
-import io.ktor.server.sessions.sessions
-import io.ktor.util.hex
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
+import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
@@ -33,6 +27,7 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
     companion object {
         const val COOKIE_NAME = "USER_SESSION"
 
+        @Deprecated("Do not authenticate with NIF, use email.", ReplaceWith("fromEmail"))
         context(_: JdbcTransaction)
         fun fromNif(nif: String) = UserReferenceEntity.findByNif(nif)?.let { reference ->
             val email = reference.email ?: error("User with NIF $nif has no email")
@@ -44,6 +39,21 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
                 groups = reference.groups,
             )
         } ?: error("User with NIF $nif not found")
+
+        /**
+         * Creates a UserSession from an email address, checking that the user exists.
+         * @param email Email Address of the user
+         * @throws IllegalArgumentException if the user is not found
+         */
+        context(_: JdbcTransaction)
+        fun fromEmail(email: String) = UserReferenceEntity.findByEmail(email)?.let { reference ->
+            UserSession(
+                sub = reference.sub.value,
+                fullName = reference.fullName,
+                email = email,
+                groups = reference.groups,
+            )
+        } ?: error("User with email $email not found")
 
         fun ApplicationCall.getUserSession(): UserSession? {
             val session = sessions.get<UserSession>()

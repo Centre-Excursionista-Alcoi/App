@@ -14,11 +14,11 @@ class LoginViewModel : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
 
-    fun login(nif: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
+    fun login(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
         try {
             _isLoading.emit(true)
 
-            AuthBackend.login(nif, password)
+            AuthBackend.login(email, password)
             ProfileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
             doMain { afterLogin() }
@@ -29,16 +29,16 @@ class LoginViewModel : ErrorViewModel() {
         }
     }
 
-    fun register(nif: String, password: String, afterLogin: () -> Unit) = viewModelScope.async {
+    fun register(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.async {
         try {
             _isLoading.emit(true)
             clearError()
 
             // Try to register
-            AuthBackend.register(nif, password)
+            AuthBackend.register(email, password)
 
             // If successful, log in
-            login(nif, password, afterLogin).join()
+            login(email, password, afterLogin).join()
         } catch (e: ServerException) {
             setError(e)
         } finally {
@@ -46,12 +46,12 @@ class LoginViewModel : ErrorViewModel() {
         }
     }
 
-    fun forgotPassword(nif: String, afterRequest: () -> Unit) = viewModelScope.launch {
+    fun forgotPassword(email: String, afterRequest: () -> Unit) = viewModelScope.launch {
         try {
             _isLoading.emit(true)
             clearError()
 
-            AuthBackend.forgotPassword(nif)
+            AuthBackend.forgotPassword(email)
 
             doMain { afterRequest() }
         } catch (e: ServerException) {

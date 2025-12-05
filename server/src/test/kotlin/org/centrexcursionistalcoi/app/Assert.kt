@@ -1,17 +1,16 @@
 package org.centrexcursionistalcoi.app
 
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.isSuccess
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.error.Error
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Asserts that two JSON strings are equivalent, ignoring formatting and key order.
@@ -76,7 +75,10 @@ fun assertJsonEquals(expectedJson: JsonElement, actualJson: JsonElement, ignoreK
 }
 
 fun HttpResponse.assertSuccess() {
-    assert(status.isSuccess()) { "Expected a successful status code (200-299)." }
+    assert(status.isSuccess()) {
+        val body = runBlocking { bodyAsText() }
+        "Expected a successful status code (200-299). Got: $status\n\tBody: $body"
+    }
 }
 
 suspend fun HttpResponse.assertStatusCode(expected: HttpStatusCode) {

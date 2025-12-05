@@ -1,22 +1,14 @@
 package org.centrexcursionistalcoi.app.integration
 
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
-import io.ktor.client.plugins.cookies.HttpCookies
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Url
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
-import java.io.File
-import kotlin.time.Duration.Companion.days
+import io.ktor.client.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.cookies.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,6 +26,8 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.notInList
 import org.slf4j.LoggerFactory
+import java.io.File
+import kotlin.time.Duration.Companion.days
 
 object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
@@ -74,8 +68,8 @@ object CEA : PeriodicWorker(period = 1.days) {
             logger.warn("Member has no number. Skipping.")
             return@filter false
         }
-        if (member.nif == null) {
-            logger.warn("Member #${member.number} has no NIF. Skipping.")
+        if (member.email == null) {
+            logger.warn("Member #${member.number} has no email. Skipping.")
             return@filter false
         }
         if (member.fullName == null) {
@@ -132,10 +126,10 @@ object CEA : PeriodicWorker(period = 1.days) {
         val userSubList = mutableListOf<String>()
         for (member in members.filterInvalid()) {
             member.number!!
-            member.nif!!
+            member.email!!
             member.fullName!!
 
-            val existingEntity = Database { UserReferenceEntity.findByNif(member.nif) }
+            val existingEntity = Database { UserReferenceEntity.findByEmail(member.email) }
             if (existingEntity != null) {
                 // Update existing member
                 Database {
@@ -167,8 +161,8 @@ object CEA : PeriodicWorker(period = 1.days) {
         }
         logger.debug("Disabling not found users...")
         // Disable users not in the CEA members list
-        val memberNifs = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList }.toList() }
-        for (entity in memberNifs) {
+        val membersList = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList }.toList() }
+        for (entity in membersList) {
             if (entity.nif == "87654321X") {
                 // Skip test user
                 continue
@@ -177,7 +171,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                 entity.isDisabled = true
                 entity.disableReason = "not_in_cea_members"
             }
-            logger.trace("Disabled member NIF=${entity.nif}, sub=${entity.sub.value}")
+            logger.trace("Disabled member email=${entity.email}, sub=${entity.sub.value}")
         }
         logger.info("Synchronization complete.")
     }

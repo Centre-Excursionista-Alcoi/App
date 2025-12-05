@@ -17,12 +17,12 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     val lastUpdate = timestamp("last_update").defaultExpression(DatabaseNowExpression)
 
-    val nif = text("nif").uniqueIndex()
+    val nif = text("nif").uniqueIndex().nullable()
 
     val memberNumber = uinteger("member").uniqueIndex()
 
     val fullName = text("full_name")
-    val email = text("email").nullable()
+    val email = text("email").uniqueIndex()
     val groups = array("groups", TextColumnType()).default(emptyList())
 
     val isDisabled = bool("is_disabled").default(false)
