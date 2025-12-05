@@ -82,6 +82,14 @@ fun EventItem(event: ReferencedEvent) {
                 )
             }
 
+            if (event.requiresInsurance) {
+                Text(
+                    text = stringResource(Res.string.event_requires_insurance),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
             Spacer(Modifier.height(56.dp))
         }
     )
