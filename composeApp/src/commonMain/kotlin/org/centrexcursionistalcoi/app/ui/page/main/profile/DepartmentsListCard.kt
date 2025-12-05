@@ -30,13 +30,16 @@ import org.jetbrains.compose.resources.stringResource
  * @param userSub The unique identifier of the user.
  * @param departments The list of all departments, not just the joined ones.
  * @param onJoinDepartmentRequested A callback invoked when the user requests to join a department.
+ * @param onLeaveDepartmentRequested A callback invoked when the user requests to leave a department.
+ * @param isLeavingKick Whether the leave action is a kick (removal) instead of a voluntary leave.
  */
 @Composable
 fun DepartmentsListCard(
     userSub: String,
     departments: List<Department>?,
     onJoinDepartmentRequested: ((Department) -> Job)?,
-    onLeaveDepartmentRequested: ((Department) -> Job)? = null,
+    onLeaveDepartmentRequested: ((Department) -> Job)?,
+    isLeavingKick: Boolean = false,
 ) {
     val userDepartments = remember(userSub, departments) {
         departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == userSub } != null }.orEmpty()
@@ -83,9 +86,14 @@ fun DepartmentsListCard(
         var isLoading by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { if (!isLoading) leavingDepartment = null },
-            title = { Text(stringResource(Res.string.departments_leave_title)) },
+            title = { Text(stringResource(if (isLeavingKick) Res.string.departments_kick_title else Res.string.departments_leave_title)) },
             text = {
-                Text(stringResource(Res.string.departments_leave_message, department.displayName))
+                Text(
+                    stringResource(
+                        if (isLeavingKick) Res.string.departments_kick_message else Res.string.departments_kick_message,
+                        department.displayName
+                    )
+                )
             },
             dismissButton = {
                 TextButton(enabled = !isLoading, onClick = { leavingDepartment = null }) {

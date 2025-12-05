@@ -2,28 +2,14 @@ package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,18 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.forma_pv
+import cea_app.composeapp.generated.resources.icon_monochrome
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
-import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
-import org.centrexcursionistalcoi.app.ui.page.main.profile.FEMECVAccountCard
-import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
-import org.centrexcursionistalcoi.app.ui.page.main.profile.NoInsurancesCard
-import org.centrexcursionistalcoi.app.ui.page.main.profile.PersonalInformationCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.*
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.jetbrains.compose.resources.painterResource
 
@@ -59,6 +43,7 @@ fun ColumnScope.ProfilePage(
     onFEMECVDisconnectRequested: () -> Job,
     departments: List<Department>?,
     onJoinDepartmentRequested: (Department) -> Job,
+    onLeaveDepartmentRequested: (Department) -> Job,
 ) {
     val activeInsurances = remember(profile) { profile.activeInsurances() }
 
@@ -146,6 +131,7 @@ fun ColumnScope.ProfilePage(
                 profile.sub,
                 departments,
                 onJoinDepartmentRequested,
+                onLeaveDepartmentRequested,
             )
         }
     }

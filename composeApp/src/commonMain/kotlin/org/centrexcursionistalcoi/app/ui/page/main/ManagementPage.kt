@@ -14,43 +14,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.EventFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.InventoryFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Newsmode
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NewsmodeFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
-import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.*
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
+import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
@@ -166,6 +143,7 @@ fun ManagementPage(
         onCreateDepartment = model::createDepartment,
         onUpdateDepartment = model::updateDepartment,
         onDeleteDepartment = model::delete,
+        onKickFromDepartment = model::kickFromDepartment,
         users = users,
         onPromote = model::promote,
         inventoryItemTypes = inventoryItemTypes,
@@ -204,6 +182,7 @@ private fun ManagementPage(
     onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onUpdateDepartment: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDeleteDepartment: (Department) -> Job,
+    onKickFromDepartment: (UserData, Department) -> Job,
 
     users: List<UserData>?,
     onPromote: (UserData) -> Job,
@@ -265,7 +244,7 @@ private fun ManagementPage(
 
             ManagementPage.Departments -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
 
-            ManagementPage.Users -> UsersListView(windowSizeClass, users, departments, onPromote)
+            ManagementPage.Users -> UsersListView(windowSizeClass, users, departments, onPromote, onKickFromDepartment)
 
             ManagementPage.Posts -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 

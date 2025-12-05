@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
@@ -11,14 +10,7 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.EventsRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.PostsRepository
-import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.database.*
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -30,6 +22,7 @@ import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
+import kotlin.uuid.Uuid
 
 class MainViewModel: ViewModel() {
     companion object {
@@ -143,5 +136,9 @@ class MainViewModel: ViewModel() {
 
     fun requestJoinDepartment(department: Department) = launch {
         DepartmentsRemoteRepository.requestJoin(department.id)
+    }
+
+    fun leaveDepartment(department: Department) = launch {
+        DepartmentsRemoteRepository.leave(department.id)
     }
 }
