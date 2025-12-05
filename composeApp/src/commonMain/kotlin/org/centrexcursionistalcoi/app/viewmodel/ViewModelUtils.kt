@@ -3,15 +3,10 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
@@ -48,6 +43,9 @@ fun <T> ViewModel.async(
 ): Deferred<T?> = viewModelScope.async(Dispatchers.Main, start) {
     try {
         block()
+    } catch (e: CancellationException) {
+        log.e(e) { "Coroutine cancelled." }
+        null
     } catch (e: Exception) {
         log.e(e) { "Error in ViewModel coroutine." }
         GlobalAsyncErrorHandler.setError(e)
@@ -71,6 +69,8 @@ fun ViewModel.launchWithLock(
     lock.withLock {
         try {
             block()
+        } catch (e: CancellationException) {
+            log.e(e) { "Coroutine cancelled." }
         } catch (e: Exception) {
             log.e(e) { "Error in ViewModel coroutine." }
             GlobalAsyncErrorHandler.setError(e)
