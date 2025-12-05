@@ -3,16 +3,31 @@ package org.centrexcursionistalcoi.app.push
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
+import kotlin.random.Random
 
 object LocalNotifications {
     private val log = logging()
+
+    /**
+     * Checks if the targeted notification is for the current user.
+     *
+     * Not only checks the [TargetedNotification.isSelf] flag, but also compares the [TargetedNotification.userSub] with
+     * the current profile's [ProfileResponse.sub].
+     * @return true if the notification is for the current user, false otherwise.
+     */
+    private fun TargetedNotification.checkIsSelf(): Boolean {
+        if (!isSelf) return false
+        val profile = ProfileRepository.getProfile() ?: return false
+        return profile.sub == userSub
+    }
 
     fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
@@ -61,7 +76,7 @@ object LocalNotifications {
         when (notification) {
             is PushNotification.LendingConfirmed -> {
                 // Only show if the notification is for the current user
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     log.d { "Ignoring lending confirmed notification for another user: ${notification.userSub}" }
                     return
                 }
@@ -74,7 +89,7 @@ object LocalNotifications {
             }
             is PushNotification.LendingCancelled -> {
                 // Only show if the notification is for the current user
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     log.d { "Ignoring lending cancelled notification for another user: ${notification.userSub}" }
                     return
                 }
@@ -86,7 +101,7 @@ object LocalNotifications {
                 )
             }
             is PushNotification.LendingTaken -> {
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     // The lending is for another user, the logged-in user is an admin
                     showNotification(
                         Res.string.notification_lending_given_title,
@@ -103,7 +118,7 @@ object LocalNotifications {
                 }
             }
             is PushNotification.LendingReturned -> {
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     // The lending is for another user, the logged-in user is an admin
                     showNotification(
                         Res.string.notification_lending_returned_other_title,
@@ -120,7 +135,7 @@ object LocalNotifications {
                 }
             }
             is PushNotification.LendingPartiallyReturned -> {
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     // The lending is for the current user
                     showNotification(
                         Res.string.notification_lending_returned_partial_title,
@@ -132,7 +147,7 @@ object LocalNotifications {
 
             is PushNotification.DepartmentJoinRequestUpdated -> {
                 // Only show if the notification is for the current user
-                if (!notification.isSelf) {
+                if (!notification.checkIsSelf()) {
                     log.d { "Ignoring join updated notification for another user: ${notification.userSub}" }
                     return
                 }
