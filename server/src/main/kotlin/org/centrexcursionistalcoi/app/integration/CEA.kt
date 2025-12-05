@@ -154,7 +154,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                         }
                     }
                     userSubList.add(randomSub)
-                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, email=${member.email}, status=${member.status}")
                 }
             } catch (e: SQLException) {
                 logger.error("Database error while processing member NIF=${member.nif}, number=${member.number}", e)
@@ -174,7 +174,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                 entity.isDisabled = true
                 entity.disableReason = "not_in_cea_members"
             }
-            logger.trace("Disabled member email=${entity.email}, sub=${entity.sub.value}")
+            logger.trace("Disabled member NIF=${entity.nif}, email=${entity.email}, sub=${entity.sub.value}")
         }
         logger.info("Synchronization complete.")
     }
