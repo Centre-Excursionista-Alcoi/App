@@ -1,31 +1,19 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.Month
-import java.time.ZoneOffset
-import java.util.Random
+import io.ktor.http.*
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.Event
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.data.FileWithContext.Companion.wrapFile
-import org.centrexcursionistalcoi.app.data.InventoryItem
-import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.Post
-import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.entity.EventEntity
-import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
-import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
-import org.centrexcursionistalcoi.app.database.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.entity.*
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import java.time.*
+import java.util.*
 
 class TestRoutes : ApplicationTestBase() {
     private val testDepartmentId = "2c8876a9-ff7e-4dd8-b39c-dd270631b9d2".toUUID()
@@ -148,6 +136,7 @@ class TestRoutes : ApplicationTestBase() {
             ),
             defaultCreationValuesProvider = mapOf(
                 "requiresConfirmation" to ProvidedRouteTests.DefaultValue(true) { false },
+                "requiresInsurance" to ProvidedRouteTests.DefaultValue(true) { false },
             ),
             filterEntitiesForListLoginType = { it.department == null },
             locationRegex = "/events/$uuidv4+".toRegex(),

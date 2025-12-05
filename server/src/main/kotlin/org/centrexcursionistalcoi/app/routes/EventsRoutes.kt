@@ -1,15 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
+import io.ktor.http.content.*
+import io.ktor.server.routing.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
@@ -26,6 +18,12 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.uuid.toKotlinUuid
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
@@ -121,7 +119,7 @@ fun Route.eventsRoutes() {
     )
     get("/events/calendar") {
         val session = call.getUserSession()
-        val events = EventEntity.forSession(session)
+        val events = Database { EventEntity.forSession(session).toList() }
 
         val sb = StringBuilder()
         sb.append("BEGIN:VCALENDAR\r\n")

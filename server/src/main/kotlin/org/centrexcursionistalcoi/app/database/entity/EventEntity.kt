@@ -28,26 +28,33 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
     companion object : UUIDEntityClass<EventEntity>(Events) {
         private val logger = LoggerFactory.getLogger("EventEntity")
 
-        fun forSession(session: UserSession?) = if (session == null) {
-            // Not logged in, only show public events (without department)
-            logger.debug("Unauthenticated user, fetching public events...")
-            find { Events.department eq null }
-        } else if (session.isAdmin()) {
-            // If admin, show all events
-            logger.debug("Admin user ${session.sub} fetching all events...")
-            all()
-        } else {
-            // Logged in, show public events, and events for the user's department
-            logger.debug("Fetching events for user ${session.sub}")
-            logger.debug("Fetching user departments for user ${session.sub}")
-            val userDepartments = transaction {
-                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
-                    .map { it.department.id.value }
+        context(_: JdbcTransaction)
+        fun forSession(session: UserSession?) = when {
+            session == null -> {
+                // Not logged in, only show public events (without department)
+                logger.debug("Unauthenticated user, fetching public events...")
+                find { Events.department eq null }
             }
-            logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
-            val now = now()
-            find {
-                (Events.start greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
+
+            session.isAdmin() -> {
+                // If admin, show all events
+                logger.debug("Admin user ${session.sub} fetching all events...")
+                all()
+            }
+
+            else -> {
+                // Logged in, show public events, and events for the user's department
+                logger.debug("Fetching events for user ${session.sub}")
+                logger.debug("Fetching user departments for user ${session.sub}")
+                val userDepartments = transaction {
+                    DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                        .map { it.department.id.value }
+                }
+                logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
+                val now = now()
+                find {
+                    (Events.start greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
+                }
             }
         }
     }
