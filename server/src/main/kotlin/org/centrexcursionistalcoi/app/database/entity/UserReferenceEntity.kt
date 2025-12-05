@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.LendingUser
@@ -17,6 +17,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -26,8 +27,16 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     companion object : EntityClass<String, UserReferenceEntity>(UserReferences) {
         private val logger = LoggerFactory.getLogger(UserReferenceEntity::class.java)
 
+        @Deprecated("Do not authenticate with NIF, use email.", ReplaceWith("findByEmail"))
         context(_: JdbcTransaction)
         fun findByNif(nif: String): UserReferenceEntity? = find { UserReferences.nif eq nif }.limit(1).firstOrNull()
+
+        /**
+         * Finds a user by their email address, case-insensitively.
+         */
+        context(_: JdbcTransaction)
+        fun findByEmail(email: String): UserReferenceEntity? =
+            find { UserReferences.email.upperCase() eq email.uppercase() }.limit(1).firstOrNull()
     }
 
     var sub by UserReferences.sub

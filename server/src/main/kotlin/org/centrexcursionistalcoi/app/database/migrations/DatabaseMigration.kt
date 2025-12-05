@@ -10,8 +10,9 @@ interface DatabaseMigration {
     fun migrate()
 
     companion object {
+        // When adding new migrations, also increase the VERSION constant in Database.kt
         val migrations = listOf<DatabaseMigration>(
-            V1, V2,
+            V1, V2, V3,
         )
 
         /**

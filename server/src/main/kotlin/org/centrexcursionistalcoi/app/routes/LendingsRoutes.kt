@@ -1,28 +1,10 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.request.contentLength
-import io.ktor.server.request.receiveMultipart
-import io.ktor.server.request.receiveParameters
-import io.ktor.server.request.receiveText
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import java.io.ByteArrayOutputStream
-import java.time.Instant
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -31,21 +13,8 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.ref
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
-import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
-import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
-import org.centrexcursionistalcoi.app.database.entity.LendingEntity
-import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
-import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
-import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
-import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.table.InventoryItems
-import org.centrexcursionistalcoi.app.database.table.LendingItems
-import org.centrexcursionistalcoi.app.database.table.LendingUsers
-import org.centrexcursionistalcoi.app.database.table.Lendings
-import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.database.table.UserReferences
+import org.centrexcursionistalcoi.app.database.entity.*
+import org.centrexcursionistalcoi.app.database.table.*
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Error
@@ -67,20 +36,18 @@ import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
-import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.count
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.greaterEq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.lessEq
-import org.jetbrains.exposed.v1.core.neq
-import org.jetbrains.exposed.v1.core.notInSubQuery
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
+import java.io.ByteArrayOutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -210,10 +177,10 @@ fun Route.lendingsRoutes() {
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
         Email.launch {
             val emails = Database {
-                UserReferenceEntity.find { UserReferences.email neq null }
+                UserReferenceEntity.all()
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
@@ -682,8 +649,8 @@ fun Route.lendingsRoutes() {
         // Notify administrators that a new memory has been uploaded
         Email.launch {
             val emails = Database {
-                UserReferenceEntity.find { UserReferences.email neq null and UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
 
             val fileAttachments = mutableListOf<MailerSendAttachment>()

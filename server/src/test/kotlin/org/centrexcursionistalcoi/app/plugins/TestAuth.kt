@@ -1,23 +1,23 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.post
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.parameters
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
 import io.ktor.util.appendAll
-import kotlin.test.Test
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.security.Passwords
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.test.Test
+import kotlin.text.toCharArray
 
 class TestAuth: ApplicationTestBase() {
     private val parameters = mapOf(
-        "nif" to FakeUser.NIF,
+        "email" to FakeUser.EMAIL,
         "password" to "TestPassword123",
     )
 
@@ -41,12 +41,12 @@ class TestAuth: ApplicationTestBase() {
     }
 
     @Test
-    fun test_registration_invalidNIF() = runApplicationTest {
+    fun test_registration_invalidEmail() = runApplicationTest {
         client.submitForm(
             "/register",
-            parameters { appendAll(parameters + ("nif" to "invalid")) },
+            parameters { appendAll(parameters + ("email" to "invalid")) },
         ).apply {
-            assertError(Error.InvalidArgument("nif"))
+            assertError(Error.InvalidArgument("email"))
         }
     }
 
@@ -81,7 +81,7 @@ class TestAuth: ApplicationTestBase() {
     @Test
     fun test_login_empty() = runApplicationTest {
         val response = client.post("/login")
-        response.assertError(Error.IncorrectPasswordOrNIF())
+        response.assertError(Error.IncorrectPasswordOrEmail())
     }
 
     @Test
@@ -91,18 +91,18 @@ class TestAuth: ApplicationTestBase() {
                 "/login",
                 parameters { appendAll(parameters.filterKeys { it != key }) },
             ).apply {
-                assertError(Error.IncorrectPasswordOrNIF())
+                assertError(Error.IncorrectPasswordOrEmail())
             }
         }
     }
 
     @Test
-    fun test_login_wrongNIF() = runApplicationTest {
+    fun test_login_wrongEmail() = runApplicationTest {
         client.submitForm(
             "/login",
-            parameters { appendAll(parameters + ("nif" to "invalid")) },
+            parameters { appendAll(parameters + ("email" to "invalid")) },
         ).apply {
-            assertError(Error.IncorrectPasswordOrNIF())
+            assertError(Error.IncorrectPasswordOrEmail())
         }
     }
 
@@ -112,7 +112,7 @@ class TestAuth: ApplicationTestBase() {
             "/login",
             parameters { appendAll(parameters + ("password" to "invalid")) },
         ).apply {
-            assertError(Error.IncorrectPasswordOrNIF())
+            assertError(Error.IncorrectPasswordOrEmail())
         }
     }
 

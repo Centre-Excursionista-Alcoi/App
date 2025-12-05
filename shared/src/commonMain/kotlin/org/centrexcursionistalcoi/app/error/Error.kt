@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.error
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import kotlin.reflect.KClass
-import kotlin.uuid.Uuid
+import io.ktor.http.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.serializer.ContentTypeSerializer
 import org.centrexcursionistalcoi.app.serializer.HttpStatusCodeSerializer
+import kotlin.reflect.KClass
+import kotlin.uuid.Uuid
 
 @Serializable
 sealed interface Error {
@@ -347,20 +346,20 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("NIFNotRegistered")
-    class NIFNotRegistered(): Error {
-        override val code: Int = ERROR_NIF_NOT_REGISTERED
-        override val description: String = "There is not any user registered with the given NIF."
+    @SerialName("EmailNotRegistered")
+    class EmailNotRegistered(): Error {
+        override val code: Int = ERROR_EMAIL_NOT_REGISTERED
+        override val description: String = "There is not any user registered with the given email."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.NotFound
     }
 
     @Serializable
-    @SerialName("IncorrectPasswordOrNIF")
-    class IncorrectPasswordOrNIF(): Error {
-        override val code: Int = ERROR_INCORRECT_PASSWORD_OR_NIF
-        override val description: String = "The NIF or password is incorrect."
+    @SerialName("IncorrectPasswordOrEmail")
+    class IncorrectPasswordOrEmail(): Error {
+        override val code: Int = ERROR_INCORRECT_PASSWORD_OR_EMAIL
+        override val description: String = "The email or password is incorrect."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.Unauthorized
@@ -447,16 +446,6 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("UserDoesNotHaveAnEmail")
-    class UserDoesNotHaveAnEmail(): Error {
-        override val code: Int = ERROR_USER_DOES_NOT_HAVE_AN_EMAIL
-        override val description: String = "The user doesn't have an email set."
-
-        @Serializable(HttpStatusCodeSerializer::class)
-        override val statusCode: HttpStatusCode = HttpStatusCode.UnprocessableEntity
-    }
-
-    @Serializable
     @SerialName("UserIsDisabled")
     class UserIsDisabled(): Error {
         override val code: Int = ERROR_USER_IS_DISABLED
@@ -496,8 +485,8 @@ sealed interface Error {
         const val ERROR_LENDING_NOT_TAKEN = 26
         const val ERROR_INVALID_ITEM_IN_RETURNED_ITEMS = 27
         const val ERROR_PASSWORD_NOT_SAFE_ENOUGH = 28
-        const val ERROR_NIF_NOT_REGISTERED = 29
-        const val ERROR_INCORRECT_PASSWORD_OR_NIF = 30
+        const val ERROR_EMAIL_NOT_REGISTERED = 29
+        const val ERROR_INCORRECT_PASSWORD_OR_EMAIL = 30
         const val ERROR_PASSWORD_NOT_SET = 31
         const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
         const val ERROR_LENDING_ALREADY_PICKED_UP = 33
@@ -506,7 +495,7 @@ sealed interface Error {
         const val ERROR_USER_ALREADY_REGISTERED = 36
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
         const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
-        const val ERROR_USER_DOES_NOT_HAVE_AN_EMAIL = 39
+        const val ___UNASSIGNED = 39
         const val ERROR_USER_IS_DISABLED = 40
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
@@ -539,8 +528,8 @@ sealed interface Error {
             ERROR_LENDING_NOT_TAKEN -> LendingNotTaken.serializer()
             ERROR_INVALID_ITEM_IN_RETURNED_ITEMS -> InvalidItemInReturnedItems.serializer()
             ERROR_PASSWORD_NOT_SAFE_ENOUGH -> PasswordNotSafeEnough.serializer()
-            ERROR_NIF_NOT_REGISTERED -> NIFNotRegistered.serializer()
-            ERROR_INCORRECT_PASSWORD_OR_NIF -> IncorrectPasswordOrNIF.serializer()
+            ERROR_EMAIL_NOT_REGISTERED -> EmailNotRegistered.serializer()
+            ERROR_INCORRECT_PASSWORD_OR_EMAIL -> IncorrectPasswordOrEmail.serializer()
             ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
             ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
             ERROR_LENDING_ALREADY_PICKED_UP -> LendingAlreadyPickedUp.serializer()
@@ -549,7 +538,6 @@ sealed interface Error {
             ERROR_USER_ALREADY_REGISTERED -> UserAlreadyRegistered.serializer()
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
-            ERROR_USER_DOES_NOT_HAVE_AN_EMAIL -> UserDoesNotHaveAnEmail.serializer()
             ERROR_USER_IS_DISABLED -> UserIsDisabled.serializer()
             else -> null
         }
