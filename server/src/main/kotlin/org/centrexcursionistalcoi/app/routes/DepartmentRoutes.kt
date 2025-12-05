@@ -1,17 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.response.header
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import kotlin.uuid.toKotlinUuid
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
@@ -19,6 +11,8 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
@@ -29,23 +23,24 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import kotlin.uuid.toKotlinUuid
 
 private suspend fun RoutingContext.departmentRequest(mustBeAdmin: Boolean = false): Pair<UserSession, DepartmentEntity>? {
     val session = getUserSessionOrFail() ?: return null
     if (mustBeAdmin && !session.isAdmin()) {
-        call.respondText("Admin access required", status = HttpStatusCode.Forbidden)
+        call.respondError(Error.NotAnAdmin())
         return null
     }
 
     val departmentId = call.parameters["id"]?.toUUIDOrNull()
     if (departmentId == null) {
-        call.respondText("Missing or malformed department id", status = HttpStatusCode.BadRequest)
+        call.respondError(Error.InvalidArgument("id"))
         return null
     }
 
     val department = Database { DepartmentEntity.findById(departmentId) }
     if (department == null) {
-        call.respondText("Department not found", status = HttpStatusCode.NotFound)
+        call.respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId))
         return null
     }
 
@@ -132,6 +127,60 @@ fun Route.departmentsRoutes() {
                 call.response.header("CEA-Info", "pending")
                 call.respondText("Join request sent. Please wait for confirmation.", status = HttpStatusCode.Created)
             }
+        }
+    }
+
+    post("/departments/{id}/leave") {
+        val (session, department) = departmentRequest() ?: return@post
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq session.sub) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respond(HttpStatusCode.NoContent)
+        } else {
+            Database {
+                member.delete()
+            }
+            department.updated()
+
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+    post("/departments/{id}/leave/{sub}") {
+        val (_, department) = departmentRequest(true) ?: return@post
+
+        val sub = call.parameters["sub"]
+        if (sub == null) {
+            // in theory this should never happen due to the route structure
+            call.respondError(Error.MissingArgument("sub"))
+            return@post
+        }
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq sub) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respondError(Error.EntityNotFound(DepartmentMemberEntity::class, sub))
+        } else {
+            Database {
+                member.delete()
+            }
+            department.updated()
+
+            Push.launch {
+                Push.sendPushNotification(
+                    userSub = member.userSub.value,
+                    notification = member.kickedNotification(),
+                    includeAdmins = false,
+                )
+            }
+
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 

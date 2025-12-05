@@ -1,7 +1,5 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
@@ -12,6 +10,8 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import java.util.*
+import kotlin.uuid.toKotlinUuid
 
 class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers) {
@@ -50,6 +50,14 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
             isSelf = true,
             isConfirmed = false,
+        )
+    }
+
+    fun kickedNotification() = Database {
+        PushNotification.DepartmentKicked(
+            requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
+            userSub = this@DepartmentMemberEntity.userSub.value,
+            departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
         )
     }
 }
