@@ -66,14 +66,18 @@ fun ViewModel.launchWithLock(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
 ) = viewModelScope.launch(Dispatchers.Main, start) {
-    lock.withLock {
-        try {
-            block()
-        } catch (e: CancellationException) {
-            log.e(e) { "Coroutine cancelled." }
-        } catch (e: Exception) {
-            log.e(e) { "Error in ViewModel coroutine." }
-            GlobalAsyncErrorHandler.setError(e)
+    try {
+        lock.withLock {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                log.e(e) { "Coroutine cancelled." }
+            } catch (e: Exception) {
+                log.e(e) { "Error in ViewModel coroutine." }
+                GlobalAsyncErrorHandler.setError(e)
+            }
         }
+    } catch (e: CancellationException) {
+        log.e(e) { "Coroutine cancelled." }
     }
 }
