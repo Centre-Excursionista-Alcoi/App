@@ -78,11 +78,6 @@ object CEA : PeriodicWorker(period = 1.days) {
         true
     }
 
-    /**
-     * Sync once a day.
-     */
-    private const val SYNC_EVERY_SECONDS = 24 * 60 * 60 // 1 day
-
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     /**
@@ -172,22 +167,6 @@ object CEA : PeriodicWorker(period = 1.days) {
             logger.trace("Disabled member email=${entity.email}, sub=${entity.sub.value}")
         }
         logger.info("Synchronization complete.")
-    }
-
-    /**
-     * Synchronizes the CEA members data with the database if needed.
-     * @suspend
-     * @throws HttpResponseException if the download fails.
-     * @throws SerializationException if the data cannot be parsed.
-     */
-    suspend fun synchronizeIfNeeded() {
-        val now = now()
-        val lastSync = Database { ConfigEntity[ConfigEntity.LastCEASync] }
-        if (lastSync == null || now.epochSecond - lastSync.epochSecond >= SYNC_EVERY_SECONDS) {
-            run()
-        } else {
-            logger.info("CEA members synchronization not needed. Last sync at $lastSync.")
-        }
     }
 
     private fun generateNonce(length: Int = 10): String {
