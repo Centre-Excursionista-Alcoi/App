@@ -36,17 +36,17 @@ class TestV3Migration : PostgresTestBase() {
         // User without email
         Database.exec(
             """INSERT INTO user_references (sub, nif, member, full_name, email, groups) VALUES (?, ?, ?, ?, ?, ?);""",
-            arrayOf("abcdef", "87654321X", 1, "Test User 1", null, arrayOf("user"))
+            arrayOf("1", "87654321X", 1, "Test User 1", null, arrayOf("user"))
         ).assertTrue()
         // User with email
         Database.exec(
             """INSERT INTO user_references (sub, nif, member, full_name, email, groups) VALUES (?, ?, ?, ?, ?, ?);""",
-            arrayOf("abcdef", "12345678Z", 3, "Test User 2", "email@example.com", arrayOf("user"))
+            arrayOf("2", "12345678Z", 3, "Test User 2", "email@example.com", arrayOf("user"))
         ).assertTrue()
         // Duplicate email
         Database.exec(
             """INSERT INTO user_references (sub, nif, member, full_name, email, groups) VALUES (?, ?, ?, ?, ?, ?);""",
-            arrayOf("abcdef", "11111111H", 2, "Test User 3", "email@example.com", arrayOf("user"))
+            arrayOf("3", "11111111H", 2, "Test User 3", "email@example.com", arrayOf("user"))
         ).assertTrue()
 
         // Run migration
@@ -55,12 +55,22 @@ class TestV3Migration : PostgresTestBase() {
         }
 
         // Verify migration
-        Database.execQuery("SELECT * FROM user_references;").let { rs ->
+        Database.execQuery("SELECT * FROM user_references ORDER BY sub;").let { rs ->
             assertTrue { rs.next() }
-            // "Test User 1" had no email, so it should have been removed
-            // "Test User 2" would be present, but "Test User 3" has a lower member number, so it should be kept instead
-            // First row should be "Test User 3"
+            // "Test User 1" had no email, so it should have been disabled
+            assertEquals("Test User 1", rs.getString("full_name"))
+            assertEquals(true, rs.getBoolean("is_disabled"))
+
+            assertTrue { rs.next() }
+            // "Test User 2" should be enabled, but "Test User 3" has a lower member number, so it should be kept instead
+            assertEquals("Test User 2", rs.getString("full_name"))
+            assertEquals(true, rs.getBoolean("is_disabled"))
+
+            assertTrue { rs.next() }
+            // "Test User 3" should be enabled
             assertEquals("Test User 3", rs.getString("full_name"))
+            assertEquals(false, rs.getBoolean("is_disabled"))
+
             // There should be no more rows
             assertFalse { rs.next() }
         }

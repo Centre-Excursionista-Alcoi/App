@@ -227,6 +227,9 @@ fun Route.configureAuthRoutes() {
             UserReferenceEntity.findById(userId)
         } ?: return@post respondError(Error.InvalidArgument("request_id"))
 
+        // Users without email are disabled
+        val email = userReference.email ?: return@post respondError(Error.UserIsDisabled())
+
         // update the user's password
         val hashedPassword = Passwords.hash(newPassword)
         Database {
@@ -242,7 +245,7 @@ fun Route.configureAuthRoutes() {
         val locale = call.request.locale()
         Email.sendTemplate(
             to = listOf(
-                MailerSendEmail(userReference.email, userReference.fullName)
+                MailerSendEmail(email, userReference.fullName)
             ),
             template = EmailTemplate.PasswordChangedNotification,
             locale = locale,

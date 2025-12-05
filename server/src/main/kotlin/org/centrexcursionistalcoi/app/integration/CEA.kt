@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.generateRandomString
@@ -51,6 +52,8 @@ object CEA : PeriodicWorker(period = 1.days) {
         val disabledReason = if (isDisabled) {
             if (!NIFValidation.validate(nif)) {
                 "invalid_nif"
+            } else if (!EmailValidation.validate(email)) {
+                "invalid_email"
             } else if (status.equals("baixa", true)) {
                 "status_baixa"
             } else if (status.equals("pendent", true)) {

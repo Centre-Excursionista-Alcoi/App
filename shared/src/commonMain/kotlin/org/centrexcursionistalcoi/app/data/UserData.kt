@@ -10,9 +10,6 @@ import kotlin.uuid.Uuid
 data class UserData(
     val sub: String,
     val fullName: String,
-    /**
-     * In theory, never `null`. However, allows `null` in order to strip sensitive info for non-admin users.
-     */
     val email: String?,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,

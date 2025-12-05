@@ -180,7 +180,7 @@ fun Route.lendingsRoutes() {
                 UserReferenceEntity.all()
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
+                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
@@ -650,7 +650,7 @@ fun Route.lendingsRoutes() {
         Email.launch {
             val emails = Database {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
+                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
             }
 
             val fileAttachments = mutableListOf<MailerSendAttachment>()
