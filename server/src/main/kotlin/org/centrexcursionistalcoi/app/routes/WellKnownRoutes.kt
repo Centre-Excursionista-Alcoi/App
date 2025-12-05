@@ -1,9 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
+import io.ktor.http.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -22,6 +21,7 @@ fun Route.wellKnownRoutes() {
                 val obj = buildJsonObject {
                     put("relation", buildJsonArray {
                         add(JsonPrimitive("delegate_permission/common.handle_all_urls"))
+                        add(JsonPrimitive("delegate_permission/common.get_login_creds"))
                     })
                     put("target", buildJsonObject {
                         put("namespace", JsonPrimitive("android_app"))
