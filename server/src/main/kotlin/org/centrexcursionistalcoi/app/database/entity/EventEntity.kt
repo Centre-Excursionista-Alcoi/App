@@ -1,5 +1,11 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
@@ -8,21 +14,20 @@ import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.util.*
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
 class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UUIDEntityClass<EventEntity>(Events) {
@@ -112,5 +117,23 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
     override suspend fun updated() {
         notifyUpdateForEntity(Companion, id)
         Database { lastUpdate = now() }
+    }
+
+    fun assistanceConfirmedNotification(session: UserSession, isSelf: Boolean): PushNotification.EventAssistanceUpdated = Database {
+        PushNotification.EventAssistanceUpdated(
+            eventId = this@EventEntity.id.value.toKotlinUuid(),
+            userSub = session.sub,
+            isSelf = isSelf,
+            isConfirmed = true,
+        )
+    }
+
+    fun assistanceRejectedNotification(session: UserSession, isSelf: Boolean): PushNotification.EventAssistanceUpdated = Database {
+        PushNotification.EventAssistanceUpdated(
+            eventId = this@EventEntity.id.value.toKotlinUuid(),
+            userSub = session.sub,
+            isSelf = isSelf,
+            isConfirmed = false,
+        )
     }
 }
