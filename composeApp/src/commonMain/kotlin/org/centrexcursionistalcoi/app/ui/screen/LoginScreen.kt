@@ -38,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun LoginScreen(
+fun AuthScreen(
     changedPassword: Boolean = false,
     model: LoginViewModel = viewModel { LoginViewModel() },
     onLoginSuccess: () -> Unit,
@@ -46,7 +46,7 @@ fun LoginScreen(
     val isLoading by model.isLoading.collectAsState()
     val error by model.error.collectAsState()
 
-    LoginScreen(
+    AuthScreen(
         isLoading = isLoading,
         error = error,
         changedPassword = changedPassword,
@@ -59,7 +59,7 @@ fun LoginScreen(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
-private fun LoginScreen(
+private fun AuthScreen(
     isLoading: Boolean,
     error: Throwable?,
     changedPassword: Boolean,
@@ -98,7 +98,7 @@ private fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (page) {
-                    0 -> LoginScreen_Login(
+                    0 -> AuthScreen_Login(
                         isLoading = isLoading,
                         error = error,
                         onLoginRequest = { email, password ->
@@ -119,7 +119,7 @@ private fun LoginScreen(
                         },
                     )
 
-                    1 -> LoginScreen_Register(
+                    1 -> AuthScreen_Register(
                         isLoading = isLoading,
                         error = error,
                         onLoginRequest = {
@@ -150,7 +150,7 @@ private fun LoginScreen(
 }
 
 @Composable
-fun LoginScreen_Form(
+private fun AuthScreen_Form(
     isLoading: Boolean,
     error: Throwable?,
     isValid: Boolean,
@@ -229,7 +229,7 @@ fun LoginScreen_Form(
 }
 
 @Composable
-fun LoginScreen_Login(
+private fun AuthScreen_Login(
     isLoading: Boolean = false,
     error: Throwable? = null,
     onLoginRequest: (email: CharSequence, password: CharSequence) -> Unit,
@@ -275,7 +275,7 @@ fun LoginScreen_Login(
         )
     }
 
-    LoginScreen_Form(
+    AuthScreen_Form(
         isLoading = isLoading,
         error = error,
         isValid = valid,
@@ -317,7 +317,7 @@ fun LoginScreen_Login(
 }
 
 @Composable
-fun LoginScreen_Register(
+private fun AuthScreen_Register(
     isLoading: Boolean = false,
     error: Throwable? = null,
     onLoginRequest: () -> Unit,
@@ -331,7 +331,7 @@ fun LoginScreen_Register(
             password.text.isNotBlank() &&
             password.text == passwordConfirm.text
 
-    LoginScreen_Form(
+    AuthScreen_Form(
         isLoading = isLoading,
         error = error,
         isValid = valid,
