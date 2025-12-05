@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Serializable
 data class Event(
@@ -15,6 +15,7 @@ data class Event(
     val description: String?,
     val maxPeople: Long?,
     val requiresConfirmation: Boolean,
+    val requiresInsurance: Boolean,
     val department: Uuid?,
     override val image: Uuid?,
 
@@ -34,6 +35,7 @@ data class Event(
         "description" to description,
         "maxPeople" to maxPeople,
         "requiresConfirmation" to requiresConfirmation,
+        "requiresInsurance" to requiresInsurance,
         "department" to department,
         "image" to image,
         "userReferences" to userReferences,

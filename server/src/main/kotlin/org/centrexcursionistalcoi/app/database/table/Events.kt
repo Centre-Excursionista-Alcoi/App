@@ -1,7 +1,5 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import java.util.UUID
-import kotlin.uuid.Uuid
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
@@ -15,6 +13,8 @@ import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import java.util.*
+import kotlin.uuid.Uuid
 
 object Events : UUIDTable("events"), ViaLink<UUID, EventEntity, String, UserReferenceEntity>, CustomTableSerializer<UUID, EventEntity> {
     val created = timestamp("created").defaultExpression(DatabaseNowExpression)
@@ -30,6 +30,7 @@ object Events : UUIDTable("events"), ViaLink<UUID, EventEntity, String, UserRefe
 
     val maxPeople = long("maxPeople").nullable()
     val requiresConfirmation = bool("requiresConfirmation").default(false)
+    val requiresInsurance = bool("requiresInsurance").default(false)
 
     val department = optReference("department", Departments)
     val image = optReference("image", Files)

@@ -47,8 +47,8 @@ fun EventsListView(
     windowSizeClass: WindowSizeClass,
     events: List<ReferencedEvent>?,
     departments: List<Department>?,
-    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
+    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
+    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
     onDelete: (ReferencedEvent) -> Job,
 ) {
     ListView(
@@ -72,6 +72,7 @@ fun EventsListView(
             val description = rememberRichTextState()
             var maxPeople by remember { mutableStateOf(event?.maxPeople?.toString() ?: "") }
             var requiresConfirmation by remember { mutableStateOf(event?.requiresConfirmation ?: false) }
+            var requiresInsurance by remember { mutableStateOf(event?.requiresInsurance ?: false) }
             var department by remember { mutableStateOf(event?.department) }
             var image by remember { mutableStateOf<PlatformFile?>(null) }
 
@@ -91,6 +92,7 @@ fun EventsListView(
                         end != event.end?.toLocalDateTime(TimeZone.currentSystemDefault()) ||
                         maxPeople != event.maxPeople?.toString() ||
                         requiresConfirmation != event.requiresConfirmation ||
+                        requiresInsurance != event.requiresInsurance ||
                         image != null
 
             FormImagePicker(
@@ -159,6 +161,13 @@ fun EventsListView(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 enabled = !isLoading,
             )
+            FormSwitchRow(
+                checked = requiresInsurance,
+                onCheckedChange = { requiresInsurance = it },
+                label = stringResource(Res.string.event_requires_confirmation),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                enabled = !isLoading,
+            )
 
             DropdownField(
                 value = department,
@@ -199,6 +208,7 @@ fun EventsListView(
                             description,
                             maxPeople,
                             requiresConfirmation,
+                            requiresInsurance,
                             department,
                             image
                         ) {
@@ -214,6 +224,7 @@ fun EventsListView(
                             description.takeIf { it.toMarkdown() != event.description },
                             maxPeople.takeIf { it != event.maxPeople?.toString() },
                             requiresConfirmation.takeIf { it != event.requiresConfirmation },
+                            requiresInsurance.takeIf { it != event.requiresInsurance },
                             department.takeIf { it?.id != event.department?.id },
                             image
                         ) { progress = it }
