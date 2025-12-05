@@ -101,8 +101,8 @@ private fun LoginScreen(
                     0 -> LoginScreen_Login(
                         isLoading = isLoading,
                         error = error,
-                        onLoginRequest = { nif, password ->
-                            onLoginRequest(nif.toString(), password.toString())
+                        onLoginRequest = { email, password ->
+                            onLoginRequest(email.toString(), password.toString())
                         },
                         onRegisterRequest = {
                             onClearErrors()
@@ -128,8 +128,8 @@ private fun LoginScreen(
                                 state.animateScrollToPage(0)
                             }
                         },
-                        onRegisterRequest = { nif, password ->
-                            onRegisterRequest(nif.toString(), password.toString())
+                        onRegisterRequest = { email, password ->
+                            onRegisterRequest(email.toString(), password.toString())
                         },
                     )
                 }
@@ -346,7 +346,7 @@ fun LoginScreen_Register(
         OutlinedTextField(
             state = email,
             enabled = !isLoading,
-            label = { Text(stringResource(Res.string.nif)) },
+            label = { Text(stringResource(Res.string.email)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
