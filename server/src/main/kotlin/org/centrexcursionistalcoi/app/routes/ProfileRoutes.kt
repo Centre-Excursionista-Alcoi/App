@@ -1,32 +1,15 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.request.receiveMultipart
-import io.ktor.server.request.receiveParameters
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytesWriter
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.utils.io.copyTo
-import io.ktor.utils.io.jvm.javaio.toByteReadChannel
-import java.time.format.DateTimeParseException
-import java.time.temporal.ChronoUnit
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
-import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
-import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
-import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.entity.*
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
@@ -44,6 +27,10 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
+import kotlin.time.toKotlinInstant
+import kotlin.uuid.toKotlinUuid
 
 fun Route.profileRoutes() {
     get("/profile") {
@@ -262,8 +249,11 @@ fun Route.profileRoutes() {
         if (token.isNullOrBlank()) return@post respondError(Error.FCMTokenIsRequired())
 
         Database {
-            val reference = UserReferenceEntity[session.sub]
-            reference.addFCMRegistrationToken(token, deviceId)
+            // Only add the token if it doesn't already exist
+            if (FCMRegistrationTokenEntity.findById(token) == null) {
+                val reference = UserReferenceEntity[session.sub]
+                reference.addFCMRegistrationToken(token, deviceId)
+            }
         }
 
         call.respond(HttpStatusCode.Created)
@@ -275,14 +265,14 @@ fun Route.profileRoutes() {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@delete
 
         val parameters = call.receiveParameters()
-        val token = parameters["deviceId"]
+        val deviceId = parameters["deviceId"]
 
-        if (token.isNullOrBlank()) return@delete respondError(Error.DeviceIdIsRequired())
+        if (deviceId.isNullOrBlank()) return@delete respondError(Error.DeviceIdIsRequired())
 
         Database {
             val reference = UserReferenceEntity[session.sub]
             FCMRegistrationTokenEntity.find {
-                (FCMRegistrationTokens.deviceId eq token) and (FCMRegistrationTokens.user eq reference.id)
+                (FCMRegistrationTokens.deviceId eq deviceId) and (FCMRegistrationTokens.user eq reference.id)
             }.forEach { it.delete() }
         }
 
