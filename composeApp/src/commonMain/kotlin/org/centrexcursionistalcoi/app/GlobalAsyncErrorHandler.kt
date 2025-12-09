@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app
 
 import com.diamondedge.logging.logging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -10,6 +11,12 @@ object GlobalAsyncErrorHandler {
     val error get() = _error.asStateFlow()
 
     fun setError(throwable: Throwable) {
+        if (throwable is CancellationException) {
+            // Ignore cancellations
+            log.e { "Coroutine cancelled." }
+            return
+        }
+
         log.e(throwable) { "Unhandled exception" }
         _error.value = throwable
     }
