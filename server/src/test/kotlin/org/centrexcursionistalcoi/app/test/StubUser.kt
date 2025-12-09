@@ -1,10 +1,10 @@
 package org.centrexcursionistalcoi.app.test
 
 import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.slf4j.LoggerFactory
@@ -29,7 +29,7 @@ abstract class StubUser(val sub: String, val nif: String, val fullName: String, 
     }
 
     context(_: JdbcTransaction)
-    fun provideMemberEntity(status: Members.Status = Members.Status.ACTIVE): MemberEntity {
+    fun provideMemberEntity(status: Member.Status = Member.Status.ACTIVE): MemberEntity {
         return MemberEntity.findById(memberNumber) ?: MemberEntity.new(memberNumber) {
             this.status = status
             this.fullName = this@StubUser.fullName

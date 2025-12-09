@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
@@ -138,7 +139,7 @@ fun Route.configureAuthRoutes() {
         if (memberReference == null) {
             return@post call.respondError(Error.EmailNotFound())
         }
-        if (memberReference.status != Members.Status.ACTIVE) {
+        if (memberReference.status != Member.Status.ACTIVE) {
             return@post call.respondError(Error.MemberIsNotActive())
         }
 

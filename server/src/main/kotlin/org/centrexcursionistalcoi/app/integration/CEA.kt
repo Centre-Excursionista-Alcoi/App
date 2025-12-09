@@ -30,6 +30,7 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.time.Duration.Companion.days
+import org.centrexcursionistalcoi.app.data.Member as SharedMember
 
 object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
@@ -107,7 +108,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                 if (existingEntity != null) {
                     // Update existing member
                     Database {
-                        existingEntity.status = Members.Status.parse(member.status)
+                        existingEntity.status = SharedMember.Status.parse(member.status)
 
                         existingEntity.nif = member.nif
                         existingEntity.fullName = member.fullName
@@ -119,7 +120,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                     // Create new member
                     Database {
                         MemberEntity.new(member.number) {
-                            status = Members.Status.parse(member.status)
+                            status = SharedMember.Status.parse(member.status)
 
                             nif = member.nif
                             fullName = member.fullName
@@ -150,7 +151,7 @@ object CEA : PeriodicWorker(period = 1.days) {
 
         logger.debug("Disabling all already existing members not in the current members list...")
         val disabledMemberIds = Database {
-            MemberEntity.find { Members.status neq Members.Status.ACTIVE }.map { it.id.value.toUInt() }
+            MemberEntity.find { Members.status neq SharedMember.Status.ACTIVE }.map { it.id.value.toUInt() }
         }
         Database {
             UserReferenceEntity.find { UserReferences.memberNumber inList disabledMemberIds }.forEach { ref ->
