@@ -531,8 +531,8 @@ private fun GeneralLendingDetailsExtra(
     val clipboard = LocalClipboard.current
     val uriHandler = LocalUriHandler.current
 
-    val user = lending.user
-    val lendingUser = user.lendingUser!!
+    val user = remember(lending) { lending.user }
+    val lendingUser = remember(user) { user.lendingUser!! }
 
     DataRow(
         icon = MaterialSymbols.Face,

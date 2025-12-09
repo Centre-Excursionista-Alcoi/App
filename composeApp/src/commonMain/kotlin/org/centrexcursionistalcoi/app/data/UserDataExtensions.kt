@@ -47,3 +47,5 @@ val StubUser: UserData get() {
         isDisabled = false
     )
 }
+
+fun UserData.isStub(): Boolean = this.sub == "unknown"

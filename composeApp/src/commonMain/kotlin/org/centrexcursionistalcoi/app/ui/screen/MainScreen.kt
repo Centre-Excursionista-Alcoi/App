@@ -231,7 +231,7 @@ private fun MainScreenContent(
 ) {
     val activeUserLendingsCount = lendings
         // Get only lendings of the current user
-        ?.filter { it.user.sub == profile.sub }
+        ?.filter { it.user.sub == profile.sub || it.user.isStub() }
         // Count only active lendings
         ?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
     val navigationItems = remember(profile, activeUserLendingsCount) {
