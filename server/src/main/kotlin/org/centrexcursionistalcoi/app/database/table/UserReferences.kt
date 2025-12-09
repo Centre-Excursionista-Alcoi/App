@@ -17,22 +17,21 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     val lastUpdate = timestamp("last_update").defaultExpression(DatabaseNowExpression)
 
-    val nif = text("nif").uniqueIndex().nullable()
+    val nif = text("nif").uniqueIndex()
 
     val memberNumber = uinteger("member").uniqueIndex()
 
     val fullName = text("full_name")
-    val email = text("email").uniqueIndex().nullable()
+    val email = text("email").uniqueIndex()
     val groups = array("groups", TextColumnType()).default(emptyList())
 
     val isDisabled = bool("is_disabled").default(false)
-    val disableReason = text("disableReason").nullable()
 
     /**
      * Hashed password using BCrypt.
      * May be empty if the user reference has been created, but the user has not set a password yet.
      */
-    val password = encryptedBinary("password", 1024, AES.encryptor).nullable()
+    val password = encryptedBinary("password", 1024, AES.encryptor)
 
     val femecvUsername = encryptedVarchar("femecv_username", 512, AES.encryptor).nullable()
     val femecvPassword = encryptedVarchar("femecv_password", 512, AES.encryptor).nullable()

@@ -64,9 +64,19 @@ class TestAuth: ApplicationTestBase() {
     }
 
     @Test
+    fun test_registration_memberDoesNotExist() = runApplicationTest {
+        client.submitForm(
+            "/register",
+            parameters { appendAll(parameters) },
+        ).apply {
+            assertError(Error.EmailNotFound())
+        }
+    }
+
+    @Test
     fun test_registration_success() = runApplicationTest(
         databaseInitBlock = {
-            FakeUser.provideEntity()
+            FakeUser.provideMemberEntity()
         }
     ) {
         client.submitForm(

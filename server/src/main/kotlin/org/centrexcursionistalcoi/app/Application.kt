@@ -1,23 +1,19 @@
 package org.centrexcursionistalcoi.app
 
-import io.ktor.server.application.Application
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import io.sentry.Sentry
-import java.time.Instant
-import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
-import org.centrexcursionistalcoi.app.plugins.configureRouting
-import org.centrexcursionistalcoi.app.plugins.configureSSE
-import org.centrexcursionistalcoi.app.plugins.configureSessions
-import org.centrexcursionistalcoi.app.plugins.configureStatusPages
+import org.centrexcursionistalcoi.app.plugins.*
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
 
 private val logger = LoggerFactory.getLogger("Application")
 
@@ -61,7 +57,7 @@ fun main() {
     AES.init()
 
     // Initialize Database connection
-    Database.init(
+    val dbInitResult = Database.init(
         url = System.getenv("DB_URL") ?: Database.URL,
         driver = System.getenv("DB_DRIVER"),
         username = System.getenv("DB_USER") ?: "",
@@ -73,7 +69,9 @@ fun main() {
     Push.initFCM()
 
     // Start periodic CEA synchronization
-    CEA.start()
+    CEA.start(
+        waitUntilFirstSync = dbInitResult and Database.INIT_RESULT_MIGRATION_EXECUTED == Database.INIT_RESULT_MIGRATION_EXECUTED
+    )
 
     // Start Ktor server
     embeddedServer(

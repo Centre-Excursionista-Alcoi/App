@@ -1,16 +1,17 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.jetbrains.annotations.TestOnly
+import org.jetbrains.annotations.VisibleForTesting
+import org.jetbrains.exposed.v1.crypt.Encryptor
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.security.SecureRandom
-import java.util.Base64
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.jetbrains.annotations.VisibleForTesting
-import org.jetbrains.exposed.v1.crypt.Encryptor
-import org.slf4j.LoggerFactory
 
 object AES {
     @JvmStatic
@@ -42,6 +43,8 @@ object AES {
         return keyGenerator.generateKey()
     }
 
+    fun isInitialized() = secretKey != null && ivParameterSpec != null
+
     fun init() {
         val keysDir = File(System.getenv("KEYS_PATH") ?: "/keys")
 
@@ -68,6 +71,15 @@ object AES {
             val ivBytes = ivParameterFile.readBytes()
             this.ivParameterSpec = IvParameterSpec(ivBytes)
         }
+    }
+
+    /**
+     * Initializes AES with test keys. Only to be used in tests.
+     */
+    @TestOnly
+    fun initForTests() {
+        secretKey = generateKey()
+        ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
     }
 
     fun encrypt(data: ByteArray): ByteArray {

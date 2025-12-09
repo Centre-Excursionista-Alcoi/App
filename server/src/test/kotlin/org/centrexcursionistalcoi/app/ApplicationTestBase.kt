@@ -1,36 +1,32 @@
 package org.centrexcursionistalcoi.app
 
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.HttpCookies
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.setCookie
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
-import io.ktor.server.testing.ApplicationTestBuilder
-import io.ktor.server.testing.testApplication
-import java.time.Instant
-import java.time.LocalDate
-import javax.crypto.spec.IvParameterSpec
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.cookies.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
+import io.ktor.server.testing.*
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.AES
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import java.time.Instant
+import java.time.LocalDate
+import javax.crypto.spec.IvParameterSpec
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 abstract class ApplicationTestBase {
 
@@ -62,7 +58,7 @@ abstract class ApplicationTestBase {
         mockDate?.let(::mockTime)
         mockNow?.let(::mockTime)
 
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         AES.secretKey = AES.generateKey()
         AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV

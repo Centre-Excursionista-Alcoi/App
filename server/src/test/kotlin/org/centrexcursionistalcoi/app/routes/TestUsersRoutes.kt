@@ -1,16 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import java.time.LocalDate
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
-import kotlin.uuid.toJavaUuid
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserData
@@ -19,14 +14,18 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.uuid.toJavaUuid
 
 class TestUsersRoutes: ApplicationTestBase() {
     @Test
@@ -122,81 +121,9 @@ class TestUsersRoutes: ApplicationTestBase() {
     @Test
     fun test_users_not_admin() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = {
-            FakeAdminUser.provideEntity()
-            val fakeUser = FakeUser.provideEntity()
-            val fakeUser2 = FakeUser2.provideEntity()
-
-            val (department1, department2) = transaction {
-                DepartmentEntity.new { this.displayName = "example 1" } to DepartmentEntity.new { this.displayName = "example 2" }
-            }
-
-            DepartmentMemberEntity.new {
-                this.department = department1
-                this.userSub = fakeUser.sub
-                this.confirmed = true
-            }
-            DepartmentMemberEntity.new {
-                this.department = department2
-                this.userSub = fakeUser.sub
-                this.confirmed = false
-            }
-            DepartmentMemberEntity.new {
-                this.department = department2
-                this.userSub = fakeUser2.sub
-                this.confirmed = true
-            }
-
-            LendingUserEntity.new("ae1a777d-04b8-4712-b126-51a3aa39bb81".toUUID()) {
-                this.userSub = fakeUser
-                this.sports = listOf(Sports.HIKING)
-                this.phoneNumber = "123456789"
-            }
-            LendingUserEntity.new {
-                this.userSub = fakeUser2
-                this.sports = listOf(Sports.CLIMBING)
-                this.phoneNumber = "987654321"
-            }
-
-            UserInsuranceEntity.new {
-                this.userSub = fakeUser
-                this.insuranceCompany = "Insurance Co"
-                this.policyNumber = "POL123456"
-                this.validFrom = LocalDate.of(2025, 1, 1)
-                this.validTo = LocalDate.of(2025, 12, 31)
-            }
-            UserInsuranceEntity.new {
-                this.userSub = fakeUser2
-                this.insuranceCompany = "Insurance Co 2"
-                this.policyNumber = "POL654321"
-                this.validFrom = LocalDate.of(2025, 1, 1)
-                this.validTo = LocalDate.of(2025, 12, 31)
-            }
-        }
     ) {
         client.get("/users").apply {
-            assertStatusCode(HttpStatusCode.OK)
-
-            val users = bodyAsJson(ListSerializer(UserData.serializer()))
-            assertEquals(2, users.size)
-            users[0].let { user ->
-                assertEquals(FakeUser.SUB, user.sub)
-                assertEquals(FakeUser.FULL_NAME, user.fullName)
-                assertEquals(FakeUser.EMAIL, user.email)
-                assertEquals(FakeUser.GROUPS, user.groups)
-                assertEquals(2, user.departments.size)
-                assertEquals("ae1a777d-04b8-4712-b126-51a3aa39bb81".toUuid(), user.lendingUser?.id)
-                assertTrue(user.insurances.isNotEmpty())
-            }
-            users[1].let { user ->
-                assertEquals(FakeAdminUser.SUB, user.sub)
-                assertEquals(FakeAdminUser.FULL_NAME, user.fullName)
-                assertEquals(FakeAdminUser.EMAIL, user.email)
-                assertEquals(FakeAdminUser.GROUPS, user.groups)
-                assertTrue(user.departments.isEmpty())
-                assertEquals(null, user.lendingUser)
-                assertTrue(user.insurances.isEmpty())
-            }
+            assertError(Error.NotAnAdmin())
         }
     }
 }

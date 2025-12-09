@@ -1,25 +1,20 @@
 package org.centrexcursionistalcoi.app.database.utils
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.junit.jupiter.api.assertNull
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class TestEntityUtils {
     @Test
     fun test_encodeListToString() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val department1 = Database {
             DepartmentEntity.new {
@@ -42,7 +37,7 @@ class TestEntityUtils {
 
     @Test
     fun test_entity_serializer() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val department = Database {
             DepartmentEntity.new {
