@@ -4,6 +4,7 @@ import com.diamondedge.logging.logging
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.network.*
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
@@ -67,21 +68,35 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         // First, synchronize the user profile
         ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
+        val isAdmin = ProfileRepository.getProfile()?.isAdmin ?: false
+
         // Departments does not depend on any other entity, so we sync it first
         DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
-        // Users does not depend on any other entity
-        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
+        if (isAdmin) {
+            // Users does not depend on any other entity
+            // Users can only be synchronized by admin users - others should use members
+            UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+        }
+
         // Members do not depend on any other entity
         MembersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
         // Posts requires Departments
         PostsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
         // Events requires Departments and Users
+        // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
         EventsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
         // Inventory Item Types requires Departments
         InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
         // Inventory Items requires Inventory Item Types
         InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
         // Lendings requires Users, Inventory Item Types and Inventory Items
+        // Since users can only be listed by admins, lending users will not be valid for non-admins, StubUser will be filled on all cases
         LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
