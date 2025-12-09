@@ -203,8 +203,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * The logged-in user must be the owner of the lending.
      * @param lendingId The UUID of the lending to submit the memory for.
      * @param place The place where the activity took place.
-     * @param memberUsers The list of member users who participated in the activity.
+     * @param members The list of members who participated in the activity.
      * @param externalUsers A string describing external users who participated in the activity.
+     * @param sport The sport associated with the activity.
+     * @param department The department associated with the activity.
      * @param text The rich text content of the memory in Markdown.
      * @param files The list of memory files to submit.
      * @param progress An optional progress listener for upload progress.
@@ -214,9 +216,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     suspend fun submitMemory(
         lendingId: Uuid,
         place: String,
-        memberUsers: List<UserData>,
+        members: List<Member>,
         externalUsers: String,
         sport: Sports?,
+        department: Department?,
         text: String,
         files: List<PlatformFile>,
         progress: ProgressNotifier? = null
@@ -227,9 +230,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             "inventory/lendings/$lendingId/add_memory",
             formData {
                 place.takeIf { it.isNotBlank() }?.let { append("place", it) }
-                append("users", memberUsers.joinToString(",") { it.sub })
+                append("members", members.joinToString(",") { it.memberNumber.toString() })
                 externalUsers.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
                 sport?.let { append("sport", it.name) }
+                department?.let { append("department", it.id.toString()) }
                 append("text",  text)
 
                 filesWithContext.mapIndexed { index, file ->

@@ -79,7 +79,7 @@ fun LendingManagementScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     lending?.let { lending ->
-        val status = lending.status()
+        val status = remember(lending) { lending.status() }
         if (status == Lending.Status.CONFIRMED || status == Lending.Status.TAKEN) {
             val hapticFeedback = LocalHapticFeedback.current
 
@@ -180,6 +180,8 @@ private fun LendingManagementScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val status = remember(lending) { lending.status() }
+
     var showingDeleteConfirmation by remember { mutableStateOf(false) }
     if (showingDeleteConfirmation) {
         DeleteDialog(
@@ -209,7 +211,7 @@ private fun LendingManagementScreen(
                             Icon(MaterialSymbols.Delete, stringResource(Res.string.lending_details_delete))
                         }
                     }
-                    val isComplete = lending.status() == Lending.Status.MEMORY_SUBMITTED
+                    val isComplete = status == Lending.Status.MEMORY_SUBMITTED
                     if (isComplete) {
                         TooltipBox(
                             positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
