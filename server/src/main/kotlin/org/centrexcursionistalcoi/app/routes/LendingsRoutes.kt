@@ -651,7 +651,7 @@ fun Route.lendingsRoutes() {
         Email.launch {
             val emails = Database {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
 
             val fileAttachments = mutableListOf<MailerSendAttachment>()
