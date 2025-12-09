@@ -10,20 +10,12 @@ import kotlin.uuid.Uuid
 data class UserData(
     val sub: String,
     val fullName: String,
-    val email: String?,
+    val email: String,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,
     val lendingUser: LendingUser?,
     val insurances: List<UserInsurance>,
     val isDisabled: Boolean,
-    /**
-     * Options: null if not disabled, otherwise:
-     * - `status_baixa`: The status of the user is "Baixa".
-     * - `status_pendent`: The status of the user is "Pendent".
-     * - `status_unknown`: The status of the user is unknown.
-     * - `not_in_cea_members`: The user is not in the CEA members list.
-     */
-    val disableReason: String?,
 ): Entity<String>, SubReferencedFileContainer {
     companion object {
         /**
@@ -56,12 +48,6 @@ data class UserData(
     override fun hashCode(): Int {
         return sub.hashCode()
     }
-
-    /**
-     * Strips sensitive information from the user data.
-     * @return A new [UserData] instance with sensitive fields removed.
-     */
-    fun strip(): UserData = copy(email = null, departments = emptyList(), lendingUser = null, insurances = emptyList())
 
     override val referencedFiles: List<Triple<String, Uuid?, String>>
         get() {

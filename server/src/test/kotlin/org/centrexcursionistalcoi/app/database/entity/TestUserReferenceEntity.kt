@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.security.AES
 import javax.crypto.spec.IvParameterSpec
 import kotlin.test.Test
-import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
-import org.centrexcursionistalcoi.app.security.AES
 
 class TestUserReferenceEntity {
     @Test
     fun test_femecv() {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         AES.secretKey = AES.generateKey()
         AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
@@ -22,6 +21,8 @@ class TestUserReferenceEntity {
                 email = "mail@example.com"
                 memberNumber = 1000u
                 groups = emptyList()
+
+                password = ByteArray(0)
 
                 femecvUsername = "valid_username"
                 femecvPassword = "valid_password"

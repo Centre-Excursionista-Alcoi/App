@@ -1,5 +1,9 @@
 package org.centrexcursionistalcoi.app.database
 
+import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_MIGRATION_EXECUTED
+import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_OK
+import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_TABLE_CREATED
+import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration.Companion.VERSION
@@ -24,6 +28,7 @@ object Database {
         Files,
         ConfigTable,
         Departments,
+        Members,
         UserReferences,
         Posts,
         PostFiles,
@@ -41,6 +46,13 @@ object Database {
         EventMembers,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
+
+    /** Database initialized without any extra actions. */
+    const val INIT_RESULT_OK = 0B00
+    /** At least one migration was executed. */
+    const val INIT_RESULT_MIGRATION_EXECUTED = 0B01
+    /** At least one table was created. */
+    const val INIT_RESULT_TABLE_CREATED = 0B10
 
     const val URL = "jdbc:sqlite:file:test?mode=memory&cache=shared" // In-memory SQLite database
 
@@ -65,12 +77,26 @@ object Database {
         database = JdbcDatabase.connect(url, driver, username, password)
     }
 
+    /**
+     * Initializes the database connection and creates the schema if it does not exist.
+     * Also runs any pending migrations.
+     * @param url Database connection URL.
+     * @param driver Database driver class name.
+     * @param username Database username.
+     * @param password Database password.
+     * @return
+     * - [INIT_RESULT_OK] if the database was initialized without migrations.
+     * - [INIT_RESULT_TABLE_CREATED] if at least one table was created.
+     * - [INIT_RESULT_MIGRATION_EXECUTED] if migrations were executed.
+     */
     fun init(
         url: String = URL,
         driver: String? = null,
         username: String = "",
         password: String = "",
-    ) {
+    ): Int {
+        var result = INIT_RESULT_OK
+
         if (database == null) {
             initializeConnection(url, driver, username, password)
         }
@@ -94,6 +120,8 @@ object Database {
                             }
                         }
                     }
+                    logger.info("Table ${table.tableName} created")
+                    result = result or INIT_RESULT_TABLE_CREATED
                 }
             }
         }
@@ -122,8 +150,19 @@ object Database {
             } else {
                 error("No migration found from database version $version to application version $VERSION.")
             }
+            result = result or INIT_RESULT_MIGRATION_EXECUTED
         }
+
+        return result
     }
+
+    /**
+     * Initializes the database for tests.
+     *
+     * Uses [TEST_URL] as the database connection URL.
+     */
+    @TestOnly
+    fun initForTests() = init(TEST_URL)
 
     @TestOnly
     fun clear() {

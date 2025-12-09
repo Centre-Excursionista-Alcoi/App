@@ -1,17 +1,13 @@
 package org.centrexcursionistalcoi.app
 
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.slf4j.LoggerFactory
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Clock
 import kotlin.time.Duration
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import org.slf4j.LoggerFactory
 
 abstract class PeriodicWorker(
     private val period: Duration,
@@ -33,7 +29,18 @@ abstract class PeriodicWorker(
      *
      * [run] will be called once when this function is invoked.
      */
-    fun start() {
+    fun start(waitUntilFirstSync: Boolean = false) {
+        if (waitUntilFirstSync) runBlocking {
+            mutex.withLock {
+                logger.debug("Starting initial sync: {}", Clock.System.now())
+                run()
+            }
+        }
+
+        if (job != null) {
+            logger.warn("Periodic worker is already running.")
+            return
+        }
         job = scope.launch {
             while (isActive) {
                 // Try to acquire lock; if busy, skip this interval

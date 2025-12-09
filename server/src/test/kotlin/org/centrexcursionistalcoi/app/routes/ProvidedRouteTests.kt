@@ -1,61 +1,27 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
-import io.ktor.client.request.request
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.server.testing.ApplicationTestBuilder
-import java.lang.reflect.InvocationTargetException
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
-import java.time.temporal.Temporal
-import java.util.Random
-import java.util.UUID
-import kotlin.io.encoding.Base64
-import kotlin.reflect.KCallable
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.full.memberProperties
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.toJavaInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.server.testing.*
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonObject
-import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.assertBody
-import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.*
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
-import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
 import org.centrexcursionistalcoi.app.utils.Zero
@@ -68,10 +34,26 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.assertInstanceOf
-import kotlin.time.Instant as KotlinInstant
+import java.lang.reflect.InvocationTargetException
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
+import java.util.*
+import kotlin.io.encoding.Base64
+import kotlin.reflect.KCallable
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.memberProperties
+import kotlin.test.*
+import kotlin.time.toJavaInstant
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
+import kotlin.time.Instant as KotlinInstant
 
 object ProvidedRouteTests {
     private suspend fun HttpClient.request(url: String, method: HttpMethod, contentType: ContentType?, expectedStatusCode: HttpStatusCode) {
@@ -527,7 +509,7 @@ object ProvidedRouteTests {
                 test_notLoggedIn(baseUrl)
             } skipIf (listLoginType != LoginType.ADMIN),
             "$title - Test fetching list" withEntities auxiliaryEntitiesProvider runs {
-                Database.init(TEST_URL) // initialize the database
+                Database.initForTests() // initialize the database
 
                 // Insert some data into the database to be fetched
                 val entities = mutableListOf<EE>()

@@ -1,24 +1,23 @@
 package org.centrexcursionistalcoi.app.utils
 
-import java.time.LocalDate
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.table.LendingItems
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.jetbrains.exposed.v1.jdbc.insert
+import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class LendingUtilsTest {
     @Test
     fun test_conflictsWith() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val user = Database { FakeUser.provideEntity() }
 
