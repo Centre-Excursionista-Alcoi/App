@@ -42,6 +42,7 @@ abstract class StubUser(val sub: String, val nif: String, val fullName: String, 
 
     fun data(): UserData = UserData(
         sub = sub,
+        memberNumber = memberNumber,
         fullName = fullName,
         email = email,
         groups = groups,

@@ -75,6 +75,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     context(_: JdbcTransaction)
     fun toData(lendingUser: LendingUser?, insurances: List<UserInsurance>?, departments: List<DepartmentMemberInfo>?) = UserData(
         sub = sub.value,
+        memberNumber = memberNumber,
         fullName = fullName,
         email = email,
         groups = groups,

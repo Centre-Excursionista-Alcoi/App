@@ -9,6 +9,7 @@ import kotlin.uuid.Uuid
 @Serializable
 data class UserData(
     val sub: String,
+    val memberNumber: UInt,
     val fullName: String,
     val email: String,
     val groups: List<String>,
