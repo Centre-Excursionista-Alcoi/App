@@ -504,7 +504,7 @@ fun Route.lendingsRoutes() {
         }
 
         var place: String? = null
-        var users: List<String>? = null
+        var members: List<UInt>? = null
         var externalUsers: String? = null
         var plainText: String? = null
         var sport: Sports? = null
@@ -519,9 +519,10 @@ fun Route.lendingsRoutes() {
                     name == "place" -> {
                         place = part.value.takeIf { it.isNotBlank() }
                     }
-                    name == "users" -> {
-                        val usersList = part.value.split(',')
-                        users = usersList.ifEmpty { null }
+                    name == "members" -> {
+                        val membersList = part.value.split(',')
+                            .mapNotNull { it.toUIntOrNull() }
+                        members = membersList.ifEmpty { null }
                     }
                     name == "external_users" -> {
                         externalUsers = part.value.takeIf { it.isNotBlank() }
@@ -601,7 +602,7 @@ fun Route.lendingsRoutes() {
         // Instantiate the memory
         val memory = LendingMemory(
             place = place,
-            memberUsers = users.orEmpty(),
+            members = members.orEmpty(),
             externalUsers = externalUsers,
             text = plainText!!,
             sport = sport,
@@ -615,8 +616,8 @@ fun Route.lendingsRoutes() {
             val departments = Database { DepartmentEntity.all().map { it.toData() } }
             PdfGeneratorService.generateLendingPdf(
                 memory.referenced(
-                    users = Database {
-                        UserReferenceEntity.find { UserReferences.sub inList memory.memberUsers }.map { it.toData(null, null, null) }
+                    members = Database {
+                        MemberEntity.find { Members.id inList memory.members }.map { it.toMember() }
                     },
                     departments = departments,
                 ),

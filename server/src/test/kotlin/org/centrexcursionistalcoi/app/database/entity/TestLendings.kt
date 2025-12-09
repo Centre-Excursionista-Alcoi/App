@@ -126,7 +126,7 @@ class TestLendings {
                 memorySubmittedAt = instant
                 memory = LendingMemory(
                     place = "Place",
-                    memberUsers = listOf(FakeUser.SUB),
+                    members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
                     externalUsers = "John Doe",
                     text = "Lending memory text",
                     files = listOf(memoryAttachmentFileId.toKotlinUuid()),
@@ -201,7 +201,7 @@ class TestLendings {
             memorySubmittedAt = instant.toKotlinInstant(),
             memory = LendingMemory(
                 place = "Place",
-                memberUsers = listOf(FakeUser.SUB),
+                members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
                 externalUsers = "John Doe",
                 text = "Lending memory text",
                 files = listOf(memoryAttachmentFileId.toKotlinUuid()),
