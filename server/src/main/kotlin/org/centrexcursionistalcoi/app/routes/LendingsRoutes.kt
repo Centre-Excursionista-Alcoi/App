@@ -586,12 +586,12 @@ fun Route.lendingsRoutes() {
         }
 
         // If given, make sure the department exists
-        val department = departmentId?.let { id ->
-            Database { DepartmentEntity.findById(id.toJavaUuid()) }
-        }
-        if (department == null) {
-            respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId.toString()))
-            return@post
+        departmentId?.let { deptId ->
+            val department = Database { DepartmentEntity.findById(deptId.toJavaUuid()) }
+            if (department == null) {
+                respondError(Error.EntityNotFound(DepartmentEntity::class, deptId.toString()))
+                return@post
+            }
         }
 
         // Store all attachments
