@@ -1,0 +1,24 @@
+import org.centrexcursionistalcoi.app.data.Member.Status;
+
+CREATE TABLE Members(
+    memberNumber INTEGER NOT NULL PRIMARY KEY,
+    status TEXT AS Status,
+    fullName TEXT NOT NULL,
+    nif TEXT,
+    email TEXT
+);
+
+insert:
+INSERT INTO Members(memberNumber, status, fullName, nif, email) VALUES(?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM Members WHERE memberNumber = ?;
+
+selectAll:
+SELECT * FROM Members;
+
+deleteById:
+DELETE FROM Members WHERE memberNumber = ?;
+
+update:
+UPDATE Members SET status = ?, fullName = ?, nif = ?, email = ? WHERE memberNumber = ?;

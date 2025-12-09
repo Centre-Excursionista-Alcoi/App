@@ -17,18 +17,22 @@ actual object PlatformLoadLogic {
     }
 
     actual suspend fun load() {
+        log.d { "Creating database..." }
         databaseInstance = createDatabase(DriverFactory())
 
+        log.d { "Initializing push notifications..." }
         NotifierManager.initialize(
             NotificationPlatformConfiguration.Desktop(
                 showPushNotification = false,
             )
         )
 
+        log.d { "Setting logger for notifications..." }
         NotifierManager.setLogger { message ->
             log.d(tag = "NotifierManager") { message }
         }
 
+        log.d { "Adding push notifier listener..." }
         NotifierManager.addListener(PushNotifierListener)
     }
 }

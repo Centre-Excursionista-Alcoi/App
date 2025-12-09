@@ -3,43 +3,17 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,18 +25,10 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Edit
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FilterList
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FilterListOff
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Sort
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
-import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -120,6 +86,7 @@ fun <T> ListView(
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
+    itemEnabled: (T) -> Boolean = { true },
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
     onDeleteRequest: ((T) -> Job)? = null,
     itemContent: @Composable ColumnScope.(T) -> Unit,
@@ -193,6 +160,7 @@ fun <T> ListView(
                 itemTrailingContent = itemTrailingContent,
                 itemSupportingContent = itemSupportingContent,
                 itemTextStyle = itemTextStyle,
+                itemEnabled = itemEnabled,
                 selectedItem = selectedItem,
                 filters = filters,
                 sortByOptions = sortByOptions,
@@ -260,6 +228,7 @@ fun <T> ListView(
                 itemTrailingContent = itemTrailingContent,
                 itemSupportingContent = itemSupportingContent,
                 itemTextStyle = itemTextStyle,
+                itemEnabled = itemEnabled,
                 selectedItem = selectedItem,
                 filters = filters,
                 sortByOptions = sortByOptions,
@@ -283,6 +252,7 @@ fun <T> ListView_ListColumn(
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemTextStyle: (@Composable (T) -> TextStyle)? = null,
+    itemEnabled: (T) -> Boolean = { true },
     selectedItem: T?,
     onSelectedItemChange: (T) -> Unit,
     isCreatingSupported: Boolean,
@@ -412,7 +382,9 @@ fun <T> ListView_ListColumn(
                             Icon(MaterialSymbols.ChevronRight, contentDescription = null)
                         }
                     },
-                    modifier = Modifier.clip(RoundedCornerShape(12.dp)).clickable { onSelectedItemChange(item) },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(enabled = itemEnabled(item)) { onSelectedItemChange(item) },
                     colors = ListItemDefaults.colors(
                         containerColor = containerColor,
                         headlineColor = contentColor,

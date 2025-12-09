@@ -1,0 +1,33 @@
+CREATE TABLE Members(
+    memberNumber INTEGER NOT NULL PRIMARY KEY,
+    status TEXT,
+    fullName TEXT NOT NULL,
+    nif TEXT,
+    email TEXT
+);
+
+-- Column should be removed, but SQLite does not support DROP COLUMN on older versions
+-- ALTER TABLE Users DROP COLUMN disableReason;
+
+-- Column should be NOT NULL, but SQLite does not support altering column constraints directly
+-- ALTER TABLE Users ALTER COLUMN email SET NOT NULL;
+
+-- Since we need to modify some columns, we will just recreate the Users table
+-- Sync will be run automatically after migration to repopulate data
+-- To delete the Users table we also need to remove all references
+DELETE FROM LendingItems;
+DELETE FROM Lendings;
+DELETE FROM ReceivedItems;
+
+DROP TABLE Users;
+CREATE TABLE Users(
+    sub TEXT NOT NULL PRIMARY KEY,
+    memberNumber INTEGER NOT NULL,
+    fullName TEXT NOT NULL,
+    email TEXT NOT NULL,
+    groups TEXT NOT NULL,
+    departments TEXT NOT NULL,
+    lendingUser TEXT DEFAULT NULL,
+    insurances TEXT NOT NULL,
+    isDisabled INTEGER NOT NULL DEFAULT 0
+);

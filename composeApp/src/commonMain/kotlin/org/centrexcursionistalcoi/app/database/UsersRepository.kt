@@ -36,6 +36,7 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
 
     override suspend fun insert(item: UserData) = queries.insert(
         sub = item.sub,
+        memberNumber = item.memberNumber.toLong(),
         fullName = item.fullName,
         email = item.email,
         groups = item.groups,
@@ -43,11 +44,11 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         lendingUser = item.lendingUser,
         insurances = item.insurances,
         isDisabled = item.isDisabled,
-        disableReason = item.disableReason,
     )
 
     override suspend fun update(item: UserData) = queries.update(
         sub = item.sub,
+        memberNumber = item.memberNumber.toLong(),
         fullName = item.fullName,
         email = item.email,
         groups = item.groups,
@@ -55,7 +56,6 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         lendingUser = item.lendingUser,
         insurances = item.insurances,
         isDisabled = item.isDisabled,
-        disableReason = item.disableReason,
     )
 
     override suspend fun delete(id: String) {
@@ -64,6 +64,7 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
 
     fun Users.toUser() = UserData(
         sub = sub,
+        memberNumber = memberNumber.toUInt(),
         fullName = fullName,
         email = email,
         groups = groups,
@@ -71,6 +72,5 @@ object UsersRepository : DatabaseRepository<UserData, String>() {
         lendingUser = lendingUser,
         insurances = insurances,
         isDisabled = isDisabled,
-        disableReason = disableReason,
     )
 }

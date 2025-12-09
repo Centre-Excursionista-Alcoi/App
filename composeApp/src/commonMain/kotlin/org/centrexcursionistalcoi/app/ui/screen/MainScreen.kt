@@ -55,6 +55,7 @@ fun MainScreen(
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val users by model.users.collectAsState()
+    val members by model.members.collectAsState()
     val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
     val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
@@ -93,6 +94,7 @@ fun MainScreen(
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
             users = users,
+            members = members,
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
             inventoryItemTypes = inventoryItemTypes,
@@ -206,6 +208,8 @@ private fun MainScreenContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
+
+    members: List<Member>?,
 
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
@@ -429,6 +433,7 @@ private fun MainScreenContent(
                         onFEMECVConnectRequested,
                         onFEMECVDisconnectRequested,
                         users,
+                        members,
                         inventoryItemTypes,
                         inventoryItemTypesCategories,
                         onItemTypeDetailsRequested,
@@ -474,6 +479,7 @@ private fun MainScreenContent(
                             onFEMECVConnectRequested,
                             onFEMECVDisconnectRequested,
                             users,
+                            members,
                             inventoryItemTypes,
                             inventoryItemTypesCategories,
                             onItemTypeDetailsRequested,
@@ -528,6 +534,8 @@ private fun MainScreenPagerContent(
     onFEMECVDisconnectRequested: () -> Job,
 
     users: List<UserData>?,
+
+    members: List<Member>?,
 
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
@@ -584,6 +592,7 @@ private fun MainScreenPagerContent(
                 onOtherUserLendingClick,
                 departments,
                 users,
+                members,
                 inventoryItemTypes,
                 inventoryItemTypesCategories,
                 inventoryItems,

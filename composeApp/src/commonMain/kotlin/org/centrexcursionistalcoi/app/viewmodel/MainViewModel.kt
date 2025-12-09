@@ -40,6 +40,8 @@ class MainViewModel: ViewModel() {
 
     val users = UsersRepository.selectAllAsFlow().stateInViewModel()
 
+    val members = MembersRepository.selectAllAsFlow().stateInViewModel()
+
     val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
     val inventoryItemTypesCategories = InventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
 

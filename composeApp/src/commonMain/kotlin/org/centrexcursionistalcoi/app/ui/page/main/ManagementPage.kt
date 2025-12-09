@@ -119,6 +119,8 @@ fun ManagementPage(
 
     users: List<UserData>?,
 
+    members: List<Member>?,
+
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
 
@@ -146,6 +148,7 @@ fun ManagementPage(
         onKickFromDepartment = model::kickFromDepartment,
         users = users,
         onPromote = model::promote,
+        members = members,
         inventoryItemTypes = inventoryItemTypes,
         inventoryItemTypesCategories = inventoryItemTypesCategories,
         onCreateInventoryItemType = model::createInventoryItemType,
@@ -186,6 +189,8 @@ private fun ManagementPage(
 
     users: List<UserData>?,
     onPromote: (UserData) -> Job,
+
+    members: List<Member>?,
 
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
@@ -244,7 +249,7 @@ private fun ManagementPage(
 
             ManagementPage.Departments -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
 
-            ManagementPage.Users -> UsersListView(windowSizeClass, users, departments, onPromote, onKickFromDepartment)
+            ManagementPage.Users -> UsersListView(windowSizeClass, users, members, departments, onPromote, onKickFromDepartment)
 
             ManagementPage.Posts -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
 

@@ -1,22 +1,15 @@
 package org.centrexcursionistalcoi.app.sync
 
 import com.diamondedge.logging.logging
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
-import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.network.*
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.settings
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
 
@@ -78,6 +71,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Users does not depend on any other entity
         UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+        // Members do not depend on any other entity
+        MembersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Posts requires Departments
         PostsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         // Events requires Departments and Users
