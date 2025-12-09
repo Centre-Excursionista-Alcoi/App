@@ -324,7 +324,7 @@ fun LendingItems(
             modifier = Modifier.padding(12.dp)
         )
 
-        val items = lending.items.groupBy { it.type }
+        val items = remember(lending) { lending.items.groupBy { it.type } }
         for ((type, items) in items) {
             Row(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 val image by type.rememberImageFile()

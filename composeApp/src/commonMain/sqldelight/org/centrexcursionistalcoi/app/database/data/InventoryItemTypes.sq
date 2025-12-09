@@ -28,5 +28,8 @@ SELECT categories FROM InventoryItemTypes WHERE categories IS NOT NULL;
 deleteById:
 DELETE FROM InventoryItemTypes WHERE id = ?;
 
+selectByDepartmentId:
+SELECT * FROM InventoryItemTypes WHERE department = ?;
+
 update:
 UPDATE InventoryItemTypes SET displayName = ?, description = ?, categories = ?, department = ?, image = ? WHERE id = ?;
