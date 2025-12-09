@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.utils.generateRandomString
@@ -42,4 +43,6 @@ class MemberEntity(id: EntityID<UInt>) : UIntEntity(id) {
             this.password = hashedPassword
         }
     }
+
+    fun toMember() = Member(memberNumber, status, fullName, nif, email)
 }
