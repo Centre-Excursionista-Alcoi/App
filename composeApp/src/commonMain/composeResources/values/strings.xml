@@ -19,7 +19,7 @@
     <string name="login_forgot_password_dialog_message">Enter your email, and if you have been registered before, you will receive an email to update your password.</string>
     <string name="login_forgot_password_dialog_action">Send Email</string>
     <string name="login_forgot_password_success_title">Please, check your inbox.</string>
-    <string name="login_error_unknown">Server error: $1$s</string>
+    <string name="login_error_unknown">Server error: %1$s</string>
     <string name="login_error_user_not_registered">A user with the given email was not found.</string>
     <string name="login_error_invalid_credentials">Your email or password is not valid. Please, check with an administrator that the email you have in the database is the correct one.</string>
 
