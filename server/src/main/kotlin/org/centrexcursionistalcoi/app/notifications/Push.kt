@@ -5,7 +5,6 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.MulticastMessage
-import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.slf4j.LoggerFactory
+import java.util.*
 
 object Push {
     private val logger = LoggerFactory.getLogger(Push::class.java)
@@ -87,6 +87,10 @@ object Push {
 
     private fun sendFCMPushNotification(tokens: List<String>, data: Map<String, String>) {
         if (!pushFCMConfigured) return
+        if (tokens.isEmpty()) {
+            logger.debug("Won't send FCM notification because tokens list is empty.")
+            return
+        }
 
         logger.debug("Sending push notification to {} devices with data: {}", tokens.size, data)
 
