@@ -18,6 +18,9 @@ sealed interface PushNotification {
             val userSub = data["userSub"] as? String?
             val postId = (data["postId"] as? String?)?.toUuidOrNull()
             val eventId = (data["eventId"] as? String?)?.toUuidOrNull()
+            val requestId = (data["requestId"] as? String?)?.toUuidOrNull()
+            val departmentId = (data["departmentId"] as? String?)?.toUuidOrNull()
+            val isConfirmed = (data["isConfirmed"] as? String?)?.toBoolean()
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -58,6 +61,19 @@ sealed interface PushNotification {
                 NewPost.TYPE -> {
                     postId ?: throw IllegalArgumentException("Missing or invalid postId field in NewPost push notification data")
                     NewPost(postId)
+                }
+                DepartmentJoinRequestUpdated.TYPE -> {
+                    requestId ?: throw IllegalArgumentException("Missing or invalid requestId field in DepartmentJoinRequestUpdated push notification data")
+                    departmentId ?: throw IllegalArgumentException("Missing or invalid departmentId field in DepartmentJoinRequestUpdated push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in DepartmentJoinRequestUpdated push notification data")
+                    isConfirmed ?: throw IllegalArgumentException("Missing or invalid isConfirmed field in DepartmentJoinRequestUpdated push notification data")
+                    DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isConfirmed)
+                }
+                DepartmentKicked.TYPE -> {
+                    requestId ?: throw IllegalArgumentException("Missing or invalid requestId field in DepartmentJoinRequestUpdated push notification data")
+                    departmentId ?: throw IllegalArgumentException("Missing or invalid departmentId field in DepartmentJoinRequestUpdated push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in DepartmentJoinRequestUpdated push notification data")
+                    DepartmentKicked(requestId, departmentId, userSub)
                 }
                 NewEvent.TYPE -> {
                     eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in NewEvent push notification data")

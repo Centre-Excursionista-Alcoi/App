@@ -44,6 +44,7 @@ object AuthBackend {
         }
     }
 
+    @Suppress("KNOWN_EXCEPTION") // suppress because order is correct, and there won't be missing references
     suspend fun logout() {
         val response = getHttpClient().get("/logout")
         if (response.status.isSuccess()) {

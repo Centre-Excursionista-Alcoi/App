@@ -4,6 +4,7 @@ import com.diamondedge.logging.Logger
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.SentryLevel
 import io.sentry.kotlin.multiplatform.protocol.Breadcrumb
+import kotlinx.coroutines.CancellationException
 
 class SentryLogger : Logger {
     private fun addBreadcrumb(level: SentryLevel, tag: String, msg: String) {
@@ -33,7 +34,7 @@ class SentryLogger : Logger {
 
     override fun error(tag: String, msg: String, t: Throwable?) {
         addBreadcrumb(SentryLevel.ERROR, tag, msg)
-        if (t != null) {
+        if (t != null && t !is CancellationException) {
             Sentry.captureException(t)
         }
     }
