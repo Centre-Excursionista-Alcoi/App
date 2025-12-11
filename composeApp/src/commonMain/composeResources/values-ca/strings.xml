@@ -396,7 +396,7 @@
     <string name="login_password_changed_message">Ja pots iniciar sessió amb la teua nova contrasenya.</string>
     <string name="login_forgot_password">Contrasenya oblidada?</string>
     <string name="login_forgot_password_dialog_title">Has oblidat la teua contrasenya?</string>
-    <string name="login_forgot_password_dialog_message">Introdueix el teu NIF, i si t\'has registrat abans, rebràs un correu electrònic per a actualitzar la teua contrasenya.</string>
+    <string name="login_forgot_password_dialog_message">Introdueix el teu correu, i si t\'has registrat abans, rebràs un correu electrònic per a actualitzar la teua contrasenya.</string>
     <string name="login_forgot_password_dialog_action">Enviar Correu</string>
     <string name="login_forgot_password_success_title">Per favor, comprova la teua safata d\'entrada.</string>
     <string name="lending_category_without_department">Club</string>
@@ -436,7 +436,7 @@
     <string name="event_date_no_end">Data: %1$s</string>
     <string name="event_date_with_end">Data: des de %1$s fins a %2$s</string>
     <string name="event_max_people">Assistència Màxima</string>
-    <string name="event_requires_confirmation">Requereix confirmació d\'assistència.</string>
+    <string name="event_requires_confirmation">Requereix confirmació d\'assistència</string>
     <string name="event_title">Títol</string>
     <string name="event_description">Descripció</string>
     <string name="event_department">Secció</string>
@@ -455,4 +455,21 @@
         <item quantity="many">Assistència màxima: %1$d persones</item>
         <item quantity="other">Assistència màxima: %1$d persones</item>
     </plurals>
+    <string name="email">Correu Electrònic</string>
+    <string name="login_error_unknown">Error del servidor: %1$s</string>
+    <string name="login_error_user_not_registered">No s\'ha trobat cap usuari amb el correu indicat.</string>
+    <string name="login_error_invalid_credentials">El teu correu electrònic o contrasenya no són vàlids.</string>
+    <string name="departments_leave_title">Abandonar secció</string>
+    <string name="departments_leave_message">Segur que vols abandonar la secció %1$s?</string>
+    <string name="departments_leave">Abandonar</string>
+    <string name="departments_kick_title">Expulsant de secció</string>
+    <string name="departments_kick_message">Segur que vols expulsar l\'usuari de la secció %1$s?</string>
+    <string name="departments_kick">Expulsar</string>
+    <string name="management_user_registered">El soci està registrat</string>
+    <string name="management_user_not_registered">El soci no està registrat</string>
+    <string name="personal_info_not_registered">L\'usuari encara no s\'ha registrat a l\'app.</string>
+    <string name="personal_info_not_a_member">L\'usuari ja no és soci del club.</string>
+    <string name="personal_info_member_pending">És probable que l\'usuari ja no forme part del club: l\'estat és \"Pendent\".</string>
+    <string name="memory_editor_department">Secció</string>
+    <string name="event_requires_insurance">Cal tenir assegurança</string>
 </resources>
