@@ -13,6 +13,6 @@ object FakeUser2 : StubUser(
     const val NIF = "87654321X"
     const val FULL_NAME = "Sample User 2"
     const val EMAIL = "user2@example.com"
-    const val FCM_TOKEN = "token2"
+    const val FCM_TOKEN = "token-fake-user-2"
     const val MEMBER_NUMBER = 1002u
 }

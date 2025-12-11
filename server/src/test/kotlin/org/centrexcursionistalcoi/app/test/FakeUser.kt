@@ -14,6 +14,6 @@ object FakeUser : StubUser(
     const val FULL_NAME = "Sample User"
     const val EMAIL = "user@example.com"
     const val MEMBER_NUMBER = 1001u
-    const val FCM_TOKEN = "token1"
+    const val FCM_TOKEN = "token-fake-user"
     val GROUPS = listOf("user")
 }
