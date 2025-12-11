@@ -472,4 +472,7 @@
     <string name="personal_info_member_pending">És probable que l\'usuari ja no forme part del club: l\'estat és \"Pendent\".</string>
     <string name="memory_editor_department">Secció</string>
     <string name="event_requires_insurance">Cal tenir assegurança</string>
+    <string name="settings_remove_account_title">Eliminar Compte</string>
+    <string name="settings_remove_account_summary">Elimina el teu compte i totes les dades associates del servidor. Aquesta acció no es pot desfer.</string>
+    <string name="settings_remove_account_message">Si acceptes, el teu compte i totes les dades associades seran eliminades del servidor. La teua sessió serà tancada, i no podràs tornar a iniciar-la. Per favor, tingues en compte que açò no et dona de baixa del club, i hauràs de contactar amb els gestors pertinents. Aquesta acció només elimina de manera efectiva les teues dades exclusivament dels servidors de l\'app.</string>
 </resources>
