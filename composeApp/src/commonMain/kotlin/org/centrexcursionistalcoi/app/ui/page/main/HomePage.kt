@@ -50,6 +50,8 @@ fun HomePage(
     users: List<UserData>?,
 
     events: List<ReferencedEvent>?,
+    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
+    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
@@ -184,7 +186,12 @@ fun HomePage(
                 )
             }
             items(events) { event ->
-                EventItem(profile, event)
+                EventItem(
+                    profile,
+                    event,
+                    { onConfirmAssistanceRequest(event) },
+                    { onRejectAssistanceRequest(event) },
+                )
             }
             // Fill the current line
             item(key = "events_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {

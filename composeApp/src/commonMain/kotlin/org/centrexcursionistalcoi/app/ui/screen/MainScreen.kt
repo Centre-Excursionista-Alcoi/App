@@ -103,6 +103,8 @@ fun MainScreen(
             inventoryItems = inventoryItems,
             posts = posts,
             events = events,
+            onConfirmAssistanceRequest = model::confirmEventAssistance,
+            onRejectAssistanceRequest = model::rejectEventAssistance,
             shoppingList = shoppingList,
             onAddItemToShoppingListRequest = model::addItemToShoppingList,
             onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
@@ -220,6 +222,8 @@ private fun MainScreenContent(
     posts: List<ReferencedPost>?,
 
     events: List<ReferencedEvent>?,
+    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
+    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 
     shoppingList: ShoppingList,
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
@@ -440,6 +444,8 @@ private fun MainScreenContent(
                         inventoryItems,
                         posts,
                         events,
+                        onConfirmAssistanceRequest,
+                        onRejectAssistanceRequest,
                         shoppingList,
                         onAddItemToShoppingListRequest,
                         onRemoveItemFromShoppingListRequest,
@@ -486,6 +492,8 @@ private fun MainScreenContent(
                             inventoryItems,
                             posts,
                             events,
+                            onConfirmAssistanceRequest,
+                            onRejectAssistanceRequest,
                             shoppingList,
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
@@ -545,7 +553,9 @@ private fun MainScreenPagerContent(
 
     posts: List<ReferencedPost>?,
 
-    events: List<ReferencedEvent>? = null,
+    events: List<ReferencedEvent>?,
+    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
+    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
@@ -568,6 +578,8 @@ private fun MainScreenPagerContent(
                 onDenyDepartmentJoinRequest,
                 users,
                 events,
+                onConfirmAssistanceRequest,
+                onRejectAssistanceRequest,
             )
 
             Page.LENDINGS -> LendingsPage(

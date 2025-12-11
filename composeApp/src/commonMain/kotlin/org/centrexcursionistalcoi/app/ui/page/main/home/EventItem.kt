@@ -2,14 +2,13 @@ package org.centrexcursionistalcoi.app.ui.page.main.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.addCalendarEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
@@ -21,11 +20,15 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Clock
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
+fun EventItem(
+    profile: ProfileResponse,
+    event: ReferencedEvent,
+    onConfirmAssistanceRequest: () -> Job,
+    onRejectAssistanceRequest: () -> Job,
+) {
     FeedItem(
         icon = MaterialSymbols.Event,
         title = event.title,
@@ -33,7 +36,10 @@ fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
         content = event.description,
         dialogHeadline = {
             Text(
-                text = stringResource(Res.string.event_by, event.department?.displayName ?: stringResource(Res.string.event_by)),
+                text = stringResource(
+                    Res.string.event_by,
+                    event.department?.displayName ?: stringResource(Res.string.event_by)
+                ),
             )
             Text(
                 text = event.localizedDateRange(),
@@ -66,7 +72,7 @@ fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 32.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(MaterialSymbols.Distance, stringResource(Res.string.event_place))
@@ -77,16 +83,8 @@ fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
                 )
             }
 
-            if (event.requiresConfirmation) {
-                Text(
-                    text = stringResource(Res.string.event_requires_confirmation),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                )
-            }
-
+            val activeInsurances = remember(profile) { profile.activeInsurances(event.start) }
             if (event.requiresInsurance) {
-                val activeInsurances = remember(profile) { profile.activeInsurances(event.start) }
                 if (activeInsurances.isEmpty()) {
                     Text(
                         text = stringResource(Res.string.event_requires_insurance_none),
@@ -100,6 +98,40 @@ fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                     )
+                }
+            }
+
+            if (event.requiresConfirmation) {
+                val assistanceConfirmed = event.userReferences.find { it.sub == profile.sub } != null
+                Text(
+                    text = stringResource(Res.string.event_requires_confirmation),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                )
+
+                var isLoading by remember { mutableStateOf(false) }
+                if (assistanceConfirmed) {
+                    Button(
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            isLoading = true
+                            onRejectAssistanceRequest().invokeOnCompletion {
+                                isLoading = false
+                            }
+                        },
+                    ) { Text(stringResource(Res.string.event_reject_assistance)) }
+                } else {
+                    OutlinedButton(
+                        enabled = !isLoading && (!event.requiresInsurance || activeInsurances.isNotEmpty()),
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            isLoading = true
+                            onConfirmAssistanceRequest().invokeOnCompletion {
+                                isLoading = false
+                            }
+                        },
+                    ) { Text(stringResource(Res.string.event_confirm_assistance)) }
                 }
             }
 
