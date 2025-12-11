@@ -1,21 +1,20 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import kotlin.test.Test
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.test.Test
+import kotlin.uuid.toKotlinUuid
 
 class TestInventoryItemType {
     @Test
     fun `test entity serializes the same as data class`() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val id = "81653ead-5950-4b8a-92f9-88d6982fe769".toUUID()
         val departmentId = "651abec5-7e83-4f8c-88e2-eff25f098d96".toUUID()

@@ -5,49 +5,12 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,7 +28,6 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
@@ -82,21 +44,7 @@ import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.BrandIcons
 import org.centrexcursionistalcoi.app.ui.icons.Whatsapp
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Call
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CallMade
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Cancel
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Check
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircle
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircleFilled
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ContactPhone
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Help
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.KeyboardDoubleArrowRight
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Nfc
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.QrCodeScanner
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
@@ -112,6 +60,7 @@ import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerView
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -130,7 +79,7 @@ fun LendingManagementScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     lending?.let { lending ->
-        val status = lending.status()
+        val status = remember(lending) { lending.status() }
         if (status == Lending.Status.CONFIRMED || status == Lending.Status.TAKEN) {
             val hapticFeedback = LocalHapticFeedback.current
 
@@ -231,6 +180,8 @@ private fun LendingManagementScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val status = remember(lending) { lending.status() }
+
     var showingDeleteConfirmation by remember { mutableStateOf(false) }
     if (showingDeleteConfirmation) {
         DeleteDialog(
@@ -260,7 +211,7 @@ private fun LendingManagementScreen(
                             Icon(MaterialSymbols.Delete, stringResource(Res.string.lending_details_delete))
                         }
                     }
-                    val isComplete = lending.status() == Lending.Status.MEMORY_SUBMITTED
+                    val isComplete = status == Lending.Status.MEMORY_SUBMITTED
                     if (isComplete) {
                         TooltipBox(
                             positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Left),
@@ -303,10 +254,12 @@ fun LazyListScope.lendingManagementScreenContent(
     extraContent: @Composable (ColumnScope.() -> Unit)? = null
 ) {
     item("general_details") {
+        val status = remember(lending) { lending.status() }
+
         GeneralLendingDetails(lending) {
             GeneralLendingDetailsExtra(lending, snackbarHostState, users)
 
-            if (lending.status() == Lending.Status.REQUESTED) {
+            if (status == Lending.Status.REQUESTED) {
                 var isConfirming by remember { mutableStateOf(false) }
                 ElevatedButton(
                     enabled = !isConfirming,
@@ -322,7 +275,7 @@ fun LazyListScope.lendingManagementScreenContent(
                 }
             }
 
-            if (lending.status() == Lending.Status.RETURNED) {
+            if (status == Lending.Status.RETURNED) {
                 Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResource(Res.string.memory_pending_lending),
@@ -580,8 +533,8 @@ private fun GeneralLendingDetailsExtra(
     val clipboard = LocalClipboard.current
     val uriHandler = LocalUriHandler.current
 
-    val user = lending.user
-    val lendingUser = user.lendingUser!!
+    val user = remember(lending) { lending.user }
+    val lendingUser = remember(user) { user.lendingUser!! }
 
     DataRow(
         icon = MaterialSymbols.Face,

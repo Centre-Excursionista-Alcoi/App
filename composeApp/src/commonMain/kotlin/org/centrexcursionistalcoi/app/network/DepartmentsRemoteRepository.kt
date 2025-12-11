@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
@@ -81,6 +82,12 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
         val response = httpClient.post("/departments/$departmentId/leave")
         if (response.status.isSuccess()) {
             log.i { "Left department successfully" }
+
+            // Clean up inventory items and item types associated with this department
+            log.i { "Deleting items associated with the left department..." }
+            InventoryItemTypesRepository.deleteByDepartmentId(departmentId)
+
+            log.i { "Updating locally stored department..." }
             update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
         } else {
             // Try to decode the error

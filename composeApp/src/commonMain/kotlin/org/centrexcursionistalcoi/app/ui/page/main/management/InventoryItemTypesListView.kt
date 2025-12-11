@@ -29,7 +29,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
-import org.centrexcursionistalcoi.app.ui.reusable.TooltipIconButton
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.jetbrains.compose.resources.stringResource

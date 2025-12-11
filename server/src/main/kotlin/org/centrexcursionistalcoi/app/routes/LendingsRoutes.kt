@@ -180,7 +180,7 @@ fun Route.lendingsRoutes() {
                 UserReferenceEntity.all()
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
@@ -389,10 +389,10 @@ fun Route.lendingsRoutes() {
 
         // Send Push Notification asynchronously
         Push.launch {
-            Push.sendAdminPushNotification(lending.takenNotification(false))
+            Push.sendAdminPushNotification(lending.takenNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.takenNotification(true)
+                notification = lending.takenNotification()
             )
         }
 
@@ -475,18 +475,18 @@ fun Route.lendingsRoutes() {
             // Send Push Notification asynchronously
             Push.launch {
                 Push.sendAdminPushNotification(
-                    notification = lending.returnedNotification(false)
+                    notification = lending.returnedNotification()
                 )
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
-                    notification = lending.returnedNotification(true)
+                    notification = lending.returnedNotification()
                 )
             }
 
             call.respond(HttpStatusCode.NoContent)
         } else {
             Push.launch {
-                Push.sendAdminPushNotification(lending.partialReturnNotification(false))
+                Push.sendAdminPushNotification(lending.partialReturnNotification())
             }
 
             call.response.header("CEA-Missing-Items", missingItemsIds.joinToString(","))
@@ -504,7 +504,7 @@ fun Route.lendingsRoutes() {
         }
 
         var place: String? = null
-        var users: List<String>? = null
+        var members: List<UInt>? = null
         var externalUsers: String? = null
         var plainText: String? = null
         var sport: Sports? = null
@@ -519,9 +519,10 @@ fun Route.lendingsRoutes() {
                     name == "place" -> {
                         place = part.value.takeIf { it.isNotBlank() }
                     }
-                    name == "users" -> {
-                        val usersList = part.value.split(',')
-                        users = usersList.ifEmpty { null }
+                    name == "members" -> {
+                        val membersList = part.value.split(',')
+                            .mapNotNull { it.toUIntOrNull() }
+                        members = membersList.ifEmpty { null }
                     }
                     name == "external_users" -> {
                         externalUsers = part.value.takeIf { it.isNotBlank() }
@@ -585,12 +586,12 @@ fun Route.lendingsRoutes() {
         }
 
         // If given, make sure the department exists
-        val department = departmentId?.let { id ->
-            Database { DepartmentEntity.findById(id.toJavaUuid()) }
-        }
-        if (department == null) {
-            respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId.toString()))
-            return@post
+        departmentId?.let { deptId ->
+            val department = Database { DepartmentEntity.findById(deptId.toJavaUuid()) }
+            if (department == null) {
+                respondError(Error.EntityNotFound(DepartmentEntity::class, deptId.toString()))
+                return@post
+            }
         }
 
         // Store all attachments
@@ -601,7 +602,7 @@ fun Route.lendingsRoutes() {
         // Instantiate the memory
         val memory = LendingMemory(
             place = place,
-            memberUsers = users.orEmpty(),
+            members = members.orEmpty(),
             externalUsers = externalUsers,
             text = plainText!!,
             sport = sport,
@@ -615,8 +616,8 @@ fun Route.lendingsRoutes() {
             val departments = Database { DepartmentEntity.all().map { it.toData() } }
             PdfGeneratorService.generateLendingPdf(
                 memory.referenced(
-                    users = Database {
-                        UserReferenceEntity.find { UserReferences.sub inList memory.memberUsers }.map { it.toData(null, null, null) }
+                    members = Database {
+                        MemberEntity.find { Members.id inList memory.members }.map { it.toMember() }
                     },
                     departments = departments,
                 ),
@@ -650,7 +651,7 @@ fun Route.lendingsRoutes() {
         Email.launch {
             val emails = Database {
                 UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
 
             val fileAttachments = mutableListOf<MailerSendAttachment>()

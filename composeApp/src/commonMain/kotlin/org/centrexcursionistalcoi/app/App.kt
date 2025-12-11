@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
 import org.centrexcursionistalcoi.app.nav.UuidNavType
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
+import org.centrexcursionistalcoi.app.push.LocalNotifications.checkIsSelf
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
@@ -39,6 +40,7 @@ import org.centrexcursionistalcoi.app.ui.screen.*
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import kotlin.reflect.KClass
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 
@@ -72,12 +74,16 @@ fun MainApp(
             }
 
             if (isReady) {
+                LaunchedEffect(Unit) {
+                    log.d { "Platform is ready..." }
+                }
+
                 fun <N: PushNotification.LendingUpdated> destination(
                     notification: N,
                     forAdmin: (N) -> Destination? = { null },
                     forUser: (N) -> Destination? = { null }
                 ): Destination? {
-                    return if (notification.isSelf) forUser(notification)
+                    return if (notification.checkIsSelf()) forUser(notification)
                     else forAdmin(notification)
                 }
 
@@ -112,6 +118,10 @@ fun MainApp(
                 }
                 App(afterLoad ?: startDestination, onNavHostReady)
             } else {
+                LaunchedEffect(Unit) {
+                    log.d { "Platform not ready..." }
+                }
+
                 LoadingBox()
             }
         }
@@ -139,6 +149,8 @@ fun App(
     if (restartRequired) UpdateRestartRequiredDialog()
 
     SharedTransitionLayout {
+        LaunchedEffect(Unit) { log.d { "Rendering NavHost..." } }
+
         NavHost(
             navController = navController,
             startDestination = Destination.Loading,
@@ -155,6 +167,7 @@ fun App(
                         }
                     },
                     onNotLoggedIn = {
+                        log.i { "User is not logged in. Navigating to login screen..." }
                         navController.navigate(Destination.Login()) {
                             popUpTo(navController.graph.id) {
                                 inclusive = true
@@ -301,19 +314,34 @@ fun App(
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 context(scope: SharedTransitionScope)
-inline fun <reified D: Destination> NavGraphBuilder.destination(
-    noinline content: @Composable (D) -> Unit
+fun <D: Destination> NavGraphBuilder.destination(
+    kClass: KClass<D>,
+    content: @Composable (D) -> Unit
 ) {
-    composable<D>(
+    composable(
+        kClass,
         typeMap = mapOf(
             typeOf<Uuid>() to UuidNavType,
             typeOf<Uuid?>() to NullableUuidNavType,
         ),
     ) { bse ->
-        val route = bse.toRoute<D>()
+        val route = bse.toRoute<D>(kClass)
+
+        LaunchedEffect(Unit) {
+            log.d { "Rendering screen ${kClass.simpleName}" }
+        }
 
         CompositionLocalProvider(LocalTransitionContext provides (scope to this@composable)) {
             content(route)
         }
     }
+}
+
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+context(scope: SharedTransitionScope)
+inline fun <reified D: Destination> NavGraphBuilder.destination(
+    noinline content: @Composable (D) -> Unit
+) {
+    destination(D::class, content)
 }

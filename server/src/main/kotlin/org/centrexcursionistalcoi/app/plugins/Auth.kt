@@ -8,8 +8,11 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.Error.Companion.ERROR_INVALID_ARGUMENT
@@ -30,6 +33,7 @@ import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -58,10 +62,8 @@ fun login(email: String, password: CharArray): Error? {
         return Error.UserIsDisabled()
     }
 
-    val passwordHash = existingReference.password ?: return Error.PasswordNotSet()
-
     // verify password
-    if (!Passwords.verify(password, passwordHash)) {
+    if (!Passwords.verify(password, existingReference.password)) {
         return Error.IncorrectPasswordOrEmail()
     }
 
@@ -124,22 +126,26 @@ fun Route.configureAuthRoutes() {
         // validate password
         if (!Passwords.isSafe(password)) return@post call.respondError(Error.PasswordNotSafeEnough())
 
-        // check that the user exists
+        // check that the user doesn't exist
         val existingReference = Database { UserReferenceEntity.findByEmail(email) }
-        if (existingReference == null) {
-            return@post call.respondError(Error.EmailNotRegistered())
+        if (existingReference != null) {
+            return@post call.respondError(Error.UserAlreadyRegistered())
         }
 
-        // Make sure the user doesn't already have a password set
-        if (existingReference.password != null) {
-            return@post call.respondError(Error.UserAlreadyRegistered())
+        // check that the user is a valid an active member
+        val memberReference = Database {
+            MemberEntity.find { Members.email.upperCase() eq email }.limit(1).firstOrNull()
+        }
+        if (memberReference == null) {
+            return@post call.respondError(Error.EmailNotFound())
+        }
+        if (memberReference.status != Member.Status.ACTIVE) {
+            return@post call.respondError(Error.MemberIsNotActive())
         }
 
         // Update the user's password
         val hashedPassword = Passwords.hash(password)
-        Database {
-            existingReference.password = hashedPassword
-        }
+        memberReference.insertUser(hashedPassword)
 
         // Success, respond accordingly
         call.respond(HttpStatusCode.OK)
@@ -149,16 +155,14 @@ fun Route.configureAuthRoutes() {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
-        val email = parameters["email"]?.trim()?.uppercase()
-
-        if (email == null) return@post call.respondError(Error.MissingArgument("email"))
+        val email = parameters["email"]?.trim()?.uppercase() ?: return@post call.respondError(Error.MissingArgument("email"))
 
         val redirectTo = call.parameters["redirect_to"]?.trim()
 
         // check that the user exists
         val userReference = Database { UserReferenceEntity.findByEmail(email) }
         if (userReference == null) {
-            return@post call.respondError(Error.EmailNotRegistered())
+            return@post call.respondError(Error.UserNotRegistered())
         }
 
         // Create a new request
@@ -227,9 +231,6 @@ fun Route.configureAuthRoutes() {
             UserReferenceEntity.findById(userId)
         } ?: return@post respondError(Error.InvalidArgument("request_id"))
 
-        // Users without email are disabled
-        val email = userReference.email ?: return@post respondError(Error.UserIsDisabled())
-
         // update the user's password
         val hashedPassword = Passwords.hash(newPassword)
         Database {
@@ -245,7 +246,7 @@ fun Route.configureAuthRoutes() {
         val locale = call.request.locale()
         Email.sendTemplate(
             to = listOf(
-                MailerSendEmail(email, userReference.fullName)
+                MailerSendEmail(userReference.email, userReference.fullName)
             ),
             template = EmailTemplate.PasswordChangedNotification,
             locale = locale,

@@ -19,12 +19,10 @@ object LocalNotifications {
     /**
      * Checks if the targeted notification is for the current user.
      *
-     * Not only checks the [TargetedNotification.isSelf] flag, but also compares the [TargetedNotification.userSub] with
-     * the current profile's [ProfileResponse.sub].
+     * Compares the [TargetedNotification.userSub] with the current profile's [ProfileResponse.sub].
      * @return true if the notification is for the current user, false otherwise.
      */
-    private fun TargetedNotification.checkIsSelf(): Boolean {
-        if (!isSelf) return false
+    fun TargetedNotification.checkIsSelf(): Boolean {
         val profile = ProfileRepository.getProfile() ?: return false
         return profile.sub == userSub
     }

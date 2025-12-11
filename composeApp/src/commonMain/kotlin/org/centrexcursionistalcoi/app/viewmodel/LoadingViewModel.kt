@@ -5,12 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
-import kotlin.time.ExperimentalTime
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.doMain
@@ -21,15 +18,15 @@ import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class LoadingViewModel(
     onLoggedIn: () -> Unit,
     onNotLoggedIn: () -> Unit,
 ) : ViewModel() {
-    companion object {
-        private val log = logging()
-    }
+
+    private val log = logging()
 
     private val _progress = MutableStateFlow<Progress?>(null)
     val progress = _progress.asStateFlow()
@@ -115,6 +112,7 @@ class LoadingViewModel(
     }
 
     init {
+        log.d { "Initialized LoadingViewModel..." }
         load(onLoggedIn, onNotLoggedIn)
     }
 }

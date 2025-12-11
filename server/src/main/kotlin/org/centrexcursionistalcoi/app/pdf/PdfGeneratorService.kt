@@ -1,11 +1,5 @@
 package org.centrexcursionistalcoi.app.pdf
 
-import java.awt.Color
-import java.io.OutputStream
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.UUID
-import kotlin.uuid.toJavaUuid
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -17,6 +11,12 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
+import java.awt.Color
+import java.io.OutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.uuid.toJavaUuid
 
 object PdfGeneratorService {
     private val fontRegular: PDFont = PDType1Font.HELVETICA
@@ -161,8 +161,8 @@ object PdfGeneratorService {
             // 3. Participants
             // =========================================
             drawText("Socis:", fontBold, FONT_SIZE_HEADER)
-            memory.memberUsers.forEach { user ->
-                drawText("- ${user.fullName}", fontRegular, FONT_SIZE_BODY)
+            memory.members.forEach { member ->
+                drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
             }
             yPosition -= 10
 

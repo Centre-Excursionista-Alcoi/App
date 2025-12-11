@@ -52,20 +52,37 @@ fun HomePage(
     events: List<ReferencedEvent>?,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
-    val isRegisteredForLendings = profile.lendingUser != null
-    val isAdmin = profile.isAdmin
+    val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
+    val isAdmin = remember(profile) { profile.isAdmin }
 
-    val userLendings = lendings?.filter { it.user.sub == profile.sub }
+    val userLendings = remember(lendings) {
+        lendings?.filter { it.user.sub == profile.sub || it.user.isStub() }
+    }
+    val activeLendings = remember(userLendings) {
+        userLendings
+            ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+            ?.sortedByDescending { it.from }
+    }
+    val oldLendings = remember(userLendings) {
+        userLendings
+            ?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+            ?.sortedByDescending { it.from }
+            .orEmpty()
+    }
 
-    val nonCompletedLendings = lendings
-        .takeIf { isAdmin }
-        ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-        .orEmpty()
-    val pendingJoinRequests = departments
-        .takeIf { isAdmin }
-        ?.map { it.members.orEmpty() }
-        ?.filter { members -> members.any { !it.confirmed } }
-        ?.flatten()
+    val nonCompletedLendings = remember(lendings) {
+        lendings
+            .takeIf { isAdmin }
+            ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
+            .orEmpty()
+    }
+    val pendingJoinRequests = remember(departments) {
+        departments
+            .takeIf { isAdmin }
+            ?.map { it.members.orEmpty() }
+            ?.filter { members -> members.any { !it.confirmed } }
+            ?.flatten()
+    }
 
     val eventsAndPosts = remember(events, posts) {
         val combined = mutableListOf<Any>()
@@ -97,6 +114,7 @@ fun HomePage(
             }
         }
 
+        // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings
         if (isRegisteredForLendings && notificationPermissionResult in listOf(NotificationPermissionResult.Denied, NotificationPermissionResult.NotAllowed)) {
             item("notification_permission", contentType = "permission", span = { GridItemSpan(maxLineSpan) }) {
                 CardWithIcon(
@@ -148,11 +166,7 @@ fun HomePage(
             Spacer(Modifier.height(16.dp))
         }
 
-        // The notification permission is only used for lendings, so don't ask for it if the user is not registered for lendings
         if (isRegisteredForLendings) {
-            val activeLendings = userLendings
-                ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-                ?.sortedByDescending { it.from }
             if (!activeLendings.isNullOrEmpty()) {
                 stickyHeader("active_lendings_header") {
                     Text(
@@ -166,10 +180,6 @@ fun HomePage(
                 }
             }
 
-            val oldLendings = userLendings
-                ?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-                ?.sortedByDescending { it.from }
-                .orEmpty()
             if (oldLendings.isNotEmpty()) {
                 stickyHeader {
                     Text(
@@ -219,8 +229,15 @@ fun HomePage(
                     key = { "join_request_${it.id}" },
                     contentType = { "pending-join-request" },
                 ) { request ->
-                    val department = departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } } ?: return@items
-                    val userData = users?.find { it.sub == request.userSub } ?: return@items
+                    val department = remember(departments) {
+                        departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
+                    }
+                    val userData = remember(users) {
+                        users?.find { it.sub == request.userSub }
+                    }
+
+                    department ?: return@items
+                    userData ?: return@items
 
                     DepartmentPendingJoinRequest(
                         userData = userData,

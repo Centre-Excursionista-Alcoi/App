@@ -1,7 +1,5 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
@@ -10,6 +8,8 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import java.util.*
+import kotlin.uuid.toKotlinUuid
 
 class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<LendingEntity>(Lendings)
@@ -51,7 +51,6 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         PushNotification.LendingConfirmed(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
-            isSelf = true,
         )
     }
 
@@ -59,31 +58,27 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         PushNotification.LendingCancelled(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
-            isSelf = true,
         )
     }
 
-    fun takenNotification(isSelf: Boolean): PushNotification.LendingTaken = Database {
+    fun takenNotification(): PushNotification.LendingTaken = Database {
         PushNotification.LendingTaken(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
-            isSelf = isSelf,
         )
     }
 
-    fun returnedNotification(isSelf: Boolean): PushNotification.LendingReturned = Database {
+    fun returnedNotification(): PushNotification.LendingReturned = Database {
         PushNotification.LendingReturned(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
-            isSelf = isSelf,
         )
     }
 
-    fun partialReturnNotification(isSelf: Boolean): PushNotification.LendingPartiallyReturned = Database {
+    fun partialReturnNotification(): PushNotification.LendingPartiallyReturned = Database {
         PushNotification.LendingPartiallyReturned(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
-            isSelf = isSelf,
         )
     }
 

@@ -1,30 +1,14 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.contentType
-import io.ktor.http.headers
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
-import kotlin.uuid.Uuid
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedLending.Companion.referenced
-import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
@@ -38,6 +22,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
+import kotlin.uuid.Uuid
 
 object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
@@ -218,8 +203,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
      * The logged-in user must be the owner of the lending.
      * @param lendingId The UUID of the lending to submit the memory for.
      * @param place The place where the activity took place.
-     * @param memberUsers The list of member users who participated in the activity.
+     * @param members The list of members who participated in the activity.
      * @param externalUsers A string describing external users who participated in the activity.
+     * @param sport The sport associated with the activity.
+     * @param department The department associated with the activity.
      * @param text The rich text content of the memory in Markdown.
      * @param files The list of memory files to submit.
      * @param progress An optional progress listener for upload progress.
@@ -229,9 +216,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     suspend fun submitMemory(
         lendingId: Uuid,
         place: String,
-        memberUsers: List<UserData>,
+        members: List<Member>,
         externalUsers: String,
         sport: Sports?,
+        department: Department?,
         text: String,
         files: List<PlatformFile>,
         progress: ProgressNotifier? = null
@@ -242,9 +230,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             "inventory/lendings/$lendingId/add_memory",
             formData {
                 place.takeIf { it.isNotBlank() }?.let { append("place", it) }
-                append("users", memberUsers.joinToString(",") { it.sub })
+                append("members", members.joinToString(",") { it.memberNumber.toString() })
                 externalUsers.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
                 sport?.let { append("sport", it.name) }
+                department?.let { append("department", it.id.toString()) }
                 append("text",  text)
 
                 filesWithContext.mapIndexed { index, file ->

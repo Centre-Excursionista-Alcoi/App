@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import kotlin.uuid.Uuid
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -15,8 +15,11 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.storage.databaseInstance
+import kotlin.uuid.Uuid
 
 object InventoryItemTypesRepository : DatabaseRepository<ReferencedInventoryItemType, Uuid>() {
+    private val log = logging()
+
     override val queries by lazy { databaseInstance.inventoryItemTypesQueries }
 
     override suspend fun get(id: Uuid): ReferencedInventoryItemType? {
@@ -71,6 +74,25 @@ object InventoryItemTypesRepository : DatabaseRepository<ReferencedInventoryItem
 
     override suspend fun delete(id: Uuid) {
         queries.deleteById(id)
+    }
+
+    /**
+     * Deletes all item types associated with the given department ID,
+     * along with their corresponding inventory items.
+     * @param departmentId The ID of the department whose item types are to be deleted.
+     */
+    suspend fun deleteByDepartmentId(departmentId: Uuid) {
+        val types = queries.selectByDepartmentId(departmentId).awaitAsList()
+        log.d { "Got ${types.size} types for department $departmentId" }
+        for (type in types) {
+            val items = databaseInstance.inventoryItemsQueries.selectAllByType(type.id).awaitAsList()
+            log.d { "  Deleting ${items.size} items for type ${type.id}" }
+            for (item in items) {
+                databaseInstance.inventoryItemsQueries.deleteById(item.id)
+            }
+            log.d { "  Deleting type ${type.id}" }
+            queries.deleteById(type.id)
+        }
     }
 
     fun InventoryItemTypes.toInventoryItemType(departments: List<Department>) = InventoryItemType(

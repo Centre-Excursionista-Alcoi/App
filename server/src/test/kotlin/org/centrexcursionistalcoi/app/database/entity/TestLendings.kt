@@ -1,23 +1,10 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.Instant
-import java.time.LocalDate
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
-import org.centrexcursionistalcoi.app.data.InventoryItem
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.LendingMemory
-import org.centrexcursionistalcoi.app.data.ReceivedItem
-import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
@@ -27,6 +14,14 @@ import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.time.toKotlinInstant
+import kotlin.uuid.toKotlinUuid
 
 class TestLendings {
     @AfterTest
@@ -36,7 +31,7 @@ class TestLendings {
 
     @Test
     fun test_create() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val inventoryItemType = Database {
             InventoryItemTypeEntity.new {
@@ -77,7 +72,7 @@ class TestLendings {
 
     @Test
     fun test_create_endNotBeforeStart() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         assertFailsWith<ExposedSQLException> {
             Database {
@@ -92,7 +87,7 @@ class TestLendings {
 
     @Test
     fun `test entity serializes the same as data class`() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val id = "315cedda-a219-426d-8acc-ebeb7c70b9f7".toUUID()
         val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUUID()
@@ -131,7 +126,7 @@ class TestLendings {
                 memorySubmittedAt = instant
                 memory = LendingMemory(
                     place = "Place",
-                    memberUsers = listOf(FakeUser.SUB),
+                    members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
                     externalUsers = "John Doe",
                     text = "Lending memory text",
                     files = listOf(memoryAttachmentFileId.toKotlinUuid()),
@@ -206,7 +201,7 @@ class TestLendings {
             memorySubmittedAt = instant.toKotlinInstant(),
             memory = LendingMemory(
                 place = "Place",
-                memberUsers = listOf(FakeUser.SUB),
+                members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
                 externalUsers = "John Doe",
                 text = "Lending memory text",
                 files = listOf(memoryAttachmentFileId.toKotlinUuid()),

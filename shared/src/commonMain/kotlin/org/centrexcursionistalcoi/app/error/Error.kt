@@ -347,10 +347,10 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("EmailNotRegistered")
-    class EmailNotRegistered(): Error {
-        override val code: Int = ERROR_EMAIL_NOT_REGISTERED
-        override val description: String = "There is not any user registered with the given email."
+    @SerialName("EmailNotFound")
+    class EmailNotFound(): Error {
+        override val code: Int = ERROR_EMAIL_NOT_FOUND
+        override val description: String = "There is not any CEA member with the given email."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.NotFound
@@ -367,10 +367,10 @@ sealed interface Error {
     }
 
     @Serializable
-    @SerialName("PasswordNotSet")
-    class PasswordNotSet(): Error {
-        override val code: Int = ERROR_PASSWORD_NOT_SET
-        override val description: String = "The user has not set a password yet."
+    @SerialName("UserNotRegistered")
+    class UserNotRegistered(): Error {
+        override val code: Int = ERROR_USER_NOT_REGISTERED
+        override val description: String = "The user is not registered."
 
         @Serializable(HttpStatusCodeSerializer::class)
         override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
@@ -447,6 +447,16 @@ sealed interface Error {
     }
 
     @Serializable
+    @SerialName("MemberIsNotActive")
+    class MemberIsNotActive(): Error {
+        override val code: Int = ERROR_MEMBER_IS_NOT_ACTIVE
+        override val description: String = "The member is not active."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    @Serializable
     @SerialName("UserIsDisabled")
     class UserIsDisabled(): Error {
         override val code: Int = ERROR_USER_IS_DISABLED
@@ -516,9 +526,9 @@ sealed interface Error {
         const val ERROR_LENDING_NOT_TAKEN = 26
         const val ERROR_INVALID_ITEM_IN_RETURNED_ITEMS = 27
         const val ERROR_PASSWORD_NOT_SAFE_ENOUGH = 28
-        const val ERROR_EMAIL_NOT_REGISTERED = 29
+        const val ERROR_EMAIL_NOT_FOUND = 29
         const val ERROR_INCORRECT_PASSWORD_OR_EMAIL = 30
-        const val ERROR_PASSWORD_NOT_SET = 31
+        const val ERROR_USER_NOT_REGISTERED = 31
         const val ERROR_USER_ALREADY_REGISTERED_FOR_LENDING = 32
         const val ERROR_LENDING_ALREADY_PICKED_UP = 33
         const val ERROR_USER_NOT_SIGNED_UP_FOR_LENDING = 34
@@ -526,10 +536,11 @@ sealed interface Error {
         const val ERROR_USER_ALREADY_REGISTERED = 36
         const val ERROR_USER_DOES_NOT_HAVE_INSURANCE = 37
         const val ERROR_PASSWORD_RESET_REQUEST_EXPIRED = 38
-        const val ERROR_EVENT_FULL = 39
+        const val ERROR_MEMBER_IS_NOT_ACTIVE = 39
         const val ERROR_USER_IS_DISABLED = 40
-        const val ERROR_ASSISTANCE_ALREADY_CONFIRMED = 41
-        const val ERROR_EVENT_IN_THE_PAST = 42
+        const val ERROR_EVENT_FULL = 41
+        const val ERROR_ASSISTANCE_ALREADY_CONFIRMED = 42
+        const val ERROR_EVENT_IN_THE_PAST = 43
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -561,9 +572,9 @@ sealed interface Error {
             ERROR_LENDING_NOT_TAKEN -> LendingNotTaken.serializer()
             ERROR_INVALID_ITEM_IN_RETURNED_ITEMS -> InvalidItemInReturnedItems.serializer()
             ERROR_PASSWORD_NOT_SAFE_ENOUGH -> PasswordNotSafeEnough.serializer()
-            ERROR_EMAIL_NOT_REGISTERED -> EmailNotRegistered.serializer()
+            ERROR_EMAIL_NOT_FOUND -> EmailNotFound.serializer()
             ERROR_INCORRECT_PASSWORD_OR_EMAIL -> IncorrectPasswordOrEmail.serializer()
-            ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
+            ERROR_USER_NOT_REGISTERED -> UserNotRegistered.serializer()
             ERROR_USER_ALREADY_REGISTERED_FOR_LENDING -> UserAlreadyRegisteredForLending.serializer()
             ERROR_LENDING_ALREADY_PICKED_UP -> LendingAlreadyPickedUp.serializer()
             ERROR_USER_NOT_SIGNED_UP_FOR_LENDING -> UserNotSignedUpForLending.serializer()
@@ -571,6 +582,7 @@ sealed interface Error {
             ERROR_USER_ALREADY_REGISTERED -> UserAlreadyRegistered.serializer()
             ERROR_USER_DOES_NOT_HAVE_INSURANCE -> UserDoesNotHaveInsurance.serializer()
             ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> PasswordResetRequestExpired.serializer()
+            ERROR_MEMBER_IS_NOT_ACTIVE -> MemberIsNotActive.serializer()
             ERROR_USER_IS_DISABLED -> UserIsDisabled.serializer()
             ERROR_EVENT_FULL -> EventFull.serializer()
             ERROR_ASSISTANCE_ALREADY_CONFIRMED -> AssistanceAlreadyConfirmed.serializer()

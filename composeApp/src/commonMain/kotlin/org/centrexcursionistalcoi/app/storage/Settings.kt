@@ -20,6 +20,7 @@ const val SETTINGS_LAST_LENDINGS_SYNC = "last_lendings_sync"
 const val SETTINGS_LAST_POSTS_SYNC = "last_posts_sync"
 const val SETTINGS_LAST_USERS_SYNC = "last_users_sync"
 const val SETTINGS_LAST_EVENTS_SYNC = "last_events_sync"
+const val SETTINGS_LAST_MEMBERS_SYNC = "last_members_sync"
 
 /**
  * Key for storing the selected language in the settings.

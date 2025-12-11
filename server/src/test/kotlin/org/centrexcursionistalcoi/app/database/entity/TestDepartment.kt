@@ -1,29 +1,29 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.assertNotNull
+import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.uuid.toKotlinUuid
 
 class TestDepartment {
     @Test
     fun `test entity serializes the same as data class`() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val user = Database { FakeUser.provideEntity() }
         val user2 = Database { FakeUser2.provideEntity() }
@@ -86,7 +86,7 @@ class TestDepartment {
 
     @Test
     fun `test patching`() = runTest {
-        Database.init(TEST_URL)
+        Database.initForTests()
 
         val departmentEntity = Database {
             DepartmentEntity.new {

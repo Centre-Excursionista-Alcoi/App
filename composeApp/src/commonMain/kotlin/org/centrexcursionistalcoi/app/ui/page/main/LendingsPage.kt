@@ -2,17 +2,7 @@ package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
@@ -21,26 +11,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Badge
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,34 +25,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AssignmentReturn
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NoteAdd
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Pending
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.uuid.Uuid
 
 @Composable
 fun LendingsPage(
@@ -97,8 +58,8 @@ fun LendingsPage(
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
     onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
 ) {
-    val departments = inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList()
-    val itemsWithoutDepartmentExist = inventoryItems?.any { it.type.department == null } == true
+    val departments = remember(inventoryItems) { inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList() }
+    val itemsWithoutDepartmentExist = remember(inventoryItems) { inventoryItems?.any { it.type.department == null } == true }
 
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { departments.size + (if (itemsWithoutDepartmentExist) 1 else 0) }

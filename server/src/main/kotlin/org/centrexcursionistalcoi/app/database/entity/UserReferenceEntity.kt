@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import io.ktor.http.*
 import kotlinx.datetime.toJavaLocalDate
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.UserData
@@ -65,7 +66,6 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     var groups by UserReferences.groups
 
     var isDisabled by UserReferences.isDisabled
-    var disableReason by UserReferences.disableReason
 
     var password by UserReferences.password
 
@@ -73,9 +73,12 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     var femecvPassword by UserReferences.femecvPassword
     var femecvLastSync by UserReferences.femecvLastSync
 
+    fun isAdmin() = groups.contains(ADMIN_GROUP_NAME)
+
     context(_: JdbcTransaction)
     fun toData(lendingUser: LendingUser?, insurances: List<UserInsurance>?, departments: List<DepartmentMemberInfo>?) = UserData(
         sub = sub.value,
+        memberNumber = memberNumber,
         fullName = fullName,
         email = email,
         groups = groups,
@@ -83,7 +86,6 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
         insurances = insurances.orEmpty(),
         departments = departments.orEmpty(),
         isDisabled = isDisabled,
-        disableReason = disableReason,
     )
 
     suspend fun refreshFEMECVData() {

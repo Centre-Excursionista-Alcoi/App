@@ -1,14 +1,12 @@
 package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.HttpCookies
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.cookies.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,13 +17,7 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.network.configureLogging
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.*
 
 object SSENotificationsListener {
     private val log = logging()
@@ -130,6 +122,8 @@ object SSENotificationsListener {
             }
         }
         job?.invokeOnCompletion { job = null }
+
+        log.d { "SSE is running..." }
     }
 
     fun stopListening() {

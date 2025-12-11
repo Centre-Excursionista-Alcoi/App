@@ -195,7 +195,7 @@ private fun AuthScreen_Form(
                 val serverException = error as? ServerException
                 val message = if (serverException != null) {
                     when (serverException.errorCode) {
-                        Error.ERROR_PASSWORD_NOT_SET -> stringResource(Res.string.login_error_password_not_set)
+                        Error.ERROR_USER_NOT_REGISTERED -> stringResource(Res.string.login_error_user_not_registered)
                         Error.ERROR_INCORRECT_PASSWORD_OR_EMAIL -> stringResource(Res.string.login_error_invalid_credentials)
                         else -> stringResource(Res.string.login_error_unknown, serverException.message ?: unknown())
                     }

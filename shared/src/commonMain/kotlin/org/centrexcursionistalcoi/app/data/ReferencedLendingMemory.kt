@@ -1,12 +1,12 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
 
 @Serializable
 data class ReferencedLendingMemory(
     val place: String?,
-    val memberUsers: List<UserData>,
+    val members: List<Member>,
     val externalUsers: String?,
     val text: String,
     val sport: Sports?,
@@ -15,7 +15,7 @@ data class ReferencedLendingMemory(
 ) {
     fun dereference() = LendingMemory(
         place = place,
-        memberUsers = memberUsers.map { it.sub },
+        members = members.map { it.memberNumber },
         externalUsers = externalUsers,
         text = text,
         sport = sport,

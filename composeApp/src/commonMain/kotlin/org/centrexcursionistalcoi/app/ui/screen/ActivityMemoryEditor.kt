@@ -22,8 +22,9 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
@@ -43,7 +44,8 @@ fun ActivityMemoryEditor(
     model: ActivityMemoryEditorViewModel = viewModel { ActivityMemoryEditorViewModel(lendingId) },
     onBack: () -> Unit
 ) {
-    val users by model.users.collectAsState()
+    val members by model.members.collectAsState()
+    val departments by model.departments.collectAsState()
     val isSaving by model.isSaving.collectAsState()
     val saveProgress by model.saveProgress.collectAsState()
     val uploadSuccessful by model.uploadSuccessful.collectAsState()
@@ -57,7 +59,8 @@ fun ActivityMemoryEditor(
     ActivityMemoryEditor(
         isSaving = isSaving,
         saveProgress = saveProgress,
-        users = users,
+        members = members,
+        departments = departments,
         onSave = model::save,
         onBack = onBack,
     )
@@ -68,15 +71,17 @@ fun ActivityMemoryEditor(
 fun ActivityMemoryEditor(
     isSaving: Boolean,
     saveProgress: Progress?,
-    users: List<UserData>?,
-    onSave: (place: String, memberUsers: List<UserData>, externalUsers: String, sport: Sports?, description: RichTextState, files: List<PlatformFile>) -> Unit,
+    members: List<Member>?,
+    departments: List<Department>?,
+    onSave: (place: String, memberUsers: List<Member>, externalUsers: String, sport: Sports?, department: Department?, description: RichTextState, files: List<PlatformFile>) -> Unit,
     onBack: () -> Unit,
 ) {
     val state = rememberRichTextState()
     var place by remember { mutableStateOf("") }
-    var memberUsers by remember { mutableStateOf<List<UserData>>(emptyList()) }
+    var memberUsers by remember { mutableStateOf<List<Member>>(emptyList()) }
     var externalUsers by remember { mutableStateOf("") }
     var sport by remember { mutableStateOf<Sports?>(null) }
+    var department by remember { mutableStateOf<Department?>(null) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
     Scaffold(
@@ -93,7 +98,7 @@ fun ActivityMemoryEditor(
                 actions = {
                     IconButton(
                         enabled = !isSaving,
-                        onClick = { onSave(place, memberUsers, externalUsers, sport, state, files) }
+                        onClick = { onSave(place, memberUsers, externalUsers, sport, department, state, files) }
                     ) {
                         Icon(
                             MaterialSymbols.Upload,
@@ -128,8 +133,8 @@ fun ActivityMemoryEditor(
                 value = searchingForUser,
                 onValueChange = { searchingForUser = it },
                 label = { Text(stringResource(Res.string.memory_editor_member_participants)) },
-                suggestions = users.orEmpty()
-                    .filter { user -> user.fullName.uppercase().unaccent().contains(searchingForUser.uppercase().unaccent()) }
+                suggestions = members.orEmpty()
+                    .filter { member -> member.fullName.uppercase().unaccent().contains(searchingForUser.uppercase().unaccent()) }
                     .toSet(),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 toString = { it.fullName },
@@ -170,6 +175,18 @@ fun ActivityMemoryEditor(
                 label = stringResource(Res.string.memory_editor_sport),
                 itemToString = { it?.displayName ?: "" },
                 enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            )
+
+            // Department
+            DropdownField(
+                value = department,
+                onValueChange = { department = it },
+                options = departments.orEmpty(),
+                label = stringResource(Res.string.memory_editor_department),
+                itemToString = { it?.displayName ?: "" },
+                enabled = !isSaving,
+                allowNull = true,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             )
 
@@ -232,12 +249,13 @@ fun ActivityMemoryEditor_Preview() {
     ActivityMemoryEditor(
         isSaving = false,
         saveProgress = null,
-        users = listOf(
-            UserData("000", "Alice", "alice@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
-            UserData("001", "Bob", "bob@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
-            UserData("002", "Charlie", "charlie@example.com", emptyList(), emptyList(), null, emptyList(), false, null),
+        departments = null,
+        members = listOf(
+            Member(1u, Member.Status.ACTIVE, "Alice", "87654321X", "alice@example.com"),
+            Member(2u, Member.Status.ACTIVE, "Bob", "12345678Z", "bob@example.com"),
+            Member(3u, Member.Status.ACTIVE, "Charlie", "11223344B", "charlie@example.com"),
         ),
-        onSave = { _, _, _, _, _, _ -> },
+        onSave = { _, _, _, _, _, _, _ -> },
         onBack = {},
     )
 }

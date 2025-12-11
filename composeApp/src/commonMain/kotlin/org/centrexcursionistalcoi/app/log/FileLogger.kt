@@ -14,13 +14,35 @@ class FileLogger(private val filePath: Path) : Logger {
         VERBOSE('V'), DEBUG('D'), INFO('I'), WARN('W'), ERROR('E')
     }
 
+    /**
+     * Reads the log file content and returns it as a list of lines.
+     */
+    private fun readLogContent(): List<String> {
+        return try {
+            SystemFileSystem.source(filePath).buffered().use { source ->
+                source.readText().lines()
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * Writes the lines given into the log file.
+     */
+    private fun writeLogContent(lines: List<String>) {
+        SystemFileSystem.sink(filePath, false).buffered().use { sink ->
+            sink.writeText(lines.joinToString("\n") + "\n")
+        }
+    }
+
     private fun log(level: Level, tag: String, msg: String, t: Throwable?) {
         val timestamp = Clock.System.now().toLocalDateTime().toString()
-        SystemFileSystem.sink(filePath, true).buffered().use { sink ->
-            sink.writeText(
-                "${level.char}/$tag $timestamp: $msg${t?.let { "\n${it.stackTraceToString()}" } ?: ""}\n"
-            )
-        }
+        val newLine = "${level.char}/$tag $timestamp: $msg${t?.let { "\n${it.stackTraceToString()}" } ?: ""}"
+
+        val existingLines = readLogContent()
+        val allLines = (existingLines + newLine).filter { it.isNotBlank() }.takeLast(MAX_LINES)
+        writeLogContent(allLines)
     }
 
     override fun verbose(tag: String, msg: String) {
@@ -54,13 +76,20 @@ class FileLogger(private val filePath: Path) : Logger {
     override fun isLoggingError(): Boolean = true
 
     init {
-        // Append empty lines on boot
-        SystemFileSystem.sink(filePath, true).buffered().use { sink ->
-            sink.writeText("\n\n\n")
-            sink.writeText("--- App started at ${Clock.System.now().toLocalDateTime()} ---\n")
-            sink.writeText("    Version: ${BuildKonfig.VERSION_NAME}/${BuildKonfig.VERSION_CODE}\n")
-            sink.writeText("    Is Debug: ${BuildKonfig.DEBUG}\n")
-            sink.writeText("----------------------------------------------------\n")
-        }
+        val startupLines = listOf(
+            "",
+            "--- App started at ${Clock.System.now().toLocalDateTime()} ---",
+            "    Version: ${BuildKonfig.VERSION_NAME}/${BuildKonfig.VERSION_CODE}",
+            "    Is Debug: ${BuildKonfig.DEBUG}",
+            "----------------------------------------------------"
+        )
+
+        val existingLines = readLogContent()
+        val allLines = (existingLines + startupLines).filter { it.isNotBlank() }.takeLast(MAX_LINES)
+        writeLogContent(allLines)
+    }
+
+    companion object {
+        private const val MAX_LINES = 10000
     }
 }

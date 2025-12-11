@@ -17,25 +17,26 @@ import kotlinx.serialization.csv.Csv
 import org.centrexcursionistalcoi.app.PeriodicWorker
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
+import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.utils.generateRandomString
-import org.jetbrains.exposed.v1.core.notInList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.sql.SQLException
 import kotlin.time.Duration.Companion.days
+import org.centrexcursionistalcoi.app.data.Member as SharedMember
 
 object CEA : PeriodicWorker(period = 1.days) {
     @Serializable
     data class Member(
         @SerialName("Núm. soci/a")
-        val number: Int? = null,
+        val number: UInt? = null,
         @SerialName("Estat")
         val status: String? = null,
         @SerialName("Nom i cognoms")
@@ -44,28 +45,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         val nif: String? = null,
         @SerialName("Correu electrònic")
         val email: String? = null,
-    ) {
-        /**
-         * Whether the member is disabled (not "alta").
-         */
-        val isDisabled = !NIFValidation.validate(nif) || !EmailValidation.validate(email) || status?.trim()?.equals("alta", true)?.not() ?: true
-
-        val disabledReason = if (isDisabled) {
-            if (!NIFValidation.validate(nif)) {
-                "invalid_nif"
-            } else if (!EmailValidation.validate(email)) {
-                "invalid_email"
-            } else if (status.equals("baixa", true)) {
-                "status_baixa"
-            } else if (status.equals("pendent", true)) {
-                "status_pendent"
-            } else {
-                "status_unknown"
-            }
-        } else {
-            null
-        }
-    }
+    )
 
     fun List<Member>.filterInvalid() = filter { member ->
         if (member.number == null) {
@@ -118,64 +98,76 @@ object CEA : PeriodicWorker(period = 1.days) {
     fun synchronizeWithDatabase(members: List<Member>) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
-        val userSubList = mutableListOf<String>()
+        val memberNumbers = mutableListOf<UInt>()
         for (member in members.filterInvalid()) {
             try {
                 member.number!!
                 member.fullName!!
 
-                val existingEntity = if (member.email != null) Database { UserReferenceEntity.findByEmailOrNif(member.email, member.nif) } else null
+                val existingEntity = Database { MemberEntity.findById(member.number) }
                 if (existingEntity != null) {
                     // Update existing member
                     Database {
-                        existingEntity.nif = member.nif
-                        existingEntity.memberNumber = member.number.toUInt()
-                        existingEntity.fullName = member.fullName.trim('_')
-                        existingEntity.email = member.email
+                        existingEntity.status = SharedMember.Status.parse(member.status)
 
-                        existingEntity.isDisabled = member.isDisabled
-                        existingEntity.disableReason = member.disabledReason
+                        existingEntity.nif = member.nif
+                        existingEntity.fullName = member.fullName
+                        existingEntity.email = member.email
                     }
-                    userSubList.add(existingEntity.sub.value)
+                    memberNumbers.add(member.number)
                     logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
                 } else {
                     // Create new member
-                    val randomSub = generateRandomString(16)
                     Database {
-                        UserReferenceEntity.new(randomSub) {
-                            nif = member.nif
-                            memberNumber = member.number.toUInt()
-                            fullName = member.fullName.trim('_')
-                            email = member.email
-                            groups = listOf("cea_member")
+                        MemberEntity.new(member.number) {
+                            status = SharedMember.Status.parse(member.status)
 
-                            isDisabled = member.isDisabled
-                            disableReason = member.disabledReason
+                            nif = member.nif
+                            fullName = member.fullName
+                            email = member.email
                         }
                     }
-                    userSubList.add(randomSub)
-                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, email=${member.email}, status=${member.status}")
+                    memberNumbers.add(member.number)
+                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
                 }
-            } catch (e: SQLException) {
+            } catch (e: ExposedSQLException) {
                 logger.error("Database error while processing member NIF=${member.nif}, number=${member.number}", e)
             } catch (e: Exception) {
                 logger.error("Unexpected error while processing member NIF=${member.nif}, number=${member.number}", e)
             }
         }
-        logger.debug("Disabling not found users...")
-        // Disable users not in the CEA members list
-        val membersList = Database { UserReferenceEntity.find { UserReferences.sub notInList userSubList }.toList() }
-        for (entity in membersList) {
-            if (entity.nif == "87654321X") {
-                // Skip test user
-                continue
+
+        logger.debug("Removing unexisting users...")
+        Database {
+            MemberEntity.find { Members.id notInList memberNumbers }.forEach { entity ->
+                try {
+                    logger.info("Removing member number=${entity.id.value} as they are no longer in the CEA members list.")
+                    entity.delete()
+                } catch (e: ExposedSQLException) {
+                    logger.error("Database error while removing member number=${entity.id.value}", e)
+                }
             }
-            Database {
-                entity.isDisabled = true
-                entity.disableReason = "not_in_cea_members"
-            }
-            logger.trace("Disabled member NIF=${entity.nif}, email=${entity.email}, sub=${entity.sub.value}")
         }
+
+        logger.debug("Disabling all already existing members not in the current members list...")
+        val disabledMemberIds = Database {
+            MemberEntity.find { Members.status neq SharedMember.Status.ACTIVE }.map { it.id.value.toUInt() }
+        }
+        Database {
+            UserReferenceEntity.find { UserReferences.memberNumber inList disabledMemberIds }.forEach { ref ->
+                ref.isDisabled = true
+                logger.info("Disabled user with sub=${ref.sub.value}, memberNumber=${ref.memberNumber} as their member is not active.")
+            }
+        }
+
+        logger.debug("Re-enabling members that are active in the current members list...")
+        Database {
+            UserReferenceEntity.find { (UserReferences.memberNumber notInList disabledMemberIds) and (UserReferences.isDisabled eq true) }.forEach { ref ->
+                ref.isDisabled = false
+                logger.info("Re-enabled user with sub=${ref.sub.value}, memberNumber=${ref.memberNumber} as their member is active.")
+            }
+        }
+
         logger.info("Synchronization complete.")
     }
 

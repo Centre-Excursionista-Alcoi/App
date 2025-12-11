@@ -2,18 +2,14 @@
 
 package org.centrexcursionistalcoi.app.pdf
 
-import java.io.File
-import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.InventoryItem
-import org.centrexcursionistalcoi.app.data.InventoryItemType
-import org.centrexcursionistalcoi.app.data.LendingMemory
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
-import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUuid
+import java.io.File
+import kotlin.uuid.Uuid
 
 class TestPdfGeneratorService {
     // Disable generation because it is only for testing, and requires manual verification
@@ -30,7 +26,7 @@ class TestPdfGeneratorService {
         val memoryImageFileUuid = "b566d457-0226-49da-bb2f-f89971878c30".toUuid()
         val memory = LendingMemory(
             place = "Alcoi - Ull del Moro",
-            memberUsers = listOf(FakeUser.SUB),
+            members = listOf(FakeUser.MEMBER_NUMBER),
             externalUsers = "Pep Gimeno\nJoan Miró",
             text = "S'ha realitzat una activitat molt divertida. Jo què sé què més posar aquí, ha estat genial.",
             sport = Sports.ORIENTEERING,
@@ -50,7 +46,7 @@ class TestPdfGeneratorService {
 
         File("document.pdf").outputStream().use { outputStream ->
             PdfGeneratorService.generateLendingPdf(
-                memory = memory.referenced(listOf(FakeUser.data()), listOf(department)),
+                memory = memory.referenced(listOf(FakeUser.member()), listOf(department)),
                 itemsUsed = listOf(
                     InventoryItem(
                         id = Uuid.Zero,
