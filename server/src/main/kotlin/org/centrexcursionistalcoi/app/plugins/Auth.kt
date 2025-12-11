@@ -10,10 +10,8 @@ import io.ktor.server.sessions.*
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.MemberEntity
-import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.table.Members
-import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.entity.*
+import org.centrexcursionistalcoi.app.database.table.*
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.Error.Companion.ERROR_INVALID_ARGUMENT
 import org.centrexcursionistalcoi.app.error.Error.Companion.ERROR_MISSING_ARGUMENT
@@ -25,6 +23,7 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.routes.WebTemplate
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 import org.centrexcursionistalcoi.app.routes.assertContentType
@@ -33,10 +32,12 @@ import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
@@ -44,6 +45,8 @@ import kotlin.time.toJavaDuration
  * The duration after which a password recovery request expires.
  */
 val passwordRequestExpiration = 15.minutes
+
+private val logger = LoggerFactory.getLogger("Auth")
 
 /**
  * Attempts to log in a user with the given email and password.
@@ -280,5 +283,70 @@ fun Route.configureAuthRoutes() {
                 "success" to success.toString(),
             ),
         )
+    }
+
+    post("/delete_account") {
+        val session = getUserSessionOrFail() ?: return@post
+
+        val userReference = Database { UserReferenceEntity.findByEmail(session.email) } ?:
+            return@post call.respondError(Error.UserReferenceNotFound())
+
+        logger.warn("Deleting account for user ${userReference.sub} (NIF=${userReference.nif})")
+
+        Database {
+            DepartmentMemberEntity
+                .find { DepartmentMembers.userSub eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from DepartmentMemberEntity") }
+        Database {
+            FCMRegistrationTokenEntity
+                .find { FCMRegistrationTokens.user eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from FCMRegistrationTokenEntity") }
+        Database {
+            UserInsuranceEntity
+                .find { UserInsurances.userSub eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from UserInsuranceEntity") }
+        Database {
+            ReceivedItemEntity
+                .find { ReceivedItems.receivedBy eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from ReceivedItemEntity") }
+        Database {
+            LendingUserEntity
+                .find { LendingUsers.userSub eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from LendingUserEntity") }
+        Database {
+            LendingEntity
+                .find { Lendings.userSub eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from LendingEntity") }
+
+        Database {
+            LendingEntity
+                .find { Lendings.givenBy eq userReference.sub }
+                .onEach { it.givenBy = null }
+                .count()
+        }.also { logger.info("Removed $it references from LendingEntity.givenBy") }
+
+        Database { userReference.delete() }
+        logger.info("Deleted user reference.")
+
+        Database {
+            MemberEntity
+                .find { (Members.email eq userReference.email) or (Members.nif eq userReference.nif) }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Removed $it entries from MemberEntity") }
+
+        call.respond(HttpStatusCode.NoContent)
     }
 }
