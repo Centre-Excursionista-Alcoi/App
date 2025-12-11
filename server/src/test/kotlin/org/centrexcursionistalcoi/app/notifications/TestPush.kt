@@ -188,8 +188,9 @@ class TestPush {
     }.toList()
 
     @TestFactory
-    fun `test sendPushNotificationToDepartment`(): List<DynamicTest> = testNotifications.flatMap { notification ->
-        sequenceOf(true, false).map { includeAdmins ->
+    fun `test sendPushNotificationToDepartment`(): List<DynamicTest> = testNotifications
+        .flatMap { sequenceOf(it to true, it to false) }
+        .map { (notification, includeAdmins) ->
             DynamicTest.dynamicTest("includeAdmins=$includeAdmins for ${notification.type}") {
                 mockFCM { messagingMock ->
                     val department = Database {
@@ -231,8 +232,7 @@ class TestPush {
                     verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
                 }
             }
-        }
-    }.toList()
+        }.toList()
 
     @TestFactory
     fun `test sendPushNotificationToAll`(): List<DynamicTest> = testNotifications.map { notification ->
