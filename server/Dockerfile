@@ -40,7 +40,7 @@ RUN echo 'VERSION_NAME=0.0.0' >> /home/gradle/app/version.properties
 RUN echo 'VERSION_CODE=0' >> /home/gradle/app/version.properties
 
 WORKDIR /home/gradle/app
-RUN gradle clean build -i --stacktrace
+RUN gradle clean build -i --stacktrace --no-configuration-cache --no-daemon
 
 # Stage 2: Build Application
 FROM gradle:jdk21 AS build
@@ -53,7 +53,7 @@ COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 
 # Build the fat JAR, Gradle also supports shadow and boot JAR by default.
-RUN gradle buildFatJar -PSENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} --no-daemon
+RUN gradle buildFatJar -PSENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} --no-configuration-cache --no-daemon
 
 # Stage 3: Create the Runtime Image
 FROM amazoncorretto:21-alpine-jdk AS runtime
