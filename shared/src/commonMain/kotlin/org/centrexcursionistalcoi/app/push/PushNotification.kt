@@ -16,7 +16,6 @@ sealed interface PushNotification {
 
             val lendingId = (data["lendingId"] as? String?)?.toUuidOrNull()
             val userSub = data["userSub"] as? String?
-            val isSelf = (data["isSelf"] as? String?)?.toBoolean()
             val postId = (data["postId"] as? String?)?.toUuidOrNull()
             val eventId = (data["eventId"] as? String?)?.toUuidOrNull()
 
@@ -34,32 +33,27 @@ sealed interface PushNotification {
                 LendingConfirmed.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingConfirmed push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingConfirmed push notification data")
-                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingConfirmed push notification data")
-                    LendingConfirmed(lendingId, userSub, isSelf)
+                    LendingConfirmed(lendingId, userSub)
                 }
                 LendingCancelled.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingCancelled push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingCancelled push notification data")
-                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingCancelled push notification data")
-                    LendingCancelled(lendingId, userSub, isSelf)
+                    LendingCancelled(lendingId, userSub)
                 }
                 LendingTaken.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingTaken push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingTaken push notification data")
-                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingTaken push notification data")
-                    LendingTaken(lendingId, userSub, isSelf)
+                    LendingTaken(lendingId, userSub)
                 }
                 LendingReturned.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingReturned push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingReturned push notification data")
-                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingReturned push notification data")
-                    LendingReturned(lendingId, userSub, isSelf)
+                    LendingReturned(lendingId, userSub)
                 }
                 LendingPartiallyReturned.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingPartiallyReturned push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingPartiallyReturned push notification data")
-                    isSelf ?: throw IllegalArgumentException("Missing or invalid isSelf field in LendingPartiallyReturned push notification data")
-                    LendingPartiallyReturned(lendingId, userSub, isSelf)
+                    LendingPartiallyReturned(lendingId, userSub)
                 }
                 NewPost.TYPE -> {
                     postId ?: throw IllegalArgumentException("Missing or invalid postId field in NewPost push notification data")
@@ -76,7 +70,7 @@ sealed interface PushNotification {
 
     val type: String
 
-    fun toMap(): Map<String, String>
+    fun toMap(): Map<String, String> = mapOf("type" to type)
 
     sealed interface TargetedNotification : PushNotification {
         /**
@@ -84,16 +78,7 @@ sealed interface PushNotification {
          */
         val userSub: String
 
-        /**
-         * Alias for checking whether [userSub] corresponds to the current user.
-         *
-         * Determines whether the notification is about the current user or someone else (received by an admin, for example).
-         */
-        val isSelf: Boolean
-
-        override fun toMap(): Map<String, String> = mapOf("userSub" to userSub, "isSelf" to isSelf.toString())
-
-        fun notSelf(): TargetedNotification
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("userSub" to userSub)
     }
 
     @Serializable
@@ -116,11 +101,6 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
-
-        // For new lending requests, we always consider it as not self, since users don't receive notifications about new lendings
-        override val isSelf: Boolean = false
-
-        override fun notSelf() = this // never self
     }
 
     @Serializable
@@ -133,86 +113,66 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
-
-        // For memory uploads, we always consider it as not self, since users don't receive notifications about their own uploads
-        override val isSelf: Boolean = false
-
-        override fun notSelf() = this // never self
     }
 
     @Serializable
     class LendingCancelled(
         override val lendingId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingCancelled"
         }
 
         override val type: String = TYPE
-
-        override fun notSelf() = LendingCancelled(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
     class LendingConfirmed(
         override val lendingId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingConfirmed"
         }
 
         override val type: String = TYPE
-
-        override fun notSelf() = LendingConfirmed(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
     class LendingTaken(
         override val lendingId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingTaken"
         }
 
         override val type: String = TYPE
-
-        override fun notSelf() = LendingTaken(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
     class LendingPartiallyReturned(
         override val lendingId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingPartiallyReturned"
         }
 
         override val type: String = TYPE
-
-        override fun notSelf() = LendingPartiallyReturned(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
     class LendingReturned(
         override val lendingId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingReturned"
         }
 
         override val type: String = TYPE
-
-        override fun notSelf() = LendingReturned(lendingId, userSub, isSelf = false)
     }
 
     @Serializable
@@ -225,7 +185,7 @@ sealed interface PushNotification {
 
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = mapOf("postId" to postId.toString())
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("postId" to postId.toString())
     }
 
     @Serializable
@@ -233,7 +193,6 @@ sealed interface PushNotification {
         val requestId: Uuid,
         val departmentId: Uuid,
         override val userSub: String,
-        override val isSelf: Boolean,
         val isConfirmed: Boolean,
     ) : TargetedNotification {
         companion object {
@@ -243,8 +202,6 @@ sealed interface PushNotification {
         override val type: String = TYPE
 
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString(), "isConfirmed" to isConfirmed.toString())
-
-        override fun notSelf() = DepartmentJoinRequestUpdated(requestId, departmentId, userSub, isSelf = false, isConfirmed)
     }
 
     /**
@@ -260,13 +217,9 @@ sealed interface PushNotification {
             const val TYPE = "DepartmentKicked"
         }
 
-        override val isSelf: Boolean = true
-
         override val type: String = TYPE
 
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString())
-
-        override fun notSelf() = this // always self
     }
 
     @Serializable
@@ -279,6 +232,6 @@ sealed interface PushNotification {
 
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = mapOf("eventId" to eventId.toString())
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("eventId" to eventId.toString())
     }
 }

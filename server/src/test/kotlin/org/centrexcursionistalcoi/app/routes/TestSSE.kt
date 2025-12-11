@@ -1,22 +1,17 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.plugins.sse.sse
+import io.ktor.client.plugins.sse.*
+import kotlinx.coroutines.*
+import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.push.PushNotification
+import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.Zero
+import org.junit.jupiter.api.assertNotNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
-import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.push.PushNotification
-import org.centrexcursionistalcoi.app.test.*
-import org.centrexcursionistalcoi.app.utils.Zero
-import org.junit.jupiter.api.assertNotNull
 
 class TestSSE : ApplicationTestBase() {
     @Test
@@ -56,7 +51,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification includes admins, will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
                 userSub = "other",
                 includeAdmins = true,
             )
@@ -79,7 +74,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification doesn't include admins, and sub doesn't match. Won't be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
                 userSub = "other",
                 includeAdmins = false,
             )
@@ -91,7 +86,7 @@ class TestSSE : ApplicationTestBase() {
 
             // push notification doesn't include admins, and sub matches. Will be received
             Push.sendLocalPushNotification(
-                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz", true),
+                notification = PushNotification.LendingConfirmed(lendingId = Uuid.Zero, "xyz"),
                 userSub = "test-user-id-456",
                 includeAdmins = false,
             )

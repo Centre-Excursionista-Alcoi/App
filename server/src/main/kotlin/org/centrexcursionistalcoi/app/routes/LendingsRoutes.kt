@@ -180,7 +180,7 @@ fun Route.lendingsRoutes() {
                 UserReferenceEntity.all()
                     .toList()
                     .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .mapNotNull { MailerSendEmail(it.email ?: return@mapNotNull null, it.fullName) }
+                    .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
             val url = "cea://admin/lendings#${lendingEntity.id.value}"
@@ -389,10 +389,10 @@ fun Route.lendingsRoutes() {
 
         // Send Push Notification asynchronously
         Push.launch {
-            Push.sendAdminPushNotification(lending.takenNotification(false))
+            Push.sendAdminPushNotification(lending.takenNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.takenNotification(true)
+                notification = lending.takenNotification()
             )
         }
 
@@ -475,18 +475,18 @@ fun Route.lendingsRoutes() {
             // Send Push Notification asynchronously
             Push.launch {
                 Push.sendAdminPushNotification(
-                    notification = lending.returnedNotification(false)
+                    notification = lending.returnedNotification()
                 )
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
-                    notification = lending.returnedNotification(true)
+                    notification = lending.returnedNotification()
                 )
             }
 
             call.respond(HttpStatusCode.NoContent)
         } else {
             Push.launch {
-                Push.sendAdminPushNotification(lending.partialReturnNotification(false))
+                Push.sendAdminPushNotification(lending.partialReturnNotification())
             }
 
             call.response.header("CEA-Missing-Items", missingItemsIds.joinToString(","))

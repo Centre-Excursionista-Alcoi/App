@@ -3,13 +3,14 @@ package org.centrexcursionistalcoi.app.test
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.slf4j.LoggerFactory
 
-abstract class StubUser(val sub: String, val nif: String, val fullName: String, val email: String, val memberNumber: UInt, val groups: List<String>) {
+abstract class StubUser(val sub: String, val nif: String, val fullName: String, val email: String, val memberNumber: UInt, val groups: List<String>, val fcmToken: String) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     context(_: JdbcTransaction)
@@ -38,6 +39,12 @@ abstract class StubUser(val sub: String, val nif: String, val fullName: String, 
 
             logger.info("Created stub member entity: $memberNumber - $nif - $fullName - $email - $status")
         }
+    }
+
+    context(_: JdbcTransaction)
+    fun provideEntityWithFCMToken(): FCMRegistrationTokenEntity {
+        val entity = provideEntity()
+        return FCMRegistrationTokenEntity.findById(fcmToken) ?: FCMRegistrationTokenEntity.new(fcmToken) { user = entity }
     }
 
     fun member(): Member = Member(

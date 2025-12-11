@@ -16,20 +16,24 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.op.ValueInStringArrayOp
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
+import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.notifications.Push.disable
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.annotations.VisibleForTesting
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.select
 import org.slf4j.LoggerFactory
 import java.util.*
 
 object Push {
     private val logger = LoggerFactory.getLogger(Push::class.java)
 
-    private var pushFCMConfigured = false
+    @VisibleForTesting
+    var pushFCMConfigured = false
 
     private val notificationFlow = MutableSharedFlow<LocalNotification>()
 
@@ -85,7 +89,8 @@ object Push {
         }
         .map { it.notification }
 
-    private fun sendFCMPushNotification(tokens: List<String>, data: Map<String, String>) {
+    @VisibleForTesting
+    internal fun sendFCMPushNotification(tokens: Set<String>, data: Map<String, String>) {
         if (!pushFCMConfigured) return
         if (tokens.isEmpty()) {
             logger.debug("Won't send FCM notification because tokens list is empty.")
@@ -102,7 +107,7 @@ object Push {
         if (response.failureCount > 0) {
             val failedTokens = mutableListOf<String>()
             for ((i) in response.responses.withIndex()) {
-                failedTokens += tokens[i]
+                failedTokens += tokens.elementAt(i)
             }
 
             logger.warn("Failed to send push notifications to the following tokens: $failedTokens")
@@ -111,16 +116,25 @@ object Push {
         logger.info("Push notifications sent successfully to ${response.successCount} devices.")
     }
 
-    private fun sendAdminFCMPushNotification(data: Map<String, String>) {
+    context(_ : JdbcTransaction)
+    private fun fetchTokens(predicate: () -> Op<Boolean>): Set<String> {
+        // Join UserReferences and Tokens
+        return (UserReferences innerJoin FCMRegistrationTokens)
+            // Only select the token
+            .select(FCMRegistrationTokens.token)
+            // Of admin users
+            .where(predicate)
+            // Extract the token value
+            .map { it[FCMRegistrationTokens.token].value }
+            .toSet()
+    }
+
+    @VisibleForTesting
+    internal fun sendAdminFCMPushNotification(data: Map<String, String>) {
         if (!pushFCMConfigured) return
 
-        val admins = Database {
-            UserReferenceEntity.all().filter { it.groups.contains(ADMIN_GROUP_NAME) }
-        }
-
         val tokens = Database {
-            admins.flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
-                .map { it.token.value }
+            fetchTokens { ValueInStringArrayOp(ADMIN_GROUP_NAME, UserReferences.groups) }
         }
         sendFCMPushNotification(tokens, data)
     }
@@ -166,41 +180,26 @@ object Push {
 
         if (pushFCMConfigured) {
             val tokens = Database {
+                // Get all the tokens for the given sub
                 FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq userSub }.map { it.token.value }
-            }
-            sendFCMPushNotification(
-                tokens,
-                mapOf(
-                    "type" to notification.type,
-                    *notification.toMap().toList().toTypedArray()
-                )
-            )
+            }.toMutableSet()
 
             if (includeAdmins) {
-                val adminTokens = Database {
-                    UserReferenceEntity.all()
-                        // Filter admins, and exclude the given reference
-                        .filter { it.groups.contains(ADMIN_GROUP_NAME) && it.sub.value != userSub }
-                        .flatMap { FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user eq it.id } }
-                        .map { it.token.value }
+                tokens += Database {
+                    // if includeAdmins=true, also include admins that have not already been included
+                    fetchTokens { ValueInStringArrayOp(ADMIN_GROUP_NAME, UserReferences.groups) and (FCMRegistrationTokens.user neq userSub) }
                 }
-                val adminNotification = if (notification is PushNotification.TargetedNotification) {
-                    notification.notSelf()
-                } else {
-                    notification
-                }
-                sendFCMPushNotification(
-                    adminTokens,
-                    mapOf(
-                        "type" to adminNotification.type,
-                        *adminNotification.toMap().toList().toTypedArray()
-                    )
-                )
             }
+
+            sendFCMPushNotification(tokens, notification.toMap())
         }
     }
 
-    suspend fun sendPushNotification(reference: UserReferenceEntity, notification: PushNotification, includeAdmins: Boolean = true) {
+    suspend fun sendPushNotification(
+        reference: UserReferenceEntity,
+        notification: PushNotification,
+        includeAdmins: Boolean = true
+    ) {
         sendPushNotification(
             userSub = reference.sub.value,
             notification = notification,
@@ -229,9 +228,9 @@ object Push {
         }
 
         if (pushFCMConfigured) {
-            var tokens = Database {
+            val tokens = Database {
                 FCMRegistrationTokenEntity.find { FCMRegistrationTokens.user inList references }.map { it.token.value }
-            }
+            }.toMutableSet()
             if (includeAdmins) {
                 val adminReferences = Database {
                     UserReferenceEntity.all()
@@ -245,13 +244,7 @@ object Push {
                 tokens += adminTokens
             }
 
-            sendFCMPushNotification(
-                tokens,
-                mapOf(
-                    "type" to notification.type,
-                    *notification.toMap().toList().toTypedArray()
-                )
-            )
+            sendFCMPushNotification(tokens, notification.toMap())
         }
     }
 
@@ -268,16 +261,10 @@ object Push {
 
         if (pushFCMConfigured) {
             val tokens = Database {
-                FCMRegistrationTokenEntity.all().map { it.token.value }
+                FCMRegistrationTokenEntity.all().map { it.token.value }.toSet()
             }
 
-            sendFCMPushNotification(
-                tokens,
-                mapOf(
-                    "type" to notification.type,
-                    *notification.toMap().toList().toTypedArray()
-                )
-            )
+            sendFCMPushNotification(tokens, notification.toMap())
         }
     }
 }

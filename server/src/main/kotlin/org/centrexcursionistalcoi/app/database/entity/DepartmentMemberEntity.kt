@@ -38,7 +38,6 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
             userSub = this@DepartmentMemberEntity.userSub.value,
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
-            isSelf = true,
             isConfirmed = true,
         )
     }
@@ -48,7 +47,6 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
             userSub = this@DepartmentMemberEntity.userSub.value,
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
-            isSelf = true,
             isConfirmed = false,
         )
     }
