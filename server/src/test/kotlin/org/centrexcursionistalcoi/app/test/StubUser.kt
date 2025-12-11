@@ -43,8 +43,7 @@ abstract class StubUser(val sub: String, val nif: String, val fullName: String, 
 
     context(_: JdbcTransaction)
     fun provideEntityWithFCMToken(): FCMRegistrationTokenEntity {
-        val entity = provideEntity()
-        return FCMRegistrationTokenEntity.findById(fcmToken) ?: FCMRegistrationTokenEntity.new(fcmToken) { user = entity }
+        return FCMRegistrationTokenEntity.findById(fcmToken) ?: FCMRegistrationTokenEntity.new(fcmToken) { user = provideEntity() }
     }
 
     fun member(): Member = Member(
