@@ -9,12 +9,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cea_app.composeapp.generated.resources.*
+import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,6 +25,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
@@ -34,6 +38,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormF
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
+
+private val log = logging()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +104,7 @@ fun InventoryItemTypesListView(
             )
         },
         emptyItemsText = stringResource(Res.string.management_no_item_types),
-        isCreatingSupported = true,
+        isCreatingSupported = false,
         createTitle = stringResource(Res.string.management_inventory_item_type_create),
         onDeleteRequest = { (type) -> onDelete(type) },
         editItemContent = { typeAndItems ->
@@ -202,7 +208,8 @@ fun InventoryItemTypesListView(
             AsyncByteImage(
                 bytes = image,
                 contentDescription = type.displayName,
-                modifier = Modifier.size(128.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier.size(128.dp).clip(RoundedCornerShape(12.dp)),
+                canBeMaximized = true,
             )
         }
 
@@ -260,6 +267,14 @@ fun InventoryItemTypesListView(
                 highlightItemNfcId = null
             }
         }
+        LaunchedEffect(Unit) {
+            while (true) {
+                val payload = PlatformNFC.readNFC() ?: continue
+                log.d { "NFC tag read: $payload" }
+                payload.uuid()?.let { highlightItemId = it }
+                payload.id?.let { highlightItemNfcId = it }
+            }
+        }
 
         var deletingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
 
@@ -293,9 +308,18 @@ fun InventoryItemTypesListView(
             val isHighlighted = item.id == highlightItemId || (item.nfcId != null && item.nfcId contentEquals highlightItemNfcId)
             val backgroundColor by animateColorAsState(if (isHighlighted) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
             ListItem(
-                headlineContent = { Text(item.id.toString(), fontFamily = FontFamily.Monospace) },
-                supportingContent = item.variation?.let { { Text(stringResource(Res.string.inventory_item_variation, it)) } },
-                overlineContent = item.nfcId?.let { { Text(stringResource(Res.string.inventory_item_nfc_id, it.toHexString())) } },
+                headlineContent = {
+                    Text(
+                        text = item.id.toString(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                    )
+                },
+                supportingContent = item.variation
+                    ?.takeIf(String::isNotEmpty)
+                    ?.let { { Text(stringResource(Res.string.inventory_item_variation, it)) } },
+                overlineContent = item.nfcId
+                    ?.let { { Text(stringResource(Res.string.inventory_item_nfc_id, it.toHexString())) } },
                 colors = ListItemDefaults.colors(containerColor = backgroundColor),
                 modifier = Modifier.clickable { showingItemDialog = item },
             )
