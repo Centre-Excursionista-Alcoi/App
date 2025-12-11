@@ -1,41 +1,24 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getBooleanStateFlow
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
+import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
-import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
-import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
-import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
-import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
-import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.storage.*
+import org.centrexcursionistalcoi.app.ui.dialog.RemoveAccountDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Language
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -46,6 +29,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsCategory
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsOptionsRow
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsRow
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsSwitchRow
+import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -57,10 +41,19 @@ private val availableLanguages = listOf(
     Language("ca", "Català", Res.drawable.flag_ca),
     Language("es", "Castellano", Res.drawable.flag_es),
 )
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
+@Composable
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onDeleteAccount: () -> Unit,
+    viewModel: SettingsViewModel = viewModel { SettingsViewModel(onDeleteAccount) },
+) {
+    SettingsScreen(viewModel::deleteAccount, onBack)
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -151,6 +144,21 @@ fun SettingsScreen(onBack: () -> Unit) {
                     summary = stringResource(Res.string.settings_report_session_summary),
                     checked = checked,
                     onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, it) },
+                )
+            }
+            item(key = "remove_account", contentType = "option") {
+                var showingDialog by remember { mutableStateOf(false) }
+                if (showingDialog) {
+                    RemoveAccountDialog(
+                        onConfirm = onAccountDeleteRequest,
+                        onDismissRequest = { showingDialog = false },
+                    )
+                }
+
+                SettingsRow(
+                    title = stringResource(Res.string.settings_remove_account_title),
+                    summary = stringResource(Res.string.settings_remove_account_summary),
+                    onClick = { showingDialog = true }
                 )
             }
 
