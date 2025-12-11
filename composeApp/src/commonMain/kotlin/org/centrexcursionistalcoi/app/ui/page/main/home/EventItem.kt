@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -14,15 +15,17 @@ import org.centrexcursionistalcoi.app.data.addCalendarEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Distance
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun EventItem(event: ReferencedEvent) {
+fun EventItem(profile: ProfileResponse, event: ReferencedEvent) {
     FeedItem(
         icon = MaterialSymbols.Event,
         title = event.title,
@@ -78,16 +81,26 @@ fun EventItem(event: ReferencedEvent) {
                 Text(
                     text = stringResource(Res.string.event_requires_confirmation),
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                 )
             }
 
             if (event.requiresInsurance) {
-                Text(
-                    text = stringResource(Res.string.event_requires_insurance),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                val activeInsurances = remember(profile) { profile.activeInsurances(event.start) }
+                if (activeInsurances.isEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.event_requires_insurance_none),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(Res.string.event_requires_insurance_none),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(56.dp))

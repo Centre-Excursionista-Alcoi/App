@@ -5,6 +5,7 @@
     <string name="admin">Admin</string>
 
     <string name="welcome">Welcome back %1$s</string>
+    <string name="upcoming_events">Upcoming Events</string>
 
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -494,6 +495,8 @@
     <string name="event_max_people">Max people</string>
     <string name="event_requires_confirmation">Requires assistance confirmation</string>
     <string name="event_requires_insurance">Requires a valid insurance</string>
+    <string name="event_requires_insurance_none">Requires a valid insurance: you don't have one</string>
+    <string name="event_requires_insurance_valid">Requires a valid insurance: you already have one</string>
     <string name="event_title">Title</string>
     <string name="event_description">Description</string>
     <string name="event_department">Department</string>

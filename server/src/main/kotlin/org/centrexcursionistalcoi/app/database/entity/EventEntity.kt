@@ -119,20 +119,18 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         Database { lastUpdate = now() }
     }
 
-    fun assistanceConfirmedNotification(session: UserSession, isSelf: Boolean): PushNotification.EventAssistanceUpdated = Database {
+    fun assistanceConfirmedNotification(session: UserSession): PushNotification.EventAssistanceUpdated = Database {
         PushNotification.EventAssistanceUpdated(
             eventId = this@EventEntity.id.value.toKotlinUuid(),
             userSub = session.sub,
-            isSelf = isSelf,
             isConfirmed = true,
         )
     }
 
-    fun assistanceRejectedNotification(session: UserSession, isSelf: Boolean): PushNotification.EventAssistanceUpdated = Database {
+    fun assistanceRejectedNotification(session: UserSession): PushNotification.EventAssistanceUpdated = Database {
         PushNotification.EventAssistanceUpdated(
             eventId = this@EventEntity.id.value.toKotlinUuid(),
             userSub = session.sub,
-            isSelf = isSelf,
             isConfirmed = false,
         )
     }

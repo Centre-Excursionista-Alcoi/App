@@ -238,12 +238,12 @@ fun Route.eventsRoutes() {
             val department = event.department
             if (department != null) {
                 Push.sendPushNotificationToDepartment(
-                    event.assistanceConfirmedNotification(session, true),
+                    event.assistanceConfirmedNotification(session),
                     department.id.value,
                 )
             } else {
                 Push.sendPushNotificationToAll(
-                    event.assistanceConfirmedNotification(session, true),
+                    event.assistanceConfirmedNotification(session),
                 )
             }
         }
@@ -278,12 +278,12 @@ fun Route.eventsRoutes() {
             val department = event.department
             if (department != null) {
                 Push.sendPushNotificationToDepartment(
-                    event.assistanceRejectedNotification(session, true),
+                    event.assistanceRejectedNotification(session),
                     department.id.value,
                 )
             } else {
                 Push.sendPushNotificationToAll(
-                    event.assistanceRejectedNotification(session, true),
+                    event.assistanceRejectedNotification(session),
                 )
             }
         }

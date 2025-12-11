@@ -84,20 +84,6 @@ fun HomePage(
             ?.flatten()
     }
 
-    val eventsAndPosts = remember(events, posts) {
-        val combined = mutableListOf<Any>()
-        if (!posts.isNullOrEmpty()) combined.addAll(posts)
-        if (!events.isNullOrEmpty()) combined.addAll(events)
-        combined.sortByDescending {
-            when (it) {
-                is ReferencedPost -> it.date
-                is ReferencedEvent -> it.start
-                else -> throw IllegalArgumentException("Unknown type in eventsAndPosts")
-            }
-        }
-        combined
-    }
-
     AdaptiveVerticalGrid(
         windowSizeClass,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
@@ -155,14 +141,27 @@ fun HomePage(
             }
         }
 
-        items(eventsAndPosts) { postOrEvent ->
-            if (postOrEvent is ReferencedPost) {
-                PostItem(postOrEvent)
-            } else if (postOrEvent is ReferencedEvent) {
-                EventItem(postOrEvent)
+        if (!events.isNullOrEmpty()) {
+            item("events_title", contentType = "title", span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(Res.string.upcoming_events),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                )
+            }
+            items(events) { event ->
+                EventItem(profile, event)
+            }
+            // Fill the current line
+            item(key = "events_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
+                Spacer(Modifier.height(16.dp))
             }
         }
-        item(key = "posts_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
+
+        items(posts.orEmpty()) { post ->
+            PostItem(post)
+        }
+        item(key = "posts_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
             Spacer(Modifier.height(16.dp))
         }
 

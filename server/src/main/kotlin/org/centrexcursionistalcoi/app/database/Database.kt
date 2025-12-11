@@ -103,26 +103,26 @@ object Database {
 
         logger.info("Creating database schema if not exists")
         for (table in tables) {
-            transaction(database) {
-                logger.debug("Ensuring table ${table.tableName} exists")
-                if (table.exists()) {
-                    logger.debug("Table ${table.tableName} exists, skipping creation")
-                } else {
-                    for (statement in SchemaUtils.createStatements(table)) {
-                        try {
-                            exec(statement)
-                        } catch (e: ExposedSQLException) {
-                            if (e.message?.contains("already exists") == true) {
-                                // this may also be thrown if an ALTER query is run and it already exists
-                                logger.warn("Table ${table.tableName} already exists, skipping creation")
-                            } else {
-                                throw e
-                            }
+            val exists = transaction(database) { table.exists() }
+            logger.debug("Ensuring table ${table.tableName} exists")
+            if (exists) {
+                logger.debug("Table ${table.tableName} exists, skipping creation")
+            } else {
+                val createStatements = transaction(database) { SchemaUtils.createStatements(table) }
+                for (statement in createStatements) {
+                    try {
+                        transaction(database) { exec(statement) }
+                    } catch (e: ExposedSQLException) {
+                        if (e.message?.contains("already exists") == true) {
+                            // this may also be thrown if an ALTER query is run and it already exists
+                            logger.warn("Table ${table.tableName} already exists, skipping creation")
+                        } else {
+                            throw e
                         }
                     }
-                    logger.info("Table ${table.tableName} created")
-                    result = result or INIT_RESULT_TABLE_CREATED
                 }
+                logger.info("Table ${table.tableName} created")
+                result = result or INIT_RESULT_TABLE_CREATED
             }
         }
 
