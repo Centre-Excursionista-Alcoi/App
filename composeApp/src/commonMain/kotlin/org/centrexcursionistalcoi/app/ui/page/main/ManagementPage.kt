@@ -1,26 +1,28 @@
 package org.centrexcursionistalcoi.app.ui.page.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
 import org.centrexcursionistalcoi.app.ui.page.main.management.*
@@ -216,6 +218,9 @@ private fun ManagementPage(
     val pages = remember { ManagementPage.all }
     val pagerState = rememberPagerState { pages.size }
 
+    val navigationBarVisibility = LocalNavigationBarVisibility.current ?: MutableStateFlow(true)
+    val isNavigationBarVisible by navigationBarVisibility.collectAsState()
+
     val selectedItemId = selectedItem?.second
     LaunchedEffect(selectedItem) {
         selectedItem ?: return@LaunchedEffect
@@ -223,15 +228,22 @@ private fun ManagementPage(
         pagerState.scrollToPage(page)
     }
 
-    AdaptiveTabRow(
-        selectedTabIndex = pagerState.currentPage,
-        tabs = pages.map { it.tabData() },
-        onTabSelected = { index ->
-            scope.launch { pagerState.animateScrollToPage(index) }
-        },
-    )
+    AnimatedVisibility(
+        isNavigationBarVisible,
+        enter = slideInVertically { -it },
+        exit = slideOutVertically { -it },
+    ) {
+        AdaptiveTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            tabs = pages.map { it.tabData() },
+            onTabSelected = { index ->
+                scope.launch { pagerState.animateScrollToPage(index) }
+            },
+        )
+    }
     HorizontalPager(
         state = pagerState,
+        userScrollEnabled = isNavigationBarVisible,
         modifier = Modifier.fillMaxSize(),
     ) { index ->
         val page = pages.forIndex(index)

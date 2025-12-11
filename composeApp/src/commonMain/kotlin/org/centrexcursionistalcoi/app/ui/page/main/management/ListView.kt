@@ -24,6 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.platform.PlatformBackHandler
@@ -199,6 +200,14 @@ fun <T> ListView(
         }
     } else {
         if (selectedItem != null || isCreating) {
+            val navigationBarVisibility = LocalNavigationBarVisibility.current
+            DisposableEffect(Unit) {
+                navigationBarVisibility?.tryEmit(false)
+                onDispose {
+                    navigationBarVisibility?.tryEmit(true)
+                }
+            }
+
             ListView_Content(
                 itemDisplayName = selectedItem?.let(itemDisplayName) ?: createTitle,
                 itemToolbarActions = selectedItem?.let { item -> { itemToolbarActions?.invoke(this, item) } },
@@ -244,7 +253,7 @@ fun <T> ListView(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun <T> ListView_ListColumn(
+private fun <T> ListView_ListColumn(
     items: List<T>?,
     emptyItemsText: String,
     selectedItemIndex: Int? = null,
@@ -418,7 +427,7 @@ abstract class EditorContext(columnScope: ColumnScope) : ColumnScope by columnSc
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListView_Content(
+private fun ListView_Content(
     itemDisplayName: String,
     itemToolbarActions: (@Composable RowScope.() -> Unit)? = null,
     onCloseRequested: () -> Unit,

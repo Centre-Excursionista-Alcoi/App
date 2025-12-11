@@ -22,11 +22,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
+import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
@@ -290,65 +292,82 @@ private fun MainScreenContent(
         }
     }
 
+    val navigationBarVisibility = remember { MutableStateFlow(true) }
+    val isNavigationBarVisible by navigationBarVisibility.collectAsState()
+
     Scaffold(
         topBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
-                TopAppBar(
-                    title = { Text(stringResource(Res.string.app_name)) },
-                    navigationIcon = {
-                        Image(
-                            painter = painterResource(Res.drawable.icon),
-                            contentDescription = stringResource(Res.string.app_name),
-                            modifier = Modifier.size(36.dp),
-                            contentScale = ContentScale.Inside,
-                        )
-                    },
-                    actions = {
-                        if (profile.isAdmin) {
-                            Badge { Text(stringResource(Res.string.admin)) }
-                        }
-                        if (actualPage == Page.PROFILE) {
-                            IconButton(
-                                onClick = onSettingsRequested
-                            ) {
-                                Icon(MaterialSymbols.Settings, stringResource(Res.string.settings))
+                AnimatedVisibility(
+                    visible = isNavigationBarVisible,
+                    enter = slideInVertically { -it },
+                    exit = slideOutVertically { -it },
+                ) {
+                    TopAppBar(
+                        title = { Text(stringResource(Res.string.app_name)) },
+                        navigationIcon = {
+                            Image(
+                                painter = painterResource(Res.drawable.icon),
+                                contentDescription = stringResource(Res.string.app_name),
+                                modifier = Modifier.size(36.dp),
+                                contentScale = ContentScale.Inside,
+                            )
+                        },
+                        actions = {
+                            if (profile.isAdmin) {
+                                Badge { Text(stringResource(Res.string.admin)) }
                             }
-                            IconButton(
-                                onClick = { showingLogoutDialog = true }
-                            ) {
-                                Icon(MaterialSymbols.Logout, stringResource(Res.string.logout))
+                            if (actualPage == Page.PROFILE) {
+                                IconButton(
+                                    onClick = onSettingsRequested
+                                ) {
+                                    Icon(MaterialSymbols.Settings, stringResource(Res.string.settings))
+                                }
+                                IconButton(
+                                    onClick = { showingLogoutDialog = true }
+                                ) {
+                                    Icon(MaterialSymbols.Logout, stringResource(Res.string.logout))
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         },
         bottomBar = {
             if (windowSizeClass.widthSizeClass <= WindowWidthSizeClass.Medium) {
-                NavigationBar {
-                    for ((index, item) in navigationItems.values.withIndex()) {
-                        val isSelected = pager.currentPage == index
-                        NavigationBarItem(
-                            selected = isSelected,
-                            enabled = item.enabled,
-                            onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                            label = { Text(stringResource(item.label)) },
-                            icon = {
-                                if (item.tooltip != null) {
-                                    TooltipBox(
-                                        state = rememberTooltipState(),
-                                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                                        tooltip = {
-                                            PlainTooltip { Text(stringResource(item.tooltip)) }
+                AnimatedVisibility(
+                    visible = isNavigationBarVisible,
+                    enter = slideInVertically { it },
+                    exit = slideOutVertically { it },
+                ) {
+                    NavigationBar {
+                        for ((index, item) in navigationItems.values.withIndex()) {
+                            val isSelected = pager.currentPage == index
+                            NavigationBarItem(
+                                selected = isSelected,
+                                enabled = item.enabled,
+                                onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                                label = { Text(stringResource(item.label)) },
+                                icon = {
+                                    if (item.tooltip != null) {
+                                        TooltipBox(
+                                            state = rememberTooltipState(),
+                                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                                TooltipAnchorPosition.Above
+                                            ),
+                                            tooltip = {
+                                                PlainTooltip { Text(stringResource(item.tooltip)) }
+                                            }
+                                        ) {
+                                            item.Icon(isSelected)
                                         }
-                                    ) {
+                                    } else {
                                         item.Icon(isSelected)
                                     }
-                                } else {
-                                    item.Icon(isSelected)
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -381,81 +400,36 @@ private fun MainScreenContent(
         Row(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
-                NavigationRail(
-                    header = {
-                        Image(
-                            painter = painterResource(Res.drawable.icon),
-                            contentDescription = stringResource(Res.string.app_name),
-                            modifier = Modifier.size(36.dp),
-                            contentScale = ContentScale.Inside,
+            CompositionLocalProvider(LocalNavigationBarVisibility provides navigationBarVisibility) {
+                if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
+                    NavigationRail(
+                        header = {
+                            Image(
+                                painter = painterResource(Res.drawable.icon),
+                                contentDescription = stringResource(Res.string.app_name),
+                                modifier = Modifier.size(36.dp),
+                                contentScale = ContentScale.Inside,
+                            )
+                        }
+                    ) {
+                        NavigationRailItems(
+                            pager = pager,
+                            navigationItems = navigationItems,
+                            isAdmin = profile.isAdmin,
+                            isSyncing = isSyncing,
+                            onSettingsRequested = onSettingsRequested,
+                            onLogoutRequested = { showingLogoutDialog = true },
+                            onSyncRequested = onSyncRequested,
                         )
                     }
-                ) {
-                    NavigationRailItems(
-                        pager = pager,
-                        navigationItems = navigationItems,
-                        isAdmin = profile.isAdmin,
-                        isSyncing = isSyncing,
-                        onSettingsRequested = onSettingsRequested,
-                        onLogoutRequested = { showingLogoutDialog = true },
-                        onSyncRequested = onSyncRequested,
-                    )
-                }
 
-                VerticalPager(
-                    state = pager,
-                    modifier = Modifier.fillMaxSize(),
-                    userScrollEnabled = false
-                ) { pageIdx ->
-                    val entry = navigationItems.entries.toList()[pageIdx]
-                    if (!entry.value.enabled) return@VerticalPager
-                    MainScreenPagerContent(
-                        page = entry.key,
-                        snackbarHostState,
-                        selectedManagementItem,
-                        notificationPermissionResult,
-                        onNotificationPermissionRequest,
-                        onNotificationPermissionDenyRequest,
-                        profile,
-                        ::onAddInsuranceRequested,
-                        windowSizeClass,
-                        departments,
-                        onApproveDepartmentJoinRequest,
-                        onDenyDepartmentJoinRequest,
-                        onJoinDepartmentRequested,
-                        onLeaveDepartmentRequested,
-                        lendings,
-                        onLendingSignUpRequested,
-                        onLendingClick,
-                        onOtherUserLendingClick,
-                        onCreateInsurance,
-                        onFEMECVConnectRequested,
-                        onFEMECVDisconnectRequested,
-                        users,
-                        members,
-                        inventoryItemTypes,
-                        inventoryItemTypesCategories,
-                        onItemTypeDetailsRequested,
-                        inventoryItems,
-                        posts,
-                        events,
-                        shoppingList,
-                        onAddItemToShoppingListRequest,
-                        onRemoveItemFromShoppingListRequest,
-                    )
-                }
-            } else {
-                PullToRefreshBox(
-                    isRefreshing = isSyncing,
-                    onRefresh = onSyncRequested,
-                ) {
-                    HorizontalPager(
+                    VerticalPager(
                         state = pager,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        userScrollEnabled = false
                     ) { pageIdx ->
                         val entry = navigationItems.entries.toList()[pageIdx]
-                        if (!entry.value.enabled) return@HorizontalPager
+                        if (!entry.value.enabled) return@VerticalPager
                         MainScreenPagerContent(
                             page = entry.key,
                             snackbarHostState,
@@ -490,6 +464,53 @@ private fun MainScreenContent(
                             onAddItemToShoppingListRequest,
                             onRemoveItemFromShoppingListRequest,
                         )
+                    }
+                } else {
+                    PullToRefreshBox(
+                        isRefreshing = isSyncing,
+                        onRefresh = onSyncRequested,
+                    ) {
+                        HorizontalPager(
+                            state = pager,
+                            modifier = Modifier.fillMaxSize()
+                        ) { pageIdx ->
+                            val entry = navigationItems.entries.toList()[pageIdx]
+                            if (!entry.value.enabled) return@HorizontalPager
+                            MainScreenPagerContent(
+                                page = entry.key,
+                                snackbarHostState,
+                                selectedManagementItem,
+                                notificationPermissionResult,
+                                onNotificationPermissionRequest,
+                                onNotificationPermissionDenyRequest,
+                                profile,
+                                ::onAddInsuranceRequested,
+                                windowSizeClass,
+                                departments,
+                                onApproveDepartmentJoinRequest,
+                                onDenyDepartmentJoinRequest,
+                                onJoinDepartmentRequested,
+                                onLeaveDepartmentRequested,
+                                lendings,
+                                onLendingSignUpRequested,
+                                onLendingClick,
+                                onOtherUserLendingClick,
+                                onCreateInsurance,
+                                onFEMECVConnectRequested,
+                                onFEMECVDisconnectRequested,
+                                users,
+                                members,
+                                inventoryItemTypes,
+                                inventoryItemTypesCategories,
+                                onItemTypeDetailsRequested,
+                                inventoryItems,
+                                posts,
+                                events,
+                                shoppingList,
+                                onAddItemToShoppingListRequest,
+                                onRemoveItemFromShoppingListRequest,
+                            )
+                        }
                     }
                 }
             }
