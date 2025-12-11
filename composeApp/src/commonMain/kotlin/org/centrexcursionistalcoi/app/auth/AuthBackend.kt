@@ -53,7 +53,9 @@ object AuthBackend {
             LendingsRepository.deleteAll()
             InventoryItemsRepository.deleteAll()
             InventoryItemTypesRepository.deleteAll()
+            EventsRepository.deleteAll()
             PostsRepository.deleteAll()
+            MembersRepository.deleteAll()
             UsersRepository.deleteAll()
             DepartmentsRepository.deleteAll()
             log.d { "Removing all files..." }
@@ -78,6 +80,31 @@ object AuthBackend {
         )
         if (response.status.isSuccess()) {
             log.d { "Forgot password request successful." }
+        } else {
+            throw response.bodyAsError().toThrowable()
+        }
+    }
+
+    suspend fun deleteAccount() {
+        val response = getHttpClient().post("/delete_account")
+        if (response.status.isSuccess()) {
+            log.w { "Account delete request successful." }
+            log.w { "Account deleted from server. Removing all data..." }
+            // order is important due to foreign key constraints
+            LendingsRepository.deleteAll()
+            InventoryItemsRepository.deleteAll()
+            InventoryItemTypesRepository.deleteAll()
+            EventsRepository.deleteAll()
+            PostsRepository.deleteAll()
+            MembersRepository.deleteAll()
+            UsersRepository.deleteAll()
+            DepartmentsRepository.deleteAll()
+            log.w { "Removing all files..." }
+            FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
+            log.w { "Revoking FCM token..." }
+            FCMTokenManager.revoke()
+            log.w { "Removing all settings..." }
+            settings.clear()
         } else {
             throw response.bodyAsError().toThrowable()
         }

@@ -6,13 +6,7 @@ import com.mmk.kmpnotifier.notification.PayloadData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.*
 
 object PushNotifierListener : NotifierManager.Listener {
     private val log = logging()
