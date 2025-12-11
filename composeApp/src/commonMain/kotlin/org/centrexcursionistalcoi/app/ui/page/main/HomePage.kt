@@ -155,6 +155,40 @@ fun HomePage(
             }
         }
 
+        if (isAdmin) {
+            if (!pendingJoinRequests.isNullOrEmpty()) {
+                stickyHeader {
+                    Text(
+                        text = stringResource(Res.string.management_other_users_join_requests),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
+                    )
+                }
+                items(
+                    items = pendingJoinRequests.filterNot { it.confirmed },
+                    key = { "join_request_${it.id}" },
+                    contentType = { "pending-join-request" },
+                ) { request ->
+                    val department = remember(departments) {
+                        departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
+                    }
+                    val userData = remember(users) {
+                        users?.find { it.sub == request.userSub }
+                    }
+
+                    department ?: return@items
+                    userData ?: return@items
+
+                    DepartmentPendingJoinRequest(
+                        userData = userData,
+                        department = department,
+                        onApprove = { onApproveDepartmentJoinRequest(request) },
+                        onDeny = { onDenyDepartmentJoinRequest(request) },
+                    )
+                }
+            }
+        }
+
         items(eventsAndPosts) { postOrEvent ->
             if (postOrEvent is ReferencedPost) {
                 PostItem(postOrEvent)
@@ -213,38 +247,6 @@ fun HomePage(
                     contentType = { "non-completed-lending" },
                 ) { lending ->
                     LendingItem(lending) { onOtherUserLendingClick(lending) }
-                }
-            }
-
-            if (!pendingJoinRequests.isNullOrEmpty()) {
-                stickyHeader {
-                    Text(
-                        text = stringResource(Res.string.management_other_users_join_requests),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
-                    )
-                }
-                items(
-                    items = pendingJoinRequests.filterNot { it.confirmed },
-                    key = { "join_request_${it.id}" },
-                    contentType = { "pending-join-request" },
-                ) { request ->
-                    val department = remember(departments) {
-                        departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
-                    }
-                    val userData = remember(users) {
-                        users?.find { it.sub == request.userSub }
-                    }
-
-                    department ?: return@items
-                    userData ?: return@items
-
-                    DepartmentPendingJoinRequest(
-                        userData = userData,
-                        department = department,
-                        onApprove = { onApproveDepartmentJoinRequest(request) },
-                        onDeny = { onDenyDepartmentJoinRequest(request) },
-                    )
                 }
             }
         }
