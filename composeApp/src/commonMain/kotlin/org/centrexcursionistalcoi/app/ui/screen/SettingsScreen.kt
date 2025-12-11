@@ -19,10 +19,7 @@ import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.*
 import org.centrexcursionistalcoi.app.ui.dialog.RemoveAccountDialog
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Language
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Web
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.reusable.settings.SettingsCategory
@@ -146,6 +143,8 @@ private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit
                     onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, it) },
                 )
             }
+
+            item(key = "remove_account_spacer", contentType = "spacer") { Spacer(Modifier.height(16.dp)) }
             item(key = "remove_account", contentType = "option") {
                 var showingDialog by remember { mutableStateOf(false) }
                 if (showingDialog) {
@@ -156,9 +155,18 @@ private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit
                 }
 
                 SettingsRow(
+                    icon = MaterialSymbols.Warning,
                     title = stringResource(Res.string.settings_remove_account_title),
                     summary = stringResource(Res.string.settings_remove_account_summary),
-                    onClick = { showingDialog = true }
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        headlineColor = MaterialTheme.colorScheme.onErrorContainer,
+                        leadingIconColor = MaterialTheme.colorScheme.onErrorContainer,
+                        trailingIconColor = MaterialTheme.colorScheme.onErrorContainer,
+                        supportingColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { showingDialog = true },
                 )
             }
 
