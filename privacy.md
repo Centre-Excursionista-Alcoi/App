@@ -1,6 +1,6 @@
 # **Privacy Policy — CEA App**
 
-**Effective date:** 21 October 2025
+**Effective date:** 11 December 2025
 **Developer and Distributor:**
 Arnau Mora Gras
 Carrer Ibi, 14
@@ -12,6 +12,8 @@ C/ Diego Fernando Montañés, 3
 03801 Alcoi, Spain
 CIF: G03105731
 Registered in the *Registre d’Entitats Esportives de la Comunitat Valenciana*, nº 1329, section 1a
+
+[View Previous Updates](https://github.com/Centre-Excursionista-Alcoi/App/commits/master/privacy.md)
 
 ---
 
@@ -179,6 +181,14 @@ C/ Diego Fernando Montañés, 3
 Email: *[info@centrexcursionistalcoi.org](mailto:info@centrexcursionistalcoi.org)*
 CIF: G03105731
 
+## **13. Data Removal**
+
+You can request the removal of your personal data directly from the App. This will remove your data from our servers, but please note:
+
+* This does **not** remove your membership or data from the **Centre Excursionista d’Alcoi (CEA)** club itself.
+* Some third-party providers, such as **Firebase Cloud Messaging**, may still hold some of your data. You may contact them directly to request removal.
+* You may appear in documents or records maintained by other members or administrators of the organization, which is outside the scope of this data removal option.
+
 ---
 
-### **Last updated:** 21 October 2025
+### **Last updated:** 11 December 2025
