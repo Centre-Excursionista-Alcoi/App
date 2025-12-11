@@ -27,46 +27,35 @@ object LocalNotifications {
         return profile.sub == userSub
     }
 
-    fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
-        CoroutineScope(defaultAsyncDispatcher).launch {
-            val notifier = NotifierManager.getLocalNotifier()
-
-            notifier.notify {
-                id = Random.nextInt()
-                title = notificationTitle
-                body = notificationBody
-                payloadData = data.mapValues { (_, value) ->
-                    when (value) {
-                        is String -> value
-                        is Number -> value.toString()
-                        is Boolean -> value.toString()
-                        else -> value.toString()
-                    }
+    private fun notify(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
+        NotifierManager.getLocalNotifier().notify {
+            id = Random.nextInt()
+            title = notificationTitle
+            body = notificationBody
+            payloadData = data.mapValues { (_, value) ->
+                when (value) {
+                    is String -> value
+                    is Number -> value.toString()
+                    is Boolean -> value.toString()
+                    else -> value.toString()
                 }
             }
         }
     }
 
+    fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
+        CoroutineScope(defaultAsyncDispatcher).launch {
+            notify(notificationTitle, notificationBody, data)
+        }
+    }
+
     fun showNotification(notificationTitleRes: StringResource, notificationBodyRes: StringResource, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
-            val notifier = NotifierManager.getLocalNotifier()
-
-            val notificationTitle = getString(notificationTitleRes)
-            val notificationBody = getString(notificationBodyRes)
-
-            notifier.notify {
-                id = Random.nextInt()
-                title = notificationTitle
-                body = notificationBody
-                payloadData = data.mapValues { (_, value) ->
-                    when (value) {
-                        is String -> value
-                        is Number -> value.toString()
-                        is Boolean -> value.toString()
-                        else -> value.toString()
-                    }
-                }
-            }
+            notify(
+                notificationTitle = getString(notificationTitleRes),
+                notificationBody = getString(notificationBodyRes),
+                data
+            )
         }
     }
 

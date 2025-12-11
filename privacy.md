@@ -1,23 +1,25 @@
 # **Privacy Policy — CEA App**
 
-**Effective date:** 21 October 2025
-**Developer and Distributor:**
-Arnau Mora Gras
-Carrer Ibi, 14
-03802 Alcoi, Spain
+**Effective date:** 11 December 2025<br/>
+**Developer and Distributor:**<br/>
+Arnau Mora Gras<br/>
+Carrer Ibi, 14<br/>
+03802 Alcoi, Spain<br/>
 
-**On behalf of:**
-**Centre Excursionista d’Alcoi (CEA)**
-C/ Diego Fernando Montañés, 3
-03801 Alcoi, Spain
-CIF: G03105731
+**On behalf of:**<br/>
+**Centre Excursionista d’Alcoi (CEA)**<br/>
+C/ Diego Fernando Montañés, 3<br/>
+03801 Alcoi, Spain<br/>
+CIF: G03105731<br/>
 Registered in the *Registre d’Entitats Esportives de la Comunitat Valenciana*, nº 1329, section 1a
+
+[View Previous Updates](https://github.com/Centre-Excursionista-Alcoi/App/commits/master/privacy.md)
 
 ---
 
 ## **1. Introduction**
 
-CEA App (“we”, “our”, “us”) is developed and distributed by **Arnau Mora Gras** on behalf of the **Centre Excursionista d’Alcoi (CEA)**.
+CEA App (“we”, “our”, “us”) is developed and distributed by **Arnau Mora Gras** on behalf of the **Centre Excursionista d’Alcoi (CEA)**.<br/>
 We are committed to protecting your privacy and ensuring that your personal data is handled securely and in compliance with the **General Data Protection Regulation (EU) 2016/679 (GDPR)** and **Spanish data protection laws**.
 
 This Privacy Policy explains how we collect, use, and protect your information when you use our mobile applications (for Android and iOS) and the web version of the app (collectively referred to as “the App”).
@@ -32,25 +34,25 @@ The CEA App is distributed exclusively in **Spain** through:
 * **iOS:** Apple App Store
 * **Web:** The official website of the Centre Excursionista d’Alcoi
 
-The **source code** is publicly available at:
-[https://github.com/Centre-Excursionista-Alcoi/App](https://github.com/Centre-Excursionista-Alcoi/App)
+The **source code** is publicly available at:<br/>
+[https://github.com/Centre-Excursionista-Alcoi/App](https://github.com/Centre-Excursionista-Alcoi/App)<br/>
 and licensed under the **GNU GPL v3**.
 
 ---
 
 ## **3. Data Controller**
 
-The data controller responsible for processing your personal data is:
-**Centre Excursionista d’Alcoi (CEA)**
-C/ Diego Fernando Montañés, 3
-03801 Alcoi, Spain
+The data controller responsible for processing your personal data is:<br/>
+**Centre Excursionista d’Alcoi (CEA)**<br/>
+C/ Diego Fernando Montañés, 3<br/>
+03801 Alcoi, Spain<br/>
 Email: *[cea@arnyminerz.com](mailto:cea@arnyminerz.com)*
 
 ---
 
 ## **4. Data Location and Protection**
 
-All user data is **stored and processed within the European Union**, in compliance with **GDPR** and **Spanish data protection regulations**.
+All user data is **stored and processed within the European Union**, in compliance with **GDPR** and **Spanish data protection regulations**.<br/>
 We use **HTTPS/SSL encryption** for all data transfers and **AES encryption** for sensitive data stored on our servers.
 
 ---
@@ -82,13 +84,13 @@ Certain features require additional data:
 
 ### **c. FEMECV Account Connection**
 
-You may optionally connect your account to the **FEMECV (Federació d’Esports de Muntanya i Escalada de la Comunitat Valenciana)** system to fetch insurance data.
-We are **not affiliated with or endorsed by FEMECV**.
+You may optionally connect your account to the **FEMECV (Federació d’Esports de Muntanya i Escalada de la Comunitat Valenciana)** system to fetch insurance data.<br/>
+We are **not affiliated with or endorsed by FEMECV**.<br/>
 Fetched data is stored securely on our servers only for processing and display within the App.
 
 ### **d. Usage and Diagnostic Data**
 
-For performance monitoring and error tracking, we use **Sentry**, hosted in the **European Union**.
+For performance monitoring and error tracking, we use **Sentry**, hosted in the **European Union**.<br/>
 Data sent to Sentry may include:
 
 * Username
@@ -115,7 +117,7 @@ You may withdraw your consent at any time without affecting the lawfulness of pr
 
 ## **7. Data Retention**
 
-We retain your personal data only for as long as necessary to provide the App’s services or as required by law.
+We retain your personal data only for as long as necessary to provide the App’s services or as required by law.<br/>
 If you delete your account, all associated data will be permanently removed from our systems within a reasonable timeframe, except where legal obligations require retention.
 
 ---
@@ -164,7 +166,7 @@ While no system is 100% secure, we continuously review and improve our security 
 
 ## **11. Changes to This Policy**
 
-We may update this Privacy Policy from time to time. Updates will be announced within the App and/or on our website.
+We may update this Privacy Policy from time to time. Updates will be announced within the App and/or on our website.<br/>
 Your continued use of the App after changes take effect constitutes acceptance of the revised policy.
 
 ---
@@ -173,12 +175,22 @@ Your continued use of the App after changes take effect constitutes acceptance o
 
 If you have questions or concerns regarding this Privacy Policy or your personal data, please contact:
 
-**Centre Excursionista d’Alcoi (CEA)**
-C/ Diego Fernando Montañés, 3
-03801 Alcoi, Spain
-Email: *[info@centrexcursionistalcoi.org](mailto:info@centrexcursionistalcoi.org)*
+**Centre Excursionista d’Alcoi (CEA)**<br/>
+C/ Diego Fernando Montañés, 3<br/>
+03801 Alcoi, Spain<br/>
+Email: *[info@centrexcursionistalcoi.org](mailto:info@centrexcursionistalcoi.org)*<br/>
 CIF: G03105731
+
+## **13. Data Removal**
+
+You can request the removal of your personal data directly from the App. This will remove your data from our servers, but please note:
+
+* This does **not** remove your membership or data from the **Centre Excursionista d’Alcoi (CEA)** club itself.
+* Some third-party providers, such as **Firebase Cloud Messaging**, may still hold some of your data. You may contact them directly to request removal.
+* Error and performance reports, if previously accepted, were reported to **Sentry** and may be held for longer periods of time.
+* Information that may have been collected by your preferred app store (Apple App Store, Google Play Store, etc.) is out of our control and follows their respective privacy policies.
+* You may appear in documents or records maintained by other members or administrators of the organization, which is outside the scope of this data removal option.
 
 ---
 
-### **Last updated:** 21 October 2025
+### **Last updated:** 11 December 2025

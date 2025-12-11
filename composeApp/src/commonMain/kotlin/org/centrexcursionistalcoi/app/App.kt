@@ -236,9 +236,18 @@ fun App(
                 )
             }
             destination<Destination.Settings> {
-                SettingsScreen {
-                    navController.navigateUp()
-                }
+                SettingsScreen(
+                    onBack = {
+                        navController.navigateUp()
+                    },
+                    onDeleteAccount = {
+                        navController.navigate(Destination.Loading) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
             }
 
             destination<Destination.LendingDetails> { route ->
