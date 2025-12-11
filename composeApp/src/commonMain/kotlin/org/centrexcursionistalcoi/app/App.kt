@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
 import org.centrexcursionistalcoi.app.nav.UuidNavType
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
+import org.centrexcursionistalcoi.app.push.LocalNotifications.checkIsSelf
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
@@ -82,7 +83,7 @@ fun MainApp(
                     forAdmin: (N) -> Destination? = { null },
                     forUser: (N) -> Destination? = { null }
                 ): Destination? {
-                    return if (notification.isSelf) forUser(notification)
+                    return if (notification.checkIsSelf()) forUser(notification)
                     else forAdmin(notification)
                 }
 
