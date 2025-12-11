@@ -214,11 +214,22 @@ fun InventoryItemTypesListView(
         }
 
         type.department?.let { department ->
-            Text(
-                text = department.displayName,
-                style = MaterialTheme.typography.titleMedium,
+            Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val image by department.rememberImageFile()
+                AsyncByteImage(
+                    bytes = image,
+                    contentDescription = department.displayName,
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = department.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f).padding(start = 8.dp),
+                )
+            }
         }
 
         Text(

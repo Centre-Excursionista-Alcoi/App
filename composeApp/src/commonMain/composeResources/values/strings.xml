@@ -87,6 +87,7 @@
     <string name="edit">Edit</string>
     <string name="confirm">Confirm</string>
     <string name="qrcode">QR Code</string>
+    <string name="barcode">Bar Code</string>
     <string name="unknown">Unknown</string>
     <string name="share">Share</string>
     <string name="logout">Logout</string>
@@ -409,6 +410,11 @@
     <string name="nfc_error_too_small">NFC tag memory is too small</string>
     <string name="nfc_error_format_unsupported">NFC tag cannot be formatted as %1$s</string>
     <string name="nfc_error_unknown">Unknown NFC error occurred: %1$s</string>
+    <string name="nfc_waiting">Waiting for NFC card...</string>
+    <string name="nfc_write">Write NFC</string>
+    <string name="nfc_write_help">Writes the UUID into an NFC tag</string>
+    <string name="nfc_store">Store NFC</string>
+    <string name="nfc_store_help">Reads the serial number of an NFC tag and stores it in the database</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_adjust">Adjust</string>

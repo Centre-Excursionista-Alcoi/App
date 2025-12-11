@@ -2,27 +2,9 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.draganddrop.dragAndDropSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -87,7 +69,7 @@ fun QRCodeDialog(
                 writingNFC = false
                 readingNFC = false
             },
-            title = { Text("Waiting for NFC tag") },
+            title = { Text(stringResource(Res.string.nfc_waiting)) },
             text = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -112,13 +94,13 @@ fun QRCodeDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("QR Code") },
+        title = { Text(stringResource(Res.string.qrcode)) },
         text = {
             Column {
                 val qrCodePainter = rememberQrCodePainter(value)
                 ImageDisplay(
                     qrCodePainter,
-                    "QR Code",
+                    stringResource(Res.string.qrcode),
                     imageModifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
@@ -133,20 +115,33 @@ fun QRCodeDialog(
                     null
                 }
                 if (barcodePainter != null) {
-                    ImageDisplay(barcodePainter, "Bar Code", imageModifier = Modifier.fillMaxWidth())
+                    ImageDisplay(
+                        painter = barcodePainter,
+                        contentDescription = stringResource(Res.string.barcode),
+                        imageModifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 if (PlatformNFC.isSupported) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { writingNFC = true },
-                        ) { Text("Write NFC") }
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f),
-                            onClick = { readingNFC = true },
-                        ) { Text("Store NFC") }
-                    }
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { writingNFC = true },
+                    ) { Text(stringResource(Res.string.nfc_write)) }
+                    Text(
+                        text = stringResource(Res.string.nfc_write_help),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
+
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { readingNFC = true },
+                    ) { Text(stringResource(Res.string.nfc_store)) }
+                    Text(
+                        text = stringResource(Res.string.nfc_store_help),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         },
@@ -175,7 +170,7 @@ private fun ImageDisplay(
         Image(
             painter,
             contentDescription,
-            modifier = imageModifier.padding(top = 8.dp).padding(horizontal = 8.dp),
+            modifier = imageModifier.padding(8.dp),
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             if (PlatformPrinter.isSupported) {
