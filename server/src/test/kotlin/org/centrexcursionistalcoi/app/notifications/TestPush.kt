@@ -27,7 +27,8 @@ import kotlin.uuid.Uuid
 class TestPush {
     @Test
     fun `test flow for admins`() = runTest {
-        val adminSession = UserSession(sub = "abc", fullName = "Admin", email = "admin@example.com", groups = listOf(ADMIN_GROUP_NAME))
+        val adminSession =
+            UserSession(sub = "abc", fullName = "Admin", email = "admin@example.com", groups = listOf(ADMIN_GROUP_NAME))
         Push.flow(adminSession).test {
             // push notification includes admins, will be received
             Push.sendLocalPushNotification(
@@ -76,9 +77,11 @@ class TestPush {
         try {
             if (initUsers) {
                 Database.initForTests()
-                Database { FakeUser.provideEntityWithFCMToken() }
-                Database { FakeUser2.provideEntityWithFCMToken() }
-                Database { FakeAdminUser.provideEntityWithFCMToken() }
+                Database {
+                    FakeUser.provideEntityWithFCMToken()
+                    FakeUser2.provideEntityWithFCMToken()
+                    FakeAdminUser.provideEntityWithFCMToken()
+                }
             }
 
             mockkStatic(FirebaseMessaging::class)
@@ -188,85 +191,87 @@ class TestPush {
     }
 
     @TestFactory
-    fun `test sendPushNotificationToDepartment includeAdmins=true`(): List<DynamicTest> = testNotifications.map { notification ->
-        DynamicTest.dynamicTest("for ${notification.type}") {
-            mockFCM { messagingMock ->
-                val department = Database {
-                    DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
-                        displayName = "Department"
+    fun `test sendPushNotificationToDepartment includeAdmins=true`(): List<DynamicTest> =
+        testNotifications.map { notification ->
+            DynamicTest.dynamicTest("for ${notification.type}") {
+                mockFCM { messagingMock ->
+                    val department = Database {
+                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
+                            displayName = "Department"
+                        }
                     }
-                }
-                department.updated()
+                    department.updated()
 
-                Database {
-                    DepartmentMemberEntity.new {
-                        this.department = department
-                        this.userSub = FakeUser.provideEntity().sub
-                        this.confirmed = true
+                    Database {
+                        DepartmentMemberEntity.new {
+                            this.department = department
+                            this.userSub = FakeUser.provideEntity().sub
+                            this.confirmed = true
+                        }
+                        // This request has not been confirmed, should not receive notification
+                        DepartmentMemberEntity.new {
+                            this.department = department
+                            this.userSub = FakeUser2.provideEntity().sub
+                            this.confirmed = false
+                        }
                     }
-                    // This request has not been confirmed, should not receive notification
-                    DepartmentMemberEntity.new {
-                        this.department = department
-                        this.userSub = FakeUser2.provideEntity().sub
-                        this.confirmed = false
-                    }
-                }
 
-                val pushSpy = spyk<Push>(recordPrivateCalls = true)
-                pushSpy.sendPushNotificationToDepartment(notification, department.id.value, true)
-                // Notification should only be sent to FakeUser and FakeAdminUser
-                verify {
-                    pushSpy.sendFCMPushNotification(
-                        setOf(
-                            FakeUser.FCM_TOKEN,
-                            FakeAdminUser.FCM_TOKEN
-                        ),
-                        notification.toMap()
-                    )
+                    val pushSpy = spyk<Push>(recordPrivateCalls = true)
+                    pushSpy.sendPushNotificationToDepartment(notification, department.id.value, true)
+                    // Notification should only be sent to FakeUser and FakeAdminUser
+                    verify {
+                        pushSpy.sendFCMPushNotification(
+                            setOf(
+                                FakeUser.FCM_TOKEN,
+                                FakeAdminUser.FCM_TOKEN
+                            ),
+                            notification.toMap()
+                        )
+                    }
+                    verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
                 }
-                verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
             }
         }
-    }
 
     @TestFactory
-    fun `test sendPushNotificationToDepartment includeAdmins=false`(): List<DynamicTest> = testNotifications.map { notification ->
-        DynamicTest.dynamicTest("for ${notification.type}") {
-            mockFCM { messagingMock ->
-                val department = Database {
-                    DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
-                        displayName = "Department"
+    fun `test sendPushNotificationToDepartment includeAdmins=false`(): List<DynamicTest> =
+        testNotifications.map { notification ->
+            DynamicTest.dynamicTest("for ${notification.type}") {
+                mockFCM { messagingMock ->
+                    val department = Database {
+                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
+                            displayName = "Department"
+                        }
                     }
-                }
-                department.updated()
+                    department.updated()
 
-                Database {
-                    DepartmentMemberEntity.new {
-                        this.department = department
-                        this.userSub = FakeUser.provideEntity().sub
-                        this.confirmed = true
+                    Database {
+                        DepartmentMemberEntity.new {
+                            this.department = department
+                            this.userSub = FakeUser.provideEntity().sub
+                            this.confirmed = true
+                        }
+                        // This request has not been confirmed, should not receive notification
+                        DepartmentMemberEntity.new {
+                            this.department = department
+                            this.userSub = FakeUser2.provideEntity().sub
+                            this.confirmed = false
+                        }
                     }
-                    // This request has not been confirmed, should not receive notification
-                    DepartmentMemberEntity.new {
-                        this.department = department
-                        this.userSub = FakeUser2.provideEntity().sub
-                        this.confirmed = false
-                    }
-                }
 
-                val pushSpy = spyk<Push>(recordPrivateCalls = true)
-                pushSpy.sendPushNotificationToDepartment(notification, department.id.value, false)
-                // Notification should only be sent to FakeUser
-                verify {
-                    pushSpy.sendFCMPushNotification(
-                        setOf(FakeUser.FCM_TOKEN),
-                        notification.toMap()
-                    )
+                    val pushSpy = spyk<Push>(recordPrivateCalls = true)
+                    pushSpy.sendPushNotificationToDepartment(notification, department.id.value, false)
+                    // Notification should only be sent to FakeUser
+                    verify {
+                        pushSpy.sendFCMPushNotification(
+                            setOf(FakeUser.FCM_TOKEN),
+                            notification.toMap()
+                        )
+                    }
+                    verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
                 }
-                verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
             }
         }
-    }
 
     @TestFactory
     fun `test sendPushNotificationToAll`(): List<DynamicTest> = testNotifications.map { notification ->
