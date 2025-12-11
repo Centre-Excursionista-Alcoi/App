@@ -184,6 +184,7 @@ fun <T> ListView(
                     isEditSupported = editItemContent != null,
                     isEditing = isEditing || isCreating,
                     onEditRequest = { isEditing = true },
+                    onEditCancelled = { isEditing = false },
                     onDeleteRequest = selectedItem?.let { item ->
                         if (onDeleteRequest != null) {
                             { isDeleting = item }
@@ -210,6 +211,7 @@ fun <T> ListView(
                 isEditSupported = editItemContent != null,
                 isEditing = isEditing || isCreating,
                 onEditRequest = { isEditing = true },
+                onEditCancelled = { isEditing = false },
                 onDeleteRequest = selectedItem?.let { item ->
                     if (onDeleteRequest != null) {
                         { isDeleting = item }
@@ -424,6 +426,7 @@ fun ListView_Content(
     isEditSupported: Boolean,
     isEditing: Boolean,
     onEditRequest: () -> Unit,
+    onEditCancelled: () -> Unit,
     onDeleteRequest: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     shape: Shape = RectangleShape,
@@ -431,7 +434,11 @@ fun ListView_Content(
     contentColor: Color = Color.Unspecified,
 ) {
     PlatformBackHandler {
-        onCloseRequested()
+        if (isEditing) {
+            onEditCancelled()
+        } else {
+            onCloseRequested()
+        }
     }
 
     Surface(
@@ -443,10 +450,18 @@ fun ListView_Content(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onCloseRequested,
-                ) {
-                    Icon(MaterialSymbols.Close, stringResource(Res.string.close))
+                if (isEditing) {
+                    IconButton(
+                        onClick = onEditCancelled,
+                    ) {
+                        Icon(MaterialSymbols.ChevronLeft, stringResource(Res.string.close))
+                    }
+                } else {
+                    IconButton(
+                        onClick = onCloseRequested,
+                    ) {
+                        Icon(MaterialSymbols.Close, stringResource(Res.string.close))
+                    }
                 }
                 Text(
                     text = itemDisplayName,
