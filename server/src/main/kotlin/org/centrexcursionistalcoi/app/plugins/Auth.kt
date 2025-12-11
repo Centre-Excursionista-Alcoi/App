@@ -329,6 +329,12 @@ fun Route.configureAuthRoutes() {
                 .onEach { it.delete() }
                 .count()
         }.also { logger.info("Deleted $it entries from LendingEntity") }
+        Database {
+            UserInsuranceEntity
+                .find { UserInsurances.userSub eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from UserInsuranceEntity") }
 
         Database {
             LendingEntity
