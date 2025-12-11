@@ -22,6 +22,7 @@ import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.assertNotNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.uuid.Uuid
 
 class TestPush {
@@ -76,6 +77,9 @@ class TestPush {
     ) = runTest {
         try {
             if (initUsers) {
+                if (Database.isInitialized()) Database.clear()
+                assertFalse("Expected database to be disposed") { Database.isInitialized() }
+
                 Database.initForTests()
                 Database {
                     FakeUser.provideEntityWithFCMToken()
