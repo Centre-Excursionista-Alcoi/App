@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import com.mikepenz.markdown.m3.Markdown
@@ -25,9 +24,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Distance
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Groups
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
@@ -252,6 +249,9 @@ fun EventsListView(
             text = event.title,
             style = MaterialTheme.typography.titleLarge,
         )
+
+        Spacer(Modifier.height(12.dp))
+
         Row {
             Text(
                 text = stringResource(
@@ -264,7 +264,7 @@ fun EventsListView(
                 text = event.localizedDateRange(),
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Icon(
                 imageVector = MaterialSymbols.Distance,
                 contentDescription = stringResource(Res.string.event_place),
@@ -272,11 +272,11 @@ fun EventsListView(
             )
             Text(
                 text = event.place,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
             )
         }
         event.maxPeople?.let {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Icon(
                     imageVector = MaterialSymbols.Groups,
                     contentDescription = stringResource(Res.string.event_max_people),
@@ -284,22 +284,59 @@ fun EventsListView(
                 )
                 Text(
                     text = pluralStringResource(Res.plurals.event_max_people_value, it.toInt(), it),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
         }
         if (event.requiresConfirmation) {
-            Text(
-                text = stringResource(Res.string.event_requires_confirmation),
-                fontWeight = FontWeight.Bold,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(
+                    imageVector = MaterialSymbols.PersonCheck,
+                    contentDescription = stringResource(Res.string.event_requires_confirmation),
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(
+                    text = stringResource(Res.string.event_requires_confirmation),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
+        if (event.requiresInsurance) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Icon(
+                    imageVector = MaterialSymbols.HealthAndSafety,
+                    contentDescription = stringResource(Res.string.event_requires_insurance),
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(
+                    text = stringResource(Res.string.event_requires_insurance),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
 
         event.description?.let {
             Markdown(
                 content = it,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(vertical = 8.dp)
             )
+        }
+
+        if (event.userSubList.isNotEmpty()) {
+            Text(
+                text = stringResource(Res.string.event_assisting_users) + " (${event.userSubList.size})",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+            for (user in event.userSubList) {
+                Text(
+                    text = "- " + user.fullName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
