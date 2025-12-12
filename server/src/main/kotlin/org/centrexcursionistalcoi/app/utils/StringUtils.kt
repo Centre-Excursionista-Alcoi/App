@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.utils
 
 import java.security.SecureRandom
-import java.util.UUID
+import java.util.*
 
 /**
  * Tries to convert the string to a UUID.
@@ -27,5 +27,16 @@ fun generateRandomString(length: Int = 12): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     return (1..length)
         .map { chars[SecureRandom().nextInt(chars.length)] }
+        .joinToString("")
+}
+
+/**
+ * Generates a random alphanumeric string of the given length.
+ * @param length The length of the generated string. Defaults to 12 characters.
+ */
+fun generateRandomString(length: Int = 12, random: Random): String {
+    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    return (1..length)
+        .map { chars[random.nextInt(chars.length)] }
         .joinToString("")
 }

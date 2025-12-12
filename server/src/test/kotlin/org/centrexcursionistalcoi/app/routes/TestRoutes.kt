@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.data.FileWithContext.Companion.wrapFile
 import org.centrexcursionistalcoi.app.database.entity.*
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
+import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.DynamicTest
@@ -102,6 +103,7 @@ class TestRoutes : ApplicationTestBase() {
             optionalCreationValuesProvider = mapOf(
                 "variation" to { "This is a test variation for the item" },
                 "nfcId" to { ByteArray(6).apply { random.nextBytes(this) } },
+                "manufacturerTraceabilityCode" to { generateRandomString(random = random) },
             ),
             locationRegex = "/inventory/items/$uuidv4+".toRegex(),
             entityClass = InventoryItemEntity,

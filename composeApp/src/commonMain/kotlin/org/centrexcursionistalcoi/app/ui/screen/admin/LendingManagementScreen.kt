@@ -35,10 +35,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.permission.HelperHolder
-import org.centrexcursionistalcoi.app.permission.Permission
-import org.centrexcursionistalcoi.app.permission.result.CameraPermissionResult
+import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.setClipEntry
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -336,8 +333,6 @@ private fun LendingPickupReturnScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    val permissionHelper = HelperHolder.getPermissionHelperInstance()
-
     var showingScanner by remember { mutableStateOf(false) }
     if (showingScanner) {
         ScannerView(
@@ -346,6 +341,7 @@ private fun LendingPickupReturnScreen(
                 BarcodeFormat.FORMAT_QR_CODE,
                 BarcodeFormat.FORMAT_CODE_39,
                 BarcodeFormat.FORMAT_CODE_128,
+                BarcodeFormat.FORMAT_DATA_MATRIX,
             )
         ) { result ->
             when (result) {
@@ -389,12 +385,8 @@ private fun LendingPickupReturnScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            scope.launch(defaultAsyncDispatcher) {
-                                when (permissionHelper.checkIsPermissionGranted(Permission.Camera)) {
-                                    CameraPermissionResult.Denied -> permissionHelper.requestForPermission(Permission.Camera)
-                                    CameraPermissionResult.NotAllowed -> permissionHelper.openSettings()
-                                    CameraPermissionResult.Granted -> showingScanner = true
-                                }
+                            scope.launchWithCameraPermission {
+                                showingScanner = true
                             }
                         },
                     ) {

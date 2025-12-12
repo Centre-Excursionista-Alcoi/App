@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.http.isSuccess
-import kotlin.uuid.Uuid
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
@@ -15,6 +13,7 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import kotlin.uuid.Uuid
 
 object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
     "/inventory/items",
@@ -29,8 +28,8 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
 ) {
     private val log = logging()
 
-    suspend fun create(variation: String?, type: Uuid, nfcId: ByteArray?, progressNotifier: ProgressNotifier? = null) {
-        create(InventoryItem(Uuid.Zero, variation, type, nfcId), progressNotifier)
+    suspend fun create(variation: String?, type: Uuid, nfcId: ByteArray?, manufacturerTraceabilityCode: String?, progressNotifier: ProgressNotifier? = null) {
+        create(InventoryItem(Uuid.Zero, variation, type, nfcId, manufacturerTraceabilityCode), progressNotifier)
     }
 
     suspend fun create(variation: String?, type: Uuid, amount: Int, progressNotifier: ProgressNotifier? = null) {
@@ -57,6 +56,15 @@ object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInvento
         update(
             id,
             UpdateInventoryItemRequest(variation, nfcId = nfcId),
+            UpdateInventoryItemRequest.serializer(),
+            progressNotifier
+        )
+    }
+
+    suspend fun updateManufacturerData(id: Uuid, data: String, progressNotifier: ProgressNotifier? = null) {
+        update(
+            id,
+            UpdateInventoryItemRequest(manufacturerTraceabilityCode = data),
             UpdateInventoryItemRequest.serializer(),
             progressNotifier
         )
