@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.draganddrop.dragAndDropSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
@@ -24,6 +26,7 @@ import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Nfc
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Print
@@ -127,6 +130,57 @@ fun InventoryItemInformationDialog(
                         }
                 )
 
+                if (item.manufacturerTraceabilityCode == null) {
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { showingScanner = true },
+                    ) { Text(stringResource(Res.string.inventory_item_set_manufacturer_details)) }
+                    Text(
+                        text = stringResource(Res.string.inventory_item_set_manufacturer_details_help),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    val manufacturerItemDetails = remember(item) {
+                        item.manufacturerTraceabilityCode?.let(ManufacturerItemDetails::decode)
+                    }
+                    if (manufacturerItemDetails != null) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Image(
+                                    painter = painterResource(manufacturerItemDetails.logo),
+                                    contentDescription = manufacturerItemDetails.name,
+                                    modifier = Modifier.size(36.dp),
+                                )
+                                Text(
+                                    text = stringResource(
+                                        Res.string.inventory_item_manufacturer_details,
+                                        manufacturerItemDetails.name
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                                )
+                                Icon(
+                                    MaterialSymbols.Delete,
+                                    stringResource(Res.string.delete),
+                                    modifier = Modifier.clickable { onReadManufacturerData("") }
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                            ) {
+                                manufacturerItemDetails.DataShowcase()
+                            }
+                        }
+                    }
+                }
+
                 if (PlatformNFC.isSupported) {
                     OutlinedButton(
                         modifier = Modifier.fillMaxWidth(),
@@ -144,42 +198,6 @@ fun InventoryItemInformationDialog(
                     ) { Text(stringResource(Res.string.nfc_store)) }
                     Text(
                         text = stringResource(Res.string.nfc_store_help),
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                val manufacturerItemDetails = remember(item) {
-                    item.manufacturerTraceabilityCode?.let(ManufacturerItemDetails::decode)
-                }
-                if (manufacturerItemDetails != null) {
-                    OutlinedCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Image(
-                                painter = painterResource(manufacturerItemDetails.logo),
-                                contentDescription = manufacturerItemDetails.name,
-                                modifier = Modifier.size(48.dp),
-                            )
-                            Text(
-                                text = stringResource(
-                                    Res.string.inventory_item_manufacturer_details,
-                                    manufacturerItemDetails.name
-                                ),
-                                style = MaterialTheme.typography.labelMedium,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                        }
-                    }
-                } else {
-                    OutlinedButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { showingScanner = true },
-                    ) { Text(stringResource(Res.string.inventory_item_set_manufacturer_details)) }
-                    Text(
-                        text = stringResource(Res.string.inventory_item_set_manufacturer_details_help),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.fillMaxWidth()
                     )

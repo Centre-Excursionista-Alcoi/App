@@ -281,6 +281,10 @@
     <string name="inventory_item_set_manufacturer_details">Set Manufacturer Details</string>
     <string name="inventory_item_set_manufacturer_details_help">Some manufacturers include a Data Matrix or serial number with information about the material. The app will try its best to recognize the brand and data.</string>
 
+    <string name="petzl_production_year">Production Year:</string>
+    <string name="petzl_production_month">Production Month:</string>
+    <string name="petzl_identifier">Identifier:</string>
+
     <string name="create_inventory_item_variation">Variation</string>
     <string name="create_inventory_item_type">Type</string>
     <string name="create_inventory_item_amount">Amount</string>

@@ -1,18 +1,30 @@
 package org.centrexcursionistalcoi.app.data.manufacturer
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.petzl
+import cea_app.composeapp.generated.resources.petzl_identifier
+import cea_app.composeapp.generated.resources.petzl_production_month
+import cea_app.composeapp.generated.resources.petzl_production_year
 import kotlinx.datetime.Month
+import kotlinx.datetime.format.MonthNames
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
-import org.jetbrains.compose.resources.DrawableResource
+import org.centrexcursionistalcoi.app.utils.localizedNames
+import org.jetbrains.compose.resources.stringResource
 
+/**
+ * Post-2016 Petzl Serial Number format.
+ */
 @Serializable
 data class PetzlItemDetails(
     val year: Int,
     val month: Month,
     val identifier: String,
-): ManufacturerItemDetails {
+) : BasePetzlItemDetails() {
     companion object {
         val SERIAL_REGEX = Regex("""^(\d{2})([A-L])(\d{10})$""")
 
@@ -51,9 +63,34 @@ data class PetzlItemDetails(
         }
     }
 
-    @Transient
-    override val logo: DrawableResource = Res.drawable.petzl
-
-    @Transient
-    override val name: String = "Petzl"
+    @Composable
+    override fun DataShowcase() {
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(stringResource(Res.string.petzl_production_year))
+                }
+                append(' ')
+                append(year.toString())
+            }
+        )
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(stringResource(Res.string.petzl_production_month))
+                }
+                append(' ')
+                append(MonthNames.localizedNames.names[month.ordinal])
+            }
+        )
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(stringResource(Res.string.petzl_identifier))
+                }
+                append(' ')
+                append(identifier)
+            }
+        )
+    }
 }

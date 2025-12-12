@@ -63,9 +63,24 @@ fun InventoryItemTypesListView(
 ) {
     val scope = rememberCoroutineScope()
 
-    var selectedItemId by remember { mutableStateOf(selectedItemId) }
-    val selectedItemIndex = remember(selectedItemId, types) {
-        types?.indexOfFirst { it.id == selectedItemId }?.takeIf { it >= 0 }
+    var selectedItemTypeId by remember { mutableStateOf(selectedItemId) }
+
+    var highlightItemId by remember { mutableStateOf<Uuid?>(null) }
+    var highlightItemNfcId by remember { mutableStateOf<ByteArray?>(null) }
+    LaunchedEffect(highlightItemId, highlightItemNfcId) {
+        if (highlightItemId != null || highlightItemNfcId != null) {
+            delay(3000) // Highlight for 3 seconds
+            highlightItemId = null
+            highlightItemNfcId = null
+        }
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val payload = PlatformNFC.readNFC() ?: continue
+            log.d { "NFC tag read: $payload" }
+            payload.uuid()?.let { highlightItemId = it }
+            payload.id?.let { highlightItemNfcId = it }
+        }
     }
 
     var creatingInventoryItem by remember { mutableStateOf<ReferencedInventoryItemType?>(null) }
@@ -84,12 +99,18 @@ fun InventoryItemTypesListView(
                 val data = barcode.data
                 // scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_read, data)) }
                 log.i { "Barcode: ${barcode.data}, format: ${barcode.format}" }
-                items?.find { it.id == data.toUuidOrNull() }?.let { selectedItemId = it.id }
-                    ?: log.d { "Could not find item id=$data" }
-                items?.find { it.nfcId.contentEquals(data.encodeToByteArray()) }?.let { selectedItemId = it.id }
-                    ?: log.d { "Could not find item with nfcId=$data" }
-                items?.find { it.manufacturerTraceabilityCode == data }?.let { selectedItemId = it.id }
-                    ?: log.d { "Could not find item with manufacturerTraceabilityCode=$data" }
+                items?.find { it.id == data.toUuidOrNull() }?.let {
+                    selectedItemTypeId = it.type.id
+                    highlightItemId = it.id
+                } ?: log.d { "Could not find item id=$data" }
+                items?.find { it.nfcId.contentEquals(data.encodeToByteArray()) }?.let {
+                    selectedItemTypeId = it.type.id
+                    highlightItemId = it.id
+                } ?: log.d { "Could not find item with nfcId=$data" }
+                items?.find { it.manufacturerTraceabilityCode == data }?.let {
+                    selectedItemTypeId = it.type.id
+                    highlightItemId = it.id
+                } ?: log.d { "Could not find item with manufacturerTraceabilityCode=$data" }
             },
             onDismissRequest = {
                 showingScanner = false
@@ -107,7 +128,7 @@ fun InventoryItemTypesListView(
     }
     ListView(
         windowSizeClass = windowSizeClass,
-        selectedItemIndex = selectedItemIndex,
+        selectedItemId = selectedItemTypeId,
         items = groupedItems + typesWithoutItems,
         itemIdProvider = { (type) -> type.id },
         itemDisplayName = { (type) -> type.displayName },
@@ -305,27 +326,15 @@ fun InventoryItemTypesListView(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
 
-        var highlightItemId by remember { mutableStateOf<Uuid?>(null) }
-        var highlightItemNfcId by remember { mutableStateOf<ByteArray?>(null) }
-        LaunchedEffect(highlightItemId, highlightItemNfcId) {
-            if (highlightItemId != null || highlightItemNfcId != null) {
-                delay(3000) // Highlight for 3 seconds
-                highlightItemId = null
-                highlightItemNfcId = null
-            }
-        }
-        LaunchedEffect(Unit) {
-            while (true) {
-                val payload = PlatformNFC.readNFC() ?: continue
-                log.d { "NFC tag read: $payload" }
-                payload.uuid()?.let { highlightItemId = it }
-                payload.id?.let { highlightItemNfcId = it }
-            }
-        }
-
         var deletingItem by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
 
         var showingItemDialog by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
+        LaunchedEffect(items) {
+            // Update the dialog contents if the items are updated
+            if (showingItemDialog != null) {
+                showingItemDialog = items.find { it.id == showingItemDialog?.id }
+            }
+        }
         showingItemDialog?.let { item ->
             InventoryItemInformationDialog(
                 item = item,

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -32,6 +33,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+
+private val log = logging()
 
 class SortBy<T>(
     val label: @Composable () -> String,
@@ -65,7 +68,7 @@ class Filter<T>(
 fun <T> ListView(
     windowSizeClass: WindowSizeClass,
     items: List<T>?,
-    selectedItemIndex: Int? = null,
+    selectedItemId: Any? = null,
     itemDisplayName: (T) -> String,
     emptyItemsText: String,
     itemIdProvider: (T) -> Any,
@@ -93,9 +96,17 @@ fun <T> ListView(
     onDeleteRequest: ((T) -> Job)? = null,
     itemContent: @Composable ColumnScope.(T) -> Unit,
 ) {
-    var selectedItem by remember { mutableStateOf(selectedItemIndex?.let { items?.getOrNull(it) }) }
+    var selectedItem by remember(items, selectedItemId) {
+        mutableStateOf(selectedItemId?.let { id -> items?.find { itemIdProvider(it) == id } })
+    }
     var isEditing by remember { mutableStateOf(false) }
     var isCreating by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedItemId) {
+        if (selectedItemId != null && selectedItem == null) {
+            log.w { "Could not find item with id $selectedItemId (size=${items?.size})" }
+        }
+    }
 
     // Keep selected item in sync with items list
     LaunchedEffect(items) {
@@ -156,7 +167,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 items = items,
                 emptyItemsText = emptyItemsText,
-                selectedItemIndex = selectedItemIndex,
+                selectedItemId = selectedItemId,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -236,7 +247,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxSize(),
                 items = items,
                 emptyItemsText = emptyItemsText,
-                selectedItemIndex = selectedItemIndex,
+                selectedItemId = selectedItemId,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -261,7 +272,7 @@ fun <T> ListView(
 private fun <T> ListView_ListColumn(
     items: List<T>?,
     emptyItemsText: String,
-    selectedItemIndex: Int?,
+    selectedItemId: Any?,
     itemDisplayName: (T) -> String,
     itemIdProvider: (T) -> Any,
     itemLeadingContent: (@Composable (T) -> Unit)?,
@@ -303,6 +314,11 @@ private fun <T> ListView_ListColumn(
     }
     val filteredAndSortedItems = remember(searchedItems, sortBy) {
         sortBy.sorted(searchedItems)
+    }
+
+    val selectedItemIndex = remember(selectedItemId, filteredAndSortedItems) {
+        selectedItemId?.let { id -> filteredAndSortedItems.indexOfFirst { itemIdProvider(it) == id } }
+            ?.takeIf { it >= 0 }
     }
 
     Column(modifier = modifier) {
