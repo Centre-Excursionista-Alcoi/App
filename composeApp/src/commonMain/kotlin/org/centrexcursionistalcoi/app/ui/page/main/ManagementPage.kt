@@ -167,6 +167,7 @@ fun ManagementPage(
         onCreateEvent = model::createEvent,
         onUpdateEvent = model::updateEvent,
         onDeleteEvent = model::delete,
+        onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData,
     )
 }
 
@@ -201,6 +202,7 @@ private fun ManagementPage(
     onDeleteInventoryItemType: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
+    onUpdateInventoryItemManufacturerData: (ReferencedInventoryItem, String) -> Job,
 
     inventoryItems: List<ReferencedInventoryItem>?,
 
@@ -279,6 +281,7 @@ private fun ManagementPage(
                 onDeleteInventoryItemType,
                 onCreateInventoryItem,
                 onDeleteInventoryItem,
+                onUpdateInventoryItemManufacturerData,
             )
         }
     }

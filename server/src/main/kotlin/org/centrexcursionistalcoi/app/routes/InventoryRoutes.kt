@@ -1,11 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.routing.Route
+import io.ktor.http.content.*
+import io.ktor.server.routing.*
 import io.sentry.Sentry
-import java.util.UUID
-import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.Database
@@ -30,6 +27,8 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.util.*
+import kotlin.io.encoding.Base64
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
@@ -139,6 +138,7 @@ fun Route.inventoryRoutes() {
             var variation: String? = null
             var type: UUID? = null
             var nfcId: ByteArray? = null
+            var manufacturerTraceabilityCode: String? = null
 
             formParameters.forEachPart { partData ->
                 when (partData) {
@@ -155,6 +155,7 @@ fun Route.inventoryRoutes() {
                                 println("Decoded nfcId! Bytes: ${bytes.joinToString(",") { it.toString() }}")
                                 nfcId = bytes
                             }
+                            "manufacturerTraceabilityCode" -> manufacturerTraceabilityCode = partData.value
                         }
                     }
                     else -> { /* nothing */ }
@@ -175,6 +176,7 @@ fun Route.inventoryRoutes() {
                     this.variation = variation
                     this.type = itemType
                     this.nfcId = nfcId
+                    this.manufacturerTraceabilityCode = manufacturerTraceabilityCode
                 }
             }
         },

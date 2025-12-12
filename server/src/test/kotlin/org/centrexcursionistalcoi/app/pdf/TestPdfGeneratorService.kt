@@ -53,6 +53,7 @@ class TestPdfGeneratorService {
                         variation = null,
                         type = inventoryItemTypeId,
                         nfcId = null,
+                        manufacturerTraceabilityCode = null,
                     ).referenced(inventoryItemType)
                 ),
                 submittedBy = "Admin User",

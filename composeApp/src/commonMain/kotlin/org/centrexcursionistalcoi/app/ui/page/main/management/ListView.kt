@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -32,6 +33,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.DropdownIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+
+private val log = logging()
 
 class SortBy<T>(
     val label: @Composable () -> String,
@@ -65,7 +68,7 @@ class Filter<T>(
 fun <T> ListView(
     windowSizeClass: WindowSizeClass,
     items: List<T>?,
-    selectedItemIndex: Int? = null,
+    selectedItemId: Any? = null,
     itemDisplayName: (T) -> String,
     emptyItemsText: String,
     itemIdProvider: (T) -> Any,
@@ -88,13 +91,22 @@ fun <T> ListView(
     itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
     itemEnabled: (T) -> Boolean = { true },
+    searchBarActions: (@Composable RowScope.() -> Unit)? = null,
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
     onDeleteRequest: ((T) -> Job)? = null,
     itemContent: @Composable ColumnScope.(T) -> Unit,
 ) {
-    var selectedItem by remember { mutableStateOf(selectedItemIndex?.let { items?.getOrNull(it) }) }
+    var selectedItem by remember(items, selectedItemId) {
+        mutableStateOf(selectedItemId?.let { id -> items?.find { itemIdProvider(it) == id } })
+    }
     var isEditing by remember { mutableStateOf(false) }
     var isCreating by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedItemId) {
+        if (selectedItemId != null && selectedItem == null) {
+            log.w { "Could not find item with id $selectedItemId (size=${items?.size})" }
+        }
+    }
 
     // Keep selected item in sync with items list
     LaunchedEffect(items) {
@@ -155,6 +167,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 items = items,
                 emptyItemsText = emptyItemsText,
+                selectedItemId = selectedItemId,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -168,6 +181,7 @@ fun <T> ListView(
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
+                searchBarActions = searchBarActions,
             )
 
             Spacer(Modifier.width(8.dp))
@@ -233,6 +247,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxSize(),
                 items = items,
                 emptyItemsText = emptyItemsText,
+                selectedItemId = selectedItemId,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -246,6 +261,7 @@ fun <T> ListView(
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
+                searchBarActions = searchBarActions,
             )
         }
     }
@@ -256,18 +272,18 @@ fun <T> ListView(
 private fun <T> ListView_ListColumn(
     items: List<T>?,
     emptyItemsText: String,
-    selectedItemIndex: Int? = null,
+    selectedItemId: Any?,
     itemDisplayName: (T) -> String,
     itemIdProvider: (T) -> Any,
-    itemLeadingContent: (@Composable (T) -> Unit)? = null,
-    itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
-    itemSupportingContent: (@Composable (T) -> Unit)? = null,
-    itemTextStyle: (@Composable (T) -> TextStyle)? = null,
-    itemEnabled: (T) -> Boolean = { true },
+    itemLeadingContent: (@Composable (T) -> Unit)?,
+    itemTrailingContent: (@Composable RowScope.(T) -> Unit)?,
+    itemSupportingContent: (@Composable (T) -> Unit)?,
+    itemTextStyle: (@Composable (T) -> TextStyle)?,
+    itemEnabled: (T) -> Boolean,
     selectedItem: T?,
     onSelectedItemChange: (T) -> Unit,
     isCreatingSupported: Boolean,
-    onCreateRequested: (() -> Unit)? = null,
+    onCreateRequested: (() -> Unit)?,
     /**
      * Map of filters to apply to the items.
      * The key is the filter name, and the value is a pair of a composable that returns the filter label and a predicate that returns true if the item should be included.
@@ -279,6 +295,7 @@ private fun <T> ListView_ListColumn(
      * Cannot be empty.
      */
     sortByOptions: List<SortBy<T>> = SortBy.defaults(itemDisplayName),
+    searchBarActions: (@Composable RowScope.() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     var search by remember { mutableStateOf("") }
@@ -297,6 +314,11 @@ private fun <T> ListView_ListColumn(
     }
     val filteredAndSortedItems = remember(searchedItems, sortBy) {
         sortBy.sorted(searchedItems)
+    }
+
+    val selectedItemIndex = remember(selectedItemId, filteredAndSortedItems) {
+        selectedItemId?.let { id -> filteredAndSortedItems.indexOfFirst { itemIdProvider(it) == id } }
+            ?.takeIf { it >= 0 }
     }
 
     Column(modifier = modifier) {
@@ -347,6 +369,7 @@ private fun <T> ListView_ListColumn(
                         toString = { it.label() },
                         onItemSelected = { sortBy = it },
                     )
+                    searchBarActions?.invoke(this)
                 }
             }
         )

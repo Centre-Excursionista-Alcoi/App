@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.draganddrop.dragAndDropSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,38 +9,40 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
 import io.github.alexzhirkevich.qrose.ImageFormat
-import io.github.alexzhirkevich.qrose.oned.BarcodeType
-import io.github.alexzhirkevich.qrose.oned.rememberBarcodePainter
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.NfcPayload
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.manufacturer.ManufacturerItemDetails
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Nfc
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Print
+import org.centrexcursionistalcoi.app.ui.reusable.Scanner
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.utils.modIf
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-
-private val Code39Regex = Regex("^[0-9A-Z \\-.$/+%]+$")
-private val Code128Regex = Regex("^[\\x00-\\x7F]+$")
 
 private val log = logging()
 
 @Composable
-fun QRCodeDialog(
-    value: String,
+fun InventoryItemInformationDialog(
+    item: ReferencedInventoryItem,
     onReadNfc: (NfcPayload) -> Unit,
+    onReadManufacturerData: (String) -> Unit,
     onDeleteRequest: (() -> Unit)? = null,
     onDismissRequest: () -> Unit
 ) {
@@ -50,7 +53,7 @@ fun QRCodeDialog(
         LaunchedEffect(Unit) {
             job = CoroutineScope(defaultAsyncDispatcher).launch {
                 if (writingNFC) {
-                    PlatformNFC.writeNFC(value)
+                    PlatformNFC.writeNFC(item.id.toString())
                     writingNFC = false
                 } else {
                     val nfcValue = PlatformNFC.readNFC()
@@ -92,34 +95,90 @@ fun QRCodeDialog(
         )
     }
 
+    var showingScanner by remember { mutableStateOf(false) }
+    if (showingScanner) {
+        Scanner(
+            onScan = { barcode ->
+                val data = barcode.data
+                log.i { "Barcode: ${barcode.data}, format: ${barcode.format}" }
+                onReadManufacturerData(data)
+            },
+            onDismissRequest = {
+                showingScanner = false
+            }
+        )
+    }
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(Res.string.qrcode)) },
+        title = { Text(stringResource(Res.string.inventory_item_type_title)) },
         text = {
             Column {
-                val qrCodePainter = rememberQrCodePainter(value)
+                val qrCodePainter = rememberQrCodePainter(item.id.toString())
                 ImageDisplay(
                     qrCodePainter,
                     stringResource(Res.string.qrcode),
                     imageModifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .modIf(PlatformDragAndDrop.isSupported) { dragAndDropSource { _ -> PlatformDragAndDrop.qrImageTransferData(qrCodePainter) } }
+                        .modIf(PlatformDragAndDrop.isSupported) {
+                            dragAndDropSource { _ ->
+                                PlatformDragAndDrop.qrImageTransferData(
+                                    qrCodePainter
+                                )
+                            }
+                        }
                 )
 
-                val barcodePainter = if (value.matches(Code39Regex)) {
-                    rememberBarcodePainter(value, BarcodeType.Code39)
-                } else if (value.matches(Code128Regex)) {
-                    rememberBarcodePainter(value, BarcodeType.Code128)
-                } else {
-                    null
-                }
-                if (barcodePainter != null) {
-                    ImageDisplay(
-                        painter = barcodePainter,
-                        contentDescription = stringResource(Res.string.barcode),
-                        imageModifier = Modifier.fillMaxWidth()
+                if (item.manufacturerTraceabilityCode == null) {
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { showingScanner = true },
+                    ) { Text(stringResource(Res.string.inventory_item_set_manufacturer_details)) }
+                    Text(
+                        text = stringResource(Res.string.inventory_item_set_manufacturer_details_help),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                } else {
+                    val manufacturerItemDetails = remember(item) {
+                        item.manufacturerTraceabilityCode?.let(ManufacturerItemDetails::decode)
+                    }
+                    if (manufacturerItemDetails != null) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Image(
+                                    painter = painterResource(manufacturerItemDetails.logo),
+                                    contentDescription = manufacturerItemDetails.name,
+                                    modifier = Modifier.size(36.dp),
+                                )
+                                Text(
+                                    text = stringResource(
+                                        Res.string.inventory_item_manufacturer_details,
+                                        manufacturerItemDetails.name
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                                )
+                                Icon(
+                                    MaterialSymbols.Delete,
+                                    stringResource(Res.string.delete),
+                                    modifier = Modifier.clickable { onReadManufacturerData("") }
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp)
+                            ) {
+                                manufacturerItemDetails.DataShowcase()
+                            }
+                        }
+                    }
                 }
 
                 if (PlatformNFC.isSupported) {

@@ -145,6 +145,7 @@ class TestLendings {
                         displayName = "Type"
                         variation = "variation"
                         nfcId = byteArrayOf(0, 1, 2, 3)
+                        manufacturerTraceabilityCode = "abc"
                     }
                 }
             }
@@ -211,7 +212,7 @@ class TestLendings {
             memoryPdf = memoryPdfFileId.toKotlinUuid(),
             memoryReviewed = true,
             items = listOf(
-                InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3))
+                InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3), "abc")
             ),
         )
 

@@ -14,4 +14,5 @@ object InventoryItems : UUIDTable("inventory_items") {
     val variation = text("variation").nullable()
     val type = reference("type", InventoryItemTypes)
     val nfcId = binary("nfcId").nullable().uniqueIndex()
+    val manufacturerTraceabilityCode = text("manufacturerTraceabilityCode").nullable().uniqueIndex()
 }

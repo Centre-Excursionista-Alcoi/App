@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
+import kotlin.uuid.Uuid
 
 @Serializable
 data class InventoryItem(
@@ -10,12 +10,14 @@ data class InventoryItem(
     val variation: String?,
     val type: Uuid,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray?,
+    val manufacturerTraceabilityCode: String?,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "variation" to variation,
         "type" to type,
         "nfcId" to nfcId,
+        "manufacturerTraceabilityCode" to manufacturerTraceabilityCode,
     )
 
     override fun equals(other: Any?): Boolean {
@@ -28,6 +30,7 @@ data class InventoryItem(
         if (variation != other.variation) return false
         if (type != other.type) return false
         if (!nfcId.contentEquals(other.nfcId)) return false
+        if (manufacturerTraceabilityCode != other.manufacturerTraceabilityCode) return false
 
         return true
     }
@@ -37,6 +40,7 @@ data class InventoryItem(
         result = 31 * result + (variation?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)
+        result = 31 * result + (manufacturerTraceabilityCode?.hashCode() ?: 0)
         return result
     }
 }
