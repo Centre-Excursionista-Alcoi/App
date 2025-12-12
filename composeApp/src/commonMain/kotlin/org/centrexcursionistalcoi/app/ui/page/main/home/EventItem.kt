@@ -105,18 +105,26 @@ fun EventItem(
             }
 
             if (event.requiresConfirmation) {
-                val assistanceConfirmed = event.userReferences.find { it.sub == profile.sub } != null
+                val assistanceConfirmed = event.userSubList.find { it.sub == profile.sub } != null
                 Text(
                     text = stringResource(Res.string.event_requires_confirmation),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                 )
 
+                val isUserInDepartment = event.department?.let { department ->
+                    profile.departments.contains(department.id)
+                } ?: true
+
                 var isLoading by remember { mutableStateOf(false) }
                 if (assistanceConfirmed) {
-                    Button(
+                    OutlinedButton(
                         enabled = !isLoading,
                         modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
                         onClick = {
                             isLoading = true
                             onRejectAssistanceRequest().invokeOnCompletion {
@@ -125,8 +133,8 @@ fun EventItem(
                         },
                     ) { Text(stringResource(Res.string.event_reject_assistance)) }
                 } else {
-                    OutlinedButton(
-                        enabled = !isLoading && (!event.requiresInsurance || activeInsurancesForEvent.isNotEmpty()),
+                    Button(
+                        enabled = isUserInDepartment && !isLoading && (!event.requiresInsurance || activeInsurancesForEvent.isNotEmpty()),
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             isLoading = true
@@ -135,6 +143,13 @@ fun EventItem(
                             }
                         },
                     ) { Text(stringResource(Res.string.event_confirm_assistance)) }
+                }
+
+                if (!isUserInDepartment) {
+                    Text(
+                        text = stringResource(Res.string.event_not_part_of_department),
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
 

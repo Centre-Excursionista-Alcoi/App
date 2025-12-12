@@ -1,10 +1,6 @@
 package org.centrexcursionistalcoi.app.database.utils
 
-import io.ktor.util.reflect.instanceOf
-import java.time.Instant
-import java.time.LocalDate
-import java.util.UUID
-import kotlin.reflect.full.companionObjectInstance
+import io.ktor.util.reflect.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
@@ -15,42 +11,26 @@ import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.*
 import org.centrexcursionistalcoi.app.data.JsonSerializable
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
+import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
-import org.jetbrains.exposed.v1.core.ArrayColumnType
-import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
-import org.jetbrains.exposed.v1.core.BooleanColumnType
-import org.jetbrains.exposed.v1.core.DoubleColumnType
-import org.jetbrains.exposed.v1.core.EntityIDColumnType
-import org.jetbrains.exposed.v1.core.IntegerColumnType
-import org.jetbrains.exposed.v1.core.LongColumnType
-import org.jetbrains.exposed.v1.core.StringColumnType
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.UIntegerColumnType
-import org.jetbrains.exposed.v1.core.UUIDColumnType
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedBinaryColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
-import org.jetbrains.exposed.v1.dao.DaoEntityID
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.dao.IntEntity
-import org.jetbrains.exposed.v1.dao.LongEntity
-import org.jetbrains.exposed.v1.dao.UIntEntity
-import org.jetbrains.exposed.v1.dao.ULongEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.*
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
 import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
+import java.util.*
+import kotlin.reflect.full.companionObjectInstance
 
 private val ignoreColumns = listOf("lastUpdate")
 
@@ -120,7 +100,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
-                    is UUIDColumnType -> element<String>(column.name, isOptional = type.nullable) // UUIDs are serialized as Strings
+                    is UUIDColumnType -> element(column.name, UUIDSerializer.descriptor, isOptional = type.nullable)
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
                     is JsonColumnType<*> -> element(column.name, JsonObject.serializer().descriptor, isOptional = type.nullable)
@@ -188,7 +168,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                                 else -> error("Unsupported entity ID column type: ${typeValue::class.simpleName}")
                             }
                         }
-                        is EncryptedVarCharColumnType -> {
+                        is EncryptedVarCharColumnType, is EncryptedBinaryColumnType -> {
                             // Encrypted columns should not be serialized
                             continue
                         }
@@ -220,7 +200,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                             encodeStringElement(descriptor, idx, typeValue.toString())
                         }
                         is UUIDColumnType -> {
-                            encodeStringElement(descriptor, idx, (typeValue as UUID).toString())
+                            encodeSerializableElement(descriptor, idx, UUIDSerializer, typeValue as UUID)
                         }
                         is BasicBinaryColumnType -> {
                             encodeSerializableElement(descriptor, idx, Base64Serializer, typeValue as ByteArray)

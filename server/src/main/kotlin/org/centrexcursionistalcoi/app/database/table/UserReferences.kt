@@ -15,17 +15,17 @@ object UserReferences : IdTable<String>(name = "user_references") {
 
     override val id: Column<EntityID<String>> get() = sub
 
-    val lastUpdate = timestamp("last_update").defaultExpression(DatabaseNowExpression)
+    val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
     val nif = text("nif").uniqueIndex()
 
-    val memberNumber = uinteger("member").uniqueIndex()
+    val memberNumber = uinteger("memberNumber").uniqueIndex()
 
-    val fullName = text("full_name")
+    val fullName = text("fullName")
     val email = text("email").uniqueIndex()
     val groups = array("groups", TextColumnType()).default(emptyList())
 
-    val isDisabled = bool("is_disabled").default(false)
+    val isDisabled = bool("isDisabled").default(false)
 
     /**
      * Hashed password using BCrypt.
@@ -33,7 +33,7 @@ object UserReferences : IdTable<String>(name = "user_references") {
      */
     val password = encryptedBinary("password", 1024, AES.encryptor)
 
-    val femecvUsername = encryptedVarchar("femecv_username", 512, AES.encryptor).nullable()
-    val femecvPassword = encryptedVarchar("femecv_password", 512, AES.encryptor).nullable()
-    val femecvLastSync = timestamp("femecv_last_sync").nullable()
+    val femecvUsername = encryptedVarchar("femecvUsername", 512, AES.encryptor).nullable()
+    val femecvPassword = encryptedVarchar("femecvPassword", 512, AES.encryptor).nullable()
+    val femecvLastSync = timestamp("femecvLastSync").nullable()
 }

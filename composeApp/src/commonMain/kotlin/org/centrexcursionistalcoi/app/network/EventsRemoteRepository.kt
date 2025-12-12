@@ -62,7 +62,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
                 requiresInsurance = requiresInsurance,
                 department = departmentId,
                 image = inMemoryImage?.id,
-                userReferences = emptyList(),
+                userSubList = emptyList(),
             ),
             progressNotifier,
         )
@@ -106,10 +106,12 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
     suspend fun confirmAssistance(eventId: Uuid) {
         val response = httpClient.post("/events/$eventId/confirm")
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
+        update(eventId)
     }
 
     suspend fun rejectAssistance(eventId: Uuid) {
         val response = httpClient.post("/events/$eventId/reject")
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
+        update(eventId)
     }
 }

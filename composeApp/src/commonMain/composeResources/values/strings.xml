@@ -518,6 +518,7 @@
     <string name="event_requires_insurance_valid">Requires a valid insurance: you have one</string>
     <string name="event_confirm_assistance">Confirm Assistance</string>
     <string name="event_reject_assistance">Reject Assistance</string>
+    <string name="event_not_part_of_department">You are not part of the organizing department.</string>
     <string name="event_title">Title</string>
     <string name="event_description">Description</string>
     <string name="event_department">Department</string>

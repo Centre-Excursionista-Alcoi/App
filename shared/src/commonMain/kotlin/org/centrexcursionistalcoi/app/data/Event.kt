@@ -22,7 +22,7 @@ data class Event(
     /**
      * All the users that have confirmed assistance to the event.
      */
-    val userReferences: List<String>,
+    val userSubList: List<String>,
 ): Entity<Uuid>, ImageFileContainer {
     override val files: Map<String, Uuid?> = mapOf("image" to image)
 
@@ -38,6 +38,6 @@ data class Event(
         "requiresInsurance" to requiresInsurance,
         "department" to department,
         "image" to image,
-        "userReferences" to userReferences,
+        "userSubList" to userSubList,
     )
 }
