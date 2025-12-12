@@ -50,6 +50,8 @@ fun HomePage(
     users: List<UserData>?,
 
     events: List<ReferencedEvent>?,
+    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
+    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
@@ -82,20 +84,6 @@ fun HomePage(
             ?.map { it.members.orEmpty() }
             ?.filter { members -> members.any { !it.confirmed } }
             ?.flatten()
-    }
-
-    val eventsAndPosts = remember(events, posts) {
-        val combined = mutableListOf<Any>()
-        if (!posts.isNullOrEmpty()) combined.addAll(posts)
-        if (!events.isNullOrEmpty()) combined.addAll(events)
-        combined.sortByDescending {
-            when (it) {
-                is ReferencedPost -> it.date
-                is ReferencedEvent -> it.start
-                else -> throw IllegalArgumentException("Unknown type in eventsAndPosts")
-            }
-        }
-        combined
     }
 
     AdaptiveVerticalGrid(
@@ -189,15 +177,43 @@ fun HomePage(
             }
         }
 
-        items(eventsAndPosts) { postOrEvent ->
-            if (postOrEvent is ReferencedPost) {
-                PostItem(postOrEvent)
-            } else if (postOrEvent is ReferencedEvent) {
-                EventItem(postOrEvent)
+        if (!events.isNullOrEmpty()) {
+            item("events_title", contentType = "title", span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(Res.string.upcoming_events),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                )
+            }
+            items(events) { event ->
+                EventItem(
+                    profile,
+                    event,
+                    { onConfirmAssistanceRequest(event) },
+                    { onRejectAssistanceRequest(event) },
+                )
+            }
+            // Fill the current line
+            item(key = "events_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
+                Spacer(Modifier.height(16.dp))
             }
         }
-        item(key = "posts_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(Modifier.height(16.dp))
+
+        if (!posts.isNullOrEmpty()) {
+            item("posts_title", contentType = "title", span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(Res.string.posts),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                )
+            }
+            items(posts) { post ->
+                PostItem(post)
+            }
+            // Fill the current line
+            item(key = "posts_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
+                Spacer(Modifier.height(16.dp))
+            }
         }
 
         if (isRegisteredForLendings) {

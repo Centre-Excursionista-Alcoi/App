@@ -250,4 +250,19 @@ sealed interface PushNotification {
 
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("eventId" to eventId.toString())
     }
+
+    @Serializable
+    class EventAssistanceUpdated(
+        val eventId: Uuid,
+        override val userSub: String,
+        val isConfirmed: Boolean,
+    ) : TargetedNotification {
+        companion object {
+            const val TYPE = "EventAssistanceUpdated"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("eventId" to eventId.toString(), "isConfirmed" to isConfirmed.toString())
+    }
 }

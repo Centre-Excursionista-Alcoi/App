@@ -9,10 +9,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.database.*
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -142,5 +144,13 @@ class MainViewModel: ViewModel() {
 
     fun leaveDepartment(department: Department) = launch {
         DepartmentsRemoteRepository.leave(department.id)
+    }
+
+    fun confirmEventAssistance(event: ReferencedEvent) = launch {
+        EventsRemoteRepository.confirmAssistance(event.id)
+    }
+
+    fun rejectEventAssistance(event: ReferencedEvent) = launch {
+        EventsRemoteRepository.rejectAssistance(event.id)
     }
 }

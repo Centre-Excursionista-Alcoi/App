@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -10,6 +12,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
@@ -59,7 +62,7 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
                 requiresInsurance = requiresInsurance,
                 department = departmentId,
                 image = inMemoryImage?.id,
-                userReferences = emptyList(),
+                userSubList = emptyList(),
             ),
             progressNotifier,
         )
@@ -98,5 +101,17 @@ object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Ev
             serializer = UpdateEventRequest.serializer(),
             progressNotifier = progressNotifier,
         )
+    }
+
+    suspend fun confirmAssistance(eventId: Uuid) {
+        val response = httpClient.post("/events/$eventId/confirm")
+        if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
+        update(eventId)
+    }
+
+    suspend fun rejectAssistance(eventId: Uuid) {
+        val response = httpClient.post("/events/$eventId/reject")
+        if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
+        update(eventId)
     }
 }
