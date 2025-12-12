@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
@@ -106,6 +107,7 @@ fun EventItem(
                     Text(
                         text = stringResource(Res.string.event_requires_insurance_valid),
                         fontWeight = FontWeight.Bold,
+                        color = Color(0xFF29BA2D),
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                     )
                 }
