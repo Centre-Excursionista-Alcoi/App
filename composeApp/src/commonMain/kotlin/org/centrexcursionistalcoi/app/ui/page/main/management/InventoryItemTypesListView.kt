@@ -104,7 +104,7 @@ fun InventoryItemTypesListView(
             )
         },
         emptyItemsText = stringResource(Res.string.management_no_item_types),
-        isCreatingSupported = false,
+        isCreatingSupported = true,
         createTitle = stringResource(Res.string.management_inventory_item_type_create),
         onDeleteRequest = { (type) -> onDelete(type) },
         editItemContent = { typeAndItems ->
