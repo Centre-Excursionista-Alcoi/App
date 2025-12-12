@@ -88,6 +88,7 @@ fun <T> ListView(
     itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
     itemEnabled: (T) -> Boolean = { true },
+    searchBarActions: (@Composable RowScope.() -> Unit)? = null,
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
     onDeleteRequest: ((T) -> Job)? = null,
     itemContent: @Composable ColumnScope.(T) -> Unit,
@@ -155,6 +156,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 items = items,
                 emptyItemsText = emptyItemsText,
+                selectedItemIndex = selectedItemIndex,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -168,6 +170,7 @@ fun <T> ListView(
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
+                searchBarActions = searchBarActions,
             )
 
             Spacer(Modifier.width(8.dp))
@@ -233,6 +236,7 @@ fun <T> ListView(
                 modifier = Modifier.fillMaxSize(),
                 items = items,
                 emptyItemsText = emptyItemsText,
+                selectedItemIndex = selectedItemIndex,
                 itemDisplayName = itemDisplayName,
                 itemIdProvider = itemIdProvider,
                 itemLeadingContent = itemLeadingContent,
@@ -246,6 +250,7 @@ fun <T> ListView(
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
                 onCreateRequested = { isCreating = true },
+                searchBarActions = searchBarActions,
             )
         }
     }
@@ -256,18 +261,18 @@ fun <T> ListView(
 private fun <T> ListView_ListColumn(
     items: List<T>?,
     emptyItemsText: String,
-    selectedItemIndex: Int? = null,
+    selectedItemIndex: Int?,
     itemDisplayName: (T) -> String,
     itemIdProvider: (T) -> Any,
-    itemLeadingContent: (@Composable (T) -> Unit)? = null,
-    itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
-    itemSupportingContent: (@Composable (T) -> Unit)? = null,
-    itemTextStyle: (@Composable (T) -> TextStyle)? = null,
-    itemEnabled: (T) -> Boolean = { true },
+    itemLeadingContent: (@Composable (T) -> Unit)?,
+    itemTrailingContent: (@Composable RowScope.(T) -> Unit)?,
+    itemSupportingContent: (@Composable (T) -> Unit)?,
+    itemTextStyle: (@Composable (T) -> TextStyle)?,
+    itemEnabled: (T) -> Boolean,
     selectedItem: T?,
     onSelectedItemChange: (T) -> Unit,
     isCreatingSupported: Boolean,
-    onCreateRequested: (() -> Unit)? = null,
+    onCreateRequested: (() -> Unit)?,
     /**
      * Map of filters to apply to the items.
      * The key is the filter name, and the value is a pair of a composable that returns the filter label and a predicate that returns true if the item should be included.
@@ -279,6 +284,7 @@ private fun <T> ListView_ListColumn(
      * Cannot be empty.
      */
     sortByOptions: List<SortBy<T>> = SortBy.defaults(itemDisplayName),
+    searchBarActions: (@Composable RowScope.() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     var search by remember { mutableStateOf("") }
@@ -347,6 +353,7 @@ private fun <T> ListView_ListColumn(
                         toString = { it.label() },
                         onItemSelected = { sortBy = it },
                     )
+                    searchBarActions?.invoke(this)
                 }
             }
         )

@@ -277,6 +277,9 @@
     <string name="inventory_item_variation">Variation: %1$d</string>
     <string name="inventory_item_nfc_id">NFC ID: %1$s</string>
     <string name="inventory_item_create">Create Inventory Item</string>
+    <string name="inventory_item_manufacturer_details">%1$s Manufacturer Details</string>
+    <string name="inventory_item_set_manufacturer_details">Set Manufacturer Details</string>
+    <string name="inventory_item_set_manufacturer_details_help">Some manufacturers include a Data Matrix or serial number with information about the material. The app will try its best to recognize the brand and data.</string>
 
     <string name="create_inventory_item_variation">Variation</string>
     <string name="create_inventory_item_type">Type</string>
@@ -368,6 +371,7 @@
     <string name="memory_editor_department">Department</string>
     <string name="memory_editor_description">Activity description</string>
 
+    <string name="scanner_open">Open Scanner</string>
     <string name="scanner_read">Read code: %1$s</string>
     <string name="scanner_error">Could not read code</string>
 

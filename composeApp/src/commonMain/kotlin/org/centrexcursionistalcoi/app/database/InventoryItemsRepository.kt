@@ -69,6 +69,7 @@ object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uu
         variation = item.variation,
         type = item.type.id,
         nfcId = item.nfcId,
+        manufacturerTraceabilityCode = item.manufacturerTraceabilityCode,
     )
 
     override suspend fun update(item: ReferencedInventoryItem) = queries.update(
@@ -76,6 +77,7 @@ object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uu
         variation = item.variation,
         type = item.type.id,
         nfcId = item.nfcId,
+        manufacturerTraceabilityCode = item.manufacturerTraceabilityCode,
     )
 
     override suspend fun delete(id: Uuid) {
@@ -87,5 +89,6 @@ object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uu
         variation = variation,
         type = type,
         nfcId = nfcId,
+        manufacturerTraceabilityCode = manufacturerTraceabilityCode,
     )
 }

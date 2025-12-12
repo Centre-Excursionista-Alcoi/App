@@ -229,4 +229,10 @@ class ManagementViewModel : ViewModel() {
             EventsRemoteRepository.delete(post.id)
         }
     }
+
+    fun updateInventoryItemManufacturerData(item: ReferencedInventoryItem, data: String) = launch {
+        doAsync {
+            InventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
+        }
+    }
 }

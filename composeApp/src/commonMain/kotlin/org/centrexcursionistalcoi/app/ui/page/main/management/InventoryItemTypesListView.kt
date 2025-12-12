@@ -25,17 +25,21 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
-import org.centrexcursionistalcoi.app.ui.dialog.QRCodeDialog
+import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemInformationDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.QrCodeScanner
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
+import org.centrexcursionistalcoi.app.ui.reusable.Scanner
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
 
@@ -55,9 +59,13 @@ fun InventoryItemTypesListView(
     onDelete: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
+    onUpdateInventoryItemManufacturerData: (ReferencedInventoryItem, String) -> Job,
 ) {
+    val scope = rememberCoroutineScope()
+
+    var selectedItemId by remember { mutableStateOf(selectedItemId) }
     val selectedItemIndex = remember(selectedItemId, types) {
-        types?.indexOfFirst { it.id == selectedItemId }
+        types?.indexOfFirst { it.id == selectedItemId }?.takeIf { it >= 0 }
     }
 
     var creatingInventoryItem by remember { mutableStateOf<ReferencedInventoryItemType?>(null) }
@@ -66,6 +74,26 @@ fun InventoryItemTypesListView(
             type = type,
             onCreate = onCreateInventoryItem,
             onDismissRequested = { creatingInventoryItem = null }
+        )
+    }
+
+    var showingScanner by remember { mutableStateOf(false) }
+    if (showingScanner) {
+        Scanner(
+            onScan = { barcode ->
+                val data = barcode.data
+                // scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_read, data)) }
+                log.i { "Barcode: ${barcode.data}, format: ${barcode.format}" }
+                items?.find { it.id == data.toUuidOrNull() }?.let { selectedItemId = it.id }
+                    ?: log.d { "Could not find item id=$data" }
+                items?.find { it.nfcId.contentEquals(data.encodeToByteArray()) }?.let { selectedItemId = it.id }
+                    ?: log.d { "Could not find item with nfcId=$data" }
+                items?.find { it.manufacturerTraceabilityCode == data }?.let { selectedItemId = it.id }
+                    ?: log.d { "Could not find item with manufacturerTraceabilityCode=$data" }
+            },
+            onDismissRequest = {
+                showingScanner = false
+            }
         )
     }
 
@@ -107,6 +135,14 @@ fun InventoryItemTypesListView(
         isCreatingSupported = true,
         createTitle = stringResource(Res.string.management_inventory_item_type_create),
         onDeleteRequest = { (type) -> onDelete(type) },
+        searchBarActions = {
+            TooltipIconButton(
+                imageVector = MaterialSymbols.QrCodeScanner,
+                tooltip = stringResource(Res.string.scanner_open),
+                positioning = TooltipAnchorPosition.Left,
+                onClick = { scope.launchWithCameraPermission { showingScanner = true } },
+            )
+        },
         editItemContent = { typeAndItems ->
             val type = typeAndItems?.first
 
@@ -291,12 +327,13 @@ fun InventoryItemTypesListView(
 
         var showingItemDialog by remember { mutableStateOf<ReferencedInventoryItem?>(null) }
         showingItemDialog?.let { item ->
-            QRCodeDialog(
-                value = item.id.toString(),
+            InventoryItemInformationDialog(
+                item = item,
                 onReadNfc = { payload ->
                     payload.uuid()?.let { highlightItemId = it }
                     payload.id?.let { highlightItemNfcId = it }
                 },
+                onReadManufacturerData = { onUpdateInventoryItemManufacturerData(item, it) },
                 onDeleteRequest = { deletingItem = item },
                 onDismissRequest = { showingItemDialog = null }
             )
