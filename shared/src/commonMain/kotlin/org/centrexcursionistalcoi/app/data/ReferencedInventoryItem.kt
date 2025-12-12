@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
+import kotlin.uuid.Uuid
 
 @Serializable
 data class ReferencedInventoryItem(
@@ -10,6 +10,7 @@ data class ReferencedInventoryItem(
     val variation: String?,
     val type: ReferencedInventoryItemType,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray?,
+    val manufacturerTraceabilityCode: String?,
     override val referencedEntity: InventoryItem
 ): ReferencedEntity<Uuid, InventoryItem>() {
     companion object {
@@ -18,6 +19,7 @@ data class ReferencedInventoryItem(
             variation = this.variation,
             type = type,
             nfcId = this.nfcId,
+            manufacturerTraceabilityCode = manufacturerTraceabilityCode,
             referencedEntity = this,
         )
     }
@@ -32,6 +34,7 @@ data class ReferencedInventoryItem(
         if (variation != other.variation) return false
         if (type != other.type) return false
         if (!nfcId.contentEquals(other.nfcId)) return false
+        if (manufacturerTraceabilityCode != other.manufacturerTraceabilityCode) return false
         if (referencedEntity != other.referencedEntity) return false
 
         return true
@@ -42,6 +45,7 @@ data class ReferencedInventoryItem(
         result = 31 * result + (variation?.hashCode() ?: 0)
         result = 31 * result + type.hashCode()
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)
+        result = 31 * result + (manufacturerTraceabilityCode?.hashCode() ?: 0)
         result = 31 * result + referencedEntity.hashCode()
         return result
     }

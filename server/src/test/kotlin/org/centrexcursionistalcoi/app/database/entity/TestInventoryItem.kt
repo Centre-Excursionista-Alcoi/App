@@ -25,13 +25,15 @@ class TestInventoryItem {
                 }
                 variation = "abc"
                 nfcId = byteArrayOf(0, 1, 2, 3)
+                manufacturerTraceabilityCode = "abc"
             }
         }
         val inventoryItemClass = InventoryItem(
             id = inventoryItemId.toKotlinUuid(),
             type = inventoryItemTypeId.toKotlinUuid(),
             variation = "abc",
-            nfcId = byteArrayOf(0, 1, 2, 3)
+            nfcId = byteArrayOf(0, 1, 2, 3),
+            manufacturerTraceabilityCode = "abc"
         )
 
         assertJsonEquals(
