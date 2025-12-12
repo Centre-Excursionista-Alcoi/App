@@ -164,7 +164,7 @@ fun EventsListView(
             FormSwitchRow(
                 checked = requiresInsurance,
                 onCheckedChange = { requiresInsurance = it },
-                label = stringResource(Res.string.event_requires_confirmation),
+                label = stringResource(Res.string.event_requires_insurance),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 enabled = !isLoading,
             )

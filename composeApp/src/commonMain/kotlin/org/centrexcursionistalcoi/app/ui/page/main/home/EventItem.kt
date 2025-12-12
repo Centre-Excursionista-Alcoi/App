@@ -83,18 +83,28 @@ fun EventItem(
                 )
             }
 
-            val activeInsurances = remember(profile) { profile.activeInsurances(event.start) }
+            val activeInsurances = remember(profile) { profile.activeInsurances() }
+            val activeInsurancesForEvent = remember(profile) { profile.activeInsurances(event.start) }
             if (event.requiresInsurance) {
-                if (activeInsurances.isEmpty()) {
-                    Text(
-                        text = stringResource(Res.string.event_requires_insurance_none),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                    )
+                if (activeInsurancesForEvent.isEmpty()) {
+                    if (activeInsurances.isEmpty()) {
+                        Text(
+                            text = stringResource(Res.string.event_requires_insurance_none),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(Res.string.event_requires_insurance_period, event.localizedDateRange()),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                        )
+                    }
                 } else {
                     Text(
-                        text = stringResource(Res.string.event_requires_insurance_none),
+                        text = stringResource(Res.string.event_requires_insurance_valid),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
                     )
@@ -123,7 +133,7 @@ fun EventItem(
                     ) { Text(stringResource(Res.string.event_reject_assistance)) }
                 } else {
                     OutlinedButton(
-                        enabled = !isLoading && (!event.requiresInsurance || activeInsurances.isNotEmpty()),
+                        enabled = !isLoading && (!event.requiresInsurance || activeInsurancesForEvent.isNotEmpty()),
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             isLoading = true
