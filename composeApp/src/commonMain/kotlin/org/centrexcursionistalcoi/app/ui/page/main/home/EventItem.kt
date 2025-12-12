@@ -87,30 +87,21 @@ fun EventItem(
             val activeInsurances = remember(profile) { profile.activeInsurances() }
             val activeInsurancesForEvent = remember(profile) { profile.activeInsurances(event.start) }
             if (event.requiresInsurance) {
-                if (activeInsurancesForEvent.isEmpty()) {
+                val (text, color) = if (activeInsurancesForEvent.isEmpty()) {
                     if (activeInsurances.isEmpty()) {
-                        Text(
-                            text = stringResource(Res.string.event_requires_insurance_none),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                        )
+                        stringResource(Res.string.event_requires_insurance_none)
                     } else {
-                        Text(
-                            text = stringResource(Res.string.event_requires_insurance_period, event.localizedDateRange()),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                        )
-                    }
+                        stringResource(Res.string.event_requires_insurance_period, event.localizedDateRange())
+                    } to MaterialTheme.colorScheme.error
                 } else {
-                    Text(
-                        text = stringResource(Res.string.event_requires_insurance_valid),
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF29BA2D),
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
-                    )
+                    stringResource(Res.string.event_requires_insurance_valid) to Color(0xFF29BA2D)
                 }
+                Text(
+                    text = text,
+                    fontWeight = FontWeight.Bold,
+                    color = color,
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                )
             }
 
             if (event.requiresConfirmation) {
