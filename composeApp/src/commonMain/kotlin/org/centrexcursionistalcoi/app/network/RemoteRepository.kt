@@ -1,35 +1,16 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.onUpload
-import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
+import io.ktor.client.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
-import org.centrexcursionistalcoi.app.data.DocumentFileContainer
-import org.centrexcursionistalcoi.app.data.Entity
-import org.centrexcursionistalcoi.app.data.FileContainer
-import org.centrexcursionistalcoi.app.data.ImageFileContainer
-import org.centrexcursionistalcoi.app.data.ServerInfo
-import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
-import org.centrexcursionistalcoi.app.data.fetchImageFilePath
-import org.centrexcursionistalcoi.app.data.filePaths
-import org.centrexcursionistalcoi.app.data.toFormData
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -40,9 +21,10 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
-import org.centrexcursionistalcoi.app.response.bodyAsJson
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -262,18 +244,18 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private suspend fun downloadFileForEntity(item: LocalEntity, progressNotifier: ProgressNotifier? = null) {
         when (item) {
             is DocumentFileContainer -> {
-                val path = item.fetchDocumentFilePath(downloadIfNotExists = false)
                 val fileUuid = item.documentFile
                 if (fileUuid != null) {
+                    val path = item.fetchDocumentFilePath(downloadIfNotExists = false)
                     downloadFile(fileUuid, path, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
             is ImageFileContainer -> {
-                val path = item.fetchImageFilePath(downloadIfNotExists = false)
                 val fileUuid = item.image
                 if (fileUuid != null) {
+                    val path = item.fetchImageFilePath(downloadIfNotExists = false)
                     downloadFile(fileUuid, path, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
