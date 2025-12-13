@@ -59,6 +59,8 @@
     <string name="permission_deny">Deny</string>
     <string name="permission_notification_title">Notification Permission</string>
     <string name="permission_notification_message">Please, grant access to send you notification so that we can keep you up to date with your lendings.</string>
+    <string name="permission_camera_title">Camera Permission</string>
+    <string name="permission_camera_message">Please, grant access to access your camera so that the scanner can be launched.</string>
 
     <string name="management_departments">Departments</string>
     <string name="management_users">Users</string>
