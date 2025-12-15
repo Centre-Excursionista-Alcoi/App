@@ -37,7 +37,7 @@ jobs:
           cache: 'gradle'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload test results (on failure)
         if: ${{ steps.server_tests.outcome == 'failure' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: server-test-results
           retention-days: 3
