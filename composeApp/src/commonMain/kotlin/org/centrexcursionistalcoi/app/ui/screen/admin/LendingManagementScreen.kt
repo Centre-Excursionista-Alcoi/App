@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
@@ -44,6 +43,7 @@ import org.centrexcursionistalcoi.app.ui.icons.Whatsapp
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.ui.reusable.Scanner
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.screen.DataRow
 import org.centrexcursionistalcoi.app.ui.screen.GeneralLendingDetails
@@ -55,8 +55,6 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
-import org.ncgroup.kscan.BarcodeResult
-import org.ncgroup.kscan.ScannerView
 import kotlin.uuid.Uuid
 
 private val log = logging()
@@ -335,36 +333,21 @@ private fun LendingPickupReturnScreen(
 
     var showingScanner by remember { mutableStateOf(false) }
     if (showingScanner) {
-        ScannerView(
-            modifier = Modifier.zIndex(2f),
-            codeTypes = listOf(
-                BarcodeFormat.FORMAT_QR_CODE,
-                BarcodeFormat.FORMAT_CODE_39,
-                BarcodeFormat.FORMAT_CODE_128,
-                BarcodeFormat.FORMAT_DATA_MATRIX,
-            )
-        ) { result ->
-            when (result) {
-                is BarcodeResult.OnSuccess -> {
-                    val data = result.barcode.data
-                    scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_read, data)) }
-                    log.i { "Barcode: ${result.barcode.data}, format: ${result.barcode.format}" }
-                    onScanCode(result.barcode)
-                    showingScanner = false
-                }
-
-                is BarcodeResult.OnFailed -> {
-                    log.e(result.exception) { "Could not read barcode." }
-                    scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_error)) }
-                    showingScanner = false
-                }
-
-                BarcodeResult.OnCanceled -> {
-                    log.d { "Scan cancelled" }
-                    showingScanner = false
-                }
-            }
-        }
+        Scanner(
+            codeTypes = listOf(BarcodeFormat.FORMAT_ALL_FORMATS),
+            onScan = { barcode ->
+                val data = barcode.data
+                scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_read, data)) }
+                log.i { "Barcode: ${barcode.data}, format: ${barcode.format}" }
+                onScanCode(barcode)
+            },
+            onError = { exception ->
+                log.e(exception) { "Could not read barcode." }
+                scope.launch { snackbarHostState.showSnackbar(getString(Res.string.scanner_error)) }
+                showingScanner = false
+            },
+            onDismissRequest = { showingScanner = false },
+        )
     }
 
     var showingDeleteConfirmation by remember { mutableStateOf(false) }
