@@ -1,14 +1,15 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.lending_details_scan_error_not_found
 import com.diamondedge.logging.logging
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.doAsync
@@ -19,6 +20,7 @@ import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
 import org.ncgroup.kscan.Barcode
+import kotlin.uuid.Uuid
 
 class LendingManagementViewModel(
     private val lendingId: Uuid,
@@ -58,10 +60,10 @@ class LendingManagementViewModel(
                 val payload = PlatformNFC.readNFC() ?: continue
                 log.d { "NFC tag read: $payload" }
                 payload.uuid()?.let { uuid ->
-                    onScan(uuid)
+                    processScanById(uuid)
                 }
                 payload.id?.let { tagId ->
-                    processScan(tagId)
+                    processScanByNfcId(tagId)
                 }
             }
         }
@@ -84,9 +86,9 @@ class LendingManagementViewModel(
 
     fun onScan(barcode: Barcode) {
         val data = barcode.data
-        val uuid = data.toUuidOrNull() ?: return
         launch {
-            doAsync { processScan(uuid) }
+            doAsync { processScanById(data.toUuidOrNull()) }
+            doAsync { processScanByManufacturerTraceabilityCode(data) }
         }
     }
 
@@ -134,12 +136,6 @@ class LendingManagementViewModel(
         _scanSuccess.value = null
     }
 
-    fun onScan(itemId: Uuid) = launch {
-        doAsync {
-            processScan(itemId)
-        }
-    }
-
     fun toggleItem(itemId: Uuid) {
         if (toggleAllowIndeterminate.value == true) {
             if (scannedItems.value.contains(itemId)) {
@@ -166,11 +162,11 @@ class LendingManagementViewModel(
         }
     }
 
-    private suspend fun processScan(itemId: Uuid) {
+    private suspend fun processScan(predicate: (ReferencedInventoryItem) -> Boolean) {
         val lending = lending.value ?: return
-        val item = lending.items.find { it.id == itemId }
+        val item = lending.items.find(predicate)
         if (item == null) {
-            log.e { "Could not find item $itemId" }
+            log.e { "Could not find item matching predicate" }
             _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
             return
         }
@@ -180,18 +176,17 @@ class LendingManagementViewModel(
         log.i { "Item ${item.id} scanned successfully." }
     }
 
-    private suspend fun processScan(tagId: ByteArray) {
-        val lending = lending.value ?: return
-        val item = lending.items.find { it.nfcId.contentEquals(tagId) }
-        if (item == null) {
-            log.e { "Could not find item for tag: ${tagId}" }
-            _scanError.value = getString(Res.string.lending_details_scan_error_not_found)
-            return
-        }
+    private suspend fun processScanById(itemId: Uuid?) {
+        itemId ?: return
+        processScan { it.id == itemId }
+    }
 
-        _scannedItems.value += item.id
-        _dismissedItems.value -= item.id
-        log.i { "Item ${item.id} scanned successfully." }
+    private suspend fun processScanByManufacturerTraceabilityCode(manufacturerTraceabilityCode: String) {
+        processScan { it.manufacturerTraceabilityCode == manufacturerTraceabilityCode }
+    }
+
+    private suspend fun processScanByNfcId(tagId: ByteArray) {
+        processScan { it.nfcId.contentEquals(tagId) }
     }
 
 
