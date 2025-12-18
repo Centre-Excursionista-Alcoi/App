@@ -28,6 +28,8 @@ import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forI
 import org.centrexcursionistalcoi.app.ui.page.main.management.*
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
+import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
+import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 import kotlin.uuid.Uuid
 
@@ -40,36 +42,36 @@ const val MANAGEMENT_PAGE_INVENTORY = 5
 
 private sealed class ManagementPage(
     private val key: String,
-    val tabData: @Composable () -> TabData,
+    val tabData: @Composable (badgeText: String?) -> TabData,
 ) {
     object Lendings : ManagementPage(
         key = "lendings",
-        tabData = { TabData.fromResources(Res.string.management_lendings, MaterialSymbols.Inventory2, MaterialSymbols.Inventory2Filled) }
+        tabData = { TabData.fromResources(Res.string.management_lendings, MaterialSymbols.Inventory2, MaterialSymbols.Inventory2Filled, it) }
     )
 
     object Departments : ManagementPage(
         key = "departments",
-        tabData = { TabData.fromResources(Res.string.management_departments, MaterialSymbols.Category, MaterialSymbols.CategoryFilled) }
+        tabData = { TabData.fromResources(Res.string.management_departments, MaterialSymbols.Category, MaterialSymbols.CategoryFilled, it) }
     )
 
     object Users : ManagementPage(
         key = "users",
-        tabData = { TabData.fromResources(Res.string.management_users, MaterialSymbols.Face, MaterialSymbols.FaceFilled) }
+        tabData = { TabData.fromResources(Res.string.management_users, MaterialSymbols.Face, MaterialSymbols.FaceFilled, it) }
     )
 
     object Posts : ManagementPage(
         key = "posts",
-        tabData = { TabData.fromResources(Res.string.management_posts, MaterialSymbols.Newsmode, MaterialSymbols.NewsmodeFilled) }
+        tabData = { TabData.fromResources(Res.string.management_posts, MaterialSymbols.Newsmode, MaterialSymbols.NewsmodeFilled, it) }
     )
 
     object Events : ManagementPage(
         key = "events",
-        tabData = { TabData.fromResources(Res.string.management_events, MaterialSymbols.Event, MaterialSymbols.EventFilled) }
+        tabData = { TabData.fromResources(Res.string.management_events, MaterialSymbols.Event, MaterialSymbols.EventFilled, it) }
     )
 
     object Inventory : ManagementPage(
         key = "inventory",
-        tabData = { TabData.fromResources(Res.string.management_inventory,  MaterialSymbols.Inventory, MaterialSymbols.InventoryFilled) }
+        tabData = { TabData.fromResources(Res.string.management_inventory,  MaterialSymbols.Inventory, MaterialSymbols.InventoryFilled, it) }
     )
 
 
@@ -237,7 +239,14 @@ private fun ManagementPage(
     ) {
         AdaptiveTabRow(
             selectedTabIndex = pagerState.currentPage,
-            tabs = pages.map { it.tabData() },
+            tabs = pages.map { page ->
+                val countBadge = when (page) {
+                    ManagementPage.Departments -> departments.departmentsCountBadge()
+                    ManagementPage.Lendings -> lendings.lendingsCountBadge()
+                    else -> null
+                }
+                page.tabData(countBadge?.takeIf { it > 0 }?.toString())
+            },
             onTabSelected = { index ->
                 scope.launch { pagerState.animateScrollToPage(index) }
             },
