@@ -2,11 +2,16 @@ package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -17,6 +22,7 @@ data class TabData(
     val icon: ImageVector? = null,
     val filledIcon: ImageVector? = icon,
     val contentDescription: String? = title,
+    val badgeText: String? = null,
 ) {
     companion object {
         @Composable
@@ -24,26 +30,31 @@ data class TabData(
             titleRes: StringResource,
             icon: ImageVector? = null,
             filledIcon: ImageVector? = icon,
+            badgeText: String? = null,
             contentDescription: StringResource? = titleRes,
         ) = TabData(
             title = stringResource(titleRes),
             icon = icon,
             filledIcon = filledIcon,
             contentDescription = contentDescription?.let { stringResource(it) },
+            badgeText = badgeText,
         )
     }
 
     @Composable
     private fun TabWithIcon(selected: Boolean, onClick: () -> Unit) {
+
         Tab(
             selected = selected,
             onClick = onClick,
             icon = {
-                AnimatedContent(selected) {
-                    Icon(
-                        imageVector = if (it) filledIcon!! else icon!!,
-                        contentDescription = contentDescription
-                    )
+                ConditionalBadge(badgeText) {
+                    AnimatedContent(selected) {
+                        Icon(
+                            imageVector = if (it) filledIcon!! else icon!!,
+                            contentDescription = contentDescription
+                        )
+                    }
                 }
             },
             text = { Text(title) }
@@ -55,7 +66,14 @@ data class TabData(
         Tab(
             selected = selected,
             onClick = onClick,
-            text = { Text(title) }
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title)
+                    if (badgeText != null) {
+                        Badge(modifier = Modifier.padding(start = 4.dp)) { Text(badgeText) }
+                    }
+                }
+            }
         )
     }
 

@@ -1,10 +1,10 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Serializable
 data class Lending(
@@ -37,7 +37,12 @@ data class Lending(
         TAKEN,
         RETURNED,
         MEMORY_SUBMITTED,
-        COMPLETE,
+        COMPLETE;
+
+        /**
+         * Checks whether the status is pending. This is: [REQUESTED], [CONFIRMED], [TAKEN] or [RETURNED].
+         */
+        fun isPending() = this in listOf(REQUESTED, CONFIRMED, TAKEN, RETURNED)
     }
 
     override fun toMap(): Map<String, Any?> = mapOf(

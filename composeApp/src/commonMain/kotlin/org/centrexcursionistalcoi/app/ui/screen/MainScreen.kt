@@ -34,7 +34,10 @@ import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.page.main.*
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
+import org.centrexcursionistalcoi.app.ui.reusable.ConditionalBadge
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
+import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
@@ -346,8 +349,14 @@ private fun MainScreenContent(
                     exit = slideOutVertically { it },
                 ) {
                     NavigationBar {
-                        for ((index, item) in navigationItems.values.withIndex()) {
+                        for ((index, entry) in navigationItems.entries.withIndex()) {
+                            val (page, item) = entry
                             val isSelected = pager.currentPage == index
+                            val badgeText = if (page == Page.MANAGEMENT) {
+                                val departmentsCount = departments.departmentsCountBadge() ?: 0
+                                val lendingsCount = lendings.lendingsCountBadge() ?: 0
+                                (departmentsCount + lendingsCount).takeIf { it > 0 }?.toString()
+                            } else null
                             NavigationBarItem(
                                 selected = isSelected,
                                 enabled = item.enabled,
@@ -364,10 +373,14 @@ private fun MainScreenContent(
                                                 PlainTooltip { Text(stringResource(item.tooltip)) }
                                             }
                                         ) {
-                                            item.Icon(isSelected)
+                                            ConditionalBadge(badgeText) {
+                                                item.Icon(isSelected)
+                                            }
                                         }
                                     } else {
-                                        item.Icon(isSelected)
+                                        ConditionalBadge(badgeText) {
+                                            item.Icon(isSelected)
+                                        }
                                     }
                                 }
                             )
@@ -421,6 +434,8 @@ private fun MainScreenContent(
                             navigationItems = navigationItems,
                             isAdmin = profile.isAdmin,
                             isSyncing = isSyncing,
+                            departments = departments,
+                            lendings = lendings,
                             onSettingsRequested = onSettingsRequested,
                             onLogoutRequested = { showingLogoutDialog = true },
                             onSyncRequested = onSyncRequested,
@@ -655,6 +670,8 @@ private fun ColumnScope.NavigationRailItems(
     navigationItems: Map<Page, NavigationItem>,
     isAdmin: Boolean,
     isSyncing: Boolean,
+    departments: List<Department>?,
+    lendings: List<ReferencedLending>?,
     onSettingsRequested: () -> Unit,
     onLogoutRequested: () -> Unit,
     onSyncRequested: () -> Unit,
@@ -667,8 +684,14 @@ private fun ColumnScope.NavigationRailItems(
         ) { Text(stringResource(Res.string.admin)) }
     }
 
-    for ((index, item) in navigationItems.values.withIndex()) {
+    for ((index, entry) in navigationItems.entries.withIndex()) {
+        val (page, item) = entry
         val isSelected = pager.currentPage == index
+        val badgeText = if (page == Page.MANAGEMENT) {
+            val departmentsCount = departments.departmentsCountBadge() ?: 0
+            val lendingsCount = lendings.lendingsCountBadge() ?: 0
+            (departmentsCount + lendingsCount).takeIf { it > 0 }?.toString()
+        } else null
         if (item.tooltip != null) {
             TooltipBox(
                 state = rememberTooltipState(),
@@ -682,7 +705,11 @@ private fun ColumnScope.NavigationRailItems(
                     onClick = { scope.launch { pager.animateScrollToPage(index) } },
                     enabled = item.enabled,
                     label = { Text(stringResource(item.label)) },
-                    icon = { item.Icon(isSelected) }
+                    icon = {
+                        ConditionalBadge(badgeText) {
+                            item.Icon(isSelected)
+                        }
+                    }
                 )
             }
         } else {
@@ -691,7 +718,11 @@ private fun ColumnScope.NavigationRailItems(
                 onClick = { scope.launch { pager.animateScrollToPage(index) } },
                 enabled = item.enabled,
                 label = { Text(stringResource(item.label)) },
-                icon = { item.Icon(isSelected) }
+                icon = {
+                    ConditionalBadge(badgeText) {
+                        item.Icon(isSelected)
+                    }
+                }
             )
         }
     }
