@@ -197,38 +197,32 @@ private fun LendingsPage_Content(
             val categories = inventoryItems?.flatMap { it.type.categories.orEmpty() }?.toSet().orEmpty().toList()
 
             stickyHeader("lending_header") {
-                Column(
+                LazyRow(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.background)
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp)
                         .padding(top = 12.dp)
                 ) {
-                    Text(
-                        text = stringResource(Res.string.home_lending),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    LazyRow(modifier = Modifier.fillMaxWidth()) {
-                        items(
-                            items = categories,
-                            key = { it },
-                            contentType = { "category-chip" },
-                        ) { category ->
-                            val isSelected = selectedCategories.contains(category)
-                            Spacer(Modifier.width(8.dp))
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedCategories = if (isSelected) {
-                                        selectedCategories - category
-                                    } else {
-                                        selectedCategories + category
-                                    }
-                                },
-                                label = { Text(category) },
-                                modifier = Modifier.padding(end = 4.dp),
-                            )
-                        }
+                    items(
+                        items = categories,
+                        key = { it },
+                        contentType = { "category-chip" },
+                    ) { category ->
+                        val isSelected = selectedCategories.contains(category)
+                        Spacer(Modifier.width(8.dp))
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                selectedCategories = if (isSelected) {
+                                    selectedCategories - category
+                                } else {
+                                    selectedCategories + category
+                                }
+                            },
+                            label = { Text(category) },
+                            modifier = Modifier.padding(end = 4.dp),
+                        )
                     }
                 }
             }
