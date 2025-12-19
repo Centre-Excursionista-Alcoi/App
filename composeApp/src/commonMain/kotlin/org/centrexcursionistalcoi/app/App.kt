@@ -214,6 +214,9 @@ fun App(
                     onLendingClick = {
                         navController.navigate(Destination.LendingDetails(it))
                     },
+                    onMemoryEditorRequested = {
+                        navController.navigate(Destination.LendingMemoryEditor(it.id))
+                    },
                     onOtherUserLendingClick = {
                         navController.navigate(Destination.Admin.LendingManagement(it))
                     },

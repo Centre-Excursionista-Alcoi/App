@@ -182,7 +182,7 @@ private fun LendingManagementScreen(
         DeleteDialog(
             title = stringResource(Res.string.lending_details_delete_confirm_title),
             message = stringResource(Res.string.lending_details_delete_confirm_message),
-            onDelete = { onDeleteRequest().invokeOnCompletion { onBack() } },
+            onDelete = { onDeleteRequest().also { it.invokeOnCompletion { onBack() } } },
             onDismissRequested = { showingDeleteConfirmation = false }
         )
     }
@@ -355,7 +355,7 @@ private fun LendingPickupReturnScreen(
         DeleteDialog(
             title = stringResource(Res.string.lending_details_delete_confirm_title),
             message = stringResource(Res.string.lending_details_delete_confirm_message),
-            onDelete = { onDeleteRequest().invokeOnCompletion { onBack() } },
+            onDelete = { onDeleteRequest().also { it.invokeOnCompletion { onBack() } } },
             onDismissRequested = { showingDeleteConfirmation = false }
         )
     }

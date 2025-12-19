@@ -37,9 +37,6 @@ fun HomePage(
     onNotificationPermissionDenyRequest: () -> Unit,
 
     profile: ProfileResponse,
-    lendings: List<ReferencedLending>?,
-    onLendingClick: (ReferencedLending) -> Unit,
-    onOtherUserLendingClick: (ReferencedLending) -> Unit,
 
     posts: List<ReferencedPost>?,
 
@@ -57,27 +54,6 @@ fun HomePage(
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
     val isAdmin = remember(profile) { profile.isAdmin }
 
-    val userLendings = remember(lendings) {
-        lendings?.filter { it.user.sub == profile.sub || it.user.isStub() }
-    }
-    val activeLendings = remember(userLendings) {
-        userLendings
-            ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-            ?.sortedByDescending { it.from }
-    }
-    val oldLendings = remember(userLendings) {
-        userLendings
-            ?.filter { it.status() in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-            ?.sortedByDescending { it.from }
-            .orEmpty()
-    }
-
-    val nonCompletedLendings = remember(lendings) {
-        lendings
-            .takeIf { isAdmin }
-            ?.filter { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) }
-            .orEmpty()
-    }
     val pendingJoinRequests = remember(departments) {
         departments
             .takeIf { isAdmin }
@@ -213,57 +189,6 @@ fun HomePage(
             // Fill the current line
             item(key = "posts_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
                 Spacer(Modifier.height(16.dp))
-            }
-        }
-
-        if (isRegisteredForLendings) {
-            if (!activeLendings.isNullOrEmpty()) {
-                stickyHeader("active_lendings_header") {
-                    Text(
-                        text = stringResource(Res.string.home_lendings),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                    )
-                }
-                items(activeLendings, key = { it.id }, contentType = { "active-lending" }, span = { GridItemSpan(maxLineSpan) }) { lending ->
-                    LendingItem(lending) { onLendingClick(lending) }
-                }
-            }
-
-            if (oldLendings.isNotEmpty()) {
-                stickyHeader {
-                    Text(
-                        text = stringResource(Res.string.home_past_lendings),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                    )
-                }
-                items(
-                    items = oldLendings,
-                    key = { it.id },
-                    contentType = { "old-lending" },
-                ) { lending ->
-                    OldLendingItem(lending) { onLendingClick(lending) }
-                }
-            }
-        }
-
-        if (isAdmin) {
-            if (nonCompletedLendings.isNotEmpty()) {
-                stickyHeader {
-                    Text(
-                        text = stringResource(Res.string.management_other_users_lendings),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp),
-                    )
-                }
-                items(
-                    items = nonCompletedLendings,
-                    key = { "_${it.id}" },
-                    contentType = { "non-completed-lending" },
-                ) { lending ->
-                    LendingItem(lending) { onOtherUserLendingClick(lending) }
-                }
             }
         }
 
