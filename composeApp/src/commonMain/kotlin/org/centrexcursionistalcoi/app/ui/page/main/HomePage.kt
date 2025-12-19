@@ -26,6 +26,7 @@ import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun HomePage(
@@ -45,6 +46,13 @@ fun HomePage(
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
+
+    val now = Clock.System.now()
+    val futureEvents = remember(events) {
+        events?.filter { event ->
+            event.end?.let { it >= now } ?: (event.start <= now)
+        }
+    }
 
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -103,7 +111,7 @@ fun HomePage(
             }
         }
 
-        if (!events.isNullOrEmpty()) {
+        if (!futureEvents.isNullOrEmpty()) {
             item("events_title", contentType = "title", span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     text = stringResource(Res.string.upcoming_events),
@@ -111,7 +119,7 @@ fun HomePage(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
                 )
             }
-            items(events) { event ->
+            items(futureEvents) { event ->
                 EventItem(
                     profile,
                     event,
