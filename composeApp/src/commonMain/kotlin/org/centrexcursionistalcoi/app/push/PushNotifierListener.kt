@@ -43,6 +43,16 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
 
+                is PushNotification.NewEvent, is PushNotification.EventCancelled, is PushNotification.EventAssistanceUpdated -> {
+                    log.d { "Received an event notification. ID: ${notification.eventId}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncEventBackgroundJobLogic, SyncEventBackgroundJob>(
+                        input = mapOf(
+                            SyncEventBackgroundJobLogic.EXTRA_EVENT_ID to notification.eventId.toString(),
+                        ),
+                        logic = SyncEventBackgroundJobLogic,
+                    )
+                }
+
                 is PushNotification.DepartmentJoinRequestUpdated -> {
                     log.d { "Received department join request update notification for request ID: ${notification.requestId}" }
                     BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
@@ -53,9 +63,14 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
 
-                else -> {
-                    // No background sync needed
-                    log.d { "Received push notification: $notification" }
+                is PushNotification.DepartmentKicked -> {
+                    log.d { "Received department kicked notification for department ID: ${notification.departmentId}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
+                        input = mapOf(
+                            SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                        ),
+                        logic = SyncDepartmentBackgroundJobLogic,
+                    )
                 }
             }
 

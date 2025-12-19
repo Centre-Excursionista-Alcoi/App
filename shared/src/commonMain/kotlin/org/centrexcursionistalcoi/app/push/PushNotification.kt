@@ -79,6 +79,17 @@ sealed interface PushNotification {
                     eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in NewEvent push notification data")
                     NewEvent(eventId)
                 }
+                EventCancelled.TYPE -> {
+                    eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in EventCancelled push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in EventCancelled push notification data")
+                    EventCancelled(eventId, userSub)
+                }
+                EventAssistanceUpdated.TYPE -> {
+                    eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in EventAssistanceUpdated push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in EventAssistanceUpdated push notification data")
+                    isConfirmed ?: throw IllegalArgumentException("Missing or invalid isConfirmed field in EventAssistanceUpdated push notification data")
+                    EventAssistanceUpdated(eventId, userSub, isConfirmed)
+                }
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
         }
@@ -239,30 +250,63 @@ sealed interface PushNotification {
     }
 
     @Serializable
-    class NewEvent(
-        val eventId: Uuid,
-    ) : PushNotification {
-        companion object {
-            const val TYPE = "NewEvent"
-        }
-
-        override val type: String = TYPE
+    sealed interface EventUpdated : PushNotification {
+        /**
+         * The ID of the event that was updated/created.
+         */
+        val eventId: Uuid
 
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("eventId" to eventId.toString())
     }
 
     @Serializable
+    class NewEvent(
+        override val eventId: Uuid,
+    ) : EventUpdated {
+        companion object {
+            const val TYPE = "NewEvent"
+        }
+
+        override val type: String = TYPE
+    }
+
+    @Serializable
+    class EventCancelled(
+        override val eventId: Uuid,
+        override val userSub: String,
+    ) : EventUpdated, TargetedNotification {
+        companion object {
+            const val TYPE = "EventCancelled"
+        }
+
+        override val type: String = TYPE
+
+        // super.toMap cannot be used because it conflicts between EventUpdated and TargetedNotification
+        override fun toMap(): Map<String, String> = mapOf(
+            "type" to type,
+            "userSub" to userSub,
+            "eventId" to eventId.toString(),
+        )
+    }
+
+    @Serializable
     class EventAssistanceUpdated(
-        val eventId: Uuid,
+        override val eventId: Uuid,
         override val userSub: String,
         val isConfirmed: Boolean,
-    ) : TargetedNotification {
+    ) : EventUpdated, TargetedNotification {
         companion object {
             const val TYPE = "EventAssistanceUpdated"
         }
 
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("eventId" to eventId.toString(), "isConfirmed" to isConfirmed.toString())
+        // super.toMap cannot be used because it conflicts between EventUpdated and TargetedNotification
+        override fun toMap(): Map<String, String> = mapOf(
+            "type" to type,
+            "userSub" to userSub,
+            "eventId" to eventId.toString(),
+            "isConfirmed" to isConfirmed.toString(),
+        )
     }
 }

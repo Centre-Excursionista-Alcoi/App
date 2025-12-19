@@ -5,6 +5,9 @@ import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
@@ -151,6 +154,47 @@ object LocalNotifications {
                         Res.string.notification_join_request_denied_message,
                         data
                     )
+                }
+            }
+            is PushNotification.DepartmentKicked -> {
+                // Only show if the notification is for the current user
+                if (!notification.checkIsSelf()) {
+                    log.d { "Ignoring department kicked notification for another user: ${notification.userSub}" }
+                    return
+                }
+
+                runBlocking {
+                    DepartmentsRepository.get(notification.departmentId)?.let { event ->
+                        showNotification(
+                            getString(Res.string.notification_department_kicked_title),
+                            getString(
+                                Res.string.notification_department_kicked_message,
+                                event.displayName,
+                            ),
+                            data
+                        )
+                    }
+                }
+            }
+
+            is PushNotification.EventCancelled -> {
+                // Only show if the notification is for the current user
+                if (!notification.checkIsSelf()) {
+                    log.d { "Ignoring department kicked notification for another user: ${notification.userSub}" }
+                    return
+                }
+
+                runBlocking {
+                    EventsRepository.get(notification.eventId)?.let { event ->
+                        showNotification(
+                            getString(Res.string.notification_event_cancelled_title),
+                            getString(
+                                Res.string.notification_event_cancelled_message,
+                                event.title,
+                            ),
+                            data
+                        )
+                    }
                 }
             }
 

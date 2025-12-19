@@ -1,0 +1,3 @@
+package org.centrexcursionistalcoi.app.sync
+
+actual class SyncEventBackgroundJob : BackgroundSyncWorker<SyncEventBackgroundJobLogic>(SyncEventBackgroundJobLogic)

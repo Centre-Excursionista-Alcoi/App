@@ -418,6 +418,10 @@
     <string name="notification_join_request_denied_message">Your request to join a department has been denied.</string>
     <string name="notification_join_request_approved_title">Department Join Request Approved</string>
     <string name="notification_join_request_approved_message">Your request to join a department has been approved.</string>
+    <string name="notification_department_kicked_title">You have been kicked from a department</string>
+    <string name="notification_department_kicked_message">You have been kicked from the department %1$s.</string>
+    <string name="notification_event_cancelled_title">An event has been cancelled</string>
+    <string name="notification_event_cancelled_message">The event "%1$s" has been canceled.</string>
 
     <string name="nfc_write_success">NFC written successfully</string>
     <string name="nfc_error_read_only">NFC tag is read-only</string>
