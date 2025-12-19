@@ -30,12 +30,15 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.dialog.LendingsHistoryDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.page.main.*
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.ConditionalBadge
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
@@ -51,6 +54,7 @@ fun MainScreen(
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
@@ -93,8 +97,10 @@ fun MainScreen(
             onLeaveDepartmentRequested = model::leaveDepartment,
             lendings = lendings,
             onLendingSignUpRequested = onLendingSignUpRequested,
+            onLendingCancelRequested = model::cancelLending,
             onLendingClick = onLendingClick,
             onOtherUserLendingClick = onOtherUserLendingClick,
+            onMemoryEditorRequested = onMemoryEditorRequested,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
@@ -119,15 +125,13 @@ fun MainScreen(
 }
 
 private enum class Page {
-    HOME, LENDINGS, MANAGEMENT, PROFILE
+    HOME, LENDINGS, LENDING, MANAGEMENT, PROFILE
 }
 
 private class NavigationItem(
     val icon: ImageVector,
     val filledIcon: ImageVector,
     val label: StringResource,
-    val enabled: Boolean = true,
-    val tooltip: StringResource? = null,
 ) {
     @Composable
     fun Icon(isSelected: Boolean) {
@@ -153,16 +157,24 @@ private fun navigationItems(isAdmin: Boolean, anyActiveLending: Boolean): Map<Pa
                 label = Res.string.nav_home
             )
         )
-        put(
-            Page.LENDINGS,
-            NavigationItem(
-                icon = MaterialSymbols.Inventory2,
-                filledIcon = MaterialSymbols.Inventory2Filled,
-                label = Res.string.nav_lendings,
-                enabled = !anyActiveLending,
-                tooltip = Res.string.nav_lendings_disabled.takeIf { anyActiveLending }
+        if (anyActiveLending)
+            put(
+                Page.LENDING,
+                NavigationItem(
+                    icon = MaterialSymbols.Package2,
+                    filledIcon = MaterialSymbols.Package2Filled,
+                    label = Res.string.nav_lending
+                )
             )
-        )
+        else
+            put(
+                Page.LENDINGS,
+                NavigationItem(
+                    icon = MaterialSymbols.Inventory2,
+                    filledIcon = MaterialSymbols.Inventory2Filled,
+                    label = Res.string.nav_lendings,
+                )
+            )
         if (isAdmin) {
             put(
                 Page.MANAGEMENT,
@@ -207,8 +219,10 @@ private fun MainScreenContent(
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
+    onLendingCancelRequested: (ReferencedLending) -> Job,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -238,13 +252,13 @@ private fun MainScreenContent(
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
-    val activeUserLendingsCount = lendings
+    val activeUserLending = lendings
         // Get only lendings of the current user
         ?.filter { it.user.sub == profile.sub || it.user.isStub() }
-        // Count only active lendings
-        ?.count { it.status() !in listOf(Lending.Status.MEMORY_SUBMITTED, Lending.Status.COMPLETE) } ?: 0
-    val navigationItems = remember(profile, activeUserLendingsCount) {
-        navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLendingsCount > 0)
+        // Find the pending lending
+        ?.find { it.status().isPending() }
+    val navigationItems = remember(profile, activeUserLending) {
+        navigationItems(isAdmin = profile.isAdmin, anyActiveLending = activeUserLending != null)
     }
 
     val scope = rememberCoroutineScope()
@@ -257,6 +271,16 @@ private fun MainScreenContent(
         pages[pager.currentPage]
     }
 
+    fun scrollToPage(page: Page, animated: Boolean = false) {
+        scope.launch {
+            val page = navigationItems.keys.indexOf(page)
+            if (animated)
+                pager.animateScrollToPage(page)
+            else
+                pager.scrollToPage(page)
+        }
+    }
+
     var showingLogoutDialog by remember { mutableStateOf(false) }
     if (showingLogoutDialog) {
         LogoutConfirmationDialog(
@@ -265,6 +289,40 @@ private fun MainScreenContent(
                 onLogoutRequested()
             },
             onDismissRequested = { showingLogoutDialog = false },
+        )
+    }
+
+    var showingLendingHistory by remember { mutableStateOf(false) }
+    if (showingLendingHistory) {
+        LendingsHistoryDialog(
+            lendings = lendings.orEmpty().filterNot { it.status().isPending() },
+            onClick = {
+                showingLendingHistory = false
+                onLendingClick(it)
+            },
+            onDismissRequest = { showingLendingHistory = false }
+        )
+    }
+
+    var cancellingLending by remember { mutableStateOf<ReferencedLending?>(null) }
+    LaunchedEffect(lendings) {
+        // Keep the cancellingLending updated
+        if (cancellingLending != null) cancellingLending = lendings?.find { it.id == cancellingLending?.id }
+    }
+    cancellingLending?.let { lending ->
+        DeleteDialog(
+            title = stringResource(Res.string.lending_details_cancel_confirm_title),
+            message = stringResource(Res.string.lending_details_cancel_confirm_message),
+            buttonText = stringResource(Res.string.lending_details_cancel),
+            onDelete = {
+                onLendingCancelRequested(lending).also {
+                    it.invokeOnCompletion {
+                        cancellingLending = null
+                        scrollToPage(Page.HOME)
+                    }
+                }
+            },
+            onDismissRequested = { cancellingLending = null }
         )
     }
 
@@ -288,14 +346,6 @@ private fun MainScreenContent(
                     navigationItems.keys.indexOf(Page.MANAGEMENT)
                 )
             }
-        }
-    }
-
-    fun onAddInsuranceRequested() {
-        // Navigate to profile page
-        scope.launch {
-            val profilePageIndex = navigationItems.keys.indexOf(Page.PROFILE)
-            pager.animateScrollToPage(profilePageIndex)
         }
     }
 
@@ -324,17 +374,30 @@ private fun MainScreenContent(
                             if (profile.isAdmin) {
                                 Badge { Text(stringResource(Res.string.admin)) }
                             }
-                            if (actualPage == Page.PROFILE) {
-                                IconButton(
-                                    onClick = onSettingsRequested
-                                ) {
-                                    Icon(MaterialSymbols.Settings, stringResource(Res.string.settings))
+                            when (actualPage) {
+                                Page.LENDINGS, Page.LENDING -> {
+                                    LendingsActionBarIcons(
+                                        activeLending = activeUserLending,
+                                        lendings = lendings,
+                                        onCancelLendingRequest = { cancellingLending = activeUserLending },
+                                        onLendingHistoryRequest = { showingLendingHistory = true },
+                                    )
                                 }
-                                IconButton(
-                                    onClick = { showingLogoutDialog = true }
-                                ) {
-                                    Icon(MaterialSymbols.Logout, stringResource(Res.string.logout))
+
+                                Page.PROFILE -> {
+                                    IconButton(
+                                        onClick = onSettingsRequested
+                                    ) {
+                                        Icon(MaterialSymbols.Settings, stringResource(Res.string.settings))
+                                    }
+                                    IconButton(
+                                        onClick = { showingLogoutDialog = true }
+                                    ) {
+                                        Icon(MaterialSymbols.Logout, stringResource(Res.string.logout))
+                                    }
                                 }
+
+                                else -> {}
                             }
                         }
                     )
@@ -359,28 +422,11 @@ private fun MainScreenContent(
                             } else null
                             NavigationBarItem(
                                 selected = isSelected,
-                                enabled = item.enabled,
                                 onClick = { scope.launch { pager.animateScrollToPage(index) } },
                                 label = { Text(stringResource(item.label)) },
                                 icon = {
-                                    if (item.tooltip != null) {
-                                        TooltipBox(
-                                            state = rememberTooltipState(),
-                                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                                                TooltipAnchorPosition.Above
-                                            ),
-                                            tooltip = {
-                                                PlainTooltip { Text(stringResource(item.tooltip)) }
-                                            }
-                                        ) {
-                                            ConditionalBadge(badgeText) {
-                                                item.Icon(isSelected)
-                                            }
-                                        }
-                                    } else {
-                                        ConditionalBadge(badgeText) {
-                                            item.Icon(isSelected)
-                                        }
+                                    ConditionalBadge(badgeText) {
+                                        item.Icon(isSelected)
                                     }
                                 }
                             )
@@ -417,6 +463,51 @@ private fun MainScreenContent(
         Row(
             modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
+            @Composable
+            fun Content(pageIdx: Int) {
+                val entry = navigationItems.entries.toList()[pageIdx]
+                MainScreenPagerContent(
+                    page = entry.key,
+                    onPageRequested = ::scrollToPage,
+                    snackbarHostState,
+                    selectedManagementItem,
+                    notificationPermissionResult,
+                    onNotificationPermissionRequest,
+                    onNotificationPermissionDenyRequest,
+                    profile,
+                    { scrollToPage(Page.PROFILE, true) },
+                    windowSizeClass,
+                    departments,
+                    onApproveDepartmentJoinRequest,
+                    onDenyDepartmentJoinRequest,
+                    onJoinDepartmentRequested,
+                    onLeaveDepartmentRequested,
+                    lendings,
+                    activeUserLending,
+                    onLendingSignUpRequested,
+                    onOtherUserLendingClick,
+                    { cancellingLending = it },
+                    { showingLendingHistory = true },
+                    onMemoryEditorRequested,
+                    onCreateInsurance,
+                    onFEMECVConnectRequested,
+                    onFEMECVDisconnectRequested,
+                    users,
+                    members,
+                    inventoryItemTypes,
+                    inventoryItemTypesCategories,
+                    onItemTypeDetailsRequested,
+                    inventoryItems,
+                    posts,
+                    events,
+                    onConfirmAssistanceRequest,
+                    onRejectAssistanceRequest,
+                    shoppingList,
+                    onAddItemToShoppingListRequest,
+                    onRemoveItemFromShoppingListRequest,
+                )
+            }
+
             CompositionLocalProvider(LocalNavigationBarVisibility provides navigationBarVisibility) {
                 if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
                     NavigationRail(
@@ -446,46 +537,7 @@ private fun MainScreenContent(
                         state = pager,
                         modifier = Modifier.fillMaxSize(),
                         userScrollEnabled = false
-                    ) { pageIdx ->
-                        val entry = navigationItems.entries.toList()[pageIdx]
-                        if (!entry.value.enabled) return@VerticalPager
-                        MainScreenPagerContent(
-                            page = entry.key,
-                            snackbarHostState,
-                            selectedManagementItem,
-                            notificationPermissionResult,
-                            onNotificationPermissionRequest,
-                            onNotificationPermissionDenyRequest,
-                            profile,
-                            ::onAddInsuranceRequested,
-                            windowSizeClass,
-                            departments,
-                            onApproveDepartmentJoinRequest,
-                            onDenyDepartmentJoinRequest,
-                            onJoinDepartmentRequested,
-                            onLeaveDepartmentRequested,
-                            lendings,
-                            onLendingSignUpRequested,
-                            onLendingClick,
-                            onOtherUserLendingClick,
-                            onCreateInsurance,
-                            onFEMECVConnectRequested,
-                            onFEMECVDisconnectRequested,
-                            users,
-                            members,
-                            inventoryItemTypes,
-                            inventoryItemTypesCategories,
-                            onItemTypeDetailsRequested,
-                            inventoryItems,
-                            posts,
-                            events,
-                            onConfirmAssistanceRequest,
-                            onRejectAssistanceRequest,
-                            shoppingList,
-                            onAddItemToShoppingListRequest,
-                            onRemoveItemFromShoppingListRequest,
-                        )
-                    }
+                    ) { pageIdx -> Content(pageIdx) }
                 } else {
                     PullToRefreshBox(
                         isRefreshing = isSyncing,
@@ -494,46 +546,7 @@ private fun MainScreenContent(
                         HorizontalPager(
                             state = pager,
                             modifier = Modifier.fillMaxSize()
-                        ) { pageIdx ->
-                            val entry = navigationItems.entries.toList()[pageIdx]
-                            if (!entry.value.enabled) return@HorizontalPager
-                            MainScreenPagerContent(
-                                page = entry.key,
-                                snackbarHostState,
-                                selectedManagementItem,
-                                notificationPermissionResult,
-                                onNotificationPermissionRequest,
-                                onNotificationPermissionDenyRequest,
-                                profile,
-                                ::onAddInsuranceRequested,
-                                windowSizeClass,
-                                departments,
-                                onApproveDepartmentJoinRequest,
-                                onDenyDepartmentJoinRequest,
-                                onJoinDepartmentRequested,
-                                onLeaveDepartmentRequested,
-                                lendings,
-                                onLendingSignUpRequested,
-                                onLendingClick,
-                                onOtherUserLendingClick,
-                                onCreateInsurance,
-                                onFEMECVConnectRequested,
-                                onFEMECVDisconnectRequested,
-                                users,
-                                members,
-                                inventoryItemTypes,
-                                inventoryItemTypesCategories,
-                                onItemTypeDetailsRequested,
-                                inventoryItems,
-                                posts,
-                                events,
-                                onConfirmAssistanceRequest,
-                                onRejectAssistanceRequest,
-                                shoppingList,
-                                onAddItemToShoppingListRequest,
-                                onRemoveItemFromShoppingListRequest,
-                            )
-                        }
+                        ) { pageIdx -> Content(pageIdx) }
                     }
                 }
             }
@@ -542,8 +555,37 @@ private fun MainScreenContent(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun LendingsActionBarIcons(
+    activeLending: ReferencedLending?,
+    lendings: List<ReferencedLending>?,
+    onCancelLendingRequest: (ReferencedLending) -> Unit,
+    onLendingHistoryRequest: () -> Unit,
+) {
+    // This will only be displayed on LENDING, because activeUserLending will be null on LENDINGS
+    if (activeLending?.status()?.canBeCancelled() == true) {
+        TooltipIconButton(
+            MaterialSymbols.FreeCancellation,
+            stringResource(Res.string.lending_details_cancel),
+            onClick = { onCancelLendingRequest(activeLending) },
+        )
+    }
+    // Only show history button if there are more than 1 lending in the history
+    // This is, if size is greater to 1: it doesn't matter if there's an active lending, there are lendings in the history
+    // or if size is 1, but there's no active lending: the user has made a lending that has already been completed
+    if (lendings.orEmpty().size > 1 || (lendings.orEmpty().size == 1 && activeLending == null)) {
+        TooltipIconButton(
+            MaterialSymbols.History,
+            stringResource(Res.string.lending_details_history),
+            onClick = onLendingHistoryRequest,
+        )
+    }
+}
+
+@Composable
 private fun MainScreenPagerContent(
     page: Page,
+    onPageRequested: (Page) -> Unit,
     snackbarHostState: SnackbarHostState,
 
     /**
@@ -569,9 +611,12 @@ private fun MainScreenPagerContent(
     onLeaveDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
+    activeLending: ReferencedLending?,
     onLendingSignUpRequested: () -> Unit,
-    onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
+    onCancelLendingRequest: (ReferencedLending) -> Unit,
+    onLendingHistoryRequest: () -> Unit,
+    onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -605,9 +650,6 @@ private fun MainScreenPagerContent(
                 onNotificationPermissionRequest,
                 onNotificationPermissionDenyRequest,
                 profile,
-                lendings,
-                onLendingClick,
-                onOtherUserLendingClick,
                 posts,
                 departments,
                 onApproveDepartmentJoinRequest,
@@ -631,6 +673,17 @@ private fun MainScreenPagerContent(
                 onRemoveItemFromShoppingListRequest,
             )
 
+            Page.LENDING if activeLending != null -> LendingPage(
+                windowSizeClass = windowSizeClass,
+                lending = activeLending,
+                lendings = lendings,
+                onCancelLendingRequest = onCancelLendingRequest,
+                onLendingHistoryRequest = onLendingHistoryRequest,
+                onMemoryEditorRequested = { onMemoryEditorRequested(activeLending) },
+            )
+            // If lending is selected, but there's no active lending, move to home
+            Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
+
             Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
                 windowSizeClass,
                 snackbarHostState,
@@ -647,6 +700,7 @@ private fun MainScreenPagerContent(
                 posts,
                 events,
             )
+
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
             Page.PROFILE -> ProfilePage(
@@ -692,39 +746,16 @@ private fun ColumnScope.NavigationRailItems(
             val lendingsCount = lendings.lendingsCountBadge() ?: 0
             (departmentsCount + lendingsCount).takeIf { it > 0 }?.toString()
         } else null
-        if (item.tooltip != null) {
-            TooltipBox(
-                state = rememberTooltipState(),
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Right),
-                tooltip = {
-                    PlainTooltip { Text(stringResource(item.tooltip)) }
+        NavigationRailItem(
+            selected = isSelected,
+            onClick = { scope.launch { pager.animateScrollToPage(index) } },
+            label = { Text(stringResource(item.label)) },
+            icon = {
+                ConditionalBadge(badgeText) {
+                    item.Icon(isSelected)
                 }
-            ) {
-                NavigationRailItem(
-                    selected = isSelected,
-                    onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                    enabled = item.enabled,
-                    label = { Text(stringResource(item.label)) },
-                    icon = {
-                        ConditionalBadge(badgeText) {
-                            item.Icon(isSelected)
-                        }
-                    }
-                )
             }
-        } else {
-            NavigationRailItem(
-                selected = isSelected,
-                onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                enabled = item.enabled,
-                label = { Text(stringResource(item.label)) },
-                icon = {
-                    ConditionalBadge(badgeText) {
-                        item.Icon(isSelected)
-                    }
-                }
-            )
-        }
+        )
     }
     Spacer(Modifier.weight(1f))
     TooltipBox(

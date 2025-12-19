@@ -69,7 +69,7 @@ private fun LendingDetailsScreen(
             title = stringResource(Res.string.lending_details_cancel_confirm_title),
             message = stringResource(Res.string.lending_details_cancel_confirm_message),
             buttonText = stringResource(Res.string.lending_details_cancel),
-            onDelete = { onCancelRequest().invokeOnCompletion { onBack() } },
+            onDelete = { onCancelRequest().also { it.invokeOnCompletion { onBack() } } },
             onDismissRequested = { showingCancelConfirmation = false }
         )
     }
@@ -117,104 +117,115 @@ private fun LendingDetailsScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumnWidthWrapper(
+        LendingDetailsScreen_Content(
+            lending = lending,
             modifier = Modifier.fillMaxSize().padding(paddingValues),
-        ) {
-            val isPendingConfirmation = lending.status() == Lending.Status.REQUESTED
-            if (isPendingConfirmation) {
-                item(key = "pending_confirmation") {
-                    CardWithIcon(
-                        title = stringResource(Res.string.lending_details_confirmation_pending_title),
-                        message = stringResource(Res.string.lending_details_confirmation_pending_message),
-                        icon = MaterialSymbols.Pending,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+            onMemoryEditorRequest = onMemoryEditorRequest,
+        )
+    }
+}
+
+@Composable
+fun LendingDetailsScreen_Content(
+    lending: ReferencedLending,
+    modifier: Modifier = Modifier,
+    onMemoryEditorRequest: () -> Unit,
+) {
+    LazyColumnWidthWrapper(modifier) {
+        val isPendingConfirmation = lending.status() == Lending.Status.REQUESTED
+        if (isPendingConfirmation) {
+            item(key = "pending_confirmation") {
+                CardWithIcon(
+                    title = stringResource(Res.string.lending_details_confirmation_pending_title),
+                    message = stringResource(Res.string.lending_details_confirmation_pending_message),
+                    icon = MaterialSymbols.Pending,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }
+                )
             }
+        }
 
-            val isPendingPickup = lending.status() == Lending.Status.CONFIRMED
-            if (isPendingPickup) {
-                item(key = "pending_pickup") {
-                    CardWithIcon(
-                        title = stringResource(Res.string.lending_details_pickup_pending_title),
-                        message = stringResource(Res.string.lending_details_pickup_pending_message),
-                        icon = MaterialSymbols.Inventory2,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+        val isPendingPickup = lending.status() == Lending.Status.CONFIRMED
+        if (isPendingPickup) {
+            item(key = "pending_pickup") {
+                CardWithIcon(
+                    title = stringResource(Res.string.lending_details_pickup_pending_title),
+                    message = stringResource(Res.string.lending_details_pickup_pending_message),
+                    icon = MaterialSymbols.Inventory2,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }
+                )
             }
+        }
 
-            val isPendingReturn = lending.status() == Lending.Status.TAKEN
-            val activityFinished = lending.to.atStartOfDayIn(TimeZone.currentSystemDefault()) < Clock.System.now()
-            if (isPendingReturn && activityFinished) item(key = "pending_return") {
-                val isIncompleteReturn = lending.receivedItems.isNotEmpty() && lending.receivedItems.size < lending.items.size
-                if (isIncompleteReturn) {
-                    CardWithIcon(
-                        title = stringResource(Res.string.lending_details_incomplete_return_title),
-                        message = stringResource(Res.string.lending_details_incomplete_return_message),
-                        icon = MaterialSymbols.AssignmentReturn,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+        val isPendingReturn = lending.status() == Lending.Status.TAKEN
+        val activityFinished = lending.to.atStartOfDayIn(TimeZone.currentSystemDefault()) < Clock.System.now()
+        if (isPendingReturn && activityFinished) item(key = "pending_return") {
+            val isIncompleteReturn = lending.receivedItems.isNotEmpty() && lending.receivedItems.size < lending.items.size
+            if (isIncompleteReturn) {
+                CardWithIcon(
+                    title = stringResource(Res.string.lending_details_incomplete_return_title),
+                    message = stringResource(Res.string.lending_details_incomplete_return_message),
+                    icon = MaterialSymbols.AssignmentReturn,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                } else {
-                    CardWithIcon(
-                        title = stringResource(Res.string.lending_details_return_pending_title),
-                        message = stringResource(Res.string.lending_details_return_pending_message),
-                        icon = MaterialSymbols.AssignmentReturn,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+                )
+            } else {
+                CardWithIcon(
+                    title = stringResource(Res.string.lending_details_return_pending_title),
+                    message = stringResource(Res.string.lending_details_return_pending_message),
+                    icon = MaterialSymbols.AssignmentReturn,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }
+                )
             }
+        }
 
-            val isMemoryPending = lending.status() == Lending.Status.RETURNED
-            if (isMemoryPending) {
-                item(key = "memory_pending") {
-                    CardWithIcon(
-                        title = stringResource(Res.string.lending_details_memory_pending_title),
-                        message = stringResource(Res.string.lending_details_memory_pending_message),
-                        icon = MaterialSymbols.NoteAdd,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
+        val isMemoryPending = lending.status() == Lending.Status.RETURNED
+        if (isMemoryPending) {
+            item(key = "memory_pending") {
+                CardWithIcon(
+                    title = stringResource(Res.string.lending_details_memory_pending_title),
+                    message = stringResource(Res.string.lending_details_memory_pending_message),
+                    icon = MaterialSymbols.NoteAdd,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).padding(horizontal = 16.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
-                }
-
-                item(key = "memory_actions") {
-                    MemoryActions(
-                        onEditorRequest = onMemoryEditorRequest,
-                    )
-                }
+                )
             }
 
-            val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
-            if (isMemorySubmitted) item("memory_visualization") {
-                MemoryVisualization(lending)
+            item(key = "memory_actions") {
+                MemoryActions(
+                    onEditorRequest = onMemoryEditorRequest,
+                )
             }
+        }
 
-            item("basic_details") {
-                GeneralLendingDetails(lending)
-            }
+        val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
+        if (isMemorySubmitted) item("memory_visualization") {
+            MemoryVisualization(lending)
+        }
 
-            item("items") {
-                LendingItems(lending)
-            }
+        item("basic_details") {
+            GeneralLendingDetails(lending)
+        }
+
+        item("items") {
+            LendingItems(lending)
         }
     }
 }

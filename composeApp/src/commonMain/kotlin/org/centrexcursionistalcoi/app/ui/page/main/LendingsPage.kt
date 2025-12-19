@@ -19,9 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.*
@@ -454,38 +451,6 @@ fun LendingItem_Large(
                 Text(text = items.size.toString())
             }
         }
-    }
-}
-
-@Composable
-fun OldLendingItem(lending: ReferencedLending, onClick: () -> Unit) {
-    OutlinedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-    ) {
-        Text(
-            text = "${lending.from} → ${lending.to}",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            textAlign = TextAlign.Center,
-        )
-        val groupedItems = lending.items.groupBy { it.type }
-        Text(
-            text = pluralStringResource(
-                Res.plurals.lending_details_item_row,
-                lending.items.size,
-                lending.items.size,
-                groupedItems.map { (type, items) -> "${type.displayName} (${items.size})" }.joinToString()
-            ),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        )
-        Text(
-            text = lending.id.toString(),
-            style = MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.Monospace),
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            textAlign = TextAlign.Center,
-        )
     }
 }
 

@@ -43,6 +43,11 @@ data class Lending(
          * Checks whether the status is pending. This is: [REQUESTED], [CONFIRMED], [TAKEN] or [RETURNED].
          */
         fun isPending() = this in listOf(REQUESTED, CONFIRMED, TAKEN, RETURNED)
+
+        /**
+         * Lendings can only be canceled if they are in [REQUESTED] or [CONFIRMED] status.
+         */
+        fun canBeCancelled() = this in listOf(REQUESTED, CONFIRMED)
     }
 
     override fun toMap(): Map<String, Any?> = mapOf(

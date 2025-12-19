@@ -7,14 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.database.*
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -78,6 +76,10 @@ class MainViewModel: ViewModel() {
     fun denyNotificationsPermission() = launch {
         settings.putBoolean("permission.notifications.denied", true)
         _notificationPermissionResult.value = null
+    }
+
+    fun cancelLending(lending: ReferencedLending) = launch {
+        LendingsRemoteRepository.cancel(lending.id)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) = launch {

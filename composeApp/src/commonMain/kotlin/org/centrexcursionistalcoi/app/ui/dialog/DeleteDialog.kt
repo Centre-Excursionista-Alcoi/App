@@ -1,15 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.data.IDialogContext
@@ -25,7 +17,7 @@ fun <T> DeleteDialog(
     DeleteDialog(
         title = stringResource(Res.string.delete_dialog_title, displayName(item)),
         message = stringResource(Res.string.delete_dialog_message, displayName(item)),
-        onDelete = { onDelete().invokeOnCompletion { dismiss() } },
+        onDelete = { onDelete().also { it.invokeOnCompletion { dismiss() } } },
         onDismissRequested = onDismissRequested
     )
 }
@@ -35,7 +27,7 @@ fun DeleteDialog(
     title: String,
     message: String,
     buttonText: String = stringResource(Res.string.delete),
-    onDelete: IDialogContext.() -> Unit,
+    onDelete: IDialogContext.() -> Job,
     onDismissRequested: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
@@ -54,8 +46,7 @@ fun DeleteDialog(
                                 onDismissRequested()
                             }
                         }
-                    )
-                    isLoading = false
+                    ).invokeOnCompletion { isLoading = false }
                 },
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.error

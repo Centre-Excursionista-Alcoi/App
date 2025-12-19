@@ -32,6 +32,7 @@
 
     <string name="nav_home">Home</string>
     <string name="nav_lendings">Lendings</string>
+    <string name="nav_lending">Lending</string>
     <string name="nav_lendings_disabled">You have pending lendings</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
@@ -335,6 +336,7 @@
     <string name="lending_details_nfc_title">NFC Reader</string>
     <string name="lending_details_nfc_message">Place your device near the NFC tag to register the item automatically.</string>
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
+    <string name="lending_details_history">Old Lendings</string>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
