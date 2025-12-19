@@ -243,14 +243,8 @@ fun EventsListView(
                 contentDescription = event.title,
                 modifier = Modifier.size(128.dp).clip(RoundedCornerShape(12.dp))
             )
+            Spacer(Modifier.height(12.dp))
         }
-
-        Text(
-            text = event.title,
-            style = MaterialTheme.typography.titleLarge,
-        )
-
-        Spacer(Modifier.height(12.dp))
 
         Row {
             Text(

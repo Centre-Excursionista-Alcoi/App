@@ -180,7 +180,11 @@ fun <T> ListView(
                 sortByOptions = sortByOptions,
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
-                onCreateRequested = { isCreating = true },
+                onCreateRequested = {
+                    selectedItem = null
+                    isEditing = false
+                    isCreating = true
+                },
                 searchBarActions = searchBarActions,
             )
 
@@ -199,7 +203,10 @@ fun <T> ListView(
                     isEditSupported = editItemContent != null,
                     isEditing = isEditing || isCreating,
                     onEditRequest = { isEditing = true },
-                    onEditCancelled = { isEditing = false },
+                    onEditCancelled = {
+                        isEditing = false
+                        isCreating = false
+                    },
                     onDeleteRequest = selectedItem?.let { item ->
                         if (onDeleteRequest != null) {
                             { isDeleting = item }
@@ -234,7 +241,10 @@ fun <T> ListView(
                 isEditSupported = editItemContent != null,
                 isEditing = isEditing || isCreating,
                 onEditRequest = { isEditing = true },
-                onEditCancelled = { isEditing = false },
+                onEditCancelled = {
+                    isEditing = false
+                    isCreating = false
+                },
                 onDeleteRequest = selectedItem?.let { item ->
                     if (onDeleteRequest != null) {
                         { isDeleting = item }
@@ -260,7 +270,11 @@ fun <T> ListView(
                 sortByOptions = sortByOptions,
                 onSelectedItemChange = { selectedItem = it },
                 isCreatingSupported = isCreatingSupported,
-                onCreateRequested = { isCreating = true },
+                onCreateRequested = {
+                    selectedItem = null
+                    isEditing = false
+                    isCreating = true
+                },
                 searchBarActions = searchBarActions,
             )
         }
