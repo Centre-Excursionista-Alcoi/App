@@ -91,8 +91,6 @@ fun MainScreen(
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
-            onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
-            onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
             onJoinDepartmentRequested = model::requestJoinDepartment,
             onLeaveDepartmentRequested = model::leaveDepartment,
             lendings = lendings,
@@ -212,8 +210,6 @@ private fun MainScreenContent(
     onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
-    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onJoinDepartmentRequested: (Department) -> Job,
     onLeaveDepartmentRequested: (Department) -> Job,
 
@@ -478,8 +474,6 @@ private fun MainScreenContent(
                     { scrollToPage(Page.PROFILE, true) },
                     windowSizeClass,
                     departments,
-                    onApproveDepartmentJoinRequest,
-                    onDenyDepartmentJoinRequest,
                     onJoinDepartmentRequested,
                     onLeaveDepartmentRequested,
                     lendings,
@@ -605,8 +599,6 @@ private fun MainScreenPagerContent(
     windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
-    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onJoinDepartmentRequested: (Department) -> Job,
     onLeaveDepartmentRequested: (Department) -> Job,
 
@@ -651,10 +643,6 @@ private fun MainScreenPagerContent(
                 onNotificationPermissionDenyRequest,
                 profile,
                 posts,
-                departments,
-                onApproveDepartmentJoinRequest,
-                onDenyDepartmentJoinRequest,
-                users,
                 events,
                 onConfirmAssistanceRequest,
                 onRejectAssistanceRequest,
