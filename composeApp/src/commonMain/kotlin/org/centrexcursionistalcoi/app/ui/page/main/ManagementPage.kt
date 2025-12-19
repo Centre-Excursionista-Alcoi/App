@@ -46,32 +46,74 @@ private sealed class ManagementPage(
 ) {
     object Lendings : ManagementPage(
         key = "lendings",
-        tabData = { TabData.fromResources(Res.string.management_lendings, MaterialSymbols.Inventory2, MaterialSymbols.Inventory2Filled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_lendings,
+                MaterialSymbols.Inventory2,
+                MaterialSymbols.Inventory2Filled,
+                it
+            )
+        }
     )
 
     object Departments : ManagementPage(
         key = "departments",
-        tabData = { TabData.fromResources(Res.string.management_departments, MaterialSymbols.Category, MaterialSymbols.CategoryFilled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_departments,
+                MaterialSymbols.Category,
+                MaterialSymbols.CategoryFilled,
+                it
+            )
+        }
     )
 
     object Users : ManagementPage(
         key = "users",
-        tabData = { TabData.fromResources(Res.string.management_users, MaterialSymbols.Face, MaterialSymbols.FaceFilled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_users,
+                MaterialSymbols.Face,
+                MaterialSymbols.FaceFilled,
+                it
+            )
+        }
     )
 
     object Posts : ManagementPage(
         key = "posts",
-        tabData = { TabData.fromResources(Res.string.management_posts, MaterialSymbols.Newsmode, MaterialSymbols.NewsmodeFilled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_posts,
+                MaterialSymbols.Newsmode,
+                MaterialSymbols.NewsmodeFilled,
+                it
+            )
+        }
     )
 
     object Events : ManagementPage(
         key = "events",
-        tabData = { TabData.fromResources(Res.string.management_events, MaterialSymbols.Event, MaterialSymbols.EventFilled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_events,
+                MaterialSymbols.Event,
+                MaterialSymbols.EventFilled,
+                it
+            )
+        }
     )
 
     object Inventory : ManagementPage(
         key = "inventory",
-        tabData = { TabData.fromResources(Res.string.management_inventory,  MaterialSymbols.Inventory, MaterialSymbols.InventoryFilled, it) }
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_inventory,
+                MaterialSymbols.Inventory,
+                MaterialSymbols.InventoryFilled,
+                it
+            )
+        }
     )
 
 
@@ -150,6 +192,8 @@ fun ManagementPage(
         onUpdateDepartment = model::updateDepartment,
         onDeleteDepartment = model::delete,
         onKickFromDepartment = model::kickFromDepartment,
+        onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
+        onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
         users = users,
         onPromote = model::promote,
         members = members,
@@ -191,6 +235,8 @@ private fun ManagementPage(
     onUpdateDepartment: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDeleteDepartment: (Department) -> Job,
     onKickFromDepartment: (UserData, Department) -> Job,
+    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 
     users: List<UserData>?,
     onPromote: (UserData) -> Job,
@@ -270,13 +316,43 @@ private fun ManagementPage(
                 onReceiveRequested
             )
 
-            ManagementPage.Departments -> DepartmentsListView(windowSizeClass, departments, onCreateDepartment, onUpdateDepartment, onDeleteDepartment)
+            ManagementPage.Departments -> DepartmentsListView(
+                windowSizeClass,
+                users,
+                departments,
+                onCreateDepartment,
+                onUpdateDepartment,
+                onDeleteDepartment,
+                onApproveDepartmentJoinRequest,
+                onDenyDepartmentJoinRequest,
+            )
 
-            ManagementPage.Users -> UsersListView(windowSizeClass, users, members, departments, onPromote, onKickFromDepartment)
+            ManagementPage.Users -> UsersListView(
+                windowSizeClass,
+                users,
+                members,
+                departments,
+                onPromote,
+                onKickFromDepartment
+            )
 
-            ManagementPage.Posts -> PostsListView(windowSizeClass, posts, departments, onCreatePost, onUpdatePost, onDeletePost)
+            ManagementPage.Posts -> PostsListView(
+                windowSizeClass,
+                posts,
+                departments,
+                onCreatePost,
+                onUpdatePost,
+                onDeletePost
+            )
 
-            ManagementPage.Events -> EventsListView(windowSizeClass, events, departments, onCreateEvent, onUpdateEvent, onDeleteEvent)
+            ManagementPage.Events -> EventsListView(
+                windowSizeClass,
+                events,
+                departments,
+                onCreateEvent,
+                onUpdateEvent,
+                onDeleteEvent
+            )
 
             ManagementPage.Inventory -> InventoryItemTypesListView(
                 windowSizeClass,

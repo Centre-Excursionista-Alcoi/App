@@ -2,10 +2,7 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,12 +12,15 @@ import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
@@ -33,10 +33,13 @@ import kotlin.uuid.Uuid
 @Composable
 fun DepartmentsListView(
     windowSizeClass: WindowSizeClass,
+    users: List<UserData>?,
     departments: List<Department>?,
     onCreate: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onUpdate: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
     onDelete: (Department) -> Job,
+    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 ) {
     var deleting by remember { mutableStateOf<Department?>(null) }
     deleting?.let { department ->
@@ -138,5 +141,38 @@ fun DepartmentsListView(
             label = stringResource(Res.string.form_display_name),
             modifier = Modifier.fillMaxWidth(),
         )
+
+        val pendingJoinRequests = remember(departments) {
+            departments
+                ?.map { it.members.orEmpty() }
+                ?.filter { members -> members.any { !it.confirmed } }
+                ?.flatten()
+                ?.filterNot { it.confirmed }
+        }
+        if (!pendingJoinRequests.isNullOrEmpty()) {
+            Text(
+                text = stringResource(Res.string.management_other_users_join_requests),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
+            )
+            for (request in pendingJoinRequests) {
+                val department = remember(departments) {
+                    departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
+                }
+                val userData = remember(users) {
+                    users?.find { it.sub == request.userSub }
+                }
+
+                department ?: continue
+                userData ?: continue
+
+                DepartmentPendingJoinRequest(
+                    userData = userData,
+                    department = department,
+                    onApprove = { onApproveDepartmentJoinRequest(request) },
+                    onDeny = { onDenyDepartmentJoinRequest(request) },
+                )
+            }
+        }
     }
 }

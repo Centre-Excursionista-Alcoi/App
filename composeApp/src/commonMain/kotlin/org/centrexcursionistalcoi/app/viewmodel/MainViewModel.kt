@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.*
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -130,14 +133,6 @@ class MainViewModel: ViewModel() {
 
     fun disconnectFEMECV() = launch {
         ProfileRemoteRepository.disconnectFEMECV()
-    }
-
-    fun approveDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.confirmJoinRequest(request)
-    }
-
-    fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.denyJoinRequest(request)
     }
 
     fun requestJoinDepartment(department: Department) = launch {

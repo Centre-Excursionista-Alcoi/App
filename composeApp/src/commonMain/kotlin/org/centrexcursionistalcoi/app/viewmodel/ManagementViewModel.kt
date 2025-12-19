@@ -64,6 +64,14 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
+    fun approveDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
+        DepartmentsRemoteRepository.confirmJoinRequest(request)
+    }
+
+    fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
+        DepartmentsRemoteRepository.denyJoinRequest(request)
+    }
+
     fun createInventoryItemType(displayName: String, description: String, categories: List<String>, department: Department?, imageFile: PlatformFile?) = launch {
         doAsync {
             InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, department, imageFile)

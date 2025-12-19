@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.ui.page.main
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
@@ -16,12 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
-import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
@@ -40,27 +39,12 @@ fun HomePage(
 
     posts: List<ReferencedPost>?,
 
-    departments: List<Department>?,
-    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-
-    users: List<UserData>?,
-
     events: List<ReferencedEvent>?,
     onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
     onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
-    val isAdmin = remember(profile) { profile.isAdmin }
-
-    val pendingJoinRequests = remember(departments) {
-        departments
-            .takeIf { isAdmin }
-            ?.map { it.members.orEmpty() }
-            ?.filter { members -> members.any { !it.confirmed } }
-            ?.flatten()
-    }
 
     AdaptiveVerticalGrid(
         windowSizeClass,
@@ -115,40 +99,6 @@ fun HomePage(
                             Text(stringResource(Res.string.permission_grant))
                         }
                     }
-                }
-            }
-        }
-
-        if (isAdmin) {
-            if (!pendingJoinRequests.isNullOrEmpty()) {
-                stickyHeader {
-                    Text(
-                        text = stringResource(Res.string.management_other_users_join_requests),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background).fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
-                    )
-                }
-                items(
-                    items = pendingJoinRequests.filterNot { it.confirmed },
-                    key = { "join_request_${it.id}" },
-                    contentType = { "pending-join-request" },
-                ) { request ->
-                    val department = remember(departments) {
-                        departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
-                    }
-                    val userData = remember(users) {
-                        users?.find { it.sub == request.userSub }
-                    }
-
-                    department ?: return@items
-                    userData ?: return@items
-
-                    DepartmentPendingJoinRequest(
-                        userData = userData,
-                        department = department,
-                        onApprove = { onApproveDepartmentJoinRequest(request) },
-                        onDeny = { onDenyDepartmentJoinRequest(request) },
-                    )
                 }
             }
         }
