@@ -21,6 +21,7 @@ sealed interface PushNotification {
             val requestId = (data["requestId"] as? String?)?.toUuidOrNull()
             val departmentId = (data["departmentId"] as? String?)?.toUuidOrNull()
             val isConfirmed = (data["isConfirmed"] as? String?)?.toBoolean()
+            val path = data["path"] as? String?
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -90,6 +91,16 @@ sealed interface PushNotification {
                     isConfirmed ?: throw IllegalArgumentException("Missing or invalid isConfirmed field in EventAssistanceUpdated push notification data")
                     EventAssistanceUpdated(eventId, userSub, isConfirmed)
                 }
+
+                EntityCreated.TYPE -> {
+                    path ?: throw IllegalArgumentException("Missing or invalid path field in EntityCreated push notification data")
+                    EntityCreated(path)
+                }
+                EntityUpdated.TYPE -> {
+                    path ?: throw IllegalArgumentException("Missing or invalid path field in EntityUpdated push notification data")
+                    EntityUpdated(path)
+                }
+
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
             }
         }
@@ -308,5 +319,31 @@ sealed interface PushNotification {
             "eventId" to eventId.toString(),
             "isConfirmed" to isConfirmed.toString(),
         )
+    }
+
+    @Serializable
+    class EntityCreated(
+        val path: String,
+    ): PushNotification {
+        companion object {
+            const val TYPE = "EntityCreated"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("path" to path)
+    }
+
+    @Serializable
+    class EntityUpdated(
+        val path: String,
+    ): PushNotification {
+        companion object {
+            const val TYPE = "EntityUpdated"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("path" to path)
     }
 }

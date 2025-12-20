@@ -72,6 +72,26 @@ object PushNotifierListener : NotifierManager.Listener {
                         logic = SyncDepartmentBackgroundJobLogic,
                     )
                 }
+
+                is PushNotification.EntityCreated -> {
+                    log.d { "Received entity created notification for path: ${notification.path}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
+                        input = mapOf(
+                            SyncEntityBackgroundJobLogic.EXTRA_PATH to notification.path,
+                        ),
+                        logic = SyncEntityBackgroundJobLogic,
+                    )
+                }
+
+                is PushNotification.EntityUpdated -> {
+                    log.d { "Received entity updated notification for path: ${notification.path}" }
+                    BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
+                        input = mapOf(
+                            SyncEntityBackgroundJobLogic.EXTRA_PATH to notification.path,
+                        ),
+                        logic = SyncEntityBackgroundJobLogic,
+                    )
+                }
             }
 
             LocalNotifications.showPushNotification(notification, data)
