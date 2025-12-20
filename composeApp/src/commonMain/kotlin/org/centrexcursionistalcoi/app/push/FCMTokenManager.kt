@@ -42,7 +42,7 @@ object FCMTokenManager {
     suspend fun revoke(): Boolean {
         val oldToken = settings.getStringOrNull("fcm_token")
         return if (oldToken != null) {
-            return revoke(oldToken)
+            revoke(oldToken)
         } else {
             true
         }
