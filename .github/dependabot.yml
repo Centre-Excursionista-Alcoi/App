@@ -12,3 +12,55 @@ updates:
     groups:
       ci-actions:
         patterns: ["*"]
+  - package-ecosystem: "gradle"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+    groups:
+      # Dependencies used in shared module OR in both server and app
+      shared-dependencies:
+        patterns:
+          - "kotlin*"
+          - "ktor-client-core"
+          - "ktor-client-logging"
+          - "ktor-client-auth"
+          - "ktor-client-content-negotiation"
+          - "ktor-serialization-kotlinx-json"
+          - "serialization*"
+          - "logback"
+
+      # Dependencies exclusive to the server module
+      server-dependencies:
+        patterns:
+          - "ktor-server-*"
+          - "exposed-*"
+          - "postgresql"
+          - "h2"
+          - "sqlite"
+          - "kreds"
+          - "ksoup-*"
+          - "pdfbox"
+          - "firebase-admin"
+          - "telegram-bot"
+          - "retrofit-*"
+          - "bcrypt"
+
+      # Dependencies exclusive to the app (Android/iOS/Desktop) module
+      app-dependencies:
+        patterns:
+          - "androidx-*"
+          - "compose-*"
+          - "sqldelight-*"
+          - "sentry-*"
+          - "kmm-*"
+          - "coil-*"
+          - "filekit-*"
+          - "markdownRenderer-*"
+          - "qrose-*"
+          - "kscan"
+          - "richeditor"
+          - "calendar"
+          - "localina"
+          - "zoomable"
+          - "android-appUpdate"
+          - "buildkonfig"
