@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
@@ -18,8 +17,12 @@ import com.diamondedge.logging.logging
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.typing.ShoppingList
@@ -30,8 +33,10 @@ import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -194,15 +199,29 @@ private fun LendingCreationScreen(
             } else {
                 items(shoppingList.toList()) { (typeId, amount) ->
                     val type = inventoryItemTypes.find { it.id == typeId }
+                    val items = allocatedItems?.filter { it.type.id == typeId }
                     val itemError = errors
                         ?.filterIsInstance<CannotAllocateEnoughItemsException>()
                         ?.find { it.itemTypeId == typeId }
+                    val itemAllocated = itemError == null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()
+
+                    val backgroundColor = if (itemError != null)
+                        MaterialTheme.colorScheme.errorContainer
+                    else if (itemAllocated)
+                        Color(0xFFBBD0AE)
+                    else
+                        Color.Transparent
+                    val contentColor = if (itemError != null)
+                        MaterialTheme.colorScheme.onErrorContainer
+                    else if (itemAllocated)
+                        Color(0xFF2A441F)
+                    else
+                        Color.Unspecified
 
                     ListItem(
                         headlineContent = { Text("${type?.displayName ?: unknown()} ($amount)") },
-                        supportingContent = {
-                            val items = allocatedItems?.filter { it.type.id == typeId }
-                            Column {
+                        supportingContent = if (!itemAllocated) {
+                            {
                                 Text(
                                     text = when {
                                         itemError != null -> {
@@ -213,24 +232,14 @@ private fun LendingCreationScreen(
                                                 stringResource(Res.string.lending_creation_error_allocation_none)
                                             }
                                         }
-
                                         from == null || to == null -> stringResource(Res.string.lending_creation_select_dates)
                                         allocatedItems == null -> stringResource(Res.string.lending_creation_allocating)
                                         items.isNullOrEmpty() -> stringResource(Res.string.lending_creation_no_items_allocated)
-                                        else -> stringResource(Res.string.lending_creation_items_allocated) + "\n" +
-                                                items.joinToString("\n") { "- ${it.id}" }
+                                        else -> stringResource(Res.string.lending_creation_items_unknown_error)
                                     }
                                 )
-                                if (itemError != null && from != null && to != null && allocatedItems != null && !items.isNullOrEmpty()) {
-                                    for (item in items) {
-                                        Text(
-                                            text = "- ${item.id}",
-                                            fontFamily = FontFamily.Monospace,
-                                        )
-                                    }
-                                }
                             }
-                        },
+                        } else null,
                         trailingContent = {
                             val availableAmount = inventoryItems.count { it.type.id == typeId }
                             val canAddMore = amount < availableAmount
@@ -257,11 +266,11 @@ private fun LendingCreationScreen(
                             }
                         },
                         colors = ListItemDefaults.colors(
-                            containerColor = if (itemError != null) MaterialTheme.colorScheme.errorContainer else Color.Transparent,
-                            headlineColor = if (itemError != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
-                            supportingColor = if (itemError != null) MaterialTheme.colorScheme.onErrorContainer else Color.Unspecified,
+                            containerColor = backgroundColor,
+                            headlineColor = contentColor,
+                            supportingColor = contentColor,
                         ),
-                        modifier = Modifier.padding(vertical = 4.dp).clip(RoundedCornerShape(8.dp)),
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp).clip(RoundedCornerShape(8.dp)),
                     )
                 }
             }
@@ -335,4 +344,44 @@ private fun LendingCreationScreen(
             item("spacer") { Spacer(Modifier.height(64.dp)) }
         }
     }
+}
+
+private val previewType = InventoryItemType(
+    id = "3b69c54e-3465-4a1d-a194-29dc64058e4a".toUuid(),
+    displayName = "Test Item",
+    description = null,
+    categories = null,
+    department = null,
+    image = null,
+).referenced(emptyList())
+
+private val previewItem = InventoryItem(
+    id = "8c9ccff9-ec17-4918-9327-08f7de3576d3".toUuid(),
+    variation = null,
+    type = previewType.id,
+    nfcId = null,
+    manufacturerTraceabilityCode = null,
+).referenced(previewType)
+
+@Preview
+@Composable
+fun LendingCreationScreen_Allocated_Preview() {
+    LendingCreationScreen(
+        shoppingList = mapOf(previewType.id to 1),
+        isShoppingListDirty = false,
+        onAddItemToShoppingList = {},
+        onRemoveItemFromShoppingList = {},
+        onRemoveItemTypeFromShoppingList = {},
+        onResetShoppingList = {},
+        inventoryItems = listOf(previewItem),
+        inventoryItemTypes = listOf(previewType),
+        from = LocalDate(2025, 10, 11),
+        onFromChange = {},
+        to = LocalDate(2025, 10, 15),
+        onToChange = {},
+        errors = null,
+        allocatedItems = listOf(previewItem),
+        onCreateLendingRequest = {},
+        onBackRequested = {},
+    )
 }

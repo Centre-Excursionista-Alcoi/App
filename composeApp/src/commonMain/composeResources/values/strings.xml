@@ -165,7 +165,7 @@
     <string name="lending_creation_select_dates">Select dates to allocate items</string>
     <string name="lending_creation_allocating">Allocating...</string>
     <string name="lending_creation_no_items_allocated">No items allocated</string>
-    <string name="lending_creation_items_allocated">Allocated items:</string>
+    <string name="lending_creation_items_unknown_error">Unknown error</string>
     <string name="lending_creation_warning_title">Attention</string>
     <string name="lending_creation_warning_message">You will reserve the allocated items for the selected dates, but the request has to be approved by an administrator before the lending is complete.\nOnce an admin confirms the lending, you will receive a notification, and will be able to schedule the pickup of the items.</string>
     <string name="lending_creation_error_title">Error</string>
