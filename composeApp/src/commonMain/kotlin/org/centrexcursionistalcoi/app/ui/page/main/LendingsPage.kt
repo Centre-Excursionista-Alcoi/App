@@ -274,7 +274,9 @@ private fun LendingsPage_Content(
             }
         }
 
-        item(key = "bottom_spacer", contentType = "spacer") { Modifier.height(16.dp) }
+        item(key = "bottom_spacer", contentType = "spacer", span = { GridItemSpan(maxLineSpan) }) {
+            Spacer(Modifier.height(56.dp))
+        }
     }
 }
 

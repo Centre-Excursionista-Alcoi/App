@@ -131,6 +131,14 @@ fun HomePage(
             item(key = "events_filler", contentType = "filler", span = { GridItemSpan(maxCurrentLineSpan) }) {
                 Spacer(Modifier.height(16.dp))
             }
+            if (!posts.isNullOrEmpty()) {
+                // Add padding between events and posts
+                item(
+                    key = "events_posts_padding",
+                    contentType = "filler",
+                    span = { GridItemSpan(maxCurrentLineSpan) },
+                ) { Spacer(Modifier.height(12.dp)) }
+            }
         }
 
         if (!posts.isNullOrEmpty()) {
@@ -138,7 +146,7 @@ fun HomePage(
                 Text(
                     text = stringResource(Res.string.posts),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             items(posts) { post ->
