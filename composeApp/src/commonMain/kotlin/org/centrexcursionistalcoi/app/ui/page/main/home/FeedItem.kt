@@ -1,17 +1,12 @@
 package org.centrexcursionistalcoi.app.ui.page.main.home
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.mikepenz.markdown.coil3.Coil3ImageTransformerImpl
-import com.mikepenz.markdown.m3.Markdown
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,8 +15,7 @@ fun FeedItem(
     title: String,
     dateString: String,
     content: String?,
-    dialogHeadline: @Composable ColumnScope.() -> Unit,
-    dialogBottom: @Composable ColumnScope.() -> Unit = {},
+    dialogContent: @Composable ColumnScope.() -> Unit,
 ) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
@@ -32,18 +26,9 @@ fun FeedItem(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 )
-                dialogHeadline()
-
-                if (content != null) {
-                    Markdown(
-                        content = content,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        imageTransformer = Coil3ImageTransformerImpl,
-                    )
-                }
-
-                dialogBottom()
+                dialogContent()
             }
         }
     }

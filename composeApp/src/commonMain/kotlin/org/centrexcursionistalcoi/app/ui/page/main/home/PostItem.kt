@@ -45,7 +45,7 @@ fun PostItem(post: ReferencedPost) {
         title = post.title,
         dateString = post.localizedDate(),
         content = post.content,
-        dialogHeadline = {
+        dialogContent = {
             val publisherText = stringResource(Res.string.post_by, post.department?.displayName ?: stringResource(Res.string.post_department_generic))
 
             Row(modifier = Modifier.padding(horizontal = 8.dp)) {
@@ -73,12 +73,16 @@ fun PostItem(post: ReferencedPost) {
                     )
                 }
             }
-        },
-        dialogBottom = {
+
+            Text(
+                text = post.content,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            )
+
             if (post.files.isNotEmpty()) {
                 val images = post.rememberImageFiles()
                 LazyRow(
-                    modifier = Modifier.fillMaxWidth().height(300.dp).padding(bottom = 24.dp),
+                    modifier = Modifier.fillMaxWidth().height(300.dp).padding(top = 12.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     item("start_spacer") { Spacer(Modifier.width(12.dp)) }

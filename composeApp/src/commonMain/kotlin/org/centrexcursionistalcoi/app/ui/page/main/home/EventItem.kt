@@ -35,17 +35,28 @@ fun EventItem(
         title = event.title,
         dateString = event.localizedDateRange(),
         content = event.description,
-        dialogHeadline = {
+        dialogContent = {
             Text(
                 text = stringResource(
                     Res.string.event_by,
-                    event.department?.displayName ?: stringResource(Res.string.event_by)
+                    event.department?.displayName ?: stringResource(Res.string.event_department_generic)
                 ),
             )
             Text(
                 text = event.localizedDateRange(),
                 modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(MaterialSymbols.Distance, stringResource(Res.string.event_place))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = event.place,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
 
             if (PlatformCalendarSync.isSupported) {
                 OutlinedButton(
@@ -58,9 +69,6 @@ fun EventItem(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-        },
-        dialogBottom = {
             if (event.image != null) {
                 val image by event.rememberImageFile()
                 AsyncByteImage(
@@ -69,18 +77,6 @@ fun EventItem(
                         .fillMaxHeight()
                         .padding(horizontal = 8.dp),
                     canBeMaximized = true,
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 32.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(MaterialSymbols.Distance, stringResource(Res.string.event_place))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = event.place,
-                    style = MaterialTheme.typography.labelLarge
                 )
             }
 
@@ -153,7 +149,14 @@ fun EventItem(
                 }
             }
 
+            event.description?.let { description ->
+                Text(
+                    text = description,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                )
+            }
+
             Spacer(Modifier.height(56.dp))
-        }
+        },
     )
 }
