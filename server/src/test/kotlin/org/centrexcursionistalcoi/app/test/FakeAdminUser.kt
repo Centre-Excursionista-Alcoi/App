@@ -9,13 +9,14 @@ object FakeAdminUser : StubUser(
     FakeAdminUser.EMAIL,
     FakeAdminUser.MEMBER_NUMBER,
     listOf(ADMIN_GROUP_NAME, "user"),
-    FakeAdminUser.FCM_TOKEN,
+    arrayOf(FakeAdminUser.FCM_TOKEN1, FakeAdminUser.FCM_TOKEN2),
 ) {
     const val SUB = "test-user-id-456"
     const val NIF = "11111111H"
     const val FULL_NAME = "Admin User"
     const val EMAIL = "admin@example.com"
     const val MEMBER_NUMBER = 1000u
-    const val FCM_TOKEN = "token-fake-admin-user"
+    const val FCM_TOKEN1 = "token-fake-admin-user-token1"
+    const val FCM_TOKEN2 = "token-fake-admin-user-token2"
     val GROUPS = listOf(ADMIN_GROUP_NAME, "user")
 }

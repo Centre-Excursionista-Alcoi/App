@@ -389,10 +389,10 @@ fun Route.lendingsRoutes() {
 
         // Send Push Notification asynchronously
         Push.launch {
-            Push.sendAdminPushNotification(lending.takenNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.takenNotification()
+                notification = lending.takenNotification(),
+                includeAdmins = true,
             )
         }
 
@@ -474,12 +474,10 @@ fun Route.lendingsRoutes() {
 
             // Send Push Notification asynchronously
             Push.launch {
-                Push.sendAdminPushNotification(
-                    notification = lending.returnedNotification()
-                )
                 Push.sendPushNotification(
                     reference = Database { lending.userSub },
-                    notification = lending.returnedNotification()
+                    notification = lending.returnedNotification(),
+                    includeAdmins = true,
                 )
             }
 
@@ -684,12 +682,10 @@ fun Route.lendingsRoutes() {
             )
         }
         Push.launch {
-            Push.sendAdminPushNotification(
-                notification = lending.memoryAddedNotification()
-            )
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.memoryAddedNotification()
+                notification = lending.memoryAddedNotification(),
+                includeAdmins = true,
             )
         }
 
@@ -717,10 +713,10 @@ fun Route.lendingsRoutes() {
         }
 
         Push.launch {
-            Push.sendAdminPushNotification(lending.memoryAddedNotification())
             Push.sendPushNotification(
                 reference = Database { lending.userSub },
-                notification = lending.memoryAddedNotification()
+                notification = lending.memoryAddedNotification(),
+                includeAdmins = true,
             )
         }
 

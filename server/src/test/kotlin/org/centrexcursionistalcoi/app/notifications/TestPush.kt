@@ -115,7 +115,7 @@ class TestPush {
         verify(exactly = 0) { messagingMock.sendEachForMulticast(any()) }
 
         // -- Non-empty tokens list
-        sendFCMPushNotification(setOf(FakeUser.FCM_TOKEN, FakeAdminUser.FCM_TOKEN), mapOf("example" to "value"))
+        sendFCMPushNotification(setOf(*FakeUser.fcmTokens, *FakeAdminUser.fcmTokens), mapOf("example" to "value"))
         verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
     }
 
@@ -124,7 +124,7 @@ class TestPush {
         // Notification should only be sent to FakeAdminUser
         val pushSpy = spyk<Push>(recordPrivateCalls = true)
         pushSpy.sendAdminFCMPushNotification(mapOf("example" to "value"))
-        verify { pushSpy.sendFCMPushNotification(setOf(FakeAdminUser.FCM_TOKEN), any()) }
+        verify { pushSpy.sendFCMPushNotification(setOf(*FakeAdminUser.fcmTokens), any()) }
         verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
     }
 
@@ -149,7 +149,7 @@ class TestPush {
                 val pushSpy = spyk<Push>(recordPrivateCalls = true)
                 pushSpy.sendAdminPushNotification(notification)
                 // Notification should only be sent to FakeAdminUser, even though it's targeted to FakeUser
-                verify { pushSpy.sendFCMPushNotification(setOf(FakeAdminUser.FCM_TOKEN), notification.toMap()) }
+                verify { pushSpy.sendFCMPushNotification(setOf(*FakeAdminUser.fcmTokens), notification.toMap()) }
                 verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
             }
         }
@@ -168,7 +168,7 @@ class TestPush {
                 // Notification should only be sent to FakeUser and FakeAdminUser
                 verify {
                     pushSpy.sendFCMPushNotification(
-                        setOf(FakeUser.FCM_TOKEN, FakeAdminUser.FCM_TOKEN),
+                        setOf(*FakeUser.fcmTokens, *FakeAdminUser.fcmTokens),
                         notification.toMap()
                     )
                 }
@@ -188,7 +188,7 @@ class TestPush {
                     includeAdmins = false,
                 )
                 // Notification should only be sent to FakeUser
-                verify { pushSpy.sendFCMPushNotification(setOf(FakeUser.FCM_TOKEN), notification.toMap()) }
+                verify { pushSpy.sendFCMPushNotification(setOf(*FakeUser.fcmTokens), notification.toMap()) }
                 verify(exactly = 1) { messagingMock.sendEachForMulticast(any()) }
             }
         }
@@ -226,8 +226,8 @@ class TestPush {
                     verify {
                         pushSpy.sendFCMPushNotification(
                             setOf(
-                                FakeUser.FCM_TOKEN,
-                                FakeAdminUser.FCM_TOKEN
+                                *FakeUser.fcmTokens,
+                                *FakeAdminUser.fcmTokens
                             ),
                             notification.toMap()
                         )
@@ -268,7 +268,7 @@ class TestPush {
                     // Notification should only be sent to FakeUser
                     verify {
                         pushSpy.sendFCMPushNotification(
-                            setOf(FakeUser.FCM_TOKEN),
+                            setOf(*FakeUser.fcmTokens),
                             notification.toMap()
                         )
                     }
@@ -287,9 +287,9 @@ class TestPush {
                 verify {
                     pushSpy.sendFCMPushNotification(
                         setOf(
-                            FakeUser.FCM_TOKEN,
-                            FakeUser2.FCM_TOKEN,
-                            FakeAdminUser.FCM_TOKEN
+                            *FakeUser.fcmTokens,
+                            *FakeUser2.fcmTokens,
+                            *FakeAdminUser.fcmTokens
                         ),
                         notification.toMap()
                     )

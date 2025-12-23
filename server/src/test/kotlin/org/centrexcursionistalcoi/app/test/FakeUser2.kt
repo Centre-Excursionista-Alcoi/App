@@ -7,12 +7,13 @@ object FakeUser2 : StubUser(
     FakeUser2.EMAIL,
     FakeUser2.MEMBER_NUMBER,
     listOf("user"),
-    FakeUser2.FCM_TOKEN,
+    arrayOf(FakeUser2.FCM_TOKEN1, FakeUser2.FCM_TOKEN2),
 ) {
     const val SUB = "test-user-id-789"
     const val NIF = "87654321X"
     const val FULL_NAME = "Sample User 2"
     const val EMAIL = "user2@example.com"
-    const val FCM_TOKEN = "token-fake-user-2"
+    const val FCM_TOKEN1 = "token-fake-user-2-token1"
+    const val FCM_TOKEN2 = "token-fake-user-2-token2"
     const val MEMBER_NUMBER = 1002u
 }

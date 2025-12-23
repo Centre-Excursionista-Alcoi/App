@@ -18,7 +18,7 @@ abstract class StubUser(
     val email: String,
     val memberNumber: UInt,
     val groups: List<String>,
-    val fcmToken: String
+    val fcmTokens: Array<String>
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -53,9 +53,11 @@ abstract class StubUser(
     }
 
     context(_: JdbcTransaction)
-    fun provideEntityWithFCMToken(): FCMRegistrationTokenEntity = transaction {
-        FCMRegistrationTokenEntity.findById(fcmToken) ?: FCMRegistrationTokenEntity.new(fcmToken) {
-            user = provideEntity()
+    fun provideEntityWithFCMToken(): List<FCMRegistrationTokenEntity> = transaction {
+        fcmTokens.map { fcmToken ->
+            FCMRegistrationTokenEntity.findById(fcmToken) ?: FCMRegistrationTokenEntity.new(fcmToken) {
+                user = provideEntity()
+            }
         }
     }
 
