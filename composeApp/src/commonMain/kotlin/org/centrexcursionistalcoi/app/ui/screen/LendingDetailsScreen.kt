@@ -14,12 +14,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import kotlinx.coroutines.Job
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.fetchFilePath
-import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -29,11 +29,14 @@ import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Composable
@@ -225,7 +228,7 @@ fun LendingDetailsScreen_Content(
         }
 
         item("items") {
-            LendingItems(lending)
+            LendingItems(lending, false)
         }
     }
 }
@@ -327,6 +330,7 @@ fun DataRow(
 @Composable
 fun LendingItems(
     lending: ReferencedLending,
+    isManagement: Boolean,
 ) {
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
@@ -351,14 +355,16 @@ fun LendingItems(
                         style = MaterialTheme.typography.bodyMedium,
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    if (isManagement) {
+                        Spacer(Modifier.height(8.dp))
 
-                    for (item in items) {
-                        Text(
-                            text = item.id.toString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.Monospace,
-                        )
+                        for (item in items) {
+                            Text(
+                                text = item.id.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = FontFamily.Monospace,
+                            )
+                        }
                     }
                 }
             }
@@ -436,4 +442,63 @@ fun MemoryViewButtons(
             }
         }
     }
+}
+
+private val previewItemType = InventoryItemType(
+    id = "3b69c54e-3465-4a1d-a194-29dc64058e4a".toUuid(),
+    displayName = "Test Item",
+    description = null,
+    categories = null,
+    department = null,
+    image = null,
+).referenced(emptyList())
+
+private val previewItem = InventoryItem(
+    id = "8c9ccff9-ec17-4918-9327-08f7de3576d3".toUuid(),
+    variation = null,
+    type = previewItemType.id,
+    nfcId = null,
+    manufacturerTraceabilityCode = null,
+).referenced(previewItemType)
+
+private val previewUserData = UserData(
+    sub = "abc",
+    fullName = "Example User",
+    email = "user@example.com",
+    groups = listOf(),
+    departments = emptyList(),
+    memberNumber = 123u,
+    lendingUser = null,
+    insurances = emptyList(),
+    isDisabled = false,
+)
+
+private val previewLending = Lending(
+    id = "290ecb88-5676-4baf-971b-4488e174b942".toUuid(),
+    userSub = previewUserData.sub,
+    timestamp = Instant.fromEpochSeconds(1766509399),
+    confirmed = false,
+    taken = false,
+    givenBy = null,
+    givenAt = null,
+    returned = false,
+    receivedItems = emptyList(),
+    memorySubmitted = false,
+    memorySubmittedAt = null,
+    memory = null,
+    memoryPdf = null,
+    memoryReviewed = false,
+    from = LocalDate(2025, 12, 23),
+    to = LocalDate(2025, 12, 25),
+    notes = null,
+    items = listOf(previewItem.referencedEntity)
+).referenced(listOf(previewUserData), listOf(previewItemType))
+
+@Preview(showBackground = true)
+@Composable
+private fun LendingDetailsScreen_Content_Preview() {
+    LendingDetailsScreen_Content(
+        lending = previewLending,
+        onMemoryEditorRequest = {},
+    )
 }

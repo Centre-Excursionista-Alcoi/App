@@ -307,7 +307,7 @@ fun LazyListScope.lendingManagementScreenContent(
     }
 
     item("lendings") {
-        LendingItems(lending)
+        LendingItems(lending, true)
     }
 }
 
