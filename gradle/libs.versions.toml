@@ -48,7 +48,7 @@ markdown-renderer = "0.39.0"
 mockk = "1.14.7"
 # Breaking changed in 3.x, will migrate at some point
 #noinspection NewerVersionAvailable
-pdfbox = "2.0.35"
+pdfbox = "3.0.6"
 postgresql = "42.7.8"
 qrose = "1.0.1"
 # Cross-dependency, do not upgrade
