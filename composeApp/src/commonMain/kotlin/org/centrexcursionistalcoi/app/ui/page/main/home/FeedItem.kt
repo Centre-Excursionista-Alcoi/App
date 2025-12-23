@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.mikepenz.markdown.m3.Markdown
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,14 +55,18 @@ fun FeedItem(
             modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 8.dp),
         )
         if (content != null) {
-            Text(
-                text = content.take(128).let { content ->
-                    if (content.length >= 128) "$content..."
-                    else content
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 8.dp),
-            )
+            if (content.length > 150) {
+                Text(
+                    text = "${content.take(150)}...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 8.dp),
+                )
+            } else {
+                Markdown(
+                    content,
+                    modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 8.dp),
+                )
+            }
         }
     }
 }

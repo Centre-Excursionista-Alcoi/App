@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import com.mikepenz.markdown.m3.Markdown
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.addCalendarEvent
@@ -150,10 +151,7 @@ fun EventItem(
             }
 
             event.description?.let { description ->
-                Text(
-                    text = description,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                )
+                Markdown(description, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
             }
 
             Spacer(Modifier.height(56.dp))

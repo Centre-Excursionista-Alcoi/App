@@ -23,6 +23,7 @@ import cea_app.composeapp.generated.resources.close
 import cea_app.composeapp.generated.resources.post_by
 import cea_app.composeapp.generated.resources.post_department_generic
 import coil3.compose.rememberAsyncImagePainter
+import com.mikepenz.markdown.m3.Markdown
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.centrexcursionistalcoi.app.data.ReferencedPost
@@ -74,10 +75,7 @@ fun PostItem(post: ReferencedPost) {
                 }
             }
 
-            Text(
-                text = post.content,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            )
+            Markdown(post.content, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
 
             if (post.files.isNotEmpty()) {
                 val images = post.rememberImageFiles()

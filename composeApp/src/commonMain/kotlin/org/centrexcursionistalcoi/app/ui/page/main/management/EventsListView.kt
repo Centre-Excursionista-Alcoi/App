@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
+import com.mikepenz.markdown.m3.Markdown
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -311,10 +312,7 @@ fun EventsListView(
         Spacer(Modifier.height(12.dp))
 
         event.description?.let { description ->
-            Text(
-                text = description,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            )
+            Markdown(description, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
         }
 
         if (event.userSubList.isNotEmpty()) {
