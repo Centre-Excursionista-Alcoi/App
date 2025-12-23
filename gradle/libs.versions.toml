@@ -52,7 +52,7 @@ qrose = "1.0.1"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
 retrofit = "2.9.0"
-richeditor = "1.0.0-dev01"
+richeditor = "1.0.0-rc13"
 sentry = "5.12.2"
 sentry-multiplatform = "0.23.0"
 sqldelight = "2.2.1"
