@@ -251,7 +251,7 @@ fun LazyListScope.lendingManagementScreenContent(
     item("general_details") {
         val status = remember(lending) { lending.status() }
 
-        GeneralLendingDetails(lending) {
+        GeneralLendingDetails(lending, true) {
             GeneralLendingDetailsExtra(lending, snackbarHostState, users)
 
             if (status == Lending.Status.REQUESTED) {
@@ -620,7 +620,7 @@ private fun LendingPickupReturnContent(
 ) {
     val items = lending.items
 
-    GeneralLendingDetails(lending) { GeneralLendingDetailsExtra(lending, snackbarHostState, users) }
+    GeneralLendingDetails(lending, true) { GeneralLendingDetailsExtra(lending, snackbarHostState, users) }
 
     if (PlatformNFC.isSupported) {
         OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {

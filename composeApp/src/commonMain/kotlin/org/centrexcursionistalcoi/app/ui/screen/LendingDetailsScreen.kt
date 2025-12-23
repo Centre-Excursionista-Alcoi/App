@@ -224,7 +224,7 @@ fun LendingDetailsScreen_Content(
         }
 
         item("basic_details") {
-            GeneralLendingDetails(lending)
+            GeneralLendingDetails(lending, false)
         }
 
         item("items") {
@@ -236,6 +236,7 @@ fun LendingDetailsScreen_Content(
 @Composable
 fun GeneralLendingDetails(
     lending: ReferencedLending,
+    isManagement: Boolean,
     extraContent: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -244,11 +245,14 @@ fun GeneralLendingDetails(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(12.dp)
         )
-        DataRow(
-            icon = MaterialSymbols.Numbers,
-            titleRes = Res.string.lending_details_id,
-            text = lending.id.toString(),
-        )
+
+        if (isManagement) {
+            DataRow(
+                icon = MaterialSymbols.Numbers,
+                titleRes = Res.string.lending_details_id,
+                text = lending.id.toString(),
+            )
+        }
 
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 8.dp)) {
             Icon(MaterialSymbols.FirstPage, null, Modifier.padding(end = 8.dp))
