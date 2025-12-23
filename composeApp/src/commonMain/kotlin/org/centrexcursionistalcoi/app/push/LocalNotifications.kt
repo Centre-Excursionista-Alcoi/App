@@ -8,8 +8,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.compose.resources.StringResource
@@ -177,6 +179,13 @@ object LocalNotifications {
                 }
             }
 
+            is PushNotification.NewPost -> {
+                runBlocking {
+                    val post = PostsRepository.get(notification.postId) ?: PostsRemoteRepository.get(notification.postId)
+                    post ?: return@runBlocking
+                    showNotification(post.title, post.content, data)
+                }
+            }
             is PushNotification.EventCancelled -> {
                 // Only show if the notification is for the current user
                 if (!notification.checkIsSelf()) {
