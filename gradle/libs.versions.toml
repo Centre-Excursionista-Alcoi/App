@@ -39,7 +39,7 @@ kotlinx-serialization = "1.9.0"
 kotlinx-serialization-csv = "3.2.1"
 kotlinx-kover = "0.9.4"
 kreds = "0.9.1"
-kscan = "0.4.0"
+kscan = "0.5.0"
 ksoup = "0.2.5"
 ktor = "3.3.3"
 localina = "1.0.0-alpha3"
@@ -110,7 +110,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serializationCsv = { module = "de.brudaswen.kotlinx.serialization:kotlinx-serialization-csv", version.ref = "kotlinx-serialization-csv" }
 kotlinx-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kreds = { module = "io.github.crackthecodeabhi:kreds", version.ref = "kreds" }
-kscan = { module = "io.github.arnyminerz:KScan", version.ref = "kscan" }
+kscan = { module = "io.github.ismai117:KScan", version.ref = "kscan" }
 ksoup-core = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 ksoup-network = { module = "com.fleeksoft.ksoup:ksoup-network", version.ref = "ksoup" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
