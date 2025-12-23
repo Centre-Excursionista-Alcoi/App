@@ -43,7 +43,7 @@ kscan = "0.5.0"
 ksoup = "0.2.5"
 ktor = "3.3.3"
 localina = "1.0.0-alpha3"
-logback = "1.5.22"
+logback = "1.5.23"
 markdown-renderer = "0.39.0"
 mockk = "1.14.7"
 # Breaking changed in 3.x, will migrate at some point
