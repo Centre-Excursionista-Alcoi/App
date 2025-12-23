@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.push
 
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import kotlin.reflect.KClass
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -21,7 +22,8 @@ sealed interface PushNotification {
             val requestId = (data["requestId"] as? String?)?.toUuidOrNull()
             val departmentId = (data["departmentId"] as? String?)?.toUuidOrNull()
             val isConfirmed = (data["isConfirmed"] as? String?)?.toBoolean()
-            val path = data["path"] as? String?
+            val entityClass = data["entityClass"] as? String?
+            val entityId = data["entityId"] as? String?
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -92,13 +94,15 @@ sealed interface PushNotification {
                     EventAssistanceUpdated(eventId, userSub, isConfirmed)
                 }
 
-                EntityCreated.TYPE -> {
-                    path ?: throw IllegalArgumentException("Missing or invalid path field in EntityCreated push notification data")
-                    EntityCreated(path)
-                }
                 EntityUpdated.TYPE -> {
-                    path ?: throw IllegalArgumentException("Missing or invalid path field in EntityUpdated push notification data")
-                    EntityUpdated(path)
+                    entityClass ?: throw IllegalArgumentException("Missing or invalid entityClass field in EntityUpdated push notification data")
+                    entityId ?: throw IllegalArgumentException("Missing or invalid entityId field in EntityUpdated push notification data")
+                    EntityUpdated(entityClass, entityId)
+                }
+                EntityDeleted.TYPE -> {
+                    entityClass ?: throw IllegalArgumentException("Missing or invalid entityClass field in EntityDeleted push notification data")
+                    entityId ?: throw IllegalArgumentException("Missing or invalid entityId field in EntityDeleted push notification data")
+                    EntityDeleted(entityClass, entityId)
                 }
 
                 else -> throw IllegalArgumentException("Unknown push notification type: $type")
@@ -322,28 +326,34 @@ sealed interface PushNotification {
     }
 
     @Serializable
-    class EntityCreated(
-        val path: String,
-    ): PushNotification {
-        companion object {
-            const val TYPE = "EntityCreated"
-        }
-
-        override val type: String = TYPE
-
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("path" to path)
-    }
-
-    @Serializable
-    class EntityUpdated(
-        val path: String,
+    open class EntityUpdated(
+        val entityClass: String,
+        val entityId: String,
     ): PushNotification {
         companion object {
             const val TYPE = "EntityUpdated"
         }
 
+        constructor(entityClass: KClass<*>, entityId: String): this(entityClass.simpleName!!, entityId)
+
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("path" to path)
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("entityClass" to entityClass, "entityId" to entityId)
+    }
+
+    @Serializable
+    class EntityDeleted(
+        val entityClass: String,
+        val entityId: String,
+    ): PushNotification {
+        companion object {
+            const val TYPE = "EntityDeleted"
+        }
+
+        constructor(entityClass: KClass<*>, entityId: String): this(entityClass.simpleName!!, entityId)
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("entityClass" to entityClass, "entityId" to entityId)
     }
 }

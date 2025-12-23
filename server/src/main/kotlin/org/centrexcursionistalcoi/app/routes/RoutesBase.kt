@@ -186,7 +186,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
         Push.launch {
             Push.sendPushNotificationToAll(
-                PushNotification.EntityCreated("/$base/${item.id.value}"),
+                PushNotification.EntityUpdated(entityKClass, item.id.value.toString()),
             )
         }
 
@@ -227,7 +227,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
         Push.launch {
             Push.sendPushNotificationToAll(
-                PushNotification.EntityUpdated("/$base/${item.id.value}"),
+                PushNotification.EntityUpdated(entityKClass, item.id.value.toString()),
             )
         }
 
@@ -247,6 +247,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
 
         Database { item.delete() }
+
+        Push.launch {
+            Push.sendPushNotificationToAll(
+                PushNotification.EntityDeleted(entityKClass, item.id.value.toString()),
+            )
+        }
 
         call.respondText("$base deleted", status = HttpStatusCode.NoContent)
     }

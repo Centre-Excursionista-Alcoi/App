@@ -73,21 +73,23 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
 
-                is PushNotification.EntityCreated -> {
-                    log.d { "Received entity created notification for path: ${notification.path}" }
+                is PushNotification.EntityUpdated -> {
+                    log.d { "Received entity updated notification for ${notification.entityClass}#${notification.entityId}" }
                     BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
                         input = mapOf(
-                            SyncEntityBackgroundJobLogic.EXTRA_PATH to notification.path,
+                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
+                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
                         ),
                         logic = SyncEntityBackgroundJobLogic,
                     )
                 }
-
-                is PushNotification.EntityUpdated -> {
-                    log.d { "Received entity updated notification for path: ${notification.path}" }
+                is PushNotification.EntityDeleted -> {
+                    log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }
                     BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
                         input = mapOf(
-                            SyncEntityBackgroundJobLogic.EXTRA_PATH to notification.path,
+                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
+                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
+                            SyncEntityBackgroundJobLogic.EXTRA_IS_DELETE to "true",
                         ),
                         logic = SyncEntityBackgroundJobLogic,
                     )
