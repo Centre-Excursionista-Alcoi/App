@@ -124,6 +124,10 @@ fun LendingManagementScreen(
                     Lending.Status.CONFIRMED -> stringResource(Res.string.management_pickup_screen_skip_warning_message)
                     Lending.Status.TAKEN -> stringResource(Res.string.management_return_screen_skip_warning_message)
                 },
+                successMessage = when (status) {
+                    Lending.Status.CONFIRMED -> stringResource(Res.string.management_lending_picked_up)
+                    Lending.Status.TAKEN -> stringResource(Res.string.management_lending_returned)
+                },
                 snackbarHostState = snackbarHostState,
                 lending = lending,
                 users = users.orEmpty(),
@@ -313,6 +317,7 @@ private fun LendingPickupReturnScreen(
     title: String,
     skipDialogTitle: String,
     skipDialogMessage: String,
+    successMessage: String,
     snackbarHostState: SnackbarHostState,
     lending: ReferencedLending,
     scannedItems: Set<Uuid>,
@@ -393,7 +398,14 @@ private fun LendingPickupReturnScreen(
             AnimatedContent(
                 targetState = allItemsScanned
             ) { areAllItemsScanned ->
-                LendingFAB(skipDialogTitle, skipDialogMessage, areAllItemsScanned, onCompleteRequest)
+                LendingFAB(
+                    skipDialogTitle,
+                    skipDialogMessage,
+                    successMessage,
+                    areAllItemsScanned,
+                    snackbarHostState,
+                    onCompleteRequest
+                )
             }
         },
     ) { paddingValues ->
@@ -410,9 +422,13 @@ private fun LendingPickupReturnScreen(
 private fun AnimatedVisibilityScope.LendingFAB(
     dialogTitle: String,
     dialogMessage: String,
+    successMessage: String,
     allItemsScanned: Boolean,
+    snackbarHostState: SnackbarHostState,
     onCompleteRequest: () -> Job,
 ) {
+    val scope = rememberCoroutineScope()
+
     var showingSkipWarning by remember { mutableStateOf(false) }
     if (showingSkipWarning) {
         var isLoading by remember { mutableStateOf(false) }
@@ -427,6 +443,9 @@ private fun AnimatedVisibilityScope.LendingFAB(
                         onCompleteRequest().invokeOnCompletion {
                             isLoading = false
                             showingSkipWarning = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar(successMessage)
+                            }
                         }
                     }
                 ) { Text(stringResource(Res.string.management_pickup_screen_confirm)) }

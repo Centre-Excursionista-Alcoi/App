@@ -261,6 +261,8 @@
     <string name="management_return">Return</string>
     <string name="management_skip_memory">Skip</string>
     <string name="management_memory_pdf_not_available">Memory not available in PDF format.</string>
+    <string name="management_lending_picked_up">Lending has been picked up.</string>
+    <string name="management_lending_returned">Lending has been returned.</string>
 
     <string name="management_promote_user">Promote</string>
     <string name="management_promote_user_title">Promote user</string>
