@@ -6,6 +6,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -136,10 +137,11 @@ class TestPush {
         PushNotification.LendingTaken(Uuid.Zero, FakeUser.SUB),
         PushNotification.LendingPartiallyReturned(Uuid.Zero, FakeUser.SUB),
         PushNotification.LendingReturned(Uuid.Zero, FakeUser.SUB),
-        PushNotification.NewPost(Uuid.Zero),
         PushNotification.DepartmentJoinRequestUpdated(Uuid.Zero, Uuid.Zero, FakeUser.SUB, true),
         PushNotification.DepartmentKicked(Uuid.Zero, Uuid.Zero, FakeUser.SUB),
-        PushNotification.NewEvent(Uuid.Zero),
+        PushNotification.EntityUpdated(Event::class, Uuid.Zero.toString(), true),
+        PushNotification.EntityUpdated(Event::class, Uuid.Zero.toString(), false),
+        PushNotification.EntityDeleted(Event::class, Uuid.Zero.toString()),
     )
 
     @TestFactory

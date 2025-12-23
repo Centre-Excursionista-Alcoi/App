@@ -186,7 +186,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
         Push.launch {
             Push.sendPushNotificationToAll(
-                PushNotification.EntityUpdated(entityKClass, item.id.value.toString()),
+                PushNotification.EntityUpdated(entityKClass, item.id.value.toString(), true),
             )
         }
 
@@ -227,7 +227,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
         Push.launch {
             Push.sendPushNotificationToAll(
-                PushNotification.EntityUpdated(entityKClass, item.id.value.toString()),
+                PushNotification.EntityUpdated(entityKClass, item.id.value.toString(), false),
             )
         }
 

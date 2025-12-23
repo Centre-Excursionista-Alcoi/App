@@ -17,13 +17,13 @@ sealed interface PushNotification {
 
             val lendingId = (data["lendingId"] as? String?)?.toUuidOrNull()
             val userSub = data["userSub"] as? String?
-            val postId = (data["postId"] as? String?)?.toUuidOrNull()
             val eventId = (data["eventId"] as? String?)?.toUuidOrNull()
             val requestId = (data["requestId"] as? String?)?.toUuidOrNull()
             val departmentId = (data["departmentId"] as? String?)?.toUuidOrNull()
             val isConfirmed = (data["isConfirmed"] as? String?)?.toBoolean()
             val entityClass = data["entityClass"] as? String?
             val entityId = data["entityId"] as? String?
+            val isCreate = (data["isCreate"] as? String?)?.toBoolean()
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -61,10 +61,6 @@ sealed interface PushNotification {
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingPartiallyReturned push notification data")
                     LendingPartiallyReturned(lendingId, userSub)
                 }
-                NewPost.TYPE -> {
-                    postId ?: throw IllegalArgumentException("Missing or invalid postId field in NewPost push notification data")
-                    NewPost(postId)
-                }
                 DepartmentJoinRequestUpdated.TYPE -> {
                     requestId ?: throw IllegalArgumentException("Missing or invalid requestId field in DepartmentJoinRequestUpdated push notification data")
                     departmentId ?: throw IllegalArgumentException("Missing or invalid departmentId field in DepartmentJoinRequestUpdated push notification data")
@@ -78,15 +74,6 @@ sealed interface PushNotification {
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in DepartmentJoinRequestUpdated push notification data")
                     DepartmentKicked(requestId, departmentId, userSub)
                 }
-                NewEvent.TYPE -> {
-                    eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in NewEvent push notification data")
-                    NewEvent(eventId)
-                }
-                EventCancelled.TYPE -> {
-                    eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in EventCancelled push notification data")
-                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in EventCancelled push notification data")
-                    EventCancelled(eventId, userSub)
-                }
                 EventAssistanceUpdated.TYPE -> {
                     eventId ?: throw IllegalArgumentException("Missing or invalid eventId field in EventAssistanceUpdated push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in EventAssistanceUpdated push notification data")
@@ -97,7 +84,8 @@ sealed interface PushNotification {
                 EntityUpdated.TYPE -> {
                     entityClass ?: throw IllegalArgumentException("Missing or invalid entityClass field in EntityUpdated push notification data")
                     entityId ?: throw IllegalArgumentException("Missing or invalid entityId field in EntityUpdated push notification data")
-                    EntityUpdated(entityClass, entityId)
+                    isCreate ?: throw IllegalArgumentException("Missing or invalid isCreate field in EntityUpdated push notification data")
+                    EntityUpdated(entityClass, entityId, isCreate)
                 }
                 EntityDeleted.TYPE -> {
                     entityClass ?: throw IllegalArgumentException("Missing or invalid entityClass field in EntityDeleted push notification data")
@@ -218,19 +206,6 @@ sealed interface PushNotification {
     }
 
     @Serializable
-    class NewPost(
-        val postId: Uuid,
-    ) : PushNotification {
-        companion object {
-            const val TYPE = "NewPost"
-        }
-
-        override val type: String = TYPE
-
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("postId" to postId.toString())
-    }
-
-    @Serializable
     class DepartmentJoinRequestUpdated(
         val requestId: Uuid,
         val departmentId: Uuid,
@@ -275,36 +250,6 @@ sealed interface PushNotification {
     }
 
     @Serializable
-    class NewEvent(
-        override val eventId: Uuid,
-    ) : EventUpdated {
-        companion object {
-            const val TYPE = "NewEvent"
-        }
-
-        override val type: String = TYPE
-    }
-
-    @Serializable
-    class EventCancelled(
-        override val eventId: Uuid,
-        override val userSub: String,
-    ) : EventUpdated, TargetedNotification {
-        companion object {
-            const val TYPE = "EventCancelled"
-        }
-
-        override val type: String = TYPE
-
-        // super.toMap cannot be used because it conflicts between EventUpdated and TargetedNotification
-        override fun toMap(): Map<String, String> = mapOf(
-            "type" to type,
-            "userSub" to userSub,
-            "eventId" to eventId.toString(),
-        )
-    }
-
-    @Serializable
     class EventAssistanceUpdated(
         override val eventId: Uuid,
         override val userSub: String,
@@ -329,16 +274,23 @@ sealed interface PushNotification {
     open class EntityUpdated(
         val entityClass: String,
         val entityId: String,
+        val isCreate: Boolean,
     ): PushNotification {
         companion object {
             const val TYPE = "EntityUpdated"
         }
 
-        constructor(entityClass: KClass<*>, entityId: String): this(entityClass.simpleName!!, entityId)
+        constructor(entityClass: KClass<*>, entityId: String, isCreate: Boolean): this(entityClass.simpleName!!, entityId, isCreate)
+
+        val entityUuid: Uuid? get() = entityId.toUuidOrNull()
 
         override val type: String = TYPE
 
-        override fun toMap(): Map<String, String> = super.toMap() + mapOf("entityClass" to entityClass, "entityId" to entityId)
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf(
+            "entityClass" to entityClass,
+            "entityId" to entityId,
+            "isCreate" to isCreate.toString(),
+        )
     }
 
     @Serializable
@@ -351,6 +303,8 @@ sealed interface PushNotification {
         }
 
         constructor(entityClass: KClass<*>, entityId: String): this(entityClass.simpleName!!, entityId)
+
+        val entityUuid: Uuid? get() = entityId.toUuidOrNull()
 
         override val type: String = TYPE
 

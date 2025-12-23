@@ -90,14 +90,6 @@ object SSENotificationsListener {
                                         ),
                                         logic = SyncLendingBackgroundJobLogic,
                                     )
-                                } else if (notification is PushNotification.NewPost) {
-                                    log.d { "Received new post notification for post ID: ${notification.postId}" }
-                                    BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
-                                        input = mapOf(
-                                            SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
-                                        ),
-                                        logic = SyncPostBackgroundJobLogic,
-                                    )
                                 } else if (notification is PushNotification.DepartmentJoinRequestUpdated) {
                                     log.d { "Received department update notification for department ID: ${notification.departmentId}" }
                                     BackgroundJobCoordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic, SyncDepartmentBackgroundJob>(
@@ -105,6 +97,25 @@ object SSENotificationsListener {
                                             SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
                                         ),
                                         logic = SyncDepartmentBackgroundJobLogic,
+                                    )
+                                } else if (notification is PushNotification.EntityUpdated) {
+                                    log.d { "Received ${notification.entityClass} update notification for ID: ${notification.entityId}" }
+                                    BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
+                                        input = mapOf(
+                                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
+                                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
+                                        ),
+                                        logic = SyncEntityBackgroundJobLogic,
+                                    )
+                                } else if (notification is PushNotification.EntityDeleted) {
+                                    log.d { "Received ${notification.entityClass} delete notification for ID: ${notification.entityId}" }
+                                    BackgroundJobCoordinator.scheduleAsync<SyncEntityBackgroundJobLogic, SyncEntityBackgroundJob>(
+                                        input = mapOf(
+                                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
+                                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
+                                            SyncEntityBackgroundJobLogic.EXTRA_IS_DELETE to "true",
+                                        ),
+                                        logic = SyncEntityBackgroundJobLogic,
                                     )
                                 }
 

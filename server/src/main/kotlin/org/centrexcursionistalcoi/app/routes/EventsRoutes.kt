@@ -1,20 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.UUID
-import kotlin.time.Clock.System.now
-import kotlin.time.toJavaInstant
-import kotlin.uuid.toKotlinUuid
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
@@ -33,7 +22,6 @@ import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
@@ -44,6 +32,14 @@ import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.time.Clock.System.now
+import kotlin.time.toJavaInstant
 
 private val eventAssistanceMutex = Mutex()
 
@@ -111,22 +107,6 @@ fun Route.eventsRoutes() {
                     this.image = imageEntity
                 }
             }.also { eventEntity ->
-                Push.launch {
-                    if (departmentId != null) {
-                        Push.sendPushNotificationToDepartment(
-                            PushNotification.NewEvent(
-                                eventId = eventEntity.id.value.toKotlinUuid(),
-                            ),
-                            departmentId!!
-                        )
-                    } else {
-                        Push.sendPushNotificationToAll(
-                            PushNotification.NewEvent(
-                                eventId = eventEntity.id.value.toKotlinUuid(),
-                            )
-                        )
-                    }
-                }
                 Telegram.launch {
                     val event = Database { eventEntity.toData() }
                     Telegram.sendEvent(event)

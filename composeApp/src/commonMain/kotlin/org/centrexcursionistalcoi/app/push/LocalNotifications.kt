@@ -6,6 +6,8 @@ import com.mmk.kmpnotifier.notification.NotifierManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.data.Event
+import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
@@ -179,30 +181,43 @@ object LocalNotifications {
                 }
             }
 
-            is PushNotification.NewPost -> {
-                runBlocking {
-                    val post = PostsRepository.get(notification.postId) ?: PostsRemoteRepository.get(notification.postId)
-                    post ?: return@runBlocking
-                    showNotification(post.title, post.content, data)
+            is PushNotification.EntityUpdated -> {
+                if (notification.isCreate) {
+                    when (notification.entityClass) {
+                        Post::class.simpleName -> {
+                            val postId = notification.entityUuid ?: return log.w { "Invalid post ID: ${notification.entityId}" }
+                            runBlocking {
+                                PostsRepository.get(postId) ?: PostsRemoteRepository.get(postId)
+                            }?.let { post ->
+                                showNotification(post.title, post.content, data)
+                            } ?: log.w { "Could not find Post#${notification.entityId}" }
+                        }
+                    }
                 }
             }
-            is PushNotification.EventCancelled -> {
-                // Only show if the notification is for the current user
-                if (!notification.checkIsSelf()) {
-                    log.d { "Ignoring department kicked notification for another user: ${notification.userSub}" }
-                    return
-                }
+            is PushNotification.EntityDeleted -> {
+                when (notification.entityClass) {
+                    Event::class.simpleName -> runBlocking {
+                        val eventId = notification.entityUuid ?: return@runBlocking log.w { "Invalid event ID: ${notification.entityId}" }
+                        EventsRepository.get(eventId)?.let { event ->
+                            if (event.requiresInsurance) {
+                                val profile = ProfileRepository.getProfile() ?: return@runBlocking log.w { "Could not find user sub" }
+                                val confirmedAssistance = profile.sub in event.userSubList.map { it.sub }
+                                if (!confirmedAssistance) {
+                                    log.d { "Received notification for cancelled event, but assistance not confirmed." }
+                                    return@runBlocking
+                                }
+                            }
 
-                runBlocking {
-                    EventsRepository.get(notification.eventId)?.let { event ->
-                        showNotification(
-                            getString(Res.string.notification_event_cancelled_title),
-                            getString(
-                                Res.string.notification_event_cancelled_message,
-                                event.title,
-                            ),
-                            data
-                        )
+                            showNotification(
+                                getString(Res.string.notification_event_cancelled_title),
+                                getString(
+                                    Res.string.notification_event_cancelled_message,
+                                    event.title,
+                                ),
+                                data
+                            )
+                        }
                     }
                 }
             }

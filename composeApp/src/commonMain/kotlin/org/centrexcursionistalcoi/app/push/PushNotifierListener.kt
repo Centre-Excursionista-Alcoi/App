@@ -33,17 +33,7 @@ object PushNotifierListener : NotifierManager.Listener {
                     )
                 }
 
-                is PushNotification.NewPost -> {
-                    log.d { "Received new post notification. ID: ${notification.postId}" }
-                    BackgroundJobCoordinator.scheduleAsync<SyncPostBackgroundJobLogic, SyncPostBackgroundJob>(
-                        input = mapOf(
-                            SyncPostBackgroundJobLogic.EXTRA_POST_ID to notification.postId.toString(),
-                        ),
-                        logic = SyncPostBackgroundJobLogic,
-                    )
-                }
-
-                is PushNotification.NewEvent, is PushNotification.EventCancelled, is PushNotification.EventAssistanceUpdated -> {
+                is PushNotification.EventAssistanceUpdated -> {
                     log.d { "Received an event notification. ID: ${notification.eventId}" }
                     BackgroundJobCoordinator.scheduleAsync<SyncEventBackgroundJobLogic, SyncEventBackgroundJob>(
                         input = mapOf(
