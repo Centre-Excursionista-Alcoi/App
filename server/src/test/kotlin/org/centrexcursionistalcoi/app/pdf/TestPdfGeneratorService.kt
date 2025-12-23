@@ -8,13 +8,20 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUuid
+import org.junit.Assume
 import java.io.File
+import kotlin.test.Test
 import kotlin.uuid.Uuid
 
 class TestPdfGeneratorService {
     // Disable generation because it is only for testing, and requires manual verification
-    // @Test
+    // Set to true when testing
+    private val shouldRun = false
+
+    @Test
     fun generate() {
+        Assume.assumeTrue(shouldRun)
+
         val departmentImageFileId = "71eafe26-0c06-4f5b-a534-960e2901bb02".toUuid()
         val department = Department(
             id = "52c09ab7-fe66-4a1a-a202-1a6124614490".toUuid(),

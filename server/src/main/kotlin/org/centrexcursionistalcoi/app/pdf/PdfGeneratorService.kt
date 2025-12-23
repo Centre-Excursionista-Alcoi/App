@@ -5,7 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
@@ -19,8 +19,6 @@ import java.util.*
 import kotlin.uuid.toJavaUuid
 
 object PdfGeneratorService {
-    private val fontRegular: PDFont = PDType1Font.HELVETICA
-    private val fontBold: PDFont = PDType1Font.HELVETICA_BOLD
     private const val FONT_SIZE_TITLE = 18f
     private const val FONT_SIZE_HEADER = 12f
     private const val FONT_SIZE_BODY = 10f
@@ -42,6 +40,10 @@ object PdfGeneratorService {
         Sports.CULTURAL_TOURISM -> "Turisme cultural"
     }
 
+    private fun PDDocument.loadFontFromResources(fontName: String): PDType0Font {
+        return PDType0Font.load(this, this::class.java.getResourceAsStream("/fonts/$fontName.ttf"))
+    }
+
     fun generateLendingPdf(
         memory: ReferencedLendingMemory,
         itemsUsed: List<ReferencedInventoryItem>,
@@ -59,6 +61,11 @@ object PdfGeneratorService {
             // Start Y position (Top of page, moving down)
             var yPosition = page.mediaBox.height - MARGIN
             val width = page.mediaBox.width - (2 * MARGIN)
+
+            // Load Fonts
+            val fontRegular = document.loadFontFromResources("RobotoCondensed-Light")
+            val fontTitles = document.loadFontFromResources("Nunito-Bold")
+            val fontErrors = fontTitles
 
             // --- Helper: Page Break Logic ---
             fun checkPageBreak(neededHeight: Float) {
@@ -117,7 +124,7 @@ object PdfGeneratorService {
 
                 // Draw Title next to Logo
                 contentStream.beginText()
-                contentStream.setFont(fontBold, FONT_SIZE_TITLE)
+                contentStream.setFont(fontTitles, FONT_SIZE_TITLE)
                 contentStream.newLineAtOffset(MARGIN + logoWidth + 10, yPosition - 30)
                 contentStream.showText("Memòria d'Activitat")
                 contentStream.endText()
@@ -135,14 +142,14 @@ object PdfGeneratorService {
 
                 yPosition -= 70 // Space after header
             } catch (e: Exception) {
-                drawText("[Logo Error]", fontBold, FONT_SIZE_BODY, Color.RED)
+                drawText("[Logo Error]", fontErrors, FONT_SIZE_BODY, Color.RED)
                 logger.error("Error loading logo image for PDF", e)
             }
 
             // =========================================
             // 2. Metadata (Submitted By, Date, Place)
             // =========================================
-            drawText("Enviada per: $submittedBy", fontBold, FONT_SIZE_HEADER)
+            drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
             val fmt = DateTimeFormatter.ofPattern("dd MMMM, yyyy")
             drawText("Dates: des del ${dateRange.first.format(fmt)} fins al ${dateRange.second.format(fmt)}", fontRegular, FONT_SIZE_BODY)
@@ -160,13 +167,13 @@ object PdfGeneratorService {
             // =========================================
             // 3. Participants
             // =========================================
-            drawText("Socis:", fontBold, FONT_SIZE_HEADER)
+            drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
             memory.members.forEach { member ->
                 drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
             }
             yPosition -= 10
 
-            drawText("Altres participants:", fontBold, FONT_SIZE_HEADER)
+            drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
             val externalUsers = memory.externalUsers
             if (!externalUsers.isNullOrBlank()) {
                 externalUsers.split("\n").forEach { user ->
@@ -178,7 +185,7 @@ object PdfGeneratorService {
             // =========================================
             // 4. Items Used
             // =========================================
-            drawText("Material del club utilitzat:", fontBold, FONT_SIZE_HEADER)
+            drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
             itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
                 drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
             }
@@ -187,7 +194,7 @@ object PdfGeneratorService {
             // =========================================
             // 5. Markdown Text (Long Text)
             // =========================================
-            drawText("Descripció de l'activitat:", fontBold, FONT_SIZE_HEADER)
+            drawText("Descripció de l'activitat:", fontTitles, FONT_SIZE_HEADER)
 
             // Simple Markdown Clean-up (PDFBox doesn't support bolding inside strings natively)
             // We split by newlines to preserve paragraphs
@@ -207,7 +214,7 @@ object PdfGeneratorService {
             // 6. Photos
             // =========================================
             if (memory.files.isNotEmpty()) {
-                drawText("Fotos:", fontBold, FONT_SIZE_HEADER)
+                drawText("Fotos:", fontTitles, FONT_SIZE_HEADER)
 
                 memory.files.forEach { uuid ->
                     try {
