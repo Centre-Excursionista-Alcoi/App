@@ -19,22 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Circle
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Code
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignCenter
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignLeft
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatAlignRight
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatBold
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatItalic
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatListBulleted
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatListNumbered
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatSize
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatStrikethrough
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FormatUnderlined
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Spellcheck
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.TextDecrease
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.TextIncrease
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -231,26 +216,6 @@ fun RichTextStyleRow(
         }
 
         item {
-            RichTextStyleButton(
-                onClick = {
-                    state.increaseListLevel()
-                },
-                enabled = enabled && state.canIncreaseListLevel,
-                icon = MaterialSymbols.TextIncrease,
-            )
-        }
-
-        item {
-            RichTextStyleButton(
-                onClick = {
-                    state.decreaseListLevel()
-                },
-                enabled = enabled && state.canDecreaseListLevel,
-                icon = MaterialSymbols.TextDecrease,
-            )
-        }
-
-        item {
             Box(
                 Modifier
                     .height(24.dp)
@@ -265,7 +230,7 @@ fun RichTextStyleRow(
                     state.addRichSpan(SpellCheck)
                 },
                 enabled = enabled,
-                isSelected = state.currentRichSpanStyle is SpellCheck,
+                isSelected = state.isRichSpan<SpellCheck>(),
                 icon = MaterialSymbols.Spellcheck,
             )
         }
