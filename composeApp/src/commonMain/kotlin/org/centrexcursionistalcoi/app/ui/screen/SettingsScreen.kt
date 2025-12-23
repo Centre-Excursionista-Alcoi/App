@@ -12,12 +12,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.coroutines.getBooleanStateFlow
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
+import io.ktor.client.plugins.sse.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
-import org.centrexcursionistalcoi.app.storage.*
+import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
+import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.RemoveAccountDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
@@ -30,6 +34,7 @@ import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 data class Language(val code: String, val displayName: String, val flag: DrawableResource)
 
@@ -45,14 +50,49 @@ fun SettingsScreen(
     onDeleteAccount: () -> Unit,
     viewModel: SettingsViewModel = viewModel { SettingsViewModel(onDeleteAccount) },
 ) {
-    SettingsScreen(viewModel::deleteAccount, onBack)
+    val fcmToken by viewModel.fcmToken.collectAsState()
+
+    val sseConnected by viewModel.sseConnected.collectAsState()
+    val sseError by viewModel.sseError.collectAsState()
+
+    val privacyErrors by viewModel.privacyErrors.collectAsState()
+    val privacyAnalytics by viewModel.privacyAnalytics.collectAsState()
+    val privacySessionReplay by viewModel.privacySessionReplay.collectAsState()
+
+    SettingsScreen(
+        fcmToken = fcmToken,
+        sseConnected = sseConnected,
+        sseError = sseError,
+        privacyErrors = privacyErrors,
+        onPrivacyErrorsChange = viewModel::onPrivacyErrorsChange,
+        privacyAnalytics = privacyAnalytics,
+        onPrivacyAnalyticsChange = viewModel::onPrivacyAnalyticsChange,
+        privacySessionReplay = privacySessionReplay,
+        onPrivacySessionReplayChange = viewModel::onPrivacySessionReplayChange,
+        onAccountDeleteRequest = viewModel::deleteAccount,
+        onBack = onBack,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
 @Composable
-private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit) {
-    val scope = rememberCoroutineScope()
+private fun SettingsScreen(
+    fcmToken: String?,
 
+    enableSSE: Boolean = PlatformSSEConfiguration.enableSSE,
+    sseConnected: Boolean?,
+    sseError: SSEClientException?,
+
+    privacyErrors: Boolean,
+    onPrivacyErrorsChange: (Boolean) -> Unit,
+    privacyAnalytics: Boolean,
+    onPrivacyAnalyticsChange: (Boolean) -> Unit,
+    privacySessionReplay: Boolean,
+    onPrivacySessionReplayChange: (Boolean) -> Unit,
+
+    onAccountDeleteRequest: () -> Job,
+    onBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,18 +130,25 @@ private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit
                 )
             }
 
-            if (PlatformSSEConfiguration.enableSSE) {
-                item(key = "push_category", contentType = "category") {
-                    SettingsCategory(
-                        text = stringResource(Res.string.settings_category_push)
-                    )
-                }
+            item(key = "push_category", contentType = "category") {
+                SettingsCategory(
+                    text = stringResource(Res.string.settings_category_push)
+                )
+            }
+            item(key = "push_fcm", contentType = "info") {
+                SettingsRow(
+                    icon = MaterialSymbols.CloudSync,
+                    title = stringResource(Res.string.settings_push_fcm_connection_title),
+                    summary = fcmToken?.let {
+                        stringResource(Res.string.settings_push_fcm_connection_connected, it)
+                    } ?: stringResource(Res.string.settings_push_fcm_connection_disconnected),
+                )
+            }
+            if (enableSSE) {
                 item(key = "push_sse_connected", contentType = "info") {
-                    val isConnected by SSENotificationsListener.isConnected.collectAsState()
-                    val sseError by SSENotificationsListener.sseException.collectAsState()
                     SettingsRow(
                         title = stringResource(Res.string.settings_push_connection_title),
-                        summary = if (isConnected) {
+                        summary = if (sseConnected == true) {
                             stringResource(Res.string.settings_push_connection_message_connected)
                         } else {
                             stringResource(Res.string.settings_push_connection_message_disconnected)
@@ -117,30 +164,27 @@ private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit
                 )
             }
             item(key = "report_errors", contentType = "option") {
-                val checked by settings.getBooleanStateFlow(scope, SETTINGS_PRIVACY_ERRORS, true).collectAsState()
                 SettingsSwitchRow(
                     title = stringResource(Res.string.settings_report_errors_title),
                     summary = stringResource(Res.string.settings_report_errors_summary),
-                    checked = checked,
-                    onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_ERRORS, it) },
+                    checked = privacyErrors,
+                    onCheckedChange = onPrivacyErrorsChange,
                 )
             }
             item(key = "report_analytics", contentType = "option") {
-                val checked by settings.getBooleanStateFlow(scope, SETTINGS_PRIVACY_ANALYTICS, true).collectAsState()
                 SettingsSwitchRow(
                     title = stringResource(Res.string.settings_report_analytics_title),
                     summary = stringResource(Res.string.settings_report_analytics_summary),
-                    checked = checked,
-                    onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_ANALYTICS, it) },
+                    checked = privacyAnalytics,
+                    onCheckedChange = onPrivacyAnalyticsChange,
                 )
             }
             item(key = "report_session_replay", contentType = "option") {
-                val checked by settings.getBooleanStateFlow(scope, SETTINGS_PRIVACY_SESSION_REPLAY, true).collectAsState()
                 SettingsSwitchRow(
                     title = stringResource(Res.string.settings_report_session_title),
                     summary = stringResource(Res.string.settings_report_session_summary),
-                    checked = checked,
-                    onCheckedChange = { settings.putBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, it) },
+                    checked = privacySessionReplay,
+                    onCheckedChange = onPrivacySessionReplayChange,
                 )
             }
 
@@ -210,4 +254,42 @@ private fun SettingsScreen(onAccountDeleteRequest: () -> Job, onBack: () -> Unit
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun SettingsScreen_NoFcmToken_Preview() {
+    SettingsScreen(
+        fcmToken = null,
+        enableSSE = true,
+        sseConnected = false,
+        sseError = null,
+        privacyErrors = true,
+        onPrivacyErrorsChange = {},
+        privacyAnalytics = true,
+        onPrivacyAnalyticsChange = {},
+        privacySessionReplay = true,
+        onPrivacySessionReplayChange = {},
+        onAccountDeleteRequest = { CoroutineScope(Dispatchers.Unconfined).launch { } },
+        onBack = {},
+    )
+}
+
+@Preview
+@Composable
+fun SettingsScreen_WithFcmToken_Preview() {
+    SettingsScreen(
+        fcmToken = "123456789",
+        enableSSE = true,
+        sseConnected = true,
+        sseError = null,
+        privacyErrors = true,
+        onPrivacyErrorsChange = {},
+        privacyAnalytics = true,
+        onPrivacyAnalyticsChange = {},
+        privacySessionReplay = true,
+        onPrivacySessionReplayChange = {},
+        onAccountDeleteRequest = { CoroutineScope(Dispatchers.Unconfined).launch { } },
+        onBack = {},
+    )
 }

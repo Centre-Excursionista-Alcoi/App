@@ -442,6 +442,9 @@
     <string name="settings_push_connection_title">Connection Status</string>
     <string name="settings_push_connection_message_connected">Receiving push notifications. Data will be updated instantly.</string>
     <string name="settings_push_connection_message_disconnected">Not receiving push notifications. Data will need to be fetched manually. Restarting the app may reconnect.</string>
+    <string name="settings_push_fcm_connection_title">FCM Connection Status</string>
+    <string name="settings_push_fcm_connection_connected">Receiving FCM push notifications. Data will be updated instantly.\nToken: %1$s</string>
+    <string name="settings_push_fcm_connection_disconnected">Not receiving FCM push notifications.</string>
     <string name="settings_category_privacy">Privacy</string>
     <string name="settings_report_errors_title">Collect error information</string>
     <string name="settings_report_errors_summary">If enabled, the app will automatically collect and report error information.</string>
