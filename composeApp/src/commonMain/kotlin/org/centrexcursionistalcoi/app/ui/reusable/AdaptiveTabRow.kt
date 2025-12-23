@@ -92,13 +92,14 @@ data class TabData(
 fun AdaptiveTabRow(
     selectedTabIndex: Int,
     tabs: List<TabData>,
+    modifier: Modifier = Modifier,
     onTabSelected: (Int) -> Unit
 ) {
     val windowSizeClass = calculateWindowSizeClass()
 
     if (tabs.size <= 4) {
         // Labels can be shown on a standard TabRow
-        PrimaryTabRow(selectedTabIndex) {
+        PrimaryTabRow(selectedTabIndex, modifier) {
             tabs.forEachIndexed { index, tab ->
                 tab.AdaptiveTab(
                     windowSizeClass = windowSizeClass,
@@ -112,7 +113,8 @@ fun AdaptiveTabRow(
         val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
         if (isCompact) {
             PrimaryScrollableTabRow(
-                selectedTabIndex = selectedTabIndex
+                selectedTabIndex = selectedTabIndex,
+                modifier = modifier
             ) {
                 tabs.forEachIndexed { index, tab ->
                     tab.AdaptiveTab(
@@ -123,7 +125,7 @@ fun AdaptiveTabRow(
                 }
             }
         } else {
-            PrimaryTabRow(selectedTabIndex) {
+            PrimaryTabRow(selectedTabIndex, modifier) {
                 tabs.forEachIndexed { index, tab ->
                     tab.AdaptiveTab(
                         windowSizeClass = windowSizeClass,

@@ -34,10 +34,12 @@ import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LendingsPage(
     windowSizeClass: WindowSizeClass,
@@ -50,6 +52,7 @@ fun LendingsPage(
 
     lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
+    onLendingHistoryRequest: () -> Unit,
 
     shoppingList: Map<Uuid, Int>,
     onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
@@ -64,17 +67,27 @@ fun LendingsPage(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        AdaptiveTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            tabs = departments.map { TabData(it.displayName) } +
-                    if (itemsWithoutDepartmentExist)
-                        listOf(TabData(stringResource(Res.string.lending_category_without_department)))
-                    else
-                        emptyList(),
-            onTabSelected = { index ->
-                scope.launch { pagerState.animateScrollToPage(index) }
-            },
-        )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            AdaptiveTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                tabs = departments.map { TabData(it.displayName) } +
+                        if (itemsWithoutDepartmentExist)
+                            listOf(TabData(stringResource(Res.string.lending_category_without_department)))
+                        else
+                            emptyList(),
+                modifier = Modifier.weight(1f),
+                onTabSelected = { index ->
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                },
+            )
+            if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
+                TooltipIconButton(
+                    MaterialSymbols.History,
+                    stringResource(Res.string.lending_details_history),
+                    onClick = onLendingHistoryRequest,
+                )
+            }
+        }
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth().weight(1f)

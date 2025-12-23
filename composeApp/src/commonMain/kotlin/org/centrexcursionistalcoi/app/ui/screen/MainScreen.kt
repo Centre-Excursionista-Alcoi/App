@@ -656,6 +656,7 @@ private fun MainScreenPagerContent(
                 onItemTypeDetailsRequested,
                 lendings,
                 onLendingSignUpRequested,
+                onLendingHistoryRequest,
                 shoppingList,
                 onAddItemToShoppingListRequest,
                 onRemoveItemFromShoppingListRequest,

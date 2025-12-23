@@ -1,7 +1,10 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,8 +23,10 @@ fun LendingsHistoryDialog(lendings: List<ReferencedLending>, onClick: (Reference
     ModalBottomSheet(
         onDismissRequest = onDismissRequest
     ) {
-        for (lending in lendings) {
-            LendingHistoryItem(lending) { onClick(lending) }
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(lendings) { lending ->
+                LendingHistoryItem(lending) { onClick(lending) }
+            }
         }
     }
 }
