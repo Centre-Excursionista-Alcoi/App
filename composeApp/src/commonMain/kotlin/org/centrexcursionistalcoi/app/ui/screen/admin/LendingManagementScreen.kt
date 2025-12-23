@@ -115,17 +115,14 @@ fun LendingManagementScreen(
                 title = when (status) {
                     Lending.Status.CONFIRMED -> stringResource(Res.string.management_pickup_screen)
                     Lending.Status.TAKEN -> stringResource(Res.string.management_return_screen)
-                    else -> "" // This case is already filtered
                 },
                 skipDialogTitle = when (status) {
                     Lending.Status.CONFIRMED -> stringResource(Res.string.management_pickup_screen_skip_warning_title)
                     Lending.Status.TAKEN -> stringResource(Res.string.management_return_screen_skip_warning_title)
-                    else -> "" // This case is already filtered
                 },
                 skipDialogMessage = when (status) {
                     Lending.Status.CONFIRMED -> stringResource(Res.string.management_pickup_screen_skip_warning_message)
                     Lending.Status.TAKEN -> stringResource(Res.string.management_return_screen_skip_warning_message)
-                    else -> "" // This case is already filtered
                 },
                 snackbarHostState = snackbarHostState,
                 lending = lending,
@@ -137,7 +134,6 @@ fun LendingManagementScreen(
                 onCompleteRequest = when (status) {
                     Lending.Status.CONFIRMED -> model::pickup
                     Lending.Status.TAKEN -> model::`return`
-                    else -> error("This case is already filtered")
                 },
                 onDeleteRequest = model::deleteLending,
                 onBack = onBack,
