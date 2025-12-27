@@ -1,6 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import java.util.Calendar
 import java.util.Properties
@@ -45,15 +46,9 @@ kotlin {
             enable = true
         }
 
-        /*compilerOptions {
+        compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
-        }*/
-        /*
-        compilerOptions.configure {
-           jvmTarget.set(
-               org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
-           )
-       }*/
+        }
     }
     
     listOf(
