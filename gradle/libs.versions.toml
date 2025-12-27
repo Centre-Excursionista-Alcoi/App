@@ -1,7 +1,7 @@
 [versions]
 # View compatibility in: https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html
 #noinspection AndroidGradlePluginVersion
-agp = "8.11.1"
+agp = "8.13.0"
 android-appUpdate = "2.1.0"
 android-compileSdk = "36"
 android-minSdk = "24"
