@@ -8,10 +8,10 @@ import io.github.alexzhirkevich.qrose.toByteArray
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
 import io.ktor.http.fileExtensions
-import java.io.File
-import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
+import java.io.File
 
 actual object PlatformDragAndDrop: PlatformProvider {
     actual override val isSupported: Boolean = true

@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.googleServices) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.kotlinMultiplatformAndroid) apply false
     alias(libs.plugins.kotlinxSerialization) apply false
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.sentryJvm) apply false

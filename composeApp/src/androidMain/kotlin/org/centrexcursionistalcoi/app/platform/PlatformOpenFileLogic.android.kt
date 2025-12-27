@@ -4,10 +4,10 @@ import android.content.Intent
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
-import java.io.File
-import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
+import java.io.File
 
 actual object PlatformOpenFileLogic : PlatformProvider {
     private val log = logging()

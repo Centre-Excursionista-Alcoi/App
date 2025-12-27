@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.platform
 import android.content.Intent
 import android.provider.CalendarContract
 import com.diamondedge.logging.logging
-import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.android.MainActivity
 import kotlin.time.Instant
 
 actual object PlatformCalendarSync : PlatformProvider {

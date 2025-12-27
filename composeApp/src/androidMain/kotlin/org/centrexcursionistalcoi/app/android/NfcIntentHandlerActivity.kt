@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app
+package org.centrexcursionistalcoi.app.android
 
 import android.app.PendingIntent
 import android.content.Intent
