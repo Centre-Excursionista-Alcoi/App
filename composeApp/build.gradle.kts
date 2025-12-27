@@ -1,18 +1,17 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
-import java.util.*
+import java.util.Calendar
+import java.util.Properties
 
 plugins {
-    alias(libs.plugins.androidApplication)
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.cocoapods)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.googleServices)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.sentryMultiplatform)
     alias(libs.plugins.sqldelight)
@@ -36,17 +35,25 @@ val versionProperties = readProperties("version.properties", rootDir)!!
 val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
-val credentialsProperties = readProperties("credentials.properties", rootDir)
-fun getCredential(key: String): String? {
-    val gradleProperty = providers.gradleProperty(key)
-    return System.getenv(key) ?: gradleProperty.orNull ?: credentialsProperties?.getProperty(key)
-}
-
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+    androidLibrary {
+        namespace = "org.centrexcursionistalcoi.app.android"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        androidResources {
+            enable = true
         }
+
+        /*compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }*/
+        /*
+        compilerOptions.configure {
+           jvmTarget.set(
+               org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+           )
+       }*/
     }
     
     listOf(
@@ -132,7 +139,7 @@ kotlin {
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
 
-            implementation(projects.shared)
+            api(projects.shared)
         }
 
         commonTest.dependencies {
@@ -254,57 +261,6 @@ sqldelight {
             packageName.set("org.centrexcursionistalcoi.app.database")
             schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
             verifyMigrations.set(true)
-        }
-    }
-}
-
-android {
-    namespace = "org.centrexcursionistalcoi.app"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "org.centrexcursionistalcoi.app"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionName = appVersionName
-        versionCode = appVersionCode.toInt()
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    signingConfigs {
-        create("release") {
-            keyAlias = getCredential("KEYSTORE_ALIAS")
-            keyPassword = getCredential("KEYSTORE_ALIAS_PASSWORD")
-
-            storeFile = File(rootDir, "keystore.jks")
-            storePassword = getCredential("KEYSTORE_PASSWORD")
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = true
-            isShrinkResources = false
-
-            proguardFiles(
-                // Default file with automatically generated optimization rules.
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-            )
-
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    testOptions {
-        unitTests {
-            isReturnDefaultValues = true
         }
     }
 }
@@ -436,7 +392,7 @@ buildkonfig {
 
 dependencies {
     coreLibraryDesugaring(libs.android.desugaring)
-    debugImplementation(compose.uiTooling)
+    // debugImplementation(compose.uiTooling)
 }
 
 configurations.configureEach {
