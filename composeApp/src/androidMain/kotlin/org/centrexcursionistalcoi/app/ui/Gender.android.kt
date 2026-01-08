@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.ui
 import android.app.GrammaticalInflectionManager
 import android.os.Build
 import androidx.core.app.GrammaticalInflectionManagerCompat
-import org.centrexcursionistalcoi.app.appContext
+import org.centrexcursionistalcoi.app.android.appContext
 import org.centrexcursionistalcoi.app.ui.data.GrammaticalGender
 
 actual object Gender {

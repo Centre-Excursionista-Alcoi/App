@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app
+package org.centrexcursionistalcoi.app.android
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +8,7 @@ import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
 import io.ktor.http.Url
+import org.centrexcursionistalcoi.app.MainApp
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import tech.kotlinlang.permission.PermissionInitiation

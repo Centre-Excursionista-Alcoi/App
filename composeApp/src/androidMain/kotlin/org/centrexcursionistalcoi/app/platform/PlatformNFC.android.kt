@@ -5,11 +5,10 @@ import android.nfc.Tag
 import android.widget.Toast
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
-import kotlin.coroutines.Continuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.centrexcursionistalcoi.app.doMain
@@ -19,6 +18,7 @@ import org.centrexcursionistalcoi.app.exception.NfcTagIsReadOnlyException
 import org.centrexcursionistalcoi.app.exception.NfcTagMemorySmallException
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
+import kotlin.coroutines.Continuation
 
 actual object PlatformNFC : PlatformProvider {
     private val log = logging()
