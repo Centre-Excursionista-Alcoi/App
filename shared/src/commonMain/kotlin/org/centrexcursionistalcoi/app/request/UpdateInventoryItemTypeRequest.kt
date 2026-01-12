@@ -11,10 +11,11 @@ data class UpdateInventoryItemTypeRequest(
     val displayName: String? = null,
     val description: String? = null,
     val categories: List<String>? = null,
+    val weight: Double? = null,
     val department: Uuid? = null,
     val image: FileWithContext? = null,
 ): UpdateEntityRequest<Uuid, InventoryItemType> {
     override fun isEmpty(): Boolean {
-        return displayName.isNullOrEmpty() && description == null && categories.isNullOrEmpty() && image.isNullOrEmpty() && department == null
+        return displayName.isNullOrEmpty() && description == null && weight == null && categories.isNullOrEmpty() && image.isNullOrEmpty() && department == null
     }
 }
