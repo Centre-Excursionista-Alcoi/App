@@ -6,10 +6,24 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.datetime.LocalDateTime
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.network.*
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
@@ -19,8 +33,12 @@ class ManagementViewModel : ViewModel() {
     companion object {
         private val log = logging()
     }
-    
-    fun createDepartment(displayName: String, imageFile: PlatformFile?, progressNotifier: ProgressNotifier?) = launch {
+
+    fun createDepartment(
+        displayName: String,
+        imageFile: PlatformFile?,
+        progressNotifier: ProgressNotifier?
+    ) = launch {
         try {
             doAsync {
                 val image = imageFile?.readBytes()
@@ -72,15 +90,49 @@ class ManagementViewModel : ViewModel() {
         DepartmentsRemoteRepository.denyJoinRequest(request)
     }
 
-    fun createInventoryItemType(displayName: String, description: String, categories: List<String>, department: Department?, imageFile: PlatformFile?) = launch {
+    fun createInventoryItemType(
+        displayName: String,
+        description: String,
+        categories: List<String>,
+        weight: String,
+        department: Department?,
+        imageFile: PlatformFile?
+    ) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.create(displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, department, imageFile)
+            val weightDouble = weight.toDoubleOrNull()
+
+            InventoryItemTypesRemoteRepository.create(
+                displayName,
+                description.takeUnless { it.isEmpty() },
+                categories.takeUnless { it.isEmpty() },
+                weightDouble?.takeIf { it > 0.0 },
+                department,
+                imageFile
+            )
         }
     }
 
-    fun updateInventoryItemType(id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, imageFile: PlatformFile?) = launch {
+    fun updateInventoryItemType(
+        id: Uuid,
+        displayName: String,
+        description: String,
+        categories: List<String>,
+        weight: String,
+        department: Department?,
+        imageFile: PlatformFile?
+    ) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.update(id, displayName, description.takeUnless { it.isEmpty() }, categories.takeUnless { it.isEmpty() }, department, imageFile)
+            val weightDouble = weight.toDoubleOrNull()
+
+            InventoryItemTypesRemoteRepository.update(
+                id,
+                displayName,
+                description.takeUnless { it.isEmpty() },
+                categories.takeUnless { it.isEmpty() },
+                weightDouble?.takeIf { it > 0.0 },
+                department,
+                imageFile
+            )
         }
     }
 
@@ -90,11 +142,12 @@ class ManagementViewModel : ViewModel() {
         }
     }
 
-    fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) = launch {
-        doAsync {
-            InventoryItemsRemoteRepository.create(variation, type.id, amount)
+    fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) =
+        launch {
+            doAsync {
+                InventoryItemsRemoteRepository.create(variation, type.id, amount)
+            }
         }
-    }
 
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {
         doAsync {
@@ -156,7 +209,16 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(postId, title, contentMarkdown, department?.id, link, files, removedFiles, progressNotifier)
+            PostsRemoteRepository.update(
+                postId,
+                title,
+                contentMarkdown,
+                department?.id,
+                link,
+                files,
+                removedFiles,
+                progressNotifier
+            )
         }
     }
 

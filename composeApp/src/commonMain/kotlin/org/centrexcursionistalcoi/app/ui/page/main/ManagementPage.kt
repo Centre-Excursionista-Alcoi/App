@@ -8,24 +8,60 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.management_departments
+import cea_app.composeapp.generated.resources.management_events
+import cea_app.composeapp.generated.resources.management_inventory
+import cea_app.composeapp.generated.resources.management_lendings
+import cea_app.composeapp.generated.resources.management_posts
+import cea_app.composeapp.generated.resources.management_users
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.EventFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.InventoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Newsmode
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NewsmodeFilled
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
-import org.centrexcursionistalcoi.app.ui.page.main.management.*
+import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
@@ -245,8 +281,8 @@ private fun ManagementPage(
 
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,

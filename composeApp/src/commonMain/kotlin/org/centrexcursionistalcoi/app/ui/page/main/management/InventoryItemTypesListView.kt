@@ -2,13 +2,33 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,7 +36,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.inventory_item_create
+import cea_app.composeapp.generated.resources.inventory_item_nfc_id
+import cea_app.composeapp.generated.resources.inventory_item_variation
+import cea_app.composeapp.generated.resources.management_inventory_item_type_categories
+import cea_app.composeapp.generated.resources.management_inventory_item_type_create
+import cea_app.composeapp.generated.resources.management_inventory_item_type_department
+import cea_app.composeapp.generated.resources.management_inventory_item_type_description
+import cea_app.composeapp.generated.resources.management_inventory_item_type_display_name
+import cea_app.composeapp.generated.resources.management_inventory_item_type_identifiers
+import cea_app.composeapp.generated.resources.management_no_item_types
+import cea_app.composeapp.generated.resources.none
+import cea_app.composeapp.generated.resources.scanner_open
+import cea_app.composeapp.generated.resources.submit
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
@@ -54,8 +87,8 @@ fun InventoryItemTypesListView(
     allCategories: Set<String>,
     departments: List<Department>?,
     items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
-    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onCreate: (displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
     onDelete: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
@@ -172,12 +205,14 @@ fun InventoryItemTypesListView(
             var categories by remember { mutableStateOf(type?.categories ?: emptyList()) }
             var displayName by remember { mutableStateOf(type?.displayName ?: "") }
             var description by remember { mutableStateOf(type?.description ?: "") }
+            var weight by remember { mutableStateOf(type?.weight?.toString() ?: "") }
             var department by remember { mutableStateOf<Department?>(type?.department) }
 
             val isDirty = if (type == null) true else
                 displayName != type.displayName ||
                         description != type.description ||
                         categories != type.categories ||
+                        weight != type.weight?.toString() ||
                         department != type.department ||
                         image != null
 
@@ -246,9 +281,9 @@ fun InventoryItemTypesListView(
                 onClick = {
                     isLoading = true
                     val job = if (type == null) {
-                        onCreate(displayName, description, categories, department, image)
+                        onCreate(displayName, description, categories, weight, department, image)
                     } else {
-                        onUpdate(type.id, displayName, description, categories, department, image)
+                        onUpdate(type.id, displayName, description, categories, weight, department, image)
                     }
                     job.invokeOnCompletion {
                         isLoading = false
