@@ -18,7 +18,7 @@ import kotlin.time.Duration
 abstract class PeriodicWorker(
     private val period: Duration,
     context: CoroutineContext = Dispatchers.IO,
-): Closeable {
+) : Closeable {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     private val scope = CoroutineScope(context)
@@ -40,6 +40,7 @@ abstract class PeriodicWorker(
             mutex.withLock {
                 logger.debug("Starting initial sync: {}", Clock.System.now())
                 run()
+                done()
             }
         }
 
@@ -54,6 +55,7 @@ abstract class PeriodicWorker(
                     try {
                         logger.debug("Starting sync: {}", Clock.System.now())
                         run()
+                        done()
                     } finally {
                         mutex.unlock()
                     }
@@ -61,13 +63,16 @@ abstract class PeriodicWorker(
                     logger.debug("Skipping sync: Previous run still active.")
                 }
 
-                val nextRunTime = Clock.System.now() + period
-                logger.info("${this@PeriodicWorker::class.simpleName} completed, next run in $period ($nextRunTime)")
-
                 // Wait for next interval
                 delay(period)
             }
         }
+    }
+
+    private fun done() {
+        val now = Clock.System.now()
+        val nextRunTime = now + period
+        logger.info("${this@PeriodicWorker::class.simpleName} completed, next run in $period ($nextRunTime)")
     }
 
     /**
