@@ -1,6 +1,12 @@
 package org.centrexcursionistalcoi.app
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
@@ -54,6 +60,9 @@ abstract class PeriodicWorker(
                 } else {
                     logger.debug("Skipping sync: Previous run still active.")
                 }
+
+                val nextRunTime = Clock.System.now() + period
+                logger.info("${this@PeriodicWorker::class.simpleName} completed, next run in $period ($nextRunTime)")
 
                 // Wait for next interval
                 delay(period)
