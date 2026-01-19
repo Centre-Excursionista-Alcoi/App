@@ -142,29 +142,21 @@ fun DepartmentsListView(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        val pendingJoinRequests = remember(departments) {
-            departments
-                ?.map { it.members.orEmpty() }
-                ?.filter { members -> members.any { !it.confirmed } }
-                ?.flatten()
-                ?.filterNot { it.confirmed }
+        val pendingJoinRequests = remember(department) {
+            department.members.orEmpty()
+                // Filter not confirmed requests
+                .filterNot { it.confirmed }
         }
-        if (!pendingJoinRequests.isNullOrEmpty()) {
+        if (pendingJoinRequests.isNotEmpty()) {
             Text(
                 text = stringResource(Res.string.management_other_users_join_requests),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
             )
             for (request in pendingJoinRequests) {
-                val department = remember(departments) {
-                    departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
-                }
                 val userData = remember(users) {
                     users?.find { it.sub == request.userSub }
-                }
-
-                department ?: continue
-                userData ?: continue
+                } ?: continue
 
                 DepartmentPendingJoinRequest(
                     userData = userData,
