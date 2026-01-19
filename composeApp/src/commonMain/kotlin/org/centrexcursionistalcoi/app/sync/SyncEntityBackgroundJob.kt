@@ -1,9 +1,21 @@
 package org.centrexcursionistalcoi.app.sync
 
 import com.diamondedge.logging.logging
-import org.centrexcursionistalcoi.app.data.*
-import org.centrexcursionistalcoi.app.database.*
-import org.centrexcursionistalcoi.app.network.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Event
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Post
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 
 expect class SyncEntityBackgroundJob : BackgroundSyncWorker<SyncEntityBackgroundJobLogic>
@@ -44,19 +56,24 @@ object SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             log.d { "Updating $entityClass#$entityId..." }
             when (entityClass) {
                 Department::class.simpleName -> DepartmentsRemoteRepository.get(
-                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid department ID: $entityId")
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid department ID: $entityId"),
+                    ignoreIfModifiedSince = true
                 )?.let { DepartmentsRepository.insertOrUpdate(it) }
                 Post::class.simpleName -> PostsRemoteRepository.get(
-                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid post ID: $entityId")
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid post ID: $entityId"),
+                    ignoreIfModifiedSince = true
                 )?.let { PostsRepository.insertOrUpdate(it) }
                 InventoryItemType::class.simpleName -> InventoryItemTypesRemoteRepository.get(
-                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item type ID: $entityId")
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item type ID: $entityId"),
+                    ignoreIfModifiedSince = true
                 )?.let { InventoryItemTypesRepository.insertOrUpdate(it) }
                 InventoryItem::class.simpleName -> InventoryItemsRemoteRepository.get(
-                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item ID: $entityId")
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item ID: $entityId"),
+                    ignoreIfModifiedSince = true
                 )?.let { InventoryItemsRepository.insertOrUpdate(it) }
                 Event::class.simpleName -> EventsRemoteRepository.get(
-                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid event ID: $entityId")
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid event ID: $entityId"),
+                    ignoreIfModifiedSince = true
                 )?.let { EventsRepository.insertOrUpdate(it) }
                 else -> log.w { "Got unknown entity class: $entityClass" }
             }

@@ -13,7 +13,7 @@ object SyncDepartmentBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         val departmentId = input[EXTRA_DEPARTMENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing department ID")
 
-        val department = DepartmentsRemoteRepository.get(departmentId, progressNotifier)
+        val department = DepartmentsRemoteRepository.get(departmentId, progressNotifier, ignoreIfModifiedSince = true)
             ?: return SyncResult.Failure("Department with ID $departmentId not found on server")
         DepartmentsRepository.insertOrUpdate(department)
 
