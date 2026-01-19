@@ -146,6 +146,8 @@ fun DepartmentsListView(
             }
         },
     ) { department ->
+        val members = remember(department) { department.members.orEmpty() }
+
         if (department.image != null) {
             val image by department.rememberImageFile()
             AsyncByteImage(
@@ -161,8 +163,8 @@ fun DepartmentsListView(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        val pendingJoinRequests = remember(department) {
-            department.members.orEmpty()
+        val pendingJoinRequests = remember(members) {
+            members
                 // Filter not confirmed requests
                 .filterNot { it.confirmed }
         }
@@ -182,6 +184,29 @@ fun DepartmentsListView(
                     department = department,
                     onApprove = { onApproveDepartmentJoinRequest(request) },
                     onDeny = { onDenyDepartmentJoinRequest(request) },
+                )
+            }
+        }
+
+        val confirmedMembers = remember(members) {
+            members.filter { it.confirmed }
+        }
+        if (confirmedMembers.isNotEmpty()) {
+            Text(
+                text = stringResource(Res.string.management_department_members),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+            val confirmedMembersData = remember(confirmedMembers, users) {
+                confirmedMembers.mapNotNull { memberInfo ->
+                    users?.find { it.sub == memberInfo.userSub }
+                }.sortedBy { it.fullName }
+            }
+            for (userData in confirmedMembersData) {
+                Text(
+                    text = "- " + userData.fullName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
