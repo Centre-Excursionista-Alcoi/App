@@ -204,7 +204,7 @@ fun DepartmentsListView(
             }
             for (userData in confirmedMembersData) {
                 Text(
-                    text = "- " + userData.fullName,
+                    text = "\u2022 ${userData.fullName}",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.fillMaxWidth()
                 )
