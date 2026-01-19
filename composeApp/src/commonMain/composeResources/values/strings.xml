@@ -70,6 +70,7 @@
     <string name="management_inventory">Inventory</string>
 
     <string name="management_department_create">Create Department</string>
+    <string name="management_department_members">Members</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>
