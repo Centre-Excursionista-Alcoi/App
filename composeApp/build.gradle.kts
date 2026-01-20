@@ -254,6 +254,8 @@ sqldelight {
             packageName.set("org.centrexcursionistalcoi.app.database")
             schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
             verifyMigrations.set(true)
+            deriveSchemaFromMigrations.set(false) // Sometimes it breaks desktop build
+            migrationOutputDirectory.set(file("${getLayout().buildDirectory}/sqldelight/migrations"))
         }
     }
 }
