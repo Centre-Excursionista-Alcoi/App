@@ -1,19 +1,44 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -28,7 +53,15 @@ import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodExcepti
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AddCircle
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArrowBack
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Info
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Undo
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
@@ -36,9 +69,6 @@ import org.centrexcursionistalcoi.app.ui.utils.unknown
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 
 private val log = logging()
 
