@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.test
 
-enum class LoginType {
-    NONE,
-    USER,
-    ADMIN
+sealed class LoginType {
+    data object NONE : LoginType()
+    data object USER : LoginType()
+    data object ADMIN : LoginType()
+    data object LENDING_USER : LoginType()
+    data class CUSTOM(val user: StubUser) : LoginType()
 }

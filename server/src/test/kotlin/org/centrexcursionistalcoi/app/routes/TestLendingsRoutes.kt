@@ -687,7 +687,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_pickup_lending_without_dismissing() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
+        shouldLogIn = LoginType.LENDING_USER,
         databaseInitBlock = {
             getOrCreateItem()
 
@@ -721,7 +721,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_pickup_lending_with_item_dismiss() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
+        shouldLogIn = LoginType.LENDING_USER,
         databaseInitBlock = {
             getOrCreateItem()
 
@@ -773,7 +773,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_return_lending_all_items() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
+        shouldLogIn = LoginType.LENDING_USER,
         databaseInitBlock = {
             getOrCreateItem()
 
@@ -788,7 +788,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 this.to = LocalDate.of(2025, 10, 15)
                 this.confirmed = true
                 this.taken = true
-                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenBy = FakeLendingUser.provideEntity().sub
                 this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -834,12 +834,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertEquals(2, receivedItems.size)
             receivedItems[0].let { receivedItem ->
                 assertEquals(exampleItemId, receivedItem.item.id.value)
-                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals(FakeLendingUser.SUB, receivedItem.receivedBy.sub.value)
                 assertEquals("All good", receivedItem.notes)
             }
             receivedItems[1].let { receivedItem ->
                 assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), receivedItem.item.id.value)
-                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals(FakeLendingUser.SUB, receivedItem.receivedBy.sub.value)
                 assertEquals(null, receivedItem.notes)
             }
         }
@@ -847,7 +847,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_return_lending_partial_items() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
+        shouldLogIn = LoginType.LENDING_USER,
         databaseInitBlock = {
             getOrCreateItem()
 
@@ -862,7 +862,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 this.to = LocalDate.of(2025, 10, 15)
                 this.confirmed = true
                 this.taken = true
-                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenBy = FakeLendingUser.provideEntity().sub
                 this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -912,7 +912,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertEquals(1, receivedItems.size)
             receivedItems[0].let { receivedItem ->
                 assertEquals(exampleItemId, receivedItem.item.id.value)
-                assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
+                assertEquals(FakeLendingUser.SUB, receivedItem.receivedBy.sub.value)
                 assertEquals("All good", receivedItem.notes)
             }
         }
