@@ -14,6 +14,8 @@ val HttpHeaders.CEAInfo: String get() = "CEA-Info"
 val HttpHeaders.CEAWebDAVMessage: String get() = "CEA-WebDAV-Message"
 val HttpHeaders.CEAWebDAVNormalizedPath: String get() = "CEA-WebDAV-NormalizedPath"
 
+val HttpHeaders.CEAMissingPermission: String get() = "CEA-MissingPermission"
+
 val ifModifiedSinceFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
 
 /**

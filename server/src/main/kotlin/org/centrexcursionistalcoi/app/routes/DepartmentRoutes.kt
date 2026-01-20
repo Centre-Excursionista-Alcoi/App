@@ -15,6 +15,7 @@ import io.ktor.server.routing.post
 import java.util.UUID
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.CEAMissingPermission
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -53,7 +54,7 @@ private suspend fun RoutingContext.departmentRequest(requiredPermission: ((UUID)
 
     val permission = requiredPermission?.invoke(departmentId)
     if (permission != null && !session.hasPermission(permission)) {
-        call.response.header("CEA-MissingPermission", permission)
+        call.response.header(HttpHeaders.CEAMissingPermission, permission)
         call.respondError(Error.MissingPermission())
         return null
     }
