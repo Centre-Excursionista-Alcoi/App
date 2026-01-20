@@ -2,13 +2,17 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
-    androidTarget {
+    androidLibrary {
+        namespace = "org.centrexcursionistalcoi.app.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
@@ -43,17 +47,5 @@ kotlin {
             optIn.add("kotlin.uuid.ExperimentalUuidApi")
             optIn.add("kotlin.time.ExperimentalTime")
         }
-    }
-}
-
-android {
-    namespace = "org.centrexcursionistalcoi.app.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

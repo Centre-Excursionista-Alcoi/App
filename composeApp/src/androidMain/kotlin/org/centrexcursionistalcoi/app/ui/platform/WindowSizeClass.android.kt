@@ -5,7 +5,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
-import org.centrexcursionistalcoi.app.MainActivity
+import org.centrexcursionistalcoi.app.android.MainActivity
 
 @Composable
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

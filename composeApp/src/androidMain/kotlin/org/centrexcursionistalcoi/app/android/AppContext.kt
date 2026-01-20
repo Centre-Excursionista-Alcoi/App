@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app
+package org.centrexcursionistalcoi.app.android
 
 import android.content.Context
 
