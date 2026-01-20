@@ -3,7 +3,7 @@ name: Server Tests
 on:
   pull_request:
     paths:
-      - '.github/workflows/build-server.yml'
+      - '.github/workflows/test-server.yml'
       - 'server/**'
       - '*.gradle.kts'
       - '*.properties'
