@@ -202,8 +202,13 @@ fun DepartmentsListView(
             }
         }
 
-        val confirmedMembers = remember(members) {
-            members.filter { it.confirmed }
+        val confirmedMembers = remember(members, users) {
+            members
+                .filter { it.confirmed }
+                .mapNotNull { memberInfo ->
+                    users?.find { it.sub == memberInfo.userSub }
+                }
+                .sortedBy { it.fullName }
         }
         if (confirmedMembers.isNotEmpty()) {
             Text(
@@ -211,12 +216,7 @@ fun DepartmentsListView(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             )
-            val confirmedMembersData = remember(confirmedMembers, users) {
-                confirmedMembers.mapNotNull { memberInfo ->
-                    users?.find { it.sub == memberInfo.userSub }
-                }.sortedBy { it.fullName }
-            }
-            for (userData in confirmedMembersData) {
+            for (userData in confirmedMembers) {
                 Text(
                     text = "\u2022 ${userData.fullName}",
                     style = MaterialTheme.typography.bodyMedium,
