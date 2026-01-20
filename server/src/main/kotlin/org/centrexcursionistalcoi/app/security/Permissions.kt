@@ -9,13 +9,13 @@ import org.jetbrains.annotations.VisibleForTesting
 object Permissions {
     /**
      * Validates the format of a permission string.
-     * Permissions can be only: lowercase, with '_' and '.'. Wildcards '*' are allowed, and may replace any characters between dots.
+     * Permissions can be only: lowercase, with '_', '-' and '.'. Wildcards '*' are allowed, and may replace any characters between dots.
      * Example: "user.view", "user.*", "user.*.edit".
      * @return `true` if the permission format is valid, `false` otherwise.
      */
     @VisibleForTesting
     fun validatePermissionFormat(permission: String): Boolean {
-        val permissionRegex = Regex("^[a-z0-9_]+(\\.[a-z0-9_*]+)*$")
+        val permissionRegex = Regex("^[a-z0-9_-]+(\\.[a-z0-9_\\-*]+)*$")
         return permissionRegex.matches(permission)
     }
 
