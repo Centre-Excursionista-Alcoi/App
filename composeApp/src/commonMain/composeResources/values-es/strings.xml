@@ -489,4 +489,11 @@
     <string name="event_reject_assistance">Cancelar Asistencia</string>
     <string name="event_assisting_users">Asistentes</string>
     <string name="event_not_part_of_department">No eres miembro de la sección que organiza.</string>
+    <string name="settings_push_fcm_connection_connected"></string>
+    <string name="lending_creation_items_unknown_error"></string>
+    <string name="management_lending_picked_up"></string>
+    <string name="settings_push_fcm_connection_title"></string>
+    <string name="management_department_members"></string>
+    <string name="settings_push_fcm_connection_disconnected"></string>
+    <string name="management_lending_returned"></string>
 </resources>
