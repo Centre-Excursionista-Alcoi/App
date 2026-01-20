@@ -505,4 +505,10 @@
     <string name="event_reject_assistance">Cancel·lar Assistència</string>
     <string name="event_assisting_users">Assistents</string>
     <string name="event_not_part_of_department">No eres part de la secció que organitza.</string>
+    <string name="settings_push_fcm_connection_connected">Rebent notificacions push per FCM. Les dades seran actualitzades a l\'instant.\nToken: %1$s</string>
+    <string name="lending_creation_items_unknown_error">Error desconegut</string>
+    <string name="management_lending_picked_up">El préstec ha sigut recollit.</string>
+    <string name="settings_push_fcm_connection_title">Estat de Connexió FCM</string>
+    <string name="settings_push_fcm_connection_disconnected">No s\'estan rebent notificacions push per FCM.</string>
+    <string name="management_lending_returned">El préstec ha sigut retornat.</string>
 </resources>
