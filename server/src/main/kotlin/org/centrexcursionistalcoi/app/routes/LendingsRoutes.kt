@@ -97,7 +97,7 @@ private val lendingsMutex = Mutex()
  *
  * If not, the item's department is checked one by one. If the item belongs to a department, the permission [Permissions.Lending.GIVE_BY_DEPARTMENT] or
  * [Permissions.Lending.RECEIVE_BY_DEPARTMENT] for that department is checked.
- * If the item not linked to any department, the generic permission [Permissions.Lending.GIVE_NO_DEPARTMENT] or [Permissions.Lending.RECEIVE_NO_DEPARTMENT] is checked.
+ * If the item is not linked to any department, the generic permission [Permissions.Lending.GIVE_NO_DEPARTMENT] or [Permissions.Lending.RECEIVE_NO_DEPARTMENT] is checked.
  *
  * Users that do not have all the required permissions won't be able to give/receive the lending.
  * @param session The user session
