@@ -499,7 +499,7 @@ sealed interface Error {
     @Serializable
     @SerialName("PermissionRejected")
     class PermissionRejected(): Error {
-        override val code: Int = ERROR_EVENT_IN_THE_PAST
+        override val code: Int = ERROR_PERMISSION_REJECTED
         override val description: String = "You are not allowed to access this endpoint."
 
         @Serializable(HttpStatusCodeSerializer::class)
