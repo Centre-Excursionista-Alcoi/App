@@ -52,6 +52,7 @@ object SmtpProvider : EmailProvider {
 
             if (NotificationsConfig.smtpUseTls) {
                 put("mail.smtp.starttls.enable", true)
+                put("mail.smtp.starttls.required", true)
             }
         }
 
