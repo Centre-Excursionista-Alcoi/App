@@ -66,6 +66,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
@@ -326,9 +327,7 @@ private fun MainScreenContent(
         // Find the pending lending
         ?.find { it.status().isPending() }
     val isManagerOfAnyDepartment = remember(profile, departments) {
-        departments.orEmpty().any { department ->
-            department.members.orEmpty().find { it.userSub == profile.sub }?.isManager == true
-        }
+        departments.orEmpty().isManagerOfAny(profile)
     }
     val navigationItems = remember(profile, activeUserLending) {
         navigationItems(isAdmin = profile.isAdmin, isManagerOfAnyDepartment, anyActiveLending = activeUserLending != null)

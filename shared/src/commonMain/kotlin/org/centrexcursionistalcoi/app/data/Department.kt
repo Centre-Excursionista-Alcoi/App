@@ -4,6 +4,7 @@ import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.centrexcursionistalcoi.app.exception.DepartmentNotFoundException
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
 
 @Serializable
@@ -19,6 +20,15 @@ data class Department(
          * @throws DepartmentNotFoundException if no department with the given [id] is found
          */
         fun List<Department>.getDepartment(id: Uuid): Department = this.firstOrNull { it.id == id } ?: throw DepartmentNotFoundException(id)
+
+        /**
+         * Checks if the profile is a manager of any department in the list.
+         */
+        fun List<Department>.isManagerOfAny(profile: ProfileResponse): Boolean {
+            return this.any { department ->
+                department.members.orEmpty().find { it.userSub == profile.sub }?.isManager == true
+            }
+        }
     }
 
     @Transient
