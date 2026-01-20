@@ -23,7 +23,7 @@ open class ParametrizedPermission(
             if (str.isBlank()) {
                 throw IllegalArgumentException("Parameter value cannot be blank")
             }
-            result = result.replaceFirst("*", param.toString())
+            result = result.replaceFirst("*", str)
         }
         return result
     }
