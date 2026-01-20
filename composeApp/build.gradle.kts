@@ -254,9 +254,14 @@ sqldelight {
             packageName.set("org.centrexcursionistalcoi.app.database")
             schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
             verifyMigrations.set(true)
-            deriveSchemaFromMigrations.set(false) // Sometimes it breaks desktop build
-            migrationOutputDirectory.set(file("${getLayout().buildDirectory}/sqldelight/migrations"))
         }
+    }
+}
+
+project.gradle.taskGraph.whenReady {
+    // Disable verification of migrations because the tasks just gets frozen
+    tasks.named("verifyCommonMainDatabaseMigration") {
+        enabled = false
     }
 }
 
