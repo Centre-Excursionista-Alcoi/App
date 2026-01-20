@@ -1,10 +1,21 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.CEAMissingPermission
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -19,22 +30,32 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.centrexcursionistalcoi.app.security.Permissions
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import kotlin.uuid.toKotlinUuid
 
-private suspend fun RoutingContext.departmentRequest(mustBeAdmin: Boolean = false): Pair<UserSession, DepartmentEntity>? {
+/**
+ * Helper function to process department-related requests.
+ * It retrieves the user session, validates the department ID from the request parameters,
+ * checks for required permissions, and fetches the corresponding [DepartmentEntity].
+ * @param requiredPermission An optional lambda that takes a department ID and returns the required permission string.
+ * @return A [Pair] of [UserSession] and [DepartmentEntity] if successful, or null if any validation fails.
+ */
+private suspend fun RoutingContext.departmentRequest(requiredPermission: ((UUID) -> String)? = null): Pair<UserSession, DepartmentEntity>? {
     val session = getUserSessionOrFail() ?: return null
-    if (mustBeAdmin && !session.isAdmin()) {
-        call.respondError(Error.NotAnAdmin())
-        return null
-    }
 
     val departmentId = call.parameters["id"]?.toUUIDOrNull()
     if (departmentId == null) {
         call.respondError(Error.InvalidArgument("id"))
+        return null
+    }
+
+    val permission = requiredPermission?.invoke(departmentId)
+    if (permission != null && !session.hasPermission(permission)) {
+        call.response.header(HttpHeaders.CEAMissingPermission, permission)
+        call.respondError(Error.MissingPermission())
         return null
     }
 
@@ -109,7 +130,7 @@ fun Route.departmentsRoutes() {
                 call.respondText("You are already a member of this department.", status = HttpStatusCode.Conflict)
             }
         } else {
-            val confirmed = session.isAdmin() // Auto-confirm if the user is an admin
+            val confirmed = session.hasPermission(Permissions.Department.MANAGE_REQUESTS(department.id.value)) // Auto-confirm if the user has the manage permission
 
             Database {
                 DepartmentMemberEntity.new {
@@ -150,7 +171,7 @@ fun Route.departmentsRoutes() {
         }
     }
     post("/departments/{id}/leave/{sub}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest { Permissions.Department.KICK(it) } ?: return@post
 
         val sub = call.parameters["sub"]
         if (sub == null) {
@@ -188,7 +209,7 @@ fun Route.departmentsRoutes() {
         val (session, department) = departmentRequest() ?: return@get
 
         val pendingRequests = Database {
-            if (session.isAdmin()) {
+            if (session.hasPermission( Permissions.Department.MANAGE_REQUESTS(department.id.value))) {
                 DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
             } else {
                 // There should only be one match or none
@@ -210,7 +231,7 @@ fun Route.departmentsRoutes() {
 
     // Allows an admin to confirm and deny join requests
     post("/departments/{id}/confirm/{requestId}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest { Permissions.Department.MANAGE_REQUESTS(it) } ?: return@post
 
         val requestId = call.parameters["requestId"]?.toUUIDOrNull()
         if (requestId == null) {
@@ -249,7 +270,7 @@ fun Route.departmentsRoutes() {
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
     }
     post("/departments/{id}/deny/{requestId}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest { Permissions.Department.MANAGE_REQUESTS(it) } ?: return@post
 
         val requestId = call.parameters["requestId"]?.toUUIDOrNull()
         if (requestId == null) {

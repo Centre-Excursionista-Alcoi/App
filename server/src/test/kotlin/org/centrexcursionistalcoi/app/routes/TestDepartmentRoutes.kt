@@ -1,21 +1,31 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.*
-import io.ktor.http.*
-import org.centrexcursionistalcoi.app.*
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.assertBody
+import org.centrexcursionistalcoi.app.assertError
+import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.assertNull
-import kotlin.test.*
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
@@ -214,9 +224,14 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
     @Test
     fun test_confirm_notAdmin() = runApplicationTest(
-        shouldLogIn = LoginType.USER
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
     ) {
-        client.post("/departments/abc/confirm/abc").apply {
+        client.post("/departments/$departmentId/confirm/abc").apply {
             assertStatusCode(HttpStatusCode.Forbidden)
         }
     }
@@ -362,7 +377,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         }
     ) {
         client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
-            assertError(Error.NotAnAdmin())
+            assertError(Error.MissingPermission())
         }
     }
 
@@ -401,6 +416,89 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         }
 
         val entity = Database { DepartmentMemberEntity.findById(context.dibResult.id) }
+        assertNull(entity)
+    }
+
+    // New tests for the deny endpoint
+    @Test
+    fun test_deny_notAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    @Test
+    fun test_deny_malformedDepartmentId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/abc/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_deny_departmentNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_deny_malformedRequestId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/abc").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_deny_requestNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_deny_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userSub = FakeUser.provideEntity().id
+                department = mockDepartment
+                confirmed = false
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        val entity = Database { DepartmentMemberEntity.findById(joinRequestId) }
         assertNull(entity)
     }
 }
