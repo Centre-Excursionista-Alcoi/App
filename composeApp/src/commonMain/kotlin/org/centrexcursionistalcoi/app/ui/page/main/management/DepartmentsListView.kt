@@ -31,6 +31,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -46,6 +47,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun DepartmentsListView(
     windowSizeClass: WindowSizeClass,
+    profile: ProfileResponse,
     users: List<UserData>?,
     departments: List<Department>?,
     onCreate: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
@@ -54,6 +56,18 @@ fun DepartmentsListView(
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 ) {
+    val filteredDepartments = remember(profile, departments) {
+        if (profile.isAdmin) {
+            // Admin can see all departments
+            departments
+        } else {
+            // Non-admin can see only the departments they are managing
+            departments?.filter { department ->
+                department.members?.any { it.userSub == profile.sub && it.isManager } == true
+            }
+        }
+    }
+
     var deleting by remember { mutableStateOf<Department?>(null) }
     deleting?.let { department ->
         DeleteDialog(
@@ -66,7 +80,7 @@ fun DepartmentsListView(
 
     ListView(
         windowSizeClass = windowSizeClass,
-        items = departments,
+        items = filteredDepartments,
         itemIdProvider = { it.id },
         itemDisplayName = { it.displayName },
         itemLeadingContent = { department ->

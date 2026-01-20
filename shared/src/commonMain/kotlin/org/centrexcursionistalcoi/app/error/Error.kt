@@ -496,6 +496,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
     }
 
+    @Serializable
+    @SerialName("PermissionRejected")
+    class PermissionRejected(): Error {
+        override val code: Int = ERROR_PERMISSION_REJECTED
+        override val description: String = "You are not allowed to access this endpoint."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -541,6 +551,7 @@ sealed interface Error {
         const val ERROR_EVENT_FULL = 41
         const val ERROR_ASSISTANCE_ALREADY_CONFIRMED = 42
         const val ERROR_EVENT_IN_THE_PAST = 43
+        const val ERROR_PERMISSION_REJECTED = 44
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -587,6 +598,7 @@ sealed interface Error {
             ERROR_EVENT_FULL -> EventFull.serializer()
             ERROR_ASSISTANCE_ALREADY_CONFIRMED -> AssistanceAlreadyConfirmed.serializer()
             ERROR_EVENT_IN_THE_PAST -> EventInThePast.serializer()
+            ERROR_PERMISSION_REJECTED -> PermissionRejected.serializer()
             else -> null
         }
     }
