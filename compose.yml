@@ -20,7 +20,14 @@ services:
       EMAIL_FROM_NAME: No Reply
       EMAIL_REPLY_TO_ADDR: info@example.com
       EMAIL_REPLY_TO_NAME: Support
+      # -- MailerSend Configuration --
       MAILER_SEND_TOKEN: abc
+      # -- SMTP Configuration --
+      SMTP_HOST: smtp.example.com
+      SMTP_PORT: 587
+      SMTP_USER: smtp_user
+      SMTP_PASS: smtp_password
+      SMTP_TLS: true
       # Firebase Admin
       GOOGLE_APPLICATION_CREDENTIALS: /service-account-file.json
       # CEA Configuration
