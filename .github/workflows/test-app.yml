@@ -54,7 +54,7 @@ jobs:
         if: ${{ steps.app_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v6
         with:
-          name: shared-test-results
+          name: app-test-results
           retention-days: 3
           path: |
             composeApp/build/test-results
