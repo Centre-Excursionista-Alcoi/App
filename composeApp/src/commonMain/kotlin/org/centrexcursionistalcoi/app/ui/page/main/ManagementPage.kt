@@ -103,11 +103,8 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             // Admins can always see the page
             if (profile.isAdmin) return true
 
-            // If items is empty, do not show the page
-            val items = items ?: return false
-
             // If user is not admin, check whether they are manager of at least one department
-            val isManager = items.any { department ->
+            val isManager = items.orEmpty().any { department ->
                 department.members.orEmpty()
                     // Find the member info for the current user
                     .find { it.userSub == profile.sub }
