@@ -1,5 +1,10 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
@@ -9,16 +14,10 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.assertNotNull
-import java.util.*
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.uuid.toKotlinUuid
 
 class TestDepartment {
     @Test
@@ -49,11 +48,13 @@ class TestDepartment {
                     userSub = user.sub
                     department = departmentEntity
                     confirmed = true
+                    isManager = true
                 }
                 DepartmentMemberEntity.new(departmentMember2Id) {
                     userSub = user2.sub
                     department = departmentEntity
                     confirmed = false
+                    isManager = false
                 }
             }
         }
@@ -68,12 +69,14 @@ class TestDepartment {
                     userSub = FakeUser.SUB,
                     departmentId = departmentId.toKotlinUuid(),
                     confirmed = true,
+                    isManager = true,
                 ),
                 DepartmentMemberInfo(
                     id = departmentMember2Id.toKotlinUuid(),
                     userSub = FakeUser2.SUB,
                     departmentId = departmentId.toKotlinUuid(),
                     confirmed = false,
+                    isManager = false,
                 )
             )
         )
