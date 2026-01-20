@@ -11,7 +11,7 @@ object NotificationsConfig : ConfigProvider() {
     val mailerSendToken get() = getenv("MAILER_SEND_TOKEN") ?: error("MAILER_SEND_TOKEN is not set")
 
     val smtpHost get() = getenv("SMTP_HOST")
-    val smtpPort get() = (getenv("SMTP_PORT") ?: "25").toIntOrNull()
+    val smtpPort get() = (getenv("SMTP_PORT") ?: "587").toIntOrNull()
     val smtpUsername get() = getenv("SMTP_USER")
     val smtpPassword get() = getenv("SMTP_PASS")
     val smtpUseTls get() = getenv("SMTP_TLS")?.toBoolean() ?: false
