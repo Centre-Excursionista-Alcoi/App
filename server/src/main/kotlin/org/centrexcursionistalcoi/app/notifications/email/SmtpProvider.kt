@@ -28,6 +28,14 @@ object SmtpProvider : EmailProvider {
         NotificationsConfig.smtpUsername != null &&
         NotificationsConfig.smtpPassword != null
 
+    /**
+     * Sends an email using SMTP, with the credentials configured in [NotificationsConfig].
+     * @throws IllegalStateException if SMTP is not configured.
+     * @param to List of recipient email addresses.
+     * @param subject Subject of the email.
+     * @param htmlContent HTML content of the email.
+     * @param attachments Optional list of attachments.
+     */
     override suspend fun sendEmail(
         to: List<MailerSendEmail>,
         subject: String,
