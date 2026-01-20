@@ -1,10 +1,23 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.MultiPartData
+import io.ktor.server.request.contentType
+import io.ktor.server.request.receiveMultipart
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
+import io.ktor.server.routing.post
+import java.util.UUID
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.Entity
@@ -24,12 +37,11 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.slf4j.LoggerFactory
-import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 private val logger = LoggerFactory.getLogger("RoutesBase")
@@ -41,6 +53,20 @@ suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentT
         return null
     }
     return Unit
+}
+
+/**
+ * Asserts that the "id" parameter in the call's parameters is a valid UUID.
+ * If not, responds with an [Error.InvalidArgument] error.
+ * @return The UUID if valid, or null if invalid.
+ */
+suspend fun RoutingContext.assertIdParameter(): UUID? {
+    val id = call.parameters["id"]?.toUUIDOrNull()
+    if (id == null) {
+        call.respondError(Error.InvalidArgument("id"))
+        return null
+    }
+    return id
 }
 
 @Suppress("USELESS_CAST")

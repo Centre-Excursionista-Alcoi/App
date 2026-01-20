@@ -9,11 +9,13 @@ data class DepartmentMemberInfo(
     val userSub: String,
     val departmentId: Uuid,
     val confirmed: Boolean,
+    val isManager: Boolean = false,
 ): Entity<Uuid> {
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "userSub" to userSub,
         "departmentId" to departmentId,
         "confirmed" to confirmed,
+        "isManager" to isManager,
     )
 }

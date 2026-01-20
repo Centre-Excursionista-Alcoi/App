@@ -1,9 +1,18 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
@@ -23,28 +32,49 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import kotlin.uuid.toKotlinUuid
 
-private suspend fun RoutingContext.departmentRequest(mustBeAdmin: Boolean = false): Pair<UserSession, DepartmentEntity>? {
-    val session = getUserSessionOrFail() ?: return null
-    if (mustBeAdmin && !session.isAdmin()) {
-        call.respondError(Error.NotAnAdmin())
-        return null
+private fun UserSession.isManager(department: DepartmentEntity): Boolean {
+    return Database {
+        DepartmentMemberEntity
+            .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq this@isManager.sub) and (DepartmentMembers.isManager eq true) }
+            .empty()
+            .not()
     }
+}
+
+private suspend fun RoutingContext.departmentRequest(isRestricted: Boolean = false): Pair<UserSession, DepartmentEntity>? {
+    val session = getUserSessionOrFail() ?: return null
 
     val departmentId = call.parameters["id"]?.toUUIDOrNull()
-    if (departmentId == null) {
-        call.respondError(Error.InvalidArgument("id"))
-        return null
-    }
 
-    val department = Database { DepartmentEntity.findById(departmentId) }
-    if (department == null) {
-        call.respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId))
-        return null
-    }
+    return if (isRestricted) {
+        // Endpoint is restricted, verify that the user has permissions
 
-    return session to department
+        val department = departmentId?.let { Database { DepartmentEntity.findById(it) } }
+        if (department == null) {
+            // Department was not found, cannot check for permissions, so return missing permissions
+            call.respondError(Error.PermissionRejected())
+            return null
+        }
+        // Department was found, check if the user is a manager, or an admin
+        if (!session.isAdmin() && !session.isManager(department)) {
+            call.respondError(Error.PermissionRejected())
+            return null
+        }
+        // User has permissions, continue
+        session to department
+    } else {
+        // Endpoint is not restricted, just get the department
+
+        val departmentId = assertIdParameter() ?: return null
+        val department = Database { DepartmentEntity.findById(departmentId) }
+        if (department == null) {
+            call.respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId))
+            return null
+        }
+
+        session to department
+    }
 }
 
 fun Route.departmentsRoutes() {
@@ -188,7 +218,7 @@ fun Route.departmentsRoutes() {
         val (session, department) = departmentRequest() ?: return@get
 
         val pendingRequests = Database {
-            if (session.isAdmin()) {
+            if (session.isAdmin() || session.isManager(department)) {
                 DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
             } else {
                 // There should only be one match or none
