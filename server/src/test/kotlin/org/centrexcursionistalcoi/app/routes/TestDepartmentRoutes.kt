@@ -1,21 +1,31 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.*
-import io.ktor.http.*
-import org.centrexcursionistalcoi.app.*
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.CEAInfo
+import org.centrexcursionistalcoi.app.assertBody
+import org.centrexcursionistalcoi.app.assertError
+import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.assertNull
-import kotlin.test.*
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
@@ -226,7 +236,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN
     ) {
         client.post("/departments/abc/confirm/abc").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
+            assertError(Error.PermissionRejected())
         }
     }
 
@@ -235,7 +245,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN
     ) {
         client.post("/departments/$departmentId/confirm/abc").apply {
-            assertStatusCode(HttpStatusCode.NotFound)
+            assertError(Error.PermissionRejected())
         }
     }
 
@@ -362,7 +372,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         }
     ) {
         client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
-            assertError(Error.NotAnAdmin())
+            assertError(Error.PermissionRejected())
         }
     }
 
