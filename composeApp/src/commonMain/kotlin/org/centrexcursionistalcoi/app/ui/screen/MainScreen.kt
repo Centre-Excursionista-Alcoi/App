@@ -749,7 +749,8 @@ private fun MainScreenPagerContent(
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
 
-            Page.MANAGEMENT if profile.isAdmin -> ManagementPage(
+            // Management page only for admins or department managers
+            Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
                 windowSizeClass,
                 snackbarHostState,
                 selectedManagementItem,
