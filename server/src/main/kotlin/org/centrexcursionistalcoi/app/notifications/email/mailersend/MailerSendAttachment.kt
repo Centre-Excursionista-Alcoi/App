@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.mailersend
+package org.centrexcursionistalcoi.app.notifications.email.mailersend
 
 import java.util.Base64
 import kotlinx.serialization.Serializable
@@ -35,4 +35,8 @@ data class MailerSendAttachment(
         disposition = disposition,
         id = id,
     )
+
+    fun decodeContent(): ByteArray {
+        return Base64.getMimeDecoder().decode(content)
+    }
 }

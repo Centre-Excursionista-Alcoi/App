@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.mailersend
+package org.centrexcursionistalcoi.app.notifications.email.mailersend
 
 import kotlinx.serialization.Serializable
 
