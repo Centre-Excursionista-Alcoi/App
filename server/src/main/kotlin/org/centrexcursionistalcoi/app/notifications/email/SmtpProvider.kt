@@ -99,10 +99,10 @@ object SmtpProvider : EmailProvider {
             setSubject(subject)
 
             if (attachments.isNullOrEmpty()) {
-                setText(htmlContent)
+                setContent(htmlContent, "text/html; charset=UTF-8")
             } else {
                 val messageBodyPart = MimeBodyPart().apply {
-                    setText(htmlContent)
+                    setContent(htmlContent, "text/html; charset=UTF-8")
                 }
 
                 val multipart = MimeMultipart().apply {
