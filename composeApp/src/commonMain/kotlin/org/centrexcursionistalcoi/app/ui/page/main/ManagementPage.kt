@@ -387,6 +387,7 @@ private fun ManagementPage(
 
             ManagementPage.Departments -> DepartmentsListView(
                 windowSizeClass,
+                profile,
                 users,
                 departments,
                 onCreateDepartment,
