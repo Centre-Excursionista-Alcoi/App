@@ -298,7 +298,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           PRODUCTION: true
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: ./gradlew :composeApp:bundleRelease :composeApp:assembleRelease
+        run: ./gradlew :android:bundleRelease :android:assembleRelease
 
       - name: Sentry - Install CLI
         run: |
@@ -322,14 +322,14 @@ jobs:
             --uuid ${{ steps.uuids.outputs.proguard_uuid }} \
             --org ${{ secrets.SENTRY_ORG }} \
             --project ${{ secrets.SENTRY_PROJECT }} \
-            composeApp/build/outputs/mapping/release/mapping.txt
+            android/build/outputs/mapping/release/mapping.txt
 
       - name: Release AAB & APK
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./composeApp/build/outputs/**/*.apk
+            ./android/build/outputs/**/*.apk
 
       - name: Upload to Play Store
         id: upload_play_store
@@ -337,7 +337,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
           packageName: org.centrexcursionistalcoi.app
-          releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
+          releaseFiles: ./android/build/outputs/bundle/release/android-release.aab
           track: "beta"
           # Priority is dynamically set by the previous script step
           inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}

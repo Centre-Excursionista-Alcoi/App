@@ -234,12 +234,12 @@ jobs:
       - name: Decode google-services.json
         run: |
           echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
-          base64 --decode google-services.txt > composeApp/google-services.json
+          base64 --decode google-services.txt > android/google-services.json
       - name: Verify google-services.json integrity
         env:
           KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
         run: |
-          cd composeApp
+          cd android
           echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
       - name: Clean quote backslashes
@@ -272,14 +272,14 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           PRODUCTION: true
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: ./gradlew :composeApp:bundleRelease
+        run: ./gradlew :android:bundleRelease
 
       - name: AAB Artifact
         id: aab_artifact
         uses: actions/upload-artifact@v6
         with:
           name: AAB Artifact
-          path: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
+          path: ./android/build/outputs/bundle/release/android-release.aab
 
       - name: Sentry - Install CLI
         run: |
@@ -303,7 +303,7 @@ jobs:
             --uuid ${{ steps.uuids.outputs.proguard_uuid }} \
             --org ${{ secrets.SENTRY_ORG }} \
             --project ${{ secrets.SENTRY_PROJECT }} \
-            composeApp/build/outputs/mapping/release/mapping.txt
+            android/build/outputs/mapping/release/mapping.txt
 
       - name: Upload to Play Store
         id: upload_play_store
@@ -311,7 +311,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
           packageName: org.centrexcursionistalcoi.app
-          releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
+          releaseFiles: ./android/build/outputs/bundle/release/android-release.aab
           track: "internal"
           inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed
