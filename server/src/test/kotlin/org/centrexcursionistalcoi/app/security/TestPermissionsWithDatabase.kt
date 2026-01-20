@@ -9,27 +9,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.exception.UserNotFoundException
 import org.centrexcursionistalcoi.app.test.*
 
-class TestPermissions {
-
-    @Test
-    fun `validatePermissionFormat accepts valid and rejects invalid`() {
-        // No DB required for this test, but ensure clean state if other tests rely on it
-        Database.clear()
-        Database.initForTests()
-
-        // valid
-        assertTrue(Permissions.validatePermissionFormat("user.view"))
-        assertTrue(Permissions.validatePermissionFormat("user.*"))
-        assertTrue(Permissions.validatePermissionFormat("user.*.edit"))
-        assertTrue(Permissions.validatePermissionFormat("user_view"))
-        assertTrue(Permissions.validatePermissionFormat("abc123.something"))
-
-        // invalid
-        assertFalse(Permissions.validatePermissionFormat("User.View"))
-        assertFalse(Permissions.validatePermissionFormat("user..view"))
-        assertFalse(Permissions.validatePermissionFormat("user,\$pecial"))
-        assertFalse(Permissions.validatePermissionFormat(""))
-    }
+class TestPermissionsWithDatabase {
 
     @Test
     fun `hasPermission throws for invalid permission format`() = runTest {
