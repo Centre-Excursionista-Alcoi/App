@@ -45,4 +45,24 @@ object Permissions {
         /** Allows managing join requests from a user for a department. */
         val MANAGE_REQUESTS = "department.*.manage_requests".parametrized()
     }
+
+    object Lending {
+        /** Allows giving items from any department. */
+        const val GIVE = "lending.give"
+
+        /** Allows giving items linked to a department (placeholder). */
+        val GIVE_BY_DEPARTMENT = "lending.give.by_department.*".parametrized()
+
+        /** Allows giving items not linked to any department. */
+        const val GIVE_NO_DEPARTMENT = "lending.give.by_department.none"
+
+        /** Allows receiving items from any department. */
+        const val RECEIVE = "lending.receive"
+
+        /** Allows receiving items linked to a department (placeholder). */
+        val RECEIVE_BY_DEPARTMENT = "lending.receive.by_department.*".parametrized()
+
+        /** Allows receiving items not linked to any department. */
+        const val RECEIVE_NO_DEPARTMENT = "lending.receive.by_department.none"
+    }
 }

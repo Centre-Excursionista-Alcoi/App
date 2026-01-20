@@ -58,16 +58,19 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendA
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
+import org.centrexcursionistalcoi.app.security.Permissions
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
@@ -86,6 +89,63 @@ import org.jetbrains.exposed.v1.json.contains
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
  */
 private val lendingsMutex = Mutex()
+
+/**
+ * Helper function to check if a user has permission to give or receive items for a lending.
+ *
+ * First it checks whether the user has permission to all departments ([Permissions.Lending.GIVE] or [Permissions.Lending.RECEIVE]). If it does, the permission is granted.
+ *
+ * If not, the item's department is checked one by one. If the item belongs to a department, the permission [Permissions.Lending.GIVE_BY_DEPARTMENT] or
+ * [Permissions.Lending.RECEIVE_BY_DEPARTMENT] for that department is checked.
+ * If the item not linked to any department, the generic permission [Permissions.Lending.GIVE_NO_DEPARTMENT] or [Permissions.Lending.RECEIVE_NO_DEPARTMENT] is checked.
+ *
+ * Users that do not have all the required permissions won't be able to give/receive the lending.
+ * @param session The user session
+ * @param lending The lending entity
+ * @param isGiving Whether this is a give operation (true) or receive operation (false)
+ * @return `true` if the user has permission, `false` otherwise
+ */
+@VisibleForTesting
+fun checkLendingDepartmentPermissions(session: UserSession, lending: LendingEntity, isGiving: Boolean): Boolean {
+    // First check if the user has permission to give/receive from all departments
+    val generalPermission = if (isGiving) {
+        Permissions.Lending.GIVE
+    } else {
+        Permissions.Lending.RECEIVE
+    }
+    if (session.hasPermission(generalPermission)) {
+        return true
+    }
+
+    // Check each item's department
+    val items = Database { lending.items.toList() }
+    for (item in items) {
+        val itemType = Database { item.type }
+        val department = Database { itemType.department }
+
+        val hasPermission = if (isGiving) {
+            if (department != null) {
+                session.hasPermission(Permissions.Lending.GIVE_BY_DEPARTMENT(department.id.value))
+            } else {
+                session.hasPermission(Permissions.Lending.GIVE_NO_DEPARTMENT)
+            }
+        } else {
+            if (department != null) {
+                session.hasPermission(Permissions.Lending.RECEIVE_BY_DEPARTMENT(department.id.value))
+            } else {
+                session.hasPermission(Permissions.Lending.RECEIVE_NO_DEPARTMENT)
+            }
+        }
+
+        // If user lacks permission for any item, return false
+        if (!hasPermission) {
+            return false
+        }
+    }
+
+    // User has permission for all items
+    return true
+}
 
 fun Route.lendingsRoutes() {
     postWithLock("inventory/lendings", lendingsMutex) {
@@ -375,7 +435,7 @@ fun Route.lendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/pickup") {
-        val session = assertAdmin() ?: return@post
+        val session = getUserSessionOrFail() ?: return@post
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
@@ -391,6 +451,12 @@ fun Route.lendingsRoutes() {
 
         if (!lending.confirmed) {
             call.respondError(Error.LendingNotConfirmed())
+            return@post
+        }
+
+        // Check if user has permission to give items for this lending
+        if (!checkLendingDepartmentPermissions(session, lending, isGiving = true)) {
+            call.respondError(Error.MissingPermission())
             return@post
         }
 
@@ -433,7 +499,7 @@ fun Route.lendingsRoutes() {
     }
     post("inventory/lendings/{id}/return") {
         assertContentType(ContentType.Application.Json) ?: return@post
-        val session = assertAdmin() ?: return@post
+        val session = getUserSessionOrFail() ?: return@post
 
         val lendingId = call.parameters["id"]?.toUUIDOrNull()
         if (lendingId == null) {
@@ -449,6 +515,12 @@ fun Route.lendingsRoutes() {
 
         if (!lending.taken) {
             call.respondError(Error.LendingNotTaken(lendingId.toKotlinUuid()))
+            return@post
+        }
+
+        // Check if user has permission to receive items for this lending
+        if (!checkLendingDepartmentPermissions(session, lending, isGiving = false)) {
+            call.respondError(Error.MissingPermission())
             return@post
         }
 
