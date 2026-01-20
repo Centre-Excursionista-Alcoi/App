@@ -2,18 +2,18 @@ package org.centrexcursionistalcoi.app.notifications.email
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import jakarta.activation.DataHandler
+import jakarta.mail.Authenticator
+import jakarta.mail.PasswordAuthentication
+import jakarta.mail.Session
+import jakarta.mail.Transport
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.util.ByteArrayDataSource
 import java.util.Date
 import java.util.Properties
-import javax.activation.DataHandler
-import javax.mail.Authenticator
-import javax.mail.PasswordAuthentication
-import javax.mail.Session
-import javax.mail.Transport
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeBodyPart
-import javax.mail.internet.MimeMessage
-import javax.mail.internet.MimeMultipart
-import javax.mail.util.ByteArrayDataSource
 import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
@@ -23,10 +23,11 @@ import org.slf4j.LoggerFactory
 object SmtpProvider : EmailProvider {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    override val isConfigured: Boolean get() = NotificationsConfig.smtpHost != null &&
-        NotificationsConfig.smtpPort != null &&
-        NotificationsConfig.smtpUsername != null &&
-        NotificationsConfig.smtpPassword != null
+    override val isConfigured: Boolean
+        get() = NotificationsConfig.smtpHost != null &&
+                NotificationsConfig.smtpPort != null &&
+                NotificationsConfig.smtpUsername != null &&
+                NotificationsConfig.smtpPassword != null
 
     /**
      * Sends an email using SMTP, with the credentials configured in [NotificationsConfig].

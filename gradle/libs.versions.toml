@@ -26,7 +26,7 @@ filekit = "0.12.0"
 firebase-admin = "9.7.0"
 gms = "4.4.4"
 h2 = "2.4.240"
-javax-mail = "1.6.2"
+jakarta-mail = "2.0.2"
 km-logging = "2.1.0"
 kmm-notifier = "1.6.1"
 kmm-permission = "0.15.0"
@@ -101,7 +101,7 @@ filekit-coil = { module = "io.github.vinceglb:filekit-coil", version.ref = "file
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
-javax-mail = { module = "com.sun.mail:javax.mail", version.ref = "javax-mail" }
+jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakarta-mail" }
 kmm-notifier = { module = "io.github.mirzemehdi:kmpnotifier", version.ref = "kmm-notifier" }
 kmm-permission = { module = "tech.kotlinlang:permission", version.ref = "kmm-permission" }
 kmm-settings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "kmm-settings" }

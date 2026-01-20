@@ -7,11 +7,13 @@ import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import javax.mail.Message
-import javax.mail.Transport
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
-import javax.mail.util.ByteArrayDataSource
+import jakarta.mail.Message
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.Transport
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.util.ByteArrayDataSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -109,7 +111,7 @@ class TestSmtpProvider {
 
             // Body and attachment
             val content = sent.content
-            if (content is javax.mail.Multipart) {
+            if (content is Multipart) {
                 // First part should be the HTML body
                 val bodyPart = content.getBodyPart(0)
                 val bodyContent = bodyPart.content.toString()
@@ -118,7 +120,7 @@ class TestSmtpProvider {
                 // Second part should be the attachment
                 val attachmentPart = content.getBodyPart(1)
                 assertEquals("greeting.txt", attachmentPart.fileName)
-                assertEquals(javax.mail.Part.ATTACHMENT, attachmentPart.disposition)
+                assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
 
                 val ds = attachmentPart.dataHandler.dataSource
                 // Try to read bytes if it's a ByteArrayDataSource
