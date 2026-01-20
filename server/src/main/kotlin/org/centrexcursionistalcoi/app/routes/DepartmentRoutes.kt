@@ -129,7 +129,7 @@ fun Route.departmentsRoutes() {
                 call.respondText("You are already a member of this department.", status = HttpStatusCode.Conflict)
             }
         } else {
-            val confirmed = session.hasPermission( Permissions.Department.MANAGE_REQUESTS(department.id.value)) // Auto-confirm if the user has the manage permission
+            val confirmed = session.hasPermission(Permissions.Department.MANAGE_REQUESTS(department.id.value)) // Auto-confirm if the user has the manage permission
 
             Database {
                 DepartmentMemberEntity.new {
