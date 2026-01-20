@@ -418,4 +418,87 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         val entity = Database { DepartmentMemberEntity.findById(context.dibResult.id) }
         assertNull(entity)
     }
+
+    // New tests for the deny endpoint
+    @Test
+    fun test_deny_notAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    @Test
+    fun test_deny_malformedDepartmentId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/abc/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_deny_departmentNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_deny_malformedRequestId() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/abc").apply {
+            assertStatusCode(HttpStatusCode.BadRequest)
+        }
+    }
+
+    @Test
+    fun test_deny_requestNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_deny_correct() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val mockDepartment = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userSub = FakeUser.provideEntity().id
+                department = mockDepartment
+                confirmed = false
+            }
+        }
+    ) {
+        client.post("/departments/$departmentId/deny/$joinRequestId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        val entity = Database { DepartmentMemberEntity.findById(joinRequestId) }
+        assertNull(entity)
+    }
 }
