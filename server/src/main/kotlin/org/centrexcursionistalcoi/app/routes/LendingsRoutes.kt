@@ -118,20 +118,24 @@ fun checkLendingDepartmentPermissions(session: UserSession, lending: LendingEnti
     }
 
     // Check each item's department
-    val items = Database { lending.items.toList() }
-    for (item in items) {
-        val itemType = Database { item.type }
-        val department = Database { itemType.department }
-
+    val departmentIds = Database {
+        lending.items.map { item ->
+            // Extract primitive department ID (or null) inside a single transaction
+            val itemType = item.type
+            val department = itemType.department
+            department?.id?.value
+        }
+    }
+    for (departmentId in departmentIds) {
         val hasPermission = if (isGiving) {
-            if (department != null) {
-                session.hasPermission(Permissions.Lending.GIVE_BY_DEPARTMENT(department.id.value))
+            if (departmentId != null) {
+                session.hasPermission(Permissions.Lending.GIVE_BY_DEPARTMENT(departmentId))
             } else {
                 session.hasPermission(Permissions.Lending.GIVE_NO_DEPARTMENT)
             }
         } else {
-            if (department != null) {
-                session.hasPermission(Permissions.Lending.RECEIVE_BY_DEPARTMENT(department.id.value))
+            if (departmentId != null) {
+                session.hasPermission(Permissions.Lending.RECEIVE_BY_DEPARTMENT(departmentId))
             } else {
                 session.hasPermission(Permissions.Lending.RECEIVE_NO_DEPARTMENT)
             }
