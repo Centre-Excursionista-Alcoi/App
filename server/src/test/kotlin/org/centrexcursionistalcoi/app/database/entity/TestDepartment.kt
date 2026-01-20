@@ -76,7 +76,7 @@ class TestDepartment {
                     userSub = FakeUser2.SUB,
                     departmentId = departmentId.toKotlinUuid(),
                     confirmed = false,
-                    isManager = true,
+                    isManager = false,
                 )
             )
         )
