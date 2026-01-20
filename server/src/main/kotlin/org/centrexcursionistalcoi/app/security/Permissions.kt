@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.exception.UserNotFoundException
+import org.centrexcursionistalcoi.app.security.ParametrizedPermission.Companion.parametrized
 import org.jetbrains.annotations.VisibleForTesting
 
 object Permissions {
@@ -39,17 +41,21 @@ object Permissions {
             return false
         }
 
-        // Admin users have all permissions
-        if (user.isAdmin()) {
+        // Check whether the user has the permission
+        return hasPermission(permission, user.groups)
+    }
+
+    fun hasPermission(permission: String, groups: List<String>): Boolean {
+        if (groups.contains(ADMIN_GROUP_NAME)) {
             return true
         }
 
         // Check if user has the specific permission (is in the group)
-        if (user.groups.contains(permission)) {
+        if (groups.contains(permission)) {
             return true
         }
 
-        for (group in user.groups) {
+        for (group in groups) {
             // Check if user has wildcard permission: replace '*' with regex '.*', and '.' with '\.' (escape dot)
             val groupRegex = Regex("^" + group.replace(".", "\\.").replace("*", ".*") + "$")
             if (groupRegex.matches(permission)) {
@@ -59,5 +65,13 @@ object Permissions {
 
         // Permission not found
         return false
+    }
+
+    object Department {
+        /** Allows kicking any user from the department. */
+        val KICK = "department.*.kick".parametrized()
+
+        /** Allows managing join requests from a user for a department. */
+        val MANAGE_REQUESTS = "department.*.manage_requests".parametrized()
     }
 }

@@ -1,16 +1,23 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.util.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
+import io.ktor.server.response.header
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.sessions.SessionTransportTransformerEncrypt
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.get
+import io.ktor.server.sessions.sessions
+import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.security.Permissions
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 // TODO: Set in environment variables and load from there
@@ -71,7 +78,15 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
         }
     }
 
+    @Deprecated("Use proper permissions for each action", ReplaceWith("hasPermission(PERMISSION_NAME)"))
     fun isAdmin(): Boolean = groups.contains(ADMIN_GROUP_NAME)
+
+    /**
+     * Checks if the user has the specified permission.
+     * @param permission The permission to check
+     * @return `true` if the user has the permission, `false` otherwise
+     */
+    fun hasPermission(permission: String): Boolean = Permissions.hasPermission(permission, groups)
 
     /**
      * Gets the [UserReferenceEntity] associated with this session user's sub.
