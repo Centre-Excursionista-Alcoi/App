@@ -82,4 +82,5 @@ android {
 
 dependencies {
     implementation(projects.composeApp)
+    coreLibraryDesugaring(libs.android.desugaring)
 }
