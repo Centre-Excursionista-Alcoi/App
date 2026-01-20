@@ -36,22 +36,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.inventory_item_create
-import cea_app.composeapp.generated.resources.inventory_item_nfc_id
-import cea_app.composeapp.generated.resources.inventory_item_variation
-import cea_app.composeapp.generated.resources.management_inventory_item_type_categories
-import cea_app.composeapp.generated.resources.management_inventory_item_type_create
-import cea_app.composeapp.generated.resources.management_inventory_item_type_department
-import cea_app.composeapp.generated.resources.management_inventory_item_type_description
-import cea_app.composeapp.generated.resources.management_inventory_item_type_display_name
-import cea_app.composeapp.generated.resources.management_inventory_item_type_identifiers
-import cea_app.composeapp.generated.resources.management_no_item_types
-import cea_app.composeapp.generated.resources.none
-import cea_app.composeapp.generated.resources.scanner_open
-import cea_app.composeapp.generated.resources.submit
+import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.data.Department
@@ -60,6 +48,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemInformationDialog
@@ -74,7 +63,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormF
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.stringResource
-import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -108,6 +96,7 @@ fun InventoryItemTypesListView(
         }
     }
     LaunchedEffect(Unit) {
+        if (PlatformNFC.isNotSupported) return@LaunchedEffect
         while (true) {
             val payload = PlatformNFC.readNFC() ?: continue
             log.d { "NFC tag read: $payload" }
