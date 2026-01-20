@@ -1,14 +1,22 @@
 package org.centrexcursionistalcoi.app.integration
 
-import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.cookies.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
+import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
+import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,7 +33,11 @@ import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -218,7 +230,9 @@ object CEA : PeriodicWorker(period = 1.days) {
                 append("wp-submit", "Entra")
                 append("redirect_to", "https://centrexcursionistalcoi.org/wp-admin/testcookie=1")
             },
-        )
+        ) {
+            header(HttpHeaders.Referrer, "https://centrexcursionistalcoi.org/wp-login.php")
+        }
         if (loginResponse.status == HttpStatusCode.Found) {
             logger.debug("Logged in to CEA website successfully.")
         } else {

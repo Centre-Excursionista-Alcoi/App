@@ -13,7 +13,7 @@ object SyncEventBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         val eventId = input[EXTRA_EVENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing event ID")
 
-        val event = EventsRemoteRepository.get(eventId, progressNotifier)
+        val event = EventsRemoteRepository.get(eventId, progressNotifier, ignoreIfModifiedSince = true)
             ?: return SyncResult.Failure("Event with ID $eventId not found on server")
         EventsRepository.insertOrUpdate(event)
 

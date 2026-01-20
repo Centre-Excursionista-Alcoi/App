@@ -5,13 +5,13 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.20</string>
+	<string>2.0.21</string>
 	<key>CFBundleURLSchemes</key>
 	<array>
 		<string>cea</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>380</string>
+	<string>404</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

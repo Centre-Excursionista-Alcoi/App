@@ -1,10 +1,10 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.util.Calendar
+import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
-import java.util.Calendar
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.buildkonfig)
@@ -60,13 +60,13 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.windowSizeClass)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.components.uiToolingPreview)
 
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -174,7 +174,6 @@ kotlin {
         androidMain {
             dependsOn(phonesMain)
             dependencies {
-                implementation(compose.preview)
                 implementation(libs.androidx.appcompat)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.ktor.client.android)
@@ -257,6 +256,13 @@ sqldelight {
             schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
             verifyMigrations.set(true)
         }
+    }
+}
+
+project.gradle.taskGraph.whenReady {
+    // Disable verification of migrations because the tasks just gets frozen
+    tasks.named("verifyCommonMainDatabaseMigration") {
+        enabled = false
     }
 }
 

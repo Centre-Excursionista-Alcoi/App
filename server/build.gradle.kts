@@ -122,6 +122,9 @@ dependencies {
     implementation(libs.telegram.bot)
     implementation(libs.retrofit.core)
 
+    // Email sending
+    implementation(libs.jakarta.mail)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)

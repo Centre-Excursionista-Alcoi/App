@@ -1,10 +1,10 @@
-name: Server Tests
+name: App Tests
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/test-server.yml'
-      - 'server/**'
+      - '.github/workflows/test-app.yml'
+      - 'composeApp/**'
       - '*.gradle.kts'
       - '*.properties'
       - 'gradle/**'
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   run_tests:
-    name: Run server tests
+    name: Run app tests
     runs-on: ubuntu-latest
 
     steps:
@@ -46,27 +46,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Pre-pull PostgreSQL image
-        run: docker pull postgres:17
-
-      # See: https://github.com/testcontainers/testcontainers-java/issues/11212
-      - name: Set Docker API version
-        run: echo api.version=1.44 >> ~/.docker-java.properties
-
-      - name: Run Server Tests
-        id: server_tests
+      - name: Decode google-services.json
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
+          base64 --decode google-services.txt > composeApp/google-services.json
+      - name: Verify google-services.json integrity
         env:
-          TESTCONTAINERS_RYUK_DISABLED: true
-          TESTCONTAINERS_CHECKS_DISABLE: true
-          TESTCONTAINERS_HOST_OVERRIDE: localhost
-        run: ./gradlew :server:check
+          KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
+        run: |
+          cd composeApp
+          echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
+
+      - name: Run App Tests
+        id: app_tests
+        run: ./gradlew :composeApp:check
 
       - name: Upload test results (on failure)
-        if: ${{ steps.server_tests.outcome == 'failure' }}
+        if: ${{ steps.app_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v6
         with:
-          name: server-test-results
+          name: app-test-results
           retention-days: 3
           path: |
-            server/build/test-results
-            server/build/reports/tests
+            composeApp/build/test-results
+            composeApp/build/reports/tests

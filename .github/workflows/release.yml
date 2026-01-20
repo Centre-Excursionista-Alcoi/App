@@ -35,11 +35,98 @@ jobs:
           file_pattern: 'version.properties composeApp/composeApp.podspec iosApp/iosApp.xcodeproj/project.pbxproj iosApp/iosApp/Info.plist'
           branch: master
 
+  shared-tests:
+    name: Run shared tests
+    runs-on: ubuntu-latest
+
+    needs: [ update-version-name ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      - name: Run Shared Tests
+        id: shared_tests
+        run: ./gradlew :shared:check
+
+      - name: Upload test results (on failure)
+        if: ${{ steps.shared_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: shared-test-results
+          retention-days: 3
+          path: |
+            shared/build/test-results
+            shared/build/reports/tests
+
+  app-tests:
+    name: Run app tests
+    runs-on: ubuntu-latest
+
+    needs: [ update-version-name ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      - name: Run App Tests
+        id: app_tests
+        run: ./gradlew :composeApp:check
+
+      - name: Decode google-services.json
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
+          base64 --decode google-services.txt > composeApp/google-services.json
+      - name: Verify google-services.json integrity
+        env:
+          KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
+        run: |
+          cd composeApp
+          echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
+
+      - name: Upload test results (on failure)
+        if: ${{ steps.app_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-test-results
+          retention-days: 3
+          path: |
+            composeApp/build/test-results
+            composeApp/build/reports/tests
+
   build-android:
     name: Build for Android
     runs-on: ubuntu-latest
 
-    needs: [update-version-name]
+    needs: [shared-tests, app-tests]
 
     steps:
       - name: Checkout code
@@ -278,7 +365,7 @@ jobs:
     name: Build for iOS
     runs-on: macos-26
 
-    needs: [update-version-name]
+    needs: [shared-tests, app-tests]
 
     if: false  # Temporarily disabled due to issues with GoogleService-Info.plist not being found on runtime
 
@@ -486,7 +573,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, ubuntu-22.04, windows-latest]
 
-    needs: [update-version-name]
+    needs: [shared-tests, app-tests]
 
     steps:
       - uses: actions/checkout@v6
@@ -555,6 +642,8 @@ jobs:
     name: Run server tests
     runs-on: ubuntu-latest
 
+    needs: [ update-version-name ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -590,7 +679,7 @@ jobs:
     name: Build and Publish Server Docker image
     runs-on: ubuntu-latest
 
-    needs: server-tests
+    needs: [server-tests, shared-tests]
 
     steps:
       - name: Checkout code

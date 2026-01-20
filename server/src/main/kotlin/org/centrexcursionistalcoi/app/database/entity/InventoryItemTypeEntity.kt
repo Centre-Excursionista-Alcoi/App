@@ -27,6 +27,8 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
     var description by InventoryItemTypes.description
     var categories by InventoryItemTypes.categories
 
+    var weight by InventoryItemTypes.weight
+
     var department by DepartmentEntity optionalReferencedOn InventoryItemTypes.department
 
     override var image by FileEntity optionalReferencedOn InventoryItemTypes.image
@@ -37,6 +39,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
         displayName = displayName,
         description = description,
         categories = categories,
+        weight = weight,
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid()
     )
@@ -46,6 +49,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
         request.displayName?.let { displayName = it }
         request.description?.let { description = it.takeUnless { value -> value.isBlank() } }
         request.categories?.let { categories = it }
+        request.weight?.let { weight = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         updateOrSetImage(request.image)
     }

@@ -15,17 +15,18 @@ androidx-navigation = "2.9.1"
 androidx-work = "2.11.0"
 buildkonfig = "0.17.1"
 bcrypt = "0.10.2"
-calendar ="2.9.0"
+calendar ="2.10.0"
 coil = "3.3.0"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
-composeMultiplatform = "1.9.3"
-compose-material3 = "1.10.0-alpha05"
+composeMultiplatform = "1.10.0"
+compose-material3 = "1.11.0-alpha01"
 compose-windowSizeClass = "1.9.0"
 exposed = "1.0.0-rc-4"
 filekit = "0.12.0"
 firebase-admin = "9.7.0"
 gms = "4.4.4"
 h2 = "2.4.240"
+jakarta-mail = "2.0.2"
 km-logging = "2.1.0"
 kmm-notifier = "1.6.1"
 kmm-permission = "0.15.0"
@@ -43,13 +44,13 @@ kscan = "0.5.0"
 ksoup = "0.2.5"
 ktor = "3.3.3"
 localina = "1.0.0-alpha3"
-logback = "1.5.23"
+logback = "1.5.25"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
 markdown-renderer = "0.38.1"
 mockk = "1.14.7"
 pdfbox = "3.0.6"
-postgresql = "42.7.8"
+postgresql = "42.7.9"
 qrose = "1.0.1"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
@@ -81,7 +82,12 @@ androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 calendar = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "calendar" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+compose-components-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-windowSizeClass" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
@@ -95,6 +101,7 @@ filekit-coil = { module = "io.github.vinceglb:filekit-coil", version.ref = "file
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakarta-mail" }
 kmm-notifier = { module = "io.github.mirzemehdi:kmpnotifier", version.ref = "kmm-notifier" }
 kmm-permission = { module = "tech.kotlinlang:permission", version.ref = "kmm-permission" }
 kmm-settings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "kmm-settings" }

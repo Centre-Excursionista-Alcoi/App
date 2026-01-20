@@ -8,30 +8,62 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.EventFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2Filled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.InventoryFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Newsmode
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NewsmodeFilled
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage.Companion.forIndex
-import org.centrexcursionistalcoi.app.ui.page.main.management.*
+import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
-import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
@@ -40,11 +72,11 @@ const val MANAGEMENT_PAGE_POSTS = 3
 const val MANAGEMENT_PAGE_EVENTS = 4
 const val MANAGEMENT_PAGE_INVENTORY = 5
 
-private sealed class ManagementPage(
+private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
     private val key: String,
     val tabData: @Composable (badgeText: String?) -> TabData,
 ) {
-    object Lendings : ManagementPage(
+    object Lendings : ManagementPage<Uuid, ReferencedLending>(
         key = "lendings",
         tabData = {
             TabData.fromResources(
@@ -56,7 +88,7 @@ private sealed class ManagementPage(
         }
     )
 
-    object Departments : ManagementPage(
+    object Departments : ManagementPage<Uuid, Department>(
         key = "departments",
         tabData = {
             TabData.fromResources(
@@ -66,9 +98,24 @@ private sealed class ManagementPage(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<Department>?): Boolean {
+            // Admins can always see the page
+            if (profile.isAdmin) return true
 
-    object Users : ManagementPage(
+            // If user is not admin, check whether they are manager of at least one department
+            val isManager = items.orEmpty().any { department ->
+                department.members.orEmpty()
+                    // Find the member info for the current user
+                    .find { it.userSub == profile.sub }
+                    // Check if that member is a manager
+                    ?.isManager == true
+            }
+            return isManager
+        }
+    }
+
+    object Users : ManagementPage<String, UserData>(
         key = "users",
         tabData = {
             TabData.fromResources(
@@ -80,7 +127,7 @@ private sealed class ManagementPage(
         }
     )
 
-    object Posts : ManagementPage(
+    object Posts : ManagementPage<Uuid, ReferencedPost>(
         key = "posts",
         tabData = {
             TabData.fromResources(
@@ -92,7 +139,7 @@ private sealed class ManagementPage(
         }
     )
 
-    object Events : ManagementPage(
+    object Events : ManagementPage<Uuid, ReferencedEvent>(
         key = "events",
         tabData = {
             TabData.fromResources(
@@ -104,7 +151,7 @@ private sealed class ManagementPage(
         }
     )
 
-    object Inventory : ManagementPage(
+    object Inventory : ManagementPage<Uuid, ReferencedInventoryItemType>(
         key = "inventory",
         tabData = {
             TabData.fromResources(
@@ -119,7 +166,7 @@ private sealed class ManagementPage(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ManagementPage) return false
+        if (other !is ManagementPage<*, *>) return false
         if (key != other.key) return false
         return true
     }
@@ -128,18 +175,30 @@ private sealed class ManagementPage(
         return key.hashCode()
     }
 
+    open fun shouldShow(profile: ProfileResponse, items: List<EntityType>?): Boolean = profile.isAdmin
+
 
     companion object {
-        val all = listOfNotNull(
-            Lendings,
-            Departments,
-            Users,
-            Posts,
-            Events.takeIf { EventsRemoteRepository.endpointSupported() },
-            Inventory,
-        )
+        fun allFiltered(
+            profile: ProfileResponse,
+            lendings: List<ReferencedLending>?,
+            departments: List<Department>?,
+            users: List<UserData>?,
+            posts: List<ReferencedPost>?,
+            events: List<ReferencedEvent>?,
+            inventoryItemTypes: List<ReferencedInventoryItemType>?,
+        ): List<ManagementPage<*, *>> {
+            return listOfNotNull(
+                Lendings.takeIf { Lendings.shouldShow(profile, lendings) },
+                Departments.takeIf { Departments.shouldShow(profile, departments) },
+                Users.takeIf { Users.shouldShow(profile, users) },
+                Posts.takeIf { Posts.shouldShow(profile, posts) },
+                Events.takeIf { EventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
+                Inventory.takeIf { Inventory.shouldShow(profile, inventoryItemTypes) },
+            )
+        }
 
-        fun List<ManagementPage>.forIndex(index: Int): ManagementPage {
+        fun List<ManagementPage<*, *>>.forIndex(index: Int): ManagementPage<*, *> {
             return this[index]
         }
     }
@@ -156,6 +215,8 @@ fun ManagementPage(
      * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_EVENTS], [MANAGEMENT_PAGE_INVENTORY].
      */
     selectedItem: Pair<Int, Uuid?>?,
+
+    profile: ProfileResponse,
 
     lendings: List<ReferencedLending>?,
     onGiveRequested: (ReferencedLending) -> Unit,
@@ -182,6 +243,7 @@ fun ManagementPage(
         windowSizeClass = windowSizeClass,
         snackbarHostState = snackbarHostState,
         selectedItem = selectedItem,
+        profile = profile,
         lendings = lendings,
         onConfirmLendingRequest = model::confirmLending,
         onSkipMemoryRequest = model::skipLendingMemory,
@@ -224,6 +286,8 @@ private fun ManagementPage(
 
     selectedItem: Pair<Int, Uuid?>?,
 
+    profile: ProfileResponse,
+
     lendings: List<ReferencedLending>?,
     onConfirmLendingRequest: (ReferencedLending) -> Job,
     onSkipMemoryRequest: (ReferencedLending) -> Job,
@@ -245,8 +309,8 @@ private fun ManagementPage(
 
     inventoryItemTypes: List<ReferencedInventoryItemType>?,
     inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
+    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
     onDeleteInventoryItemType: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
@@ -265,7 +329,9 @@ private fun ManagementPage(
     onDeleteEvent: (ReferencedEvent) -> Job,
 ) {
     val scope = rememberCoroutineScope()
-    val pages = remember { ManagementPage.all }
+    val pages = remember(profile, lendings, departments, users, posts, events, inventoryItemTypes) {
+        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes)
+    }
     val pagerState = rememberPagerState { pages.size }
 
     val navigationBarVisibility = LocalNavigationBarVisibility.current ?: MutableStateFlow(true)
@@ -318,6 +384,7 @@ private fun ManagementPage(
 
             ManagementPage.Departments -> DepartmentsListView(
                 windowSizeClass,
+                profile,
                 users,
                 departments,
                 onCreateDepartment,

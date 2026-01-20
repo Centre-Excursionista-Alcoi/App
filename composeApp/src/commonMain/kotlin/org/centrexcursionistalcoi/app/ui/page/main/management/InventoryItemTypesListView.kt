@@ -2,13 +2,33 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.data.Department
@@ -27,6 +48,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemInformationDialog
@@ -41,7 +63,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormF
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.stringResource
-import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -54,8 +75,8 @@ fun InventoryItemTypesListView(
     allCategories: Set<String>,
     departments: List<Department>?,
     items: List<ReferencedInventoryItem>?,
-    onCreate: (displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
-    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, department: Department?, image: PlatformFile?) -> Job,
+    onCreate: (displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
+    onUpdate: (id: Uuid, displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
     onDelete: (ReferencedInventoryItemType) -> Job,
     onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
@@ -75,6 +96,7 @@ fun InventoryItemTypesListView(
         }
     }
     LaunchedEffect(Unit) {
+        if (PlatformNFC.isNotSupported) return@LaunchedEffect
         while (true) {
             val payload = PlatformNFC.readNFC() ?: continue
             log.d { "NFC tag read: $payload" }
@@ -172,12 +194,14 @@ fun InventoryItemTypesListView(
             var categories by remember { mutableStateOf(type?.categories ?: emptyList()) }
             var displayName by remember { mutableStateOf(type?.displayName ?: "") }
             var description by remember { mutableStateOf(type?.description ?: "") }
+            var weight by remember { mutableStateOf(type?.weight?.toString() ?: "") }
             var department by remember { mutableStateOf<Department?>(type?.department) }
 
             val isDirty = if (type == null) true else
                 displayName != type.displayName ||
                         description != type.description ||
                         categories != type.categories ||
+                        weight != type.weight?.toString() ||
                         department != type.department ||
                         image != null
 
@@ -246,9 +270,9 @@ fun InventoryItemTypesListView(
                 onClick = {
                     isLoading = true
                     val job = if (type == null) {
-                        onCreate(displayName, description, categories, department, image)
+                        onCreate(displayName, description, categories, weight, department, image)
                     } else {
-                        onUpdate(type.id, displayName, description, categories, department, image)
+                        onUpdate(type.id, displayName, description, categories, weight, department, image)
                     }
                     job.invokeOnCompletion {
                         isLoading = false

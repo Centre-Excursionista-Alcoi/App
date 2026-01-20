@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.exception.InventoryItemTypeNotFoundException
 import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
+import kotlin.uuid.Uuid
 
 @Serializable
 data class ReferencedInventoryItemType(
@@ -11,6 +11,7 @@ data class ReferencedInventoryItemType(
     val displayName: String,
     val description: String?,
     val categories: List<String>?,
+    val weight: Double?,
     val department: Department?,
     @Serializable(NullableUUIDSerializer::class) override val image: Uuid?,
 
@@ -28,6 +29,7 @@ data class ReferencedInventoryItemType(
             displayName = this.displayName,
             description = this.description,
             categories = this.categories,
+            weight = this.weight,
             department = this.department?.let { deptId -> departments.firstOrNull { it.id == deptId } },
             image = this.image,
             referencedEntity = this

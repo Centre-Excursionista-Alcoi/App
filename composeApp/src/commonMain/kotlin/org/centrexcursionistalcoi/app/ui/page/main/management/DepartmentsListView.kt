@@ -1,15 +1,29 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -17,6 +31,7 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -27,12 +42,12 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
 import org.jetbrains.compose.resources.stringResource
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DepartmentsListView(
     windowSizeClass: WindowSizeClass,
+    profile: ProfileResponse,
     users: List<UserData>?,
     departments: List<Department>?,
     onCreate: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
@@ -41,6 +56,18 @@ fun DepartmentsListView(
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
 ) {
+    val filteredDepartments = remember(profile, departments) {
+        if (profile.isAdmin) {
+            // Admin can see all departments
+            departments
+        } else {
+            // Non-admin can see only the departments they are managing
+            departments?.filter { department ->
+                department.members?.any { it.userSub == profile.sub && it.isManager } == true
+            }
+        }
+    }
+
     var deleting by remember { mutableStateOf<Department?>(null) }
     deleting?.let { department ->
         DeleteDialog(
@@ -53,7 +80,7 @@ fun DepartmentsListView(
 
     ListView(
         windowSizeClass = windowSizeClass,
-        items = departments,
+        items = filteredDepartments,
         itemIdProvider = { it.id },
         itemDisplayName = { it.displayName },
         itemLeadingContent = { department ->
@@ -64,6 +91,12 @@ fun DepartmentsListView(
                 contentDescription = department.displayName,
                 modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
             )
+        },
+        itemTrailingContent = { department ->
+            val unconfirmedRequests = department.members?.count { !it.confirmed } ?: 0
+            if (unconfirmedRequests > 0) {
+                Badge { Text(unconfirmedRequests.toString()) }
+            }
         },
         emptyItemsText = stringResource(Res.string.management_no_departments),
         itemToolbarActions = {
@@ -127,6 +160,8 @@ fun DepartmentsListView(
             }
         },
     ) { department ->
+        val members = remember(department) { department.members.orEmpty() }
+
         if (department.image != null) {
             val image by department.rememberImageFile()
             AsyncByteImage(
@@ -142,35 +177,50 @@ fun DepartmentsListView(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        val pendingJoinRequests = remember(departments) {
-            departments
-                ?.map { it.members.orEmpty() }
-                ?.filter { members -> members.any { !it.confirmed } }
-                ?.flatten()
-                ?.filterNot { it.confirmed }
+        val pendingJoinRequests = remember(members) {
+            members
+                // Filter not confirmed requests
+                .filterNot { it.confirmed }
         }
-        if (!pendingJoinRequests.isNullOrEmpty()) {
+        if (pendingJoinRequests.isNotEmpty()) {
             Text(
                 text = stringResource(Res.string.management_other_users_join_requests),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
             )
             for (request in pendingJoinRequests) {
-                val department = remember(departments) {
-                    departments?.find { dept -> dept.members.orEmpty().any { it.id == request.id } }
-                }
                 val userData = remember(users) {
                     users?.find { it.sub == request.userSub }
-                }
-
-                department ?: continue
-                userData ?: continue
+                } ?: continue
 
                 DepartmentPendingJoinRequest(
                     userData = userData,
                     department = department,
                     onApprove = { onApproveDepartmentJoinRequest(request) },
                     onDeny = { onDenyDepartmentJoinRequest(request) },
+                )
+            }
+        }
+
+        val confirmedMembers = remember(members) {
+            members.filter { it.confirmed }
+        }
+        if (confirmedMembers.isNotEmpty()) {
+            Text(
+                text = stringResource(Res.string.management_department_members),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+            val confirmedMembersData = remember(confirmedMembers, users) {
+                confirmedMembers.mapNotNull { memberInfo ->
+                    users?.find { it.sub == memberInfo.userSub }
+                }.sortedBy { it.fullName }
+            }
+            for (userData in confirmedMembersData) {
+                Text(
+                    text = "\u2022 ${userData.fullName}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

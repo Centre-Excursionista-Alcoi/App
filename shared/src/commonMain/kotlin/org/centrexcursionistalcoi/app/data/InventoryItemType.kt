@@ -11,6 +11,7 @@ data class InventoryItemType(
     val displayName: String,
     val description: String?,
     val categories: List<String>?,
+    val weight: Double? = null,
     val department: Uuid?,
     @Serializable(NullableUUIDSerializer::class) override val image: Uuid?,
 ): Entity<Uuid>, ImageFileContainer {
@@ -29,6 +30,7 @@ data class InventoryItemType(
         "displayName" to displayName,
         "description" to description,
         "categories" to categories,
+        "weight" to weight,
         "department" to department,
         "image" to image?.let { FileReference(it) },
     )

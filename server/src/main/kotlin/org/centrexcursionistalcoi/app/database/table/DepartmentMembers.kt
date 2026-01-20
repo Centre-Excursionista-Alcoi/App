@@ -9,6 +9,7 @@ object DepartmentMembers : UUIDTable("department_members") {
     val departmentId = reference("department_id", Departments, ReferenceOption.CASCADE, ReferenceOption.RESTRICT)
 
     val confirmed = bool("confirmed").default(false)
+    val isManager = bool("is_manager").default(false)
 
     init {
         // A user can only be member of a department once

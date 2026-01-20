@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.content.*
-import io.ktor.server.routing.*
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.routing.Route
 import io.sentry.Sentry
+import java.util.UUID
+import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.Database
@@ -27,8 +30,6 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.*
-import kotlin.io.encoding.Base64
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
@@ -52,6 +53,7 @@ fun Route.inventoryRoutes() {
             var displayName: String? = null
             var description: String? = null
             var categories: List<String>? = null
+            var weight: Double? = null
             var department: UUID? = null
             val image = FileRequestData()
 
@@ -72,6 +74,7 @@ fun Route.inventoryRoutes() {
                                     null
                                 }
                             }
+                            "weight" -> weight = partData.value.toDoubleOrNull()
                             "department" -> department = partData.value.toUUIDOrNull()
                             "image" -> {
                                 image.populate(partData)
@@ -105,6 +108,7 @@ fun Route.inventoryRoutes() {
                     this.displayName = displayName
                     this.description = description
                     this.categories = categories
+                    this.weight = weight
                     this.department = deptEntity
                     this.image = imageFile
                 }
