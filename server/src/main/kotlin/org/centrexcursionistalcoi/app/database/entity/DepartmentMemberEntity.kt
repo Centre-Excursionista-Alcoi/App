@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
@@ -10,8 +12,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.*
-import kotlin.uuid.toKotlinUuid
 
 class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers) {
@@ -24,6 +24,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var department by DepartmentEntity referencedOn DepartmentMembers.departmentId
     var userSub by DepartmentMembers.userSub
     var confirmed by DepartmentMembers.confirmed
+    var isManager by DepartmentMembers.isManager
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
@@ -31,6 +32,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         userSub = userSub.value,
         departmentId = department.id.value.toKotlinUuid(),
         confirmed = confirmed,
+        isManager = isManager,
     )
 
     fun confirmedNotification() = Database {
