@@ -5,5 +5,4 @@ sealed class LoginType {
     data object USER : LoginType()
     data object ADMIN : LoginType()
     data object LENDING_USER : LoginType()
-    data class CUSTOM(val user: StubUser) : LoginType()
 }

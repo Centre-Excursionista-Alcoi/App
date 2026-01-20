@@ -22,7 +22,6 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeLendingUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.test.StubUser
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.time.Instant
 import java.time.LocalDate
@@ -37,7 +36,7 @@ abstract class ApplicationTestBase {
         mockDate: LocalDate? = null,
         mockNow: Instant? = null,
         /**
-         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER], [LoginType.ADMIN], [LoginType.LENDING_USER], or [LoginType.CUSTOM]).
+         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER], [LoginType.ADMIN], or [LoginType.LENDING_USER]).
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         disablePush: Boolean = true,
@@ -50,7 +49,7 @@ abstract class ApplicationTestBase {
         mockNow: Instant? = null,
         databaseInitBlock: (JdbcTransaction.() -> DIB)? = null,
         /**
-         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER], [LoginType.ADMIN], [LoginType.LENDING_USER], or [LoginType.CUSTOM]).
+         * Patches to apply to the user entity after creation (only applies if [shouldLogIn] is [LoginType.USER], [LoginType.ADMIN], or [LoginType.LENDING_USER]).
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         disablePush: Boolean = true,
@@ -75,7 +74,6 @@ abstract class ApplicationTestBase {
                 is LoginType.USER -> Database { FakeUser.provideEntity().also { userEntityPatches(it) } }
                 is LoginType.ADMIN -> Database { FakeAdminUser.provideEntity().also { userEntityPatches(it) } }
                 is LoginType.LENDING_USER -> Database { FakeLendingUser.provideEntity().also { userEntityPatches(it) } }
-                is LoginType.CUSTOM -> Database { shouldLogIn.user.provideEntity().also { userEntityPatches(it) } }
                 is LoginType.NONE -> {}
             }
 
@@ -126,10 +124,6 @@ abstract class ApplicationTestBase {
 
                             call.respondText("Logged in as ${fakeUser.fullName}")
                         }
-                        get("/test-login-custom") {
-                            // For custom users, we need to pass the user info through request
-                            // This will be handled by the loginAsCustomUser function
-                        }
                     }
                 }
                 val cookiesStorage = AcceptAllCookiesStorage()
@@ -150,7 +144,6 @@ abstract class ApplicationTestBase {
                     is LoginType.USER -> loginAsFakeUser()
                     is LoginType.ADMIN -> loginAsFakeAdminUser()
                     is LoginType.LENDING_USER -> loginAsFakeLendingUser()
-                    is LoginType.CUSTOM -> loginAsCustomUser(shouldLogIn.user)
                     is LoginType.NONE -> {}
                 }
 
@@ -199,11 +192,5 @@ abstract class ApplicationTestBase {
             "Session cookie not found in response"
         )
         System.err.println("Logged in successfully!")
-    }
-
-    suspend fun ApplicationTestBuilder.loginAsCustomUser(user: StubUser) {
-        // For custom users, we need to add a dynamic route handler
-        // For now, we'll use a simpler approach with direct session setting
-        throw UnsupportedOperationException("Custom user login is not yet fully implemented. Use predefined user types.")
     }
 }
