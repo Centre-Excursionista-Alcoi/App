@@ -15,7 +15,7 @@ object Email {
 
     fun launch(block: suspend () -> Unit): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            if (provider != null) return@launch
+            if (provider == null) return@launch
             block()
         }
     }
