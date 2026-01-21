@@ -103,7 +103,8 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
         return true
     }
     // If the user is the owner of the lending, they can manage it
-    if (lending.userSub.sub.value == sub) {
+    val lendingSub = Database { lending.userSub.sub.value }
+    if (lendingSub == sub) {
         return true
     }
 
