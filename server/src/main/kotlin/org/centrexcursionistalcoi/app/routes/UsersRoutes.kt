@@ -78,7 +78,8 @@ fun Route.usersRoutes() {
                 // Else, get only users in the departments they manage
                 // Since if reached this point the user is at least inside a department, we are sure that themself is included, so no need to check
                 val userReferences = managingDepartments
-                    .flatMap { it.confirmedMembers }
+                    // Select members, not just confirmed members, because we need the member data in order to display requests to the user
+                    .flatMap { it.members }
                     .map { it.userReference }
                     .distinctBy { it.sub }
                 val userSubs = userReferences.map { it.sub.value }
