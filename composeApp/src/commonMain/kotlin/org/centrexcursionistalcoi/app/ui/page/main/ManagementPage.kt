@@ -86,7 +86,23 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedLending>?): Boolean {
+            // Admins can always see the page
+            if (profile.isAdmin) return true
+
+            // If user is not an admin, check whether they are manager of at least one department among all the lendings
+            val isManager = items.orEmpty().any { lending ->
+                lending.items.any { item ->
+                    item.type.department
+                        ?.members
+                        .orEmpty()
+                        .any { it.userSub == profile.sub && it.confirmed && it.isManager }
+                }
+            }
+            return isManager
+        }
+    }
 
     object Departments : ManagementPage<Uuid, Department>(
         key = "departments",
