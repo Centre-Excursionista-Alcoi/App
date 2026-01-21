@@ -40,7 +40,6 @@ import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
-import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -171,11 +170,7 @@ fun DepartmentsListView(
             )
         }
 
-        ReadOnlyFormField(
-            value = department.displayName,
-            label = stringResource(Res.string.form_display_name),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        Spacer(Modifier.height(12.dp))
 
         val pendingJoinRequests = remember(members) {
             members
