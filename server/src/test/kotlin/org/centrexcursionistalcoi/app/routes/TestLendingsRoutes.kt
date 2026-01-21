@@ -60,9 +60,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
     private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUUID()
+    private val exampleItemType3Id = "944d16f7-a399-4885-b7f1-5fdf4f201dbd".toUUID()
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
     private val exampleItem2Id = "e76c84a1-0d56-48d7-afa1-dbb51f585ed2".toUUID()
+    private val exampleItem3Id = "1bfe299a-c0bd-4983-b9a2-3f54d2aa301d".toUUID()
     private val exampleDepartmentId = "0b8e5869-0a3c-4d29-8c3b-93cd52405bea".toUUID()
+    private val exampleDepartment2Id = "23b7b771-5ed1-4e10-a729-58bdf95f85dd".toUUID()
 
     context(_: JdbcTransaction)
     private fun getOrCreateDepartment(id: UUID = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
@@ -627,18 +630,23 @@ class TestLendingsRoutes : ApplicationTestBase() {
             val user = FakeUser.provideEntity()
             val admin = FakeAdminUser.provideEntity()
 
-            val department = getOrCreateDepartment()
+            val department1 = getOrCreateDepartment()
+            val department2 = getOrCreateDepartment(id = exampleDepartment2Id)
             getOrCreateItem(
-                type = getOrCreateItemType(department = department)
+                type = getOrCreateItemType(department = department1)
             )
             getOrCreateItem(
                 id = exampleItem2Id,
                 type = getOrCreateItemType(exampleItemType2Id)
             )
+            getOrCreateItem(
+                id = exampleItem3Id,
+                type = getOrCreateItemType(exampleItemType3Id, department = department2)
+            )
 
             DepartmentMembers.insert {
                 it[DepartmentMembers.userSub] = user.sub
-                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.departmentId] = department1.id
                 it[DepartmentMembers.confirmed] = true
                 it[DepartmentMembers.isManager] = true
             }
@@ -680,6 +688,21 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     it[lending] = lendingEntity.id
                 }
             }
+            val adminLending3 = LendingEntity.new {
+                this.userSub = admin
+                this.from = LocalDate.of(2025, 1, 10)
+                this.to = LocalDate.of(2025, 1, 15)
+                this.notes = "Admin lending 3"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = exampleItem3Id
+                    it[lending] = lendingEntity.id
+                }
+            }
             Triple(userLending, adminLending1, adminLending2)
         }
     ) { context ->
@@ -690,7 +713,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         client.get("/inventory/lendings").apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
-                assertEquals(2, lendings.size)
+                assertEquals(3, lendings.size)
                 lendings[0].let { lending ->
                     assertEquals(userLending.id.value, lending.id.toJavaUuid())
                     assertEquals(FakeUser.SUB, lending.userSub)
@@ -699,8 +722,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     assertEquals(adminLending1.id.value, lending.id.toJavaUuid())
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
+                // this lending is included because even though it has lendings from mixed departments, one of the items doesn't have a department assigned
+                lendings[2].let { lending ->
+                    assertEquals(adminLending2.id.value, lending.id.toJavaUuid())
+                    assertEquals(FakeAdminUser.SUB, lending.userSub)
+                }
             }
-            // adminLending2 won't be listed because it has mixed items (with department and without department)
+            // adminLending3 won't be listed because it has mixed items (from two different departments)
         }
     }
 
