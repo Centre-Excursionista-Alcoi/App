@@ -13,6 +13,7 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -60,6 +61,7 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendA
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
@@ -89,6 +91,81 @@ import org.jetbrains.exposed.v1.json.contains
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
  */
 private val lendingsMutex = Mutex()
+
+/**
+ * Checks if the user is allowed to manage a lending, based on the departments the user is managing, and the department assigned to the lending.
+ *
+ * The lending department assignation is based on its items. If all of them belong to the same department, this department will be the one assigned to the lending.
+ */
+private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
+    // If the user is an admin, they can manage it
+    if (isAdmin()) {
+        return true
+    }
+    // If the user is the owner of the lending, they can manage it
+    val lendingSub = Database { lending.userSub.sub.value }
+    if (lendingSub == sub) {
+        return true
+    }
+
+    // Get a list of all the departments the user is a manager of
+    val userManagingDepartmentsIds = Database {
+        DepartmentMemberEntity.find { (DepartmentMembers.userSub eq sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
+            .map { it.department.id.value }
+    }
+    // If the list is empty, the user is not managing any department, do not allow to manage
+    if (userManagingDepartmentsIds.isEmpty()) {
+        return false
+    }
+
+    // Fetch the descriptive department of the lending
+    val lendingDepartment = Database {
+        lending.items
+            // Fetch all the departments of the items
+            .mapNotNull { it.type.department }
+            // Remove duplicates
+            .distinctBy { it.id.value }
+            // Only take it if length is equal to 1:
+            // If greater than 1: There are more than 1 departments
+            // If less than 1 (0): There are no items with departments: user cannot manage it
+            .takeIf { it.size == 1 }
+            ?.first()
+    }
+    // If the lending doesn't have an assigned department, it cannot be managed
+    if (lendingDepartment == null) {
+        return false
+    }
+    // If the department is not in the list of departments the user is managing, it cannot be managed
+    if (lendingDepartment.id.value !in userManagingDepartmentsIds) {
+        return false
+    }
+    // Finally, the user can manage it
+    return true
+}
+
+/**
+ * Processes a request for a lending by getting its id from the call parameters (`id`).
+ *
+ * If any error occurs, a response is sent to the user, and the function returns null.
+ * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so it's safe to exit the upper function.
+ */
+private suspend fun RoutingContext.lendingRequest(session: UserSession): LendingEntity? {
+    val lendingId = call.parameters["id"]?.toUUIDOrNull()
+
+    val lending = lendingId?.let { Database { LendingEntity.findById(it) } }
+    if (lending == null) {
+        // Lending was not found, cannot check for permissions, so return missing permissions
+        call.respondError(Error.PermissionRejected())
+        return null
+    }
+    // Lending was found, check if the user can manage the lending
+    if (!session.canManageLending(lending)) {
+        call.respondError(Error.PermissionRejected())
+        return null
+    }
+
+    return lending
+}
 
 fun Route.lendingsRoutes() {
     postWithLock("inventory/lendings", lendingsMutex) {
@@ -291,46 +368,15 @@ fun Route.lendingsRoutes() {
     }
     get("inventory/lendings/{id}") {
         val session = getUserSessionOrFail() ?: return@get
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            call.respondError(Error.MalformedId())
-            return@get
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@get
-        }
-
-        if (!session.isAdmin()) {
-            val lendingUserSub = Database { lending.userSub.sub.value }
-            if (lendingUserSub != session.sub) {
-                // Return not found to avoid leaking existence of the lending
-                call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-                return@get
-            }
-        }
+        val lending = lendingRequest(session) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
         }
     }
     delete("inventory/lendings/{id}") {
-        assertAdmin() ?: return@delete
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            call.respondError(Error.MalformedId())
-            return@delete
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@delete
-        }
+        val session = getUserSessionOrFail() ?: return@delete
+        val lending = lendingRequest(session) ?: return@delete
 
         Database { lending.delete() }
 
@@ -371,19 +417,8 @@ fun Route.lendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/confirm") {
-        assertAdmin() ?: return@post
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            call.respondError(Error.MalformedId())
-            return@post
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@post
-        }
+        val session = getUserSessionOrFail() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
 
         Database {
             lending.confirmed = true
@@ -400,19 +435,8 @@ fun Route.lendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/pickup") {
-        val session = assertAdmin() ?: return@post
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            call.respondError(Error.MalformedId())
-            return@post
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@post
-        }
+        val session = getUserSessionOrFail() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
 
         if (!lending.confirmed) {
             call.respondError(Error.LendingNotConfirmed())
@@ -458,19 +482,9 @@ fun Route.lendingsRoutes() {
     }
     post("inventory/lendings/{id}/return") {
         assertContentType(ContentType.Application.Json) ?: return@post
-        val session = assertAdmin() ?: return@post
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            call.respondError(Error.MalformedId())
-            return@post
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            call.respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@post
-        }
+        val session = getUserSessionOrFail() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
+        val lendingId = lending.id.value
 
         if (!lending.taken) {
             call.respondError(Error.LendingNotTaken(lendingId.toKotlinUuid()))

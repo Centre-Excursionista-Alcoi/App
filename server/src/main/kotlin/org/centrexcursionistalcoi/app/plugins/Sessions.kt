@@ -1,16 +1,23 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.util.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
+import io.ktor.server.response.header
+import io.ktor.server.routing.RoutingContext
+import io.ktor.server.sessions.SessionTransportTransformerEncrypt
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.get
+import io.ktor.server.sessions.sessions
+import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 // TODO: Set in environment variables and load from there
@@ -43,14 +50,26 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
             )
         } ?: error("User with email $email not found")
 
+        /**
+         * Gets the [UserSession] from the call, or `null` if it doesn't exist.
+         *
+         * Also appends a header (`CEA-LoggedIn`) to the response indicating whether the user is logged in or not.
+         */
         fun ApplicationCall.getUserSession(): UserSession? {
             val session = sessions.get<UserSession>()
             response.header("CEA-LoggedIn", (session != null).toString())
             return session
         }
 
+        /**
+         * Gets the [UserSession] from the call, or `null` if it doesn't exist.
+         */
         fun RoutingContext.getUserSession(): UserSession? = call.getUserSession()
 
+        /**
+         * Gets the [UserSession] from the call, or responds with an error ([Error.NotLoggedIn]) if it doesn't exist.
+         * @see getUserSession
+         */
         suspend fun RoutingContext.getUserSessionOrFail(): UserSession? {
             val session = getUserSession()
             if (session == null) {
