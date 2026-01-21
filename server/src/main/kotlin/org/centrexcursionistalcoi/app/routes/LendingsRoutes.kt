@@ -149,9 +149,7 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
  * If any error occurs, a response is sent to the user, and the function returns null.
  * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so its safe to exit the upper function.
  */
-private suspend fun RoutingContext.lendingRequest(): LendingEntity? {
-    val session = getUserSessionOrFail() ?: return null
-
+private suspend fun RoutingContext.lendingRequest(session: UserSession): LendingEntity? {
     val lendingId = call.parameters["id"]?.toUUIDOrNull()
 
     val lending = lendingId?.let { Database { LendingEntity.findById(it) } }
@@ -369,14 +367,16 @@ fun Route.lendingsRoutes() {
         }
     }
     get("inventory/lendings/{id}") {
-        val lending = lendingRequest() ?: return@get
+        val session = getUserSessionOrFail() ?: return@get
+        val lending = lendingRequest(session) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(lending, LendingEntity)
         }
     }
     delete("inventory/lendings/{id}") {
-        val lending = lendingRequest() ?: return@delete
+        val session = getUserSessionOrFail() ?: return@delete
+        val lending = lendingRequest(session) ?: return@delete
 
         Database { lending.delete() }
 
@@ -417,7 +417,8 @@ fun Route.lendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     post("inventory/lendings/{id}/confirm") {
-        val lending = lendingRequest() ?: return@post
+        val session = getUserSessionOrFail() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
 
         Database {
             lending.confirmed = true
@@ -435,7 +436,7 @@ fun Route.lendingsRoutes() {
     }
     post("inventory/lendings/{id}/pickup") {
         val session = getUserSessionOrFail() ?: return@post
-        val lending = lendingRequest() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
 
         if (!lending.confirmed) {
             call.respondError(Error.LendingNotConfirmed())
@@ -482,7 +483,7 @@ fun Route.lendingsRoutes() {
     post("inventory/lendings/{id}/return") {
         assertContentType(ContentType.Application.Json) ?: return@post
         val session = getUserSessionOrFail() ?: return@post
-        val lending = lendingRequest() ?: return@post
+        val lending = lendingRequest(session) ?: return@post
         val lendingId = lending.id.value
 
         if (!lending.taken) {
