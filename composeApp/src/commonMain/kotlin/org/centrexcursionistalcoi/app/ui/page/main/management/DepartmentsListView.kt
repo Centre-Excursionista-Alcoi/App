@@ -176,6 +176,8 @@ fun DepartmentsListView(
             members
                 // Filter not confirmed requests
                 .filterNot { it.confirmed }
+                // Map to user data
+                .mapNotNull { info -> users?.find { it.sub == info.userSub }?.let { info to it } }
         }
         if (pendingJoinRequests.isNotEmpty()) {
             Text(
@@ -183,11 +185,7 @@ fun DepartmentsListView(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
             )
-            for (request in pendingJoinRequests) {
-                val userData = remember(users) {
-                    users?.find { it.sub == request.userSub }
-                } ?: continue
-
+            for ((request, userData) in pendingJoinRequests) {
                 DepartmentPendingJoinRequest(
                     userData = userData,
                     department = department,
