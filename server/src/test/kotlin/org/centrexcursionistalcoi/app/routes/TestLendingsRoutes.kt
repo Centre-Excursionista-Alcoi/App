@@ -59,7 +59,9 @@ class TestLendingsRoutes : ApplicationTestBase() {
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
 
     private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
+    private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUUID()
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
+    private val exampleItem2Id = "e76c84a1-0d56-48d7-afa1-dbb51f585ed2".toUUID()
     private val exampleDepartmentId = "0b8e5869-0a3c-4d29-8c3b-93cd52405bea".toUUID()
 
     context(_: JdbcTransaction)
@@ -629,6 +631,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
             getOrCreateItem(
                 type = getOrCreateItemType(department = department)
             )
+            getOrCreateItem(
+                id = exampleItem2Id,
+                type = getOrCreateItemType(exampleItemType2Id)
+            )
 
             DepartmentMembers.insert {
                 it[DepartmentMembers.userSub] = user.sub
@@ -648,23 +654,38 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     it[lending] = lendingEntity.id
                 }
             }
-            val adminLending = LendingEntity.new {
+            val adminLending1 = LendingEntity.new {
                 this.userSub = admin
                 this.from = LocalDate.of(2025, 11, 10)
                 this.to = LocalDate.of(2025, 11, 15)
-                this.notes = "Admin lending"
+                this.notes = "Admin lending 1"
             }.also { lendingEntity ->
                 LendingItems.insert {
                     it[item] = exampleItemId
                     it[lending] = lendingEntity.id
                 }
             }
-            userLending to adminLending
+            val adminLending2 = LendingEntity.new {
+                this.userSub = admin
+                this.from = LocalDate.of(2025, 12, 10)
+                this.to = LocalDate.of(2025, 12, 15)
+                this.notes = "Admin lending 2"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = exampleItem2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+            Triple(userLending, adminLending1, adminLending2)
         }
     ) { context ->
         val lending = context.dibResult
         assertNotNull(lending)
-        val (userLending, adminLending) = lending
+        val (userLending, adminLending1, adminLending2) = lending
 
         client.get("/inventory/lendings").apply {
             assertStatusCode(HttpStatusCode.OK)
@@ -675,10 +696,11 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     assertEquals(FakeUser.SUB, lending.userSub)
                 }
                 lendings[1].let { lending ->
-                    assertEquals(adminLending.id.value, lending.id.toJavaUuid())
+                    assertEquals(adminLending1.id.value, lending.id.toJavaUuid())
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
             }
+            // adminLending2 won't be listed because it has mixed items (with department and without department)
         }
     }
 
