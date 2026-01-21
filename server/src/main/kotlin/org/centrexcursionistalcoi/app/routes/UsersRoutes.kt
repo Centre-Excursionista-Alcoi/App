@@ -59,9 +59,9 @@ fun Route.usersRoutes() {
         val users = Database {
             if (managingDepartments == null) {
                 // If admin, get all users
-                val departmentMembers = Database { DepartmentMemberEntity.all().map { it.toData() } }
-                val lendingUsers = Database { LendingUserEntity.all().map { it.toData() } }
-                val insurances = Database { UserInsuranceEntity.all().map { it.toData() } }
+                val departmentMembers = DepartmentMemberEntity.all().map { it.toData() }
+                val lendingUsers = LendingUserEntity.all().map { it.toData() }
+                val insurances = UserInsuranceEntity.all().map { it.toData() }
 
                 UserReferenceEntity.all()
                     // Avoid duplicates in case a user is in multiple departments
@@ -83,24 +83,18 @@ fun Route.usersRoutes() {
                     .distinctBy { it.sub }
                 val userSubs = userReferences.map { it.sub.value }
 
-                val departmentMembers = Database {
-                    DepartmentMemberEntity
-                        // Find members in the relevant departments
-                        .find { DepartmentMembers.userSub inList userSubs }
-                        .map { it.toData() }
-                }
-                val lendingUsers = Database {
-                    LendingUserEntity
-                        // Find members in the relevant departments
-                        .find { LendingUsers.userSub inList userSubs }
-                        .map { it.toData() }
-                }
-                val insurances = Database {
-                    UserInsuranceEntity
-                        // Find members in the relevant departments
-                        .find { UserInsurances.userSub inList userSubs }
-                        .map { it.toData() }
-                }
+                val departmentMembers = DepartmentMemberEntity
+                    // Find members in the relevant departments
+                    .find { DepartmentMembers.userSub inList userSubs }
+                    .map { it.toData() }
+                val lendingUsers = LendingUserEntity
+                    // Find members in the relevant departments
+                    .find { LendingUsers.userSub inList userSubs }
+                    .map { it.toData() }
+                val insurances = UserInsuranceEntity
+                    // Find members in the relevant departments
+                    .find { UserInsurances.userSub inList userSubs }
+                    .map { it.toData() }
 
                 userReferences
                     // Map to data class including lending user and insurances
