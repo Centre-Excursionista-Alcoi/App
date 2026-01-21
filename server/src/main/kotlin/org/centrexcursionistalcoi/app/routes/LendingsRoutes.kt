@@ -31,6 +31,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
@@ -40,6 +41,7 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
@@ -75,6 +77,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.core.notInSubQuery
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -255,12 +258,34 @@ fun Route.lendingsRoutes() {
                 json.encodeEntityListToString(allLendings, LendingEntity)
             }
         } else {
-            val userLendings = Database {
+            val lendings = Database {
                 val userRef = UserReferenceEntity.findById(session.sub)!!
-                LendingEntity.find { Lendings.userSub eq userRef.id }.toList()
+                LendingEntity.find { Lendings.userSub eq userRef.id }.toMutableList()
             }
+
+            // If all the items from a lending are from the same department, it's considered that the lending is from that department, and as such,
+            // the manager of the department (if any) can see and act upon the lending just like an admin.
+            val managedDepartmentsIds = Database {
+                DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
+                    .map { it.department.id.value }
+            }
+            if (managedDepartmentsIds.isNotEmpty()) {
+                val managedDepartmentLendings = Database {
+                    LendingEntity.find { Lendings.id notInList lendings.map { it.id } }.filter { lending ->
+                        val departments = lending.items.mapNotNull { it.type.department }.distinctBy { it.id.value }
+                        val departmentId = if (departments.size == 1) {
+                            departments.first().id.value
+                        } else {
+                            return@filter false
+                        }
+                        managedDepartmentsIds.contains(departmentId)
+                    }
+                }
+                lendings.addAll(managedDepartmentLendings)
+            }
+
             call.respondText(ContentType.Application.Json) {
-                json.encodeEntityListToString(userLendings, LendingEntity)
+                json.encodeEntityListToString(lendings, LendingEntity)
             }
         }
     }

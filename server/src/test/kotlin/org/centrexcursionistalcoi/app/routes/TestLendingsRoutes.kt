@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
@@ -37,6 +38,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.error.Error
@@ -57,7 +59,21 @@ class TestLendingsRoutes : ApplicationTestBase() {
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
 
     private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
+    private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUUID()
+    private val exampleItemType3Id = "944d16f7-a399-4885-b7f1-5fdf4f201dbd".toUUID()
     private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
+    private val exampleItem2Id = "e76c84a1-0d56-48d7-afa1-dbb51f585ed2".toUUID()
+    private val exampleItem3Id = "1bfe299a-c0bd-4983-b9a2-3f54d2aa301d".toUUID()
+    private val exampleDepartmentId = "0b8e5869-0a3c-4d29-8c3b-93cd52405bea".toUUID()
+    private val exampleDepartment2Id = "23b7b771-5ed1-4e10-a729-58bdf95f85dd".toUUID()
+
+    context(_: JdbcTransaction)
+    private fun getOrCreateDepartment(id: UUID = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
+        return DepartmentEntity.findById(id) ?: DepartmentEntity.new(id) {
+            this.displayName = displayName
+        }
+    }
+
     context(_: JdbcTransaction)
     private fun getOrCreateItem(
         id: UUID = exampleItemId,
@@ -76,10 +92,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
         displayName: String = "Item Type 1",
         description: String? = "Description 1",
         image: FileEntity? = null,
+        department: DepartmentEntity? = null,
     ): InventoryItemTypeEntity = InventoryItemTypeEntity.findById(id) ?: InventoryItemTypeEntity.new(id) {
         this.displayName = displayName
         this.description = description
         this.image = image
+        this.department = department
     }
 
     @Test
@@ -601,6 +619,116 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 assertEquals(userLending.id.value, lending.id.toJavaUuid())
                 assertEquals(FakeUser.SUB, lending.userSub)
             }
+        }
+    }
+
+    @Test
+    fun test_list_lending_departmentManager() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            // Existing lending from 2025-10-10 to 2025-10-15
+            val user = FakeUser.provideEntity()
+            val admin = FakeAdminUser.provideEntity()
+
+            val department1 = getOrCreateDepartment()
+            val department2 = getOrCreateDepartment(id = exampleDepartment2Id)
+            getOrCreateItem(
+                type = getOrCreateItemType(department = department1)
+            )
+            getOrCreateItem(
+                id = exampleItem2Id,
+                type = getOrCreateItemType(exampleItemType2Id)
+            )
+            getOrCreateItem(
+                id = exampleItem3Id,
+                type = getOrCreateItemType(exampleItemType3Id, department = department2)
+            )
+
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub
+                it[DepartmentMembers.departmentId] = department1.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            val userLending = LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.notes = "Existing lending"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+            }
+            val adminLending1 = LendingEntity.new {
+                this.userSub = admin
+                this.from = LocalDate.of(2025, 11, 10)
+                this.to = LocalDate.of(2025, 11, 15)
+                this.notes = "Admin lending 1"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+            }
+            val adminLending2 = LendingEntity.new {
+                this.userSub = admin
+                this.from = LocalDate.of(2025, 12, 10)
+                this.to = LocalDate.of(2025, 12, 15)
+                this.notes = "Admin lending 2"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = exampleItem2Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+            val adminLending3 = LendingEntity.new {
+                this.userSub = admin
+                this.from = LocalDate.of(2025, 1, 10)
+                this.to = LocalDate.of(2025, 1, 15)
+                this.notes = "Admin lending 3"
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[item] = exampleItemId
+                    it[lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[item] = exampleItem3Id
+                    it[lending] = lendingEntity.id
+                }
+            }
+            Triple(userLending, adminLending1, adminLending2)
+        }
+    ) { context ->
+        val lending = context.dibResult
+        assertNotNull(lending)
+        val (userLending, adminLending1, adminLending2) = lending
+
+        client.get("/inventory/lendings").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Lending.serializer().list()) { lendings ->
+                assertEquals(3, lendings.size)
+                lendings[0].let { lending ->
+                    assertEquals(userLending.id.value, lending.id.toJavaUuid())
+                    assertEquals(FakeUser.SUB, lending.userSub)
+                }
+                lendings[1].let { lending ->
+                    assertEquals(adminLending1.id.value, lending.id.toJavaUuid())
+                    assertEquals(FakeAdminUser.SUB, lending.userSub)
+                }
+                // this lending is included because even though it has lendings from mixed departments, one of the items doesn't have a department assigned
+                lendings[2].let { lending ->
+                    assertEquals(adminLending2.id.value, lending.id.toJavaUuid())
+                    assertEquals(FakeAdminUser.SUB, lending.userSub)
+                }
+            }
+            // adminLending3 won't be listed because it has mixed items (from two different departments)
         }
     }
 
