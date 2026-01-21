@@ -147,7 +147,7 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
  * Processes a request for a lending by getting its id from the call parameters (`id`).
  *
  * If any error occurs, a response is sent to the user, and the function returns null.
- * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so its safe to exit the upper function.
+ * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so it's safe to exit the upper function.
  */
 private suspend fun RoutingContext.lendingRequest(): LendingEntity? {
     val session = getUserSessionOrFail() ?: return null
