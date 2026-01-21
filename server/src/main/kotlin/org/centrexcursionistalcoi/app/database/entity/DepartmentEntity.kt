@@ -28,6 +28,8 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, E
 
     val members by DepartmentMemberEntity referrersOn DepartmentMembers.departmentId
 
+    val confirmedMembers get() = members.filter { it.confirmed }
+
     context(_: JdbcTransaction)
     override fun toData(): Department = Department(
         id = id.value.toKotlinUuid(),

@@ -3,7 +3,16 @@ package org.centrexcursionistalcoi.app.notifications
 import app.cash.turbine.test
 import com.google.firebase.messaging.BatchResponse
 import com.google.firebase.messaging.FirebaseMessaging
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.unmockkStatic
+import io.mockk.verify
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Event
@@ -13,18 +22,12 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.notifications.Push.sendFCMPushNotification
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
-import org.centrexcursionistalcoi.app.test.FakeAdminUser
-import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.assertNotNull
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.uuid.Uuid
 
 class TestPush {
     @Test
@@ -211,13 +214,13 @@ class TestPush {
                     Database {
                         DepartmentMemberEntity.new {
                             this.department = department
-                            this.userSub = FakeUser.provideEntity().sub
+                            this.userReference = FakeUser.provideEntity()
                             this.confirmed = true
                         }
                         // This request has not been confirmed, should not receive notification
                         DepartmentMemberEntity.new {
                             this.department = department
-                            this.userSub = FakeUser2.provideEntity().sub
+                            this.userReference = FakeUser2.provideEntity()
                             this.confirmed = false
                         }
                     }
@@ -254,13 +257,13 @@ class TestPush {
                     Database {
                         DepartmentMemberEntity.new {
                             this.department = department
-                            this.userSub = FakeUser.provideEntity().sub
+                            this.userReference = FakeUser.provideEntity()
                             this.confirmed = true
                         }
                         // This request has not been confirmed, should not receive notification
                         DepartmentMemberEntity.new {
                             this.department = department
-                            this.userSub = FakeUser2.provideEntity().sub
+                            this.userReference = FakeUser2.provideEntity()
                             this.confirmed = false
                         }
                     }

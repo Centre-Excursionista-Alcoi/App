@@ -1,16 +1,23 @@
 package org.centrexcursionistalcoi.app.sync
 
 import com.diamondedge.logging.logging
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.until
-import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.network.*
-import org.centrexcursionistalcoi.app.process.ProgressNotifier
-import org.centrexcursionistalcoi.app.storage.settings
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.until
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.storage.settings
 
 expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
 
@@ -68,16 +75,11 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         // First, synchronize the user profile
         ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
-        val isAdmin = ProfileRepository.getProfile()?.isAdmin ?: false
-
         // Departments does not depend on any other entity, so we sync it first
         DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
-        if (isAdmin) {
-            // Users does not depend on any other entity
-            // Users can only be synchronized by admin users - others should use members
-            UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
-        }
+        // Users does not depend on any other entity
+        UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         // Members do not depend on any other entity
         MembersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
@@ -96,7 +98,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         // Lendings requires Users, Inventory Item Types and Inventory Items
-        // Since users can only be listed by admins, lending users will not be valid for non-admins, StubUser will be filled on all cases
+        // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
+        // lending user info will not be valid for non-admins, StubUser will be filled on those cases
         LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)

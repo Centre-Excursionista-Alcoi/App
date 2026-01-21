@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -9,6 +9,8 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
@@ -86,6 +88,17 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
         insurances = insurances.orEmpty(),
         departments = departments.orEmpty(),
         isDisabled = isDisabled,
+    )
+
+    /**
+     * Converts this entity to a [UserData] object, including related data.
+     * Automatically fetches the related [LendingUserEntity], [UserInsuranceEntity]s, and [DepartmentMemberEntity]s from the database.
+     */
+    context(_: JdbcTransaction)
+    fun toData() = toData(
+        lendingUser = LendingUserEntity.find { LendingUsers.userSub eq sub.value }.firstOrNull()?.toData(),
+        insurances = UserInsuranceEntity.find { UserInsurances.userSub eq sub.value }.map { it.toData() },
+        departments = DepartmentMemberEntity.find { DepartmentMembers.userSub eq sub.value }.map { it.toData() }
     )
 
     suspend fun refreshFEMECVData() {

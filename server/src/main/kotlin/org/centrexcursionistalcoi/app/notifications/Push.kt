@@ -214,9 +214,8 @@ object Push {
     ) {
         val references = Database {
             DepartmentEntity.findById(departmentId)
-                ?.members
-                ?.filter { it.confirmed }
-                ?.map { it.userSub.value }
+                ?.confirmedMembers
+                ?.map { it.userReference.id.value }
                 .orEmpty()
         }
         for (reference in references) {

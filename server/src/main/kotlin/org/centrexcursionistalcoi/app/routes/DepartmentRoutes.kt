@@ -144,7 +144,7 @@ fun Route.departmentsRoutes() {
             Database {
                 DepartmentMemberEntity.new {
                     this.department = department
-                    this.userSub = Database { UserReferenceEntity[session.sub].id }
+                    this.userReference = Database { UserReferenceEntity[session.sub] }
                     this.confirmed = confirmed
                 }
             }
@@ -204,7 +204,7 @@ fun Route.departmentsRoutes() {
 
             Push.launch {
                 Push.sendPushNotification(
-                    userSub = member.userSub.value,
+                    userSub = member.userReference.id.value,
                     notification = member.kickedNotification(),
                     includeAdmins = false,
                 )
@@ -226,7 +226,7 @@ fun Route.departmentsRoutes() {
             }
                 .map { entity ->
                     DepartmentJoinRequest(
-                        entity.userSub.value,
+                        entity.userReference.id.value,
                         entity.department.id.value.toKotlinUuid(),
                         entity.id.value.toKotlinUuid()
                     )
@@ -270,7 +270,7 @@ fun Route.departmentsRoutes() {
 
         Push.launch {
             Push.sendPushNotification(
-                userSub = member.userSub.value,
+                userSub = member.userReference.id.value,
                 notification = member.confirmedNotification(),
                 includeAdmins = true,
             )
@@ -304,7 +304,7 @@ fun Route.departmentsRoutes() {
 
         Push.launch {
             Push.sendPushNotification(
-                userSub = member.userSub.value,
+                userSub = member.userReference.id.value,
                 notification = member.deniedNotification(),
                 includeAdmins = true,
             )
