@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.core.eq
 
 fun Route.usersRoutes() {
     // Provides a list of all users. Admins get all users, non-admins only get users in departments they manage (if they
-    // don't manage any department, an empty list will be returned).
+    // don't manage any department, only themselves will be included in the list).
     get("/users") {
         val session = getUserSessionOrFail() ?: return@get
         var managingDepartments: List<DepartmentEntity>? = null
@@ -36,19 +36,35 @@ fun Route.usersRoutes() {
             }
         }
 
+        if (managingDepartments != null && managingDepartments.isEmpty()) {
+            // Not admin and not managing any departments, return self
+            val user = Database {
+                UserReferenceEntity.find { UserReferences.sub eq session.sub }
+                    .map { it.toData() }
+                    .firstOrNull()
+            }
+            if (user == null) {
+                respondError(Error.UserNotFound())
+                return@get
+            }
+            call.respond(listOf(user))
+            return@get
+        }
+
         val departmentMembers = Database { DepartmentMemberEntity.all().map { it.toData() } }
         val lendingUsers = Database { LendingUserEntity.all().map { it.toData() } }
         val insurances = Database { UserInsuranceEntity.all().map { it.toData() } }
         val users = Database {
             if (managingDepartments == null) {
-                // if admin, get all users
+                // If admin, get all users
                 UserReferenceEntity.all()
             } else {
-                // else, get only users in the departments they manage
+                // Else, get only users in the departments they manage
+                // Since if reached this point the user is at least inside a department, we are sure that themself is included, so no need to check
                 managingDepartments
                     .flatMap { it.confirmedMembers }
                     .map { it.userReference }
-            }.map { user ->
+            }.toSet().map { user ->
                 user.toData(
                     lendingUser = lendingUsers.find { it.sub == user.sub.value },
                     insurances = insurances.filter { it.userSub == user.sub.value },

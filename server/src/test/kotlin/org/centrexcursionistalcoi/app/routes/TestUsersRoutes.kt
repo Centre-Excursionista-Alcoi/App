@@ -11,7 +11,6 @@ import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
-import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserData
@@ -20,7 +19,6 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
-import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -121,6 +119,7 @@ class TestUsersRoutes: ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             val fakeUser = FakeUser.provideEntity()
+            val fakeUser2 = FakeUser2.provideEntity()
 
             val (department1, department2) = transaction {
                 DepartmentEntity.new { this.displayName = "example 1" } to DepartmentEntity.new { this.displayName = "example 2" }
@@ -130,11 +129,17 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.department = department1
                 this.userReference = fakeUser
                 this.confirmed = true
+                this.isManager = true
             }
             DepartmentMemberEntity.new {
                 this.department = department2
                 this.userReference = fakeUser
                 this.confirmed = false
+            }
+            DepartmentMemberEntity.new {
+                this.department = department2
+                this.userReference = fakeUser2
+                this.confirmed = true
             }
             LendingUserEntity.new {
                 this.userSub = fakeUser
@@ -156,17 +161,9 @@ class TestUsersRoutes: ApplicationTestBase() {
             val departments = Database { DepartmentEntity.all().associate { it.id.value to it.toData() } }
 
             val users = bodyAsJson(ListSerializer(UserData.serializer()))
-            assertEquals(2, users.size)
+            // The manager should only see themself, because the other user is in a department they don't manage
+            assertEquals(1, users.size)
             users[0].let { user ->
-                assertEquals(FakeAdminUser.SUB, user.sub)
-                assertEquals(FakeAdminUser.FULL_NAME, user.fullName)
-                assertEquals(FakeAdminUser.EMAIL, user.email)
-                assertEquals(FakeAdminUser.GROUPS, user.groups)
-                assertTrue(user.departments.isEmpty())
-                assertEquals(null, user.lendingUser)
-                assertTrue(user.insurances.isEmpty())
-            }
-            users[1].let { user ->
                 assertEquals(FakeUser.SUB, user.sub)
                 assertEquals(FakeUser.FULL_NAME, user.fullName)
                 assertEquals(FakeUser.EMAIL, user.email)
@@ -207,7 +204,10 @@ class TestUsersRoutes: ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
     ) {
         client.get("/users").apply {
-            assertError(Error.NotAnAdmin())
+            assertStatusCode(HttpStatusCode.OK)
+            val users = bodyAsJson(ListSerializer(UserData.serializer()))
+            assertEquals(1, users.size, "Non-admin user should only see themself")
+            assertEquals(FakeUser.SUB, users[0].sub)
         }
     }
 }
