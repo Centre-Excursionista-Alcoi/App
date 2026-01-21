@@ -98,7 +98,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         // Lendings requires Users, Inventory Item Types and Inventory Items
-        // Since users can only be listed by admins, lending users will not be valid for non-admins, StubUser will be filled on all cases
+        // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
+        // lending user info will not be valid for non-admins, StubUser will be filled on those cases
         LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
