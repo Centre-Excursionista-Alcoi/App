@@ -92,7 +92,7 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             if (profile.isAdmin) return true
 
             // If user is not an admin, check whether they are manager of at least one department among the departments identifying all the items
-            // A department identifies an item if all the items inside the lending are from this same department.
+            // A department identifies a lending if all the items inside the lending are from the same department.
             val isManager = items.orEmpty().any { lending ->
                 val departments = lending.items.mapNotNull { it.type.department }.distinctBy { it.id }
                 val department = departments.takeIf { it.size == 1 }?.firstOrNull()
