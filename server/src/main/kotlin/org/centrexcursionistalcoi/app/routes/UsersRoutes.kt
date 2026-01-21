@@ -65,7 +65,7 @@ fun Route.usersRoutes() {
 
                 UserReferenceEntity.all()
                     // Avoid duplicates in case a user is in multiple departments
-                    .toSet()
+                    .distinctBy { it.sub }
                     // Map to data class including lending user and insurances
                     .map { user ->
                         user.toData(
@@ -80,7 +80,7 @@ fun Route.usersRoutes() {
                 val userReferences = managingDepartments
                     .flatMap { it.confirmedMembers }
                     .map { it.userReference }
-                    .toSet()
+                    .distinctBy { it.sub }
                 val userSubs = userReferences.map { it.sub.value }
 
                 val departmentMembers = Database {
