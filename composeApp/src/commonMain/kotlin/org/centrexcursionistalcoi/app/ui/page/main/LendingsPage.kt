@@ -541,10 +541,10 @@ fun LendingItem(
                 modifier = Modifier.weight(1f).padding(start = 4.dp)
             )
         }
-        val groupedItems = lending.items.groupBy { it.type }
+        val groupedItems = remember(lending) { lending.items.groupBy { it.type } }
 
         // Get the department of all the items, if they all share the same department. Otherwise null
-        val itemsDepartment = remember(lending) {
+        val itemsDepartment = remember(groupedItems) {
             val departments = groupedItems.keys.mapNotNull { it.department }.toSet()
             if (departments.size == 1) {
                 departments.first()
