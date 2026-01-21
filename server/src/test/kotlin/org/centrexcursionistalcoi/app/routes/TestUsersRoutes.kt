@@ -118,6 +118,7 @@ class TestUsersRoutes: ApplicationTestBase() {
     fun test_users_manager() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
+            val fakeAdmin = FakeAdminUser.provideEntity()
             val fakeUser = FakeUser.provideEntity()
             val fakeUser2 = FakeUser2.provideEntity()
 
@@ -130,6 +131,11 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.userReference = fakeUser
                 this.confirmed = true
                 this.isManager = true
+            }
+            DepartmentMemberEntity.new {
+                this.department = department1
+                this.userReference = fakeAdmin
+                this.confirmed = true
             }
             DepartmentMemberEntity.new {
                 this.department = department2
@@ -161,8 +167,8 @@ class TestUsersRoutes: ApplicationTestBase() {
             val departments = Database { DepartmentEntity.all().associate { it.id.value to it.toData() } }
 
             val users = bodyAsJson(ListSerializer(UserData.serializer()))
-            // The manager should only see themself, because the other user is in a department they don't manage
-            assertEquals(1, users.size)
+            // The manager should only see themself and the admin, because the other user is in a department they don't manage
+            assertEquals(2, users.size)
             users[0].let { user ->
                 assertEquals(FakeUser.SUB, user.sub)
                 assertEquals(FakeUser.FULL_NAME, user.fullName)
@@ -195,6 +201,15 @@ class TestUsersRoutes: ApplicationTestBase() {
                     assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom.toJavaLocalDate())
                     assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo.toJavaLocalDate())
                 }
+            }
+            users[1].let { user ->
+                assertEquals(FakeAdminUser.SUB, user.sub)
+                assertEquals(FakeAdminUser.FULL_NAME, user.fullName)
+                assertEquals(FakeAdminUser.EMAIL, user.email)
+                assertEquals(FakeAdminUser.GROUPS, user.groups)
+                assertEquals(1, user.departments.size)
+                assertEquals(null, user.lendingUser)
+                assertTrue(user.insurances.isEmpty())
             }
         }
     }
