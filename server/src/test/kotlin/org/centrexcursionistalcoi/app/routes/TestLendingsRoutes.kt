@@ -1045,4 +1045,417 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
         }
     }
+
+    // Tests for canManageLending function and department manager access
+
+    @Test
+    fun test_department_manager_can_access_lending_from_managed_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of the department
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a lending with items from the managed department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should be able to delete the lending
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+    }
+
+    @Test
+    fun test_department_manager_denied_access_to_lending_from_other_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department1 = getOrCreateDepartment(exampleDepartmentId, "Department 1")
+            val department2 = getOrCreateDepartment(exampleDepartment2Id, "Department 2")
+            val itemType = getOrCreateItemType(department = department2)
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of department1 only
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department1.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a lending with items from department2
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should NOT be able to delete the lending from another department
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+            assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_department_manager_denied_access_to_lending_with_multiple_departments() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department1 = getOrCreateDepartment(exampleDepartmentId, "Department 1")
+            val department2 = getOrCreateDepartment(exampleDepartment2Id, "Department 2")
+            val itemType1 = getOrCreateItemType(exampleItemTypeId, "Item Type 1", department = department1)
+            val itemType2 = getOrCreateItemType(exampleItemType2Id, "Item Type 2", department = department2)
+            val item1 = getOrCreateItem(exampleItemId, type = itemType1)
+            val item2 = getOrCreateItem(exampleItem2Id, type = itemType2)
+
+            // Make the user a manager of department1
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department1.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a lending with items from both departments
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item1.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+                LendingItems.insert {
+                    it[LendingItems.item] = item2.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should NOT be able to delete the lending with items from multiple departments
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+            assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_department_manager_denied_access_to_lending_with_no_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = null) // No department
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of a department
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a lending with items that have no department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should NOT be able to delete the lending with no department affiliation
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+            assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_department_manager_can_confirm_lending_from_managed_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of the department
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a lending with items from the managed department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = false
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should be able to confirm the lending
+        client.post("/inventory/lendings/${lending.id.value}/confirm").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        // Verify the lending is confirmed
+        Database {
+            val lendingEntity = LendingEntity[lending.id.value]
+            assertTrue(lendingEntity.confirmed)
+        }
+    }
+
+    @Test
+    fun test_department_manager_can_pickup_lending_from_managed_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of the department
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a confirmed lending with items from the managed department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should be able to pickup the lending
+        client.post("/inventory/lendings/${lending.id.value}/pickup").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        // Verify the lending is marked as taken
+        Database {
+            val lendingEntity = LendingEntity[lending.id.value]
+            assertTrue(lendingEntity.taken)
+        }
+    }
+
+    @Test
+    fun test_department_manager_can_return_lending_from_managed_department() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Make the user a manager of the department
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = user.sub.value
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.isManager] = true
+            }
+
+            // Create a taken lending with items from the managed department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+                this.taken = true
+                this.givenBy = FakeAdminUser.provideEntity().sub
+                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Department manager should be able to return the lending
+        client.post("/inventory/lendings/${lending.id.value}/return") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(
+                    ReturnLendingRequest.serializer(),
+                    ReturnLendingRequest(
+                        returnedItems = listOf(
+                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                        )
+                    )
+                )
+            )
+        }.apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        // Verify the lending is marked as returned
+        Database {
+            val lendingEntity = LendingEntity[lending.id.value]
+            assertTrue(lendingEntity.returned)
+        }
+    }
+
+    @Test
+    fun test_regular_user_without_manager_role_denied_access() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Note: FakeUser is NOT made a manager of any department
+
+            // Create a lending with items from a department
+            LendingEntity.new {
+                this.userSub = FakeUser2.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Regular user without manager role should NOT be able to delete the lending
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.Forbidden)
+            assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_lending_owner_can_access_their_own_lending() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Create a lending owned by FakeUser (the logged-in user)
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Lending owner should be able to get their own lending
+        client.get("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+    }
+
+    @Test
+    fun test_admin_can_access_all_lendings() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val department = getOrCreateDepartment()
+            val itemType = getOrCreateItemType(department = department)
+            val item = getOrCreateItem(type = itemType)
+
+            // Create a lending from another user
+            LendingEntity.new {
+                this.userSub = FakeUser.provideEntity()
+                this.from = LocalDate.of(2025, 10, 10)
+                this.to = LocalDate.of(2025, 10, 15)
+                this.confirmed = true
+            }.also { lendingEntity ->
+                LendingItems.insert {
+                    it[LendingItems.item] = item.id.value
+                    it[LendingItems.lending] = lendingEntity.id
+                }
+            }
+        }
+    ) { context ->
+        val lending = context.dibResult!!
+
+        // Admin should be able to delete any lending
+        client.delete("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+    }
 }
