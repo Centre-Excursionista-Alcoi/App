@@ -48,6 +48,7 @@
     <string name="home_lendings">Your Lendings</string>
     <string name="home_lending">Material Lending</string>
     <string name="home_past_lendings">Past Lendings</string>
+    <string name="home_lending_department">Department: %1$s</string>
     <plurals name="home_lending_items">
         <item quantity="one">%1$d item: %2$s</item>
         <item quantity="other">%1$d items: %2$s</item>
