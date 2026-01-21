@@ -57,13 +57,13 @@ suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentT
 
 /**
  * Asserts that the "id" parameter in the call's parameters is a valid UUID.
- * If not, responds with an [Error.InvalidArgument] error.
+ * If not, responds with an [Error.MalformedId] error.
  * @return The UUID if valid, or null if invalid.
  */
 suspend fun RoutingContext.assertIdParameter(): UUID? {
     val id = call.parameters["id"]?.toUUIDOrNull()
     if (id == null) {
-        call.respondError(Error.InvalidArgument("id"))
+        call.respondError(Error.MalformedId())
         return null
     }
     return id
