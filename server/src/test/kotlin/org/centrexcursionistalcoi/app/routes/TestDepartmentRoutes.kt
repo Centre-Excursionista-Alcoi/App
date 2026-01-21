@@ -57,7 +57,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             DepartmentMemberEntity.new {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = DepartmentEntity.new(departmentId) {
                     displayName = "Test Department"
                 }
@@ -78,7 +78,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
             DepartmentMemberEntity.new {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = DepartmentEntity.new(departmentId) {
                     displayName = "Test Department"
                 }
@@ -158,12 +158,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = false
             }
             DepartmentMemberEntity.new {
-                userSub = FakeAdminUser.provideEntity().id
+                userReference = FakeAdminUser.provideEntity()
                 department = mockDepartment
                 confirmed = true
             }
@@ -189,12 +189,12 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = false
             }
             DepartmentMemberEntity.new {
-                userSub = FakeAdminUser.provideEntity().id
+                userReference = FakeAdminUser.provideEntity()
                 department = mockDepartment
                 confirmed = true
             }
@@ -285,7 +285,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(joinRequestId) {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = true
             }
@@ -307,7 +307,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(joinRequestId) {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = false
             }
@@ -345,7 +345,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(joinRequestId) {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = true
             }
@@ -398,7 +398,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
                 displayName = "Test Department"
             }
             DepartmentMemberEntity.new(joinRequestId) {
-                userSub = FakeUser.provideEntity().id
+                userReference = FakeUser.provideEntity()
                 department = mockDepartment
                 confirmed = true
             }

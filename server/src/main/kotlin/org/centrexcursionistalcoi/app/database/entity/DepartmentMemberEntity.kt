@@ -22,14 +22,14 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     }
 
     var department by DepartmentEntity referencedOn DepartmentMembers.departmentId
-    var userSub by DepartmentMembers.userSub
+    var userReference by UserReferenceEntity referencedOn DepartmentMembers.userSub
     var confirmed by DepartmentMembers.confirmed
     var isManager by DepartmentMembers.isManager
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
         id = id.value.toKotlinUuid(),
-        userSub = userSub.value,
+        userSub = userReference.id.value,
         departmentId = department.id.value.toKotlinUuid(),
         confirmed = confirmed,
         isManager = isManager,
@@ -38,7 +38,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun confirmedNotification() = Database {
         PushNotification.DepartmentJoinRequestUpdated(
             requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
-            userSub = this@DepartmentMemberEntity.userSub.value,
+            userSub = this@DepartmentMemberEntity.userReference.id.value,
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
             isConfirmed = true,
         )
@@ -47,7 +47,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun deniedNotification() = Database {
         PushNotification.DepartmentJoinRequestUpdated(
             requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
-            userSub = this@DepartmentMemberEntity.userSub.value,
+            userSub = this@DepartmentMemberEntity.userReference.id.value,
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
             isConfirmed = false,
         )
@@ -56,7 +56,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     fun kickedNotification() = Database {
         PushNotification.DepartmentKicked(
             requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
-            userSub = this@DepartmentMemberEntity.userSub.value,
+            userSub = this@DepartmentMemberEntity.userReference.id.value,
             departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
         )
     }

@@ -45,13 +45,13 @@ class TestDepartment {
         }.also { departmentEntity ->
             Database {
                 DepartmentMemberEntity.new(departmentMember1Id) {
-                    userSub = user.sub
+                    userReference = user
                     department = departmentEntity
                     confirmed = true
                     isManager = true
                 }
                 DepartmentMemberEntity.new(departmentMember2Id) {
-                    userSub = user2.sub
+                    userReference = user2
                     department = departmentEntity
                     confirmed = false
                     isManager = false
