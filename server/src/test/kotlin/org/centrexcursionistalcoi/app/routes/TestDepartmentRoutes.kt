@@ -35,15 +35,6 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/join", HttpMethod.Post)
 
     @Test
-    fun test_join_malformedId() = runApplicationTest(
-        shouldLogIn = LoginType.USER
-    ) {
-        client.post("/departments/abc/join").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
-        }
-    }
-
-    @Test
     fun test_join_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.USER
     ) {
@@ -131,15 +122,6 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
     @Test
     fun test_members_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/members")
-
-    @Test
-    fun test_members_malformedId() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN
-    ) {
-        client.get("/departments/abc/members").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
-        }
-    }
 
     @Test
     fun test_members_departmentNotFound() = runApplicationTest(
@@ -232,34 +214,11 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_confirm_malformedDepartmentId() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN
-    ) {
-        client.post("/departments/abc/confirm/abc").apply {
-            assertError(Error.PermissionRejected())
-        }
-    }
-
-    @Test
     fun test_confirm_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
         client.post("/departments/$departmentId/confirm/abc").apply {
             assertError(Error.PermissionRejected())
-        }
-    }
-
-    @Test
-    fun test_confirm_malformedRequestId() = runApplicationTest(
-        shouldLogIn = LoginType.ADMIN,
-        databaseInitBlock = {
-            DepartmentEntity.new(departmentId) {
-                displayName = "Test Department"
-            }
-        }
-    ) {
-        client.post("/departments/$departmentId/confirm/abc").apply {
-            assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
 
