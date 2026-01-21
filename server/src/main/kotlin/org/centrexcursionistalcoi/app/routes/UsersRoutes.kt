@@ -34,7 +34,9 @@ fun Route.usersRoutes() {
         if (!session.isAdmin()) {
             // We have to check whether the user is managing a department
             managingDepartments = Database {
-                DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.isManager eq true) }
+                // We check whether the user is a confirmed manager in any department. Even though it should not be required to check whether it's
+                // confirmed, we do it anyway for safety.
+                DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
                     .map { it.department }
             }
         }
