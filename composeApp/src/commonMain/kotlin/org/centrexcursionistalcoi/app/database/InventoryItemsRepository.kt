@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -12,8 +13,8 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.storage.databaseInstance
-import kotlin.uuid.Uuid
 
 object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>() {
     override val queries by lazy { databaseInstance.inventoryItemsQueries }
@@ -32,7 +33,7 @@ object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uu
     override suspend fun selectAll(): List<ReferencedInventoryItem> {
         val types = InventoryItemTypesRepository.selectAll()
         return queries.selectAll().awaitAsList().map { item ->
-            val type = types.first { it.id == item.type }
+            val type = types.firstOrNull { it.id == item.type } ?: throw MissingCrossReferenceException("InventoryItemType", item.type)
             item.toInventoryItem().referenced(type)
         }
     }
@@ -50,7 +51,7 @@ object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uu
 
     override suspend fun get(id: Uuid): ReferencedInventoryItem? {
         val item = queries.get(id).awaitAsList().firstOrNull() ?: return null
-        val type = InventoryItemTypesRepository.get(item.type) ?: throw NoSuchElementException("Inventory item type not found: ${item.type}")
+        val type = InventoryItemTypesRepository.get(item.type) ?: throw MissingCrossReferenceException("InventoryItemType", item.type)
         return item.toInventoryItem().referenced(type)
     }
 

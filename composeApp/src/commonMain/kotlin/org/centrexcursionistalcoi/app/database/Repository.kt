@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 
 private val log = logging()
 
@@ -13,14 +14,14 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     /**
      * Fetches a list of all the elements of this repository.
-     * @throws NoSuchElementException If a reference of any item is not found.
+     * @throws MissingCrossReferenceException If a reference of the item is not found.
      */
     suspend fun selectAll(): List<T>
 
     /**
      * Searches for an item with the given [id].
      * @return The item with the given [id], or `null` if it doesn't exist.
-     * @throws NoSuchElementException If a reference of the item is not found.
+     * @throws MissingCrossReferenceException If a reference of the item is not found.
      */
     suspend fun get(id: IdType): T?
 
