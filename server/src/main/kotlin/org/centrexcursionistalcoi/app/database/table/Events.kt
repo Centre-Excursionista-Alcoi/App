@@ -1,15 +1,15 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import java.util.UUID
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.*
 
 object Events : UUIDTable("events"), CustomTableSerializer<UUID, EventEntity> {
     val created = timestamp("created").defaultExpression(DatabaseNowExpression)

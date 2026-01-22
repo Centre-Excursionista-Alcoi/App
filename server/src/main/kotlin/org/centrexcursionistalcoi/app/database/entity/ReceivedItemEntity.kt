@@ -6,8 +6,8 @@ import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class ReceivedItemEntity(id: EntityID<UUID>): UUIDEntity(id) {

@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database.table
 import org.centrexcursionistalcoi.app.data.Sports
 import org.jetbrains.exposed.v1.core.EnumerationNameColumnType
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 
 /**
  * Holds a list of all the users that have accepted the conditions for the lending service.
