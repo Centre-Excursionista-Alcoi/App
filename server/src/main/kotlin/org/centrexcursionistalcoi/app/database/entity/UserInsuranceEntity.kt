@@ -7,8 +7,8 @@ import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConverter<UserInsurance, Uuid> {

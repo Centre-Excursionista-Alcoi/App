@@ -13,7 +13,7 @@ import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.centrexcursionistalcoi.app.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.timestamp

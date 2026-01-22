@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database.table
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.TextColumnType
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 object InventoryItemTypes : UUIDTable("inventory_item_types") {

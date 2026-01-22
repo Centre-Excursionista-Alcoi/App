@@ -1,15 +1,15 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
-import java.util.*
-import kotlin.uuid.toKotlinUuid
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 
 class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<LendingEntity>(Lendings)
