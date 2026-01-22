@@ -317,7 +317,6 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 downloadFileForEntity(item, progressNotifier)
             } catch (e: IllegalStateException) {
                 log.e { "${e.message} Synchronizing completely with server..." }
-                // TODO: Handle MissingCrossReferenceException
                 synchronizeWithDatabase(progressNotifier)
             }
         } else {
