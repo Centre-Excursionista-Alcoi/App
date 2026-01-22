@@ -138,7 +138,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
 
                 log.d { "Running sync again..." }
-                synchronizeAllRepositories(force, progressNotifier, isRetry = true)
+                synchronizeAllRepositories(true, progressNotifier, isRetry = true)
             }
         }
     }
