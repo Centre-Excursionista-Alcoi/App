@@ -512,4 +512,5 @@
     <string name="settings_push_fcm_connection_disconnected">No s\'estan rebent notificacions push per FCM.</string>
     <string name="management_lending_returned">El préstec ha sigut retornat.</string>
     <string name="management_department_members">Membres</string>
+    <string name="home_lending_department">Secció: %1$s</string>
 </resources>
