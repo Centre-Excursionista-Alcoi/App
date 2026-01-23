@@ -42,7 +42,7 @@ kotlinx-kover = "0.9.4"
 kreds = "0.9.1"
 kscan = "0.5.0"
 ksoup = "0.2.5"
-ktor = "3.3.3"
+ktor = "3.4.0"
 localina = "1.0.0-alpha3"
 logback = "1.5.25"
 # No not upgrade without testing: crashes

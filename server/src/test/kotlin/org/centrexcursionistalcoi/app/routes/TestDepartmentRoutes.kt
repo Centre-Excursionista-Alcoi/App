@@ -9,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
@@ -25,7 +26,6 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
-import org.junit.jupiter.api.assertNull
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()

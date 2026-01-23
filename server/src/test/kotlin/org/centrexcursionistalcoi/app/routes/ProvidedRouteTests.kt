@@ -30,6 +30,7 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -66,7 +67,6 @@ import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.assertInstanceOf
 import kotlin.time.Instant as KotlinInstant
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 import kotlinx.datetime.LocalTime as KotlinLocalTime
@@ -186,7 +186,7 @@ object ProvidedRouteTests {
     private fun Any.populate(name: String, value: Any, foreignTypesAssociations: Map<String, EntityClass<*, *>>) {
         val memberProperty = this::class.memberProperties.firstOrNull { it.name == name }
         assertNotNull(memberProperty, "Could not find \"$name\" in properties. List: ${this::class.memberProperties.joinToString()}")
-        assertInstanceOf<KMutableProperty<*>>(memberProperty, "Property $name is not mutable: $memberProperty")
+        assertIs<KMutableProperty<*>>(memberProperty, "Property $name is not mutable: $memberProperty")
         val member = memberProperty.setter
         try {
             when (value) {
@@ -402,20 +402,20 @@ object ProvidedRouteTests {
                 fun <T> T.assertActual(name: String, expected: T) {
                     when (this) {
                         is FileEntity -> {
-                            assertInstanceOf<FileWithContext>(expected, "Expected value for $name should be a FileBytesWrapper")
+                            assertIs<FileWithContext>(expected, "Expected value for $name should be a FileBytesWrapper")
                             val actualBytes = Database { bytes }
                             assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         }
 
                         is ExposedEntity<*> -> {
                             // If the actual value is an ExposedEntity, the expected value is a UUID matching its ID.
-                            assertInstanceOf<UUID>(expected, "Expected value for $name should be a UUID")
+                            assertIs<UUID>(expected, "Expected value for $name should be a UUID")
                             val actualId = this.id.value
                             assertEquals(expected, actualId, "Field $name ID does not match")
                         }
 
                         is ByteArray -> {
-                            assertInstanceOf<ByteArray>(expected, "Expected value for $name should be a ByteArray")
+                            assertIs<ByteArray>(expected, "Expected value for $name should be a ByteArray")
                             assertContentEquals(expected, this, "Field $name contents does not match")
                         }
 
@@ -469,7 +469,7 @@ object ProvidedRouteTests {
                         if (expected is FileWithContext) {
                             // If expected is a FileBytesWrapper, actual is a UUID matching a FileEntity.
                             // Fetch the FileEntity from the database and compare its data.
-                            assertInstanceOf<Uuid>(actual, "Expected value for $name should be a Uuid")
+                            assertIs<Uuid>(actual, "Expected value for $name should be a Uuid")
                             val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
                             assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
                             val actualBytes = Database { fileEntity.bytes }
@@ -478,7 +478,7 @@ object ProvidedRouteTests {
                             // If expected is a UUID and actual is a Uuid, compare their values
                             assertEquals(expected, actual.toJavaUuid(), "Field $name ID does not match")
                         } else if (expected is ByteArray) {
-                            assertInstanceOf<ByteArray>(actual, "Expected value for $name should be a ByteArray")
+                            assertIs<ByteArray>(actual, "Expected value for $name should be a ByteArray")
                             assertContentEquals(expected, actual, "Field $name contents does not match")
                         } else if (expected is LocalDate && actual is KotlinLocalDate) {
                             assertEquals(expected, actual.toJavaLocalDate(), "Date $name does not match")

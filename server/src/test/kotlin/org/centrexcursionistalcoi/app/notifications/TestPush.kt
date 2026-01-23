@@ -12,6 +12,7 @@ import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -27,7 +28,6 @@ import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.junit.jupiter.api.assertNotNull
 
 class TestPush {
     @Test
