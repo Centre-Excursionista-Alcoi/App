@@ -1,17 +1,22 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.plugins.sse.*
-import kotlinx.coroutines.*
+import io.ktor.client.plugins.sse.sse
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.Uuid
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.push.PushNotification
-import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.Zero
-import org.junit.jupiter.api.assertNotNull
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.Uuid
 
 class TestSSE : ApplicationTestBase() {
     @Test

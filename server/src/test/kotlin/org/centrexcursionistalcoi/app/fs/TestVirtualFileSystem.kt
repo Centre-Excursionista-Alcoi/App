@@ -1,24 +1,24 @@
 package org.centrexcursionistalcoi.app.fs
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem.resetRootDirs
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.dao.Entity
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.assertNotNull
-import org.junit.jupiter.api.assertNull
-import java.time.Instant
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
 
 class TestVirtualFileSystem {
-    @BeforeEach
+    @BeforeTest
     fun setUp() {
         Database.initForTests()
 
@@ -43,7 +43,7 @@ class TestVirtualFileSystem {
         VirtualFileSystem.rootDirs = listOf(mockDir)
     }
 
-    @AfterEach
+    @AfterTest
     fun tearDown() {
         Database.clear()
         resetRootDirs()

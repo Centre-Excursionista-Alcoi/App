@@ -4,6 +4,7 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
@@ -17,7 +18,6 @@ import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.assertNotNull
 
 class TestDepartment {
     @Test

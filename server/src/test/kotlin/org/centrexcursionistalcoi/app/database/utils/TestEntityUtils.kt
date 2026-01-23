@@ -1,15 +1,19 @@
 package org.centrexcursionistalcoi.app.database.utils
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.getString
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.junit.jupiter.api.assertNull
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class TestEntityUtils {
     @Test
