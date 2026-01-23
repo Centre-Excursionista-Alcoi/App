@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 
 object DepartmentMembers : UUIDTable("department_members") {
     /** The Subject Identifier of the user */
