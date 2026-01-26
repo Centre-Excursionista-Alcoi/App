@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">CEA App</string>
     <string name="admin">Admin</string>
-    <string name="welcome">Benvingut/da %1$s</string>
+    <string name="welcome">Bienvenido/da de nuevo%1$s</string>
     <string name="nif">NIF</string>
     <string name="password">Contraseña</string>
     <string name="confirm_password">Confirmar Contraseña</string>
@@ -27,7 +27,7 @@
     <string name="permission_grant">Permitir</string>
     <string name="permission_settings">Abrir Ajustes</string>
     <string name="permission_deny">Denegar</string>
-    <string name="permission_notification_title">Permiso de notificaciones</string>
+    <string name="permission_notification_title">Permiso de Notificaciones</string>
     <string name="permission_notification_message">Por favor, permítenos mandarte notificaciones para poder mantenerte al día con tus préstamos.</string>
     <string name="management_departments">Secciones</string>
     <string name="management_users">Usuarios</string>
@@ -299,7 +299,7 @@
     <string name="lending_details_confirmation_pending_message">Un admin tiene que confirmar tu préstamo primero.</string>
     <string name="lending_details_pickup_pending_title">Recogida Pendiente</string>
     <string name="lending_details_pickup_pending_message">Un admin se pondrá en contacto contigo para programar una recogida.</string>
-    <string name="sort_by_signed_lendings_first">Registrado para préstamos primero</string>
+    <string name="sort_by_signed_lendings_first">Regístrate para préstamos primero</string>
     <string name="lending_details_incomplete_return_title">Devolución Incompleta</string>
     <string name="sort_by_signed_lendings_last">Registrado para préstamos último</string>
     <string name="management_user_disabled">Dado de baja</string>
@@ -389,7 +389,7 @@
     <string name="login_forgot_password_dialog_action">Enviar Correo</string>
     <string name="login_forgot_password_success_title">Por favor, comprueba tu bandeja de entrada.</string>
     <string name="login_error_unknown">Error del servidor: %1$s</string>
-    <string name="login_error_user_not_registered">No se ha encontrado ningun usuario con el correo electrónico dado.</string>
+    <string name="login_error_user_not_registered">No se ha encontrado ningún usuario con el correo electrónico dado.</string>
     <string name="login_error_invalid_credentials">Tu correo electrónico o contraseña no son válidos. Por favor, comprueba junto a un administrador que el correo electrónico de la base de datos es el correcto.</string>
     <string name="management_events">Eventos</string>
     <string name="management_inventory_item_type_department">Sección</string>
