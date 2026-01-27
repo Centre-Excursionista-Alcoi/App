@@ -97,20 +97,13 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
+      - name: Copy dummy google-services.json
+        run: |
+          cp android/google-services.test.json android/google-services.json
+
       - name: Run App Tests
         id: app_tests
         run: ./gradlew :composeApp:check
-
-      - name: Decode google-services.json
-        run: |
-          echo ${{ secrets.GOOGLE_SERVICES_BASE64 }} > google-services.txt
-          base64 --decode google-services.txt > android/google-services.json
-      - name: Verify google-services.json integrity
-        env:
-          KEYSTORE_SHA256: 231998efc417aa76bf3de171964df690f52b830b6489b5bb882a1156237e742e
-        run: |
-          cd android
-          echo "${{ env.KEYSTORE_SHA256 }} google-services.json" | sha256sum --check --status || exit 1
 
       - name: Upload test results (on failure)
         if: ${{ steps.app_tests.outcome == 'failure' }}
