@@ -372,7 +372,7 @@
     <string name="memory_editor_upload_image">Puja imatges</string>
     <string name="memory_editor_sport">Esport</string>
     <string name="memory_editor_description">Descripció de l\'Activitat</string>
-    <string name="post_by">Per%1$s</string>
+    <string name="post_by">Per %1$s</string>
     <string name="home_posts">Anuncis</string>
     <string name="days_of_week_monday">Dilluns</string>
     <string name="days_of_week_tuesday">Dimarts</string>
