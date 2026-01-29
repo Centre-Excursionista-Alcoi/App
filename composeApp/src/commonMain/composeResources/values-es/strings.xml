@@ -363,7 +363,7 @@
     <string name="months_october">Octubre</string>
     <string name="months_november">Noviembre</string>
     <string name="months_december">Diciembre</string>
-    <string name="post_by">Por%1$s</string>
+    <string name="post_by">Por %1$s</string>
     <string name="home_posts">Anuncios</string>
     <string name="days_of_week_monday">Lunes</string>
     <string name="days_of_week_tuesday">Martes</string>
