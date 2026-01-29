@@ -1,9 +1,29 @@
 package org.centrexcursionistalcoi.app.utils
 
 import androidx.compose.runtime.Composable
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.date_with_time
+import cea_app.composeapp.generated.resources.date_with_time_range
+import cea_app.composeapp.generated.resources.days_of_week_friday
+import cea_app.composeapp.generated.resources.days_of_week_monday
+import cea_app.composeapp.generated.resources.days_of_week_saturday
+import cea_app.composeapp.generated.resources.days_of_week_sunday
+import cea_app.composeapp.generated.resources.days_of_week_thursday
+import cea_app.composeapp.generated.resources.days_of_week_tuesday
+import cea_app.composeapp.generated.resources.days_of_week_wednesday
+import cea_app.composeapp.generated.resources.months_april
+import cea_app.composeapp.generated.resources.months_august
+import cea_app.composeapp.generated.resources.months_december
+import cea_app.composeapp.generated.resources.months_february
+import cea_app.composeapp.generated.resources.months_january
+import cea_app.composeapp.generated.resources.months_july
+import cea_app.composeapp.generated.resources.months_june
+import cea_app.composeapp.generated.resources.months_march
+import cea_app.composeapp.generated.resources.months_may
+import cea_app.composeapp.generated.resources.months_november
+import cea_app.composeapp.generated.resources.months_october
+import cea_app.composeapp.generated.resources.months_september
 import kotlinx.datetime.LocalDate
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -13,6 +33,7 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Instant
 
 fun LocalTime.withoutSeconds(): LocalTime {
     return LocalTime(hour, minute)
@@ -68,10 +89,20 @@ fun localizedLocalDate(date: LocalDate): String {
     return date.format(format)
 }
 
+fun localizedLocalTime(time: LocalTime): String {
+    val format = LocalTime.Format {
+        hour()
+        char(':')
+        minute()
+    }
+    return time.format(format)
+}
+
 @Composable
 fun localizedDateWithTime(date: LocalDate, time: LocalTime): String {
     val localizedDate = localizedLocalDate(date)
-    return stringResource(Res.string.date_with_time, localizedDate, time.toString())
+    val localizedTime = localizedLocalTime(time)
+    return stringResource(Res.string.date_with_time, localizedDate, localizedTime)
 }
 
 @Composable
