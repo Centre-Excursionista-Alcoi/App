@@ -51,7 +51,7 @@ markdown-renderer = "0.39.2"
 mockk = "1.14.9"
 pdfbox = "3.0.6"
 postgresql = "42.7.9"
-qrose = "1.0.1"
+qrose = "1.1.2"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
 retrofit = "2.9.0"
