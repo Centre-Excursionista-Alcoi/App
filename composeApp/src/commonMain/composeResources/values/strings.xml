@@ -162,8 +162,6 @@
     <string name="lending_creation_title">Create Lending</string>
     <string name="lending_creation_action">Create Lending</string>
     <string name="lending_creation_reset">Reset List</string>
-    <string name="lending_creation_from">Start Date</string>
-    <string name="lending_creation_until">End Date</string>
     <string name="lending_creation_select_dates">Select dates to allocate items</string>
     <string name="lending_creation_allocating">Allocating...</string>
     <string name="lending_creation_no_items_allocated">No items allocated</string>

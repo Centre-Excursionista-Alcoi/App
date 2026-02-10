@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -23,11 +25,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,10 +39,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.back
+import cea_app.composeapp.generated.resources.lending_creation_action
+import cea_app.composeapp.generated.resources.lending_creation_allocating
+import cea_app.composeapp.generated.resources.lending_creation_error_allocation
+import cea_app.composeapp.generated.resources.lending_creation_error_allocation_insufficient
+import cea_app.composeapp.generated.resources.lending_creation_error_allocation_none
+import cea_app.composeapp.generated.resources.lending_creation_error_allocation_title
+import cea_app.composeapp.generated.resources.lending_creation_error_insurance
+import cea_app.composeapp.generated.resources.lending_creation_error_insurance_title
+import cea_app.composeapp.generated.resources.lending_creation_error_message
+import cea_app.composeapp.generated.resources.lending_creation_error_message_unknown
+import cea_app.composeapp.generated.resources.lending_creation_error_title
+import cea_app.composeapp.generated.resources.lending_creation_items_unknown_error
+import cea_app.composeapp.generated.resources.lending_creation_no_items_allocated
+import cea_app.composeapp.generated.resources.lending_creation_reset
+import cea_app.composeapp.generated.resources.lending_creation_select_dates
+import cea_app.composeapp.generated.resources.lending_creation_title
+import cea_app.composeapp.generated.resources.lending_creation_warning_message
+import cea_app.composeapp.generated.resources.lending_creation_warning_title
+import cea_app.composeapp.generated.resources.status_loading
 import com.diamondedge.logging.logging
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -52,7 +74,6 @@ import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsExcepti
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
-import org.centrexcursionistalcoi.app.ui.data.RangeSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AddCircle
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArrowBack
@@ -64,11 +85,14 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Undo
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
-import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
+import org.centrexcursionistalcoi.app.utils.fromEpochMillis
+import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -192,30 +216,28 @@ private fun LendingCreationScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             item("dates") {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                    DatePickerFormField(
-                        value = from,
-                        onValueChange = onFromChange,
-                        label = stringResource(Res.string.lending_creation_from),
-                        modifier = Modifier.weight(1f).padding(end = 4.dp),
-                        selectableDates = RangeSelectableDates(from = today, to = to),
-                        onRangeSelected = { range ->
-                            onFromChange(range.start)
-                            onToChange(range.endInclusive)
-                        },
-                    )
-                    DatePickerFormField(
-                        value = to,
-                        onValueChange = onToChange,
-                        label = stringResource(Res.string.lending_creation_until),
-                        modifier = Modifier.weight(1f).padding(start = 4.dp),
-                        selectableDates = FutureSelectableDates(from ?: today),
-                        onRangeSelected = { range ->
-                            onFromChange(range.start)
-                            onToChange(range.endInclusive)
-                        },
-                    )
+                val state = rememberDateRangePickerState(
+                    initialSelectedStartDateMillis = from?.toEpochMillis(),
+                    initialSelectedEndDateMillis = to?.toEpochMillis(),
+                    selectableDates = FutureSelectableDates(from = today, inclusive = false),
+                )
+
+                LaunchedEffect(state) {
+                    snapshotFlow { state.selectedStartDateMillis to state.selectedEndDateMillis }
+                        .collect { (from, to) ->
+                            from?.let(LocalDate::fromEpochMillis)?.let(onFromChange)
+                            to?.let(LocalDate::fromEpochMillis)?.let(onToChange)
+                        }
                 }
+
+                DateRangePicker(
+                    state = state,
+                    title = {},
+                    modifier = Modifier.fillMaxWidth().height(400.dp).padding(horizontal = 12.dp).padding(bottom = 8.dp),
+                    colors = DatePickerDefaults.colors(
+                        containerColor = Color.Transparent,
+                    )
+                )
             }
             if (inventoryItemTypes == null || inventoryItems == null) {
                 item("loading") {

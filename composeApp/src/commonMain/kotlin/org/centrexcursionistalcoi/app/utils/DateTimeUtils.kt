@@ -131,3 +131,18 @@ fun Instant.isSameDayAs(other: Instant, timeZone: TimeZone = TimeZone.currentSys
  * Converts this [Instant] to a [LocalDateTime] in the system's current default time zone.
  */
 fun Instant.toLocalDateTime() = this.toLocalDateTime(TimeZone.currentSystemDefault())
+
+/**
+ * Converts this [LocalDate] to the number of milliseconds since the Unix epoch (January 1, 1970) at
+ * the start of the day in the system's current default time zone.
+ */
+fun LocalDate.toEpochMillis() = toEpochDays() * 24 * 60 * 60 * 1000L
+
+/**
+ * Creates a [LocalDate] from the given number of milliseconds since the Unix epoch (January 1, 1970
+ * at the start of the day in the system's current default time zone.
+ */
+fun LocalDate.Companion.fromEpochMillis(epochMillis: Long): LocalDate {
+    val epochDays = epochMillis / (24 * 60 * 60 * 1000L)
+    return fromEpochDays(epochDays)
+}
