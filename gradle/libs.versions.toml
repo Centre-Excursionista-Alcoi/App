@@ -65,7 +65,7 @@ telegram-bot = "6.3.0"
 testcontainers = "1.21.4"
 turbine = "1.2.1"
 xmlutil = "0.91.3"
-zoomable = "2.10.0"
+zoomable = "2.11.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
