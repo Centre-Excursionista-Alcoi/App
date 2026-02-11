@@ -44,7 +44,7 @@ kscan = "0.5.0"
 ksoup = "0.2.5"
 ktor = "3.4.0"
 localina = "1.0.0-alpha3"
-logback = "1.5.28"
+logback = "1.5.29"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
 markdown-renderer = "0.39.2"
