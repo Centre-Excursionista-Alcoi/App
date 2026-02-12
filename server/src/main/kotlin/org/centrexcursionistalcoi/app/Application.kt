@@ -1,19 +1,24 @@
 package org.centrexcursionistalcoi.app
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.server.application.Application
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.sentry.Sentry
+import java.time.Instant
+import java.time.LocalDate
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.*
+import org.centrexcursionistalcoi.app.plugins.SessionsKeys
+import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
+import org.centrexcursionistalcoi.app.plugins.configureRouting
+import org.centrexcursionistalcoi.app.plugins.configureSSE
+import org.centrexcursionistalcoi.app.plugins.configureSessions
+import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.time.LocalDate
 
 private val logger = LoggerFactory.getLogger("Application")
 
@@ -55,6 +60,14 @@ fun main() {
 
     // Initialize AES encryption
     AES.init()
+
+    // Validate Session encryption keys
+    if (SessionsKeys.secretEncryptKey == null || SessionsKeys.secretSignKey == null) {
+        logger.warn("No Session encryption keys found. Using default keys. This is a security issue.")
+        logger.warn("Suggestion: Set the SECRET_ENCRYPT_KEY and SECRET_SIGN_KEY environment variables.")
+    } else {
+        logger.info("Session encryption keys found.")
+    }
 
     // Initialize Database connection
     val dbInitResult = Database.init(

@@ -20,6 +20,9 @@ services:
       EMAIL_FROM_NAME: No Reply
       EMAIL_REPLY_TO_ADDR: info@example.com
       EMAIL_REPLY_TO_NAME: Support
+      # Session encryption keys
+      SECRET_ENCRYPT_KEY: 00112233445566778899aabbccddeeff
+      SECRET_SIGN_KEY: 6819b57a326945c1968f45236589
       # -- MailerSend Configuration --
       MAILER_SEND_TOKEN: abc
       # -- SMTP Configuration --
