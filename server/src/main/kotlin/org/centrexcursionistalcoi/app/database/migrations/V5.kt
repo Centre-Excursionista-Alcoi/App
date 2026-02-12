@@ -28,10 +28,10 @@ object V5 : DatabaseMigration {
 
         while (resultSet.next()) {
             val sub = resultSet.getString("sub")
-            
+
             // "password" is type bytea, but AES.encryptor stores Base64 string bytes in it.
             val passwordBytes = resultSet.getBytes("password")
-            
+
             // "femecvUsername" and "femecvPassword" are varchar, storing Base64 string.
             val femecvUsername = resultSet.getString("femecvUsername")
             val femecvPassword = resultSet.getString("femecvPassword")
@@ -61,7 +61,7 @@ object V5 : DatabaseMigration {
         updateStatement.close()
     }
 
-    private data class UserRefData(
+    private class UserRefData(
         val sub: String,
         val password: ByteArray?,
         val femecvUsername: String?,
@@ -74,17 +74,17 @@ object V5 : DatabaseMigration {
             // Stored bytes are the bytes of the Base64 string
             val base64String = String(storedBytes)
             val legacyEncrypted = Base64.getDecoder().decode(base64String)
-            
+
             // Decrypt with legacy logic
             @Suppress("DEPRECATION")
             val plaintext = AES.decryptLegacy(legacyEncrypted)
-            
+
             // Encrypt with new logic (Random IV)
             val newEncrypted = AES.encrypt(plaintext)
-            
+
             // Encode back to Base64
             val newBase64String = Base64.getEncoder().encodeToString(newEncrypted)
-            
+
             return newBase64String.toByteArray()
         } catch (e: Exception) {
             // Log error or rethrow? 
@@ -98,18 +98,18 @@ object V5 : DatabaseMigration {
         if (storedString == null) return null
         try {
             val legacyEncrypted = Base64.getDecoder().decode(storedString)
-            
-             // Decrypt with legacy logic
-             @Suppress("DEPRECATION")
+
+            // Decrypt with legacy logic
+            @Suppress("DEPRECATION")
             val plaintext = AES.decryptLegacy(legacyEncrypted)
-            
+
             // Encrypt with new logic
             val newEncrypted = AES.encrypt(plaintext)
-             
+
             // Encode back to Base64
             return Base64.getEncoder().encodeToString(newEncrypted)
         } catch (e: Exception) {
-             throw RuntimeException("Failed to re-encrypt value", e)
+            throw RuntimeException("Failed to re-encrypt value", e)
         }
     }
 }

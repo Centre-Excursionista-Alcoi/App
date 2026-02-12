@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database.migrations
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.assertTrue
 import org.centrexcursionistalcoi.app.database.Database
@@ -45,14 +46,26 @@ class TestV5Migration : PostgresTestBase() {
         Database.exec(
             """INSERT INTO user_references (sub, nif, "memberNumber", "fullName", email, password, "femecvUsername", "femecvPassword") VALUES (?, ?, ?, ?, ?, ?, ?, ?);""",
             arrayOf(
-                "1", 
-                "12345678Z", 
-                1L, 
-                "Test User", 
-                "test@example.com", 
-                legacyBase64.toByteArray(), 
-                legacyBase64, 
+                "1",
+                "12345678Z",
+                1L,
+                "Test User",
+                "test@example.com",
+                legacyBase64.toByteArray(),
+                legacyBase64,
                 legacyBase64
+            )
+        ).assertTrue()
+        // without femecv
+        Database.exec(
+            """INSERT INTO user_references (sub, nif, "memberNumber", "fullName", email, password) VALUES (?, ?, ?, ?, ?, ?);""",
+            arrayOf(
+                "2",
+                "11111111H",
+                2L,
+                "Test User 2",
+                "test2@example.com",
+                legacyBase64.toByteArray()
             )
         ).assertTrue()
         
@@ -60,21 +73,37 @@ class TestV5Migration : PostgresTestBase() {
         Database { V5.migrate() }
         
         // Verify migration
-        Database.execQuery("SELECT password, \"femecvUsername\" FROM user_references WHERE sub = '1'").let { rs ->
+        Database.execQuery("SELECT password, \"femecvUsername\", \"femecvPassword\" FROM user_references WHERE sub = '1'").let { rs ->
             assertTrue(rs.next(), "Should have found user row")
             val storedPasswordBytes = rs.getBytes("password")
-            val storedUsername = rs.getString("femecvUsername")
-            
+            val storedFemecvUsername = rs.getString("femecvUsername")
+            val storedFemecvPassword = rs.getString("femecvPassword")
+
             // Password verification
-            val passwordBase64 = String(storedPasswordBytes)
-            val passwordBytes = Base64.getDecoder().decode(passwordBase64)
-            val passwordPlaintext = AES.decrypt(passwordBytes) // New decrypt logic
-            assertEquals(secret, String(passwordPlaintext))
-            
-            // Username verification
-            val usernameBytes = Base64.getDecoder().decode(storedUsername)
-            val usernamePlaintext = AES.decrypt(usernameBytes) // New decrypt logic
-            assertEquals(secret, String(usernamePlaintext))
+            val plaintextPassword = Base64.getDecoder().decode(storedPasswordBytes).let(AES::decrypt)
+            assertEquals(secret, String(plaintextPassword))
+
+            // FEMECV Username verification
+            val plaintextFemecvUsername = Base64.getDecoder().decode(storedFemecvUsername).let(AES::decrypt)
+            assertEquals(secret, String(plaintextFemecvUsername))
+
+            // FEMECV Password verification
+            val plaintextFemecvPassword = Base64.getDecoder().decode(storedFemecvPassword).let(AES::decrypt)
+            assertEquals(secret, String(plaintextFemecvPassword))
+        }
+        Database.execQuery("SELECT password, \"femecvUsername\", \"femecvPassword\" FROM user_references WHERE sub = '2'").let { rs ->
+            assertTrue(rs.next(), "Should have found user row")
+            val storedPasswordBytes = rs.getBytes("password")
+            val storedFemecvUsername: String? = rs.getString("femecvUsername")
+            val storedFemecvPassword: String? = rs.getString("femecvPassword")
+
+            // Password verification
+            val plaintextPassword = Base64.getDecoder().decode(storedPasswordBytes).let(AES::decrypt)
+            assertEquals(secret, String(plaintextPassword))
+
+            // FEMECV verification
+            assertNull(storedFemecvUsername)
+            assertNull(storedFemecvPassword)
         }
     }
 }
