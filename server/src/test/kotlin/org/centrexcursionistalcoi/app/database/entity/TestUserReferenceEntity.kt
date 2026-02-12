@@ -1,9 +1,8 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlin.test.Test
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.security.AES
-import javax.crypto.spec.IvParameterSpec
-import kotlin.test.Test
 
 class TestUserReferenceEntity {
     @Test
@@ -11,7 +10,6 @@ class TestUserReferenceEntity {
         Database.initForTests()
 
         AES.secretKey = AES.generateKey()
-        AES.ivParameterSpec = IvParameterSpec(ByteArray(16) { 0 }) // Example IV
 
         // Test that we can create a user with FEMECV credentials and no errors occur
         Database {
