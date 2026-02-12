@@ -50,7 +50,7 @@ logback = "1.5.29"
 markdown-renderer = "0.39.2"
 mockk = "1.14.9"
 pdfbox = "3.0.6"
-postgresql = "42.7.9"
+postgresql = "42.7.10"
 qrose = "1.1.2"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
