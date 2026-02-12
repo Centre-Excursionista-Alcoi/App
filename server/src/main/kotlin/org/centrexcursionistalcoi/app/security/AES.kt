@@ -79,6 +79,9 @@ object AES {
     @TestOnly
     fun initForTests() {
         secretKey = generateKey()
+
+        // This is required for legacy V5 migration checks
+        ivParameterSpec = IvParameterSpec(ByteArray(16)) // Example IV
     }
 
     fun encrypt(data: ByteArray): ByteArray {
