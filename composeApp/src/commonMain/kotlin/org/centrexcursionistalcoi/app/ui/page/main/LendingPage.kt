@@ -29,7 +29,8 @@ fun LendingPage(
                 actions = {
                     LendingsActionBarIcons(
                         lending,
-                        lendings,
+                        // Filter only the lendings owned by the logged in user
+                        lendings?.filter { it.user.sub == lending.user.sub },
                         { onCancelLendingRequest(lending) },
                         onLendingHistoryRequest,
                     )
