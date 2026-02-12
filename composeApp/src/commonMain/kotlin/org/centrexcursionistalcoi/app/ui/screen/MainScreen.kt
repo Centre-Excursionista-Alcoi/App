@@ -450,7 +450,8 @@ private fun MainScreenContent(
                                 Page.LENDINGS, Page.LENDING -> {
                                     LendingsActionBarIcons(
                                         activeLending = activeUserLending,
-                                        lendings = lendings,
+                                        // Filter only the lendings owned by the logged in user
+                                        lendings = lendings?.filter { it.user.sub == profile.sub },
                                         onCancelLendingRequest = { cancellingLending = activeUserLending },
                                         onLendingHistoryRequest = { showingLendingHistory = true },
                                     )
