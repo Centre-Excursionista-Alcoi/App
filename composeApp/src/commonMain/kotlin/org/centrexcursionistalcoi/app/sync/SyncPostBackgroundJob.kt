@@ -19,8 +19,8 @@ object SyncPostBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         PostsRepository.insertOrUpdate(post)
 
         LocalNotifications.showNotification(
-            post.title,
-            post.content,
+            { post.title },
+            { post.content },
             mapOf("postId" to postId.toString())
         )
 
