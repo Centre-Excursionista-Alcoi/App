@@ -368,10 +368,23 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         }
     }
 
-    suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) {
+    suspend fun delete(id: RemoteIdType, progressNotifier: ProgressNotifier? = null) = delete(
+        id = id,
+        data = null,
+        serializer = null,
+        progressNotifier = progressNotifier
+    )
+
+    suspend fun <T: Any> delete(id: RemoteIdType, data: T?, serializer: KSerializer<T>?, progressNotifier: ProgressNotifier? = null) {
         if (!endpointSupported()) return
 
-        val response = httpClient.delete("$endpoint/$id")
+        val response = httpClient.delete("$endpoint/$id") {
+            if (data != null && serializer != null) {
+                contentType(ContentType.Application.Json)
+                val body = json.encodeToString(serializer, data)
+                setBody(body)
+            }
+        }
         if (response.status.isSuccess()) {
             log.i { "Deleted $name with ID $id" }
             progressNotifier?.invoke(Progress.LocalDBWrite)

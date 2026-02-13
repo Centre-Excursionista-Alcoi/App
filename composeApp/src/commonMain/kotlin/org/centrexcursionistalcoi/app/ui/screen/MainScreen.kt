@@ -310,7 +310,7 @@ private fun MainScreenContent(
     onLendingCancelRequested: (ReferencedLending) -> Job,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending) -> Job,
+    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
@@ -705,7 +705,7 @@ private fun MainScreenPagerContent(
     onLendingSignUpRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending) -> Job,
+    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onLendingHistoryRequest: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 

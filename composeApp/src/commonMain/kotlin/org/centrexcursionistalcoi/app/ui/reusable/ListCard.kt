@@ -30,7 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.create
+import cea_app.composeapp.generated.resources.delete
+import cea_app.composeapp.generated.resources.edit
+import cea_app.composeapp.generated.resources.status_loading
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ImageFileContainer
 import org.centrexcursionistalcoi.app.data.rememberImageFile
@@ -75,7 +80,7 @@ fun <T> ListCard(
             DeleteDialog(
                 item,
                 { it.toString() },
-                { onDelete(item) }
+                onDelete = { onDelete(item) }
             ) { deleting = null }
         }
     }

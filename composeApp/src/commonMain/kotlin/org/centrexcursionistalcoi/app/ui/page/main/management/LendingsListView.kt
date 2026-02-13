@@ -124,7 +124,7 @@ fun LendingsListView(
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending) -> Job,
+    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
 ) {
     var selectedLending by remember { mutableStateOf<ReferencedLending?>(null) }
     LaunchedEffect(lendings) {
@@ -223,7 +223,7 @@ private fun LendingManagementScreenContent_ExtraContent(
     lending: ReferencedLending,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending) -> Job,
+    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
 ) {
     when (lending.status()) {
         Lending.Status.CONFIRMED -> {
@@ -251,8 +251,9 @@ private fun LendingManagementScreenContent_ExtraContent(
         // Only allow to delete lendings that are not yet completed
         DeleteButton(
             item = lending,
+            showReasonField = true,
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-        ) { onDeleteRequested(lending) }
+        ) { onDeleteRequested(lending, reason) }
     }
 }
 
