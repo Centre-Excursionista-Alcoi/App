@@ -59,8 +59,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
-import kotlin.uuid.Uuid
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.admin
+import cea_app.composeapp.generated.resources.app_name
+import cea_app.composeapp.generated.resources.error_access_denied
+import cea_app.composeapp.generated.resources.force_sync
+import cea_app.composeapp.generated.resources.icon
+import cea_app.composeapp.generated.resources.lending_details_cancel
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_message
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_title
+import cea_app.composeapp.generated.resources.lending_details_history
+import cea_app.composeapp.generated.resources.logout
+import cea_app.composeapp.generated.resources.nav_home
+import cea_app.composeapp.generated.resources.nav_lending
+import cea_app.composeapp.generated.resources.nav_lendings
+import cea_app.composeapp.generated.resources.nav_management
+import cea_app.composeapp.generated.resources.nav_profile
+import cea_app.composeapp.generated.resources.settings
+import cea_app.composeapp.generated.resources.shopping_list_selected
+import cea_app.composeapp.generated.resources.shopping_list_view
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,6 +136,7 @@ import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.uuid.Uuid
 
 @Composable
 fun MainScreen(
@@ -171,6 +189,7 @@ fun MainScreen(
             onLendingCancelRequested = model::cancelLending,
             onLendingClick = onLendingClick,
             onOtherUserLendingClick = onOtherUserLendingClick,
+            onDeleteLendingRequest = model::deleteLending,
             onMemoryEditorRequested = onMemoryEditorRequested,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
@@ -291,6 +310,7 @@ private fun MainScreenContent(
     onLendingCancelRequested: (ReferencedLending) -> Job,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
+    onDeleteLendingRequest: (ReferencedLending) -> Job,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
@@ -558,6 +578,7 @@ private fun MainScreenContent(
                     onLendingSignUpRequested,
                     onOtherUserLendingClick,
                     { cancellingLending = it },
+                    onDeleteLendingRequest,
                     { showingLendingHistory = true },
                     onMemoryEditorRequested,
                     onCreateInsurance,
@@ -684,6 +705,7 @@ private fun MainScreenPagerContent(
     onLendingSignUpRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Unit,
+    onDeleteLendingRequest: (ReferencedLending) -> Job,
     onLendingHistoryRequest: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
@@ -759,6 +781,7 @@ private fun MainScreenPagerContent(
                 lendings,
                 onOtherUserLendingClick,
                 onOtherUserLendingClick,
+                onDeleteLendingRequest,
                 departments,
                 users,
                 members,

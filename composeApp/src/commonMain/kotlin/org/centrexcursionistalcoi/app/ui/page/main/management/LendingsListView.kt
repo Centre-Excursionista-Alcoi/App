@@ -5,15 +5,36 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -30,10 +51,45 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.days_of_week_short_friday
+import cea_app.composeapp.generated.resources.days_of_week_short_monday
+import cea_app.composeapp.generated.resources.days_of_week_short_saturday
+import cea_app.composeapp.generated.resources.days_of_week_short_sunday
+import cea_app.composeapp.generated.resources.days_of_week_short_thursday
+import cea_app.composeapp.generated.resources.days_of_week_short_tuesday
+import cea_app.composeapp.generated.resources.days_of_week_short_wednesday
+import cea_app.composeapp.generated.resources.lending_details_complete
+import cea_app.composeapp.generated.resources.lending_details_confirmation_pending_title
+import cea_app.composeapp.generated.resources.lending_details_memory_pending_title
+import cea_app.composeapp.generated.resources.lending_details_pickup_pending_title
+import cea_app.composeapp.generated.resources.lending_details_return_pending_title
+import cea_app.composeapp.generated.resources.management_active_lendings
+import cea_app.composeapp.generated.resources.management_complete_lendings
+import cea_app.composeapp.generated.resources.management_lending_give
+import cea_app.composeapp.generated.resources.management_lending_receive
+import cea_app.composeapp.generated.resources.months_april
+import cea_app.composeapp.generated.resources.months_august
+import cea_app.composeapp.generated.resources.months_december
+import cea_app.composeapp.generated.resources.months_february
+import cea_app.composeapp.generated.resources.months_january
+import cea_app.composeapp.generated.resources.months_july
+import cea_app.composeapp.generated.resources.months_june
+import cea_app.composeapp.generated.resources.months_march
+import cea_app.composeapp.generated.resources.months_may
+import cea_app.composeapp.generated.resources.months_november
+import cea_app.composeapp.generated.resources.months_october
+import cea_app.composeapp.generated.resources.months_september
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.core.*
+import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import com.kizitonwose.calendar.core.minusMonths
+import com.kizitonwose.calendar.core.now
+import com.kizitonwose.calendar.core.plusDays
+import com.kizitonwose.calendar.core.plusMonths
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getBooleanFlow
 import kotlinx.coroutines.Job
@@ -51,6 +107,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.page.main.LendingItem
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.screen.admin.lendingManagementScreenContent
 import org.jetbrains.compose.resources.stringResource
@@ -67,6 +124,7 @@ fun LendingsListView(
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onDeleteRequested: (ReferencedLending) -> Job,
 ) {
     var selectedLending by remember { mutableStateOf<ReferencedLending?>(null) }
     LaunchedEffect(lendings) {
@@ -113,6 +171,7 @@ fun LendingsListView(
                                     lending = lending,
                                     onGiveRequested = onGiveRequested,
                                     onReceiveRequested = onReceiveRequested,
+                                    onDeleteRequested = onDeleteRequested,
                                 )
                             },
                         )
@@ -142,6 +201,7 @@ fun LendingsListView(
                             lending = lending,
                             onGiveRequested = onGiveRequested,
                             onReceiveRequested = onReceiveRequested,
+                            onDeleteRequested = onDeleteRequested,
                         )
                     },
                 )
@@ -163,6 +223,7 @@ private fun LendingManagementScreenContent_ExtraContent(
     lending: ReferencedLending,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onDeleteRequested: (ReferencedLending) -> Job,
 ) {
     when (lending.status()) {
         Lending.Status.CONFIRMED -> {
@@ -184,6 +245,14 @@ private fun LendingManagementScreenContent_ExtraContent(
         else -> {
             // nothing
         }
+    }
+
+    if (lending.status().isPending()) {
+        // Only allow to delete lendings that are not yet completed
+        DeleteButton(
+            item = lending,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        ) { onDeleteRequested(lending) }
     }
 }
 
