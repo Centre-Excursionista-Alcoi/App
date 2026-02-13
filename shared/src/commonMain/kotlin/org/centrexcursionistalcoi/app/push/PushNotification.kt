@@ -24,6 +24,7 @@ sealed interface PushNotification {
             val entityClass = data["entityClass"] as? String?
             val entityId = data["entityId"] as? String?
             val isCreate = (data["isCreate"] as? String?)?.toBoolean()
+            val message = data["message"] as? String?
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
@@ -45,6 +46,11 @@ sealed interface PushNotification {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingCancelled push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingCancelled push notification data")
                     LendingCancelled(lendingId, userSub)
+                }
+                LendingDeleted.TYPE -> {
+                    lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingDeleted push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in LendingDeleted push notification data")
+                    LendingDeleted(lendingId, userSub, message)
                 }
                 LendingTaken.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in LendingTaken push notification data")
@@ -152,6 +158,19 @@ sealed interface PushNotification {
     ) : LendingUpdated {
         companion object {
             const val TYPE = "LendingCancelled"
+        }
+
+        override val type: String = TYPE
+    }
+
+    @Serializable
+    class LendingDeleted(
+        override val lendingId: Uuid,
+        override val userSub: String,
+        val message: String?,
+    ) : LendingUpdated {
+        companion object {
+            const val TYPE = "LendingDeleted"
         }
 
         override val type: String = TYPE

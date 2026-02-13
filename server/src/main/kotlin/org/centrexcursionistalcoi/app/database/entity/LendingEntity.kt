@@ -1,7 +1,5 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
@@ -10,6 +8,8 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import java.util.UUID
+import kotlin.uuid.toKotlinUuid
 
 class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<LendingEntity>(Lendings)
@@ -58,6 +58,14 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
         PushNotification.LendingCancelled(
             lendingId = this@LendingEntity.id.value.toKotlinUuid(),
             userSub = this@LendingEntity.userSub.sub.value,
+        )
+    }
+
+    fun deletedNotification(message: String?): PushNotification.LendingDeleted = Database {
+        PushNotification.LendingDeleted(
+            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            userSub = this@LendingEntity.userSub.sub.value,
+            message = message,
         )
     }
 

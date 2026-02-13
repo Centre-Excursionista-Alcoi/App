@@ -1,6 +1,33 @@
 package org.centrexcursionistalcoi.app.push
 
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.notification_department_kicked_message
+import cea_app.composeapp.generated.resources.notification_department_kicked_title
+import cea_app.composeapp.generated.resources.notification_event_cancelled_message
+import cea_app.composeapp.generated.resources.notification_event_cancelled_title
+import cea_app.composeapp.generated.resources.notification_join_request_approved_message
+import cea_app.composeapp.generated.resources.notification_join_request_approved_title
+import cea_app.composeapp.generated.resources.notification_join_request_denied_message
+import cea_app.composeapp.generated.resources.notification_join_request_denied_title
+import cea_app.composeapp.generated.resources.notification_lending_cancelled_message
+import cea_app.composeapp.generated.resources.notification_lending_cancelled_title
+import cea_app.composeapp.generated.resources.notification_lending_confirmed_message
+import cea_app.composeapp.generated.resources.notification_lending_confirmed_title
+import cea_app.composeapp.generated.resources.notification_lending_created_message
+import cea_app.composeapp.generated.resources.notification_lending_created_title
+import cea_app.composeapp.generated.resources.notification_lending_deleted_message
+import cea_app.composeapp.generated.resources.notification_lending_deleted_reason_message
+import cea_app.composeapp.generated.resources.notification_lending_deleted_title
+import cea_app.composeapp.generated.resources.notification_lending_given_message
+import cea_app.composeapp.generated.resources.notification_lending_given_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_other_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_other_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_partial_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_partial_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_title
+import cea_app.composeapp.generated.resources.notification_lending_taken_message
+import cea_app.composeapp.generated.resources.notification_lending_taken_title
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import kotlinx.coroutines.CoroutineScope
@@ -50,9 +77,9 @@ object LocalNotifications {
         }
     }
 
-    fun showNotification(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
+    fun showNotification(notificationTitle: suspend () -> String, notificationBody: suspend () -> String, data: Map<String, *>) {
         CoroutineScope(defaultAsyncDispatcher).launch {
-            notify(notificationTitle, notificationBody, data)
+            notify(notificationTitle(), notificationBody(), data)
         }
     }
 
@@ -93,6 +120,22 @@ object LocalNotifications {
                     Res.string.notification_lending_cancelled_message,
                     data
                 )
+            }
+            is PushNotification.LendingDeleted -> {
+                val message = notification.message
+                if (message == null) {
+                    showNotification(
+                        Res.string.notification_lending_deleted_title,
+                        Res.string.notification_lending_deleted_message,
+                        data
+                    )
+                } else {
+                    showNotification(
+                        { getString(Res.string.notification_lending_deleted_title) },
+                        { getString(Res.string.notification_lending_deleted_reason_message, message) },
+                        data
+                    )
+                }
             }
             is PushNotification.LendingTaken -> {
                 if (!notification.checkIsSelf()) {
@@ -167,17 +210,17 @@ object LocalNotifications {
                     return
                 }
 
-                runBlocking {
-                    DepartmentsRepository.get(notification.departmentId)?.let { event ->
-                        showNotification(
-                            getString(Res.string.notification_department_kicked_title),
+                runBlocking { DepartmentsRepository.get(notification.departmentId) }?.let { event ->
+                    showNotification(
+                        { getString(Res.string.notification_department_kicked_title) },
+                        {
                             getString(
                                 Res.string.notification_department_kicked_message,
                                 event.displayName,
-                            ),
-                            data
-                        )
-                    }
+                            )
+                        },
+                        data
+                    )
                 }
             }
 
@@ -189,7 +232,7 @@ object LocalNotifications {
                             runBlocking {
                                 PostsRepository.get(postId) ?: PostsRemoteRepository.get(postId)
                             }?.let { post ->
-                                showNotification(post.title, post.content, data)
+                                showNotification({ post.title }, { post.content }, data)
                             } ?: log.w { "Could not find Post#${notification.entityId}" }
                         }
                     }
@@ -197,24 +240,26 @@ object LocalNotifications {
             }
             is PushNotification.EntityDeleted -> {
                 when (notification.entityClass) {
-                    Event::class.simpleName -> runBlocking {
-                        val eventId = notification.entityUuid ?: return@runBlocking log.w { "Invalid event ID: ${notification.entityId}" }
-                        EventsRepository.get(eventId)?.let { event ->
+                    Event::class.simpleName -> {
+                        val eventId = notification.entityUuid ?: return log.w { "Invalid event ID: ${notification.entityId}" }
+                        runBlocking { EventsRepository.get(eventId) }?.let { event ->
                             if (event.requiresInsurance) {
-                                val profile = ProfileRepository.getProfile() ?: return@runBlocking log.w { "Could not find user sub" }
+                                val profile = ProfileRepository.getProfile() ?: return log.w { "Could not find user sub" }
                                 val confirmedAssistance = profile.sub in event.userSubList.map { it.sub }
                                 if (!confirmedAssistance) {
                                     log.d { "Received notification for cancelled event, but assistance not confirmed." }
-                                    return@runBlocking
+                                    return
                                 }
                             }
 
                             showNotification(
-                                getString(Res.string.notification_event_cancelled_title),
-                                getString(
-                                    Res.string.notification_event_cancelled_message,
-                                    event.title,
-                                ),
+                                { getString(Res.string.notification_event_cancelled_title) },
+                                {
+                                    getString(
+                                        Res.string.notification_event_cancelled_message,
+                                        event.title,
+                                    )
+                                },
                                 data
                             )
                         }

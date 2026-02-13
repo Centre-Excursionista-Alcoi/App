@@ -17,12 +17,6 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import java.io.ByteArrayOutputStream
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -64,6 +58,7 @@ import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
@@ -86,6 +81,12 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.json.contains
+import java.io.ByteArrayOutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -378,7 +379,24 @@ fun Route.lendingsRoutes() {
         val session = getUserSessionOrFail() ?: return@delete
         val lending = lendingRequest(session) ?: return@delete
 
+        val body = call.receiveText()
+        val request = try {
+            json.decodeFromString(DeleteLendingRequest.serializer(), body)
+        } catch (_: SerializationException) {
+            null
+        }
+
         Database { lending.delete() }
+
+        // Send push notification to the owner of the lending asynchronously
+        Push.launch {
+            Push.sendPushNotification(
+                reference = Database { lending.userSub },
+                notification = lending.deletedNotification(
+                    message = request?.message
+                )
+            )
+        }
 
         call.respond(HttpStatusCode.NoContent)
     }
