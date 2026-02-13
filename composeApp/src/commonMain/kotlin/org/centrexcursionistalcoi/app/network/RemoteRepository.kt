@@ -15,8 +15,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
@@ -33,6 +31,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -41,6 +40,8 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -97,6 +98,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * @param progress An optional progress notifier to report progress.
      * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
      * @return A list of local entities converted from the remote entities.
+     * @throws ServerException if the server returns an error response.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<LocalEntity> {
@@ -204,6 +206,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * Synchronizes the local database with the remote server.
      * @param progress An optional progress notifier to report progress.
      * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
+     * @throws ServerException if the server returns an error response.
      * @throws MissingCrossReferenceException if a reference of any item is not found.
      */
     suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false) {
