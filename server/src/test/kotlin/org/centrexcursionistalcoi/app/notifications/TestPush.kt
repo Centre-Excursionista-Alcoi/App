@@ -9,11 +9,6 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Event
@@ -23,11 +18,18 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.notifications.Push.sendFCMPushNotification
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.uuid.Uuid
 
 class TestPush {
     @Test
@@ -136,6 +138,8 @@ class TestPush {
         PushNotification.NewLendingRequest(Uuid.Zero, FakeUser.SUB),
         PushNotification.NewMemoryUpload(Uuid.Zero, FakeUser.SUB),
         PushNotification.LendingCancelled(Uuid.Zero, FakeUser.SUB),
+        PushNotification.LendingDeleted(Uuid.Zero, FakeUser.SUB, null),
+        PushNotification.LendingDeleted(Uuid.Zero, FakeUser.SUB, "Lending deleted"),
         PushNotification.LendingConfirmed(Uuid.Zero, FakeUser.SUB),
         PushNotification.LendingTaken(Uuid.Zero, FakeUser.SUB),
         PushNotification.LendingPartiallyReturned(Uuid.Zero, FakeUser.SUB),

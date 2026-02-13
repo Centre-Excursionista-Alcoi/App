@@ -406,6 +406,9 @@
     <string name="notification_lending_confirmed_message">An administrator has confirmed your lending request.</string>
     <string name="notification_lending_cancelled_title">Lending Cancelled</string>
     <string name="notification_lending_cancelled_message">Your lending has been cancelled.</string>
+    <string name="notification_lending_deleted_title">Lending Deleted</string>
+    <string name="notification_lending_deleted_message">Your lending has been deleted by an administrator.</string>
+    <string name="notification_lending_deleted_reason_message">Your lending has been deleted by an administrator. Reason: %1$s</string>
     <string name="notification_lending_created_title">Lending Request</string>
     <string name="notification_lending_created_message">A new lending request has been created. Please review and confirm it.</string>
     <string name="notification_lending_taken_title">Lending Taken</string>
