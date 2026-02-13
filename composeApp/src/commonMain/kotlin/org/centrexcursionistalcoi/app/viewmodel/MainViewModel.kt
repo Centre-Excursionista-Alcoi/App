@@ -11,7 +11,15 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.database.*
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
@@ -149,5 +157,9 @@ class MainViewModel: ViewModel() {
 
     fun rejectEventAssistance(event: ReferencedEvent) = launch {
         EventsRemoteRepository.rejectAssistance(event.id)
+    }
+
+    fun deleteLending(lending: ReferencedLending) = launch {
+        LendingsRemoteRepository.delete(lending.id)
     }
 }

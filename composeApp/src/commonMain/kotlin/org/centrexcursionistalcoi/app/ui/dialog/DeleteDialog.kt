@@ -1,8 +1,22 @@
 package org.centrexcursionistalcoi.app.ui.dialog
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import cea_app.composeapp.generated.resources.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.delete
+import cea_app.composeapp.generated.resources.delete_dialog_message
+import cea_app.composeapp.generated.resources.delete_dialog_no_name_message
+import cea_app.composeapp.generated.resources.delete_dialog_no_name_title
+import cea_app.composeapp.generated.resources.delete_dialog_title
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.ui.data.IDialogContext
 import org.jetbrains.compose.resources.stringResource
@@ -10,13 +24,23 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun <T> DeleteDialog(
     item: T,
-    displayName: (T) -> String,
+    displayName: (T) -> String?,
     onDelete: () -> Job,
     onDismissRequested: () -> Unit
 ) {
+    val name = displayName(item)
+
     DeleteDialog(
-        title = stringResource(Res.string.delete_dialog_title, displayName(item)),
-        message = stringResource(Res.string.delete_dialog_message, displayName(item)),
+        title = if (name != null) {
+            stringResource(Res.string.delete_dialog_title, name)
+        } else {
+            stringResource(Res.string.delete_dialog_no_name_title)
+        },
+        message = if (name != null) {
+            stringResource(Res.string.delete_dialog_message, name)
+        } else {
+            stringResource(Res.string.delete_dialog_no_name_message)
+        },
         onDelete = { onDelete().also { it.invokeOnCompletion { dismiss() } } },
         onDismissRequested = onDismissRequested
     )

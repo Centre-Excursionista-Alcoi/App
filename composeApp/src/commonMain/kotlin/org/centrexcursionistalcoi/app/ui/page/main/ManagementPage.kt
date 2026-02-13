@@ -16,10 +16,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.management_departments
+import cea_app.composeapp.generated.resources.management_events
+import cea_app.composeapp.generated.resources.management_inventory
+import cea_app.composeapp.generated.resources.management_lendings
+import cea_app.composeapp.generated.resources.management_posts
+import cea_app.composeapp.generated.resources.management_users
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -64,6 +69,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
+import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
 const val MANAGEMENT_PAGE_DEPARTMENTS = 1
@@ -237,6 +243,7 @@ fun ManagementPage(
     lendings: List<ReferencedLending>?,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onDeleteRequested: (ReferencedLending) -> Job,
 
     departments: List<Department>?,
 
@@ -265,6 +272,7 @@ fun ManagementPage(
         onSkipMemoryRequest = model::skipLendingMemory,
         onGiveRequested = onGiveRequested,
         onReceiveRequested = onReceiveRequested,
+        onDeleteRequested = onDeleteRequested,
         departments = departments,
         onCreateDepartment = model::createDepartment,
         onUpdateDepartment = model::updateDepartment,
@@ -309,6 +317,7 @@ private fun ManagementPage(
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onDeleteRequested: (ReferencedLending) -> Job,
 
     departments: List<Department>?,
     onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
@@ -395,7 +404,8 @@ private fun ManagementPage(
                 onConfirmLendingRequest,
                 onSkipMemoryRequest,
                 onGiveRequested,
-                onReceiveRequested
+                onReceiveRequested,
+                onDeleteRequested
             )
 
             ManagementPage.Departments -> DepartmentsListView(
