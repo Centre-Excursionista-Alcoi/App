@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DeleteLendingRequest(
-    val message: String
+    val message: String?
 )

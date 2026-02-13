@@ -1,14 +1,30 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
+import io.ktor.http.headers
+import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
@@ -20,6 +36,7 @@ import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
 import kotlin.uuid.Uuid
@@ -54,6 +71,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
         } else {
             throw response.bodyAsError().toThrowable()
         }
+    }
+
+    suspend fun delete(id: Uuid, reason: String?, progressNotifier: ProgressNotifier? = null) {
+        delete(id, DeleteLendingRequest(reason), DeleteLendingRequest.serializer(), progressNotifier)
     }
 
     /**

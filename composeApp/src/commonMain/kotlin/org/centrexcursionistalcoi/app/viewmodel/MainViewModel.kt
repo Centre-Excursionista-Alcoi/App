@@ -159,7 +159,7 @@ class MainViewModel: ViewModel() {
         EventsRemoteRepository.rejectAssistance(event.id)
     }
 
-    fun deleteLending(lending: ReferencedLending) = launch {
-        LendingsRemoteRepository.delete(lending.id)
+    fun deleteLending(lending: ReferencedLending, reason: String?) = launch {
+        LendingsRemoteRepository.delete(lending.id, reason)
     }
 }

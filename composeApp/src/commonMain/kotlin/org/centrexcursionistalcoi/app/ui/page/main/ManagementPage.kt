@@ -243,7 +243,7 @@ fun ManagementPage(
     lendings: List<ReferencedLending>?,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending) -> Job,
+    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
 
     departments: List<Department>?,
 
@@ -317,7 +317,7 @@ private fun ManagementPage(
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending) -> Job,
+    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
 
     departments: List<Department>?,
     onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,

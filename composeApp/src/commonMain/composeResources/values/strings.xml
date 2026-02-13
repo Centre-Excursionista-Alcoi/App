@@ -278,6 +278,7 @@
     <string name="delete_dialog_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
     <string name="delete_dialog_no_name_title">Confirm Deletion</string>
     <string name="delete_dialog_no_name_message">Are you sure you want to delete this element? This action cannot be undone.</string>
+    <string name="delete_dialog_reason">Reason to delete</string>
 
     <string name="inventory_item_type_title">Item Details</string>
     <string name="inventory_item_type_not_found">Type not found</string>

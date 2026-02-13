@@ -11,7 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontFamily
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.edit
+import cea_app.composeapp.generated.resources.inventory_item_nfc_id
+import cea_app.composeapp.generated.resources.inventory_item_type
+import cea_app.composeapp.generated.resources.inventory_item_variation
+import cea_app.composeapp.generated.resources.none
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
@@ -21,13 +26,13 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 fun InventoryItemDetailsDialog(
     item: ReferencedInventoryItem,
-    onDelete: () -> Job,
+    onDelete: DeleteDialogContext.() -> Job,
     onEdit: (variation: String, nfcId: ByteArray?) -> Job,
     onDismissRequest: () -> Unit
 ) {
     var deleting by remember { mutableStateOf(false) }
     if (deleting) {
-        DeleteDialog(item, { it.type.displayName }, onDelete) { deleting = false }
+        DeleteDialog(item = item, { it.type.displayName }, onDelete = onDelete) { deleting = false }
     }
 
     var editing by remember { mutableStateOf(false) }
