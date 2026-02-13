@@ -1,10 +1,19 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.http.*
-import org.centrexcursionistalcoi.app.database.*
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.isSuccess
+import io.ktor.http.parameters
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -30,6 +39,9 @@ object AuthBackend {
     }
 
     suspend fun login(email: String, password: String) {
+        // Clear storage before logging in. This clears the cookies
+        settings.clear()
+
         val response = getHttpClient().submitForm(
             url = "/login",
             formParameters = parameters {
