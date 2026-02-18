@@ -497,4 +497,10 @@
     <string name="settings_push_fcm_connection_title">Estado de Conexión FCM</string>
     <string name="settings_push_fcm_connection_connected">Recibiendo notificaciones por FCM. Los datos se actualizarán al instante.\nToken: %1$s</string>
     <string name="settings_push_fcm_connection_disconnected">No se están recibiendo notificaciones por FCM.</string>
+    <string name="delete_dialog_no_name_title">Confirmar Eliminació</string>
+    <string name="delete_dialog_no_name_message">Segur que vols eliminar aquest element? Aquesta acció no es pot desfer.</string>
+    <string name="delete_dialog_reason">Raó per a eliminar</string>
+    <string name="notification_lending_deleted_title">Préstec Eliminat</string>
+    <string name="notification_lending_deleted_message">El teu préstec ha sigut eliminat per un administrador.</string>
+    <string name="notification_lending_deleted_reason_message">El teu préstec ha sigut eliminat per un administrador. Motiu: %1$s</string>
 </resources>
