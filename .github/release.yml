@@ -1,0 +1,50 @@
+changelog:
+  categories:
+    - title: Security Updates
+      labels:
+        - security
+    - title: Android
+      labels:
+        - android
+    - title: iOS
+      labels:
+        - ios
+    - title: Desktop
+      labels:
+        - desktop
+    - title: Server
+      labels:
+        - server
+    - title: App
+      labels:
+        - app
+    - title: Admin
+      labels:
+        - admin
+    - title: New Features
+      labels:
+        - enhancement
+    - title: Bug Fixes
+      labels:
+        - bug
+    - title: UI/UX Improvements
+      labels:
+        - gui
+    - title: Email & Notifications
+      labels:
+        - email
+    - title: Database Migrations
+      labels:
+        - migration
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Testing
+      labels:
+        - testing
+    - title: Dependency Updates
+      labels:
+        - dependencies
+    - title: CI/CD
+      labels:
+        - github_actions
