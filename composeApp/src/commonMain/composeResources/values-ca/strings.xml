@@ -513,4 +513,10 @@
     <string name="management_lending_returned">El préstec ha sigut retornat.</string>
     <string name="management_department_members">Membres</string>
     <string name="home_lending_department">Secció: %1$s</string>
+    <string name="delete_dialog_no_name_title">Confirmar Eliminación</string>
+    <string name="delete_dialog_no_name_message">Seguro que quieres eliminar este elemento? Esta acción no se puede deshacer.</string>
+    <string name="delete_dialog_reason">Razón para eliminar</string>
+    <string name="notification_lending_deleted_title">Préstamo eliminado</string>
+    <string name="notification_lending_deleted_message">Tu préstamo ha sido eliminado por un administrador.</string>
+    <string name="notification_lending_deleted_reason_message">Tu préstamo ha sido eliminado por un administrador. Razón: %1$s</string>
 </resources>
