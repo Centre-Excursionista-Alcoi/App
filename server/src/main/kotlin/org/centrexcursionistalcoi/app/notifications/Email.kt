@@ -11,7 +11,7 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendA
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 
 object Email {
-    private val provider: EmailProvider? = EmailProvider.providers.firstOrNull { it.isConfigured }
+    private val provider: EmailProvider? by lazy { EmailProvider.providers.firstOrNull { it.isConfigured } }
 
     fun launch(block: suspend () -> Unit): Job {
         return CoroutineScope(Dispatchers.IO).launch {
