@@ -3,7 +3,9 @@ package org.centrexcursionistalcoi.app.notifications.email
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import jakarta.activation.DataHandler
+import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Authenticator
+import jakarta.mail.MessagingException
 import jakarta.mail.PasswordAuthentication
 import jakarta.mail.Session
 import jakarta.mail.Transport
@@ -29,6 +31,66 @@ object SmtpProvider : EmailProvider {
                 NotificationsConfig.smtpUsername != null &&
                 NotificationsConfig.smtpPassword != null
 
+    private fun createSession(): Session {
+        val props = Properties().apply {
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.host", NotificationsConfig.smtpHost)
+            put("mail.smtp.port", NotificationsConfig.smtpPort.toString())
+
+            if (NotificationsConfig.smtpUseTls) {
+                // It's best practice to use String values for Jakarta Mail properties
+                put("mail.smtp.starttls.enable", "true")
+                put("mail.smtp.starttls.required", "true")
+            }
+        }
+
+        val auth = object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(
+                    NotificationsConfig.smtpUsername,
+                    NotificationsConfig.smtpPassword
+                )
+            }
+        }
+        return Session.getInstance(props, auth)
+    }
+
+    override suspend fun isAvailable(): Boolean {
+        check(isConfigured) { "SMTP is not configured." }
+
+        logger.debug("Attempting to ping SMTP server...")
+
+        val session = createSession()
+        var transport: Transport? = null
+
+        return try {
+            // Retrieve the transport for the SMTP protocol
+            transport = session.getTransport("smtp")
+
+            // Attempt to connect. This will test the host, port, TLS, and the Authenticator.
+            transport.connect()
+
+            logger.info("Successfully connected to SMTP server.")
+            true
+        } catch (e: AuthenticationFailedException) {
+            logger.error("SMTP Authentication failed: Invalid username or password.", e)
+            false
+        } catch (e: MessagingException) {
+            logger.error("SMTP Connection failed: Could not reach host or negotiate TLS.", e)
+            false
+        } catch (e: Exception) {
+            logger.error("An unexpected error occurred while pinging the SMTP server.", e)
+            false
+        } finally {
+            // Always ensure the transport connection is closed to prevent resource leaks
+            try {
+                transport?.close()
+            } catch (e: MessagingException) {
+                logger.warn("Failed to close SMTP transport cleanly.", e)
+            }
+        }
+    }
+
     /**
      * Sends an email using SMTP, with the credentials configured in [NotificationsConfig].
      * @throws IllegalStateException if SMTP is not configured.
@@ -45,28 +107,8 @@ object SmtpProvider : EmailProvider {
     ) {
         check(isConfigured) { "SMTP is not configured." }
 
-        logger.debug("Setting up SMTP session...")
-        val props = Properties().apply {
-            put("mail.smtp.auth", "true")
-            put("mail.smtp.host", NotificationsConfig.smtpHost)
-            put("mail.smtp.port", NotificationsConfig.smtpPort.toString())
-
-            if (NotificationsConfig.smtpUseTls) {
-                put("mail.smtp.starttls.enable", true)
-                put("mail.smtp.starttls.required", true)
-            }
-        }
-
-        val auth = object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(
-                    NotificationsConfig.smtpUsername,
-                    NotificationsConfig.smtpPassword
-                )
-            }
-        }
         logger.debug("Creating SMTP session...")
-        val session = Session.getInstance(props, auth)
+        val session = createSession()
         sendEmail(session, to, subject, htmlContent, attachments)
     }
 

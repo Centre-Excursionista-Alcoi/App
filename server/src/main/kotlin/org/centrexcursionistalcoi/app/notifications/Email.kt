@@ -20,6 +20,12 @@ object Email {
         }
     }
 
+    fun isConfigured() = provider?.isConfigured == true
+
+    suspend fun isAvailable(): Boolean {
+        return provider?.isAvailable() == true
+    }
+
     suspend fun sendEmail(to: List<MailerSendEmail>, subject: String, htmlContent: String, attachments: List<MailerSendAttachment>? = null) {
         provider?.sendEmail(to, subject, htmlContent, attachments)
     }
