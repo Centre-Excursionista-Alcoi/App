@@ -139,7 +139,7 @@ object SmtpProvider : EmailProvider {
 
             val from = InternetAddress(NotificationsConfig.emailFromAddr, NotificationsConfig.emailFromName)
             setFrom(from)
-            sender = from
+            // sender = from
 
             if (NotificationsConfig.emailReplyToAddr != null) {
                 replyTo = arrayOf(
