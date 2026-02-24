@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.SessionsKeys
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
@@ -78,6 +79,7 @@ fun main() {
         logger.warn("Email provider is not available. Email notifications will not be sent.")
     } else {
         logger.info("Email provider is available.")
+        logger.debug("Emails will be sent from ${NotificationsConfig.emailFromAddr} with name ${NotificationsConfig.emailFromName}")
     }
 
     // Initialize Database connection
