@@ -9,12 +9,17 @@ import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.notifications.email.EmailProvider
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
+import org.jetbrains.annotations.TestOnly
 
 object Email {
     private val provider: EmailProvider? by lazy { EmailProvider.providers.firstOrNull { it.isConfigured } }
 
+    @TestOnly
+    var disabled: Boolean = false
+
     fun launch(block: suspend () -> Unit): Job {
         return CoroutineScope(Dispatchers.IO).launch {
+            if (disabled) return@launch
             if (provider == null) return@launch
             block()
         }
