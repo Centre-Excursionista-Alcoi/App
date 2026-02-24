@@ -37,11 +37,17 @@ object SmtpProvider : EmailProvider {
             put("mail.smtp.host", NotificationsConfig.smtpHost)
             put("mail.smtp.port", NotificationsConfig.smtpPort.toString())
 
+            put("mail.smtp.localhost", NotificationsConfig.emailFromAddr.substringAfter('@'))
+
             if (NotificationsConfig.smtpUseTls) {
                 // It's best practice to use String values for Jakarta Mail properties
                 put("mail.smtp.starttls.enable", "true")
                 put("mail.smtp.starttls.required", "true")
             }
+
+            put("mail.smtp.connectiontimeout", "5000") // Timeout for making the TCP connection
+            put("mail.smtp.timeout", "5000")           // Timeout for the SMTP response
+            put("mail.smtp.writetimeout", "5000")      // Timeout for sending data
         }
 
         val auth = object : Authenticator() {
@@ -68,7 +74,11 @@ object SmtpProvider : EmailProvider {
             transport = session.getTransport("smtp")
 
             // Attempt to connect. This will test the host, port, TLS, and the Authenticator.
-            transport.connect()
+            transport.connect(
+                NotificationsConfig.smtpHost,
+                NotificationsConfig.smtpUsername,
+                NotificationsConfig.smtpPassword
+            )
 
             logger.info("Successfully connected to SMTP server.")
             true
