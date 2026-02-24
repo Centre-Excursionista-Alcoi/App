@@ -222,7 +222,7 @@ fun Route.configureAuthRoutes() {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
-        val webUi = call.receiveParameters()["webui"]?.toBoolean() ?: false
+        val webUi = parameters["webui"]?.toBoolean() ?: false
         val requestId = parameters["request_id"]?.trim()
         val newPassword = parameters["password"]?.trim()?.toCharArray()
 
@@ -270,17 +270,19 @@ fun Route.configureAuthRoutes() {
         }
 
         // send a notification email
-        val locale = call.request.locale()
-        Email.sendTemplate(
-            to = listOf(
-                MailerSendEmail(userReference.email, userReference.fullName)
-            ),
-            template = EmailTemplate.PasswordChangedNotification,
-            locale = locale,
-            args = mapOf(
-                "userName" to userReference.fullName,
-            ),
-        )
+        Email.launch {
+            val locale = call.request.locale()
+            Email.sendTemplate(
+                to = listOf(
+                    MailerSendEmail(userReference.email, userReference.fullName)
+                ),
+                template = EmailTemplate.PasswordChangedNotification,
+                locale = locale,
+                args = mapOf(
+                    "userName" to userReference.fullName,
+                ),
+            )
+        }
 
         // Success, respond accordingly
         call.respond(HttpStatusCode.OK)
