@@ -14,5 +14,5 @@ abstract class ConfigProvider {
         }
     }
 
-    protected fun getenv(name: String): String? = override[name] ?: System.getenv(name)?.ifBlank { null }
+    protected fun getenv(name: String): String? = override[name] ?: System.getenv(name)?.trim()?.ifBlank { null }
 }
