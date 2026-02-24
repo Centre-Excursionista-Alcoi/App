@@ -23,6 +23,7 @@ import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
@@ -54,6 +55,7 @@ abstract class ApplicationTestBase {
          */
         userEntityPatches: JdbcTransaction.(UserReferenceEntity) -> Unit = {},
         disablePush: Boolean = true,
+        disableEmail: Boolean = true,
         finally: suspend () -> Unit = {},
         block: suspend ApplicationTestBuilder.(ApplicationTestContext<DIB>) -> Unit
     ) = runTest {
@@ -66,6 +68,9 @@ abstract class ApplicationTestBase {
 
         // Disable push notifications during tests
         Push.disable = disablePush
+
+        // Disable email during tests
+        Email.disabled = disableEmail
 
         try {
             val dib = databaseInitBlock?.let { Database(it) }

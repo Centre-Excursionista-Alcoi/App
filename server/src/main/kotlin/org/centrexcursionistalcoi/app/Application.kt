@@ -6,9 +6,11 @@ import io.ktor.server.netty.Netty
 import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
+import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.SessionsKeys
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
@@ -67,6 +69,15 @@ fun main() {
         logger.warn("Suggestion: Set the SECRET_ENCRYPT_KEY and SECRET_SIGN_KEY environment variables.")
     } else {
         logger.info("Session encryption keys found.")
+    }
+
+    // Validate Email configuration
+    if (!Email.isConfigured()) {
+        logger.warn("Email provider is not configured. Email notifications will not be sent.")
+    } else if (!runBlocking { Email.isAvailable() }) {
+        logger.warn("Email provider is not available. Email notifications will not be sent.")
+    } else {
+        logger.info("Email provider is available.")
     }
 
     // Initialize Database connection

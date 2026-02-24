@@ -9,15 +9,26 @@ import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.notifications.email.EmailProvider
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
+import org.jetbrains.annotations.TestOnly
 
 object Email {
-    private val provider: EmailProvider? = EmailProvider.providers.firstOrNull { it.isConfigured }
+    private val provider: EmailProvider? by lazy { EmailProvider.providers.firstOrNull { it.isConfigured } }
+
+    @TestOnly
+    var disabled: Boolean = false
 
     fun launch(block: suspend () -> Unit): Job {
         return CoroutineScope(Dispatchers.IO).launch {
+            if (disabled) return@launch
             if (provider == null) return@launch
             block()
         }
+    }
+
+    fun isConfigured() = provider?.isConfigured == true
+
+    suspend fun isAvailable(): Boolean {
+        return provider?.isAvailable() == true
     }
 
     suspend fun sendEmail(to: List<MailerSendEmail>, subject: String, htmlContent: String, attachments: List<MailerSendAttachment>? = null) {

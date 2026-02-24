@@ -16,6 +16,12 @@ sealed interface EmailProvider {
     val isConfigured: Boolean
 
     /**
+     * Verifies that the email provider is actually available as well as configured ([isConfigured]).
+     * @return True if the email provider is available, false otherwise.
+     */
+    suspend fun isAvailable(): Boolean = true
+
+    /**
      * Sends an email to the specified recipients.
      * @throws IllegalArgumentException If the email could not be sent because some parameters are invalid.
      * @throws IllegalStateException If the email could not be sent because of a server error.
