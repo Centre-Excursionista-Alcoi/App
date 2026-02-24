@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -285,7 +286,11 @@ fun Route.configureAuthRoutes() {
         }
 
         // Success, respond accordingly
-        call.respond(HttpStatusCode.OK)
+        if (webUi) {
+            call.respondText("OK")
+        } else {
+            call.respond(HttpStatusCode.OK)
+        }
     }
 
     get("/reset_password") {
