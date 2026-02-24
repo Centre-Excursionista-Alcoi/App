@@ -228,7 +228,7 @@ fun Route.configureAuthRoutes() {
 
         suspend fun respondError(error: Error) {
             if (webUi) {
-                call.respondRedirect("/reset_password_form?request_id=$requestId&error=${error.code}")
+                call.respondRedirect("/reset_password?request_id=$requestId&error=${error.code}")
             } else {
                 call.respondError(error)
             }
