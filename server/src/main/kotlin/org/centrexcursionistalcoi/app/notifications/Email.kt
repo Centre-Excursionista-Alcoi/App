@@ -10,8 +10,11 @@ import org.centrexcursionistalcoi.app.notifications.email.EmailProvider
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.jetbrains.annotations.TestOnly
+import org.slf4j.LoggerFactory
 
 object Email {
+    private val logger = LoggerFactory.getLogger("Email")
+
     private val provider: EmailProvider? by lazy { EmailProvider.providers.firstOrNull { it.isConfigured } }
 
     @TestOnly
@@ -21,7 +24,11 @@ object Email {
         return CoroutineScope(Dispatchers.IO).launch {
             if (disabled) return@launch
             if (provider == null) return@launch
-            block()
+            try {
+                block()
+            } catch (e: Exception) {
+                logger.error("Could not invoke email block.", e)
+            }
         }
     }
 
