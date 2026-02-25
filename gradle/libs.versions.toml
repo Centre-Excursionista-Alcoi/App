@@ -16,7 +16,7 @@ androidx-work = "2.11.0"
 buildkonfig = "0.17.1"
 bcrypt = "0.10.2"
 calendar ="2.10.0"
-coil = "3.3.0"
+coil = "3.4.0"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
 composeMultiplatform = "1.10.1"
 compose-material3 = "1.11.0-alpha02"
