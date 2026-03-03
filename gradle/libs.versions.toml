@@ -43,7 +43,7 @@ kreds = "0.9.1"
 kscan = "0.6.0"
 ksoup = "0.2.6"
 ktor = "3.4.0"
-localina = "1.0.0-alpha3"
+localina = "1.0.0-beta1"
 logback = "1.5.32"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
