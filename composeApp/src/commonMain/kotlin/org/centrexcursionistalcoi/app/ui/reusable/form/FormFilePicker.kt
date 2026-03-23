@@ -8,9 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.file_picker_pick
-import cea_app.composeapp.generated.resources.remove
+import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -29,10 +27,9 @@ fun FormFilePicker(
     label: String? = null,
     enabled: Boolean = true,
     pickerType: FileKitType = FileKitType.File(),
-    pickerTitle: String? = null,
     canClear: Boolean = true,
 ) {
-    val picker = rememberFilePickerLauncher(pickerType, pickerTitle) { file ->
+    val picker = rememberFilePickerLauncher(pickerType) { file ->
         file ?: return@rememberFilePickerLauncher
         onFilePicked(file)
     }
