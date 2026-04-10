@@ -148,7 +148,7 @@ jobs:
 
       - name: Determine In-App Update Priority
         id: determine_priority
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             let priority = 2;
