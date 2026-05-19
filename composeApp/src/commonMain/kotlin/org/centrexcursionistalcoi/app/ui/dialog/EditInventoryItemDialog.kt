@@ -2,10 +2,27 @@ package org.centrexcursionistalcoi.app.ui.dialog
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.cancel
+import cea_app.composeapp.generated.resources.create_inventory_item_nfc_id
+import cea_app.composeapp.generated.resources.create_inventory_item_variation
+import cea_app.composeapp.generated.resources.management_inventory_item_edit
+import cea_app.composeapp.generated.resources.none
+import cea_app.composeapp.generated.resources.remove
+import cea_app.composeapp.generated.resources.submit
+import cea_app.composeapp.generated.resources.undo
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -24,7 +41,7 @@ fun EditInventoryItemDialog(
     var variation by remember { mutableStateOf("") }
     var nfcId by remember { mutableStateOf(item.nfcId) }
 
-    val isDirty = variation != item.variation || nfcId != item.nfcId
+    val isDirty = variation != item.variation || !nfcId.contentEquals(item.nfcId)
 
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismissRequested() },
