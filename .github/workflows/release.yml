@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -123,7 +123,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -343,7 +343,7 @@ jobs:
     needs: build-android
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Android
         uses: getsentry/action-release@v3
         env:
@@ -363,7 +363,7 @@ jobs:
     if: false  # Temporarily disabled due to issues with GoogleService-Info.plist not being found on runtime
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # --- Setup Environment ---
       - name: Setup Gradle
@@ -548,7 +548,7 @@ jobs:
     needs: build-ios
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - iOS
         uses: getsentry/action-release@v3
         env:
@@ -569,7 +569,7 @@ jobs:
     needs: [shared-tests, app-tests]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.10'
@@ -620,7 +620,7 @@ jobs:
     needs: build-desktop
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Desktop
         uses: getsentry/action-release@v3
         env:
@@ -639,7 +639,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -676,7 +676,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -731,7 +731,7 @@ jobs:
     needs: release-server
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Server
         uses: getsentry/action-release@v3
         env:
