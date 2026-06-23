@@ -47,7 +47,7 @@ localina = "1.0.0-beta2"
 logback = "1.5.34"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
-markdown-renderer = "0.42.0"
+markdown-renderer = "0.43.0"
 mockk = "1.14.11"
 pdfbox = "3.0.7"
 postgresql = "42.7.11"
