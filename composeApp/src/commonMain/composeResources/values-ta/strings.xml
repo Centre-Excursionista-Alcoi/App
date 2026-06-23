@@ -174,7 +174,7 @@
     <string name="departments_leave_message">%1$s துறையை விட்டு வெளியேற விரும்புகிறீர்களா</string>
     <string name="departments_leave">கிளம்பு</string>
     <string name="departments_kick_title">துறையிலிருந்து உதைத்தல்</string>
-    <string name="departments_kick_message">%1$s பிரிவில் இருந்து பயனரை உதைக்க விரும்புகிறீர்களா?</string>
+    <string name="departments_kick_message">%1$s பிரிவில் இருந்து பயனரை உதைக்க விரும்புகிறீர்களா.</string>
     <string name="departments_kick">உதை</string>
     <string name="management_no_departments">துறைகள் இல்லை</string>
     <string name="management_no_users">பயனர்கள் இல்லை</string>
