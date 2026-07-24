@@ -56,7 +56,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - uses: actions/setup-python@v6 # Updated to v5 (latest stable)
+      - uses: actions/setup-python@v7 # Updated to v5 (latest stable)
         with:
           python-version: '3.10'
 
