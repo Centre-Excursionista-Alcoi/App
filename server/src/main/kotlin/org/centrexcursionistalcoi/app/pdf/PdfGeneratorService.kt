@@ -1,8 +1,5 @@
 package org.centrexcursionistalcoi.app.pdf
 
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format.DateTimeComponents
-import kotlinx.datetime.format.char
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -151,35 +148,8 @@ object PdfGeneratorService {
             // =========================================
             drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
-            val simpleFormat = DateTimeComponents.Format {
-                year()
-                char('/')
-                monthNumber()
-                char('/')
-                day()
-            }
-            val timezoneFormat = DateTimeComponents.Format {
-                year()
-                char('/')
-                monthNumber()
-                char('/')
-                day()
-                chars(" (")
-                timeZoneId()
-                char(')')
-            }
-            val fromDate = if (memory.from.timeZone == TimeZone.currentSystemDefault()) {
-                // If the memory's timezone is the same as the system's, we can format it directly
-                memory.from.format(simpleFormat)
-            } else {
-                // If the memory's timezone is different, make it explicit in the format
-                memory.from.format(timezoneFormat)
-            }
-            val toDate = if (memory.to.timeZone == TimeZone.currentSystemDefault()) {
-                memory.to.format(simpleFormat)
-            } else {
-                memory.to.format(timezoneFormat)
-            }
+            val fromDate = memory.from.toStringCompact()
+            val toDate = memory.to.toStringCompact()
             drawText("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
 
             if (memory.place != null) {

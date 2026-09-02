@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.char
 import kotlinx.datetime.format.format
 import kotlinx.datetime.offsetAt
 import kotlinx.datetime.toInstant
@@ -30,6 +31,37 @@ data class ZonedDateTime(
     fun format(format: DateTimeFormat<DateTimeComponents>): String {
         return format.format {
             setZonedDateTime(this@ZonedDateTime)
+        }
+    }
+
+    /**
+     * Formats the [ZonedDateTime] as a compact string, using the format `YYYY/MM/DD` if the timezone
+     * is the same as the system's, or `YYYY/MM/DD (TimeZone)` if it's different.
+     */
+    fun toStringCompact(): String {
+        val simpleFormat = DateTimeComponents.Format {
+            year()
+            char('/')
+            monthNumber()
+            char('/')
+            day()
+        }
+        val timezoneFormat = DateTimeComponents.Format {
+            year()
+            char('/')
+            monthNumber()
+            char('/')
+            day()
+            chars(" (")
+            timeZoneId()
+            char(')')
+        }
+        return if (timeZone == TimeZone.currentSystemDefault()) {
+            // If the timezone is the same as the system's, we can format it directly
+            format(simpleFormat)
+        } else {
+            // If the timezone is different, make it explicit in the format
+            format(timezoneFormat)
         }
     }
 
