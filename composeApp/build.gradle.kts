@@ -33,6 +33,7 @@ fun readProperties(fileName: String, root: File = projectDir): Properties? {
 
 val versionProperties = readProperties("version.properties", rootDir)!!
 
+val appExeVersionName: String? = versionProperties.getProperty("EXE_VERSION_NAME")
 val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
@@ -303,8 +304,8 @@ compose.desktop {
                 menuGroup = "CEA App"
                 packageName = "CEA App"
                 upgradeUuid = "5504905b-d0a6-44a6-acb7-5ddcfbaa4ef8"
-                msiPackageVersion = appVersionName
-                exePackageVersion = appVersionName
+                msiPackageVersion = appExeVersionName ?: appVersionName
+                exePackageVersion = appExeVersionName ?: appVersionName
             }
             linux {
                 iconFile.set(
