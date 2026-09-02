@@ -2,6 +2,7 @@
 
 package org.centrexcursionistalcoi.app.pdf
 
+import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.InventoryItemType
@@ -9,12 +10,14 @@ import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.junit.Assume
 import java.io.File
 import kotlin.test.Test
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 class TestPdfGeneratorService {
@@ -45,6 +48,8 @@ class TestPdfGeneratorService {
             department = department.id,
             attachments = listOf(memoryImageFileUuid),
             submittedBy = FakeUser.SUB,
+            from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault()),
+            to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault()),
         )
 
         val inventoryItemTypeId = "f3ca1b24-886e-4b1a-88f3-934babbaec86".toUuid()
@@ -70,10 +75,6 @@ class TestPdfGeneratorService {
                     ).referenced(inventoryItemType)
                 ),
                 submittedBy = "Admin User",
-                dateRange = Pair(
-                    java.time.LocalDate.of(2025, 10, 8),
-                    java.time.LocalDate.of(2025, 10, 9)
-                ),
                 photoProvider = { uuid ->
                     this::class.java.getResourceAsStream("/square.png")!!.readBytes()
                 },

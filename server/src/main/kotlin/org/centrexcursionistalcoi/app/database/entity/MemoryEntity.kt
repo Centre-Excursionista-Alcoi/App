@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
@@ -22,6 +24,8 @@ import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import java.time.Instant
 import java.util.UUID
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -38,6 +42,28 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
     var sport by Memories.sport
     var department by DepartmentEntity optionalReferencedOn Memories.department
     var submittedBy by UserReferenceEntity referencedOn Memories.submittedBy
+
+    var fromInstant by Memories.fromInstant
+    var fromZone by Memories.fromZone
+    var toInstant by Memories.toInstant
+    var toZone by Memories.toZone
+
+    /** When the described activity started, as a [ZonedDateTime] combining [fromInstant]/[fromZone]. */
+    var from: ZonedDateTime
+        get() = ZonedDateTime.fromInstant(fromInstant.toKotlinInstant(), TimeZone.of(fromZone))
+        set(value) {
+            fromInstant = value.toInstant().toJavaInstant()
+            fromZone = value.timeZone.id
+        }
+
+    /** When the described activity ended, as a [ZonedDateTime] combining [toInstant]/[toZone]. */
+    var to: ZonedDateTime
+        get() = ZonedDateTime.fromInstant(toInstant.toKotlinInstant(), TimeZone.of(toZone))
+        set(value) {
+            toInstant = value.toInstant().toJavaInstant()
+            toZone = value.timeZone.id
+        }
+
     var lending by LendingEntity optionalReferencedOn Memories.lending
     var pdf by FileEntity optionalReferencedOn Memories.pdf
 
@@ -64,6 +90,8 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         department = department?.id?.value?.toKotlinUuid(),
         attachments = files.map { it.id.value.toKotlinUuid() },
         submittedBy = submittedBy.id.value,
+        from = from,
+        to = to,
         pdf = pdf?.id?.value?.toKotlinUuid(),
         lending = lending?.id?.value?.toKotlinUuid(),
     )
@@ -78,6 +106,8 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         request.text?.let { text = it }
         request.sport?.let { sport = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
+        request.from?.let { from = it }
+        request.to?.let { to = it }
         request.attachments?.forEach { fileWithContext ->
             FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
                 MemoriesFiles.deleteWhere { (MemoriesFiles.memory eq this@MemoryEntity.id) and (MemoriesFiles.file eq fileEntity.id) }

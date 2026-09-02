@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.database.adapters.JsonAdapter
 import org.centrexcursionistalcoi.app.database.adapters.ListStringAdapter
 import org.centrexcursionistalcoi.app.database.adapters.LocalDateAdapter
 import org.centrexcursionistalcoi.app.database.adapters.UUIDAdapter
+import org.centrexcursionistalcoi.app.database.adapters.ZonedDateTimeAdapter
 import org.centrexcursionistalcoi.app.database.data.Departments
 import org.centrexcursionistalcoi.app.database.data.Events
 import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
@@ -76,6 +77,8 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             EnumColumnAdapter(),
             UUIDAdapter,
             JsonAdapter(ListSerializer(Uuid.serializer())),
+            ZonedDateTimeAdapter,
+            ZonedDateTimeAdapter,
             UUIDAdapter,
             UUIDAdapter,
         ),

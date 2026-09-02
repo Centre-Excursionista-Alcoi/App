@@ -54,7 +54,9 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.reflect.full.companionObjectInstance
 
-private val ignoreColumns = listOf("lastUpdate")
+// "fromInstant"/"fromZone"/"toInstant"/"toZone" back Memories' `from`/`to` (ZonedDateTime), which are re-exposed as
+// combined "from"/"to" fields through CustomTableSerializer instead of their raw storage columns.
+private val ignoreColumns = listOf("lastUpdate", "fromInstant", "fromZone", "toInstant", "toZone")
 
 fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
     return encodeToString(entityClass.serializer(), entity)

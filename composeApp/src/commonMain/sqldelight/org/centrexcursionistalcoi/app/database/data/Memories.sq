@@ -1,5 +1,6 @@
 import kotlin.UInt;
 import kotlin.collections.List;
+import org.centrexcursionistalcoi.app.data.ZonedDateTime;
 import kotlin.uuid.Uuid;
 import org.centrexcursionistalcoi.app.data.Sports;
 
@@ -13,12 +14,14 @@ CREATE TABLE Memories (
     department TEXT AS Uuid REFERENCES Departments(id),
     attachments TEXT AS List<Uuid>,
     submittedBy TEXT NOT NULL,
+    fromDate TEXT AS ZonedDateTime NOT NULL,
+    toDate TEXT AS ZonedDateTime NOT NULL,
     pdf TEXT AS Uuid,
     lending TEXT AS Uuid REFERENCES Lendings(id)
 );
 
 insert:
-INSERT INTO Memories (id, place, members, externalUsers, text, sport, department, attachments, submittedBy, pdf, lending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Memories (id, place, members, externalUsers, text, sport, department, attachments, submittedBy, fromDate, toDate, pdf, lending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 get:
 SELECT * FROM Memories WHERE id = ?;
@@ -33,4 +36,4 @@ deleteById:
 DELETE FROM Memories WHERE id = ?;
 
 update:
-UPDATE Memories SET place = ?, members = ?, externalUsers = ?, text = ?, sport = ?, department = ?, attachments = ?, submittedBy = ?, pdf = ?, lending = ? WHERE id = ?;
+UPDATE Memories SET place = ?, members = ?, externalUsers = ?, text = ?, sport = ?, department = ?, attachments = ?, submittedBy = ?, fromDate = ?, toDate = ?, pdf = ?, lending = ? WHERE id = ?;

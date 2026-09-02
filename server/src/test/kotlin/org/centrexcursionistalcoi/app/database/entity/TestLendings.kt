@@ -1,12 +1,14 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
@@ -182,6 +184,8 @@ class TestLendings {
                 sport = Sports.ORIENTEERING
                 this.department = department
                 submittedBy = entity.userSub
+                from = ZonedDateTime.fromInstant(instant.toKotlinInstant(), TimeZone.currentSystemDefault())
+                to = ZonedDateTime.fromInstant(instant.toKotlinInstant(), TimeZone.currentSystemDefault())
                 lending = entity
                 pdf = memoryPdfFileEntity
             }.also { memoryEntity ->
