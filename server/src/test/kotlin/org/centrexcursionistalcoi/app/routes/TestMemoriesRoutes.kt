@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
@@ -25,6 +26,7 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
@@ -33,6 +35,9 @@ import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -228,6 +233,112 @@ class TestMemoriesRoutes : ApplicationTestBase() {
                 assertEquals("Updated place", memory.place)
                 assertEquals(memoryId.toString(), memory.id.toJavaUuid().toString())
             }
+        }
+    }
+
+    @Test
+    fun test_delete_memory_notLinkedToLending() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            MemoryEntity.new {
+                this.text = "Standalone memory"
+                this.submittedBy = user
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+        },
+    ) { context ->
+        val memory = context.dibResult!!
+
+        // A memory not linked to any lending can always be deleted
+        client.delete("/memories/${memory.id.value}").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+    }
+
+    @Test
+    fun test_delete_memory_forLending_noNewerLending() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val lending = LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 8)
+                this.to = LocalDate.of(2025, 10, 9)
+                this.returned = true
+                this.memorySubmitted = true
+                this.memorySubmittedAt = Instant.parse("2025-10-01T10:00:00Z")
+                this.timestamp = Instant.parse("2025-09-25T10:00:00Z")
+            }
+            val memory = MemoryEntity.new {
+                this.text = "Everything went great"
+                this.submittedBy = user
+                this.lending = lending
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+            Memories.update({ Memories.id eq memory.id }) {
+                it[createdAt] = Instant.parse("2025-10-01T10:00:00Z")
+            }
+            lending to memory
+        },
+    ) { context ->
+        val (lending, memory) = context.dibResult!!
+
+        client.delete("/memories/${memory.id.value}").apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        // The lending should be reset back to "memory not submitted", allowing the user to submit a new one
+        client.get("/inventory/lendings/${lending.id.value}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Lending.serializer()) { fetchedLending ->
+                assertEquals(false, fetchedLending.memorySubmitted)
+            }
+        }
+    }
+
+    @Test
+    fun test_delete_memory_forLending_newerLendingExists() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val lending = LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 10, 8)
+                this.to = LocalDate.of(2025, 10, 9)
+                this.returned = true
+                this.memorySubmitted = true
+                this.memorySubmittedAt = Instant.parse("2025-10-01T10:00:00Z")
+                this.timestamp = Instant.parse("2025-09-25T10:00:00Z")
+            }
+            val memory = MemoryEntity.new {
+                this.text = "Everything went great"
+                this.submittedBy = user
+                this.lending = lending
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+            Memories.update({ Memories.id eq memory.id }) {
+                it[createdAt] = Instant.parse("2025-10-01T10:00:00Z")
+            }
+
+            // The user has already been allowed to create a new lending, relying on this memory being submitted
+            LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate.of(2025, 11, 10)
+                this.to = LocalDate.of(2025, 11, 12)
+                this.timestamp = Instant.parse("2025-11-01T10:00:00Z")
+            }
+            memory
+        },
+    ) { context ->
+        val memory = context.dibResult!!
+
+        // Deleting the memory now would retroactively invalidate the newer lending, so it must be rejected
+        client.delete("/memories/${memory.id.value}").apply {
+            assertError(Error.CannotDeleteMemoryLendingCreatedAfter())
         }
     }
 }

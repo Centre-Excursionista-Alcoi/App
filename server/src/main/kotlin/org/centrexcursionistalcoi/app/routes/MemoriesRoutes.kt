@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
@@ -52,8 +53,11 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.io.ByteArrayOutputStream
@@ -386,6 +390,24 @@ fun Route.memoriesRoutes() {
         val memory = Database { MemoryEntity.findById(id) }
         if (memory == null) {
             respondError(Error.EntityNotFound("Memory", id.toString()))
+            return@delete
+        }
+
+        // Deleting a lending's memory resets the lending back to "memory not submitted", which would let its owner
+        // create a new lending again. If a new lending has already been created since this memory was submitted,
+        // that new lending's existence already depended on this memory being present, so the deletion must be
+        // rejected to avoid retroactively invalidating it.
+        val newerLendingExists = Database {
+            memory.lending?.let { lending ->
+                LendingEntity.find {
+                    (Lendings.id neq lending.id) and
+                        (Lendings.userSub eq lending.userSub.id) and
+                        (Lendings.timestamp greater memory.createdAt)
+                }.empty().not()
+            } ?: false
+        }
+        if (newerLendingExists) {
+            respondError(Error.CannotDeleteMemoryLendingCreatedAfter())
             return@delete
         }
 

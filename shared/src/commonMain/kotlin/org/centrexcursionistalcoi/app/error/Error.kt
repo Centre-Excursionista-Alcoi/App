@@ -516,6 +516,16 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    @Serializable
+    @SerialName("CannotDeleteMemoryLendingCreatedAfter")
+    class CannotDeleteMemoryLendingCreatedAfter: Error {
+        override val code: Int = ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER
+        override val description: String = "Cannot delete this memory: a new lending has already been created after it was submitted."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -563,6 +573,7 @@ sealed interface Error {
         const val ERROR_EVENT_IN_THE_PAST = 43
         const val ERROR_PERMISSION_REJECTED = 44
         const val ERROR_MEMORY_ALREADY_SUBMITTED = 45
+        const val ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER = 46
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -611,6 +622,7 @@ sealed interface Error {
             ERROR_EVENT_IN_THE_PAST -> EventInThePast.serializer()
             ERROR_PERMISSION_REJECTED -> PermissionRejected.serializer()
             ERROR_MEMORY_ALREADY_SUBMITTED -> MemoryAlreadySubmitted.serializer()
+            ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER -> CannotDeleteMemoryLendingCreatedAfter.serializer()
             else -> null
         }
     }
