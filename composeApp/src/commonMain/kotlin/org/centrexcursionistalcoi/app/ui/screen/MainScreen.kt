@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -70,6 +71,7 @@ import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_mes
 import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_title
 import cea_app.composeapp.generated.resources.lending_details_history
 import cea_app.composeapp.generated.resources.logout
+import cea_app.composeapp.generated.resources.memory_create
 import cea_app.composeapp.generated.resources.nav_activities
 import cea_app.composeapp.generated.resources.nav_home
 import cea_app.composeapp.generated.resources.nav_lending
@@ -102,6 +104,7 @@ import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingsHistoryDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FreeCancellation
@@ -150,6 +153,7 @@ fun MainScreen(
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onCreateMemoryRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
@@ -197,6 +201,7 @@ fun MainScreen(
             onDeleteLendingRequest = model::deleteLending,
             memories = memories,
             onMemoryEditorRequested = onMemoryEditorRequested,
+            onCreateMemoryRequested = onCreateMemoryRequested,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
@@ -328,6 +333,7 @@ private fun MainScreenContent(
 
     memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onCreateMemoryRequested: () -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -563,6 +569,20 @@ private fun MainScreenContent(
                             Res.string.shopping_list_selected,
                             shoppingList.toList().sumOf { it.second }
                         )
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = actualPage == Page.ACTIVITIES,
+                enter = slideInHorizontally { it },
+                exit = slideOutHorizontally { it },
+            ) {
+                FloatingActionButton(
+                    onClick = onCreateMemoryRequested,
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Add,
+                        contentDescription = stringResource(Res.string.memory_create)
                     )
                 }
             }

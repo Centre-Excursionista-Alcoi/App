@@ -95,5 +95,10 @@ data class ZonedDateTime(
             val localDateTime = instant.toLocalDateTime(timeZone)
             return ZonedDateTime(timeZone, localDateTime.date, localDateTime.time)
         }
+
+        fun forSystemDefault(localDateTime: LocalDateTime): ZonedDateTime {
+            val timeZone = TimeZone.currentSystemDefault()
+            return ZonedDateTime(timeZone, localDateTime.date, localDateTime.time)
+        }
     }
 }

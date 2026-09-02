@@ -5,7 +5,12 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -21,7 +26,7 @@ import com.russhwolf.settings.ExperimentalSettingsApi
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
-import io.ktor.http.*
+import io.ktor.http.Url
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.NullableUuidNavType
@@ -36,7 +41,16 @@ import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
-import org.centrexcursionistalcoi.app.ui.screen.*
+import org.centrexcursionistalcoi.app.ui.screen.ActivityMemoryEditor
+import org.centrexcursionistalcoi.app.ui.screen.AuthScreen
+import org.centrexcursionistalcoi.app.ui.screen.InventoryItemTypeDetailsScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingCreationScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingDetailsScreen
+import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
+import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
+import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
+import org.centrexcursionistalcoi.app.ui.screen.MainScreen
+import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
@@ -215,7 +229,10 @@ fun App(
                         navController.navigate(Destination.LendingDetails(it))
                     },
                     onMemoryEditorRequested = {
-                        navController.navigate(Destination.LendingMemoryEditor(it.id))
+                        navController.navigate(Destination.MemoryEditor(it.id))
+                    },
+                    onCreateMemoryRequested = {
+                        navController.navigate(Destination.MemoryEditor(null))
                     },
                     onOtherUserLendingClick = {
                         navController.navigate(Destination.Admin.LendingManagement(it))
@@ -259,7 +276,7 @@ fun App(
                 LendingDetailsScreen(
                     lendingId = lendingId,
                     onMemoryEditorRequested = {
-                        navController.navigate(Destination.LendingMemoryEditor(lendingId))
+                        navController.navigate(Destination.MemoryEditor(lendingId))
                     },
                     onBack = { navController.navigateUp() }
                 )
@@ -312,7 +329,7 @@ fun App(
                     }
                 ) { navController.navigateUp() }
             }
-            destination<Destination.LendingMemoryEditor> { route ->
+            destination<Destination.MemoryEditor> { route ->
                 val lendingId = route.lendingId
 
                 ActivityMemoryEditor(lendingId) { navController.navigateUp() }
