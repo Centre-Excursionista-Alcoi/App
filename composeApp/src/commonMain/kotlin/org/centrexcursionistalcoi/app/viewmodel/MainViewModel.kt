@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
@@ -59,6 +60,8 @@ class MainViewModel: ViewModel() {
     val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
     val lendings = LendingsRepository.selectAllAsFlow().stateInViewModel()
+
+    val memories = MemoriesRepository.selectAllAsFlow().stateInViewModel()
 
     val posts = PostsRepository.selectAllAsFlow().stateInViewModel()
 

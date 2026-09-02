@@ -34,6 +34,7 @@
     <string name="nav_lendings">Lendings</string>
     <string name="nav_lending">Lending</string>
     <string name="nav_lendings_disabled">You have pending lendings</string>
+    <string name="nav_activities">Activities</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
 
@@ -342,6 +343,13 @@
     <string name="lending_details_nfc_message">Place your device near the NFC tag to register the item automatically.</string>
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
     <string name="lending_details_history">Old Lendings</string>
+
+    <string name="activities_memories">Memories</string>
+    <string name="activities_activities">Activities</string>
+
+    <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
+    <string name="memories_message_admin">Here you can take a look at all the memories every submitted, that you have access to.</string>
+    <string name="memories_empty">No memories available</string>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
