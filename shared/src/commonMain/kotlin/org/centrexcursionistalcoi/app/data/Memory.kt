@@ -17,11 +17,17 @@ data class Memory(
     val text: String,
     val sport: Sports?,
     val department: Uuid?,
-    val files: List<Uuid>,
+    val attachments: List<Uuid>,
     val submittedBy: String,
     val pdf: Uuid? = null,
     val lending: Uuid? = null,
-): JsonSerializable, Entity<Uuid> {
+): JsonSerializable, Entity<Uuid>, FileContainer, ImageFileListContainer {
+    /** The generated summary PDF, exposed as a [FileContainer] so it's downloaded like any other single document. */
+    override val files: Map<String, Uuid?> = mapOf("pdf" to pdf)
+
+    /** The user-attached photos, exposed as an [ImageFileListContainer] (fetched on demand, like [Post.images]). */
+    override val images: List<Uuid> = attachments
+
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "place" to place,
@@ -30,7 +36,7 @@ data class Memory(
         "text" to text,
         "sport" to sport?.name,
         "department" to department,
-        "files" to files,
+        "attachments" to attachments,
         "submittedBy" to submittedBy,
         "pdf" to pdf,
         "lending" to lending,
@@ -45,7 +51,7 @@ data class Memory(
         put("text", JsonPrimitive(text))
         put("sport", JsonPrimitive(sport?.name))
         put("department", JsonPrimitive(department?.toString()))
-        put("files", JsonArray(files.map { JsonPrimitive(it.toString()) }))
+        put("attachments", JsonArray(attachments.map { JsonPrimitive(it.toString()) }))
         put("submittedBy", JsonPrimitive(submittedBy))
         put("pdf", JsonPrimitive(pdf?.toString()))
         put("lending", JsonPrimitive(lending?.toString()))
@@ -59,7 +65,7 @@ data class Memory(
         text = text,
         sport = sport,
         department = departments.find { it.id == department },
-        files = files,
+        attachments = attachments,
         submittedBy = submittedBy,
     )
 }

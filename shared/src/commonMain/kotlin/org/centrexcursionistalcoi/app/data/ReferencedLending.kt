@@ -43,5 +43,11 @@ data class ReferencedLending(
         "memoryPdf" to memory?.pdf
     )
 
-    override val referencedFiles: List<Triple<String, Uuid?, String>> get() = referencedEntity.referencedFiles
+    override val referencedFiles: List<Triple<String, Uuid?, String>>
+        get() {
+            val files = memory?.attachments.orEmpty()
+                .map { uuid -> Triple(uuid.toString(), uuid, "MemoryAttachments") }
+                .toTypedArray()
+            return listOf(*files)
+        }
 }

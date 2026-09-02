@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import kotlinx.serialization.SerializationStrategy
-import org.centrexcursionistalcoi.app.data.Memory
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
@@ -18,6 +18,8 @@ import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import java.util.UUID
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 
 object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, InventoryItemEntity>, CustomTableSerializer<UUID, LendingEntity> {
     val userSub = reference("userSub", UserReferences, onDelete = ReferenceOption.CASCADE)
@@ -55,14 +57,14 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
 
     override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
         "receivedItems" to ReceivedItem.serializer().list(),
-        "memory" to Memory.serializer(),
+        "memory" to Uuid.serializer(),
     )
 
     context(_: JdbcTransaction)
     override fun extraColumns(entity: LendingEntity): Map<String, Any?> = buildMap {
         put("receivedItems", entity.receivedItems.map { it.toReceivedItem() })
-        // "memory" is nullable and not a plain column anymore (it's linked via the optional reference on the
-        // Memories table), so it's only included when present to avoid encoding a null value.
-        entity.memory?.toData()?.let { put("memory", it) }
+        // "memory" only holds the linked memory's id (memories are their own resource, fetched separately), so
+        // it's only included when present to avoid encoding a null value.
+        entity.memory?.id?.value?.toKotlinUuid()?.let { put("memory", it) }
     }
 }

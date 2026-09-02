@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.data
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.getType
 
-fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<ReferencedInventoryItemType>) = ReferencedLending(
+fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<ReferencedInventoryItemType>, memory: Memory?) = ReferencedLending(
     id = this.id,
     user = users.getUser(userSub),
     timestamp = this.timestamp,
@@ -15,8 +15,7 @@ fun Lending.referenced(users: List<UserData>, inventoryItemTypes: List<Reference
     receivedItems = receivedItems,
     memorySubmitted = this.memorySubmitted,
     memorySubmittedAt = this.memorySubmittedAt,
-    memory = this.memory,
-    memoryPdf = this.memoryPdf,
+    memory = memory,
     memoryReviewed = this.memoryReviewed,
     from = this.from,
     to = this.to,

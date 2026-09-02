@@ -62,7 +62,7 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         text = text,
         sport = sport,
         department = department?.id?.value?.toKotlinUuid(),
-        files = files.map { it.id.value.toKotlinUuid() },
+        attachments = files.map { it.id.value.toKotlinUuid() },
         submittedBy = submittedBy.id.value,
         pdf = pdf?.id?.value?.toKotlinUuid(),
         lending = lending?.id?.value?.toKotlinUuid(),
@@ -78,7 +78,7 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         request.text?.let { text = it }
         request.sport?.let { sport = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
-        request.files?.forEach { fileWithContext ->
+        request.attachments?.forEach { fileWithContext ->
             FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
                 MemoriesFiles.deleteWhere { (MemoriesFiles.memory eq this@MemoryEntity.id) and (MemoriesFiles.file eq fileEntity.id) }
             }

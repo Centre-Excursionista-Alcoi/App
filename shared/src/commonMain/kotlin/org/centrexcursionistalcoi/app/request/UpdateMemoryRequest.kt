@@ -14,7 +14,7 @@ data class UpdateMemoryRequest(
     val text: String? = null,
     val sport: Sports? = null,
     val department: Uuid? = null,
-    val files: List<FileWithContext>? = null,
+    val attachments: List<FileWithContext>? = null,
 ): UpdateEntityRequest<Uuid, Memory> {
     override fun isEmpty(): Boolean {
         return place.isNullOrEmpty() &&
@@ -23,6 +23,6 @@ data class UpdateMemoryRequest(
             text.isNullOrEmpty() &&
             sport == null &&
             department == null &&
-            files.isNullOrEmpty()
+            attachments.isNullOrEmpty()
     }
 }

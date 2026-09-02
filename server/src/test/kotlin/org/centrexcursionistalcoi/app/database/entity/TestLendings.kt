@@ -5,7 +5,6 @@ import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
-import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
@@ -218,19 +217,7 @@ class TestLendings {
             notes = "notes",
             memorySubmitted = true,
             memorySubmittedAt = instant.toKotlinInstant(),
-            memory = Memory(
-                id = memoryId.toKotlinUuid(),
-                place = "Place",
-                members = listOf(member.memberNumber),
-                externalUsers = "John Doe",
-                text = "Lending memory text",
-                files = listOf(memoryAttachmentFileId.toKotlinUuid()),
-                department = department.id.value.toKotlinUuid(),
-                sport = Sports.ORIENTEERING,
-                submittedBy = FakeUser.SUB,
-                pdf = memoryPdfFileId.toKotlinUuid(),
-                lending = id.toKotlinUuid(),
-            ),
+            memory = memoryId.toKotlinUuid(),
             memoryReviewed = true,
             items = listOf(
                 InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3), "abc")

@@ -7,7 +7,6 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.LendingUser
-import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.adapters.InstantAdapter
@@ -22,11 +21,13 @@ import org.centrexcursionistalcoi.app.database.data.InventoryItems
 import org.centrexcursionistalcoi.app.database.data.LendingItems
 import org.centrexcursionistalcoi.app.database.data.Lendings
 import org.centrexcursionistalcoi.app.database.data.Members
+import org.centrexcursionistalcoi.app.database.data.Memories
 import org.centrexcursionistalcoi.app.database.data.Posts
 import org.centrexcursionistalcoi.app.database.data.ReceivedItems
 import org.centrexcursionistalcoi.app.database.data.Users
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 expect class DriverFactory {
     suspend fun createDriver(): SqlDriver
@@ -65,11 +66,18 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             LocalDateAdapter,
             InstantAdapter,
             InstantAdapter,
-            JsonAdapter(Memory.serializer()),
-            UUIDAdapter,
         ),
         Members.Adapter(
             EnumColumnAdapter()
+        ),
+        Memories.Adapter(
+            UUIDAdapter,
+            JsonAdapter(ListSerializer(UInt.serializer())),
+            EnumColumnAdapter(),
+            UUIDAdapter,
+            JsonAdapter(ListSerializer(Uuid.serializer())),
+            UUIDAdapter,
+            UUIDAdapter,
         ),
         Posts.Adapter(
             UUIDAdapter,

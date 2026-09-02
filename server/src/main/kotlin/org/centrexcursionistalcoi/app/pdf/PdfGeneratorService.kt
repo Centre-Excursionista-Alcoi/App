@@ -15,7 +15,7 @@ import java.awt.Color
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 import kotlin.uuid.toJavaUuid
 
 object PdfGeneratorService {
@@ -213,10 +213,10 @@ object PdfGeneratorService {
             // =========================================
             // 6. Photos
             // =========================================
-            if (memory.files.isNotEmpty()) {
+            if (memory.attachments.isNotEmpty()) {
                 drawText("Fotos:", fontTitles, FONT_SIZE_HEADER)
 
-                memory.files.forEach { uuid ->
+                memory.attachments.forEach { uuid ->
                     try {
                         val photo = photoProvider(uuid.toJavaUuid())
                         val pdImage = PDImageXObject.createFromByteArray(document, photo, uuid.toString())

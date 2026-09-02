@@ -43,7 +43,7 @@ class TestPdfGeneratorService {
             text = "S'ha realitzat una activitat molt divertida. Jo què sé què més posar aquí, ha estat genial.",
             sport = Sports.ORIENTEERING,
             department = department.id,
-            files = listOf(memoryImageFileUuid),
+            attachments = listOf(memoryImageFileUuid),
             submittedBy = FakeUser.SUB,
         )
 

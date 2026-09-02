@@ -12,7 +12,7 @@ data class ReferencedLendingMemory(
     val text: String,
     val sport: Sports?,
     val department: Department?,
-    val files: List<Uuid>,
+    val attachments: List<Uuid>,
     val submittedBy: String,
 ) {
     fun dereference() = Memory(
@@ -23,7 +23,7 @@ data class ReferencedLendingMemory(
         text = text,
         sport = sport,
         department = department?.id,
-        files = files,
+        attachments = attachments,
         submittedBy = submittedBy,
     )
 }

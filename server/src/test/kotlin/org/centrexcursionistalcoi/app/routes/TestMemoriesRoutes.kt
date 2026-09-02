@@ -106,13 +106,22 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.Created)
         }
 
-        // The lending should now expose the memory, and be marked as submitted
-        client.get("/inventory/lendings/${lending.id.value}").apply {
+        // The lending should now expose its memory's id, and be marked as submitted
+        val memoryId = client.get("/inventory/lendings/${lending.id.value}").run {
             assertStatusCode(HttpStatusCode.OK)
+            var memoryId: kotlin.uuid.Uuid? = null
             assertBody(Lending.serializer()) { fetchedLending ->
                 assertEquals(true, fetchedLending.memorySubmitted)
-                val memory = fetchedLending.memory
-                assertNotNull(memory, "Lending should expose its memory")
+                memoryId = fetchedLending.memory
+                assertNotNull(memoryId, "Lending should expose its memory's id")
+            }
+            memoryId!!
+        }
+
+        // The memory itself should be fetchable and contain the submitted content
+        client.get("/memories/$memoryId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Memory.serializer()) { memory ->
                 assertEquals("Everything went great", memory.text)
                 assertEquals(lending.id.value.toString(), memory.lending.toString())
             }

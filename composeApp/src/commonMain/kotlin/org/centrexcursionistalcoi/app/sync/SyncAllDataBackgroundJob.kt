@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
@@ -22,6 +23,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
+import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
@@ -115,7 +117,11 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             // Inventory Items requires Inventory Item Types
             InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
-            // Lendings requires Users, Inventory Item Types and Inventory Items
+            // Memories only reference Departments and (optionally) Lendings by id, no resolution is needed. They
+            // must be synced before Lendings, since a lending's memory is resolved from what's already cached here.
+            MemoriesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
+            // Lendings requires Users, Inventory Item Types, Inventory Items and Memories
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
             LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
@@ -128,6 +134,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
 
                 log.d { "Removing all data..." }
                 // order is important due to foreign key constraints. Same as above
+                MemoriesRepository.deleteAll()
                 LendingsRepository.deleteAll()
                 InventoryItemsRepository.deleteAll()
                 InventoryItemTypesRepository.deleteAll()

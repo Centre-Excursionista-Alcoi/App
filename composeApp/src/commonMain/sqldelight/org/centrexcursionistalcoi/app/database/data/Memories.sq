@@ -1,0 +1,36 @@
+import kotlin.UInt;
+import kotlin.collections.List;
+import kotlin.uuid.Uuid;
+import org.centrexcursionistalcoi.app.data.Sports;
+
+CREATE TABLE Memories (
+    id TEXT AS Uuid PRIMARY KEY NOT NULL,
+    place TEXT,
+    members TEXT AS List<UInt>,
+    externalUsers TEXT,
+    text TEXT NOT NULL,
+    sport TEXT AS Sports,
+    department TEXT AS Uuid REFERENCES Departments(id),
+    attachments TEXT AS List<Uuid>,
+    submittedBy TEXT NOT NULL,
+    pdf TEXT AS Uuid,
+    lending TEXT AS Uuid REFERENCES Lendings(id)
+);
+
+insert:
+INSERT INTO Memories (id, place, members, externalUsers, text, sport, department, attachments, submittedBy, pdf, lending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+get:
+SELECT * FROM Memories WHERE id = ?;
+
+getByLendingId:
+SELECT * FROM Memories WHERE lending = ?;
+
+selectAll:
+SELECT * FROM Memories;
+
+deleteById:
+DELETE FROM Memories WHERE id = ?;
+
+update:
+UPDATE Memories SET place = ?, members = ?, externalUsers = ?, text = ?, sport = ?, department = ?, attachments = ?, submittedBy = ?, pdf = ?, lending = ? WHERE id = ?;
