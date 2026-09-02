@@ -350,6 +350,15 @@
     <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
     <string name="memories_message_admin">Here you can take a look at all the memories every submitted, that you have access to.</string>
     <string name="memories_empty">No memories available</string>
+    <string name="memory_title">Activity Memory</string>
+    <string name="memory_from">Start Date</string>
+    <string name="memory_to">End Date</string>
+    <string name="memory_place">Place</string>
+    <string name="memory_submitted_by">Submitted by</string>
+    <string name="memory_text">Text</string>
+    <string name="memory_images">Images</string>
+    <string name="memory_members">Participating Members</string>
+    <string name="memory_external">Other people</string>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>

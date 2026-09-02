@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.activities_activities
 import cea_app.composeapp.generated.resources.activities_memories
-import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.ui.page.main.activities.MemoriesPage
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.jetbrains.compose.resources.stringResource
@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun ColumnScope.ActivitiesPage(
     isAdmin: Boolean,
-    memories: List<Memory>?
+    memories: List<ReferencedMemory>?
 ) {
     if (memories == null) {
         LoadingBox()

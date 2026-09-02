@@ -86,11 +86,11 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
 import org.centrexcursionistalcoi.app.data.Member
-import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.isStub
@@ -326,7 +326,7 @@ private fun MainScreenContent(
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
 
-    memories: List<Memory>?,
+    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
@@ -725,7 +725,7 @@ private fun MainScreenPagerContent(
     onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onLendingHistoryRequest: () -> Unit,
 
-    memories: List<Memory>?,
+    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,

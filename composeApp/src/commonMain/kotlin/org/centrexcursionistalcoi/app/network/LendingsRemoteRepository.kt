@@ -25,8 +25,10 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.data.referenced
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
@@ -51,10 +53,12 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     remoteToLocalEntityConverter = { lending ->
         val inventoryItemTypes = InventoryItemTypesRepository.selectAll()
         val users = UsersRepository.selectAll()
+        val members = MembersRepository.selectAll()
+        val departments = DepartmentsRepository.selectAll()
         // Memories are synced separately (see MemoriesRemoteRepository); this only resolves against what's
         // already cached locally, so Memories must be synced before Lendings for this to be up to date.
-        val memory = lending.memory?.let { MemoriesRepository.get(it) }
-        lending.referenced(users, inventoryItemTypes, memory)
+        val memory = lending.memory?.let { MemoriesRepository.get(it) }?.dereference()
+        lending.referenced(users, inventoryItemTypes, memory, members, departments)
     },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {

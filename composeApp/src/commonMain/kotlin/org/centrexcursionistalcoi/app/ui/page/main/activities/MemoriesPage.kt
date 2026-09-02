@@ -1,24 +1,41 @@
 package org.centrexcursionistalcoi.app.ui.page.main.activities
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.memories_empty
 import cea_app.composeapp.generated.resources.memories_message
 import cea_app.composeapp.generated.resources.memories_message_admin
-import org.centrexcursionistalcoi.app.data.Memory
+import cea_app.composeapp.generated.resources.memory_from
+import cea_app.composeapp.generated.resources.memory_place
+import cea_app.composeapp.generated.resources.memory_submitted_by
+import cea_app.composeapp.generated.resources.memory_to
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.ui.dialog.MemoryDialog
+import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
+import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Location
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun MemoriesPage(isAdmin: Boolean, memories: List<Memory>) {
+fun MemoriesPage(isAdmin: Boolean, memories: List<ReferencedMemory>) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         item {
             Text(
@@ -41,18 +58,76 @@ fun MemoriesPage(isAdmin: Boolean, memories: List<Memory>) {
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
-                MemoryCard(memory)
+                MemoryCard(isAdmin, memory)
             }
         }
     }
 }
 
 @Composable
-fun MemoryCard(memory: Memory) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+fun MemoryCard(isAdmin: Boolean, memory: ReferencedMemory) {
+    var showingDialog by remember { mutableStateOf(false) }
+    if (showingDialog) {
+        MemoryDialog(memory = memory, onDismissRequest = { showingDialog = false })
+    }
+
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        onClick = { showingDialog = true }
+    ) {
         val from = memory.from.toStringCompact()
         val to = memory.to.toStringCompact()
-        Text("Dates: from $from until $to", modifier = Modifier.padding(8.dp))
-        Text("Place: ${memory.place ?: "N/A"}", modifier = Modifier.padding(8.dp))
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).padding(top = 4.dp)) {
+            Icon(
+                imageVector = MaterialSymbols.CalendarStartOutline,
+                contentDescription = stringResource(Res.string.memory_from),
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = from,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+
+            Icon(
+                imageVector = MaterialSymbols.CalendarEndOutline,
+                contentDescription = stringResource(Res.string.memory_to),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            Text(
+                text = to,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (isAdmin) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Icon(
+                    imageVector = MaterialSymbols.Badge,
+                    contentDescription = stringResource(Res.string.memory_submitted_by),
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = memory.submittedBy.fullName,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+        memory.place?.let { place ->
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Icon(
+                    imageVector = MaterialSymbols.Location,
+                    contentDescription = stringResource(Res.string.memory_place),
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = place,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+        memory.attachments.takeIf { it.isNotEmpty() }?.let { attachments ->
+            Badge(modifier = Modifier.padding(8.dp)) { Text("${attachments.size} files") }
+        }
     }
 }

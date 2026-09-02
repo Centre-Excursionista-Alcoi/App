@@ -8,7 +8,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -43,7 +43,7 @@ object PdfGeneratorService {
     }
 
     fun generateLendingPdf(
-        memory: ReferencedLendingMemory,
+        memory: ReferencedMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
         photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data

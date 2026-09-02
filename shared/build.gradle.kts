@@ -8,9 +8,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "org.centrexcursionistalcoi.app.shared"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.android.compileSdk.get().toInt()) {
+                minorApiLevel = 0
+            }
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {

@@ -5,8 +5,9 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.database.data.Memories
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 import kotlin.uuid.Uuid
@@ -18,58 +19,83 @@ import kotlin.uuid.Uuid
  * this repository stores them independently of [LendingsRepository], regardless of whether they are linked to a
  * lending or not.
  */
-object MemoriesRepository : DatabaseRepository<Memory, Uuid>() {
+object MemoriesRepository : DatabaseRepository<ReferencedMemory, Uuid>() {
     override val queries by lazy { databaseInstance.memoriesQueries }
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<Memory>> = queries
-        .selectAll()
-        .asFlow()
-        .mapToList(dispatcher)
-        .map { list -> list.map { it.toMemory() } }
+    override suspend fun get(id: Uuid): ReferencedMemory? {
+        val memory = getRaw(id) ?: return null
+        return memory.referenced(UsersRepository.selectAll(), MembersRepository.selectAll(), DepartmentsRepository.selectAll())
+    }
 
-    override suspend fun get(id: Uuid): Memory? = queries.get(id).awaitAsList().firstOrNull()?.toMemory()
+    private suspend fun getRaw(id: Uuid): Memory? = queries.get(id).awaitAsList().firstOrNull()?.toMemory()
 
-    /** Returns the memory linked to the lending with the given [lendingId], if any. */
+    /** Returns the raw memory linked to the lending with the given [lendingId], if any. */
     suspend fun getByLendingId(lendingId: Uuid): Memory? = queries.getByLendingId(lendingId).awaitAsList().firstOrNull()?.toMemory()
 
-    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<Memory?> = queries
-        .get(id)
-        .asFlow()
-        .mapToList(dispatcher)
-        .map { it.firstOrNull()?.toMemory() }
+    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedMemory?> = combine(
+        queries.get(id).asFlow().mapToList(dispatcher),
+        UsersRepository.selectAllAsFlow(dispatcher),
+        MembersRepository.selectAllAsFlow(dispatcher),
+        DepartmentsRepository.selectAllAsFlow(dispatcher),
+    ) { rows, users, members, departments ->
+        rows.firstOrNull()?.toMemory()?.referenced(users, members, departments)
+    }
 
-    override suspend fun selectAll(): List<Memory> = queries.selectAll().awaitAsList().map { it.toMemory() }
+    override suspend fun selectAll(): List<ReferencedMemory> {
+        val users = UsersRepository.selectAll()
+        val members = MembersRepository.selectAll()
+        val departments = DepartmentsRepository.selectAll()
+        return queries.selectAll().awaitAsList().map { it.toMemory().referenced(users, members, departments) }
+    }
 
-    override suspend fun insert(item: Memory) = queries.insert(
-        id = item.id,
-        place = item.place,
-        members = item.members,
-        externalUsers = item.externalUsers,
-        text = item.text,
-        sport = item.sport,
-        department = item.department,
-        attachments = item.attachments,
-        submittedBy = item.submittedBy,
-        fromDate = item.from,
-        toDate = item.to,
-        pdf = item.pdf,
-        lending = item.lending,
+    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedMemory>> = combine(
+        queries.selectAll().asFlow().mapToList(dispatcher),
+        UsersRepository.selectAllAsFlow(dispatcher),
+        MembersRepository.selectAllAsFlow(dispatcher),
+        DepartmentsRepository.selectAllAsFlow(dispatcher),
+    ) { rows, users, members, departments ->
+        rows.map { it.toMemory().referenced(users, members, departments) }
+    }
+
+    override suspend fun insert(item: ReferencedMemory) = insertRaw(item.dereference())
+
+    override suspend fun update(item: ReferencedMemory) = updateRaw(item.dereference())
+
+    /** Inserts or updates the given raw [memory], without needing to resolve its members/department/submitter first. */
+    suspend fun insertOrUpdate(memory: Memory) {
+        if (getRaw(memory.id) != null) updateRaw(memory) else insertRaw(memory)
+    }
+
+    private suspend fun insertRaw(memory: Memory) = queries.insert(
+        id = memory.id,
+        place = memory.place,
+        members = memory.members,
+        externalUsers = memory.externalUsers,
+        text = memory.text,
+        sport = memory.sport,
+        department = memory.department,
+        attachments = memory.attachments,
+        submittedBy = memory.submittedBy,
+        fromDate = memory.from,
+        toDate = memory.to,
+        pdf = memory.pdf,
+        lending = memory.lending,
     )
 
-    override suspend fun update(item: Memory) = queries.update(
-        place = item.place,
-        members = item.members,
-        externalUsers = item.externalUsers,
-        text = item.text,
-        sport = item.sport,
-        department = item.department,
-        attachments = item.attachments,
-        submittedBy = item.submittedBy,
-        fromDate = item.from,
-        toDate = item.to,
-        pdf = item.pdf,
-        lending = item.lending,
-        id = item.id,
+    private suspend fun updateRaw(memory: Memory) = queries.update(
+        place = memory.place,
+        members = memory.members,
+        externalUsers = memory.externalUsers,
+        text = memory.text,
+        sport = memory.sport,
+        department = memory.department,
+        attachments = memory.attachments,
+        submittedBy = memory.submittedBy,
+        fromDate = memory.from,
+        toDate = memory.to,
+        pdf = memory.pdf,
+        lending = memory.lending,
+        id = memory.id,
     )
 
     override suspend fun delete(id: Uuid) {

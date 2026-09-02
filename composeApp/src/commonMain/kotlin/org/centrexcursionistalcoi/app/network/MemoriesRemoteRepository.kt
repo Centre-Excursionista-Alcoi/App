@@ -2,9 +2,13 @@ package org.centrexcursionistalcoi.app.network
 
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository.update
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
@@ -20,12 +24,16 @@ import kotlin.uuid.Uuid
  * Reading, updating and deleting are kept available (and synced) so the local database and repository layer are
  * ready to accept lending-less memories once the app exposes creating them.
  */
-object MemoriesRemoteRepository : SymmetricRemoteRepository<Uuid, Memory>(
+object MemoriesRemoteRepository : RemoteRepository<Uuid, ReferencedMemory, Uuid, Memory>(
     "/memories",
     SETTINGS_LAST_MEMORIES_SYNC,
     Memory.serializer(),
     MemoriesRepository,
     isCreationSupported = false,
+    remoteToLocalIdConverter = { it },
+    remoteToLocalEntityConverter = { memory ->
+        memory.referenced(UsersRepository.selectAll(), MembersRepository.selectAll(), DepartmentsRepository.selectAll())
+    },
 ) {
     /**
      * Patches the memory with the given [id]. Named `patch` (rather than `update`) to avoid ambiguity with the

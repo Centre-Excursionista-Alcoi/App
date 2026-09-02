@@ -24,7 +24,7 @@ data class ReferencedLending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memory: Memory?,
+    val memory: ReferencedMemory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -33,21 +33,9 @@ data class ReferencedLending(
     val items: List<ReferencedInventoryItem>,
 
     override val referencedEntity: Lending
-) : ReferencedEntity<Uuid, Lending>(), FileContainer, SubReferencedFileContainer {
+) : ReferencedEntity<Uuid, Lending>() {
 
     val durationDays: Int = from.daysUntil(to) + 1
 
     fun status(): Status = referencedEntity.status()
-
-    override val files: Map<String, Uuid?> = mapOf(
-        "memoryPdf" to memory?.pdf
-    )
-
-    override val referencedFiles: List<Triple<String, Uuid?, String>>
-        get() {
-            val files = memory?.attachments.orEmpty()
-                .map { uuid -> Triple(uuid.toString(), uuid, "MemoryAttachments") }
-                .toTypedArray()
-            return listOf(*files)
-        }
 }
