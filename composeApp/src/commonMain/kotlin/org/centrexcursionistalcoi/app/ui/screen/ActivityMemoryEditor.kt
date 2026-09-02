@@ -13,11 +13,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,7 +37,22 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.memory_editor_department
+import cea_app.composeapp.generated.resources.memory_editor_description
+import cea_app.composeapp.generated.resources.memory_editor_external_participants
+import cea_app.composeapp.generated.resources.memory_editor_external_participants_help
+import cea_app.composeapp.generated.resources.memory_editor_from
+import cea_app.composeapp.generated.resources.memory_editor_member_participants
+import cea_app.composeapp.generated.resources.memory_editor_place
+import cea_app.composeapp.generated.resources.memory_editor_place_help
+import cea_app.composeapp.generated.resources.memory_editor_save
+import cea_app.composeapp.generated.resources.memory_editor_sport
+import cea_app.composeapp.generated.resources.memory_editor_title
+import cea_app.composeapp.generated.resources.memory_editor_to
+import cea_app.composeapp.generated.resources.memory_editor_upload_image
+import cea_app.composeapp.generated.resources.memory_editor_warning_no_lending
+import cea_app.composeapp.generated.resources.remove
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -44,28 +61,31 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.displayName
 import org.centrexcursionistalcoi.app.process.Progress
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArrowBack
+import org.centrexcursionistalcoi.app.ui.data.PastSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Upload
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteFormField
+import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.utils.unaccent
 import org.centrexcursionistalcoi.app.viewmodel.ActivityMemoryEditorViewModel
 import org.jetbrains.compose.resources.stringResource
+import kotlin.uuid.Uuid
 
 @Composable
 fun ActivityMemoryEditor(
-    lendingId: Uuid,
+    lendingId: Uuid?,
     model: ActivityMemoryEditorViewModel = viewModel { ActivityMemoryEditorViewModel(lendingId) },
     onBack: () -> Unit
 ) {
@@ -82,6 +102,7 @@ fun ActivityMemoryEditor(
     }
 
     ActivityMemoryEditor(
+        isForLending = model.isForLending,
         isSaving = isSaving,
         saveProgress = saveProgress,
         members = members,
@@ -94,14 +115,17 @@ fun ActivityMemoryEditor(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun ActivityMemoryEditor(
+    isForLending: Boolean,
     isSaving: Boolean,
     saveProgress: Progress?,
     members: List<Member>?,
     departments: List<Department>?,
-    onSave: (place: String, memberUsers: List<Member>, externalUsers: String, sport: Sports?, department: Department?, description: RichTextState, files: List<PlatformFile>) -> Unit,
+    onSave: (from: ZonedDateTime?, to: ZonedDateTime?, place: String, memberUsers: List<Member>, externalUsers: String, sport: Sports?, department: Department?, description: RichTextState, files: List<PlatformFile>) -> Unit,
     onBack: () -> Unit,
 ) {
     val state = rememberRichTextState()
+    var from by remember { mutableStateOf<ZonedDateTime?>(null) }
+    var to by remember { mutableStateOf<ZonedDateTime?>(null) }
     var place by remember { mutableStateOf("") }
     var memberUsers by remember { mutableStateOf<List<Member>>(emptyList()) }
     var externalUsers by remember { mutableStateOf("") }
@@ -113,17 +137,13 @@ fun ActivityMemoryEditor(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                    ) {
-                        Icon(MaterialSymbols.ArrowBack, contentDescription = stringResource(Res.string.back))
-                    }
+                    BackButton(onBack)
                 },
                 title = { Text(stringResource(Res.string.memory_editor_title)) },
                 actions = {
                     IconButton(
                         enabled = !isSaving,
-                        onClick = { onSave(place, memberUsers, externalUsers, sport, department, state, files) }
+                        onClick = { onSave(from, to, place, memberUsers, externalUsers, sport, department, state, files) }
                     ) {
                         Icon(
                             MaterialSymbols.Upload,
@@ -140,6 +160,40 @@ fun ActivityMemoryEditor(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(paddingValues)) {
+            if (!isForLending) {
+                OutlinedCard(
+                    modifier = Modifier.padding(8.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text(
+                        text = stringResource(Res.string.memory_editor_warning_no_lending),
+                        style = MaterialTheme.typography.bodyMediumEmphasized,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                }
+
+                // TODO: Actually allow to select timezone
+                DateTimePickerFormField(
+                    value = from?.dateTime,
+                    onValueChange = { from = ZonedDateTime.forSystemDefault(it) },
+                    label = stringResource(Res.string.memory_editor_from),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    enabled = !isSaving,
+                    selectableDates = PastSelectableDates.today(),
+                )
+                DateTimePickerFormField(
+                    value = to?.dateTime,
+                    onValueChange = { to = ZonedDateTime.forSystemDefault(it) },
+                    label = stringResource(Res.string.memory_editor_to),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    enabled = !isSaving,
+                    selectableDates = PastSelectableDates.today(),
+                )
+            }
+
             // Place
             OutlinedTextField(
                 value = place,
@@ -272,6 +326,7 @@ fun ActivityMemoryEditor(
 @Composable
 fun ActivityMemoryEditor_Preview() {
     ActivityMemoryEditor(
+        isForLending = false,
         isSaving = false,
         saveProgress = null,
         departments = null,
@@ -280,7 +335,7 @@ fun ActivityMemoryEditor_Preview() {
             Member(2u, Member.Status.ACTIVE, "Bob", "12345678Z", "bob@example.com"),
             Member(3u, Member.Status.ACTIVE, "Charlie", "11223344B", "charlie@example.com"),
         ),
-        onSave = { _, _, _, _, _, _, _ -> },
+        onSave = { _, _, _, _, _, _, _, _, _ -> },
         onBack = {},
     )
 }

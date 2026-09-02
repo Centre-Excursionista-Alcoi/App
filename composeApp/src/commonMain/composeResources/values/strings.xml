@@ -34,6 +34,7 @@
     <string name="nav_lendings">Lendings</string>
     <string name="nav_lending">Lending</string>
     <string name="nav_lendings_disabled">You have pending lendings</string>
+    <string name="nav_activities">Activities</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
 
@@ -343,6 +344,22 @@
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
     <string name="lending_details_history">Old Lendings</string>
 
+    <string name="activities_memories">Memories</string>
+    <string name="activities_activities">Activities</string>
+
+    <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
+    <string name="memories_empty">No memories available</string>
+    <string name="memory_create">Create new memory</string>
+    <string name="memory_title">Activity Memory</string>
+    <string name="memory_from">Start Date</string>
+    <string name="memory_to">End Date</string>
+    <string name="memory_place">Place</string>
+    <string name="memory_submitted_by">Submitted by</string>
+    <string name="memory_text">Text</string>
+    <string name="memory_images">Images</string>
+    <string name="memory_members">Participating Members</string>
+    <string name="memory_external">Other people</string>
+
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
     <string name="personal_info_full_name">Full Name</string>
@@ -373,9 +390,12 @@
     <string name="memory_pending">Pending Memories</string>
     <string name="memory_pending_lending">Memory submission is pending.</string>
     <string name="memory_pick">Pick memory file</string>
+    <string name="memory_editor_warning_no_lending">You are creating a memory for an activity without a lending. If you did take material from the club to do the activity, please, complete the memory from that lending.</string>
     <string name="memory_editor">Open memory editor</string>
     <string name="memory_editor_title">Activity Memory Editor</string>
     <string name="memory_editor_save">Save Memory</string>
+    <string name="memory_editor_from">Start Date</string>
+    <string name="memory_editor_to">End Date</string>
     <string name="memory_editor_place">Place</string>
     <string name="memory_editor_place_help">Where the activity took place</string>
     <string name="memory_editor_member_participants">Member Participants</string>

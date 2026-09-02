@@ -23,8 +23,8 @@ data class Memory(
     val from: ZonedDateTime,
     /** When the activity described by this memory ended. For lending memories, this is the lending's [Lending.to]. */
     val to: ZonedDateTime,
-    val pdf: Uuid? = null,
-    val lending: Uuid? = null,
+    val pdf: Uuid?,
+    val lending: Uuid?,
 ): JsonSerializable, Entity<Uuid>, FileContainer, ImageFileListContainer {
     /** The generated summary PDF, exposed as a [FileContainer] so it's downloaded like any other single document. */
     override val files: Map<String, Uuid?> = mapOf("pdf" to pdf)
@@ -65,7 +65,7 @@ data class Memory(
         put("lending", JsonPrimitive(lending?.toString()))
     }
 
-    fun referenced(members: List<Member>, departments: List<Department>) = ReferencedLendingMemory(
+    fun referenced(users: List<UserData>, members: List<Member>, departments: List<Department>) = ReferencedMemory(
         id = id,
         place = place,
         members = this.members.mapNotNull { memberNumber -> members.find { it.memberNumber == memberNumber } },
@@ -74,8 +74,10 @@ data class Memory(
         sport = sport,
         department = departments.find { it.id == department },
         attachments = attachments,
-        submittedBy = submittedBy,
+        submittedBy = users.find { it.sub == submittedBy } ?: throw IllegalArgumentException("User with sub $submittedBy not found"),
         from = from,
         to = to,
+        pdf = pdf,
+        referencedEntity = this,
     )
 }

@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.nav
 
 import io.ktor.http.Url
-import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
@@ -10,6 +9,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import kotlin.uuid.Uuid
 
 @Serializable
 sealed interface Destination {
@@ -92,9 +92,9 @@ sealed interface Destination {
             .associate { it.substringBefore('=').toUuid() to it.substringAfter('=').toInt() }
     }
 
-    @Serializable @SerialName("lendingMemoryWrite") data class LendingMemoryEditor(val lendingId: Uuid) : Destination {
-        constructor(lending: ReferencedLending): this(lending.id)
-    }
+    @Serializable @SerialName("memoryEditor") data class MemoryEditor(
+        val lendingId: Uuid? = null
+    ) : Destination
 
     /**
      * Redirections from external links.

@@ -77,6 +77,7 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.data.referenced
@@ -292,7 +293,7 @@ fun LendingDetailsScreen_Content(
 
         val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
         if (isMemorySubmitted) item("memory_visualization") {
-            MemoryVisualization(lending)
+            MemoryVisualization(lending.memory ?: return@item)
         }
 
         item("basic_details") {
@@ -475,10 +476,8 @@ fun MemoryActions(
 
 @Composable
 fun MemoryVisualization(
-    lending: ReferencedLending,
+    memory: ReferencedMemory
 ) {
-    lending.memory?.pdf ?: return
-
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(Res.string.lending_details_memory_view),
@@ -486,22 +485,22 @@ fun MemoryVisualization(
             modifier = Modifier.padding(12.dp)
         )
 
-        MemoryViewButtons(lending)
+        MemoryViewButtons(memory)
     }
 }
 
 @Composable
 fun MemoryViewButtons(
-    lending: ReferencedLending,
+    memory: ReferencedMemory,
     fpm: FileProviderModel = viewModel { FileProviderModel() },
 ) {
-    val memoryPdf = lending.memory?.pdf ?: return
+    val memoryPdf = memory.pdf ?: return
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         if (PlatformShareLogic.isSupported) {
             IconButton(
                 onClick = {
-                    fpm.shareFile { lending.fetchFilePath(memoryPdf) }
+                    fpm.shareFile { memory.fetchFilePath(memoryPdf) }
                 },
             ) {
                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
@@ -510,7 +509,7 @@ fun MemoryViewButtons(
         if (PlatformOpenFileLogic.isSupported) {
             OutlinedButton(
                 onClick = {
-                    fpm.openFile { lending.fetchFilePath(memoryPdf) }
+                    fpm.openFile { memory.fetchFilePath(memoryPdf) }
                 },
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
@@ -567,7 +566,7 @@ private val previewLending = Lending(
     to = LocalDate(2025, 12, 25),
     notes = null,
     items = listOf(previewItem.referencedEntity)
-).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
+).referenced(listOf(previewUserData), listOf(previewItemType), memory = null, members = emptyList(), departments = emptyList())
 
 @Preview(showBackground = true)
 @Composable

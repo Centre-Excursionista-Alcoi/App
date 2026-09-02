@@ -24,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -70,6 +71,8 @@ import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_mes
 import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_title
 import cea_app.composeapp.generated.resources.lending_details_history
 import cea_app.composeapp.generated.resources.logout
+import cea_app.composeapp.generated.resources.memory_create
+import cea_app.composeapp.generated.resources.nav_activities
 import cea_app.composeapp.generated.resources.nav_home
 import cea_app.composeapp.generated.resources.nav_lending
 import cea_app.composeapp.generated.resources.nav_lendings
@@ -89,6 +92,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.isStub
@@ -100,9 +104,11 @@ import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingsHistoryDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FreeCancellation
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Hiking
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.History
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HomeFilled
@@ -117,6 +123,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccount
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SupervisorAccountFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Sync
+import org.centrexcursionistalcoi.app.ui.page.main.ActivitiesPage
 import org.centrexcursionistalcoi.app.ui.page.main.HomePage
 import org.centrexcursionistalcoi.app.ui.page.main.LendingPage
 import org.centrexcursionistalcoi.app.ui.page.main.LendingsPage
@@ -146,6 +153,7 @@ fun MainScreen(
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onCreateMemoryRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
@@ -160,6 +168,7 @@ fun MainScreen(
     val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
+    val memories by model.memories.collectAsState()
     val posts by model.posts.collectAsState()
     val events by model.events.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
@@ -190,7 +199,9 @@ fun MainScreen(
             onLendingClick = onLendingClick,
             onOtherUserLendingClick = onOtherUserLendingClick,
             onDeleteLendingRequest = model::deleteLending,
+            memories = memories,
             onMemoryEditorRequested = onMemoryEditorRequested,
+            onCreateMemoryRequested = onCreateMemoryRequested,
             onCreateInsurance = model::createInsurance,
             onFEMECVConnectRequested = model::connectFEMECV,
             onFEMECVDisconnectRequested = model::disconnectFEMECV,
@@ -215,7 +226,7 @@ fun MainScreen(
 }
 
 private enum class Page {
-    HOME, LENDINGS, LENDING, MANAGEMENT, PROFILE
+    HOME, LENDINGS, LENDING, ACTIVITIES, MANAGEMENT, PROFILE
 }
 
 private class NavigationItem(
@@ -265,6 +276,14 @@ private fun navigationItems(isAdmin: Boolean, isManagerOfAnyDepartment: Boolean,
                     label = Res.string.nav_lendings,
                 )
             )
+        put(
+            Page.ACTIVITIES,
+            NavigationItem(
+                icon = MaterialSymbols.Hiking,
+                filledIcon = MaterialSymbols.Hiking,
+                label = Res.string.nav_activities
+            )
+        )
         if (isAdmin || isManagerOfAnyDepartment) {
             put(
                 Page.MANAGEMENT,
@@ -311,7 +330,10 @@ private fun MainScreenContent(
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
+
+    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    onCreateMemoryRequested: () -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -550,6 +572,20 @@ private fun MainScreenContent(
                     )
                 }
             }
+            AnimatedVisibility(
+                visible = actualPage == Page.ACTIVITIES,
+                enter = slideInHorizontally { it },
+                exit = slideOutHorizontally { it },
+            ) {
+                FloatingActionButton(
+                    onClick = onCreateMemoryRequested,
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Add,
+                        contentDescription = stringResource(Res.string.memory_create)
+                    )
+                }
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
@@ -580,6 +616,7 @@ private fun MainScreenContent(
                     { cancellingLending = it },
                     onDeleteLendingRequest,
                     { showingLendingHistory = true },
+                    memories,
                     onMemoryEditorRequested,
                     onCreateInsurance,
                     onFEMECVConnectRequested,
@@ -707,6 +744,8 @@ private fun MainScreenPagerContent(
     onCancelLendingRequest: (ReferencedLending) -> Unit,
     onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onLendingHistoryRequest: () -> Unit,
+
+    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
 
     onCreateInsurance: CreateInsuranceRequest,
@@ -771,6 +810,10 @@ private fun MainScreenPagerContent(
             )
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
+
+            Page.ACTIVITIES -> ActivitiesPage(
+                memories = memories?.filter { it.submittedBy == profile }
+            )
 
             // Management page only for admins or department managers
             Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(

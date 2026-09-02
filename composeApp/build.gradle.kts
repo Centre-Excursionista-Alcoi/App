@@ -1,10 +1,10 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import java.util.Calendar
-import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
+import java.util.Calendar
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.buildkonfig)
@@ -37,9 +37,13 @@ val appVersionName: String = versionProperties.getProperty("VERSION_NAME")
 val appVersionCode: String = versionProperties.getProperty("VERSION_CODE")
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "org.centrexcursionistalcoi.app.android"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.android.compileSdk.get().toInt()) {
+                minorApiLevel = 0
+            }
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         androidResources {

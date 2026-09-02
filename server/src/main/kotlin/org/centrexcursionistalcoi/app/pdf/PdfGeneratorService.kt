@@ -8,7 +8,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -43,7 +43,7 @@ object PdfGeneratorService {
     }
 
     fun generateLendingPdf(
-        memory: ReferencedLendingMemory,
+        memory: ReferencedMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
         photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data
@@ -165,29 +165,35 @@ object PdfGeneratorService {
             // =========================================
             // 3. Participants
             // =========================================
-            drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
-            memory.members.forEach { member ->
-                drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
-            }
-            yPosition -= 10
-
-            drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
-            val externalUsers = memory.externalUsers
-            if (!externalUsers.isNullOrBlank()) {
-                externalUsers.split("\n").forEach { user ->
-                    drawText("- $user", fontRegular, FONT_SIZE_BODY)
+            if (memory.members.isNotEmpty()) {
+                drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
+                memory.members.forEach { member ->
+                    drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
                 }
+                yPosition -= 10
             }
-            yPosition -= 10
+
+            if (!memory.externalUsers.isNullOrEmpty()) {
+                drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
+                val externalUsers = memory.externalUsers
+                if (!externalUsers.isNullOrBlank()) {
+                    externalUsers.split("\n").forEach { user ->
+                        drawText("- $user", fontRegular, FONT_SIZE_BODY)
+                    }
+                }
+                yPosition -= 10
+            }
 
             // =========================================
             // 4. Items Used
             // =========================================
-            drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
-            itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
-                drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
+            if (itemsUsed.isNotEmpty()) {
+                drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
+                itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
+                    drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
+                }
+                yPosition -= 10
             }
-            yPosition -= 10
 
             // =========================================
             // 5. Markdown Text (Long Text)

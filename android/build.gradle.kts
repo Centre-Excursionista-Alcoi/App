@@ -32,7 +32,9 @@ fun getCredential(key: String): String? {
 android {
     namespace = "org.centrexcursionistalcoi.app"
     compileSdk {
-        version = release(libs.versions.android.compileSdk.get().toInt())
+        version = release(libs.versions.android.compileSdk.get().toInt()) {
+            minorApiLevel = 0
+        }
     }
 
     defaultConfig {

@@ -241,9 +241,11 @@ fun Route.memoriesRoutes() {
         // Generate the summary PDF for the memory
         val baos = ByteArrayOutputStream()
         baos.use { output ->
+            val users = Database { UserReferenceEntity.all().map { it.toData() } }
             val departments = Database { DepartmentEntity.all().map { it.toData() } }
             val referencedMemory = Database {
                 memoryEntity.toData().referenced(
+                    users = users,
                     members = MemberEntity.find { Members.id inList (members.orEmpty()) }.map { it.toMember() },
                     departments = departments,
                 )
