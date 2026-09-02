@@ -133,13 +133,6 @@ fun ActivityMemoryEditor(
     var department by remember { mutableStateOf<Department?>(null) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
-    // Form validation:
-    // If not for lending, from and to must be provided, and description must not be empty.
-    // If for lending, only description must not be empty.
-    val formValid = isForLending || (from != null && to != null) && state.toMarkdown().isNotEmpty()
-
-    // TODO: Instead of disabling the upload button, when clicking, scroll and highlight the first invalid field, and show a message
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -149,7 +142,7 @@ fun ActivityMemoryEditor(
                 title = { Text(stringResource(Res.string.memory_editor_title)) },
                 actions = {
                     IconButton(
-                        enabled = formValid && !isSaving,
+                        enabled = !isSaving,
                         onClick = { onSave(from, to, place, memberUsers, externalUsers, sport, department, state, files) }
                     ) {
                         Icon(
