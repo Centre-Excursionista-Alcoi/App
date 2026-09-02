@@ -153,6 +153,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             MemoryEntity.new {
                 this.text = "Not yours to see"
                 this.lending = lending
+                this.submittedBy = otherUser
             }
         },
     ) { context ->

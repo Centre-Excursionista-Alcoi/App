@@ -1,10 +1,6 @@
 package org.centrexcursionistalcoi.app.database.utils
 
 import io.ktor.util.reflect.instanceOf
-import java.time.Instant
-import java.time.LocalDate
-import java.util.UUID
-import kotlin.reflect.full.companionObjectInstance
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
@@ -30,6 +26,7 @@ import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
 import org.jetbrains.exposed.v1.core.BooleanColumnType
 import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
+import org.jetbrains.exposed.v1.core.EnumerationNameColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.StringColumnType
@@ -52,6 +49,10 @@ import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
+import java.util.UUID
+import kotlin.reflect.full.companionObjectInstance
 
 private val ignoreColumns = listOf("lastUpdate")
 
@@ -122,6 +123,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
                     is UUIDColumnType -> element(column.name, UUIDSerializer.descriptor, isOptional = type.nullable)
+                    is EnumerationNameColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // Enums are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
                     is JsonColumnType<*> -> element(column.name, JsonObject.serializer().descriptor, isOptional = type.nullable)
@@ -222,6 +224,9 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                         }
                         is UUIDColumnType -> {
                             encodeSerializableElement(descriptor, idx, UUIDSerializer, typeValue as UUID)
+                        }
+                        is EnumerationNameColumnType<*> -> {
+                            encodeStringElement(descriptor, idx, typeValue.toString())
                         }
                         is BasicBinaryColumnType -> {
                             encodeSerializableElement(descriptor, idx, Base64Serializer, typeValue as ByteArray)
