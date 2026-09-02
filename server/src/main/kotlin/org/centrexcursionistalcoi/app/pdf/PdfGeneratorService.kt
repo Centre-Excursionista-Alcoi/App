@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.pdf
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.char
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -13,8 +16,6 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.io.OutputStream
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.uuid.toJavaUuid
 
@@ -48,7 +49,6 @@ object PdfGeneratorService {
         memory: ReferencedLendingMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
-        dateRange: Pair<LocalDate, LocalDate>,
         photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream
     ) {
@@ -151,8 +151,36 @@ object PdfGeneratorService {
             // =========================================
             drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
-            val fmt = DateTimeFormatter.ofPattern("dd MMMM, yyyy")
-            drawText("Dates: des del ${dateRange.first.format(fmt)} fins al ${dateRange.second.format(fmt)}", fontRegular, FONT_SIZE_BODY)
+            val simpleFormat = DateTimeComponents.Format {
+                year()
+                char('/')
+                monthNumber()
+                char('/')
+                day()
+            }
+            val timezoneFormat = DateTimeComponents.Format {
+                year()
+                char('/')
+                monthNumber()
+                char('/')
+                day()
+                chars(" (")
+                timeZoneId()
+                char(')')
+            }
+            val fromDate = if (memory.from.timeZone == TimeZone.currentSystemDefault()) {
+                // If the memory's timezone is the same as the system's, we can format it directly
+                memory.from.format(simpleFormat)
+            } else {
+                // If the memory's timezone is different, make it explicit in the format
+                memory.from.format(timezoneFormat)
+            }
+            val toDate = if (memory.to.timeZone == TimeZone.currentSystemDefault()) {
+                memory.to.format(simpleFormat)
+            } else {
+                memory.to.format(timezoneFormat)
+            }
+            drawText("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
 
             if (memory.place != null) {
                 drawText("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)

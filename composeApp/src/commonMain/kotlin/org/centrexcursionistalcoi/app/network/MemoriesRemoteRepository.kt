@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.network
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository.update
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -39,10 +40,12 @@ object MemoriesRemoteRepository : SymmetricRemoteRepository<Uuid, Memory>(
         sport: Sports? = null,
         department: Uuid? = null,
         attachments: List<FileWithContext>? = null,
+        from: ZonedDateTime? = null,
+        to: ZonedDateTime? = null,
         progressNotifier: ProgressNotifier? = null,
     ) = update(
         id,
-        UpdateMemoryRequest(place, members, externalUsers, text, sport, department, attachments),
+        UpdateMemoryRequest(place, members, externalUsers, text, sport, department, attachments, from, to),
         UpdateMemoryRequest.serializer(),
         progressNotifier,
     )

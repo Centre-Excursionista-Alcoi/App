@@ -50,6 +50,8 @@ object MemoriesRepository : DatabaseRepository<Memory, Uuid>() {
         department = item.department,
         attachments = item.attachments,
         submittedBy = item.submittedBy,
+        fromDate = item.from,
+        toDate = item.to,
         pdf = item.pdf,
         lending = item.lending,
     )
@@ -63,6 +65,8 @@ object MemoriesRepository : DatabaseRepository<Memory, Uuid>() {
         department = item.department,
         attachments = item.attachments,
         submittedBy = item.submittedBy,
+        fromDate = item.from,
+        toDate = item.to,
         pdf = item.pdf,
         lending = item.lending,
         id = item.id,
@@ -82,6 +86,8 @@ object MemoriesRepository : DatabaseRepository<Memory, Uuid>() {
         department = department,
         attachments = attachments.orEmpty(),
         submittedBy = submittedBy,
+        from = fromDate,
+        to = toDate,
         pdf = pdf,
         lending = lending,
     )

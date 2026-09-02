@@ -14,6 +14,8 @@ data class ReferencedLendingMemory(
     val department: Department?,
     val attachments: List<Uuid>,
     val submittedBy: String,
+    val from: ZonedDateTime,
+    val to: ZonedDateTime,
 ) {
     fun dereference() = Memory(
         id = id,
@@ -25,5 +27,7 @@ data class ReferencedLendingMemory(
         department = department?.id,
         attachments = attachments,
         submittedBy = submittedBy,
+        from = from,
+        to = to,
     )
 }
