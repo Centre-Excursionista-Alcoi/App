@@ -4,10 +4,27 @@ import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.FileWithContext
+import org.centrexcursionistalcoi.app.data.LendingUser
+import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.adapters.*
-import org.centrexcursionistalcoi.app.database.data.*
+import org.centrexcursionistalcoi.app.database.adapters.InstantAdapter
+import org.centrexcursionistalcoi.app.database.adapters.JsonAdapter
+import org.centrexcursionistalcoi.app.database.adapters.ListStringAdapter
+import org.centrexcursionistalcoi.app.database.adapters.LocalDateAdapter
+import org.centrexcursionistalcoi.app.database.adapters.UUIDAdapter
+import org.centrexcursionistalcoi.app.database.data.Departments
+import org.centrexcursionistalcoi.app.database.data.Events
+import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
+import org.centrexcursionistalcoi.app.database.data.InventoryItems
+import org.centrexcursionistalcoi.app.database.data.LendingItems
+import org.centrexcursionistalcoi.app.database.data.Lendings
+import org.centrexcursionistalcoi.app.database.data.Members
+import org.centrexcursionistalcoi.app.database.data.Posts
+import org.centrexcursionistalcoi.app.database.data.ReceivedItems
+import org.centrexcursionistalcoi.app.database.data.Users
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -48,7 +65,7 @@ suspend fun createDatabase(driverFactory: DriverFactory): Database {
             LocalDateAdapter,
             InstantAdapter,
             InstantAdapter,
-            JsonAdapter(LendingMemory.serializer()),
+            JsonAdapter(Memory.serializer()),
             UUIDAdapter,
         ),
         Members.Adapter(

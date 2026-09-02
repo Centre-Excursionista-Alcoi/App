@@ -22,8 +22,7 @@ data class Lending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memory: LendingMemory?,
-    val memoryPdf: Uuid?,
+    val memory: Memory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -79,7 +78,7 @@ data class Lending(
     }
 
     override val files: Map<String, Uuid?> = mapOf(
-        "memoryPdf" to memoryPdf
+        "memoryPdf" to memory?.pdf
     )
 
     override val referencedFiles: List<Triple<String, Uuid?, String>>

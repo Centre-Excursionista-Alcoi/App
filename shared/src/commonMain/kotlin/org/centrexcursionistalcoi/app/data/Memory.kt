@@ -9,7 +9,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlin.uuid.Uuid
 
 @Serializable
-data class LendingMemory(
+data class Memory(
+    override val id: Uuid,
     val place: String?,
     val members: List<UInt>,
     val externalUsers: String?,
@@ -17,9 +18,27 @@ data class LendingMemory(
     val sport: Sports?,
     val department: Uuid?,
     val files: List<Uuid>,
-): JsonSerializable {
+    val submittedBy: String,
+    val pdf: Uuid? = null,
+    val lending: Uuid? = null,
+): JsonSerializable, Entity<Uuid> {
+    override fun toMap(): Map<String, Any?> = mapOf(
+        "id" to id,
+        "place" to place,
+        "members" to members,
+        "externalUsers" to externalUsers,
+        "text" to text,
+        "sport" to sport?.name,
+        "department" to department,
+        "files" to files,
+        "submittedBy" to submittedBy,
+        "pdf" to pdf,
+        "lending" to lending,
+    )
+
     @OptIn(ExperimentalSerializationApi::class)
     override fun toJsonObject(): JsonObject = buildJsonObject {
+        put("id", JsonPrimitive(id.toString()))
         put("place", JsonPrimitive(place))
         put("members", JsonArray(members.map { JsonPrimitive(it) }))
         put("externalUsers", JsonPrimitive(externalUsers))
@@ -27,9 +46,13 @@ data class LendingMemory(
         put("sport", JsonPrimitive(sport?.name))
         put("department", JsonPrimitive(department?.toString()))
         put("files", JsonArray(files.map { JsonPrimitive(it.toString()) }))
+        put("submittedBy", JsonPrimitive(submittedBy))
+        put("pdf", JsonPrimitive(pdf?.toString()))
+        put("lending", JsonPrimitive(lending?.toString()))
     }
 
     fun referenced(members: List<Member>, departments: List<Department>) = ReferencedLendingMemory(
+        id = id,
         place = place,
         members = this.members.mapNotNull { memberNumber -> members.find { it.memberNumber == memberNumber } },
         externalUsers = externalUsers,
@@ -37,5 +60,6 @@ data class LendingMemory(
         sport = sport,
         department = departments.find { it.id == department },
         files = files,
+        submittedBy = submittedBy,
     )
 }

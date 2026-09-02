@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.fs
 
 import io.ktor.http.ContentType
 import io.ktor.http.fileExtensions
-import java.time.Instant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 object VirtualFileSystem {
     private val forcedExtensions = mapOf(
@@ -159,7 +159,7 @@ object VirtualFileSystem {
             entityClass = LendingEntity,
             idConverter = { it.toUUIDOrNull() },
             customFileDisplayName = { it.userSub.fullName + " :: " + it.from + " - " + it.to },
-        ) { lending -> lending.memoryPdf },
+        ) { lending -> lending.memory?.pdf },
         RootDir(
             name = "Insurances",
             entityClass = UserInsuranceEntity,

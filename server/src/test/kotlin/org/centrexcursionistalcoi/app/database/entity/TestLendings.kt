@@ -3,15 +3,21 @@ package org.centrexcursionistalcoi.app.database.entity
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ReceivedItem
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
@@ -93,6 +99,7 @@ class TestLendings {
         val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUUID()
         val itemTypeId = "2c3c5f3d-5c5e-4916-988c-225b57f91cfa".toUUID()
         val receivedItemId = "786a1c86-6e7d-4cdc-bebf-d1540f67029b".toUUID()
+        val memoryId = "5b9f2b34-2a58-4b9d-9a2b-9f6a6e6f2a01".toUUID()
         val memoryPdfFileId = "bd84fb5c-9356-4abe-a8e5-0aea77b7b7cb".toUUID()
         val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUUID()
 
@@ -124,16 +131,6 @@ class TestLendings {
                 notes = "notes"
                 memorySubmitted = true
                 memorySubmittedAt = instant
-                memory = LendingMemory(
-                    place = "Place",
-                    members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
-                    externalUsers = "John Doe",
-                    text = "Lending memory text",
-                    files = listOf(memoryAttachmentFileId.toKotlinUuid()),
-                    department = department.id.value.toKotlinUuid(),
-                    sport = Sports.ORIENTEERING,
-                )
-                memoryPdf = memoryPdfFileEntity
                 memoryReviewed = true
             }
         }
@@ -168,11 +165,32 @@ class TestLendings {
             }
         }
         // Upload memory attachment
-        Database {
+        val memoryAttachmentFileEntity = Database {
             FileEntity.new(memoryAttachmentFileId) {
                 name = "attachment.pdf"
                 type = "application/pdf"
                 bytes = byteArrayOf(1, 2, 3, 4)
+            }
+        }
+        // Create the memory, linked to the lending. Memories are stored in their own tables and only optionally
+        // reference a lending.
+        val member = transaction { FakeUser.provideMemberEntity() }
+        Database {
+            MemoryEntity.new(memoryId) {
+                place = "Place"
+                externalPeople = "John Doe"
+                text = "Lending memory text"
+                sport = Sports.ORIENTEERING
+                this.department = department
+                submittedBy = entity.userSub
+                lending = entity
+                pdf = memoryPdfFileEntity
+            }.also { memoryEntity ->
+                memoryEntity.members = SizedCollection(listOf(member))
+                MemoriesFiles.insert {
+                    it[memory] = memoryEntity.id
+                    it[file] = memoryAttachmentFileEntity.id
+                }
             }
         }
 
@@ -200,16 +218,19 @@ class TestLendings {
             notes = "notes",
             memorySubmitted = true,
             memorySubmittedAt = instant.toKotlinInstant(),
-            memory = LendingMemory(
+            memory = Memory(
+                id = memoryId.toKotlinUuid(),
                 place = "Place",
-                members = listOf(transaction { FakeUser.provideMemberEntity() }.memberNumber),
+                members = listOf(member.memberNumber),
                 externalUsers = "John Doe",
                 text = "Lending memory text",
                 files = listOf(memoryAttachmentFileId.toKotlinUuid()),
                 department = department.id.value.toKotlinUuid(),
                 sport = Sports.ORIENTEERING,
+                submittedBy = FakeUser.SUB,
+                pdf = memoryPdfFileId.toKotlinUuid(),
+                lending = id.toKotlinUuid(),
             ),
-            memoryPdf = memoryPdfFileId.toKotlinUuid(),
             memoryReviewed = true,
             items = listOf(
                 InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3), "abc")
