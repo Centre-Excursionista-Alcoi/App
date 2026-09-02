@@ -13,8 +13,6 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.io.OutputStream
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.uuid.toJavaUuid
 
@@ -48,7 +46,6 @@ object PdfGeneratorService {
         memory: ReferencedLendingMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
-        dateRange: Pair<LocalDate, LocalDate>,
         photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream
     ) {
@@ -151,8 +148,9 @@ object PdfGeneratorService {
             // =========================================
             drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
-            val fmt = DateTimeFormatter.ofPattern("dd MMMM, yyyy")
-            drawText("Dates: des del ${dateRange.first.format(fmt)} fins al ${dateRange.second.format(fmt)}", fontRegular, FONT_SIZE_BODY)
+            val fromDate = memory.from.toStringCompact()
+            val toDate = memory.to.toStringCompact()
+            drawText("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
 
             if (memory.place != null) {
                 drawText("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)

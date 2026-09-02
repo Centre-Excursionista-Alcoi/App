@@ -16,11 +16,15 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -47,7 +51,6 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
-import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -95,6 +98,8 @@ fun Route.memoriesRoutes() {
         var sport: Sports? = null
         var departmentId: UUID? = null
         var lendingId: UUID? = null
+        var fromRaw: ZonedDateTime? = null
+        var toRaw: ZonedDateTime? = null
         var attachedFiles: List<FileRequestData> = emptyList()
 
         val multiPartData = call.receiveMultipart()
@@ -110,6 +115,8 @@ fun Route.memoriesRoutes() {
                     "text" -> plainText = part.value.takeIf { it.isNotBlank() }
                     "department" -> departmentId = part.value.toUUIDOrNull()
                     "lending" -> lendingId = part.value.toUUIDOrNull()
+                    "from" -> fromRaw = runCatching { ZonedDateTime.parse(part.value) }.getOrNull()
+                    "to" -> toRaw = runCatching { ZonedDateTime.parse(part.value) }.getOrNull()
                     "sport" -> {
                         sport = try {
                             Sports.valueOf(part.value)
@@ -172,6 +179,29 @@ fun Route.memoriesRoutes() {
             lendingEntity
         }
 
+        // For lending memories, the date range is taken from the lending itself. Standalone memories must provide it.
+        val (from, to) = if (lending != null) {
+            val zone = TimeZone.currentSystemDefault()
+            Database {
+                ZonedDateTime(zone, lending.from.toKotlinLocalDate(), LocalTime(0, 0, 0)) to
+                    ZonedDateTime(zone, lending.to.toKotlinLocalDate(), LocalTime(23, 59, 59))
+            }
+        } else {
+            if (fromRaw == null) {
+                respondError(Error.MissingArgument("from"))
+                return@post
+            }
+            if (toRaw == null) {
+                respondError(Error.MissingArgument("to"))
+                return@post
+            }
+            if (toRaw!!.toInstant() < fromRaw!!.toInstant()) {
+                respondError(Error.EndDateCannotBeBeforeStart())
+                return@post
+            }
+            fromRaw!! to toRaw!!
+        }
+
         // If given, make sure the department exists
         val department = departmentId?.let { deptId ->
             val departmentEntity = Database { DepartmentEntity.findById(deptId) }
@@ -194,6 +224,8 @@ fun Route.memoriesRoutes() {
                 this.sport = sport
                 this.department = department
                 this.submittedBy = userReference
+                this.from = from
+                this.to = to
                 this.lending = lending
             }.also { entity ->
                 entity.members = SizedCollection(MemberEntity.find { Members.id inList members.orEmpty() }.toList())
@@ -221,12 +253,10 @@ fun Route.memoriesRoutes() {
                     item.toData().referenced(item.type.toData().referenced(departments))
                 }
             }
-            val dateRange = Database { lending?.let { it.from to it.to } } ?: (today() to today())
             PdfGeneratorService.generateLendingPdf(
                 referencedMemory,
                 itemsUsed = itemsUsed,
                 submittedBy = userReference.fullName,
-                dateRange = dateRange,
                 photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
                 outputStream = output,
             )

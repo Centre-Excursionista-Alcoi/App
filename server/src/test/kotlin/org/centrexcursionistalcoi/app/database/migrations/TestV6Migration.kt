@@ -58,11 +58,16 @@ class TestV6Migration : PostgresTestBase() {
         }
 
         // Simulate an old (pre-migration) database: add back the legacy columns, and fill them in as the old
-        // `add_memory` endpoint used to.
+        // `add_memory` endpoint used to. Also drop `memories.fromInstant`/`fromZone`/`toInstant`/`toZone` (added
+        // later by V7), since at the time V6 runs, that concept doesn't exist yet -- V6's own inserts don't set them.
         Database.exec(
             """
                 ALTER TABLE lendings ADD COLUMN memory json;
                 ALTER TABLE lendings ADD COLUMN "memoryPdf" uuid;
+                ALTER TABLE memories DROP COLUMN "fromInstant";
+                ALTER TABLE memories DROP COLUMN "fromZone";
+                ALTER TABLE memories DROP COLUMN "toInstant";
+                ALTER TABLE memories DROP COLUMN "toZone";
             """.trimIndent()
         ).assertTrue()
 

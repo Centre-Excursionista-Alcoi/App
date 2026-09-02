@@ -19,6 +19,10 @@ data class Memory(
     val department: Uuid?,
     val attachments: List<Uuid>,
     val submittedBy: String,
+    /** When the activity described by this memory started. For lending memories, this is the lending's [Lending.from]. */
+    val from: ZonedDateTime,
+    /** When the activity described by this memory ended. For lending memories, this is the lending's [Lending.to]. */
+    val to: ZonedDateTime,
     val pdf: Uuid? = null,
     val lending: Uuid? = null,
 ): JsonSerializable, Entity<Uuid>, FileContainer, ImageFileListContainer {
@@ -38,6 +42,8 @@ data class Memory(
         "department" to department,
         "attachments" to attachments,
         "submittedBy" to submittedBy,
+        "from" to from,
+        "to" to to,
         "pdf" to pdf,
         "lending" to lending,
     )
@@ -53,6 +59,8 @@ data class Memory(
         put("department", JsonPrimitive(department?.toString()))
         put("attachments", JsonArray(attachments.map { JsonPrimitive(it.toString()) }))
         put("submittedBy", JsonPrimitive(submittedBy))
+        put("from", JsonPrimitive(from.toString()))
+        put("to", JsonPrimitive(to.toString()))
         put("pdf", JsonPrimitive(pdf?.toString()))
         put("lending", JsonPrimitive(lending?.toString()))
     }
@@ -67,5 +75,7 @@ data class Memory(
         department = departments.find { it.id == department },
         attachments = attachments,
         submittedBy = submittedBy,
+        from = from,
+        to = to,
     )
 }

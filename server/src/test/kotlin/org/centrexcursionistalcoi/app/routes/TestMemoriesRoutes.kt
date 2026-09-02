@@ -9,6 +9,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
@@ -16,6 +19,8 @@ import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.data.ZonedDateTime
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
@@ -33,7 +38,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 import kotlin.uuid.toJavaUuid
+import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 class TestMemoriesRoutes : ApplicationTestBase() {
 
@@ -51,13 +58,26 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_create_memory_standalone_missingDateRange() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.submitFormWithBinaryData("/memories", formData { append("text", "No date range given") }).apply {
+            assertError(Error.MissingArgument("from"))
+        }
+    }
+
+    @Test
     fun test_create_memory_standalone() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val zone = TimeZone.currentSystemDefault()
+        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+
         val location = client.submitFormWithBinaryData(
             "/memories",
             formData {
                 append("text", "A memory with no lending attached")
                 append("place", "Alcoi")
                 append("sport", Sports.HIKING.name)
+                append("from", from.toString())
+                append("to", to.toString())
             }
         ).run {
             assertStatusCode(HttpStatusCode.Created)
@@ -72,6 +92,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
                 assertEquals("A memory with no lending attached", memory.text)
                 assertEquals("Alcoi", memory.place)
                 assertEquals(Sports.HIKING, memory.sport)
+                assertEquals(from, memory.from)
+                assertEquals(to, memory.to)
                 assertNull(memory.lending, "Standalone memory should not be linked to a lending")
                 assertNotNull(memory.pdf, "A summary PDF should have been generated")
             }
@@ -118,12 +140,23 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             memoryId!!
         }
 
-        // The memory itself should be fetchable and contain the submitted content
+        // The memory itself should be fetchable and contain the submitted content, with its date range taken
+        // automatically from the lending's own from/to.
         client.get("/memories/$memoryId").apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Memory.serializer()) { memory ->
                 assertEquals("Everything went great", memory.text)
                 assertEquals(lending.id.value.toString(), memory.lending.toString())
+                val (lendingFrom, lendingTo) = Database { lending.from to lending.to }
+                val zone = TimeZone.currentSystemDefault()
+                assertEquals(
+                    ZonedDateTime(zone, lendingFrom.toKotlinLocalDate(), LocalTime(0, 0, 0)),
+                    memory.from,
+                )
+                assertEquals(
+                    ZonedDateTime(zone, lendingTo.toKotlinLocalDate(), LocalTime(23, 59, 59)),
+                    memory.to,
+                )
             }
         }
 
@@ -154,6 +187,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
                 this.text = "Not yours to see"
                 this.lending = lending
                 this.submittedBy = otherUser
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
             }
         },
     ) { context ->
@@ -168,7 +203,11 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     fun test_patch_memory() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val location = client.submitFormWithBinaryData(
             "/memories",
-            formData { append("text", "Original text") }
+            formData {
+                append("text", "Original text")
+                append("from", ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)).toString())
+                append("to", ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)).toString())
+            }
         ).run {
             assertStatusCode(HttpStatusCode.Created)
             headers[HttpHeaders.Location]!!
