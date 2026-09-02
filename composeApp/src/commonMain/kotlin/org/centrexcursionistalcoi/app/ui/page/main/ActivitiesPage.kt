@@ -51,7 +51,7 @@ fun ColumnScope.ActivitiesPage(
             modifier = Modifier.fillMaxWidth().weight(1f),
         ) { page ->
             when (page) {
-                0 -> MemoriesPage(memories)
+                0 -> MemoriesPage(isAdmin, memories)
             }
         }
     }
