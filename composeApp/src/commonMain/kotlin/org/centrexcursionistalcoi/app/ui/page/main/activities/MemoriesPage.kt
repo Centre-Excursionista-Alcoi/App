@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.page.main.activities
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,26 +21,23 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.memories_empty
 import cea_app.composeapp.generated.resources.memories_message
-import cea_app.composeapp.generated.resources.memories_message_admin
 import cea_app.composeapp.generated.resources.memory_from
 import cea_app.composeapp.generated.resources.memory_place
-import cea_app.composeapp.generated.resources.memory_submitted_by
 import cea_app.composeapp.generated.resources.memory_to
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.ui.dialog.MemoryDialog
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Location
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun MemoriesPage(isAdmin: Boolean, memories: List<ReferencedMemory>) {
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+fun MemoriesPage(memories: List<ReferencedMemory>) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             Text(
-                text = if (isAdmin) stringResource(Res.string.memories_message_admin) else stringResource(Res.string.memories_message),
+                text = stringResource(Res.string.memories_message),
                 modifier = Modifier.padding(8.dp)
             )
         }
@@ -58,14 +56,14 @@ fun MemoriesPage(isAdmin: Boolean, memories: List<ReferencedMemory>) {
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
-                MemoryCard(isAdmin, memory)
+                MemoryCard(memory)
             }
         }
     }
 }
 
 @Composable
-fun MemoryCard(isAdmin: Boolean, memory: ReferencedMemory) {
+fun MemoryCard(memory: ReferencedMemory) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         MemoryDialog(memory = memory, onDismissRequest = { showingDialog = false })
@@ -99,19 +97,6 @@ fun MemoryCard(isAdmin: Boolean, memory: ReferencedMemory) {
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
-        }
-        if (isAdmin) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
-                Icon(
-                    imageVector = MaterialSymbols.Badge,
-                    contentDescription = stringResource(Res.string.memory_submitted_by),
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = memory.submittedBy.fullName,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
         }
         memory.place?.let { place ->
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {

@@ -348,7 +348,6 @@
     <string name="activities_activities">Activities</string>
 
     <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
-    <string name="memories_message_admin">Here you can take a look at all the memories every submitted, that you have access to.</string>
     <string name="memories_empty">No memories available</string>
     <string name="memory_create">Create new memory</string>
     <string name="memory_title">Activity Memory</string>

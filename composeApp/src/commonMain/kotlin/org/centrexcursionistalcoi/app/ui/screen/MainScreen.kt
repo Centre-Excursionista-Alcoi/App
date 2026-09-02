@@ -811,7 +811,9 @@ private fun MainScreenPagerContent(
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
 
-            Page.ACTIVITIES -> ActivitiesPage(profile.isAdmin, memories)
+            Page.ACTIVITIES -> ActivitiesPage(
+                memories = memories?.filter { it.submittedBy == profile }
+            )
 
             // Management page only for admins or department managers
             Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
