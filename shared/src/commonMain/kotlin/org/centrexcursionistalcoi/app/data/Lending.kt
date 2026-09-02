@@ -22,15 +22,15 @@ data class Lending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memory: LendingMemory?,
-    val memoryPdf: Uuid?,
+    /** The id of the linked memory, if any. Memories are their own resource, fetched separately. */
+    val memory: Uuid?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
     val to: LocalDate,
     val notes: String?,
     val items: List<InventoryItem>,
-): Entity<Uuid>, FileContainer, SubReferencedFileContainer {
+): Entity<Uuid> {
     enum class Status {
         REQUESTED,
         CONFIRMED,
@@ -77,16 +77,4 @@ data class Lending(
         confirmed && !taken -> Status.CONFIRMED
         else -> Status.REQUESTED
     }
-
-    override val files: Map<String, Uuid?> = mapOf(
-        "memoryPdf" to memoryPdf
-    )
-
-    override val referencedFiles: List<Triple<String, Uuid?, String>>
-        get() {
-            val files = memory?.files.orEmpty()
-                .map { uuid -> Triple(uuid.toString(), uuid, "MemoryAttachments") }
-                .toTypedArray()
-            return listOf(*files)
-        }
 }

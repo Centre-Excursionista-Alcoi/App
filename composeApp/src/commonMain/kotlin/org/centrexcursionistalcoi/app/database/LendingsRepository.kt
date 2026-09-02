@@ -7,11 +7,21 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.Memory
+import org.centrexcursionistalcoi.app.data.ReceivedItem
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository.toInventoryItemType
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository.toInventoryItem
 import org.centrexcursionistalcoi.app.database.UsersRepository.toUser
-import org.centrexcursionistalcoi.app.database.data.*
+import org.centrexcursionistalcoi.app.database.data.InventoryItemTypes
+import org.centrexcursionistalcoi.app.database.data.InventoryItems
+import org.centrexcursionistalcoi.app.database.data.LendingItems
+import org.centrexcursionistalcoi.app.database.data.Lendings
+import org.centrexcursionistalcoi.app.database.data.ReceivedItems
+import org.centrexcursionistalcoi.app.database.data.Users
 import org.centrexcursionistalcoi.app.storage.databaseInstance
 import kotlin.uuid.Uuid
 
@@ -31,7 +41,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val users = usersQueries.selectAll().awaitAsList()
         val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
         val departments = DepartmentsRepository.selectAll()
-        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+        val memory = MemoriesRepository.getByLendingId(id)
+        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments, memory)
     }
 
     override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedLending?> {
@@ -42,6 +53,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
         val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
+        val memories = MemoriesRepository.selectAllAsFlow(dispatcher)
         @Suppress("UNCHECKED_CAST")
         return combine(
             lendingFlow,
@@ -51,6 +63,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             usersQueries,
             receivedItemsFlow,
             departments,
+            memories,
         ) { flows ->
             val lending = flows[0] as Lendings?
             val items = flows[1] as List<LendingItems>
@@ -59,7 +72,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             val users = flows[4] as List<Users>
             val receivedItems = flows[5] as List<ReceivedItems>
             val departments = flows[6] as List<Department>
-            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+            val memories = flows[7] as List<Memory>
+            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments, memories.find { it.lending == id })
         }
     }
 
@@ -71,6 +85,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
         val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
         val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
+        val memories = MemoriesRepository.selectAllAsFlow(dispatcher)
         @Suppress("UNCHECKED_CAST")
         return combine(
             lendingsFlow,
@@ -79,7 +94,8 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             inventoryItemTypesFlow,
             usersQueries,
             receivedItemsFlow,
-            departments
+            departments,
+            memories,
         ) { flows ->
             val lendings = flows[0] as List<Lendings>
             val items = flows[1] as List<LendingItems>
@@ -88,9 +104,11 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             val users = flows[4] as List<Users>
             val receivedItems = flows[5] as List<ReceivedItems>
             val departments = flows[6] as List<Department>
+            val memories = flows[7] as List<Memory>
             lendings.map { lending ->
                 val relatedItems = items.filter { it.lendingId == lending.id }
-                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+                val memory = memories.find { it.lending == lending.id }
+                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments, memory)
             }
         }
     }
@@ -103,9 +121,11 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         val users = usersQueries.selectAll().awaitAsList()
         val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
         val departments = DepartmentsRepository.selectAll()
+        val memories = MemoriesRepository.selectAll()
         return lendings.map { lending ->
             val relatedItems = items.filter { it.lendingId == lending.id }
-            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+            val memory = memories.find { it.lending == lending.id }
+            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments, memory)
         }
     }
 
@@ -124,10 +144,9 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             returned = item.returned,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memory = item.memory,
             memoryReviewed = item.memoryReviewed,
-            memoryPdf = item.memoryPdf,
         )
+        item.memory?.let { MemoriesRepository.insertOrUpdate(it) }
         for (inventoryItem in item.items) {
             val exists = lendingItemsQueries.get(item.id, inventoryItem.id).executeAsOneOrNull() != null
             if (!exists) {
@@ -168,10 +187,9 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
             returned = item.returned,
             memorySubmitted = item.memorySubmitted,
             memorySubmittedAt = item.memorySubmittedAt,
-            memory = item.memory,
             memoryReviewed = item.memoryReviewed,
-            memoryPdf = item.memoryPdf,
         )
+        item.memory?.let { MemoriesRepository.insertOrUpdate(it) }
 
         lendingItemsQueries.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
@@ -216,6 +234,7 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         users: List<Users>,
         receivedItems: List<ReceivedItems>,
         departments: List<Department>,
+        memory: Memory?,
     ) = Lending(
         id = id,
         userSub = userSub,
@@ -230,13 +249,13 @@ object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
         returned = returned,
         memorySubmitted = memorySubmitted,
         memorySubmittedAt = memorySubmittedAt,
-        memory = memory,
-        memoryPdf = memoryPdf,
+        memory = memory?.id,
         memoryReviewed = memoryReviewed,
         items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() },
         receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }
     ).referenced(
         users.map { it.toUser() },
-        inventoryItemTypes.map { it.toInventoryItemType(departments) }
+        inventoryItemTypes.map { it.toInventoryItemType(departments) },
+        memory,
     )
 }

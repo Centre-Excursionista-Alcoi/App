@@ -1,0 +1,38 @@
+-- Memories become their own table, matching the server architecture: memories are their own resource and only
+-- optionally reference a lending via a foreign key, rather than being embedded as a column in Lendings.
+CREATE TABLE Memories (
+    id TEXT NOT NULL PRIMARY KEY,
+    place TEXT,
+    members TEXT,
+    externalUsers TEXT,
+    text TEXT NOT NULL,
+    sport TEXT,
+    department TEXT REFERENCES Departments(id),
+    attachments TEXT,
+    submittedBy TEXT NOT NULL,
+    pdf TEXT,
+    lending TEXT REFERENCES Lendings(id)
+);
+
+-- Lendings needs to be recreated to drop the memory/memoryPdf columns; dependent rows are cleared first, and a
+-- full sync will repopulate everything (including the now-separate memories) afterward.
+DELETE FROM LendingItems;
+DELETE FROM ReceivedItems;
+
+DROP TABLE Lendings;
+CREATE TABLE Lendings (
+    id TEXT NOT NULL PRIMARY KEY,
+    userSub TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    fromDate TEXT NOT NULL,
+    toDate TEXT NOT NULL,
+    confirmed INTEGER NOT NULL,
+    taken INTEGER NOT NULL,
+    givenBy TEXT,
+    givenAt INTEGER,
+    returned INTEGER NOT NULL,
+    memorySubmitted INTEGER NOT NULL,
+    memorySubmittedAt INTEGER,
+    memoryReviewed INTEGER NOT NULL,
+    notes TEXT
+);

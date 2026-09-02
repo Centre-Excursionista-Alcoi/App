@@ -5,21 +5,25 @@ import kotlin.uuid.Uuid
 
 @Serializable
 data class ReferencedLendingMemory(
+    val id: Uuid,
     val place: String?,
     val members: List<Member>,
     val externalUsers: String?,
     val text: String,
     val sport: Sports?,
     val department: Department?,
-    val files: List<Uuid>,
+    val attachments: List<Uuid>,
+    val submittedBy: String,
 ) {
-    fun dereference() = LendingMemory(
+    fun dereference() = Memory(
+        id = id,
         place = place,
         members = members.map { it.memberNumber },
         externalUsers = externalUsers,
         text = text,
         sport = sport,
         department = department?.id,
-        files = files,
+        attachments = attachments,
+        submittedBy = submittedBy,
     )
 }

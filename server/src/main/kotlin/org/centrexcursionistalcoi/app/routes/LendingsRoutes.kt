@@ -3,10 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.request.contentLength
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
@@ -20,19 +17,12 @@ import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
-import org.centrexcursionistalcoi.app.data.LendingMemory
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
-import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
-import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
@@ -41,9 +31,7 @@ import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
-import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Error
@@ -51,22 +39,18 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
@@ -80,11 +64,8 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.json.contains
-import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
-import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
@@ -581,206 +562,8 @@ fun Route.lendingsRoutes() {
             call.respond(HttpStatusCode.Accepted)
         }
     }
-    post("inventory/lendings/{id}/add_memory") {
-        assertContentType(ContentType.MultiPart.FormData)
-        val session = getUserSessionOrFail() ?: return@post
-
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
-        if (lendingId == null) {
-            respondError(Error.MalformedId())
-            return@post
-        }
-
-        var place: String? = null
-        var members: List<UInt>? = null
-        var externalUsers: String? = null
-        var plainText: String? = null
-        var sport: Sports? = null
-        var departmentId: Uuid? = null
-        var attachedFiles: List<FileRequestData> = emptyList()
-
-        val multiPartData = call.receiveMultipart()
-        multiPartData.forEachPart { part ->
-            if (part is PartData.FormItem) {
-                val name = part.name
-                when {
-                    name == "place" -> {
-                        place = part.value.takeIf { it.isNotBlank() }
-                    }
-                    name == "members" -> {
-                        val membersList = part.value.split(',')
-                            .mapNotNull { it.toUIntOrNull() }
-                        members = membersList.ifEmpty { null }
-                    }
-                    name == "external_users" -> {
-                        externalUsers = part.value.takeIf { it.isNotBlank() }
-                    }
-                    name == "text" -> {
-                        plainText = part.value.takeIf { it.isNotBlank() }
-                    }
-                    name == "department" -> {
-                        departmentId = part.value.toUuidOrNull()
-                    }
-                    name == "sport" -> {
-                        sport = try {
-                            Sports.valueOf(part.value)
-                        } catch (_: IllegalArgumentException) {
-                            null
-                        }
-                    }
-                    name?.startsWith("file_") == true -> {
-                        val data = FileRequestData()
-                        data.populate(part)
-                        attachedFiles = attachedFiles + data
-                    }
-                }
-            } else if (part is PartData.FileItem) {
-                if (part.name?.startsWith("file_") == true) {
-                    val data = FileRequestData()
-                    data.populate(part)
-                    attachedFiles = attachedFiles + data
-                }
-            }
-        }
-
-        if (plainText == null) {
-            respondError(Error.MemoryNotGiven())
-            return@post
-        }
-
-        val lending = Database { LendingEntity.findById(lendingId) }
-        if (lending == null) {
-            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@post
-        }
-
-        if (!lending.returned) {
-            respondError(Error.CannotSubmitMemoryUntilMaterialIsReturned())
-            return@post
-        }
-
-        val userReference = Database { UserReferenceEntity.findById(session.sub) }
-        if (userReference == null) {
-            respondError(Error.UserReferenceNotFound())
-            return@post
-        }
-
-        // make sure the lending belongs to the user
-        val lendingUserSub = Database { lending.userSub.sub.value }
-        if (lendingUserSub != session.sub) {
-            // Return not found to avoid leaking existence of the lending
-            respondError(Error.EntityNotFound("Lending", lendingId.toString()))
-            return@post
-        }
-
-        // If given, make sure the department exists
-        departmentId?.let { deptId ->
-            val department = Database { DepartmentEntity.findById(deptId.toJavaUuid()) }
-            if (department == null) {
-                respondError(Error.EntityNotFound(DepartmentEntity::class, deptId.toString()))
-                return@post
-            }
-        }
-
-        // Store all attachments
-        val documentEntities = attachedFiles.map { file ->
-            Database { file.newEntity() }
-        }
-
-        // Instantiate the memory
-        val memory = LendingMemory(
-            place = place,
-            members = members.orEmpty(),
-            externalUsers = externalUsers,
-            text = plainText!!,
-            sport = sport,
-            department = departmentId,
-            files = documentEntities.map { it.id.value.toKotlinUuid() }
-        )
-
-        // Generate the PDF file for the memory
-        val baos = ByteArrayOutputStream()
-        baos.use { output ->
-            val departments = Database { DepartmentEntity.all().map { it.toData() } }
-            PdfGeneratorService.generateLendingPdf(
-                memory.referenced(
-                    members = Database {
-                        MemberEntity.find { Members.id inList memory.members }.map { it.toMember() }
-                    },
-                    departments = departments,
-                ),
-                itemsUsed = Database {
-                    lending.items.map { item ->
-                        item.toData().referenced(item.type.toData().referenced(departments))
-                    }
-                },
-                submittedBy = userReference.fullName,
-                dateRange = lending.from to lending.to,
-                photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
-                outputStream = output,
-            )
-        }
-        val pdfDocumentEntity = Database {
-            FileEntity.new {
-                name = "lending_memory_${lending.id.value}.pdf"
-                contentType = ContentType.Application.Pdf
-                bytes = baos.toByteArray()
-            }
-        }
-
-        Database {
-            lending.memorySubmitted = true
-            lending.memorySubmittedAt = now()
-            lending.memory = memory
-            lending.memoryPdf = pdfDocumentEntity
-        }
-
-        // Notify administrators that a new memory has been uploaded
-        Email.launch {
-            val emails = Database {
-                UserReferenceEntity.find { UserReferences.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
-            }
-
-            val fileAttachments = mutableListOf<MailerSendAttachment>()
-            var bytesCounter = 0L
-            val maxTotalSizeBytes = 20 * 1024 * 1024 // 20 MB
-            for ((i, file) in attachedFiles.withIndex()) {
-                val fileBytes = file.baos.toByteArray()
-                bytesCounter += fileBytes.size
-                if (bytesCounter > maxTotalSizeBytes) {
-                    break
-                }
-                fileAttachments.add(MailerSendAttachment(fileBytes, file.originalFileName ?: "memory_attachment_$i"))
-            }
-
-            val url = "cea://admin/lendings#${lending.id.value}"
-            Email.sendEmail(
-                to = emails,
-                subject = "New lending memory submitted (#${lending.id.value})",
-                htmlContent = """
-                    <p>The lending memory for lending #${lending.id.value} has been submitted by ${userReference.fullName}.</p>
-                    <p>
-                        <strong>From:</strong> ${lending.from}<br/>
-                        <strong>To:</strong> ${lending.to}<br/>
-                        <strong>Notes:</strong> ${lending.notes ?: "None"}<br/>
-                    </p>
-                    <p>Please review the submitted memory in the admin panel.</p>
-                    <a href="$url">Open in app</a> (<a href="$url">$url</a>)
-                """.trimIndent(),
-                attachments = fileAttachments,
-            )
-        }
-        Push.launch {
-            Push.sendPushNotification(
-                reference = Database { lending.userSub },
-                notification = lending.memoryAddedNotification(),
-                includeAdmins = true,
-            )
-        }
-
-        call.respond(HttpStatusCode.NoContent)
-    }
+    // Memory creation/submission lives in memoriesRoutes() (see MemoriesRoutes.kt), which accepts an optional
+    // "lending" reference, since memories are no longer exclusively tied to a lending.
     // Allows admins to skip the memory submission for a lending
     post("inventory/lendings/{id}/skip_memory") {
         assertAdmin() ?: return@post

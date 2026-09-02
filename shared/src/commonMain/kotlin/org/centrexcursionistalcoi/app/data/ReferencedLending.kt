@@ -24,8 +24,7 @@ data class ReferencedLending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memory: LendingMemory?,
-    val memoryPdf: Uuid?,
+    val memory: Memory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
@@ -41,8 +40,14 @@ data class ReferencedLending(
     fun status(): Status = referencedEntity.status()
 
     override val files: Map<String, Uuid?> = mapOf(
-        "memoryPdf" to memoryPdf
+        "memoryPdf" to memory?.pdf
     )
 
-    override val referencedFiles: List<Triple<String, Uuid?, String>> get() = referencedEntity.referencedFiles
+    override val referencedFiles: List<Triple<String, Uuid?, String>>
+        get() {
+            val files = memory?.attachments.orEmpty()
+                .map { uuid -> Triple(uuid.toString(), uuid, "MemoryAttachments") }
+                .toTypedArray()
+            return listOf(*files)
+        }
 }

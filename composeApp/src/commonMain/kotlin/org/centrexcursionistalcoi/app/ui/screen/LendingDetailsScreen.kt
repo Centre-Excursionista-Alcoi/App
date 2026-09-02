@@ -40,10 +40,33 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
-import kotlin.time.Clock
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.insurance_view_document
+import cea_app.composeapp.generated.resources.inventory_item_amount
+import cea_app.composeapp.generated.resources.lending_details_cancel
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_message
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_title
+import cea_app.composeapp.generated.resources.lending_details_complete
+import cea_app.composeapp.generated.resources.lending_details_confirmation_pending_message
+import cea_app.composeapp.generated.resources.lending_details_confirmation_pending_title
+import cea_app.composeapp.generated.resources.lending_details_from
+import cea_app.composeapp.generated.resources.lending_details_id
+import cea_app.composeapp.generated.resources.lending_details_incomplete_return_message
+import cea_app.composeapp.generated.resources.lending_details_incomplete_return_title
+import cea_app.composeapp.generated.resources.lending_details_items
+import cea_app.composeapp.generated.resources.lending_details_memory
+import cea_app.composeapp.generated.resources.lending_details_memory_pending_message
+import cea_app.composeapp.generated.resources.lending_details_memory_pending_title
+import cea_app.composeapp.generated.resources.lending_details_memory_view
+import cea_app.composeapp.generated.resources.lending_details_notes
+import cea_app.composeapp.generated.resources.lending_details_pickup_pending_message
+import cea_app.composeapp.generated.resources.lending_details_pickup_pending_title
+import cea_app.composeapp.generated.resources.lending_details_return_pending_message
+import cea_app.composeapp.generated.resources.lending_details_return_pending_title
+import cea_app.composeapp.generated.resources.lending_details_title
+import cea_app.composeapp.generated.resources.lending_details_until
+import cea_app.composeapp.generated.resources.memory_editor
+import cea_app.composeapp.generated.resources.share
 import kotlinx.coroutines.Job
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -84,6 +107,9 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Composable
 fun LendingDetailsScreen(
@@ -451,7 +477,7 @@ fun MemoryActions(
 fun MemoryVisualization(
     lending: ReferencedLending,
 ) {
-    lending.memoryPdf ?: return
+    lending.memory?.pdf ?: return
 
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
@@ -469,7 +495,7 @@ fun MemoryViewButtons(
     lending: ReferencedLending,
     fpm: FileProviderModel = viewModel { FileProviderModel() },
 ) {
-    val memoryPdf = lending.memoryPdf ?: return
+    val memoryPdf = lending.memory?.pdf ?: return
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         if (PlatformShareLogic.isSupported) {
@@ -536,13 +562,12 @@ private val previewLending = Lending(
     memorySubmitted = false,
     memorySubmittedAt = null,
     memory = null,
-    memoryPdf = null,
     memoryReviewed = false,
     from = LocalDate(2025, 12, 23),
     to = LocalDate(2025, 12, 25),
     notes = null,
     items = listOf(previewItem.referencedEntity)
-).referenced(listOf(previewUserData), listOf(previewItemType))
+).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
 
 @Preview(showBackground = true)
 @Composable

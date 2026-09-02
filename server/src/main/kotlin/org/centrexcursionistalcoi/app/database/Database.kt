@@ -7,7 +7,28 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration.Companion.VERSION
-import org.centrexcursionistalcoi.app.database.table.*
+import org.centrexcursionistalcoi.app.database.table.ConfigTable
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.EventMembers
+import org.centrexcursionistalcoi.app.database.table.Events
+import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
+import org.centrexcursionistalcoi.app.database.table.Files
+import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
+import org.centrexcursionistalcoi.app.database.table.InventoryItems
+import org.centrexcursionistalcoi.app.database.table.LendingItems
+import org.centrexcursionistalcoi.app.database.table.LendingUsers
+import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.table.Members
+import org.centrexcursionistalcoi.app.database.table.Memories
+import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
+import org.centrexcursionistalcoi.app.database.table.MemoriesMembers
+import org.centrexcursionistalcoi.app.database.table.PostFiles
+import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.table.ReceivedItems
+import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -39,6 +60,9 @@ object Database {
         InventoryItems,
         Lendings,
         LendingItems,
+        Memories,
+        MemoriesFiles,
+        MemoriesMembers,
         ReceivedItems,
         RecoverPasswordRequests,
         FCMRegistrationTokens,

@@ -2,9 +2,13 @@
 
 package org.centrexcursionistalcoi.app.pdf
 
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.InventoryItem
+import org.centrexcursionistalcoi.app.data.InventoryItemType
+import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
+import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toUuid
@@ -31,14 +35,16 @@ class TestPdfGeneratorService {
         )
 
         val memoryImageFileUuid = "b566d457-0226-49da-bb2f-f89971878c30".toUuid()
-        val memory = LendingMemory(
+        val memory = Memory(
+            id = "9b57a238-6a3a-4a1a-9f4a-6f4b1e6f5a11".toUuid(),
             place = "Alcoi - Ull del Moro",
             members = listOf(FakeUser.MEMBER_NUMBER),
             externalUsers = "Pep Gimeno\nJoan Miró",
             text = "S'ha realitzat una activitat molt divertida. Jo què sé què més posar aquí, ha estat genial.",
             sport = Sports.ORIENTEERING,
             department = department.id,
-            files = listOf(memoryImageFileUuid),
+            attachments = listOf(memoryImageFileUuid),
+            submittedBy = FakeUser.SUB,
         )
 
         val inventoryItemTypeId = "f3ca1b24-886e-4b1a-88f3-934babbaec86".toUuid()

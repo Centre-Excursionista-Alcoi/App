@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -50,7 +51,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     remoteToLocalEntityConverter = { lending ->
         val inventoryItemTypes = InventoryItemTypesRepository.selectAll()
         val users = UsersRepository.selectAll()
-        lending.referenced(users, inventoryItemTypes)
+        // Memories are synced separately (see MemoriesRemoteRepository); this only resolves against what's
+        // already cached locally, so Memories must be synced before Lendings for this to be up to date.
+        val memory = lending.memory?.let { MemoriesRepository.get(it) }
+        lending.referenced(users, inventoryItemTypes, memory)
     },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
@@ -220,7 +224,11 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
     }
 
     /**
-     * Submits a memory file for a lending by its ID.
+     * Submits a memory for a lending by its ID.
+     *
+     * Memories are their own resource on the server (`POST /memories`) and can, in general, exist without a
+     * lending attached — but this app only ever submits memories tied to a lending, so [lendingId] is required here.
+     *
      * The logged-in user must be the owner of the lending.
      * @param lendingId The UUID of the lending to submit the memory for.
      * @param place The place where the activity took place.
@@ -248,13 +256,14 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
         val filesWithContext = files.map { it.fileWithContext() }
 
         val response = httpClient.submitFormWithBinaryData(
-            "inventory/lendings/$lendingId/add_memory",
+            "memories",
             formData {
                 place.takeIf { it.isNotBlank() }?.let { append("place", it) }
                 append("members", members.joinToString(",") { it.memberNumber.toString() })
                 externalUsers.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
                 sport?.let { append("sport", it.name) }
                 department?.let { append("department", it.id.toString()) }
+                append("lending", lendingId.toString())
                 append("text",  text)
 
                 filesWithContext.mapIndexed { index, file ->
@@ -274,6 +283,14 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
         if (!response.status.isSuccess()) {
             throw response.bodyAsError().toThrowable()
         }
+
+        // Fetch and cache the newly created memory locally, so that resolving the lending's memory (by id) below
+        // finds it. The created memory's id is only available via the Location header of this response.
+        val location = response.headers[HttpHeaders.Location]
+            ?: throw IllegalArgumentException("Missing Location header in response")
+        val memoryId = location.substringAfterLast('/').let { Uuid.parse(it) }
+        MemoriesRemoteRepository.update(memoryId, progress)
+
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
         LendingsRepository.update(updatedLending)
     }
