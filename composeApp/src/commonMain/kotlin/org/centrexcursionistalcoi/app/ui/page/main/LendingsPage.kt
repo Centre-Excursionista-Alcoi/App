@@ -108,7 +108,7 @@ fun LendingsPage(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onLendingHistoryRequest: () -> Unit,
-    onShoppingListChanged: (Map<Uuid, Int>) -> Unit = {},
+    onShoppingListChanged: (Map<Uuid, Int>) -> Unit,
     model: LendingsPageModel = koinViewModel(),
 ) {
     val windowSizeClass = calculateWindowSizeClass()
