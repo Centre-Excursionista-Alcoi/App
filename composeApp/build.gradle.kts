@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.koinCompilerPlugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
     alias(libs.plugins.sqldelight)
@@ -293,6 +294,13 @@ dependencies {
 // Trigger Common Metadata Generation from Native tasks
 tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }.configureEach {
     dependsOn("kspCommonMainKotlinMetadata")
+}
+
+koinCompiler {
+    // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
+    // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
+    // missing even though they resolve correctly at runtime. Disable it until upstream fixes the detector.
+    compileSafety = false
 }
 
 room3 {

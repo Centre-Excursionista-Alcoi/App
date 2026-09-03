@@ -35,6 +35,7 @@ kmm-permission = "0.15.0"
 kmm-settings = "1.3.0"
 koin = "4.2.2"
 koin-annotations = "2.3.1"
+koin-compiler-plugin = "1.1.0"
 kotlin = "2.4.10"
 kotlin-crypto-hash = "0.8.0"
 kotlin-crypto-random = "0.6.0"
@@ -199,6 +200,7 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinMultiplatformAndroid = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+koinCompilerPlugin = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-compiler-plugin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sentryJvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
