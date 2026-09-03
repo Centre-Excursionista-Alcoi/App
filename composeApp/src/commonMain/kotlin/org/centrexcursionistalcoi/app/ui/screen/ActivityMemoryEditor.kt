@@ -160,166 +160,33 @@ fun ActivityMemoryEditor(
             }
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(paddingValues)) {
-            if (!isForLending) {
-                OutlinedCard(
-                    modifier = Modifier.padding(8.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Text(
-                        text = stringResource(Res.string.memory_editor_warning_no_lending),
-                        style = MaterialTheme.typography.bodyMediumEmphasized,
-                        modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    )
-                }
-
-                // TODO: Actually allow to select timezone
-                DateTimePickerFormField(
-                    value = from?.dateTime,
-                    onValueChange = { from = ZonedDateTime.forSystemDefault(it) },
-                    label = stringResource(Res.string.memory_editor_from),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                    enabled = !isSaving,
-                    selectableDates = PastSelectableDates.today(),
-                )
-                DateTimePickerFormField(
-                    value = to?.dateTime,
-                    onValueChange = { to = ZonedDateTime.forSystemDefault(it) },
-                    label = stringResource(Res.string.memory_editor_to),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                    enabled = !isSaving,
-                    selectableDates = PastSelectableDates.today(),
-                )
-            }
-
-            // Place
-            OutlinedTextField(
-                value = place,
-                onValueChange = { place = it },
-                label = { Text(stringResource(Res.string.memory_editor_place)) },
-                supportingText = { Text(stringResource(Res.string.memory_editor_place_help)) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                enabled = !isSaving,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            )
-
-            // Member Participants
-            var searchingForUser by remember { mutableStateOf("") }
-            AutocompleteFormField(
-                value = searchingForUser,
-                onValueChange = { searchingForUser = it },
-                label = { Text(stringResource(Res.string.memory_editor_member_participants)) },
-                suggestions = members.orEmpty()
-                    .filter { member -> member.fullName.uppercase().unaccent().contains(searchingForUser.uppercase().unaccent()) }
-                    .toSet(),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                toString = { it.fullName },
-                enabled = !isSaving,
-                onSuggestionClicked = { memberUsers += it; searchingForUser = "" },
-            )
-            LazyRow(modifier = Modifier.fillMaxWidth()) {
-                item { Spacer(Modifier.width(8.dp)) }
-                items(memberUsers) { user ->
-                    AssistChip(
-                        enabled = !isSaving,
-                        onClick = { memberUsers -= user },
-                        label = { Text(user.fullName) },
-                        trailingIcon = {
-                            Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
-                        },
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
-                }
-                item { Spacer(Modifier.width(8.dp)) }
-            }
-
-            // External Participants
-            OutlinedTextField(
-                value = externalUsers,
-                onValueChange = { externalUsers = it },
-                label = { Text(stringResource(Res.string.memory_editor_external_participants)) },
-                supportingText = { Text(stringResource(Res.string.memory_editor_external_participants_help)) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                enabled = !isSaving,
-            )
-
-            // Sport
-            DropdownField(
-                value = sport,
-                onValueChange = { sport = it },
-                options = Sports.entries,
-                label = stringResource(Res.string.memory_editor_sport),
-                itemToString = { it?.displayName ?: "" },
-                enabled = !isSaving,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            )
-
-            // Department
-            DropdownField(
-                value = department,
-                onValueChange = { department = it },
-                options = departments.orEmpty(),
-                label = stringResource(Res.string.memory_editor_department),
-                itemToString = { it?.displayName ?: "" },
-                enabled = !isSaving,
-                allowNull = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            )
-
-            // Activity description:
-            Text(
-                text = stringResource(Res.string.memory_editor_description),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 16.dp),
-            )
-            RichTextStyleRow(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
-                state = state,
-                enabled = !isSaving,
-            )
-            OutlinedRichTextEditor(
-                state = state,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 16.dp),
-                enabled = !isSaving,
-            )
-
-            // Images
-            val imagePicker = rememberFilePickerLauncher(FileKitType.ImageAndVideo, mode = FileKitMode.Multiple()) { pickedFiles ->
-                if (pickedFiles == null) return@rememberFilePickerLauncher
-                files += pickedFiles
-            }
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                onClick = { imagePicker.launch() },
-                enabled = !isSaving,
-            ) {
-                Icon(MaterialSymbols.AttachFile, stringResource(Res.string.memory_editor_upload_image))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(Res.string.memory_editor_upload_image))
-            }
-            LazyRow(modifier = Modifier.fillMaxWidth()) {
-                item { Spacer(Modifier.width(8.dp)) }
-                items(files) { file ->
-                    AssistChip(
-                        enabled = !isSaving,
-                        onClick = { files -= file },
-                        label = { Text(file.name) },
-                        trailingIcon = {
-                            Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
-                        },
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
-                }
-                item { Spacer(Modifier.width(8.dp)) }
-            }
-
-            Spacer(Modifier.height(56.dp))
-        }
+        MemoryEditor_Content(
+            isForLending = isForLending,
+            isSaving = isSaving,
+            members = members,
+            departments = departments,
+            state = state,
+            from = from,
+            to = to,
+            place = place,
+            memberUsers = memberUsers,
+            externalUsers = externalUsers,
+            sport = sport,
+            department = department,
+            files = files,
+            onFromChange = { from = it },
+            onToChange = { to = it },
+            onPlaceChange = { place = it },
+            onMemberUsersChange = { memberUsers = it },
+            onExternalUsersChange = { externalUsers = it },
+            onSportChange = { sport = it },
+            onDepartmentChange = { department = it },
+            onFilesChange = { files = it },
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
+        )
     }
 }
 
@@ -339,4 +206,195 @@ fun ActivityMemoryEditor_Preview() {
         onSave = { _, _, _, _, _, _, _, _, _ -> },
         onBack = {},
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MemoryEditor_Content(
+    isForLending: Boolean,
+    isSaving: Boolean,
+    members: List<Member>?,
+    departments: List<Department>?,
+    state: RichTextState,
+    from: ZonedDateTime?,
+    to: ZonedDateTime?,
+    place: String,
+    memberUsers: List<Member>,
+    externalUsers: String,
+    sport: Sports?,
+    department: Department?,
+    files: List<PlatformFile>,
+    onFromChange: (ZonedDateTime?) -> Unit,
+    onToChange: (ZonedDateTime?) -> Unit,
+    onPlaceChange: (String) -> Unit,
+    onMemberUsersChange: (List<Member>) -> Unit,
+    onExternalUsersChange: (String) -> Unit,
+    onSportChange: (Sports?) -> Unit,
+    onDepartmentChange: (Department?) -> Unit,
+    onFilesChange: (List<PlatformFile>) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        if (!isForLending) {
+            OutlinedCard(
+                modifier = Modifier.padding(8.dp),
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Text(
+                    text = stringResource(Res.string.memory_editor_warning_no_lending),
+                    style = MaterialTheme.typography.bodyMediumEmphasized,
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                )
+            }
+
+            // TODO: Actually allow to select timezone
+            DateTimePickerFormField(
+                value = from?.dateTime,
+                onValueChange = { onFromChange(ZonedDateTime.forSystemDefault(it)) },
+                label = stringResource(Res.string.memory_editor_from),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                enabled = !isSaving,
+                selectableDates = PastSelectableDates.today(),
+            )
+            DateTimePickerFormField(
+                value = to?.dateTime,
+                onValueChange = { onToChange(ZonedDateTime.forSystemDefault(it)) },
+                label = stringResource(Res.string.memory_editor_to),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                enabled = !isSaving,
+                selectableDates = PastSelectableDates.today(),
+            )
+        }
+
+        // Place
+        OutlinedTextField(
+            value = place,
+            onValueChange = onPlaceChange,
+            label = { Text(stringResource(Res.string.memory_editor_place)) },
+            supportingText = { Text(stringResource(Res.string.memory_editor_place_help)) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            enabled = !isSaving,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        )
+
+        // Member Participants
+        var searchingForUser by remember { mutableStateOf("") }
+        AutocompleteFormField(
+            value = searchingForUser,
+            onValueChange = { searchingForUser = it },
+            label = { Text(stringResource(Res.string.memory_editor_member_participants)) },
+            suggestions = members.orEmpty()
+                .filter { member -> member.fullName.uppercase().unaccent().contains(searchingForUser.uppercase().unaccent()) }
+                .toSet(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            toString = { it.fullName },
+            enabled = !isSaving,
+            onSuggestionClicked = {
+                onMemberUsersChange(memberUsers + it)
+                searchingForUser = ""
+            },
+        )
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            item { Spacer(Modifier.width(8.dp)) }
+            items(memberUsers) { user ->
+                AssistChip(
+                    enabled = !isSaving,
+                    onClick = { onMemberUsersChange(memberUsers - user) },
+                    label = { Text(user.fullName) },
+                    trailingIcon = {
+                        Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            item { Spacer(Modifier.width(8.dp)) }
+        }
+
+        // External Participants
+        OutlinedTextField(
+            value = externalUsers,
+            onValueChange = onExternalUsersChange,
+            label = { Text(stringResource(Res.string.memory_editor_external_participants)) },
+            supportingText = { Text(stringResource(Res.string.memory_editor_external_participants_help)) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            enabled = !isSaving,
+        )
+
+        // Sport
+        DropdownField(
+            value = sport,
+            onValueChange = onSportChange,
+            options = Sports.entries,
+            label = stringResource(Res.string.memory_editor_sport),
+            itemToString = { it?.displayName ?: "" },
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        )
+
+        // Department
+        DropdownField(
+            value = department,
+            onValueChange = onDepartmentChange,
+            options = departments.orEmpty(),
+            label = stringResource(Res.string.memory_editor_department),
+            itemToString = { it?.displayName ?: "" },
+            enabled = !isSaving,
+            allowNull = true,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        )
+
+        // Activity description:
+        Text(
+            text = stringResource(Res.string.memory_editor_description),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 16.dp),
+        )
+        RichTextStyleRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+            state = state,
+            enabled = !isSaving,
+        )
+        OutlinedRichTextEditor(
+            state = state,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 16.dp),
+            enabled = !isSaving,
+        )
+
+        // Images
+        val imagePicker = rememberFilePickerLauncher(FileKitType.ImageAndVideo, mode = FileKitMode.Multiple()) { pickedFiles ->
+            if (pickedFiles == null) return@rememberFilePickerLauncher
+            onFilesChange(files + pickedFiles)
+        }
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            onClick = { imagePicker.launch() },
+            enabled = !isSaving,
+        ) {
+            Icon(MaterialSymbols.AttachFile, stringResource(Res.string.memory_editor_upload_image))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(Res.string.memory_editor_upload_image))
+        }
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            item { Spacer(Modifier.width(8.dp)) }
+            items(files) { file ->
+                AssistChip(
+                    enabled = !isSaving,
+                    onClick = { onFilesChange(files - file) },
+                    label = { Text(file.name) },
+                    trailingIcon = {
+                        Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            item { Spacer(Modifier.width(8.dp)) }
+        }
+
+        Spacer(Modifier.height(56.dp))
+    }
 }
