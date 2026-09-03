@@ -27,7 +27,6 @@ import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.ktor.http.Url
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
-import org.centrexcursionistalcoi.app.nav.Navigator
 import org.centrexcursionistalcoi.app.nav.rememberNavigator
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.LocalNotifications.checkIsSelf
@@ -62,7 +61,6 @@ fun MainApp(
     url: Url? = null,
     pushNotification: PushNotification? = null,
     model: PlatformInitializerViewModel = koinViewModel { parametersOf(url) },
-    onNavigatorReady: (Navigator) -> Unit = {}
 ) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
@@ -127,7 +125,7 @@ fun MainApp(
                         else -> null
                     }
                 }
-                App(afterLoad ?: startDestination, onNavigatorReady)
+                App(afterLoad ?: startDestination)
             } else {
                 LaunchedEffect(Unit) {
                     log.d { "Platform not ready..." }
@@ -141,9 +139,8 @@ fun MainApp(
 
 @Composable
 @OptIn(ExperimentalSettingsApi::class, ExperimentalSharedTransitionApi::class)
-fun App(
+private fun App(
     afterLoad: Destination? = null,
-    onNavigatorReady: (Navigator) -> Unit = {}
 ) {
     val navigator = rememberNavigator(Destination.Loading)
 
@@ -307,9 +304,6 @@ fun App(
                 }
             },
         )
-    }
-    LaunchedEffect(navigator) {
-        onNavigatorReady(navigator)
     }
 }
 
