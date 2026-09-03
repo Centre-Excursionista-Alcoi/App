@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.di
 
+import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 
@@ -9,10 +10,15 @@ import org.koin.core.module.Module
  * (repositories, remote repositories, services, view models -- see [AnnotatedModules.kt]), plus any additional
  * [extraModules].
  *
+ * [config] runs before the modules are registered, so platforms that need to configure the [KoinApplication] itself
+ * (e.g. Android's `androidContext(...)`, required by [org.centrexcursionistalcoi.app.database.AppDatabase]'s
+ * platform module) can do so here.
+ *
  * Call this once per process, as early as possible during platform startup.
  */
-fun initKoin(extraModules: List<Module> = emptyList()) {
+fun initKoin(extraModules: List<Module> = emptyList(), config: KoinApplication.() -> Unit = {}) {
     startKoin {
+        config()
         modules(
             databaseModules() +
                 CoreScanModule().module() +
