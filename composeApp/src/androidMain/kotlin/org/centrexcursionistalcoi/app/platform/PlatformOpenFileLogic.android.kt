@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import com.diamondedge.logging.logging
@@ -22,13 +23,17 @@ actual class PlatformOpenFileLogic(private val context: Context) : PlatformProvi
         val file = File(filePath.toString())
         val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 
-        val intent = Intent().apply {
-            action = Intent.ACTION_VIEW
+        val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, contentType.toString())
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        intent.resolveActivity(context.packageManager)?.let {
-            context.startActivity(Intent.createChooser(intent, null))
-        } ?: log.e { "View not supported for $path as $contentType" }
+        try {
+            val chooser = Intent.createChooser(intent, null).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: ActivityNotFoundException) {
+            log.e(e) { "View not supported for $path as $contentType" }
+        }
     }
 }

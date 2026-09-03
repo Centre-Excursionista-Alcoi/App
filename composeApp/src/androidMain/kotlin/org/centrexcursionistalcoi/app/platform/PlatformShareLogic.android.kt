@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import com.diamondedge.logging.logging
@@ -28,9 +29,14 @@ actual class PlatformShareLogic(private val context: Context) : PlatformProvider
             type = contentType.toString()
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        intent.resolveActivity(context.packageManager)?.let {
-            context.startActivity(Intent.createChooser(intent, null))
-        } ?: log.e { "Sharing not supported for $path as $contentType" }
+        try {
+            val chooser = Intent.createChooser(intent, null).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: ActivityNotFoundException) {
+            log.e(e) { "Sharing not supported for $path as $contentType" }
+        }
     }
 
     actual fun share(text: String) {
@@ -40,8 +46,13 @@ actual class PlatformShareLogic(private val context: Context) : PlatformProvider
             type = "text/plain"
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        intent.resolveActivity(context.packageManager)?.let {
-            context.startActivity(Intent.createChooser(intent, null))
-        } ?: log.e { "Sharing not supported for text" }
+        try {
+            val chooser = Intent.createChooser(intent, null).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: ActivityNotFoundException) {
+            log.e(e) { "Sharing not supported for text" }
+        }
     }
 }

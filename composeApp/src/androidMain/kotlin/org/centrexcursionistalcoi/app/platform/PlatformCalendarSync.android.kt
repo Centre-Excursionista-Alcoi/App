@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
@@ -31,11 +32,11 @@ actual class PlatformCalendarSync(private val context: Context) : PlatformProvid
             putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
         }
 
-        if (intent.resolveActivity(context.packageManager) != null) {
+        try {
             context.startActivity(intent)
             return true
-        } else {
-            log.e { "No calendar app is available." }
+        } catch (e: ActivityNotFoundException) {
+            log.e(e) { "No calendar app is available." }
             return false
         }
     }
