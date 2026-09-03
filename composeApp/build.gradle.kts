@@ -7,6 +7,7 @@ import java.util.Calendar
 import java.util.Properties
 
 plugins {
+    alias(libs.plugins.androidx.room3)
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.cocoapods)
     alias(libs.plugins.composeMultiplatform)
@@ -14,8 +15,9 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.koinCompilerPlugin)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
-    alias(libs.plugins.sqldelight)
 }
 
 fun readProperties(fileName: String, root: File = projectDir): Properties? {
@@ -58,7 +60,14 @@ kotlin {
     listOf(
         iosArm64(),
         iosSimulatorArm64()
-    )
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = "CEAApp"
+            isStatic = true
+            // Required when using NativeSQLiteDriver
+            linkerOpts.add("-lsqlite3")
+        }
+    }
 
     jvm()
 
@@ -134,17 +143,28 @@ kotlin {
             // Push Notifications (must be API for exporting to iOS)
             api(libs.kmm.notifier)
 
-            // SQLDelight extensions
-            implementation(libs.sqldelight.adapters)
-            implementation(libs.sqldelight.coroutines)
+            // Room 3
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+
+            // Koin dependency injection
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.ktor)
+            api(libs.koin.annotations)
 
             api(projects.shared)
+        }
+        named("commonMain").configure {
+            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
+            implementation(libs.koin.test)
         }
 
         // Platforms that require granting permissions
@@ -167,7 +187,6 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.java)
-                implementation(libs.sqldelight.sqlite)
             }
         }
 
@@ -185,8 +204,6 @@ kotlin {
                 // Custom Tabs support
                 implementation(libs.androidx.browser)
 
-                implementation(libs.sqldelight.android)
-
                 // WorkManager
                 implementation(libs.bundles.androidx.work)
 
@@ -195,6 +212,9 @@ kotlin {
 
                 // In-App Update check
                 implementation(libs.android.appUpdate)
+
+                // Room3 SQLite Wrapper
+                implementation(libs.androidx.room3.sqliteWrapper)
             }
         }
 
@@ -203,7 +223,6 @@ kotlin {
             dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(libs.ktor.client.darwin)
-                implementation(libs.sqldelight.native)
             }
         }
         iosArm64Main { dependsOn(iosMain.get()) }
@@ -252,22 +271,31 @@ kotlin {
     }
 }
 
-sqldelight {
-    databases {
-        create("Database") {
-            generateAsync.set(true)
-            packageName.set("org.centrexcursionistalcoi.app.database")
-            schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
-            verifyMigrations.set(true)
-        }
+dependencies {
+    listOf(
+        libs.androidx.room3.compiler,
+    ).forEach { dependency ->
+        add("kspAndroid", dependency)
+        add("kspIosSimulatorArm64", dependency)
+        add("kspIosArm64", dependency)
+        add("kspJvm", dependency)
     }
 }
 
-project.gradle.taskGraph.whenReady {
-    // Disable verification of migrations because the tasks just gets frozen
-    tasks.named("verifyCommonMainDatabaseMigration") {
-        enabled = false
-    }
+// Trigger Common Metadata Generation from Native tasks
+tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }.configureEach {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+koinCompiler {
+    // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
+    // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
+    // missing even though they resolve correctly at runtime. Disable it until upstream fixes the detector.
+    compileSafety = false
+}
+
+room3 {
+    schemaDirectory("$projectDir/schemas")
 }
 
 compose.desktop {

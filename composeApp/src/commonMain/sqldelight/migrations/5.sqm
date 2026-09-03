@@ -1,1 +1,0 @@
-ALTER TABLE Lendings ADD COLUMN memoryPdf TEXT;

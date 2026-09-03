@@ -1,76 +1,40 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.database.data.Users
-import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.centrexcursionistalcoi.app.database.room.entity.UserEntity.Companion.toEntity
+import org.koin.core.annotation.Singleton
 
-object UsersRepository : DatabaseRepository<UserData, String>() {
-    override val queries by lazy { databaseInstance.usersQueries }
+@Singleton
+class UsersRepository(db: AppDatabase) : Repository<UserData, String> {
+    private val dao = db.userDao()
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher) = queries
-        .selectAll()
-        .asFlow()
-        .mapToList(dispatcher)
+    override fun selectAllAsFlow() = dao
+        .selectAllAsFlow()
         .map { list -> list.map { it.toUser() } }
 
     override suspend fun get(id: String): UserData? {
-        return queries.get(id).awaitAsList().firstOrNull()?.toUser()
+        return dao.get(id)?.toUser()
     }
 
-    override fun getAsFlow(id: String, dispatcher: CoroutineDispatcher): Flow<UserData?> {
-        return queries
-            .get(id)
-            .asFlow()
-            .mapToList(dispatcher)
-            .map { it.firstOrNull()?.toUser() }
+    override fun getAsFlow(id: String): Flow<UserData?> {
+        return dao
+            .getAsFlow(id)
+            .map { it?.toUser() }
     }
 
-    override suspend fun selectAll(): List<UserData> = queries.selectAll().awaitAsList()
-        .map { it.toUser() }
+    override suspend fun selectAll() = dao.selectAll().map { it.toUser() }
 
-    override suspend fun insert(item: UserData) = queries.insert(
-        sub = item.sub,
-        memberNumber = item.memberNumber.toLong(),
-        fullName = item.fullName,
-        email = item.email,
-        groups = item.groups,
-        departments = item.departments,
-        lendingUser = item.lendingUser,
-        insurances = item.insurances,
-        isDisabled = item.isDisabled,
+    override suspend fun insert(item: UserData) = dao.insert(
+        item.toEntity()
     )
 
-    override suspend fun update(item: UserData) = queries.update(
-        sub = item.sub,
-        memberNumber = item.memberNumber.toLong(),
-        fullName = item.fullName,
-        email = item.email,
-        groups = item.groups,
-        departments = item.departments,
-        lendingUser = item.lendingUser,
-        insurances = item.insurances,
-        isDisabled = item.isDisabled,
+    override suspend fun update(item: UserData) = dao.update(
+        item.toEntity()
     )
 
     override suspend fun delete(id: String) {
-        queries.deleteById(id)
+        dao.deleteById(id)
     }
-
-    fun Users.toUser() = UserData(
-        sub = sub,
-        memberNumber = memberNumber.toUInt(),
-        fullName = fullName,
-        email = email,
-        groups = groups,
-        departments = departments,
-        lendingUser = lendingUser,
-        insurances = insurances,
-        isDisabled = isDisabled,
-    )
 }

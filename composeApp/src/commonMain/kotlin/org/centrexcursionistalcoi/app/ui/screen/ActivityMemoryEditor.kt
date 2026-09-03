@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.memory_editor_department
 import cea_app.composeapp.generated.resources.memory_editor_description
@@ -81,12 +80,14 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.utils.unaccent
 import org.centrexcursionistalcoi.app.viewmodel.ActivityMemoryEditorViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.uuid.Uuid
 
 @Composable
 fun ActivityMemoryEditor(
     lendingId: Uuid?,
-    model: ActivityMemoryEditorViewModel = viewModel { ActivityMemoryEditorViewModel(lendingId) },
+    model: ActivityMemoryEditorViewModel = koinViewModel { parametersOf(lendingId) },
     onBack: () -> Unit
 ) {
     val members by model.members.collectAsState()

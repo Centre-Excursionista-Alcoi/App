@@ -10,11 +10,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentLength
 import io.ktor.utils.io.readRemaining
-import java.awt.Desktop
-import java.io.File
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +23,15 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import java.awt.Desktop
+import java.io.File
+import kotlin.system.exitProcess
 
-actual object PlatformAppUpdates {
+actual object PlatformAppUpdates : KoinComponent {
     private val log = logging()
 
     private const val GITHUB_OWNER = "Centre-Excursionista-Alcoi"
@@ -46,7 +48,7 @@ actual object PlatformAppUpdates {
 
     private var updateAssetUrl: String? = null
     private var downloadedFile: File? = null
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = CoroutineScope(get<DispatcherProvider>().io + SupervisorJob())
 
     // Regex to parse SemVer (Major.Minor.Patch)
     private val versionRegex = Regex("""(\d+)\.(\d+)\.(\d+)""")

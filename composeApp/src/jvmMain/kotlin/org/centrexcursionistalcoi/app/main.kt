@@ -10,13 +10,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.icon
 import com.diamondedge.logging.FixedLogLevel
 import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.io.files.Path
+import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.FileLogger
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates.checkForUpdates
@@ -37,6 +39,8 @@ fun main() {
         JvmLogger(FixedLogLevel(true)),
         FileLogger(Path("app.log")),
     )
+
+    initKoin()
 
     initializeSentry()
 

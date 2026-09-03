@@ -42,23 +42,33 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
-object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
+@Singleton
+class LendingsRemoteRepository(
+    private val lendingsRepository: LendingsRepository,
+    inventoryItemTypesRepository: InventoryItemTypesRepository,
+    usersRepository: UsersRepository,
+    membersRepository: MembersRepository,
+    departmentsRepository: DepartmentsRepository,
+    memoriesRepository: MemoriesRepository,
+    private val memoriesRemoteRepository: MemoriesRemoteRepository,
+) : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
     SETTINGS_LAST_LENDINGS_SYNC,
     Lending.serializer(),
-    LendingsRepository,
+    lendingsRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { lending ->
-        val inventoryItemTypes = InventoryItemTypesRepository.selectAll()
-        val users = UsersRepository.selectAll()
-        val members = MembersRepository.selectAll()
-        val departments = DepartmentsRepository.selectAll()
+        val inventoryItemTypes = inventoryItemTypesRepository.selectAll()
+        val users = usersRepository.selectAll()
+        val members = membersRepository.selectAll()
+        val departments = departmentsRepository.selectAll()
         // Memories are synced separately (see MemoriesRemoteRepository); this only resolves against what's
         // already cached locally, so Memories must be synced before Lendings for this to be up to date.
-        val memory = lending.memory?.let { MemoriesRepository.get(it) }?.dereference()
-        lending.referenced(users, inventoryItemTypes, memory, members, departments)
+        val memory = lending.memory?.let { memoriesRepository.get(it) }
+        lending.referenced(users, inventoryItemTypes, memory)
     },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
@@ -75,7 +85,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
                 ?: throw IllegalArgumentException("Missing Location header in response")
             val id = location.substringAfterLast("/").let { Uuid.parse(it) }
             val lending = get(id) ?: throw NoSuchElementException("Lending $id not found after creation")
-            LendingsRepository.insert(lending)
+            lendingsRepository.insert(lending)
         } else {
             throw response.bodyAsError().toThrowable()
         }
@@ -144,7 +154,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             val error = response.bodyAsError()
             throw error.toThrowable()
         }
-        LendingsRepository.delete(lendingId)
+        lendingsRepository.delete(lendingId)
     }
 
     /**
@@ -162,7 +172,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             throw response.bodyAsError().toThrowable()
         }
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after confirmation")
-        LendingsRepository.update(updatedLending)
+        lendingsRepository.update(updatedLending)
     }
 
     /**
@@ -192,7 +202,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             throw response.bodyAsError().toThrowable()
         }
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after pickup")
-        LendingsRepository.update(updatedLending)
+        lendingsRepository.update(updatedLending)
     }
 
     /**
@@ -224,7 +234,7 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             throw response.bodyAsError().toThrowable()
         }
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after return")
-        LendingsRepository.update(updatedLending)
+        lendingsRepository.update(updatedLending)
     }
 
     /**
@@ -293,10 +303,10 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
         val location = response.headers[HttpHeaders.Location]
             ?: throw IllegalArgumentException("Missing Location header in response")
         val memoryId = location.substringAfterLast('/').let { Uuid.parse(it) }
-        MemoriesRemoteRepository.update(memoryId, progress)
+        memoriesRemoteRepository.update(memoryId, progress)
 
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after memory submission")
-        LendingsRepository.update(updatedLending)
+        lendingsRepository.update(updatedLending)
     }
 
     /**
@@ -313,6 +323,6 @@ object LendingsRemoteRepository : RemoteRepository<Uuid, ReferencedLending, Uuid
             throw response.bodyAsError().toThrowable()
         }
         val updatedLending = get(lendingId, progress) ?: throw NoSuchElementException("Lending $lendingId not found after skipping memory")
-        LendingsRepository.update(updatedLending)
+        lendingsRepository.update(updatedLending)
     }
 }

@@ -12,7 +12,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
@@ -54,6 +53,8 @@ import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.reflect.KClass
 import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
@@ -64,7 +65,7 @@ private val log = logging()
 fun MainApp(
     url: Url? = null,
     pushNotification: PushNotification? = null,
-    model: PlatformInitializerViewModel = viewModel { PlatformInitializerViewModel(url) },
+    model: PlatformInitializerViewModel = koinViewModel { parametersOf(url) },
     onNavHostReady: suspend (NavController) -> Unit = {}
 ) {
     setSingletonImageLoaderFactory { context ->

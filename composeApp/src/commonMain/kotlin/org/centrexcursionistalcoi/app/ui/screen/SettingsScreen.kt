@@ -30,8 +30,34 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.arnyminerz
+import cea_app.composeapp.generated.resources.flag_ca
+import cea_app.composeapp.generated.resources.flag_en
+import cea_app.composeapp.generated.resources.flag_es
+import cea_app.composeapp.generated.resources.settings_category_general
+import cea_app.composeapp.generated.resources.settings_category_privacy
+import cea_app.composeapp.generated.resources.settings_category_push
+import cea_app.composeapp.generated.resources.settings_dev_credit_email
+import cea_app.composeapp.generated.resources.settings_dev_credit_message
+import cea_app.composeapp.generated.resources.settings_dev_credit_title
+import cea_app.composeapp.generated.resources.settings_dev_credit_website
+import cea_app.composeapp.generated.resources.settings_language
+import cea_app.composeapp.generated.resources.settings_push_connection_message_connected
+import cea_app.composeapp.generated.resources.settings_push_connection_message_disconnected
+import cea_app.composeapp.generated.resources.settings_push_connection_title
+import cea_app.composeapp.generated.resources.settings_push_fcm_connection_connected
+import cea_app.composeapp.generated.resources.settings_push_fcm_connection_disconnected
+import cea_app.composeapp.generated.resources.settings_push_fcm_connection_title
+import cea_app.composeapp.generated.resources.settings_remove_account_summary
+import cea_app.composeapp.generated.resources.settings_remove_account_title
+import cea_app.composeapp.generated.resources.settings_report_analytics_summary
+import cea_app.composeapp.generated.resources.settings_report_analytics_title
+import cea_app.composeapp.generated.resources.settings_report_errors_summary
+import cea_app.composeapp.generated.resources.settings_report_errors_title
+import cea_app.composeapp.generated.resources.settings_report_session_summary
+import cea_app.composeapp.generated.resources.settings_report_session_title
+import cea_app.composeapp.generated.resources.settings_title
 import com.russhwolf.settings.ExperimentalSettingsApi
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.ktor.client.plugins.sse.SSEClientException
@@ -60,6 +86,8 @@ import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 data class Language(val code: String, val displayName: String, val flag: DrawableResource)
 
@@ -73,7 +101,7 @@ private val availableLanguages = listOf(
 fun SettingsScreen(
     onBack: () -> Unit,
     onDeleteAccount: () -> Unit,
-    viewModel: SettingsViewModel = viewModel { SettingsViewModel(onDeleteAccount) },
+    viewModel: SettingsViewModel = koinViewModel { parametersOf(onDeleteAccount) },
 ) {
     val fcmToken by viewModel.fcmToken.collectAsState()
 

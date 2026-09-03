@@ -8,12 +8,16 @@ import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_USERS_SYNC
+import org.koin.core.annotation.Singleton
 
-object UsersRemoteRepository : SymmetricRemoteRepository<String, UserData>(
+@Singleton
+class UsersRemoteRepository(
+    usersRepository: UsersRepository,
+) : SymmetricRemoteRepository<String, UserData>(
     "/users",
     SETTINGS_LAST_USERS_SYNC,
     UserData.serializer(),
-    UsersRepository
+    usersRepository
 ) {
     suspend fun promote(sub: String, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.post("/users/$sub/promote") {

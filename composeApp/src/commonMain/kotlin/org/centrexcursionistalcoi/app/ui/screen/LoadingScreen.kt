@@ -18,8 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.error_unknown
+import cea_app.composeapp.generated.resources.loading_screen_error
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -27,13 +28,15 @@ import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun LoadingScreen(
     onLoggedIn: () -> Unit,
     onNotLoggedIn: () -> Unit
 ) {
-    val vm = viewModel { LoadingViewModel(onLoggedIn, onNotLoggedIn) }
+    val vm = koinViewModel<LoadingViewModel> { parametersOf(onLoggedIn, onNotLoggedIn) }
 
     val error by vm.error.collectAsState()
     val progress by vm.progress.collectAsState()

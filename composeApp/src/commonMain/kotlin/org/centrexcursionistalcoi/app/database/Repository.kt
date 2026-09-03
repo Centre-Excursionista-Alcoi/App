@@ -1,16 +1,14 @@
 package org.centrexcursionistalcoi.app.database
 
 import com.diamondedge.logging.logging
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.data.Entity
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 
 private val log = logging()
 
 interface Repository<T : Entity<IdType>, IdType: Any> {
-    fun selectAllAsFlow(dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<T>>
+    fun selectAllAsFlow(): Flow<List<T>>
 
     /**
      * Fetches a list of all the elements of this repository.
@@ -25,15 +23,23 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
      */
     suspend fun get(id: IdType): T?
 
-    fun getAsFlow(id: IdType, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<T?>
+    fun getAsFlow(id: IdType): Flow<T?>
 
-    suspend fun insert(item: T): Long
+    suspend fun insert(item: T)
 
-    suspend fun insert(items: List<T>)
+    suspend fun insert(items: List<T>) {
+        for (item in items) {
+            insert(item)
+        }
+    }
 
-    suspend fun update(item: T): Long
+    suspend fun update(item: T)
 
-    suspend fun update(items: List<T>)
+    suspend fun update(items: List<T>) {
+        for (item in items) {
+            update(item)
+        }
+    }
 
     /**
      * Inserts or updates the given [item] in the repository.
@@ -53,7 +59,11 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     suspend fun delete(id: IdType)
 
-    suspend fun deleteByIdList(ids: List<IdType>)
+    suspend fun deleteByIdList(ids: List<IdType>) {
+        for (id in ids) {
+            delete(id)
+        }
+    }
 
     /**
      * Deletes all entries in the repository.

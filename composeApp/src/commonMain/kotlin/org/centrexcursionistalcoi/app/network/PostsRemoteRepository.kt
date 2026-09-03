@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.data.ReferencedPost
@@ -15,15 +13,22 @@ import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_POSTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
-object PostsRemoteRepository: RemoteRepository<Uuid, ReferencedPost, Uuid, Post>(
+@Singleton
+class PostsRemoteRepository(
+    postsRepository: PostsRepository,
+    departmentsRepository: DepartmentsRepository,
+) : RemoteRepository<Uuid, ReferencedPost, Uuid, Post>(
     "/posts",
     SETTINGS_LAST_POSTS_SYNC,
     Post.serializer(),
-    PostsRepository,
+    postsRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { post ->
-        val departments = DepartmentsRepository.selectAll()
+        val departments = departmentsRepository.selectAll()
         post.referenced(departments)
     },
 ) {

@@ -12,16 +12,21 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
-object InventoryItemTypesRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
+@Singleton
+class InventoryItemTypesRemoteRepository(
+    inventoryItemTypesRepository: InventoryItemTypesRepository,
+    departmentsRepository: DepartmentsRepository
+) : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
     "/inventory/types",
     SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC,
     InventoryItemType.serializer(),
-    InventoryItemTypesRepository,
+    inventoryItemTypesRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { inventoryItemType ->
-        val departments = DepartmentsRepository.selectAll()
+        val departments = departmentsRepository.selectAll()
         inventoryItemType.referenced(departments)
     },
 ) {

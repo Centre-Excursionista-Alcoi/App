@@ -2,13 +2,37 @@ package org.centrexcursionistalcoi.app.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -20,8 +44,28 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.banner
+import cea_app.composeapp.generated.resources.cancel
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.confirm_password
+import cea_app.composeapp.generated.resources.email
+import cea_app.composeapp.generated.resources.login_action
+import cea_app.composeapp.generated.resources.login_error_invalid_credentials
+import cea_app.composeapp.generated.resources.login_error_unknown
+import cea_app.composeapp.generated.resources.login_error_user_not_registered
+import cea_app.composeapp.generated.resources.login_forgot_password
+import cea_app.composeapp.generated.resources.login_forgot_password_dialog_action
+import cea_app.composeapp.generated.resources.login_forgot_password_dialog_message
+import cea_app.composeapp.generated.resources.login_forgot_password_dialog_title
+import cea_app.composeapp.generated.resources.login_forgot_password_success_title
+import cea_app.composeapp.generated.resources.login_password_changed_message
+import cea_app.composeapp.generated.resources.login_password_changed_title
+import cea_app.composeapp.generated.resources.login_title
+import cea_app.composeapp.generated.resources.password
+import cea_app.composeapp.generated.resources.people
+import cea_app.composeapp.generated.resources.register_action
+import cea_app.composeapp.generated.resources.register_title
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -36,11 +80,12 @@ import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AuthScreen(
     changedPassword: Boolean = false,
-    model: LoginViewModel = viewModel { LoginViewModel() },
+    model: LoginViewModel = koinViewModel(),
     onLoginSuccess: () -> Unit,
 ) {
     val isLoading by model.isLoading.collectAsState()

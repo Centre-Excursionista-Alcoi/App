@@ -5,6 +5,7 @@ import com.diamondedge.logging.logging
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -15,7 +16,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fileWithContext
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
@@ -27,9 +28,20 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
-class ManagementViewModel : ViewModel() {
+@KoinViewModel
+class ManagementViewModel(
+    private val departmentsRemoteRepository: DepartmentsRemoteRepository,
+    private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository,
+    private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
+    private val usersRemoteRepository: UsersRemoteRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val postsRemoteRepository: PostsRemoteRepository,
+    private val eventsRemoteRepository: EventsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
+) : ViewModel() {
     companion object {
         private val log = logging()
     }
@@ -40,9 +52,9 @@ class ManagementViewModel : ViewModel() {
         progressNotifier: ProgressNotifier?
     ) = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val image = imageFile?.readBytes()
-                DepartmentsRemoteRepository.create(displayName, image, progressNotifier)
+                departmentsRemoteRepository.create(displayName, image, progressNotifier)
             }
         } catch (e: ServerException) {
             log.e(e) { "Could not create department." }
@@ -57,8 +69,8 @@ class ManagementViewModel : ViewModel() {
         image: PlatformFile?,
         progressNotifier: ProgressNotifier? = null,
     ) = launch {
-        doAsync {
-            DepartmentsRemoteRepository.update(
+        withContext(dispatcherProvider.io) {
+            departmentsRemoteRepository.update(
                 departmentId,
                 UpdateDepartmentRequest(
                     displayName = displayName,
@@ -71,23 +83,23 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun delete(department: Department) = launch {
-        doAsync {
-            DepartmentsRemoteRepository.delete(department.id)
+        withContext(dispatcherProvider.io) {
+            departmentsRemoteRepository.delete(department.id)
         }
     }
 
     fun kickFromDepartment(userData: UserData, department: Department) = launch {
-        doAsync {
-            DepartmentsRemoteRepository.kick(department.id, userData.sub)
+        withContext(dispatcherProvider.io) {
+            departmentsRemoteRepository.kick(department.id, userData.sub)
         }
     }
 
     fun approveDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.confirmJoinRequest(request)
+        departmentsRemoteRepository.confirmJoinRequest(request)
     }
 
     fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.denyJoinRequest(request)
+        departmentsRemoteRepository.denyJoinRequest(request)
     }
 
     fun createInventoryItemType(
@@ -98,10 +110,10 @@ class ManagementViewModel : ViewModel() {
         department: Department?,
         imageFile: PlatformFile?
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val weightDouble = weight.toDoubleOrNull()
 
-            InventoryItemTypesRemoteRepository.create(
+            inventoryItemTypesRemoteRepository.create(
                 displayName,
                 description.takeUnless { it.isEmpty() },
                 categories.takeUnless { it.isEmpty() },
@@ -121,10 +133,10 @@ class ManagementViewModel : ViewModel() {
         department: Department?,
         imageFile: PlatformFile?
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val weightDouble = weight.toDoubleOrNull()
 
-            InventoryItemTypesRemoteRepository.update(
+            inventoryItemTypesRemoteRepository.update(
                 id,
                 displayName,
                 description.takeUnless { it.isEmpty() },
@@ -137,40 +149,40 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun delete(inventoryItemType: ReferencedInventoryItemType) = launch {
-        doAsync {
-            InventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
+        withContext(dispatcherProvider.io) {
+            inventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
         }
     }
 
     fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) =
         launch {
-            doAsync {
-                InventoryItemsRemoteRepository.create(variation, type.id, amount)
+            withContext(dispatcherProvider.io) {
+                inventoryItemsRemoteRepository.create(variation, type.id, amount)
             }
         }
 
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {
-        doAsync {
-            InventoryItemsRemoteRepository.delete(inventoryItem.id)
+        withContext(dispatcherProvider.io) {
+            inventoryItemsRemoteRepository.delete(inventoryItem.id)
         }
     }
 
     fun promote(user: UserData) = launch {
-        doAsync {
-            UsersRemoteRepository.promote(user.sub)
-            UsersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
+        withContext(dispatcherProvider.io) {
+            usersRemoteRepository.promote(user.sub)
+            usersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
         }
     }
 
     fun confirmLending(lending: ReferencedLending) = launch {
-        doAsync {
-            LendingsRemoteRepository.confirm(lending.id)
+        withContext(dispatcherProvider.io) {
+            lendingsRemoteRepository.confirm(lending.id)
         }
     }
 
     fun skipLendingMemory(lending: ReferencedLending) = launch {
-        doAsync {
-            LendingsRemoteRepository.skipMemory(lending.id)
+        withContext(dispatcherProvider.io) {
+            lendingsRemoteRepository.skipMemory(lending.id)
         }
     }
 
@@ -182,10 +194,10 @@ class ManagementViewModel : ViewModel() {
         files: List<PlatformFile>,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val contentMarkdown = content.toMarkdown()
 
-            PostsRemoteRepository.create(
+            postsRemoteRepository.create(
                 title,
                 contentMarkdown,
                 department?.id,
@@ -206,10 +218,10 @@ class ManagementViewModel : ViewModel() {
         files: List<PlatformFile>,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(
+            postsRemoteRepository.update(
                 postId,
                 title,
                 contentMarkdown,
@@ -223,8 +235,8 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun delete(post: ReferencedPost) = launch {
-        doAsync {
-            PostsRemoteRepository.delete(post.id)
+        withContext(dispatcherProvider.io) {
+            postsRemoteRepository.delete(post.id)
         }
     }
 
@@ -241,10 +253,10 @@ class ManagementViewModel : ViewModel() {
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description.toMarkdown()
 
-            EventsRemoteRepository.create(
+            eventsRemoteRepository.create(
                 start,
                 end,
                 place,
@@ -274,10 +286,10 @@ class ManagementViewModel : ViewModel() {
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description?.toMarkdown()
 
-            EventsRemoteRepository.update(
+            eventsRemoteRepository.update(
                 eventId,
                 start,
                 end,
@@ -295,14 +307,14 @@ class ManagementViewModel : ViewModel() {
     }
 
     fun delete(post: ReferencedEvent) = launch {
-        doAsync {
-            EventsRemoteRepository.delete(post.id)
+        withContext(dispatcherProvider.io) {
+            eventsRemoteRepository.delete(post.id)
         }
     }
 
     fun updateInventoryItemManufacturerData(item: ReferencedInventoryItem, data: String) = launch {
-        doAsync {
-            InventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
+        withContext(dispatcherProvider.io) {
+            inventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
         }
     }
 }

@@ -5,16 +5,25 @@ import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.PayloadData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.sync.*
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
-object PushNotifierListener : NotifierManager.Listener {
+object PushNotifierListener : NotifierManager.Listener, KoinComponent {
     private val log = logging()
 
     override fun onNewToken(token: String) {
         log.i { "onNewToken: $token" }
 
-        CoroutineScope(defaultAsyncDispatcher).launch {
+        CoroutineScope(get<DispatcherProvider>().io).launch {
             FCMTokenManager.renovate(token)
         }
     }

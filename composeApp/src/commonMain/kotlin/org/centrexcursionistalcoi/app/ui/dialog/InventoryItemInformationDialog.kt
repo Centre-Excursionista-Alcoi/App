@@ -3,15 +3,47 @@ package org.centrexcursionistalcoi.app.ui.dialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.draganddrop.dragAndDropSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.cancel
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.delete
+import cea_app.composeapp.generated.resources.inventory_item_manufacturer_details
+import cea_app.composeapp.generated.resources.inventory_item_set_manufacturer_details
+import cea_app.composeapp.generated.resources.inventory_item_set_manufacturer_details_help
+import cea_app.composeapp.generated.resources.inventory_item_type_title
+import cea_app.composeapp.generated.resources.nfc_store
+import cea_app.composeapp.generated.resources.nfc_store_help
+import cea_app.composeapp.generated.resources.nfc_waiting
+import cea_app.composeapp.generated.resources.nfc_write
+import cea_app.composeapp.generated.resources.nfc_write_help
+import cea_app.composeapp.generated.resources.qrcode
 import com.diamondedge.logging.logging
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
@@ -22,7 +54,7 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.manufacturer.ManufacturerItemDetails
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformPrinter
@@ -35,6 +67,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.utils.modIf
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 private val log = logging()
 
@@ -46,12 +79,13 @@ fun InventoryItemInformationDialog(
     onDeleteRequest: (() -> Unit)? = null,
     onDismissRequest: () -> Unit
 ) {
+    val dispatcherProvider = koinInject<DispatcherProvider>()
     var writingNFC by remember { mutableStateOf(false) }
     var readingNFC by remember { mutableStateOf(false) }
     if (writingNFC || readingNFC) {
         var job by remember { mutableStateOf<Job?>(null) }
         LaunchedEffect(Unit) {
-            job = CoroutineScope(defaultAsyncDispatcher).launch {
+            job = CoroutineScope(dispatcherProvider.io).launch {
                 if (writingNFC) {
                     PlatformNFC.writeNFC(item.id.toString())
                     writingNFC = false

@@ -4,9 +4,6 @@ import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
-import org.centrexcursionistalcoi.app.storage.DriverFactory
-import org.centrexcursionistalcoi.app.storage.createDatabase
-import org.centrexcursionistalcoi.app.storage.databaseInstance
 
 actual object PlatformLoadLogic {
     private val log = logging()
@@ -17,9 +14,6 @@ actual object PlatformLoadLogic {
     }
 
     actual suspend fun load() {
-        log.d { "Creating database..." }
-        databaseInstance = createDatabase(DriverFactory())
-
         log.d { "Initializing push notifications..." }
         NotifierManager.initialize(
             NotificationPlatformConfiguration.Desktop(

@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.management_departments
 import cea_app.composeapp.generated.resources.management_events
@@ -69,6 +68,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
@@ -209,13 +210,14 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             posts: List<ReferencedPost>?,
             events: List<ReferencedEvent>?,
             inventoryItemTypes: List<ReferencedInventoryItemType>?,
+            eventsRemoteRepository: EventsRemoteRepository,
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
                 Lendings.takeIf { Lendings.shouldShow(profile, lendings) },
                 Departments.takeIf { Departments.shouldShow(profile, departments) },
                 Users.takeIf { Users.shouldShow(profile, users) },
                 Posts.takeIf { Posts.shouldShow(profile, posts) },
-                Events.takeIf { EventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
+                Events.takeIf { eventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
                 Inventory.takeIf { Inventory.shouldShow(profile, inventoryItemTypes) },
             )
         }
@@ -260,7 +262,8 @@ fun ManagementPage(
 
     events: List<ReferencedEvent>?,
 
-    model: ManagementViewModel = viewModel { ManagementViewModel() },
+    eventsRemoteRepository: EventsRemoteRepository = koinInject(),
+    model: ManagementViewModel = koinViewModel(),
 ) {
     ManagementPage(
         windowSizeClass = windowSizeClass,
@@ -300,6 +303,7 @@ fun ManagementPage(
         onUpdateEvent = model::updateEvent,
         onDeleteEvent = model::delete,
         onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData,
+        eventsRemoteRepository = eventsRemoteRepository,
     )
 }
 
@@ -352,10 +356,11 @@ private fun ManagementPage(
     onCreateEvent: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
     onUpdateEvent: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
     onDeleteEvent: (ReferencedEvent) -> Job,
+    eventsRemoteRepository: EventsRemoteRepository,
 ) {
     val scope = rememberCoroutineScope()
     val pages = remember(profile, lendings, departments, users, posts, events, inventoryItemTypes) {
-        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes)
+        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes, eventsRemoteRepository)
     }
     val pagerState = rememberPagerState { pages.size }
 

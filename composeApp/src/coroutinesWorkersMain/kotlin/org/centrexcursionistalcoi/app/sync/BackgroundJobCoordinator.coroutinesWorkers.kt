@@ -2,18 +2,19 @@ package org.centrexcursionistalcoi.app.sync
 
 import androidx.compose.runtime.mutableStateMapOf
 import com.diamondedge.logging.logging
-import kotlin.time.Duration
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import kotlin.time.Duration
+import kotlin.uuid.Uuid
 
-actual object BackgroundJobCoordinator {
+actual object BackgroundJobCoordinator : KoinComponent {
     private val log = logging()
 
     private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
@@ -79,7 +80,7 @@ actual object BackgroundJobCoordinator {
         logic: BackgroundSyncWorkerLogic,
     ) {
         log.info { "Scheduling background job $id (uniqueName=$uniqueName, repeatInterval=$repeatInterval). Input: $input" }
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(get<DispatcherProvider>().io).launch {
             if (repeatInterval != null) {
                 while (true) {
                     execute(input, id, uniqueName, logic)

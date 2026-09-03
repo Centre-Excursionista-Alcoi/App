@@ -1,25 +1,35 @@
 package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
-import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.cookies.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.BuildKonfig
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.network.configureLogging
 import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
-import org.centrexcursionistalcoi.app.sync.*
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
-object SSENotificationsListener {
+object SSENotificationsListener : KoinComponent {
     private val log = logging()
 
     private var job: Job? = null
@@ -57,7 +67,7 @@ object SSENotificationsListener {
         }
 
         log.d { "Setting up SSE..." }
-        job = CoroutineScope(defaultAsyncDispatcher).launch {
+        job = CoroutineScope(get<DispatcherProvider>().io).launch {
             try {
                 client.sse("/sse") {
                     log.i(tag = "SSE") { "Listening for events." }

@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.request.post
+import io.ktor.http.isSuccess
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -18,17 +18,23 @@ import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_EVENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
-object EventsRemoteRepository : RemoteRepository<Uuid, ReferencedEvent, Uuid, Event>(
+@Singleton
+class EventsRemoteRepository(
+    eventsRepository: EventsRepository,
+    departmentsRepository: DepartmentsRepository,
+    usersRepository: UsersRepository,
+) : RemoteRepository<Uuid, ReferencedEvent, Uuid, Event>(
     "/events",
     SETTINGS_LAST_EVENTS_SYNC,
     Event.serializer(),
-    EventsRepository,
+    eventsRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { event ->
-        val departments = DepartmentsRepository.selectAll()
-        val users = UsersRepository.selectAll()
+        val departments = departmentsRepository.selectAll()
+        val users = usersRepository.selectAll()
         event.referenced(departments, users)
     },
 ) {

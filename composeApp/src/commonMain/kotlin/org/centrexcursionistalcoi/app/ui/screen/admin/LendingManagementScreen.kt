@@ -61,7 +61,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleStartEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.cancel
 import cea_app.composeapp.generated.resources.confirm
@@ -137,6 +136,8 @@ import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import kotlin.uuid.Uuid
@@ -146,7 +147,7 @@ private val log = logging()
 @Composable
 fun LendingManagementScreen(
     lendingId: Uuid,
-    model: LendingManagementViewModel = viewModel { LendingManagementViewModel(lendingId) },
+    model: LendingManagementViewModel = koinViewModel { parametersOf(lendingId) },
     onBack: () -> Unit,
 ) {
     val users by model.users.collectAsState()

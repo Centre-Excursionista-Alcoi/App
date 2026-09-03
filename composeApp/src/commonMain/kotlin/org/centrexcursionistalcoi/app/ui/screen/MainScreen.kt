@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.admin
 import cea_app.composeapp.generated.resources.app_name
@@ -143,6 +142,7 @@ import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 @Composable
@@ -158,7 +158,7 @@ fun MainScreen(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
-    model: MainViewModel = viewModel { MainViewModel() }
+    model: MainViewModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()

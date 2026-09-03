@@ -8,9 +8,9 @@ import io.sentry.kotlin.multiplatform.protocol.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.doMain
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.Server
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -18,12 +18,16 @@ import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
+@KoinViewModel
 class LoadingViewModel(
-    onLoggedIn: () -> Unit,
-    onNotLoggedIn: () -> Unit,
+    @InjectedParam private val onLoggedInParam: () -> Unit,
+    @InjectedParam private val onNotLoggedInParam: () -> Unit,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
 
     private val log = logging()
@@ -41,7 +45,7 @@ class LoadingViewModel(
     private fun load(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
-    ) = viewModelScope.launch(defaultAsyncDispatcher) {
+    ) = viewModelScope.launch(dispatcherProvider.io) {
         log.d { "Loading app content..." }
         _error.value = null
 
@@ -65,7 +69,7 @@ class LoadingViewModel(
                 }
 
                 _progress.value = null
-                doMain { onLoggedIn() }
+                withContext(dispatcherProvider.main) { onLoggedIn() }
             } else {
                 // Clear Sentry user context
                 Sentry.configureScope { scope ->
@@ -73,7 +77,7 @@ class LoadingViewModel(
                 }
 
                 _progress.value = null
-                doMain { onNotLoggedIn() }
+                withContext(dispatcherProvider.main) { onNotLoggedIn() }
             }
         } catch (e: Exception) {
             log.e(e) { "Error while loading." }
@@ -113,6 +117,6 @@ class LoadingViewModel(
 
     init {
         log.d { "Initialized LoadingViewModel..." }
-        load(onLoggedIn, onNotLoggedIn)
+        load(onLoggedInParam, onNotLoggedInParam)
     }
 }

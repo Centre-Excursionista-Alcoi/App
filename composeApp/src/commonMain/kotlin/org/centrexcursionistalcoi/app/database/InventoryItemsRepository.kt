@@ -1,95 +1,40 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlin.uuid.Uuid
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
-import org.centrexcursionistalcoi.app.database.data.InventoryItems
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
-import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
-import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
+import org.koin.core.annotation.Singleton
+import kotlin.uuid.Uuid
 
-object InventoryItemsRepository : DatabaseRepository<ReferencedInventoryItem, Uuid>() {
-    override val queries by lazy { databaseInstance.inventoryItemsQueries }
+@Singleton
+class InventoryItemsRepository(db: AppDatabase) : Repository<ReferencedInventoryItem, Uuid> {
+    private val dao = db.inventoryItemDao()
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedInventoryItem>> {
-        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
-        val itemsFlow = queries.selectAll().asFlow().mapToList(dispatcher)
-        return combine(typesFlow, itemsFlow) { types, items ->
-            items.mapNotNull { item ->
-                val type = types.find { it.id == item.type } ?: return@mapNotNull null
-                item.toInventoryItem().referenced(type)
-            }
-        }
-    }
+    override fun selectAllAsFlow(): Flow<List<ReferencedInventoryItem>> = dao
+        .selectAllAsFlow()
+        .map { list -> list.map { it.toReferenced() } }
 
-    override suspend fun selectAll(): List<ReferencedInventoryItem> {
-        val types = InventoryItemTypesRepository.selectAll()
-        return queries.selectAll().awaitAsList().map { item ->
-            val type = types.firstOrNull { it.id == item.type } ?: throw MissingCrossReferenceException("InventoryItemType", item.type)
-            item.toInventoryItem().referenced(type)
-        }
-    }
+    override suspend fun selectAll(): List<ReferencedInventoryItem> = dao.selectAll().map { it.toReferenced() }
 
-    fun selectAllWithTypeIdFlow(typeId: Uuid, dispatcher: CoroutineDispatcher = defaultAsyncDispatcher): Flow<List<ReferencedInventoryItem>> {
-        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
-        val itemsFlow = queries.selectAllByType(typeId).asFlow().mapToList(dispatcher)
-        return combine(typesFlow, itemsFlow) { types, items ->
-            items.mapNotNull { item ->
-                val type = types.find { it.id == item.type } ?: return@mapNotNull null
-                item.toInventoryItem().referenced(type)
-            }
-        }
-    }
+    fun selectAllWithTypeIdFlow(typeId: Uuid): Flow<List<ReferencedInventoryItem>> = dao
+        .selectAllByTypeAsFlow(typeId)
+        .map { list -> list.map { it.toReferenced() } }
 
-    override suspend fun get(id: Uuid): ReferencedInventoryItem? {
-        val item = queries.get(id).awaitAsList().firstOrNull() ?: return null
-        val type = InventoryItemTypesRepository.get(item.type) ?: throw MissingCrossReferenceException("InventoryItemType", item.type)
-        return item.toInventoryItem().referenced(type)
-    }
+    override suspend fun get(id: Uuid): ReferencedInventoryItem? = dao.get(id)?.toReferenced()
 
-    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedInventoryItem?> {
-        val typesFlow = InventoryItemTypesRepository.selectAllAsFlow(dispatcher)
-        val itemFlow = queries.get(id).asFlow().mapToList(dispatcher).map { it.firstOrNull() }
-        return combine(typesFlow, itemFlow) { types, items ->
-            items ?: return@combine null
-            val type = types.find { it.id == items.type } ?: return@combine null
-            items.toInventoryItem().referenced(type)
-        }
-    }
+    override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItem?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
-    override suspend fun insert(item: ReferencedInventoryItem) = queries.insert(
-        id = item.id,
-        variation = item.variation,
-        type = item.type.id,
-        nfcId = item.nfcId,
-        manufacturerTraceabilityCode = item.manufacturerTraceabilityCode,
+    override suspend fun insert(item: ReferencedInventoryItem) = dao.insert(
+        item.dereference().toEntity()
     )
 
-    override suspend fun update(item: ReferencedInventoryItem) = queries.update(
-        id = item.id,
-        variation = item.variation,
-        type = item.type.id,
-        nfcId = item.nfcId,
-        manufacturerTraceabilityCode = item.manufacturerTraceabilityCode,
+    override suspend fun update(item: ReferencedInventoryItem) = dao.update(
+        item.dereference().toEntity()
     )
 
     override suspend fun delete(id: Uuid) {
-        queries.deleteById(id)
+        dao.deleteById(id)
     }
-
-    fun InventoryItems.toInventoryItem() = InventoryItem(
-        id = id,
-        variation = variation,
-        type = type,
-        nfcId = nfcId,
-        manufacturerTraceabilityCode = manufacturerTraceabilityCode,
-    )
 }

@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.insurance_view_document
 import cea_app.composeapp.generated.resources.inventory_item_amount
@@ -108,6 +107,8 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -115,7 +116,7 @@ import kotlin.uuid.Uuid
 @Composable
 fun LendingDetailsScreen(
     lendingId: Uuid,
-    model: LendingDetailsModel = viewModel { LendingDetailsModel(lendingId) },
+    model: LendingDetailsModel = koinViewModel { parametersOf(lendingId) },
     onMemoryEditorRequested: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -492,7 +493,7 @@ fun MemoryVisualization(
 @Composable
 fun MemoryViewButtons(
     memory: ReferencedMemory,
-    fpm: FileProviderModel = viewModel { FileProviderModel() },
+    fpm: FileProviderModel = koinViewModel(),
 ) {
     val memoryPdf = memory.pdf ?: return
 
@@ -565,8 +566,8 @@ private val previewLending = Lending(
     from = LocalDate(2025, 12, 23),
     to = LocalDate(2025, 12, 25),
     notes = null,
-    items = listOf(previewItem.referencedEntity)
-).referenced(listOf(previewUserData), listOf(previewItemType), memory = null, members = emptyList(), departments = emptyList())
+    items = listOf(previewItem.dereference())
+).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
 
 @Preview(showBackground = true)
 @Composable

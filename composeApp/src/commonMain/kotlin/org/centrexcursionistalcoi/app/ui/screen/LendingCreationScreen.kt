@@ -38,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.back
 import cea_app.composeapp.generated.resources.lending_creation_action
@@ -91,6 +90,8 @@ import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -99,7 +100,7 @@ private val log = logging()
 @Composable
 fun LendingCreationScreen(
     originalShoppingList: ShoppingList,
-    model: LendingCreationViewModel = viewModel { LendingCreationViewModel(originalShoppingList) },
+    model: LendingCreationViewModel = koinViewModel { parametersOf(originalShoppingList) },
     onLendingCreated: () -> Unit,
     onBackRequested: () -> Unit,
 ) {

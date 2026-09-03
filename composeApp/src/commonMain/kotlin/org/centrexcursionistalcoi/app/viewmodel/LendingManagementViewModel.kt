@@ -8,35 +8,43 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import org.ncgroup.kscan.Barcode
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class LendingManagementViewModel(
-    private val lendingId: Uuid,
+    @InjectedParam private val lendingId: Uuid,
+    private val lendingsRepository: LendingsRepository,
+    usersRepository: UsersRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ): ErrorViewModel() {
     companion object {
         private val log = logging()
     }
 
-    val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
+    val lending = lendingsRepository.getAsFlow(lendingId).stateInViewModel()
 
     val toggleAllowIndeterminate = lending
         // Allow indeterminate for pickups
         .map { lending -> lending?.status() == Lending.Status.CONFIRMED }
         .stateInViewModel()
 
-    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
+    val users = usersRepository.selectAllAsFlow().stateInViewModel()
 
     private val _scannedItems = MutableStateFlow(emptySet<Uuid>())
     val scannedItems get() = _scannedItems.asStateFlow()
@@ -87,16 +95,16 @@ class LendingManagementViewModel(
     fun onScan(barcode: Barcode) {
         val data = barcode.data
         launch {
-            doAsync { processScanById(data.toUuidOrNull()) }
-            doAsync { processScanByManufacturerTraceabilityCode(data) }
+            withContext(dispatcherProvider.io) { processScanById(data.toUuidOrNull()) }
+            withContext(dispatcherProvider.io) { processScanByManufacturerTraceabilityCode(data) }
         }
     }
 
     fun confirmLending() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Confirming lending..." }
-                LendingsRemoteRepository.confirm(lendingId)
+                lendingsRemoteRepository.confirm(lendingId)
                 log.i { "Lending has been confirmed." }
             }
         } catch (e: ServerException) {
@@ -107,9 +115,9 @@ class LendingManagementViewModel(
 
     fun deleteLending() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Deleting lending..." }
-                LendingsRemoteRepository.delete(lendingId)
+                lendingsRemoteRepository.delete(lendingId)
                 log.i { "Lending has been deleted." }
             }
         } catch (e: ServerException) {
@@ -120,9 +128,9 @@ class LendingManagementViewModel(
 
     fun skipMemory() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Skipping memory for lending..." }
-                LendingsRemoteRepository.skipMemory(lendingId)
+                lendingsRemoteRepository.skipMemory(lendingId)
                 log.i { "Memory has been skipped for lending." }
             }
         } catch (e: ServerException) {
@@ -196,12 +204,12 @@ class LendingManagementViewModel(
 
     fun pickup() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val dismissedItems = dismissedItems.value
 
                 log.i { "Marking lending as picked up..." }
                 log.d { "Dismissing ${dismissedItems.size} items: ${dismissedItems.joinToString()}" }
-                LendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
+                lendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
                 log.i { "Lending has been marked as picked up." }
             }
         } catch (e: ServerException) {
@@ -249,12 +257,12 @@ class LendingManagementViewModel(
 
     fun `return`() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Returning lending..." }
                 val scannedItems = scannedItems.value
                 val notes = scannedItemsNotes.value.filterKeys { it in scannedItems }
                 log.d { "Selected ${scannedItems.size} / ${lending.value?.items?.size} items" }
-                LendingsRemoteRepository.`return`(
+                lendingsRemoteRepository.`return`(
                     lendingId,
                     scannedItems.map { it to notes[it] }
                 )

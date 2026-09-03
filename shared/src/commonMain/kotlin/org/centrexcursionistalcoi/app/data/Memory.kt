@@ -78,6 +78,6 @@ data class Memory(
         from = from,
         to = to,
         pdf = pdf,
-        referencedEntity = this,
+        lending = lending,
     )
 }

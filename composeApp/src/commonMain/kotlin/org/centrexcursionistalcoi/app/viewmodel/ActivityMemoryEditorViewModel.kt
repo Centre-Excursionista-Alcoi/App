@@ -6,31 +6,42 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
-class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() {
+@KoinViewModel
+class ActivityMemoryEditorViewModel(
+    @InjectedParam private val lendingId: Uuid?,
+    membersRepository: MembersRepository,
+    departmentsRepository: DepartmentsRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val memoriesRemoteRepository: MemoriesRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
+) : ViewModel() {
 
     val isForLending = lendingId != null
 
     /**
      * All active (non disabled) users.
      */
-    val members = MembersRepository.selectAllAsFlow()
+    val members = membersRepository.selectAllAsFlow()
         // We also check for null, because non-admins only get provided active users, and their status is not given (it is always active/null).
         .map { members -> members.filter { it.status == null || it.status == Member.Status.ACTIVE } }
         .stateInViewModel()
 
-    val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
+    val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving get() = _isSaving.asStateFlow()
@@ -54,10 +65,10 @@ class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() 
     ) = launch {
         try {
             _isSaving.value = true
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val markdownText = text.toMarkdown()
                 if (isForLending) {
-                    LendingsRemoteRepository.submitMemory(
+                    lendingsRemoteRepository.submitMemory(
                         lendingId!!,
                         place,
                         members,
@@ -70,7 +81,7 @@ class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() 
                 } else {
                     require(from != null && to != null) { "From and To dates must be provided when creating a memory not for a lending" }
 
-                    MemoriesRemoteRepository.create(
+                    memoriesRemoteRepository.create(
                         place,
                         members,
                         externalUsers,

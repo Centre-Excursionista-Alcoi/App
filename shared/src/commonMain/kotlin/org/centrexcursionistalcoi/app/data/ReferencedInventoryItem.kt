@@ -11,8 +11,7 @@ data class ReferencedInventoryItem(
     val type: ReferencedInventoryItemType,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray?,
     val manufacturerTraceabilityCode: String?,
-    override val referencedEntity: InventoryItem
-): ReferencedEntity<Uuid, InventoryItem>() {
+): ReferencedEntity<Uuid, InventoryItem> {
     companion object {
         fun InventoryItem.referenced(type: ReferencedInventoryItemType) = ReferencedInventoryItem(
             id = this.id,
@@ -20,9 +19,16 @@ data class ReferencedInventoryItem(
             type = type,
             nfcId = this.nfcId,
             manufacturerTraceabilityCode = manufacturerTraceabilityCode,
-            referencedEntity = this,
         )
     }
+
+    override fun dereference() = InventoryItem(
+        id = id,
+        variation = variation,
+        type = type.id,
+        nfcId = nfcId,
+        manufacturerTraceabilityCode = manufacturerTraceabilityCode,
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -35,7 +41,6 @@ data class ReferencedInventoryItem(
         if (type != other.type) return false
         if (!nfcId.contentEquals(other.nfcId)) return false
         if (manufacturerTraceabilityCode != other.manufacturerTraceabilityCode) return false
-        if (referencedEntity != other.referencedEntity) return false
 
         return true
     }
@@ -46,7 +51,6 @@ data class ReferencedInventoryItem(
         result = 31 * result + type.hashCode()
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)
         result = 31 * result + (manufacturerTraceabilityCode?.hashCode() ?: 0)
-        result = 31 * result + referencedEntity.hashCode()
         return result
     }
 }

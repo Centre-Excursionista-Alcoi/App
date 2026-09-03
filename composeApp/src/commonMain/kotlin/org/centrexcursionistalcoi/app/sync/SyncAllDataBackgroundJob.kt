@@ -4,7 +4,7 @@ import com.diamondedge.logging.logging
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.DATABASE_VERSION
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.component.get
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -40,7 +41,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     private val log = logging()
 
     private const val SETTINGS_LAST_SYNC = "lastSync"
-    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncVersion"
+    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncDbVersion"
 
     const val EXTRA_FORCE_SYNC = "force_sync"
 
@@ -58,8 +59,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
      * Checks if the database version has been upgraded since the last sync.
      */
     fun databaseVersionUpgrade(): Boolean {
-        val lastSyncVersion = settings.getLongOrNull(SETTINGS_LAST_SYNC_VERSION)?.toInt()
-        return lastSyncVersion == null || lastSyncVersion < Database.Schema.version
+        val lastSyncVersion = settings.getIntOrNull(SETTINGS_LAST_SYNC_VERSION)
+        return lastSyncVersion == null || lastSyncVersion < DATABASE_VERSION
     }
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
@@ -96,35 +97,34 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
             // Departments does not depend on any other entity, so we sync it first
-            DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<DepartmentsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Users does not depend on any other entity
-            UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<UsersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Members do not depend on any other entity
-            MembersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<MembersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Posts requires Departments
-            PostsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<PostsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Events requires Departments and Users
             // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
-            EventsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<EventsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Item Types requires Departments
-            InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<InventoryItemTypesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Items requires Inventory Item Types
-            InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<InventoryItemsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
-            // Memories only reference Departments and (optionally) Lendings by id, no resolution is needed. They
-            // must be synced before Lendings, since a lending's memory is resolved from what's already cached here.
-            MemoriesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
-
-            // Lendings requires Users, Inventory Item Types, Inventory Items and Memories
+            // Lendings requires Users, Inventory Item Types and Inventory Items
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
-            LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<LendingsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
+            // Memories requires Departments and (optionally) Lendings
+            get<MemoriesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -133,16 +133,17 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
                 log.e(e) { "Could not find cross reference. Deleting all local data, and synchronizing again..." }
 
                 log.d { "Removing all data..." }
-                // order is important due to foreign key constraints. Same as above
-                MemoriesRepository.deleteAll()
-                LendingsRepository.deleteAll()
-                InventoryItemsRepository.deleteAll()
-                InventoryItemTypesRepository.deleteAll()
-                EventsRepository.deleteAll()
-                PostsRepository.deleteAll()
-                MembersRepository.deleteAll()
-                UsersRepository.deleteAll()
-                DepartmentsRepository.deleteAll()
+                // Order is important due to foreign key constraints: children before their parents (the reverse of
+                // the sync order above, since Memories has a FK to Lendings).
+                get<MemoriesRepository>().deleteAll()
+                get<LendingsRepository>().deleteAll()
+                get<InventoryItemsRepository>().deleteAll()
+                get<InventoryItemTypesRepository>().deleteAll()
+                get<EventsRepository>().deleteAll()
+                get<PostsRepository>().deleteAll()
+                get<MembersRepository>().deleteAll()
+                get<UsersRepository>().deleteAll()
+                get<DepartmentsRepository>().deleteAll()
 
                 log.d { "Removing all files..." }
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
@@ -153,7 +154,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         } catch (e: ServerException) {
             if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
                 log.w { "Not logged in. Credentials may have expired. Logging out..." }
-                AuthBackend.logout()
+                get<AuthBackend>().logout()
             } else {
                 log.e(e) { "Server error during synchronization. Failing..." }
                 throw e
@@ -165,6 +166,6 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         synchronizeAllRepositories(force, progressNotifier)
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
-        settings.putLong(SETTINGS_LAST_SYNC_VERSION, Database.Schema.version)
+        settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
     }
 }

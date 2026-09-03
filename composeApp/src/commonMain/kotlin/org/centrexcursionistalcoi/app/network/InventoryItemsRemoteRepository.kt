@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
@@ -11,15 +10,21 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
+import kotlin.uuid.Uuid
 
-object InventoryItemsRemoteRepository : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
+@Singleton
+class InventoryItemsRemoteRepository(
+    inventoryItemsRepository: InventoryItemsRepository,
+    inventoryItemTypesRepository: InventoryItemTypesRepository
+) : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
     "/inventory/items",
     SETTINGS_LAST_INVENTORY_ITEMS_SYNC,
     InventoryItem.serializer(),
-    InventoryItemsRepository,
+    inventoryItemsRepository,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { item ->
-        val type = InventoryItemTypesRepository.get(item.type) ?: throw NoSuchElementException("No inventory item type with ID ${item.type} found for inventory item ${item.id}")
+        val type = inventoryItemTypesRepository.get(item.type) ?: throw NoSuchElementException("No inventory item type with ID ${item.type} found for inventory item ${item.id}")
         item.referenced(type)
     },
 ) {
