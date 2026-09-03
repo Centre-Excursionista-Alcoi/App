@@ -22,6 +22,7 @@ actual class PlatformCalendarSync(private val context: Context) : PlatformProvid
     ): Boolean {
         val intent = Intent(Intent.ACTION_INSERT).apply {
             data = CalendarContract.Events.CONTENT_URI
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
             putExtra(CalendarContract.Events.TITLE, title)
             putExtra(CalendarContract.Events.EVENT_LOCATION, location)
             putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin.toEpochMilliseconds())

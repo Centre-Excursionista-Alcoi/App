@@ -26,6 +26,7 @@ actual class PlatformShareLogic(private val context: Context) : PlatformProvider
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_STREAM, uri)
             type = contentType.toString()
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))
@@ -37,6 +38,7 @@ actual class PlatformShareLogic(private val context: Context) : PlatformProvider
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, text)
             type = "text/plain"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))

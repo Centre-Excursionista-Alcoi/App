@@ -25,7 +25,7 @@ actual class PlatformOpenFileLogic(private val context: Context) : PlatformProvi
         val intent = Intent().apply {
             action = Intent.ACTION_VIEW
             setDataAndType(uri, contentType.toString())
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         intent.resolveActivity(context.packageManager)?.let {
             context.startActivity(Intent.createChooser(intent, null))
