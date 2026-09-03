@@ -566,8 +566,8 @@ private val previewLending = Lending(
     from = LocalDate(2025, 12, 23),
     to = LocalDate(2025, 12, 25),
     notes = null,
-    items = listOf(previewItem.referencedEntity)
-).referenced(listOf(previewUserData), listOf(previewItemType), memory = null, members = emptyList(), departments = emptyList())
+    items = listOf(previewItem.dereference())
+).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
 
 @Preview(showBackground = true)
 @Composable

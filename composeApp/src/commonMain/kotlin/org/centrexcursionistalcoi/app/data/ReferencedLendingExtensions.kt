@@ -6,9 +6,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion
 fun Lending.referenced(
     users: List<UserData>,
     inventoryItemTypes: List<ReferencedInventoryItemType>,
-    memory: Memory?,
-    members: List<Member>,
-    departments: List<Department>
+    memory: ReferencedMemory?,
 ) = ReferencedLending(
     id = this.id,
     user = users.getUser(userSub),
@@ -21,7 +19,7 @@ fun Lending.referenced(
     receivedItems = receivedItems,
     memorySubmitted = this.memorySubmitted,
     memorySubmittedAt = this.memorySubmittedAt,
-    memory = memory?.referenced(users, members, departments),
+    memory = memory,
     memoryReviewed = this.memoryReviewed,
     from = this.from,
     to = this.to,
@@ -30,5 +28,4 @@ fun Lending.referenced(
         val type = inventoryItemTypes.getType(item.type)
         item.referenced(type)
     },
-    referencedEntity = this,
 )

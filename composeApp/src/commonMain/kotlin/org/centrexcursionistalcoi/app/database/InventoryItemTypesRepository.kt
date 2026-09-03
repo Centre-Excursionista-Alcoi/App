@@ -2,48 +2,26 @@ package org.centrexcursionistalcoi.app.database
 
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemTypeEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
 @Singleton
-class InventoryItemTypesRepository(
-    private val db: AppDatabase,
-    private val departmentsRepository: DepartmentsRepository,
-) : Repository<ReferencedInventoryItemType, Uuid> {
+class InventoryItemTypesRepository(private val db: AppDatabase) : Repository<ReferencedInventoryItemType, Uuid> {
     private val log = logging()
 
     private val dao = db.inventoryItemTypeDao()
 
-    override suspend fun get(id: Uuid): ReferencedInventoryItemType? {
-        val departments = departmentsRepository.selectAll()
-        return dao.get(id)?.toInventoryItemType()?.referenced(departments)
-    }
+    override suspend fun get(id: Uuid): ReferencedInventoryItemType? = dao.get(id)?.toReferenced()
 
-    override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItemType?> {
-        val departments = departmentsRepository.selectAllAsFlow()
-        val itemType = dao.getAsFlow(id)
-        return combine(departments, itemType) { departmentsList, itemTypeEntity ->
-            itemTypeEntity?.toInventoryItemType()?.referenced(departmentsList)
-        }
-    }
+    override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItemType?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
-    override fun selectAllAsFlow(): Flow<List<ReferencedInventoryItemType>> {
-        val departments = departmentsRepository.selectAllAsFlow()
-        val itemTypes = dao.selectAllAsFlow()
-        return combine(departments, itemTypes) { departmentsList, itemTypesList ->
-            itemTypesList.map { it.toInventoryItemType().referenced(departmentsList) }
-        }
-    }
+    override fun selectAllAsFlow(): Flow<List<ReferencedInventoryItemType>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
 
-    override suspend fun selectAll(): List<ReferencedInventoryItemType> {
-        val departments = departmentsRepository.selectAll()
-        return dao.selectAll().map { it.toInventoryItemType().referenced(departments) }
-    }
+    override suspend fun selectAll(): List<ReferencedInventoryItemType> = dao.selectAll().map { it.toReferenced() }
 
     fun categoriesAsFlow(): Flow<Set<String>> = dao
         .selectAllWithCategoriesAsFlow()

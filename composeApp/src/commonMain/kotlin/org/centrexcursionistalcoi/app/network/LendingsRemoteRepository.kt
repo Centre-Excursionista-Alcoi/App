@@ -67,8 +67,8 @@ class LendingsRemoteRepository(
         val departments = departmentsRepository.selectAll()
         // Memories are synced separately (see MemoriesRemoteRepository); this only resolves against what's
         // already cached locally, so Memories must be synced before Lendings for this to be up to date.
-        val memory = lending.memory?.let { memoriesRepository.get(it) }?.dereference()
-        lending.referenced(users, inventoryItemTypes, memory, members, departments)
+        val memory = lending.memory?.let { memoriesRepository.get(it) }
+        lending.referenced(users, inventoryItemTypes, memory)
     },
 ) {
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {

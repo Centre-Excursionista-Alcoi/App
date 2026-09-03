@@ -31,11 +31,29 @@ data class ReferencedLending(
     val to: LocalDate,
     val notes: String?,
     val items: List<ReferencedInventoryItem>,
+) : ReferencedEntity<Uuid, Lending> {
 
-    override val referencedEntity: Lending
-) : ReferencedEntity<Uuid, Lending>() {
+   override fun dereference() = Lending(
+       id = id,
+       userSub = user.sub,
+       timestamp = timestamp,
+       confirmed = confirmed,
+       taken = taken,
+       givenBy = givenBy?.sub,
+       givenAt = givenAt,
+       returned = returned,
+       receivedItems = receivedItems,
+       memorySubmitted = memorySubmitted,
+       memorySubmittedAt = memorySubmittedAt,
+       memory = memory?.id,
+       memoryReviewed = memoryReviewed,
+       from = from,
+       to = to,
+       notes = notes,
+       items = items.map { it.dereference() },
+   )
 
-    val durationDays: Int = from.daysUntil(to) + 1
+   val durationDays: Int = from.daysUntil(to) + 1
 
-    fun status(): Status = referencedEntity.status()
+   fun status(): Status = dereference().status()
 }

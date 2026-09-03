@@ -1,58 +1,44 @@
 package org.centrexcursionistalcoi.app.database
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.EventEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.room.entity.EventUserCrossRef
+import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
 @Singleton
-class EventsRepository(
-    db: AppDatabase,
-    private val departmentsRepository: DepartmentsRepository,
-    private val usersRepository: UsersRepository,
-) : Repository<ReferencedEvent, Uuid> {
+class EventsRepository(private val db: AppDatabase) : Repository<ReferencedEvent, Uuid> {
     private val dao = db.eventDao()
 
-    override suspend fun get(id: Uuid): ReferencedEvent? {
-        val departments = departmentsRepository.selectAll()
-        val users = usersRepository.selectAll()
-        return dao.get(id)?.toEvent()?.referenced(departments, users)
+    override suspend fun get(id: Uuid): ReferencedEvent? = dao.get(id)?.toReferenced()
+
+    override fun getAsFlow(id: Uuid): Flow<ReferencedEvent?> = dao.getAsFlow(id).map { it?.toReferenced() }
+
+    override fun selectAllAsFlow(): Flow<List<ReferencedEvent>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
+
+    override suspend fun selectAll(): List<ReferencedEvent> = dao.selectAll().map { it.toReferenced() }
+
+    override suspend fun insert(item: ReferencedEvent) {
+        dao.insert(item.dereference().toEntity())
+        insertUserCrossRefs(item)
     }
 
-    override fun getAsFlow(id: Uuid): Flow<ReferencedEvent?> {
-        val departmentsFlow = departmentsRepository.selectAllAsFlow()
-        val usersFlow = usersRepository.selectAllAsFlow()
-        val eventFlow = dao.getAsFlow(id)
-        return combine(departmentsFlow, usersFlow, eventFlow) { departments, users, event ->
-            event?.toEvent()?.referenced(departments, users)
+    override suspend fun update(item: ReferencedEvent) {
+        dao.update(item.dereference().toEntity())
+        val crossRefDao = db.eventUserCrossRefDao()
+        crossRefDao.deleteByEventId(item.id)
+        insertUserCrossRefs(item)
+    }
+
+    private suspend fun insertUserCrossRefs(item: ReferencedEvent) {
+        val crossRefDao = db.eventUserCrossRefDao()
+        for (user in item.userSubList) {
+            crossRefDao.insert(EventUserCrossRef(eventId = item.id, userSub = user.sub))
         }
     }
-
-    override fun selectAllAsFlow(): Flow<List<ReferencedEvent>> {
-        val departmentsFlow = departmentsRepository.selectAllAsFlow()
-        val usersFlow = usersRepository.selectAllAsFlow()
-        val eventsFlow = dao.selectAllAsFlow()
-        return combine(departmentsFlow, usersFlow, eventsFlow) { departments, users, events ->
-            events.map { it.toEvent().referenced(departments, users) }
-        }
-    }
-
-    override suspend fun selectAll(): List<ReferencedEvent> {
-        val departments = departmentsRepository.selectAll()
-        val users = usersRepository.selectAll()
-        return dao.selectAll().map { it.toEvent().referenced(departments, users) }
-    }
-
-    override suspend fun insert(item: ReferencedEvent) = dao.insert(
-        item.dereference().toEntity()
-    )
-
-    override suspend fun update(item: ReferencedEvent) = dao.update(
-        item.dereference().toEntity()
-    )
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

@@ -1,10 +1,12 @@
 package org.centrexcursionistalcoi.app.database
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.database.room.entity.MemoryEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.room.entity.MemoryMemberCrossRef
+import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -17,47 +19,20 @@ import kotlin.uuid.Uuid
  */
 @Singleton
 class MemoriesRepository(
-    db: AppDatabase,
-    private val usersRepository: UsersRepository,
-    private val membersRepository: MembersRepository,
-    private val departmentsRepository: DepartmentsRepository,
+    private val db: AppDatabase,
 ) : Repository<ReferencedMemory, Uuid> {
     private val dao = db.memoryDao()
 
-    override suspend fun get(id: Uuid): ReferencedMemory? {
-        val memory = getRaw(id) ?: return null
-        return memory.referenced(usersRepository.selectAll(), membersRepository.selectAll(), departmentsRepository.selectAll())
-    }
-
-    private suspend fun getRaw(id: Uuid): Memory? = dao.get(id)?.toMemory()
+    override suspend fun get(id: Uuid): ReferencedMemory? = dao.get(id)?.toReferenced()
 
     /** Returns the raw memory linked to the lending with the given [lendingId], if any. */
-    suspend fun getByLendingId(lendingId: Uuid): Memory? = dao.getByLendingId(lendingId).firstOrNull()?.toMemory()
+    suspend fun getByLendingId(lendingId: Uuid): ReferencedMemory? = dao.getByLendingId(lendingId).firstOrNull()?.toReferenced()
 
-    override fun getAsFlow(id: Uuid): Flow<ReferencedMemory?> = combine(
-        dao.getAsFlow(id),
-        usersRepository.selectAllAsFlow(),
-        membersRepository.selectAllAsFlow(),
-        departmentsRepository.selectAllAsFlow(),
-    ) { entity, users, members, departments ->
-        entity?.toMemory()?.referenced(users, members, departments)
-    }
+    override fun getAsFlow(id: Uuid): Flow<ReferencedMemory?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
-    override suspend fun selectAll(): List<ReferencedMemory> {
-        val users = usersRepository.selectAll()
-        val members = membersRepository.selectAll()
-        val departments = departmentsRepository.selectAll()
-        return dao.selectAll().map { it.toMemory().referenced(users, members, departments) }
-    }
+    override suspend fun selectAll(): List<ReferencedMemory> = dao.selectAll().map { it.toReferenced() }
 
-    override fun selectAllAsFlow(): Flow<List<ReferencedMemory>> = combine(
-        dao.selectAllAsFlow(),
-        usersRepository.selectAllAsFlow(),
-        membersRepository.selectAllAsFlow(),
-        departmentsRepository.selectAllAsFlow(),
-    ) { entities, users, members, departments ->
-        entities.map { it.toMemory().referenced(users, members, departments) }
-    }
+    override fun selectAllAsFlow(): Flow<List<ReferencedMemory>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
 
     override suspend fun insert(item: ReferencedMemory) = insertRaw(item.dereference())
 
@@ -65,12 +40,27 @@ class MemoriesRepository(
 
     /** Inserts or updates the given raw [memory], without needing to resolve its members/department/submitter first. */
     suspend fun insertOrUpdate(memory: Memory) {
-        if (getRaw(memory.id) != null) updateRaw(memory) else insertRaw(memory)
+        if (dao.get(memory.id) != null) updateRaw(memory) else insertRaw(memory)
     }
 
-    private suspend fun insertRaw(memory: Memory) = dao.insert(memory.toEntity())
+    private suspend fun insertRaw(memory: Memory) {
+        dao.insert(memory.toEntity())
+        insertMemberCrossRefs(memory)
+    }
 
-    private suspend fun updateRaw(memory: Memory) = dao.update(memory.toEntity())
+    private suspend fun updateRaw(memory: Memory) {
+        dao.update(memory.toEntity())
+        val crossRefDao = db.memoryMemberCrossRefDao()
+        crossRefDao.deleteByMemoryId(memory.id)
+        insertMemberCrossRefs(memory)
+    }
+
+    private suspend fun insertMemberCrossRefs(memory: Memory) {
+        val crossRefDao = db.memoryMemberCrossRefDao()
+        for (memberNumber in memory.members) {
+            crossRefDao.insert(MemoryMemberCrossRef(memoryId = memory.id, memberNumber = memberNumber.toLong()))
+        }
+    }
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

@@ -18,12 +18,14 @@ expect fun platformDatabaseModule(): Module
 val daoModule = module {
     single { get<AppDatabase>().departmentDao() }
     single { get<AppDatabase>().eventDao() }
+    single { get<AppDatabase>().eventUserCrossRefDao() }
     single { get<AppDatabase>().inventoryItemTypeDao() }
     single { get<AppDatabase>().inventoryItemDao() }
     single { get<AppDatabase>().lendingDao() }
     single { get<AppDatabase>().lendingItemDao() }
     single { get<AppDatabase>().memberDao() }
     single { get<AppDatabase>().memoryDao() }
+    single { get<AppDatabase>().memoryMemberCrossRefDao() }
     single { get<AppDatabase>().postDao() }
     single { get<AppDatabase>().receivedItemDao() }
     single { get<AppDatabase>().userDao() }

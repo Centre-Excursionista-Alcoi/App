@@ -20,24 +20,9 @@ data class EventEntity(
     val requiresInsurance: Boolean,
     val department: Uuid?,
     val image: Uuid?,
-    val userReferences: List<String>,
 ) {
-    fun toEvent() = Event(
-        id = id,
-        start = start,
-        end = end,
-        place = place,
-        title = title,
-        description = description,
-        maxPeople = maxPeople,
-        requiresConfirmation = requiresConfirmation,
-        requiresInsurance = requiresInsurance,
-        department = department,
-        image = image,
-        userSubList = userReferences,
-    )
-
     companion object {
+        /** [Event.userSubList] is persisted separately, as [EventUserCrossRef] rows. */
         fun Event.toEntity() = EventEntity(
             id = id,
             start = start,
@@ -50,7 +35,6 @@ data class EventEntity(
             requiresInsurance = requiresInsurance,
             department = department,
             image = image,
-            userReferences = userSubList,
         )
     }
 }

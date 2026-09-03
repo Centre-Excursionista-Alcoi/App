@@ -29,7 +29,6 @@ data class MemoryEntity(
     @PrimaryKey
     val id: Uuid,
     val place: String?,
-    val members: List<UInt>?,
     val externalUsers: String?,
     val text: String,
     val sport: Sports?,
@@ -41,27 +40,11 @@ data class MemoryEntity(
     val pdf: Uuid?,
     val lending: Uuid?,
 ) {
-    fun toMemory() = Memory(
-        id = id,
-        place = place,
-        members = members.orEmpty(),
-        externalUsers = externalUsers,
-        text = text,
-        sport = sport,
-        department = department,
-        attachments = attachments.orEmpty(),
-        submittedBy = submittedBy,
-        from = fromDate,
-        to = toDate,
-        pdf = pdf,
-        lending = lending,
-    )
-
     companion object {
+        /** [Memory.members] is persisted separately, as [MemoryMemberCrossRef] rows. */
         fun Memory.toEntity() = MemoryEntity(
             id = id,
             place = place,
-            members = members,
             externalUsers = externalUsers,
             text = text,
             sport = sport,
