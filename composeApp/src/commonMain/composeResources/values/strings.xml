@@ -225,6 +225,8 @@
     <string name="management_active_lendings">Active Lendings</string>
     <string name="management_complete_lendings">Complete Lendings</string>
 
+    <string name="management_memories">Memories</string>
+
     <string name="management_other_users_lendings">Lendings from other users</string>
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
     <string name="management_pending_pickup_lendings">Lendings pending pickup</string>

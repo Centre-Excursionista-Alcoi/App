@@ -21,9 +21,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,16 +74,43 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.centrexcursionistalcoi.app.viewmodel.management.InventoryManagementViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.Uuid
 
 private val log = logging()
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryItemTypesListView(
-    windowSizeClass: WindowSizeClass,
+    selectedItemId: Uuid?,
+    model: InventoryManagementViewModel = koinViewModel()
+) {
+    val departments by model.departments.collectAsState()
+    val inventoryItems by model.inventoryItems.collectAsState()
+    val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
+    val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
+
+    InventoryItemTypesListView(
+        selectedItemId = selectedItemId,
+        types = inventoryItemTypes,
+        allCategories = inventoryItemTypesCategories.orEmpty(),
+        departments = departments,
+        items = inventoryItems,
+        onCreate = model::createInventoryItemType,
+        onUpdate = model::updateInventoryItemType,
+        onDelete = model::delete,
+        onCreateInventoryItem = model::createInventoryItem,
+        onDeleteInventoryItem = model::delete,
+        onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InventoryItemTypesListView(
     selectedItemId: Uuid?,
     types: List<ReferencedInventoryItemType>?,
     allCategories: Set<String>,
@@ -106,7 +133,7 @@ fun InventoryItemTypesListView(
     var highlightItemNfcId by remember { mutableStateOf<ByteArray?>(null) }
     LaunchedEffect(highlightItemId, highlightItemNfcId) {
         if (highlightItemId != null || highlightItemNfcId != null) {
-            delay(3000) // Highlight for 3 seconds
+            delay(3.seconds) // Highlight for 3 seconds
             highlightItemId = null
             highlightItemNfcId = null
         }
@@ -165,7 +192,6 @@ fun InventoryItemTypesListView(
         }.map { type -> type to emptyList<ReferencedInventoryItem>() }
     }
     ListView(
-        windowSizeClass = windowSizeClass,
         selectedItemId = selectedItemTypeId,
         items = groupedItems + typesWithoutItems,
         itemIdProvider = { (type) -> type.id },

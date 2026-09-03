@@ -1,15 +1,49 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.event_assisting_users
+import cea_app.composeapp.generated.resources.event_by
+import cea_app.composeapp.generated.resources.event_department
+import cea_app.composeapp.generated.resources.event_department_generic
+import cea_app.composeapp.generated.resources.event_end
+import cea_app.composeapp.generated.resources.event_max_people
+import cea_app.composeapp.generated.resources.event_max_people_value
+import cea_app.composeapp.generated.resources.event_place
+import cea_app.composeapp.generated.resources.event_place_cea
+import cea_app.composeapp.generated.resources.event_requires_confirmation
+import cea_app.composeapp.generated.resources.event_requires_insurance
+import cea_app.composeapp.generated.resources.event_start
+import cea_app.composeapp.generated.resources.event_title
+import cea_app.composeapp.generated.resources.icon_monochrome
+import cea_app.composeapp.generated.resources.management_event_create
+import cea_app.composeapp.generated.resources.management_no_events
+import cea_app.composeapp.generated.resources.submit
 import com.mikepenz.markdown.m3.Markdown
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -24,7 +58,11 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Distance
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Groups
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.PersonCheck
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
@@ -33,15 +71,30 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormSwitchRow
 import org.centrexcursionistalcoi.app.ui.utils.optional
+import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
+
+@Composable
+fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
+    val events by model.events.collectAsState()
+    val departments by model.departments.collectAsState()
+
+    EventsListView(
+        events = events,
+        departments = departments,
+        onCreate = model::createEvent,
+        onUpdate = model::updateEvent,
+        onDelete = model::deleteEvent,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsListView(
-    windowSizeClass: WindowSizeClass,
+private fun EventsListView(
     events: List<ReferencedEvent>?,
     departments: List<Department>?,
     onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
@@ -49,7 +102,6 @@ fun EventsListView(
     onDelete: (ReferencedEvent) -> Job,
 ) {
     ListView(
-        windowSizeClass = windowSizeClass,
         items = events,
         itemIdProvider = { it.id },
         itemDisplayName = { it.title },

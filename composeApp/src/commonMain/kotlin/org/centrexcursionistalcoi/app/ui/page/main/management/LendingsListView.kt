@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -106,17 +105,41 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.page.main.LendingItem
+import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.InteractiveCanvas
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.screen.admin.lendingManagementScreenContent
+import org.centrexcursionistalcoi.app.viewmodel.management.LendingsManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
+
+@Composable
+fun LendingsListView(
+    snackbarHostState: SnackbarHostState,
+    onGiveRequested: (ReferencedLending) -> Unit,
+    onReceiveRequested: (ReferencedLending) -> Unit,
+    model: LendingsManagementViewModel = koinViewModel()
+) {
+    val lendings by model.lendings.collectAsState()
+    val users by model.users.collectAsState()
+
+    LendingsListView(
+        snackbarHostState = snackbarHostState,
+        lendings = lendings,
+        users = users.orEmpty(),
+        onConfirmLendingRequest = { model.confirmLending(it) },
+        onSkipMemoryRequest = { model.skipLendingMemory(it) },
+        onGiveRequested = onGiveRequested,
+        onReceiveRequested = onReceiveRequested,
+        onDeleteRequested = { lending, reason -> model.delete(lending, reason) },
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LendingsListView(
-    windowSizeClass: WindowSizeClass,
+private fun LendingsListView(
     snackbarHostState: SnackbarHostState,
     lendings: List<ReferencedLending>?,
     users: List<UserData>,
@@ -126,6 +149,8 @@ fun LendingsListView(
     onReceiveRequested: (ReferencedLending) -> Unit,
     onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
 ) {
+    val windowSizeClass = calculateWindowSizeClass()
+
     var selectedLending by remember { mutableStateOf<ReferencedLending?>(null) }
     LaunchedEffect(lendings) {
         if (selectedLending != null) {

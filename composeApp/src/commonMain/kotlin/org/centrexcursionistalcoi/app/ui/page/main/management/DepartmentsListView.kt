@@ -12,8 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,9 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.delete
+import cea_app.composeapp.generated.resources.form_display_name
+import cea_app.composeapp.generated.resources.management_department_create
+import cea_app.composeapp.generated.resources.management_department_members
+import cea_app.composeapp.generated.resources.management_no_departments
+import cea_app.composeapp.generated.resources.management_other_users_join_requests
+import cea_app.composeapp.generated.resources.submit
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -38,14 +44,41 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
+import org.centrexcursionistalcoi.app.viewmodel.management.DepartmentsManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.uuid.Uuid
+
+@Composable
+fun DepartmentsListView(model: DepartmentsManagementViewModel = koinViewModel()) {
+    val profile = model.profile.collectAsState()
+    val users by model.users.collectAsState()
+    val departments by model.departments.collectAsState()
+
+    val profileValue = profile.value
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
+    DepartmentsListView(
+        profile = profileValue,
+        users = users,
+        departments = departments,
+        onCreate = model::createDepartment,
+        onUpdate = model::updateDepartment,
+        onDelete = model::delete,
+        onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
+        onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DepartmentsListView(
-    windowSizeClass: WindowSizeClass,
+private fun DepartmentsListView(
     profile: ProfileResponse,
     users: List<UserData>?,
     departments: List<Department>?,
@@ -78,7 +111,6 @@ fun DepartmentsListView(
     }
 
     ListView(
-        windowSizeClass = windowSizeClass,
         items = filteredDepartments,
         itemIdProvider = { it.id },
         itemDisplayName = { it.displayName },

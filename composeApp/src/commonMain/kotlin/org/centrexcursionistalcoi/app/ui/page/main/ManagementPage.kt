@@ -20,29 +20,23 @@ import cea_app.composeapp.generated.resources.management_departments
 import cea_app.composeapp.generated.resources.management_events
 import cea_app.composeapp.generated.resources.management_inventory
 import cea_app.composeapp.generated.resources.management_lendings
+import cea_app.composeapp.generated.resources.management_memories
 import cea_app.composeapp.generated.resources.management_posts
 import cea_app.composeapp.generated.resources.management_users
-import com.mohamedrejeb.richeditor.model.RichTextState
-import io.github.vinceglb.filekit.PlatformFile
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.Entity
-import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.process.Progress
-import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArticleFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
@@ -63,24 +57,22 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypes
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
-import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementPageScreenModel
-import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
-const val MANAGEMENT_PAGE_DEPARTMENTS = 1
-const val MANAGEMENT_PAGE_USERS = 2
-const val MANAGEMENT_PAGE_POSTS = 3
-const val MANAGEMENT_PAGE_EVENTS = 4
-const val MANAGEMENT_PAGE_INVENTORY = 5
+const val MANAGEMENT_PAGE_MEMORIES = 1
+const val MANAGEMENT_PAGE_DEPARTMENTS = 2
+const val MANAGEMENT_PAGE_USERS = 3
+const val MANAGEMENT_PAGE_POSTS = 4
+const val MANAGEMENT_PAGE_EVENTS = 5
+const val MANAGEMENT_PAGE_INVENTORY = 6
 
 private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
     private val key: String,
@@ -113,6 +105,18 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             return isManager
         }
     }
+
+    object Memories : ManagementPage<Uuid, Memory>(
+        key = "memories",
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_memories,
+                MaterialSymbols.Article,
+                MaterialSymbols.ArticleFilled,
+                it
+            )
+        }
+    )
 
     object Departments : ManagementPage<Uuid, Department>(
         key = "departments",
@@ -209,19 +213,15 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             profile: ProfileResponse,
             lendings: List<ReferencedLending>?,
             departments: List<Department>?,
-            users: List<UserData>?,
-            posts: List<ReferencedPost>?,
-            events: List<ReferencedEvent>?,
-            inventoryItemTypes: List<ReferencedInventoryItemType>?,
-            eventsRemoteRepository: EventsRemoteRepository,
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
                 Lendings.takeIf { Lendings.shouldShow(profile, lendings) },
+                Memories.takeIf { Memories.shouldShow(profile, null) },
                 Departments.takeIf { Departments.shouldShow(profile, departments) },
-                Users.takeIf { Users.shouldShow(profile, users) },
-                Posts.takeIf { Posts.shouldShow(profile, posts) },
-                Events.takeIf { eventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
-                Inventory.takeIf { Inventory.shouldShow(profile, inventoryItemTypes) },
+                Users.takeIf { Users.shouldShow(profile, null) },
+                Posts.takeIf { Posts.shouldShow(profile, null) },
+                Events.takeIf { Events.shouldShow(profile, null) },
+                Inventory.takeIf { Inventory.shouldShow(profile, null) },
             )
         }
 
@@ -238,28 +238,18 @@ fun ManagementPage(
     /**
      * The currently selected item in the format Pair(pageIndex, itemId?).
      *
-     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_EVENTS], [MANAGEMENT_PAGE_INVENTORY].
+     * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_MEMORIES], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_EVENTS], [MANAGEMENT_PAGE_INVENTORY].
      */
     selectedItem: Pair<Int, Uuid?>?,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
     screenModel: ManagementPageScreenModel = koinViewModel(),
-    eventsRemoteRepository: EventsRemoteRepository = koinInject(),
-    model: ManagementViewModel = koinViewModel(),
 ) {
     val profile by screenModel.profile.collectAsState()
     val lendings by screenModel.lendings.collectAsState()
     val departments by screenModel.departments.collectAsState()
-    val users by screenModel.users.collectAsState()
-    val members by screenModel.members.collectAsState()
-    val inventoryItemTypes by screenModel.inventoryItemTypes.collectAsState()
-    val inventoryItemTypesCategories by screenModel.inventoryItemTypesCategories.collectAsState()
-    val inventoryItems by screenModel.inventoryItems.collectAsState()
-    val posts by screenModel.posts.collectAsState()
-    val events by screenModel.events.collectAsState()
-    val ready by screenModel.ready.collectAsState()
 
-    if (ready != true || profile == null) {
+    if (profile == null) {
         LoadingBox()
         return
     }
@@ -269,39 +259,9 @@ fun ManagementPage(
         selectedItem = selectedItem,
         profile = profile!!,
         lendings = lendings,
-        onConfirmLendingRequest = model::confirmLending,
-        onSkipMemoryRequest = model::skipLendingMemory,
+        departments = departments,
         onGiveRequested = onGiveRequested,
         onReceiveRequested = onReceiveRequested,
-        onDeleteRequested = model::delete,
-        departments = departments,
-        onCreateDepartment = model::createDepartment,
-        onUpdateDepartment = model::updateDepartment,
-        onDeleteDepartment = model::delete,
-        onKickFromDepartment = model::kickFromDepartment,
-        onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
-        onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
-        users = users,
-        onPromote = model::promote,
-        members = members,
-        inventoryItemTypes = inventoryItemTypes,
-        inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
-        onCreateInventoryItemType = model::createInventoryItemType,
-        onUpdateInventoryItemType = model::updateInventoryItemType,
-        onDeleteInventoryItemType = model::delete,
-        onCreateInventoryItem = model::createInventoryItem,
-        onDeleteInventoryItem = model::delete,
-        inventoryItems = inventoryItems,
-        posts = posts,
-        onCreatePost = model::createPost,
-        onUpdatePost = model::updatePost,
-        onDeletePost = model::delete,
-        events = events,
-        onCreateEvent = model::createEvent,
-        onUpdateEvent = model::updateEvent,
-        onDeleteEvent = model::delete,
-        onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData,
-        eventsRemoteRepository = eventsRemoteRepository,
     )
 }
 
@@ -313,54 +273,15 @@ private fun ManagementPageContent(
     selectedItem: Pair<Int, Uuid?>?,
 
     profile: ProfileResponse,
-
     lendings: List<ReferencedLending>?,
-    onConfirmLendingRequest: (ReferencedLending) -> Job,
-    onSkipMemoryRequest: (ReferencedLending) -> Job,
+    departments: List<Department>?,
+
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
-
-    departments: List<Department>?,
-    onCreateDepartment: (displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
-    onUpdateDepartment: (id: Uuid, displayName: String, image: PlatformFile?, progressNotifier: ProgressNotifier?) -> Job,
-    onDeleteDepartment: (Department) -> Job,
-    onKickFromDepartment: (UserData, Department) -> Job,
-    onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-    onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
-
-    users: List<UserData>?,
-    onPromote: (UserData) -> Job,
-
-    members: List<Member>?,
-
-    inventoryItemTypes: List<ReferencedInventoryItemType>?,
-    inventoryItemTypesCategories: Set<String>,
-    onCreateInventoryItemType: (displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
-    onUpdateInventoryItemType: (id: Uuid, displayName: String, description: String, categories: List<String>, weight: String, department: Department?, image: PlatformFile?) -> Job,
-    onDeleteInventoryItemType: (ReferencedInventoryItemType) -> Job,
-    onCreateInventoryItem: (variation: String, ReferencedInventoryItemType, amount: Int) -> Job,
-    onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
-    onUpdateInventoryItemManufacturerData: (ReferencedInventoryItem, String) -> Job,
-
-    inventoryItems: List<ReferencedInventoryItem>?,
-
-    posts: List<ReferencedPost>?,
-    onCreatePost: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdatePost: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
-    onDeletePost: (ReferencedPost) -> Job,
-
-    events: List<ReferencedEvent>?,
-    onCreateEvent: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdateEvent: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
-    onDeleteEvent: (ReferencedEvent) -> Job,
-    eventsRemoteRepository: EventsRemoteRepository,
 ) {
-    val windowSizeClass = calculateWindowSizeClass()
-
     val scope = rememberCoroutineScope()
-    val pages = remember(profile, lendings, departments, users, posts, events, inventoryItemTypes) {
-        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes, eventsRemoteRepository)
+    val pages = remember(profile, lendings, departments) {
+        ManagementPage.allFiltered(profile, lendings, departments)
     }
     val pagerState = rememberPagerState { pages.size }
 
@@ -401,71 +322,19 @@ private fun ManagementPageContent(
     ) { index ->
         val page = pages.forIndex(index)
         when (page) {
-            ManagementPage.Lendings -> LendingsListView(
-                windowSizeClass,
-                snackbarHostState,
-                lendings,
-                users.orEmpty(),
-                onConfirmLendingRequest,
-                onSkipMemoryRequest,
-                onGiveRequested,
-                onReceiveRequested,
-                onDeleteRequested
-            )
+            ManagementPage.Lendings -> LendingsListView(snackbarHostState, onGiveRequested, onReceiveRequested)
 
-            ManagementPage.Departments -> DepartmentsListView(
-                windowSizeClass,
-                profile,
-                users,
-                departments,
-                onCreateDepartment,
-                onUpdateDepartment,
-                onDeleteDepartment,
-                onApproveDepartmentJoinRequest,
-                onDenyDepartmentJoinRequest,
-            )
+            ManagementPage.Memories -> { /*TODO*/ }
 
-            ManagementPage.Users -> UsersListView(
-                windowSizeClass,
-                users,
-                members,
-                departments,
-                onPromote,
-                onKickFromDepartment
-            )
+            ManagementPage.Departments -> DepartmentsListView()
 
-            ManagementPage.Posts -> PostsListView(
-                windowSizeClass,
-                posts,
-                departments,
-                onCreatePost,
-                onUpdatePost,
-                onDeletePost
-            )
+            ManagementPage.Users -> UsersListView()
 
-            ManagementPage.Events -> EventsListView(
-                windowSizeClass,
-                events,
-                departments,
-                onCreateEvent,
-                onUpdateEvent,
-                onDeleteEvent
-            )
+            ManagementPage.Posts -> PostsListView()
 
-            ManagementPage.Inventory -> InventoryItemTypesListView(
-                windowSizeClass,
-                selectedItemId,
-                inventoryItemTypes,
-                inventoryItemTypesCategories,
-                departments,
-                inventoryItems,
-                onCreateInventoryItemType,
-                onUpdateInventoryItemType,
-                onDeleteInventoryItemType,
-                onCreateInventoryItem,
-                onDeleteInventoryItem,
-                onUpdateInventoryItemManufacturerData,
-            )
+            ManagementPage.Events -> EventsListView()
+
+            ManagementPage.Inventory -> InventoryItemTypesListView(selectedItemId)
         }
     }
 }
