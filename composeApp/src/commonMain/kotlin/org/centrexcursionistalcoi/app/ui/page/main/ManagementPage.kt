@@ -55,6 +55,7 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.DepartmentsListVie
 import org.centrexcursionistalcoi.app.ui.page.main.management.EventsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypesListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.MemoriesManagementListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
@@ -324,7 +325,7 @@ private fun ManagementPageContent(
         when (page) {
             ManagementPage.Lendings -> LendingsListView(snackbarHostState, onGiveRequested, onReceiveRequested)
 
-            ManagementPage.Memories -> { /*TODO*/ }
+            ManagementPage.Memories -> MemoriesManagementListView()
 
             ManagementPage.Departments -> DepartmentsListView()
 

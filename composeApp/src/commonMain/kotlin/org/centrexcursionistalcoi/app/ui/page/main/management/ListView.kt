@@ -86,6 +86,16 @@ class SortBy<T>(
     val sorted: (Iterable<T>) -> List<T>,
 ) {
     companion object {
+        fun <T, R: Comparable<R>> asc(label: @Composable () -> String, comparable: (T) -> R): SortBy<T> = SortBy(
+            label = label,
+            sorted = { items -> items.sortedBy { comparable(it) } }
+        )
+
+        fun <T, R: Comparable<R>> desc(label: @Composable () -> String, comparable: (T) -> R): SortBy<T> = SortBy(
+            label = label,
+            sorted = { items -> items.sortedByDescending { comparable(it) } }
+        )
+
         fun <T> nameAsc(name: (T) -> String): SortBy<T> = SortBy(
             label = { stringResource(Res.string.sort_by_name_asc) },
             sorted = { items -> items.sortedBy { name(it) } }

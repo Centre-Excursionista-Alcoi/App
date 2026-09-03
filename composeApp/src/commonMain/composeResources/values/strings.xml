@@ -41,6 +41,8 @@
     <string name="search">Search...</string>
     <string name="sort_by_name_asc">Sort by Name (A-Z)</string>
     <string name="sort_by_name_desc">Sort by Name (Z-A)</string>
+    <string name="sort_by_date_asc">Sort by Date (oldest first)</string>
+    <string name="sort_by_date_desc">Sort by Date (newest first)</string>
     <string name="sort_by_has_insurance_first">Has Insurance First</string>
     <string name="sort_by_has_insurance_last">Has Insurance Last</string>
     <string name="sort_by_signed_lendings_first">Signed Up for Lendings First</string>
@@ -214,6 +216,7 @@
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
     <string name="management_no_posts">No posts</string>
+    <string name="management_no_memories">No memories</string>
     <string name="management_no_events">No events</string>
 
     <plurals name="management_items_amount">

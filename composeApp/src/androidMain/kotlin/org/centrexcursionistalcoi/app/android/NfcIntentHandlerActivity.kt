@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.koin.android.ext.android.inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -19,6 +20,8 @@ abstract class NfcIntentHandlerActivity : AppCompatActivity() {
     companion object {
         private val log = logging()
     }
+
+    private val platformNFC: PlatformNFC by inject()
 
     protected var nfcAdapter: NfcAdapter? = null
     protected var pendingIntent: PendingIntent? = null
@@ -96,7 +99,7 @@ abstract class NfcIntentHandlerActivity : AppCompatActivity() {
 
             if (tag != null) {
                 // Handle write
-                PlatformNFC.writeContinuation?.resume(tag) ?: log.v { "There's no pending write continuation." }
+                platformNFC.writeContinuation?.resume(tag) ?: log.v { "There's no pending write continuation." }
 
                 // Handle read
                 val techList = tag.techList.map { it.substringAfterLast('.') }
@@ -105,21 +108,21 @@ abstract class NfcIntentHandlerActivity : AppCompatActivity() {
                     // Priority given to NDEF-formatted tags
                     val tagPayload = NfcUtils.readNdefTag(intent)
                     if (tagPayload == null) {
-                        PlatformNFC.readContinuation?.resumeWithException(
+                        platformNFC.readContinuation?.resumeWithException(
                             NoSuchElementException("NFC tag has no NDEF records.")
                         )
                         return
                     }
                     tagPayload
                 } else {
-                    PlatformNFC.readContinuation?.resumeWithException(
+                    platformNFC.readContinuation?.resumeWithException(
                         UnsupportedOperationException("Unsupported NFC tag type: $techList")
                     )
                     return
                 }
 
                 log.d { "Read NFC tag: $payload" }
-                PlatformNFC.readContinuation?.resume(payload) ?: log.v { "There's no pending read continuation." }
+                platformNFC.readContinuation?.resume(payload) ?: log.v { "There's no pending read continuation." }
             }
         }
     }
