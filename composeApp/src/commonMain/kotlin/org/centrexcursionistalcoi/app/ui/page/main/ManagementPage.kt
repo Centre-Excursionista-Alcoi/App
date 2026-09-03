@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,9 +65,11 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
+import org.centrexcursionistalcoi.app.viewmodel.ManagementPageScreenModel
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -230,7 +233,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
 
 @Composable
 fun ManagementPage(
-    windowSizeClass: WindowSizeClass,
     snackbarHostState: SnackbarHostState,
 
     /**
@@ -239,43 +241,39 @@ fun ManagementPage(
      * Pages: [MANAGEMENT_PAGE_LENDINGS], [MANAGEMENT_PAGE_DEPARTMENTS], [MANAGEMENT_PAGE_USERS], [MANAGEMENT_PAGE_POSTS], [MANAGEMENT_PAGE_EVENTS], [MANAGEMENT_PAGE_INVENTORY].
      */
     selectedItem: Pair<Int, Uuid?>?,
-
-    profile: ProfileResponse,
-
-    lendings: List<ReferencedLending>?,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
-    onDeleteRequested: (ReferencedLending, reason: String?) -> Job,
-
-    departments: List<Department>?,
-
-    users: List<UserData>?,
-
-    members: List<Member>?,
-
-    inventoryItemTypes: List<ReferencedInventoryItemType>?,
-    inventoryItemTypesCategories: Set<String>,
-
-    inventoryItems: List<ReferencedInventoryItem>?,
-
-    posts: List<ReferencedPost>?,
-
-    events: List<ReferencedEvent>?,
-
+    screenModel: ManagementPageScreenModel = koinViewModel(),
     eventsRemoteRepository: EventsRemoteRepository = koinInject(),
     model: ManagementViewModel = koinViewModel(),
 ) {
-    ManagementPage(
-        windowSizeClass = windowSizeClass,
+    val profile by screenModel.profile.collectAsState()
+    val lendings by screenModel.lendings.collectAsState()
+    val departments by screenModel.departments.collectAsState()
+    val users by screenModel.users.collectAsState()
+    val members by screenModel.members.collectAsState()
+    val inventoryItemTypes by screenModel.inventoryItemTypes.collectAsState()
+    val inventoryItemTypesCategories by screenModel.inventoryItemTypesCategories.collectAsState()
+    val inventoryItems by screenModel.inventoryItems.collectAsState()
+    val posts by screenModel.posts.collectAsState()
+    val events by screenModel.events.collectAsState()
+    val ready by screenModel.ready.collectAsState()
+
+    if (ready != true || profile == null) {
+        LoadingBox()
+        return
+    }
+
+    ManagementPageContent(
         snackbarHostState = snackbarHostState,
         selectedItem = selectedItem,
-        profile = profile,
+        profile = profile!!,
         lendings = lendings,
         onConfirmLendingRequest = model::confirmLending,
         onSkipMemoryRequest = model::skipLendingMemory,
         onGiveRequested = onGiveRequested,
         onReceiveRequested = onReceiveRequested,
-        onDeleteRequested = onDeleteRequested,
+        onDeleteRequested = model::delete,
         departments = departments,
         onCreateDepartment = model::createDepartment,
         onUpdateDepartment = model::updateDepartment,
@@ -287,7 +285,7 @@ fun ManagementPage(
         onPromote = model::promote,
         members = members,
         inventoryItemTypes = inventoryItemTypes,
-        inventoryItemTypesCategories = inventoryItemTypesCategories,
+        inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
         onCreateInventoryItemType = model::createInventoryItemType,
         onUpdateInventoryItemType = model::updateInventoryItemType,
         onDeleteInventoryItemType = model::delete,
@@ -308,8 +306,8 @@ fun ManagementPage(
 }
 
 @Composable
-private fun ManagementPage(
-    windowSizeClass: WindowSizeClass,
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+private fun ManagementPageContent(
     snackbarHostState: SnackbarHostState,
 
     selectedItem: Pair<Int, Uuid?>?,
@@ -358,6 +356,8 @@ private fun ManagementPage(
     onDeleteEvent: (ReferencedEvent) -> Job,
     eventsRemoteRepository: EventsRemoteRepository,
 ) {
+    val windowSizeClass = calculateWindowSizeClass()
+
     val scope = rememberCoroutineScope()
     val pages = remember(profile, lendings, departments, users, posts, events, inventoryItemTypes) {
         ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes, eventsRemoteRepository)

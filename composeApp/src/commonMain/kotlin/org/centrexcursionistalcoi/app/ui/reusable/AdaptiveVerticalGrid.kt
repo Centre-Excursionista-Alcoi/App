@@ -6,22 +6,25 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 fun AdaptiveVerticalGrid(
-    windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     gridMinSize: Dp = 300.dp,
     content: LazyGridScope.() -> Unit
 ) {
+    val windowSizeClass = calculateWindowSizeClass()
+
     val columns = if (windowSizeClass.widthSizeClass > WindowWidthSizeClass.Medium) {
         // Desktop and large tablets
         GridCells.Adaptive(minSize = gridMinSize)

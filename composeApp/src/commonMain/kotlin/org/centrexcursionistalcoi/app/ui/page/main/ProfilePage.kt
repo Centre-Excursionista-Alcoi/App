@@ -2,14 +2,28 @@ package org.centrexcursionistalcoi.app.ui.page.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,9 +40,16 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.AddInsuranceDialog
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
-import org.centrexcursionistalcoi.app.ui.page.main.profile.*
+import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.FEMECVAccountCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.NoInsurancesCard
+import org.centrexcursionistalcoi.app.ui.page.main.profile.PersonalInformationCard
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
+import org.centrexcursionistalcoi.app.viewmodel.ProfilePageModel
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 
 // See: https://en.wikipedia.org/wiki/ISO/IEC_7810
 private const val TD1_ASPECT_RATIO = 1.586f
@@ -36,7 +57,30 @@ private const val TD1_ASPECT_RATIO = 1.586f
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ColumnScope.ProfilePage(
-    windowSizeClass: WindowSizeClass,
+    model: ProfilePageModel = koinViewModel(),
+) {
+    val profile by model.profile.collectAsState()
+    val departments by model.departments.collectAsState()
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
+    ProfilePage(
+        profile = profileValue,
+        onCreateInsurance = model::createInsurance,
+        onFEMECVConnectRequested = model::connectFEMECV,
+        onFEMECVDisconnectRequested = model::disconnectFEMECV,
+        departments = departments,
+        onJoinDepartmentRequested = model::requestJoinDepartment,
+        onLeaveDepartmentRequested = model::leaveDepartment,
+    )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun ColumnScope.ProfilePage(
     profile: ProfileResponse,
     onCreateInsurance: CreateInsuranceRequest,
     onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
@@ -100,7 +144,6 @@ fun ColumnScope.ProfilePage(
     }
 
     AdaptiveVerticalGrid(
-        windowSizeClass,
         contentPadding = PaddingValues(8.dp),
         modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
     ) {
