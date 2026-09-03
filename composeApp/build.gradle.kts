@@ -7,6 +7,7 @@ import java.util.Calendar
 import java.util.Properties
 
 plugins {
+    alias(libs.plugins.androidx.room3)
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.cocoapods)
     alias(libs.plugins.composeMultiplatform)
@@ -14,6 +15,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
     alias(libs.plugins.sqldelight)
 }
@@ -59,7 +61,14 @@ kotlin {
     listOf(
         iosArm64(),
         iosSimulatorArm64()
-    )
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = "CEAApp"
+            isStatic = true
+            // Required when using NativeSQLiteDriver
+            linkerOpts.add("-lsqlite3")
+        }
+    }
 
     jvm()
 
@@ -139,6 +148,10 @@ kotlin {
             implementation(libs.sqldelight.adapters)
             implementation(libs.sqldelight.coroutines)
 
+            // Room 3
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+
             api(projects.shared)
         }
 
@@ -196,6 +209,9 @@ kotlin {
 
                 // In-App Update check
                 implementation(libs.android.appUpdate)
+
+                // Room3 SQLite Wrapper
+                implementation(libs.androidx.room3.sqliteWrapper)
             }
         }
 
@@ -251,6 +267,17 @@ kotlin {
         xcodeConfigurationToNativeBuildType["CUSTOM_DEBUG"] = NativeBuildType.DEBUG
         xcodeConfigurationToNativeBuildType["CUSTOM_RELEASE"] = NativeBuildType.RELEASE
     }
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
+    add("kspIosArm64", libs.androidx.room3.compiler)
+    add("kspJvm", libs.androidx.room3.compiler)
+}
+
+room3 {
+    schemaDirectory("$projectDir/schemas")
 }
 
 sqldelight {

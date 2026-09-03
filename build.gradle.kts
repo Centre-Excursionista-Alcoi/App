@@ -2,6 +2,7 @@ plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader
     alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidx.room3) apply false
     alias(libs.plugins.buildkonfig) apply false
     alias(libs.plugins.cocoapods) apply false
     alias(libs.plugins.composeMultiplatform) apply false
@@ -12,6 +13,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatformAndroid) apply false
     alias(libs.plugins.kotlinxSerialization) apply false
     alias(libs.plugins.kover) apply false
+    alias(libs.plugins.ksp) apply false
     alias(libs.plugins.sentryJvm) apply false
     alias(libs.plugins.sentryMultiplatform) apply false
     alias(libs.plugins.sqldelight) apply false

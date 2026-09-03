@@ -12,6 +12,8 @@ androidx-appcompat = "1.8.0"
 androidx-browser = "1.10.0"
 androidx-lifecycle = "2.11.0"
 androidx-navigation = "2.9.2"
+androidx-room3 = "3.0.2"
+androidx-sqlite = "2.7.0"
 androidx-work = "2.11.2"
 buildkonfig = "0.22.0"
 bcrypt = "0.10.2"
@@ -42,6 +44,7 @@ kotlinx-kover = "0.9.9"
 kreds = "0.9.1"
 kscan = "0.9.2"
 ksoup = "0.2.6"
+ksp = "2.3.11"
 ktor = "3.5.2"
 localina = "1.0.0-beta2"
 logback = "1.6.3"
@@ -77,6 +80,10 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
+androidx-room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "androidx-room3" }
+androidx-room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "androidx-room3" }
+androidx-room3-sqliteWrapper = { module = "androidx.room3:room3-sqlite-wrapper", version.ref = "androidx-room3" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
 androidx-work-gcm = { module = "androidx.work:work-gcm", version.ref ="androidx-work" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
@@ -172,6 +179,7 @@ testcontainers = ["testcontainers-junit-jupiter", "testcontainers-postgresql"]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidx-room3 = { id = "androidx.room3", version.ref = "androidx-room3" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 cocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
@@ -183,6 +191,7 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinMultiplatformAndroid = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sentryJvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
 sentryMultiplatform = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry-multiplatform" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
