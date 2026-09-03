@@ -50,6 +50,8 @@ class TestPdfGeneratorService {
             submittedBy = FakeUser.SUB,
             from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault()),
             to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault()),
+            pdf = null,
+            lending = null,
         )
 
         val inventoryItemTypeId = "f3ca1b24-886e-4b1a-88f3-934babbaec86".toUuid()
@@ -64,7 +66,7 @@ class TestPdfGeneratorService {
 
         File("document.pdf").outputStream().use { outputStream ->
             PdfGeneratorService.generateLendingPdf(
-                memory = memory.referenced(listOf(FakeUser.member()), listOf(department)),
+                memory = memory.referenced(listOf(FakeUser.data()), listOf(FakeUser.member()), listOf(department)),
                 itemsUsed = listOf(
                     InventoryItem(
                         id = Uuid.Zero,
