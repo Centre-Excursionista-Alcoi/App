@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.koin.android.ext.koin.androidContext
 
 class AppBase : Application() {
     companion object {
@@ -28,7 +29,9 @@ class AppBase : Application() {
 
         initializeSentry()
 
-        initKoin()
+        initKoin {
+            androidContext(this@AppBase)
+        }
 
         BackgroundJobCoordinator.initialize(applicationContext)
 

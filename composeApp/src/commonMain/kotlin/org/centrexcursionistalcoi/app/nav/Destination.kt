@@ -1,11 +1,14 @@
 package org.centrexcursionistalcoi.app.nav
 
+import androidx.navigation3.runtime.NavKey
 import io.ktor.http.Url
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.nav.Destination.Companion.backStackFor
+import org.centrexcursionistalcoi.app.nav.Destination.Companion.fromUrl
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
@@ -14,13 +17,19 @@ import org.koin.core.component.get
 import kotlin.uuid.Uuid
 
 @Serializable
-sealed interface Destination {
+sealed interface Destination : NavKey {
     companion object : KoinComponent {
         const val ITEM_TYPE = "itemType"
 
         const val ADMIN_ITEMS = "admin/items"
         const val ADMIN_LENDINGS_MANAGEMENT = "admin/lendings"
 
+        /**
+         * Resolves the leaf destination a deep link [url] points to, or `null` if it doesn't match any destination.
+         *
+         * This only returns the destination the link ultimately points to -- use [backStackFor] to build the full
+         * back stack (with the appropriate ancestor screens) that should be pushed for it.
+         */
         suspend fun fromUrl(url: Url?): Destination? {
             if (url == null) return null
             if (url.host == ITEM_TYPE) {
@@ -51,6 +60,16 @@ sealed interface Destination {
                 }
             }
             return null
+        }
+
+        /**
+         * Builds the synthetic back stack that should be pushed for [destination] (as resolved by [fromUrl]), so
+         * that navigating back from a deep link behaves as if the user had navigated there normally.
+         */
+        fun backStackFor(destination: Destination): List<Destination> = when (destination) {
+            is ItemTypeDetails -> listOf(Main(), destination)
+            is Admin.LendingManagement -> listOf(Main(showingAdminLendingsScreen = true), destination)
+            else -> listOf(destination)
         }
     }
 
