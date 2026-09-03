@@ -52,7 +52,8 @@ class TestKoinModules {
     fun `annotated repositories, remote repositories and services resolve through ComponentScan`() {
         val koin = startKoin {
             modules(
-                module { single<AppDatabase> { getRoomDatabase(getDatabaseBuilder()) } },
+                module { single<AppDatabase> { getRoomDatabase(getDatabaseBuilder(), get<DispatcherProvider>().io) } },
+                CoreScanModule().module(),
                 RepositoryScanModule().module(),
                 RemoteRepositoryScanModule().module(),
                 ServiceScanModule().module(),

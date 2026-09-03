@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.insurance_view_document
 import cea_app.composeapp.generated.resources.inventory_item_amount
@@ -494,7 +493,7 @@ fun MemoryVisualization(
 @Composable
 fun MemoryViewButtons(
     memory: ReferencedMemory,
-    fpm: FileProviderModel = viewModel { FileProviderModel() },
+    fpm: FileProviderModel = koinViewModel(),
 ) {
     val memoryPdf = memory.pdf ?: return
 

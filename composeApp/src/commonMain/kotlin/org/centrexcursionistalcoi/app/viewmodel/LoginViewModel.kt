@@ -5,14 +5,18 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.doMain
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
-class LoginViewModel(private val authBackend: AuthBackend) : ErrorViewModel() {
+class LoginViewModel(
+    private val authBackend: AuthBackend,
+    private val dispatcherProvider: DispatcherProvider,
+) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
 
@@ -23,7 +27,7 @@ class LoginViewModel(private val authBackend: AuthBackend) : ErrorViewModel() {
             authBackend.login(email, password)
             ProfileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
-            doMain { afterLogin() }
+            withContext(dispatcherProvider.main) { afterLogin() }
         } catch (e: ServerException) {
             setError(e)
         } finally {
@@ -55,7 +59,7 @@ class LoginViewModel(private val authBackend: AuthBackend) : ErrorViewModel() {
 
             authBackend.forgotPassword(email)
 
-            doMain { afterRequest() }
+            withContext(dispatcherProvider.main) { afterRequest() }
         } catch (e: ServerException) {
             setError(e)
         } finally {

@@ -5,6 +5,7 @@ import com.diamondedge.logging.logging
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -15,7 +16,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fileWithContext
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
@@ -39,6 +40,7 @@ class ManagementViewModel(
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val postsRemoteRepository: PostsRemoteRepository,
     private val eventsRemoteRepository: EventsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
     companion object {
         private val log = logging()
@@ -50,7 +52,7 @@ class ManagementViewModel(
         progressNotifier: ProgressNotifier?
     ) = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val image = imageFile?.readBytes()
                 departmentsRemoteRepository.create(displayName, image, progressNotifier)
             }
@@ -67,7 +69,7 @@ class ManagementViewModel(
         image: PlatformFile?,
         progressNotifier: ProgressNotifier? = null,
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             departmentsRemoteRepository.update(
                 departmentId,
                 UpdateDepartmentRequest(
@@ -81,13 +83,13 @@ class ManagementViewModel(
     }
 
     fun delete(department: Department) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             departmentsRemoteRepository.delete(department.id)
         }
     }
 
     fun kickFromDepartment(userData: UserData, department: Department) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             departmentsRemoteRepository.kick(department.id, userData.sub)
         }
     }
@@ -108,7 +110,7 @@ class ManagementViewModel(
         department: Department?,
         imageFile: PlatformFile?
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val weightDouble = weight.toDoubleOrNull()
 
             inventoryItemTypesRemoteRepository.create(
@@ -131,7 +133,7 @@ class ManagementViewModel(
         department: Department?,
         imageFile: PlatformFile?
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val weightDouble = weight.toDoubleOrNull()
 
             inventoryItemTypesRemoteRepository.update(
@@ -147,39 +149,39 @@ class ManagementViewModel(
     }
 
     fun delete(inventoryItemType: ReferencedInventoryItemType) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             inventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
         }
     }
 
     fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) =
         launch {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 inventoryItemsRemoteRepository.create(variation, type.id, amount)
             }
         }
 
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             inventoryItemsRemoteRepository.delete(inventoryItem.id)
         }
     }
 
     fun promote(user: UserData) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             usersRemoteRepository.promote(user.sub)
             usersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
         }
     }
 
     fun confirmLending(lending: ReferencedLending) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             lendingsRemoteRepository.confirm(lending.id)
         }
     }
 
     fun skipLendingMemory(lending: ReferencedLending) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             lendingsRemoteRepository.skipMemory(lending.id)
         }
     }
@@ -192,7 +194,7 @@ class ManagementViewModel(
         files: List<PlatformFile>,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val contentMarkdown = content.toMarkdown()
 
             postsRemoteRepository.create(
@@ -216,7 +218,7 @@ class ManagementViewModel(
         files: List<PlatformFile>,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val contentMarkdown = content?.toMarkdown()
 
             postsRemoteRepository.update(
@@ -233,7 +235,7 @@ class ManagementViewModel(
     }
 
     fun delete(post: ReferencedPost) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             postsRemoteRepository.delete(post.id)
         }
     }
@@ -251,7 +253,7 @@ class ManagementViewModel(
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description.toMarkdown()
 
             eventsRemoteRepository.create(
@@ -284,7 +286,7 @@ class ManagementViewModel(
         image: PlatformFile?,
         progressNotifier: (Progress) -> Unit
     ) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description?.toMarkdown()
 
             eventsRemoteRepository.update(
@@ -305,13 +307,13 @@ class ManagementViewModel(
     }
 
     fun delete(post: ReferencedEvent) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             eventsRemoteRepository.delete(post.id)
         }
     }
 
     fun updateInventoryItemManufacturerData(item: ReferencedInventoryItem, data: String) = launch {
-        doAsync {
+        withContext(dispatcherProvider.io) {
             inventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
         }
     }

@@ -22,3 +22,8 @@ class ServiceScanModule
 @Module
 @ComponentScan("org.centrexcursionistalcoi.app.viewmodel")
 class ViewModelScanModule
+
+/** Scans `di` for `@Singleton`-annotated core services (e.g. [DefaultDispatcherProvider]). */
+@Module
+@ComponentScan("org.centrexcursionistalcoi.app.di")
+class CoreScanModule

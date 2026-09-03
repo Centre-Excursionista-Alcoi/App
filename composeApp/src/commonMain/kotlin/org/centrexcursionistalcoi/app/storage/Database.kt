@@ -36,9 +36,6 @@ expect class DriverFactory {
 
 lateinit var databaseInstance: Database
 
-val isDatabaseReady: Boolean
-    get() = ::databaseInstance.isInitialized
-
 @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
 suspend fun createDatabase(driverFactory: DriverFactory): Database {
     val driver = driverFactory.createDriver()

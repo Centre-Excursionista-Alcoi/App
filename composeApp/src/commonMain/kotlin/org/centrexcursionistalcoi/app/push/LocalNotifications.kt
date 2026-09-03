@@ -39,7 +39,7 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -80,13 +80,13 @@ object LocalNotifications : KoinComponent {
     }
 
     fun showNotification(notificationTitle: suspend () -> String, notificationBody: suspend () -> String, data: Map<String, *>) {
-        CoroutineScope(defaultAsyncDispatcher).launch {
+        CoroutineScope(get<DispatcherProvider>().io).launch {
             notify(notificationTitle(), notificationBody(), data)
         }
     }
 
     fun showNotification(notificationTitleRes: StringResource, notificationBodyRes: StringResource, data: Map<String, *>) {
-        CoroutineScope(defaultAsyncDispatcher).launch {
+        CoroutineScope(get<DispatcherProvider>().io).launch {
             notify(
                 notificationTitle = getString(notificationTitleRes),
                 notificationBody = getString(notificationBodyRes),

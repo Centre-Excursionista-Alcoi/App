@@ -8,11 +8,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
@@ -30,6 +31,7 @@ class LendingManagementViewModel(
     private val lendingsRepository: LendingsRepository,
     usersRepository: UsersRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ): ErrorViewModel() {
     companion object {
         private val log = logging()
@@ -93,14 +95,14 @@ class LendingManagementViewModel(
     fun onScan(barcode: Barcode) {
         val data = barcode.data
         launch {
-            doAsync { processScanById(data.toUuidOrNull()) }
-            doAsync { processScanByManufacturerTraceabilityCode(data) }
+            withContext(dispatcherProvider.io) { processScanById(data.toUuidOrNull()) }
+            withContext(dispatcherProvider.io) { processScanByManufacturerTraceabilityCode(data) }
         }
     }
 
     fun confirmLending() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Confirming lending..." }
                 lendingsRemoteRepository.confirm(lendingId)
                 log.i { "Lending has been confirmed." }
@@ -113,7 +115,7 @@ class LendingManagementViewModel(
 
     fun deleteLending() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Deleting lending..." }
                 lendingsRemoteRepository.delete(lendingId)
                 log.i { "Lending has been deleted." }
@@ -126,7 +128,7 @@ class LendingManagementViewModel(
 
     fun skipMemory() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Skipping memory for lending..." }
                 lendingsRemoteRepository.skipMemory(lendingId)
                 log.i { "Memory has been skipped for lending." }
@@ -202,7 +204,7 @@ class LendingManagementViewModel(
 
     fun pickup() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val dismissedItems = dismissedItems.value
 
                 log.i { "Marking lending as picked up..." }
@@ -255,7 +257,7 @@ class LendingManagementViewModel(
 
     fun `return`() = launch {
         try {
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 log.i { "Returning lending..." }
                 val scannedItems = scannedItems.value
                 val notes = scannedItemsNotes.value.filterKeys { it in scannedItems }

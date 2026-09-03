@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -14,7 +13,7 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
@@ -29,6 +28,7 @@ class LendingCreationViewModel(
     inventoryItemTypesRepository: InventoryItemTypesRepository,
     inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
     companion object {
         private val log = logging()
@@ -120,7 +120,7 @@ class LendingCreationViewModel(
         }
     }
 
-    private fun allocateItems() = viewModelScope.launch(defaultAsyncDispatcher) {
+    private fun allocateItems() = viewModelScope.launch(dispatcherProvider.io) {
         val from = from.value ?: return@launch
         val to = to.value ?: return@launch
 
@@ -172,13 +172,13 @@ class LendingCreationViewModel(
         val to = to.value ?: return log.w { "To date not set" }
         val items = allocatedItems.value ?: return log.w { "Items allocation not ready" }
 
-        viewModelScope.launch(defaultAsyncDispatcher) {
+        viewModelScope.launch(dispatcherProvider.io) {
             val itemIds = items.map { it.id }
 
             try {
                 lendingsRemoteRepository.create(from, to, itemIds, null)
                 log.i { "Lending created" }
-                withContext(Dispatchers.Main) { onSuccess() }
+                withContext(dispatcherProvider.main) { onSuccess() }
             } catch (e: Exception) {
                 log.e(e) { "Failed to create lending." }
                 addError(e)

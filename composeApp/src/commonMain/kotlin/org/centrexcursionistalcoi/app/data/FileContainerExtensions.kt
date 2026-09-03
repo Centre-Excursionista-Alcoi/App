@@ -9,20 +9,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.diamondedge.logging.logging
 import io.ktor.utils.io.ByteReadChannel
-import kotlin.uuid.Uuid
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.SystemPathSeparator
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.RemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.compose.koinInject
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
@@ -207,17 +206,17 @@ suspend fun SubReferencedFileContainer.writeSubReferencedFile(channel: ByteReadC
 @OptIn(DelicateCoroutinesApi::class)
 fun ImageFileContainer?.rememberImageFile(
     scope: CoroutineScope = GlobalScope,
-    dispatcher: CoroutineDispatcher = defaultAsyncDispatcher,
+    dispatcherProvider: DispatcherProvider = koinInject(),
 ): State<ByteArray?> {
     val state = remember { mutableStateOf<ByteArray?>(null) }
     LaunchedEffect(this) {
-        scope.launch(dispatcher) {
+        scope.launch(dispatcherProvider.io) {
             try {
                 val bytes = this@rememberImageFile?.imageFile()
-                withContext(Dispatchers.Main) { state.value = bytes }
+                withContext(dispatcherProvider.main) { state.value = bytes }
             } catch (e: IllegalStateException) {
                 log.w(e) { "Image file not found." }
-                withContext(Dispatchers.Main) { state.value = ByteArray(0) }
+                withContext(dispatcherProvider.main) { state.value = ByteArray(0) }
             }
         }
     }
@@ -235,20 +234,20 @@ fun ImageFileContainer?.rememberImageFile(
 @OptIn(DelicateCoroutinesApi::class)
 fun ImageFileListContainer?.rememberImageFiles(
     scope: CoroutineScope = GlobalScope,
-    dispatcher: CoroutineDispatcher = defaultAsyncDispatcher,
+    dispatcherProvider: DispatcherProvider = koinInject(),
 ): SnapshotStateMap<Uuid, ByteArray?> {
     val state = mutableStateMapOf<Uuid, ByteArray?>()
     LaunchedEffect(this) {
         if (this@rememberImageFiles == null) return@LaunchedEffect
         for (image in images) {
-            scope.launch(dispatcher) {
-                withContext(Dispatchers.Main) { state[image] = null }
+            scope.launch(dispatcherProvider.io) {
+                withContext(dispatcherProvider.main) { state[image] = null }
                 try {
                     val bytes = imageFile(uuid = image)
-                    withContext(Dispatchers.Main) { state[image] = bytes }
+                    withContext(dispatcherProvider.main) { state[image] = bytes }
                 } catch (e: IllegalArgumentException) {
                     log.w(e) { "Image file not found." }
-                    withContext(Dispatchers.Main) { state[image] = ByteArray(0) }
+                    withContext(dispatcherProvider.main) { state[image] = ByteArray(0) }
                 }
             }
         }

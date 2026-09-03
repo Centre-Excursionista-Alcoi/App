@@ -9,5 +9,6 @@ import android.content.Context
  *
  * @throws IllegalStateException if no valid context is found.
  */
+@Deprecated("Use Context Dependency Injection")
 val appContext: Context
     get() = MainActivity.instance?.applicationContext ?: ContextProvider.context ?: AppBase.instance ?: error("Could not find any valid context")

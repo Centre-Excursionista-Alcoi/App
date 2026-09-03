@@ -6,13 +6,14 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
@@ -27,6 +28,7 @@ class ActivityMemoryEditorViewModel(
     departmentsRepository: DepartmentsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
 
     val isForLending = lendingId != null
@@ -63,7 +65,7 @@ class ActivityMemoryEditorViewModel(
     ) = launch {
         try {
             _isSaving.value = true
-            doAsync {
+            withContext(dispatcherProvider.io) {
                 val markdownText = text.toMarkdown()
                 if (isForLending) {
                     lendingsRemoteRepository.submitMemory(

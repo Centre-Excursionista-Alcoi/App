@@ -3,13 +3,19 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
+import org.centrexcursionistalcoi.app.di.globalDispatcherProvider
 
 private val log = logging()
 
@@ -25,7 +31,7 @@ fun <T> Flow<T>.stateInViewModel(
 fun ViewModel.launch(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
-) = viewModelScope.launch(Dispatchers.Main, start) {
+) = viewModelScope.launch(globalDispatcherProvider.main, start) {
     try {
         block()
     } catch (e: Exception) {
@@ -40,7 +46,7 @@ fun ViewModel.launch(
 fun <T> ViewModel.async(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> T
-): Deferred<T?> = viewModelScope.async(Dispatchers.Main, start) {
+): Deferred<T?> = viewModelScope.async(globalDispatcherProvider.main, start) {
     try {
         block()
     } catch (e: CancellationException) {
@@ -65,7 +71,7 @@ fun ViewModel.launchWithLock(
     lock: Mutex,
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
-) = viewModelScope.launch(Dispatchers.Main, start) {
+) = viewModelScope.launch(globalDispatcherProvider.main, start) {
     try {
         lock.withLock {
             try {

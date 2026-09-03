@@ -3,15 +3,21 @@ package org.centrexcursionistalcoi.app.platform
 import android.content.pm.PackageManager
 import android.nfc.Tag
 import android.widget.Toast
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.nfc_error_format_unsupported
+import cea_app.composeapp.generated.resources.nfc_error_read_only
+import cea_app.composeapp.generated.resources.nfc_error_too_small
+import cea_app.composeapp.generated.resources.nfc_error_unknown
+import cea_app.composeapp.generated.resources.nfc_write_success
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.data.NfcPayload
-import org.centrexcursionistalcoi.app.doMain
+import org.centrexcursionistalcoi.app.di.globalDispatcherProvider
 import org.centrexcursionistalcoi.app.exception.NfcException
 import org.centrexcursionistalcoi.app.exception.NfcTagFormatNotSupportedException
 import org.centrexcursionistalcoi.app.exception.NfcTagIsReadOnlyException
@@ -85,7 +91,7 @@ actual object PlatformNFC : PlatformProvider {
                 getString(Res.string.nfc_error_unknown, e.message ?: e::class.simpleName ?: "NfcException")
             }
             val context = MainActivity.instance ?: return
-            doMain {
+            withContext(globalDispatcherProvider.main) {
                 Toast.makeText(context, responseMessage, Toast.LENGTH_LONG).show()
             }
         }

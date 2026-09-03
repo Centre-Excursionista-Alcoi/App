@@ -3,8 +3,9 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getBooleanStateFlow
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.doMain
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
@@ -18,6 +19,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class SettingsViewModel(
     private val authBackend: AuthBackend,
+    private val dispatcherProvider: DispatcherProvider,
     @InjectedParam private val onDeleteAccount: () -> Unit,
 ) : ErrorViewModel() {
     val fcmToken = FCMTokenManager.tokenFlow.stateInViewModel()
@@ -31,7 +33,7 @@ class SettingsViewModel(
 
     fun deleteAccount() = launch {
         authBackend.deleteAccount()
-        doMain { onDeleteAccount() }
+        withContext(dispatcherProvider.main) { onDeleteAccount() }
     }
 
     fun onPrivacyErrorsChange(state: Boolean) {

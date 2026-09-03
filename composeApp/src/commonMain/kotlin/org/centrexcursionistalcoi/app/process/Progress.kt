@@ -2,15 +2,29 @@ package org.centrexcursionistalcoi.app.process
 
 import androidx.annotation.FloatRange
 import androidx.compose.runtime.Composable
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.progress_data_processing
+import cea_app.composeapp.generated.resources.progress_download
+import cea_app.composeapp.generated.resources.progress_download_name
+import cea_app.composeapp.generated.resources.progress_download_name_percentage
+import cea_app.composeapp.generated.resources.progress_download_percentage
+import cea_app.composeapp.generated.resources.progress_local_db_read
+import cea_app.composeapp.generated.resources.progress_local_db_write
+import cea_app.composeapp.generated.resources.progress_local_fs_read
+import cea_app.composeapp.generated.resources.progress_upload
+import cea_app.composeapp.generated.resources.progress_upload_name
+import cea_app.composeapp.generated.resources.progress_upload_name_percentage
+import cea_app.composeapp.generated.resources.progress_upload_percentage
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.HttpRequestBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Contextual
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.jetbrains.compose.resources.stringResource
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 sealed class Progress {
     abstract val label: @Composable () -> String?
@@ -84,12 +98,12 @@ sealed class Progress {
         override val label: @Composable (() -> String?) = { stringResource(Res.string.progress_data_processing) }
     }
 
-    companion object {
+    companion object : KoinComponent {
         fun HttpRequestBuilder.monitorUploadProgress(notifier: ProgressNotifier?, name: String? = null) {
             if (notifier == null) return
 
             // Set initial progress value
-            CoroutineScope(defaultAsyncDispatcher).launch {
+            CoroutineScope(get<DispatcherProvider>().io).launch {
                 notifier(
                     if (name != null) NamedUpload(name, 0, null)
                     else Upload(0, null)
@@ -108,7 +122,7 @@ sealed class Progress {
             if (notifier == null) return
 
             // Set initial progress value
-            CoroutineScope(defaultAsyncDispatcher).launch {
+            CoroutineScope(get<DispatcherProvider>().io).launch {
                 notifier(
                     if (name != null) NamedDownload(name, 0, null)
                     else Download(0, null)

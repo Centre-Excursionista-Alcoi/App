@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.permission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.globalDispatcherProvider
 import org.centrexcursionistalcoi.app.permission.result.CameraPermissionResult
 
 /**
@@ -14,7 +14,7 @@ import org.centrexcursionistalcoi.app.permission.result.CameraPermissionResult
 fun CoroutineScope.launchWithCameraPermission(onPermissionGranted: () -> Unit): Job {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
 
-    return launch(defaultAsyncDispatcher) {
+    return launch(globalDispatcherProvider.io) {
         when (permissionHelper.checkIsPermissionGranted(Permission.Camera)) {
             CameraPermissionResult.Denied -> {
                 val result = permissionHelper.requestForPermission(Permission.Camera)

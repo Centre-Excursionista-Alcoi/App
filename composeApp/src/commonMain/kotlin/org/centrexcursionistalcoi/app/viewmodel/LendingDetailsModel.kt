@@ -1,8 +1,9 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.doAsync
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.koin.core.annotation.InjectedParam
@@ -14,12 +15,13 @@ class LendingDetailsModel(
     @InjectedParam private val lendingId: Uuid,
     lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ): ViewModel() {
     val lending = lendingsRepository.getAsFlow(lendingId).stateInViewModel()
 
     fun cancelLending() = async {
         try {
-            doAsync { lendingsRemoteRepository.cancel(lendingId) }
+            withContext(dispatcherProvider.io) { lendingsRemoteRepository.cancel(lendingId) }
             null
         } catch (error: ServerException) {
             error

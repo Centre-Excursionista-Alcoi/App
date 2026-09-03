@@ -6,8 +6,7 @@ import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import kotlinx.coroutines.CoroutineDispatcher
 import org.centrexcursionistalcoi.app.database.room.RoomConverters
 import org.centrexcursionistalcoi.app.database.room.dao.DepartmentDao
 import org.centrexcursionistalcoi.app.database.room.dao.EventDao
@@ -71,10 +70,11 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 }
 
 fun getRoomDatabase(
-    builder: RoomDatabase.Builder<AppDatabase>
+    builder: RoomDatabase.Builder<AppDatabase>,
+    dispatcher: CoroutineDispatcher,
 ): AppDatabase {
     return builder
         .setDriver(BundledSQLiteDriver())
-        .setQueryCoroutineContext(Dispatchers.IO)
+        .setQueryCoroutineContext(dispatcher)
         .build()
 }

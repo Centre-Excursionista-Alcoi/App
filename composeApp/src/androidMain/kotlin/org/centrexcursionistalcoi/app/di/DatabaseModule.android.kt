@@ -1,15 +1,14 @@
 package org.centrexcursionistalcoi.app.di
 
-import org.centrexcursionistalcoi.app.android.AppBase
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.getRoomDatabase
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual fun platformDatabaseModule(): Module = module {
     single<AppDatabase> {
-        val context = requireNotNull(AppBase.instance) { "AppBase has not been initialized yet." }
-        getRoomDatabase(getDatabaseBuilder(context))
+        getRoomDatabase(getDatabaseBuilder(androidContext()), get<DispatcherProvider>().io)
     }
 }
