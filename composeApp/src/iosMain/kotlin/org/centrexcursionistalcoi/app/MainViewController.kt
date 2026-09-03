@@ -5,11 +5,7 @@ import androidx.navigation.NavController
 import com.diamondedge.logging.FixedLogLevel
 import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.PrintLogger
-import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.di.initKoin
-import org.centrexcursionistalcoi.app.storage.DriverFactory
-import org.centrexcursionistalcoi.app.storage.createDatabase
-import org.centrexcursionistalcoi.app.storage.databaseInstance
 import platform.UIKit.UIViewController
 
 lateinit var navController: NavController
@@ -17,9 +13,6 @@ lateinit var navController: NavController
 
 fun MainViewController(): UIViewController {
     KmLogging.setLoggers(PrintLogger(FixedLogLevel(true)))
-
-    // Initialize the database
-    databaseInstance = runBlocking { createDatabase(DriverFactory()) }
 
     initKoin()
 

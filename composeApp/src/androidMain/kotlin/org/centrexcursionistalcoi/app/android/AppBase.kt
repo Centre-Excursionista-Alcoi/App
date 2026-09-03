@@ -7,13 +7,9 @@ import com.diamondedge.logging.PlatformLogger
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
-import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
-import org.centrexcursionistalcoi.app.storage.DriverFactory
-import org.centrexcursionistalcoi.app.storage.createDatabase
-import org.centrexcursionistalcoi.app.storage.databaseInstance
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 
 class AppBase : Application() {
@@ -31,8 +27,6 @@ class AppBase : Application() {
         instance = this
 
         initializeSentry()
-
-        databaseInstance = runBlocking { createDatabase(DriverFactory(this@AppBase)) }
 
         initKoin()
 
