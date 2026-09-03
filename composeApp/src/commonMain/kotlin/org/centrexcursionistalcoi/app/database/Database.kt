@@ -31,6 +31,8 @@ import org.centrexcursionistalcoi.app.database.room.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
 
+const val DATABASE_VERSION = 1
+
 @Database(
     entities = [
         DepartmentEntity::class,
@@ -45,7 +47,7 @@ import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
         ReceivedItemEntity::class,
         UserEntity::class,
     ],
-    version = 1,
+    version = DATABASE_VERSION,
 )
 @ColumnTypeConverters(RoomConverters::class)
 @ConstructedBy(AppDatabaseConstructor::class)

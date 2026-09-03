@@ -4,7 +4,7 @@ import com.diamondedge.logging.logging
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.DATABASE_VERSION
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -41,7 +41,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
     private val log = logging()
 
     private const val SETTINGS_LAST_SYNC = "lastSync"
-    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncVersion"
+    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncDbVersion"
 
     const val EXTRA_FORCE_SYNC = "force_sync"
 
@@ -59,8 +59,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
      * Checks if the database version has been upgraded since the last sync.
      */
     fun databaseVersionUpgrade(): Boolean {
-        val lastSyncVersion = settings.getLongOrNull(SETTINGS_LAST_SYNC_VERSION)?.toInt()
-        return lastSyncVersion == null || lastSyncVersion < Database.Schema.version
+        val lastSyncVersion = settings.getIntOrNull(SETTINGS_LAST_SYNC_VERSION)
+        return lastSyncVersion == null || lastSyncVersion < DATABASE_VERSION
     }
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
@@ -166,6 +166,6 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         synchronizeAllRepositories(force, progressNotifier)
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
-        settings.putLong(SETTINGS_LAST_SYNC_VERSION, Database.Schema.version)
+        settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
     }
 }
