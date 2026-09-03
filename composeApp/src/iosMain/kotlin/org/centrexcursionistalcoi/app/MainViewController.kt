@@ -6,6 +6,7 @@ import com.diamondedge.logging.FixedLogLevel
 import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.PrintLogger
 import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.storage.DriverFactory
 import org.centrexcursionistalcoi.app.storage.createDatabase
 import org.centrexcursionistalcoi.app.storage.databaseInstance
@@ -19,6 +20,8 @@ fun MainViewController(): UIViewController {
 
     // Initialize the database
     databaseInstance = runBlocking { createDatabase(DriverFactory()) }
+
+    initKoin()
 
     return ComposeUIViewController { App { navController = it } }
 }
