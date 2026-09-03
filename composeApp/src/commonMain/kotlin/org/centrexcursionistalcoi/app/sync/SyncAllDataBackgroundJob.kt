@@ -118,14 +118,13 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             // Inventory Items requires Inventory Item Types
             get<InventoryItemsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
-            // Memories only reference Departments and (optionally) Lendings by id, no resolution is needed. They
-            // must be synced before Lendings, since a lending's memory is resolved from what's already cached here.
-            get<MemoriesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
-
-            // Lendings requires Users, Inventory Item Types, Inventory Items and Memories
+            // Lendings requires Users, Inventory Item Types and Inventory Items
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
             get<LendingsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+
+            // Memories requires Departments and (optionally) Lendings
+            get<MemoriesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -134,7 +133,8 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
                 log.e(e) { "Could not find cross reference. Deleting all local data, and synchronizing again..." }
 
                 log.d { "Removing all data..." }
-                // order is important due to foreign key constraints. Same as above
+                // Order is important due to foreign key constraints: children before their parents (the reverse of
+                // the sync order above, since Memories has a FK to Lendings).
                 get<MemoriesRepository>().deleteAll()
                 get<LendingsRepository>().deleteAll()
                 get<InventoryItemsRepository>().deleteAll()
