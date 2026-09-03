@@ -4,6 +4,7 @@ import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.push.LocalNotifications
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.component.get
 
 expect class SyncPostBackgroundJob : BackgroundSyncWorker<SyncPostBackgroundJobLogic>
 
@@ -14,9 +15,9 @@ object SyncPostBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         val postId = input[EXTRA_POST_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing post ID")
 
-        val post = PostsRemoteRepository.get(postId, progressNotifier)
+        val post = get<PostsRemoteRepository>().get(postId, progressNotifier)
             ?: return SyncResult.Failure("Post with ID $postId not found on server")
-        PostsRepository.insertOrUpdate(post)
+        get<PostsRepository>().insertOrUpdate(post)
 
         LocalNotifications.showNotification(
             { post.title },

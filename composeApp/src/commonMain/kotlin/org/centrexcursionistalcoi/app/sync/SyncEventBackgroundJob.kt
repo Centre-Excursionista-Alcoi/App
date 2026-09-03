@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.sync
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.component.get
 
 expect class SyncEventBackgroundJob : BackgroundSyncWorker<SyncEventBackgroundJobLogic>
 
@@ -13,9 +14,9 @@ object SyncEventBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         val eventId = input[EXTRA_EVENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing event ID")
 
-        val event = EventsRemoteRepository.get(eventId, progressNotifier, ignoreIfModifiedSince = true)
+        val event = get<EventsRemoteRepository>().get(eventId, progressNotifier, ignoreIfModifiedSince = true)
             ?: return SyncResult.Failure("Event with ID $eventId not found on server")
-        EventsRepository.insertOrUpdate(event)
+        get<EventsRepository>().insertOrUpdate(event)
 
         return SyncResult.Success()
     }

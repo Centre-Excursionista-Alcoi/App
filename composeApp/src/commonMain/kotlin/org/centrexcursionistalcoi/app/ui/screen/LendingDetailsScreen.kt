@@ -82,6 +82,8 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.data.rememberImageFile
+import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -108,6 +110,7 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -115,7 +118,9 @@ import kotlin.uuid.Uuid
 @Composable
 fun LendingDetailsScreen(
     lendingId: Uuid,
-    model: LendingDetailsModel = viewModel { LendingDetailsModel(lendingId) },
+    lendingsRepository: LendingsRepository = koinInject(),
+    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
+    model: LendingDetailsModel = viewModel { LendingDetailsModel(lendingId, lendingsRepository, lendingsRemoteRepository) },
     onMemoryEditorRequested: () -> Unit,
     onBack: () -> Unit
 ) {

@@ -1,99 +1,58 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.database.data.Events
-import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.centrexcursionistalcoi.app.database.room.entity.EventEntity.Companion.toEntity
 import kotlin.uuid.Uuid
 
-object EventsRepository : DatabaseRepository<ReferencedEvent, Uuid>() {
-    override val queries by lazy { databaseInstance.eventsQueries }
+class EventsRepository(
+    db: AppDatabase,
+    private val departmentsRepository: DepartmentsRepository,
+    private val usersRepository: UsersRepository,
+) : Repository<ReferencedEvent, Uuid> {
+    private val dao = db.eventDao()
 
     override suspend fun get(id: Uuid): ReferencedEvent? {
-        val departments = DepartmentsRepository.selectAll()
-        val users = UsersRepository.selectAll()
-        return queries.get(id).awaitAsList().firstOrNull()?.toEvent(departments, users)
+        val departments = departmentsRepository.selectAll()
+        val users = usersRepository.selectAll()
+        return dao.get(id)?.toEvent()?.referenced(departments, users)
     }
 
-    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedEvent?> {
-        val departmentsFlow = DepartmentsRepository.selectAllAsFlow(dispatcher)
-        val usersFlow = UsersRepository.selectAllAsFlow(dispatcher)
-        val eventsFlow = queries.get(id).asFlow().mapToList(dispatcher)
-        return combine(departmentsFlow, usersFlow, eventsFlow) { departments, users, events ->
-            events.firstOrNull()?.toEvent(departments, users)
+    override fun getAsFlow(id: Uuid): Flow<ReferencedEvent?> {
+        val departmentsFlow = departmentsRepository.selectAllAsFlow()
+        val usersFlow = usersRepository.selectAllAsFlow()
+        val eventFlow = dao.getAsFlow(id)
+        return combine(departmentsFlow, usersFlow, eventFlow) { departments, users, event ->
+            event?.toEvent()?.referenced(departments, users)
         }
     }
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedEvent>> {
-        val departmentsFlow = DepartmentsRepository.selectAllAsFlow(dispatcher)
-        val usersFlow = UsersRepository.selectAllAsFlow(dispatcher)
-        val eventsFlow = queries.selectAll().asFlow().mapToList(dispatcher)
+    override fun selectAllAsFlow(): Flow<List<ReferencedEvent>> {
+        val departmentsFlow = departmentsRepository.selectAllAsFlow()
+        val usersFlow = usersRepository.selectAllAsFlow()
+        val eventsFlow = dao.selectAllAsFlow()
         return combine(departmentsFlow, usersFlow, eventsFlow) { departments, users, events ->
-            events.map { it.toEvent(departments, users) }
+            events.map { it.toEvent().referenced(departments, users) }
         }
     }
 
     override suspend fun selectAll(): List<ReferencedEvent> {
-        val departments = DepartmentsRepository.selectAll()
-        val users = UsersRepository.selectAll()
-        return queries.selectAll().awaitAsList().map { it.toEvent(departments, users) }
+        val departments = departmentsRepository.selectAll()
+        val users = usersRepository.selectAll()
+        return dao.selectAll().map { it.toEvent().referenced(departments, users) }
     }
 
-    override suspend fun insert(item: ReferencedEvent) = queries.insert(
-        id = item.id,
-        start = item.start,
-        end = item.end,
-        place = item.place,
-        title = item.title,
-        description = item.description,
-        maxPeople = item.maxPeople,
-        requiresConfirmation = item.requiresConfirmation,
-        requiresInsurance = item.requiresInsurance,
-        department = item.department?.id,
-        image = item.image,
-        userReferences = item.userSubList.map { it.sub },
+    override suspend fun insert(item: ReferencedEvent) = dao.insert(
+        item.dereference().toEntity()
     )
 
-    override suspend fun update(item: ReferencedEvent) = queries.update(
-        start = item.start,
-        end = item.end,
-        place = item.place,
-        title = item.title,
-        description = item.description,
-        maxPeople = item.maxPeople,
-        requiresConfirmation = item.requiresConfirmation,
-        requiresInsurance = item.requiresInsurance,
-        department = item.department?.id,
-        image = item.image,
-        userReferences = item.userSubList.map { it.sub },
-        id = item.id,
+    override suspend fun update(item: ReferencedEvent) = dao.update(
+        item.dereference().toEntity()
     )
 
     override suspend fun delete(id: Uuid) {
-        queries.deleteById(id)
+        dao.deleteById(id)
     }
-
-    fun Events.toEvent(departments: List<Department>, users: List<UserData>) = Event(
-        id = id,
-        start = start,
-        end = end,
-        place = place,
-        title = title,
-        description = description,
-        maxPeople = maxPeople,
-        requiresConfirmation = requiresConfirmation,
-        requiresInsurance = requiresInsurance,
-        department = department,
-        image = image,
-        userSubList = userReferences,
-    ).referenced(departments, users)
 }

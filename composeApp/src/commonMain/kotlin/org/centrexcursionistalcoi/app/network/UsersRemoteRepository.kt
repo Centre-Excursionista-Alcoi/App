@@ -9,11 +9,13 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_USERS_SYNC
 
-object UsersRemoteRepository : SymmetricRemoteRepository<String, UserData>(
+class UsersRemoteRepository(
+    usersRepository: UsersRepository,
+) : SymmetricRemoteRepository<String, UserData>(
     "/users",
     SETTINGS_LAST_USERS_SYNC,
     UserData.serializer(),
-    UsersRepository
+    usersRepository
 ) {
     suspend fun promote(sub: String, progressNotifier: ProgressNotifier? = null) {
         val response = httpClient.post("/users/$sub/promote") {

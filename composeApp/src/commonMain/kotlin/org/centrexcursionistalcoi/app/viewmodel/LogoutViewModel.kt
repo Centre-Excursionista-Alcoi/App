@@ -5,10 +5,10 @@ import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.doMain
 
-class LogoutViewModel(afterLogout: () -> Unit) : ViewModel() {
+class LogoutViewModel(authBackend: AuthBackend, afterLogout: () -> Unit) : ViewModel() {
     init {
         launch {
-            doAsync { AuthBackend.logout() }
+            doAsync { authBackend.logout() }
             doMain { afterLogout() }
         }
     }

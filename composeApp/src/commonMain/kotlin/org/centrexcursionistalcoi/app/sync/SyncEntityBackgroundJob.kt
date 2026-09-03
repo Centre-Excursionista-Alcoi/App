@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.component.get
 
 expect class SyncEntityBackgroundJob : BackgroundSyncWorker<SyncEntityBackgroundJobLogic>
 
@@ -35,19 +36,19 @@ object SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         if (isDelete) {
             log.d { "Deleting $entityClass#$entityId..." }
             when (entityClass) {
-                Department::class.simpleName -> DepartmentsRepository.delete(
+                Department::class.simpleName -> get<DepartmentsRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid department ID: $entityId")
                 )
-                Post::class.simpleName -> PostsRepository.delete(
+                Post::class.simpleName -> get<PostsRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid post ID: $entityId")
                 )
-                InventoryItemType::class.simpleName -> InventoryItemTypesRepository.delete(
+                InventoryItemType::class.simpleName -> get<InventoryItemTypesRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item type ID: $entityId")
                 )
-                InventoryItem::class.simpleName -> InventoryItemsRepository.delete(
+                InventoryItem::class.simpleName -> get<InventoryItemsRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item ID: $entityId")
                 )
-                Event::class.simpleName -> EventsRepository.delete(
+                Event::class.simpleName -> get<EventsRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid event ID: $entityId")
                 )
                 else -> log.w { "Got unknown entity class: $entityClass" }
@@ -55,26 +56,26 @@ object SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         } else {
             log.d { "Updating $entityClass#$entityId..." }
             when (entityClass) {
-                Department::class.simpleName -> DepartmentsRemoteRepository.get(
+                Department::class.simpleName -> get<DepartmentsRemoteRepository>().get(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid department ID: $entityId"),
                     ignoreIfModifiedSince = true
-                )?.let { DepartmentsRepository.insertOrUpdate(it) }
-                Post::class.simpleName -> PostsRemoteRepository.get(
+                )?.let { get<DepartmentsRepository>().insertOrUpdate(it) }
+                Post::class.simpleName -> get<PostsRemoteRepository>().get(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid post ID: $entityId"),
                     ignoreIfModifiedSince = true
-                )?.let { PostsRepository.insertOrUpdate(it) }
-                InventoryItemType::class.simpleName -> InventoryItemTypesRemoteRepository.get(
+                )?.let { get<PostsRepository>().insertOrUpdate(it) }
+                InventoryItemType::class.simpleName -> get<InventoryItemTypesRemoteRepository>().get(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item type ID: $entityId"),
                     ignoreIfModifiedSince = true
-                )?.let { InventoryItemTypesRepository.insertOrUpdate(it) }
-                InventoryItem::class.simpleName -> InventoryItemsRemoteRepository.get(
+                )?.let { get<InventoryItemTypesRepository>().insertOrUpdate(it) }
+                InventoryItem::class.simpleName -> get<InventoryItemsRemoteRepository>().get(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid item ID: $entityId"),
                     ignoreIfModifiedSince = true
-                )?.let { InventoryItemsRepository.insertOrUpdate(it) }
-                Event::class.simpleName -> EventsRemoteRepository.get(
+                )?.let { get<InventoryItemsRepository>().insertOrUpdate(it) }
+                Event::class.simpleName -> get<EventsRemoteRepository>().get(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid event ID: $entityId"),
                     ignoreIfModifiedSince = true
-                )?.let { EventsRepository.insertOrUpdate(it) }
+                )?.let { get<EventsRepository>().insertOrUpdate(it) }
                 else -> log.w { "Got unknown entity class: $entityClass" }
             }
         }

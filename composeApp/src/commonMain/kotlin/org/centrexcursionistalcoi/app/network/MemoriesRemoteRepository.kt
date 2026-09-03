@@ -20,7 +20,6 @@ import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
-import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository.update
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
@@ -36,15 +35,20 @@ import kotlin.uuid.Uuid
  * Reading, updating and deleting are kept available (and synced) so the local database and repository layer are
  * ready to accept lending-less memories once the app exposes creating them.
  */
-object MemoriesRemoteRepository : RemoteRepository<Uuid, ReferencedMemory, Uuid, Memory>(
+class MemoriesRemoteRepository(
+    memoriesRepository: MemoriesRepository,
+    usersRepository: UsersRepository,
+    membersRepository: MembersRepository,
+    departmentsRepository: DepartmentsRepository,
+) : RemoteRepository<Uuid, ReferencedMemory, Uuid, Memory>(
     "/memories",
     SETTINGS_LAST_MEMORIES_SYNC,
     Memory.serializer(),
-    MemoriesRepository,
+    memoriesRepository,
     isCreationSupported = false,
     remoteToLocalIdConverter = { it },
     remoteToLocalEntityConverter = { memory ->
-        memory.referenced(UsersRepository.selectAll(), MembersRepository.selectAll(), DepartmentsRepository.selectAll())
+        memory.referenced(usersRepository.selectAll(), membersRepository.selectAll(), departmentsRepository.selectAll())
     },
 ) {
     suspend fun create(

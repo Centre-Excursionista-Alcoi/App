@@ -105,6 +105,9 @@ import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.setClipEntry
@@ -137,6 +140,7 @@ import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.ncgroup.kscan.Barcode
 import org.ncgroup.kscan.BarcodeFormat
 import kotlin.uuid.Uuid
@@ -146,7 +150,12 @@ private val log = logging()
 @Composable
 fun LendingManagementScreen(
     lendingId: Uuid,
-    model: LendingManagementViewModel = viewModel { LendingManagementViewModel(lendingId) },
+    lendingsRepository: LendingsRepository = koinInject(),
+    usersRepository: UsersRepository = koinInject(),
+    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
+    model: LendingManagementViewModel = viewModel {
+        LendingManagementViewModel(lendingId, lendingsRepository, usersRepository, lendingsRemoteRepository)
+    },
     onBack: () -> Unit,
 ) {
     val users by model.users.collectAsState()

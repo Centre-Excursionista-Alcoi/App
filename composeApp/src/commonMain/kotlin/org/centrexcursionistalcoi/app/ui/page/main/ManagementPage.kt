@@ -39,7 +39,13 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
+import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -69,6 +75,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
+import org.koin.compose.koinInject
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
@@ -209,13 +216,14 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             posts: List<ReferencedPost>?,
             events: List<ReferencedEvent>?,
             inventoryItemTypes: List<ReferencedInventoryItemType>?,
+            eventsRemoteRepository: EventsRemoteRepository,
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
                 Lendings.takeIf { Lendings.shouldShow(profile, lendings) },
                 Departments.takeIf { Departments.shouldShow(profile, departments) },
                 Users.takeIf { Users.shouldShow(profile, users) },
                 Posts.takeIf { Posts.shouldShow(profile, posts) },
-                Events.takeIf { EventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
+                Events.takeIf { eventsRemoteRepository.endpointSupported() && Events.shouldShow(profile, events) },
                 Inventory.takeIf { Inventory.shouldShow(profile, inventoryItemTypes) },
             )
         }
@@ -260,7 +268,24 @@ fun ManagementPage(
 
     events: List<ReferencedEvent>?,
 
-    model: ManagementViewModel = viewModel { ManagementViewModel() },
+    departmentsRemoteRepository: DepartmentsRemoteRepository = koinInject(),
+    inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository = koinInject(),
+    inventoryItemsRemoteRepository: InventoryItemsRemoteRepository = koinInject(),
+    usersRemoteRepository: UsersRemoteRepository = koinInject(),
+    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
+    postsRemoteRepository: PostsRemoteRepository = koinInject(),
+    eventsRemoteRepository: EventsRemoteRepository = koinInject(),
+    model: ManagementViewModel = viewModel {
+        ManagementViewModel(
+            departmentsRemoteRepository,
+            inventoryItemTypesRemoteRepository,
+            inventoryItemsRemoteRepository,
+            usersRemoteRepository,
+            lendingsRemoteRepository,
+            postsRemoteRepository,
+            eventsRemoteRepository,
+        )
+    },
 ) {
     ManagementPage(
         windowSizeClass = windowSizeClass,
@@ -300,6 +325,7 @@ fun ManagementPage(
         onUpdateEvent = model::updateEvent,
         onDeleteEvent = model::delete,
         onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData,
+        eventsRemoteRepository = eventsRemoteRepository,
     )
 }
 
@@ -352,10 +378,11 @@ private fun ManagementPage(
     onCreateEvent: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
     onUpdateEvent: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
     onDeleteEvent: (ReferencedEvent) -> Job,
+    eventsRemoteRepository: EventsRemoteRepository,
 ) {
     val scope = rememberCoroutineScope()
     val pages = remember(profile, lendings, departments, users, posts, events, inventoryItemTypes) {
-        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes)
+        ManagementPage.allFiltered(profile, lendings, departments, users, posts, events, inventoryItemTypes, eventsRemoteRepository)
     }
     val pagerState = rememberPagerState { pages.size }
 

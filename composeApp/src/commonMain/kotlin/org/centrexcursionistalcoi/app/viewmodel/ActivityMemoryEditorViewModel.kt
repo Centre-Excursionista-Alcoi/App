@@ -18,19 +18,25 @@ import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import kotlin.uuid.Uuid
 
-class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() {
+class ActivityMemoryEditorViewModel(
+    private val lendingId: Uuid?,
+    membersRepository: MembersRepository,
+    departmentsRepository: DepartmentsRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val memoriesRemoteRepository: MemoriesRemoteRepository,
+) : ViewModel() {
 
     val isForLending = lendingId != null
 
     /**
      * All active (non disabled) users.
      */
-    val members = MembersRepository.selectAllAsFlow()
+    val members = membersRepository.selectAllAsFlow()
         // We also check for null, because non-admins only get provided active users, and their status is not given (it is always active/null).
         .map { members -> members.filter { it.status == null || it.status == Member.Status.ACTIVE } }
         .stateInViewModel()
 
-    val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
+    val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving get() = _isSaving.asStateFlow()
@@ -57,7 +63,7 @@ class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() 
             doAsync {
                 val markdownText = text.toMarkdown()
                 if (isForLending) {
-                    LendingsRemoteRepository.submitMemory(
+                    lendingsRemoteRepository.submitMemory(
                         lendingId!!,
                         place,
                         members,
@@ -70,7 +76,7 @@ class ActivityMemoryEditorViewModel(private val lendingId: Uuid?) : ViewModel() 
                 } else {
                     require(from != null && to != null) { "From and To dates must be provided when creating a memory not for a lending" }
 
-                    MemoriesRemoteRepository.create(
+                    memoriesRemoteRepository.create(
                         place,
                         members,
                         externalUsers,

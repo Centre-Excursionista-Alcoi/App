@@ -24,19 +24,22 @@ import kotlin.uuid.Uuid
 
 class LendingManagementViewModel(
     private val lendingId: Uuid,
+    private val lendingsRepository: LendingsRepository,
+    usersRepository: UsersRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
 ): ErrorViewModel() {
     companion object {
         private val log = logging()
     }
 
-    val lending = LendingsRepository.getAsFlow(lendingId).stateInViewModel()
+    val lending = lendingsRepository.getAsFlow(lendingId).stateInViewModel()
 
     val toggleAllowIndeterminate = lending
         // Allow indeterminate for pickups
         .map { lending -> lending?.status() == Lending.Status.CONFIRMED }
         .stateInViewModel()
 
-    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
+    val users = usersRepository.selectAllAsFlow().stateInViewModel()
 
     private val _scannedItems = MutableStateFlow(emptySet<Uuid>())
     val scannedItems get() = _scannedItems.asStateFlow()
@@ -96,7 +99,7 @@ class LendingManagementViewModel(
         try {
             doAsync {
                 log.i { "Confirming lending..." }
-                LendingsRemoteRepository.confirm(lendingId)
+                lendingsRemoteRepository.confirm(lendingId)
                 log.i { "Lending has been confirmed." }
             }
         } catch (e: ServerException) {
@@ -109,7 +112,7 @@ class LendingManagementViewModel(
         try {
             doAsync {
                 log.i { "Deleting lending..." }
-                LendingsRemoteRepository.delete(lendingId)
+                lendingsRemoteRepository.delete(lendingId)
                 log.i { "Lending has been deleted." }
             }
         } catch (e: ServerException) {
@@ -122,7 +125,7 @@ class LendingManagementViewModel(
         try {
             doAsync {
                 log.i { "Skipping memory for lending..." }
-                LendingsRemoteRepository.skipMemory(lendingId)
+                lendingsRemoteRepository.skipMemory(lendingId)
                 log.i { "Memory has been skipped for lending." }
             }
         } catch (e: ServerException) {
@@ -201,7 +204,7 @@ class LendingManagementViewModel(
 
                 log.i { "Marking lending as picked up..." }
                 log.d { "Dismissing ${dismissedItems.size} items: ${dismissedItems.joinToString()}" }
-                LendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
+                lendingsRemoteRepository.pickup(lendingId, dismissItemsIds = dismissedItems.toList())
                 log.i { "Lending has been marked as picked up." }
             }
         } catch (e: ServerException) {
@@ -254,7 +257,7 @@ class LendingManagementViewModel(
                 val scannedItems = scannedItems.value
                 val notes = scannedItemsNotes.value.filterKeys { it in scannedItems }
                 log.d { "Selected ${scannedItems.size} / ${lending.value?.items?.size} items" }
-                LendingsRemoteRepository.`return`(
+                lendingsRemoteRepository.`return`(
                     lendingId,
                     scannedItems.map { it to notes[it] }
                 )

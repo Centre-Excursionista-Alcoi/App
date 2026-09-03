@@ -2,8 +2,8 @@ package org.centrexcursionistalcoi.app.sync
 
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.component.get
 import kotlin.uuid.Uuid
 
 expect class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgroundJobLogic>
@@ -18,9 +18,9 @@ object SyncLendingBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         val isRemoval = input[EXTRA_IS_REMOVAL]?.toBoolean() ?: false
 
         if (isRemoval) {
-            LendingsRepository.delete(lendingId)
+            get<LendingsRepository>().delete(lendingId)
         } else {
-            LendingsRemoteRepository.update(lendingId)
+            get<LendingsRemoteRepository>().update(lendingId)
                 ?: return SyncResult.Failure("Lending with ID $lendingId not found on server")
         }
 

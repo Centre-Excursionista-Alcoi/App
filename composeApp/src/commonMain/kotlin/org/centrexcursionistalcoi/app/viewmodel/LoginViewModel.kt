@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.doMain
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 
-class LoginViewModel : ErrorViewModel() {
+class LoginViewModel(private val authBackend: AuthBackend) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
 
@@ -18,7 +18,7 @@ class LoginViewModel : ErrorViewModel() {
         try {
             _isLoading.emit(true)
 
-            AuthBackend.login(email, password)
+            authBackend.login(email, password)
             ProfileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
             doMain { afterLogin() }
@@ -35,7 +35,7 @@ class LoginViewModel : ErrorViewModel() {
             clearError()
 
             // Try to register
-            AuthBackend.register(email, password)
+            authBackend.register(email, password)
 
             // If successful, log in
             login(email, password, afterLogin).join()
@@ -51,7 +51,7 @@ class LoginViewModel : ErrorViewModel() {
             _isLoading.emit(true)
             clearError()
 
-            AuthBackend.forgotPassword(email)
+            authBackend.forgotPassword(email)
 
             doMain { afterRequest() }
         } catch (e: ServerException) {

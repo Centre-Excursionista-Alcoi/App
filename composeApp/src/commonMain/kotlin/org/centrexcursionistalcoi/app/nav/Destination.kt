@@ -9,11 +9,13 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import kotlin.uuid.Uuid
 
 @Serializable
 sealed interface Destination {
-    companion object {
+    companion object : KoinComponent {
         const val ITEM_TYPE = "itemType"
 
         const val ADMIN_ITEMS = "admin/items"
@@ -23,7 +25,7 @@ sealed interface Destination {
             if (url == null) return null
             if (url.host == ITEM_TYPE) {
                 val typeId = url.fragment.toUuidOrNull() ?: return null
-                val type = InventoryItemTypesRepository.get(typeId) ?: return null
+                val type = get<InventoryItemTypesRepository>().get(typeId) ?: return null
                 return ItemTypeDetails(type)
             }
             if (url.host == ADMIN_ITEMS) {

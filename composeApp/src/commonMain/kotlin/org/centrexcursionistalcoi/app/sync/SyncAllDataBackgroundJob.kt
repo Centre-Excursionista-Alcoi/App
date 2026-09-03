@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.component.get
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -96,35 +97,35 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
             // Departments does not depend on any other entity, so we sync it first
-            DepartmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<DepartmentsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Users does not depend on any other entity
-            UsersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<UsersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Members do not depend on any other entity
-            MembersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<MembersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Posts requires Departments
-            PostsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<PostsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Events requires Departments and Users
             // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
-            EventsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<EventsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Item Types requires Departments
-            InventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<InventoryItemTypesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Items requires Inventory Item Types
-            InventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<InventoryItemsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Memories only reference Departments and (optionally) Lendings by id, no resolution is needed. They
             // must be synced before Lendings, since a lending's memory is resolved from what's already cached here.
-            MemoriesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<MemoriesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Lendings requires Users, Inventory Item Types, Inventory Items and Memories
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
-            LendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            get<LendingsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -134,15 +135,15 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
 
                 log.d { "Removing all data..." }
                 // order is important due to foreign key constraints. Same as above
-                MemoriesRepository.deleteAll()
-                LendingsRepository.deleteAll()
-                InventoryItemsRepository.deleteAll()
-                InventoryItemTypesRepository.deleteAll()
-                EventsRepository.deleteAll()
-                PostsRepository.deleteAll()
-                MembersRepository.deleteAll()
-                UsersRepository.deleteAll()
-                DepartmentsRepository.deleteAll()
+                get<MemoriesRepository>().deleteAll()
+                get<LendingsRepository>().deleteAll()
+                get<InventoryItemsRepository>().deleteAll()
+                get<InventoryItemTypesRepository>().deleteAll()
+                get<EventsRepository>().deleteAll()
+                get<PostsRepository>().deleteAll()
+                get<MembersRepository>().deleteAll()
+                get<UsersRepository>().deleteAll()
+                get<DepartmentsRepository>().deleteAll()
 
                 log.d { "Removing all files..." }
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
@@ -153,7 +154,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         } catch (e: ServerException) {
             if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
                 log.w { "Not logged in. Credentials may have expired. Logging out..." }
-                AuthBackend.logout()
+                get<AuthBackend>().logout()
             } else {
                 log.e(e) { "Server error during synchronization. Failing..." }
                 throw e

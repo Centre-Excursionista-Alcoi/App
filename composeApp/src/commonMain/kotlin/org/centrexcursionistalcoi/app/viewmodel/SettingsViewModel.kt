@@ -13,7 +13,10 @@ import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
 import org.centrexcursionistalcoi.app.storage.settings
 
 @OptIn(ExperimentalSettingsApi::class)
-class SettingsViewModel(private val onDeleteAccount: () -> Unit) : ErrorViewModel() {
+class SettingsViewModel(
+    private val authBackend: AuthBackend,
+    private val onDeleteAccount: () -> Unit,
+) : ErrorViewModel() {
     val fcmToken = FCMTokenManager.tokenFlow.stateInViewModel()
 
     val sseConnected = SSENotificationsListener.isConnected.stateInViewModel(initialValue = false)
@@ -24,7 +27,7 @@ class SettingsViewModel(private val onDeleteAccount: () -> Unit) : ErrorViewMode
     val privacySessionReplay = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_SESSION_REPLAY, true)
 
     fun deleteAccount() = launch {
-        AuthBackend.deleteAccount()
+        authBackend.deleteAccount()
         doMain { onDeleteAccount() }
     }
 

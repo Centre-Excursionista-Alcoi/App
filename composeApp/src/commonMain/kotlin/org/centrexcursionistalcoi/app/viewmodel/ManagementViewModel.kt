@@ -29,7 +29,15 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import kotlin.uuid.Uuid
 
-class ManagementViewModel : ViewModel() {
+class ManagementViewModel(
+    private val departmentsRemoteRepository: DepartmentsRemoteRepository,
+    private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository,
+    private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
+    private val usersRemoteRepository: UsersRemoteRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val postsRemoteRepository: PostsRemoteRepository,
+    private val eventsRemoteRepository: EventsRemoteRepository,
+) : ViewModel() {
     companion object {
         private val log = logging()
     }
@@ -42,7 +50,7 @@ class ManagementViewModel : ViewModel() {
         try {
             doAsync {
                 val image = imageFile?.readBytes()
-                DepartmentsRemoteRepository.create(displayName, image, progressNotifier)
+                departmentsRemoteRepository.create(displayName, image, progressNotifier)
             }
         } catch (e: ServerException) {
             log.e(e) { "Could not create department." }
@@ -58,7 +66,7 @@ class ManagementViewModel : ViewModel() {
         progressNotifier: ProgressNotifier? = null,
     ) = launch {
         doAsync {
-            DepartmentsRemoteRepository.update(
+            departmentsRemoteRepository.update(
                 departmentId,
                 UpdateDepartmentRequest(
                     displayName = displayName,
@@ -72,22 +80,22 @@ class ManagementViewModel : ViewModel() {
 
     fun delete(department: Department) = launch {
         doAsync {
-            DepartmentsRemoteRepository.delete(department.id)
+            departmentsRemoteRepository.delete(department.id)
         }
     }
 
     fun kickFromDepartment(userData: UserData, department: Department) = launch {
         doAsync {
-            DepartmentsRemoteRepository.kick(department.id, userData.sub)
+            departmentsRemoteRepository.kick(department.id, userData.sub)
         }
     }
 
     fun approveDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.confirmJoinRequest(request)
+        departmentsRemoteRepository.confirmJoinRequest(request)
     }
 
     fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
-        DepartmentsRemoteRepository.denyJoinRequest(request)
+        departmentsRemoteRepository.denyJoinRequest(request)
     }
 
     fun createInventoryItemType(
@@ -101,7 +109,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val weightDouble = weight.toDoubleOrNull()
 
-            InventoryItemTypesRemoteRepository.create(
+            inventoryItemTypesRemoteRepository.create(
                 displayName,
                 description.takeUnless { it.isEmpty() },
                 categories.takeUnless { it.isEmpty() },
@@ -124,7 +132,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val weightDouble = weight.toDoubleOrNull()
 
-            InventoryItemTypesRemoteRepository.update(
+            inventoryItemTypesRemoteRepository.update(
                 id,
                 displayName,
                 description.takeUnless { it.isEmpty() },
@@ -138,39 +146,39 @@ class ManagementViewModel : ViewModel() {
 
     fun delete(inventoryItemType: ReferencedInventoryItemType) = launch {
         doAsync {
-            InventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
+            inventoryItemTypesRemoteRepository.delete(inventoryItemType.id)
         }
     }
 
     fun createInventoryItem(variation: String, type: ReferencedInventoryItemType, amount: Int) =
         launch {
             doAsync {
-                InventoryItemsRemoteRepository.create(variation, type.id, amount)
+                inventoryItemsRemoteRepository.create(variation, type.id, amount)
             }
         }
 
     fun delete(inventoryItem: ReferencedInventoryItem) = launch {
         doAsync {
-            InventoryItemsRemoteRepository.delete(inventoryItem.id)
+            inventoryItemsRemoteRepository.delete(inventoryItem.id)
         }
     }
 
     fun promote(user: UserData) = launch {
         doAsync {
-            UsersRemoteRepository.promote(user.sub)
-            UsersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
+            usersRemoteRepository.promote(user.sub)
+            usersRemoteRepository.update(user.sub, ignoreIfModifiedSince = true)
         }
     }
 
     fun confirmLending(lending: ReferencedLending) = launch {
         doAsync {
-            LendingsRemoteRepository.confirm(lending.id)
+            lendingsRemoteRepository.confirm(lending.id)
         }
     }
 
     fun skipLendingMemory(lending: ReferencedLending) = launch {
         doAsync {
-            LendingsRemoteRepository.skipMemory(lending.id)
+            lendingsRemoteRepository.skipMemory(lending.id)
         }
     }
 
@@ -185,7 +193,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val contentMarkdown = content.toMarkdown()
 
-            PostsRemoteRepository.create(
+            postsRemoteRepository.create(
                 title,
                 contentMarkdown,
                 department?.id,
@@ -209,7 +217,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val contentMarkdown = content?.toMarkdown()
 
-            PostsRemoteRepository.update(
+            postsRemoteRepository.update(
                 postId,
                 title,
                 contentMarkdown,
@@ -224,7 +232,7 @@ class ManagementViewModel : ViewModel() {
 
     fun delete(post: ReferencedPost) = launch {
         doAsync {
-            PostsRemoteRepository.delete(post.id)
+            postsRemoteRepository.delete(post.id)
         }
     }
 
@@ -244,7 +252,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val descriptionMarkdown = description.toMarkdown()
 
-            EventsRemoteRepository.create(
+            eventsRemoteRepository.create(
                 start,
                 end,
                 place,
@@ -277,7 +285,7 @@ class ManagementViewModel : ViewModel() {
         doAsync {
             val descriptionMarkdown = description?.toMarkdown()
 
-            EventsRemoteRepository.update(
+            eventsRemoteRepository.update(
                 eventId,
                 start,
                 end,
@@ -296,13 +304,13 @@ class ManagementViewModel : ViewModel() {
 
     fun delete(post: ReferencedEvent) = launch {
         doAsync {
-            EventsRemoteRepository.delete(post.id)
+            eventsRemoteRepository.delete(post.id)
         }
     }
 
     fun updateInventoryItemManufacturerData(item: ReferencedInventoryItem, data: String) = launch {
         doAsync {
-            InventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
+            inventoryItemsRemoteRepository.updateManufacturerData(item.id, data)
         }
     }
 }

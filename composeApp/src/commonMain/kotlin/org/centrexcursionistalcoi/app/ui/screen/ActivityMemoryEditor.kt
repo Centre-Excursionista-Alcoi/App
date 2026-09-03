@@ -66,6 +66,10 @@ import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.displayName
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.data.PastSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
@@ -81,12 +85,19 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.utils.unaccent
 import org.centrexcursionistalcoi.app.viewmodel.ActivityMemoryEditorViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import kotlin.uuid.Uuid
 
 @Composable
 fun ActivityMemoryEditor(
     lendingId: Uuid?,
-    model: ActivityMemoryEditorViewModel = viewModel { ActivityMemoryEditorViewModel(lendingId) },
+    membersRepository: MembersRepository = koinInject(),
+    departmentsRepository: DepartmentsRepository = koinInject(),
+    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
+    memoriesRemoteRepository: MemoriesRemoteRepository = koinInject(),
+    model: ActivityMemoryEditorViewModel = viewModel {
+        ActivityMemoryEditorViewModel(lendingId, membersRepository, departmentsRepository, lendingsRemoteRepository, memoriesRemoteRepository)
+    },
     onBack: () -> Unit
 ) {
     val members by model.members.collectAsState()

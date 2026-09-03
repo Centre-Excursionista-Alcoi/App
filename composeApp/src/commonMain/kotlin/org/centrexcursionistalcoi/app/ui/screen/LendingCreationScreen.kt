@@ -70,8 +70,11 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
+import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
+import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
@@ -91,6 +94,7 @@ import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -99,7 +103,12 @@ private val log = logging()
 @Composable
 fun LendingCreationScreen(
     originalShoppingList: ShoppingList,
-    model: LendingCreationViewModel = viewModel { LendingCreationViewModel(originalShoppingList) },
+    inventoryItemTypesRepository: InventoryItemTypesRepository = koinInject(),
+    inventoryItemsRepository: InventoryItemsRepository = koinInject(),
+    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
+    model: LendingCreationViewModel = viewModel {
+        LendingCreationViewModel(originalShoppingList, inventoryItemTypesRepository, inventoryItemsRepository, lendingsRemoteRepository)
+    },
     onLendingCreated: () -> Unit,
     onBackRequested: () -> Unit,
 ) {

@@ -45,9 +45,11 @@ import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import kotlin.random.Random
 
-object LocalNotifications {
+object LocalNotifications : KoinComponent {
     private val log = logging()
 
     /**
@@ -210,7 +212,7 @@ object LocalNotifications {
                     return
                 }
 
-                runBlocking { DepartmentsRepository.get(notification.departmentId) }?.let { event ->
+                runBlocking { get<DepartmentsRepository>().get(notification.departmentId) }?.let { event ->
                     showNotification(
                         { getString(Res.string.notification_department_kicked_title) },
                         {
@@ -230,7 +232,7 @@ object LocalNotifications {
                         Post::class.simpleName -> {
                             val postId = notification.entityUuid ?: return log.w { "Invalid post ID: ${notification.entityId}" }
                             runBlocking {
-                                PostsRepository.get(postId) ?: PostsRemoteRepository.get(postId)
+                                get<PostsRepository>().get(postId) ?: get<PostsRemoteRepository>().get(postId)
                             }?.let { post ->
                                 showNotification({ post.title }, { post.content }, data)
                             } ?: log.w { "Could not find Post#${notification.entityId}" }
@@ -242,7 +244,7 @@ object LocalNotifications {
                 when (notification.entityClass) {
                     Event::class.simpleName -> {
                         val eventId = notification.entityUuid ?: return log.w { "Invalid event ID: ${notification.entityId}" }
-                        runBlocking { EventsRepository.get(eventId) }?.let { event ->
+                        runBlocking { get<EventsRepository>().get(eventId) }?.let { event ->
                             if (event.requiresInsurance) {
                                 val profile = ProfileRepository.getProfile() ?: return log.w { "Could not find user sub" }
                                 val confirmedAssistance = profile.sub in event.userSubList.map { it.sub }

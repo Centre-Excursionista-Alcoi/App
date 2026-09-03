@@ -36,7 +36,20 @@ import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 import kotlin.uuid.Uuid
 
-class MainViewModel: ViewModel() {
+class MainViewModel(
+    private val departmentsRepository: DepartmentsRepository,
+    private val usersRepository: UsersRepository,
+    private val membersRepository: MembersRepository,
+    private val inventoryItemTypesRepository: InventoryItemTypesRepository,
+    private val inventoryItemsRepository: InventoryItemsRepository,
+    private val lendingsRepository: LendingsRepository,
+    private val memoriesRepository: MemoriesRepository,
+    private val postsRepository: PostsRepository,
+    private val eventsRepository: EventsRepository,
+    private val departmentsRemoteRepository: DepartmentsRemoteRepository,
+    private val eventsRemoteRepository: EventsRemoteRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+) : ViewModel() {
     companion object {
         private val log = logging()
     }
@@ -48,24 +61,24 @@ class MainViewModel: ViewModel() {
 
     val profile = ProfileRepository.profile.stateInViewModel()
 
-    val departments = DepartmentsRepository.selectAllAsFlow().stateInViewModel()
+    val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
-    val users = UsersRepository.selectAllAsFlow().stateInViewModel()
+    val users = usersRepository.selectAllAsFlow().stateInViewModel()
 
-    val members = MembersRepository.selectAllAsFlow().stateInViewModel()
+    val members = membersRepository.selectAllAsFlow().stateInViewModel()
 
-    val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
-    val inventoryItemTypesCategories = InventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
+    val inventoryItemTypes = inventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
+    val inventoryItemTypesCategories = inventoryItemTypesRepository.categoriesAsFlow().stateInViewModel()
 
-    val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
+    val inventoryItems = inventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
-    val lendings = LendingsRepository.selectAllAsFlow().stateInViewModel()
+    val lendings = lendingsRepository.selectAllAsFlow().stateInViewModel()
 
-    val memories = MemoriesRepository.selectAllAsFlow().stateInViewModel()
+    val memories = memoriesRepository.selectAllAsFlow().stateInViewModel()
 
-    val posts = PostsRepository.selectAllAsFlow().stateInViewModel()
+    val posts = postsRepository.selectAllAsFlow().stateInViewModel()
 
-    val events = EventsRepository.selectAllAsFlow().stateInViewModel()
+    val events = eventsRepository.selectAllAsFlow().stateInViewModel()
 
     /**
      * A map of InventoryItemType ID to amount in the shopping list.
@@ -93,7 +106,7 @@ class MainViewModel: ViewModel() {
     }
 
     fun cancelLending(lending: ReferencedLending) = launch {
-        LendingsRemoteRepository.cancel(lending.id)
+        lendingsRemoteRepository.cancel(lending.id)
     }
 
     fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) = launch {
@@ -147,22 +160,22 @@ class MainViewModel: ViewModel() {
     }
 
     fun requestJoinDepartment(department: Department) = launch {
-        DepartmentsRemoteRepository.requestJoin(department.id)
+        departmentsRemoteRepository.requestJoin(department.id)
     }
 
     fun leaveDepartment(department: Department) = launch {
-        DepartmentsRemoteRepository.leave(department.id)
+        departmentsRemoteRepository.leave(department.id)
     }
 
     fun confirmEventAssistance(event: ReferencedEvent) = launch {
-        EventsRemoteRepository.confirmAssistance(event.id)
+        eventsRemoteRepository.confirmAssistance(event.id)
     }
 
     fun rejectEventAssistance(event: ReferencedEvent) = launch {
-        EventsRemoteRepository.rejectAssistance(event.id)
+        eventsRemoteRepository.rejectAssistance(event.id)
     }
 
     fun deleteLending(lending: ReferencedLending, reason: String?) = launch {
-        LendingsRemoteRepository.delete(lending.id, reason)
+        lendingsRemoteRepository.delete(lending.id, reason)
     }
 }
