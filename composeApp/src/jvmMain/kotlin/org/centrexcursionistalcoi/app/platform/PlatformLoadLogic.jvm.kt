@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.platform
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
-import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 
 actual object PlatformLoadLogic {
@@ -15,9 +14,6 @@ actual object PlatformLoadLogic {
     }
 
     actual suspend fun load() {
-        log.d { "Starting Koin..." }
-        initKoin()
-
         log.d { "Initializing push notifications..." }
         NotifierManager.initialize(
             NotificationPlatformConfiguration.Desktop(
