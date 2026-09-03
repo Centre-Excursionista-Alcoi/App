@@ -186,6 +186,12 @@ class ManagementViewModel(
         }
     }
 
+    fun delete(lending: ReferencedLending, reason: String?) = launch {
+        withContext(dispatcherProvider.io) {
+            lendingsRemoteRepository.delete(lending.id, reason)
+        }
+    }
+
     fun createPost(
         title: String,
         department: Department?,
