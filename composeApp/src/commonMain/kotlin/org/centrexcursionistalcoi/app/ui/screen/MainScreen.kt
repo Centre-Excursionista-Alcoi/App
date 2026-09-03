@@ -144,7 +144,6 @@ fun MainScreen(
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onCreateMemoryRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
@@ -170,7 +169,6 @@ fun MainScreen(
             onLendingCancelRequested = model::cancelLending,
             onLendingClick = onLendingClick,
             onOtherUserLendingClick = onOtherUserLendingClick,
-            onDeleteLendingRequest = onDeleteLendingRequest,
             onMemoryEditorRequested = onMemoryEditorRequested,
             onCreateMemoryRequested = onCreateMemoryRequested,
             isSyncing = isSyncing == true,
@@ -280,7 +278,6 @@ private fun MainScreenContent(
     onLendingCancelRequested: (ReferencedLending) -> Job,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
 
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onCreateMemoryRequested: () -> Unit,
@@ -531,7 +528,6 @@ private fun MainScreenContent(
                     onLendingHistoryRequest = { showingLendingHistory = true },
                     onItemTypeDetailsRequested = onItemTypeDetailsRequested,
                     onOtherUserLendingClick = onOtherUserLendingClick,
-                    onDeleteLendingRequest = onDeleteLendingRequest,
                     onShoppingListChanged = { shoppingList = it },
                     onMemoryEditorRequested = onMemoryEditorRequested
                 )
@@ -634,7 +630,6 @@ private fun MainScreenPagerContent(
     onLendingHistoryRequest: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onShoppingListChanged: (ShoppingList) -> Unit,
 ) {
@@ -666,7 +661,6 @@ private fun MainScreenPagerContent(
                 selectedItem = selectedManagementItem,
                 onGiveRequested = onOtherUserLendingClick,
                 onReceiveRequested = onOtherUserLendingClick,
-                onDeleteRequested = onDeleteLendingRequest,
             )
 
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))

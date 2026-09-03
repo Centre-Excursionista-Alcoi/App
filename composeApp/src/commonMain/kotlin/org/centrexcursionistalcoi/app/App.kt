@@ -52,9 +52,7 @@ import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
-import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.reflect.KClass
@@ -221,7 +219,6 @@ fun App(
             destination<Destination.Main> { route ->
                 val showingAdminItemTypeId = route.showingAdminItemTypeId
                 val showingAdminLendingsScreen = route.showingAdminLendingsScreen
-                val managementViewModel: ManagementViewModel = koinInject()
 
                 MainScreen(
                     showingAdminItemTypeId = showingAdminItemTypeId,
@@ -241,7 +238,6 @@ fun App(
                     onOtherUserLendingClick = {
                         navController.navigate(Destination.Admin.LendingManagement(it))
                     },
-                    onDeleteLendingRequest = managementViewModel::delete,
                     onShoppingListConfirmed = {
                         navController.navigate(Destination.LendingCreation(it))
                     },
