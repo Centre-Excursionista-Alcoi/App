@@ -21,7 +21,7 @@ data class ZonedDateTime(
     val timeZone: TimeZone,
     val date: LocalDate,
     val time: LocalTime,
-) {
+): Comparable<ZonedDateTime> {
     val dateTime: LocalDateTime get() = LocalDateTime(date, time)
 
     fun toInstant(): Instant = dateTime.toInstant(timeZone)
@@ -32,6 +32,12 @@ data class ZonedDateTime(
         return format.format {
             setZonedDateTime(this@ZonedDateTime)
         }
+    }
+
+    override fun compareTo(other: ZonedDateTime): Int {
+        val thisInstant = this.toInstant()
+        val otherInstant = other.toInstant()
+        return thisInstant.compareTo(otherInstant)
     }
 
     /**

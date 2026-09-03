@@ -1,12 +1,28 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,7 +30,16 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.management_no_posts
+import cea_app.composeapp.generated.resources.management_post_create
+import cea_app.composeapp.generated.resources.post_by
+import cea_app.composeapp.generated.resources.post_department
+import cea_app.composeapp.generated.resources.post_department_generic
+import cea_app.composeapp.generated.resources.post_link
+import cea_app.composeapp.generated.resources.post_title
+import cea_app.composeapp.generated.resources.post_upload_images
+import cea_app.composeapp.generated.resources.submit
 import coil3.compose.AsyncImage
 import com.mikepenz.markdown.m3.Markdown
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -36,13 +61,28 @@ import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.utils.optional
+import org.centrexcursionistalcoi.app.viewmodel.management.PostsManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
+
+@Composable
+fun PostsListView(model: PostsManagementViewModel = koinViewModel()) {
+    val posts by model.posts.collectAsState()
+    val departments by model.departments.collectAsState()
+
+    PostsListView(
+        posts = posts,
+        departments = departments,
+        onCreate = model::createPost,
+        onUpdate = model::updatePost,
+        onDelete = model::delete,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostsListView(
-    windowSizeClass: WindowSizeClass,
+private fun PostsListView(
     posts: List<ReferencedPost>?,
     departments: List<Department>?,
     onCreate: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
@@ -50,7 +90,6 @@ fun PostsListView(
     onDelete: (ReferencedPost) -> Job,
 ) {
     ListView(
-        windowSizeClass = windowSizeClass,
         items = posts,
         itemIdProvider = { it.id },
         itemDisplayName = { it.title },

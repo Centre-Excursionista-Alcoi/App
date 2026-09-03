@@ -60,81 +60,10 @@ fun MemoryDialog(memory: ReferencedMemory, onDismissRequest: () -> Unit) {
                 )
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                memory.department?.let { department ->
-                    OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            val image by department.rememberImageFile()
-                            AsyncImage(
-                                model = image,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp).padding(end = 12.dp)
-                            )
-                            Text(
-                                text = department.displayName,
-                                style = MaterialTheme.typography.titleMediumEmphasized,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        LabelWithTitle(title = stringResource(Res.string.memory_from), text = memory.from.toStringCompact())
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        LabelWithTitle(title = stringResource(Res.string.memory_to), text = memory.to.toStringCompact())
-                    }
-                }
-
-                memory.place?.let { place ->
-                    LabelWithTitle(title = stringResource(Res.string.memory_place), text = place)
-                }
-
-                LabelWithTitle(title = stringResource(Res.string.memory_text), text = memory.text)
-
-                if (memory.attachments.isNotEmpty()) {
-                    Text(
-                        text = stringResource(Res.string.memory_images).uppercase(),
-                        style = MaterialTheme.typography.labelLargeEmphasized,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp, bottom = 4.dp)
-                    )
-                    val images = memory.rememberImageFiles()
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth().height(260.dp)
-                    ) {
-                        items(images.toList(), key = { it }) { (_, attachment) ->
-                            AsyncImage(
-                                model = attachment,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxHeight().padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-
-                if (memory.members.isNotEmpty()) {
-                    LabelWithTitle(
-                        title = stringResource(Res.string.memory_members),
-                        text = memory.members.joinToString(", ") { it.fullName },
-                    )
-                }
-                memory.externalUsers?.let { externals ->
-                    LabelWithTitle(
-                        title = stringResource(Res.string.memory_external),
-                        text = externals
-                    )
-                }
-
-                MemoryViewButtons(memory)
-            }
+            MemoryDisplay(
+                memory = memory,
+                modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState())
+            )
         }
     }
 }
@@ -154,4 +83,80 @@ fun LabelWithTitle(title: String, text: String) {
         style = MaterialTheme.typography.bodyLarge,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     )
+}
+
+@Composable
+fun MemoryDisplay(memory: ReferencedMemory, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        memory.department?.let { department ->
+            OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val image by department.rememberImageFile()
+                    AsyncImage(
+                        model = image,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp).padding(end = 12.dp)
+                    )
+                    Text(
+                        text = department.displayName,
+                        style = MaterialTheme.typography.titleMediumEmphasized,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                LabelWithTitle(title = stringResource(Res.string.memory_from), text = memory.from.toStringCompact())
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                LabelWithTitle(title = stringResource(Res.string.memory_to), text = memory.to.toStringCompact())
+            }
+        }
+
+        memory.place?.let { place ->
+            LabelWithTitle(title = stringResource(Res.string.memory_place), text = place)
+        }
+
+        LabelWithTitle(title = stringResource(Res.string.memory_text), text = memory.text)
+
+        if (memory.attachments.isNotEmpty()) {
+            Text(
+                text = stringResource(Res.string.memory_images).uppercase(),
+                style = MaterialTheme.typography.labelLargeEmphasized,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 8.dp, bottom = 4.dp)
+            )
+            val images = memory.rememberImageFiles()
+            LazyRow(
+                modifier = Modifier.fillMaxWidth().height(260.dp)
+            ) {
+                items(images.toList(), key = { it }) { (_, attachment) ->
+                    AsyncImage(
+                        model = attachment,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxHeight().padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+
+        if (memory.members.isNotEmpty()) {
+            LabelWithTitle(
+                title = stringResource(Res.string.memory_members),
+                text = memory.members.joinToString(", ") { it.fullName },
+            )
+        }
+        memory.externalUsers?.let { externals ->
+            LabelWithTitle(
+                title = stringResource(Res.string.memory_external),
+                text = externals
+            )
+        }
+
+        MemoryViewButtons(memory)
+    }
 }

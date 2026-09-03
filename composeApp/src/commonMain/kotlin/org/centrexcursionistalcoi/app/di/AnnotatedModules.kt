@@ -27,3 +27,8 @@ class ViewModelScanModule
 @Module
 @ComponentScan("org.centrexcursionistalcoi.app.di")
 class CoreScanModule
+
+/** Scans `platform` for `@Singleton`-annotated platform providers (e.g. [org.centrexcursionistalcoi.app.platform.PlatformNFC]). */
+@Module
+@ComponentScan("org.centrexcursionistalcoi.app.platform")
+class PlatformScanModule
