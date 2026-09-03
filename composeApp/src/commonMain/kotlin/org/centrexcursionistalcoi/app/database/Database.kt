@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
 
 const val DATABASE_VERSION = 1
+const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(
     entities = [
