@@ -19,7 +19,6 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        instance = this
 
         PermissionInitiation.setActivity(this)
 
@@ -37,7 +36,6 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     override fun onResume() {
         super.onResume()
-        instance = this
 
         PlatformAppUpdates.checkForUpdates(this)
     }
@@ -45,7 +43,6 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onDestroy() {
         super.onDestroy()
         PlatformAppUpdates.stop()
-        instance = null
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -75,8 +72,5 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     companion object {
         private val log = logging()
-
-        var instance: MainActivity? = null
-            private set
     }
 }

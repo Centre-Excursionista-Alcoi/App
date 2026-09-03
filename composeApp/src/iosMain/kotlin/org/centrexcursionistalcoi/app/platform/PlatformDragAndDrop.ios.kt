@@ -3,8 +3,10 @@ package org.centrexcursionistalcoi.app.platform
 import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import io.github.alexzhirkevich.qrose.QrCodePainter
 import io.ktor.http.ContentType
+import org.koin.core.annotation.Singleton
 
-actual object PlatformDragAndDrop : PlatformProvider {
+@Singleton
+actual class PlatformDragAndDrop : PlatformProvider {
     actual override val isSupported: Boolean = false
 
     actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {

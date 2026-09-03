@@ -1,12 +1,14 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import com.diamondedge.logging.logging
-import org.centrexcursionistalcoi.app.android.MainActivity
+import org.koin.core.annotation.Singleton
 import kotlin.time.Instant
 
-actual object PlatformCalendarSync : PlatformProvider {
+@Singleton
+actual class PlatformCalendarSync(private val context: Context) : PlatformProvider {
     private val log = logging()
 
     actual override val isSupported: Boolean = true
@@ -26,12 +28,6 @@ actual object PlatformCalendarSync : PlatformProvider {
             putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end.toEpochMilliseconds())
             putExtra(CalendarContract.Events.DESCRIPTION, description)
             putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
-        }
-
-        val context = MainActivity.instance
-        if (context == null) {
-            log.e { "There's no available activity." }
-            return false
         }
 
         if (intent.resolveActivity(context.packageManager) != null) {

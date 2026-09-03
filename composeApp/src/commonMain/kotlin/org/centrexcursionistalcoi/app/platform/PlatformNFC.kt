@@ -1,9 +1,11 @@
 package org.centrexcursionistalcoi.app.platform
 
-import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.NfcPayload
+import org.koin.core.annotation.Singleton
+import kotlin.uuid.Uuid
 
-expect object PlatformNFC : PlatformProvider {
+@Singleton
+expect class PlatformNFC : PlatformProvider {
     override val isSupported: Boolean
 
     /**

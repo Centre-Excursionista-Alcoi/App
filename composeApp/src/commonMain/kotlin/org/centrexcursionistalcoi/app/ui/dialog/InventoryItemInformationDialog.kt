@@ -80,6 +80,9 @@ fun InventoryItemInformationDialog(
     onDismissRequest: () -> Unit
 ) {
     val dispatcherProvider = koinInject<DispatcherProvider>()
+    val dragAndDrop = koinInject<PlatformDragAndDrop>()
+    val nfcLogic = koinInject<PlatformNFC>()
+
     var writingNFC by remember { mutableStateOf(false) }
     var readingNFC by remember { mutableStateOf(false) }
     if (writingNFC || readingNFC) {
@@ -87,10 +90,10 @@ fun InventoryItemInformationDialog(
         LaunchedEffect(Unit) {
             job = CoroutineScope(dispatcherProvider.io).launch {
                 if (writingNFC) {
-                    PlatformNFC.writeNFC(item.id.toString())
+                    nfcLogic.writeNFC(item.id.toString())
                     writingNFC = false
                 } else {
-                    val nfcValue = PlatformNFC.readNFC()
+                    val nfcValue = nfcLogic.readNFC()
                     if (nfcValue != null) {
                         log.d { "Read NFC: $nfcValue" }
                         onReadNfc(nfcValue)
@@ -155,11 +158,9 @@ fun InventoryItemInformationDialog(
                     imageModifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .modIf(PlatformDragAndDrop.isSupported) {
+                        .modIf(dragAndDrop.isSupported) {
                             dragAndDropSource { _ ->
-                                PlatformDragAndDrop.qrImageTransferData(
-                                    qrCodePainter
-                                )
+                                dragAndDrop.qrImageTransferData(qrCodePainter)
                             }
                         }
                 )
@@ -215,7 +216,7 @@ fun InventoryItemInformationDialog(
                     }
                 }
 
-                if (PlatformNFC.isSupported) {
+                if (nfcLogic.isSupported) {
                     OutlinedButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { writingNFC = true },

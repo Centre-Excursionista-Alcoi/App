@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.nfc.Tag
 import android.widget.Toast
@@ -14,7 +15,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.android.nfc.NfcUtils
 import org.centrexcursionistalcoi.app.data.NfcPayload
 import org.centrexcursionistalcoi.app.di.globalDispatcherProvider
@@ -24,13 +24,14 @@ import org.centrexcursionistalcoi.app.exception.NfcTagIsReadOnlyException
 import org.centrexcursionistalcoi.app.exception.NfcTagMemorySmallException
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
+import org.koin.core.annotation.Singleton
 import kotlin.coroutines.Continuation
 
-actual object PlatformNFC : PlatformProvider {
+@Singleton
+actual class PlatformNFC(private val context: Context) : PlatformProvider {
     private val log = logging()
 
     actual override val isSupported: Boolean get() {
-        val context = MainActivity.instance ?: return false
         val pm = context.packageManager
         return pm.hasSystemFeature(PackageManager.FEATURE_NFC)
     }
@@ -90,7 +91,6 @@ actual object PlatformNFC : PlatformProvider {
                 log.e(e) { "An unknown error occurred while writing the NFC tag." }
                 getString(Res.string.nfc_error_unknown, e.message ?: e::class.simpleName ?: "NfcException")
             }
-            val context = MainActivity.instance ?: return
             withContext(globalDispatcherProvider.main) {
                 Toast.makeText(context, responseMessage, Toast.LENGTH_LONG).show()
             }

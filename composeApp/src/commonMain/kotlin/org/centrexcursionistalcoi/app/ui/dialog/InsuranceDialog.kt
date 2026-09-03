@@ -47,6 +47,7 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
@@ -91,6 +92,9 @@ private fun InsuranceDialog(
     onOpenFile: (pathProvider: suspend (ProgressNotifier) -> String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
+    val share = koinInject<PlatformShareLogic>()
+    val openFile = koinInject<PlatformOpenFileLogic>()
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(Res.string.insurance)) },
@@ -120,7 +124,7 @@ private fun InsuranceDialog(
                 val hasDocument = insurance.documentId != null && documentId != null
                 if (hasDocument) {
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                        if (PlatformShareLogic.isSupported) {
+                        if (share.isSupported) {
                             IconButton(
                                 onClick = {
                                     onShareFile { insurance.fetchFilePath(documentId) }
@@ -129,7 +133,7 @@ private fun InsuranceDialog(
                                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
                             }
                         }
-                        if (PlatformOpenFileLogic.isSupported) {
+                        if (openFile.isSupported) {
                             OutlinedButton(
                                 onClick = {
                                     onOpenFile { insurance.fetchFilePath(documentId) }

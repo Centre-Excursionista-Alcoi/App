@@ -81,7 +81,6 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
@@ -107,6 +106,7 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
@@ -496,9 +496,10 @@ fun MemoryViewButtons(
     fpm: FileProviderModel = koinViewModel(),
 ) {
     val memoryPdf = memory.pdf ?: return
+    val share = koinInject<PlatformShareLogic>()
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        if (PlatformShareLogic.isSupported) {
+        if (share.isSupported) {
             IconButton(
                 onClick = {
                     fpm.shareFile { memory.fetchFilePath(memoryPdf) }
@@ -507,7 +508,7 @@ fun MemoryViewButtons(
                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
             }
         }
-        if (PlatformOpenFileLogic.isSupported) {
+        if (share.isSupported) {
             OutlinedButton(
                 onClick = {
                     fpm.openFile { memory.fetchFilePath(memoryPdf) }

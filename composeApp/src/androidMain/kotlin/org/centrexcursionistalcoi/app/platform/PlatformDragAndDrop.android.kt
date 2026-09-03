@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.platform
 
 import android.content.ClipData
+import android.content.Context
 import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.QrCodePainter
@@ -8,17 +9,16 @@ import io.github.alexzhirkevich.qrose.toByteArray
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.ContentType
 import io.ktor.http.fileExtensions
-import org.centrexcursionistalcoi.app.android.MainActivity
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
+import org.koin.core.annotation.Singleton
 import java.io.File
 
-actual object PlatformDragAndDrop: PlatformProvider {
+@Singleton
+actual class PlatformDragAndDrop(private val context: Context): PlatformProvider {
     actual override val isSupported: Boolean = true
 
     actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
-        val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
-
         // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
         val filePath = SystemDataPath / path
         val file = File(filePath.toString())
@@ -34,8 +34,6 @@ actual object PlatformDragAndDrop: PlatformProvider {
         value: String,
         contentType: ContentType
     ): DragAndDropTransferData {
-        val context = requireNotNull(MainActivity.instance) { "MainActivity is not instantiated" }
-
         val extension = contentType.fileExtensions().first()
         val name = value.hashCode()
         val filePath = SystemDataPath / "qr" / "$name.$extension"

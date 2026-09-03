@@ -28,10 +28,11 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class LendingManagementViewModel(
     @InjectedParam private val lendingId: Uuid,
-    private val lendingsRepository: LendingsRepository,
+    lendingsRepository: LendingsRepository,
     usersRepository: UsersRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val dispatcherProvider: DispatcherProvider,
+    private val nfcLogic: PlatformNFC
 ): ErrorViewModel() {
     companion object {
         private val log = logging()
@@ -61,11 +62,11 @@ class LendingManagementViewModel(
     private var nfcReaderJob: Job? = null
 
     fun startNfc() {
-        if (PlatformNFC.isNotSupported) return
+        if (nfcLogic.isNotSupported) return
 
         nfcReaderJob = launch {
             while (true) {
-                val payload = PlatformNFC.readNFC() ?: continue
+                val payload = nfcLogic.readNFC() ?: continue
                 log.d { "NFC tag read: $payload" }
                 payload.uuid()?.let { uuid ->
                     processScanById(uuid)
@@ -78,7 +79,7 @@ class LendingManagementViewModel(
     }
 
     fun stopNfc() {
-        if (PlatformNFC.isNotSupported) return
+        if (nfcLogic.isNotSupported) return
 
         nfcReaderJob?.cancel()
         nfcReaderJob = null

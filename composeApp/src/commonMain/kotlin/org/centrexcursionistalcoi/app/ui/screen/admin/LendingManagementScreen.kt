@@ -136,6 +136,7 @@ import org.centrexcursionistalcoi.app.utils.withoutSeconds
 import org.centrexcursionistalcoi.app.viewmodel.LendingManagementViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.ncgroup.kscan.Barcode
@@ -718,11 +719,12 @@ private fun LendingPickupReturnContent(
     onToggleItem: (Uuid) -> Unit,
     isItemToggleable: (Uuid) -> Boolean = { true },
 ) {
+    val nfcLogic = koinInject<PlatformNFC>()
     val items = lending.items
 
     GeneralLendingDetails(lending, true) { GeneralLendingDetailsExtra(lending, snackbarHostState, users) }
 
-    if (PlatformNFC.isSupported) {
+    if (nfcLogic.isSupported) {
         OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(12.dp)

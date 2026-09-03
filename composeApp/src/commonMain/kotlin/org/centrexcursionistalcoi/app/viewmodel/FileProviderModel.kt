@@ -14,7 +14,11 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
-class FileProviderModel(private val dispatcherProvider: DispatcherProvider) : ViewModel() {
+class FileProviderModel(
+    private val dispatcherProvider: DispatcherProvider,
+    private val openFileLogic: PlatformOpenFileLogic,
+    private val shareLogic: PlatformShareLogic
+) : ViewModel() {
     private val lock = Mutex()
 
     private val _progress = MutableStateFlow<Progress?>(null)
@@ -23,19 +27,19 @@ class FileProviderModel(private val dispatcherProvider: DispatcherProvider) : Vi
     private val progressNotifier: ProgressNotifier = { _progress.value = it }
 
     fun openFile(contentType: ContentType = ContentType.Application.Pdf, pathProvider: suspend (ProgressNotifier) -> String) {
-        if (!PlatformOpenFileLogic.isSupported) return
+        if (!openFileLogic.isSupported) return
         launchWithLock(lock) {
             val path = withContext(dispatcherProvider.io) { pathProvider(progressNotifier) }
-            PlatformOpenFileLogic.open(path, contentType)
+            openFileLogic.open(path, contentType)
             _progress.value = null
         }
     }
 
     fun shareFile(contentType: ContentType = ContentType.Application.Pdf, pathProvider: suspend (ProgressNotifier) -> String) {
-        if (!PlatformShareLogic.isSupported) return
+        if (!shareLogic.isSupported) return
         launchWithLock(lock) {
             val path = withContext(dispatcherProvider.io) { pathProvider(progressNotifier) }
-            PlatformShareLogic.share(path, contentType)
+            shareLogic.share(path, contentType)
             _progress.value = null
         }
     }

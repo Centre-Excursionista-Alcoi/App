@@ -1,8 +1,10 @@
 package org.centrexcursionistalcoi.app.platform
 
 import io.ktor.http.ContentType
+import org.koin.core.annotation.Singleton
 
-actual object PlatformShareLogic : PlatformProvider {
+@Singleton
+actual class PlatformShareLogic : PlatformProvider {
     actual override val isSupported: Boolean = false
 
     actual fun share(path: String, contentType: ContentType) {

@@ -1,14 +1,41 @@
 package org.centrexcursionistalcoi.app.ui.page.main.home
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.event_add_to_calendar
+import cea_app.composeapp.generated.resources.event_by
+import cea_app.composeapp.generated.resources.event_confirm_assistance
+import cea_app.composeapp.generated.resources.event_department_generic
+import cea_app.composeapp.generated.resources.event_not_part_of_department
+import cea_app.composeapp.generated.resources.event_place
+import cea_app.composeapp.generated.resources.event_reject_assistance
+import cea_app.composeapp.generated.resources.event_requires_confirmation
+import cea_app.composeapp.generated.resources.event_requires_insurance_none
+import cea_app.composeapp.generated.resources.event_requires_insurance_period
+import cea_app.composeapp.generated.resources.event_requires_insurance_valid
 import com.mikepenz.markdown.m3.Markdown
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
@@ -22,6 +49,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +59,8 @@ fun EventItem(
     onConfirmAssistanceRequest: () -> Job,
     onRejectAssistanceRequest: () -> Job,
 ) {
+    val platformCalendarSync = koinInject<PlatformCalendarSync>()
+
     FeedItem(
         icon = MaterialSymbols.Event,
         title = event.title,
@@ -59,11 +89,11 @@ fun EventItem(
                 )
             }
 
-            if (PlatformCalendarSync.isSupported) {
+            if (platformCalendarSync.isSupported) {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        PlatformCalendarSync.addCalendarEvent(event)
+                        platformCalendarSync.addCalendarEvent(event)
                     }
                 ) {
                     Text(stringResource(Res.string.event_add_to_calendar))
