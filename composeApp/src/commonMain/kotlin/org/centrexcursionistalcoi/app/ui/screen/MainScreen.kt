@@ -43,9 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -88,10 +86,6 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.isStub
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
@@ -127,6 +121,7 @@ import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_LENDINGS
 import org.centrexcursionistalcoi.app.ui.page.main.MANAGEMENT_PAGE_USERS
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.main.ProfilePage
+import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.ConditionalBadge
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton

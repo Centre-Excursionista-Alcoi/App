@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +44,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
 import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
+import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox

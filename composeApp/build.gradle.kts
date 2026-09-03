@@ -85,7 +85,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
             // Compose Navigation
-            implementation(libs.androidx.navigation.compose)
+            implementation(libs.androidx.navigation3.ui)
 
             // Runtime Language Change
             implementation(libs.localina)
