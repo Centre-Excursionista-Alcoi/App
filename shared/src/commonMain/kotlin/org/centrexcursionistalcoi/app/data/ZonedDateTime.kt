@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.char
 import kotlinx.datetime.format.format
 import kotlinx.datetime.offsetAt
@@ -41,34 +42,37 @@ data class ZonedDateTime(
     }
 
     /**
-     * Formats the [ZonedDateTime] as a compact string, using the format `YYYY/MM/DD` if the timezone
-     * is the same as the system's, or `YYYY/MM/DD (TimeZone)` if it's different.
+     * Formats the [ZonedDateTime] as a compact string:
+     * - Date is always displayed in the format `YYYY/MM/DD`
+     * - Time is displayed in the format `HH:MM` if it is not midnight
+     * - Time zone is displayed in the format ` (TimeZoneID)` if it is not the system default time zone
      */
     fun toStringCompact(): String {
-        val simpleFormat = DateTimeComponents.Format {
-            year()
-            char('/')
-            monthNumber()
-            char('/')
-            day()
+        // Do not display time if it's midnight, as it is not relevant in most cases
+        val shouldDisplayTime = time.hour != 0 && time.minute != 0
+
+        fun DateTimeFormatBuilder.WithDateTimeComponents.appendTime() {
+            hour()
+            char(':')
+            minute()
         }
-        val timezoneFormat = DateTimeComponents.Format {
-            year()
-            char('/')
-            monthNumber()
-            char('/')
-            day()
+        fun DateTimeFormatBuilder.WithDateTimeComponents.appendTimezone() {
             chars(" (")
             timeZoneId()
             char(')')
         }
-        return if (timeZone == TimeZone.currentSystemDefault()) {
-            // If the timezone is the same as the system's, we can format it directly
-            format(simpleFormat)
-        } else {
-            // If the timezone is different, make it explicit in the format
-            format(timezoneFormat)
+
+        val format = DateTimeComponents.Format {
+            year()
+            char('/')
+            monthNumber()
+            char('/')
+            day()
+
+            if (shouldDisplayTime) appendTime()
+            if (timeZone != TimeZone.currentSystemDefault()) appendTimezone()
         }
+        return format(format)
     }
 
     override fun toString(): String {
