@@ -1,1 +1,0 @@
-ALTER TABLE Departments ADD COLUMN members TEXT DEFAULT "[]";

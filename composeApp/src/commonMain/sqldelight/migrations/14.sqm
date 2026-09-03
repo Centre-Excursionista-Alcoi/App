@@ -1,1 +1,0 @@
-ALTER TABLE InventoryItems ADD COLUMN manufacturerTraceabilityCode TEXT DEFAULT NULL;

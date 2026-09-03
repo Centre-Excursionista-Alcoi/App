@@ -64,7 +64,6 @@ retrofit = "2.9.0"
 richeditor = "1.2.0"
 sentry = "6.20.0"
 sentry-multiplatform = "0.27.0"
-sqldelight = "2.3.2"
 sqlite = "3.53.4.0"
 telegram-bot = "10.0.0"
 # {"message":"client version 1.32 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version"}
@@ -169,11 +168,6 @@ qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qr
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 richeditor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
 sentry-kotlinMultiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry-multiplatform" }
-sqldelight-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqldelight" }
-sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
-sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
-sqldelight-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 telegram-bot = { module = "io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram", version.ref = "telegram-bot" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
@@ -205,4 +199,3 @@ kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sentryJvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
 sentryMultiplatform = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry-multiplatform" }
-sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

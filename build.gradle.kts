@@ -16,5 +16,4 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.sentryJvm) apply false
     alias(libs.plugins.sentryMultiplatform) apply false
-    alias(libs.plugins.sqldelight) apply false
 }

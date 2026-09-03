@@ -18,7 +18,6 @@ plugins {
     alias(libs.plugins.koinCompilerPlugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
-    alias(libs.plugins.sqldelight)
 }
 
 fun readProperties(fileName: String, root: File = projectDir): Properties? {
@@ -144,10 +143,6 @@ kotlin {
             // Push Notifications (must be API for exporting to iOS)
             api(libs.kmm.notifier)
 
-            // SQLDelight extensions
-            implementation(libs.sqldelight.adapters)
-            implementation(libs.sqldelight.coroutines)
-
             // Room 3
             implementation(libs.androidx.room3.runtime)
             implementation(libs.androidx.sqlite.bundled)
@@ -192,7 +187,6 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.java)
-                implementation(libs.sqldelight.sqlite)
             }
         }
 
@@ -209,8 +203,6 @@ kotlin {
 
                 // Custom Tabs support
                 implementation(libs.androidx.browser)
-
-                implementation(libs.sqldelight.android)
 
                 // WorkManager
                 implementation(libs.bundles.androidx.work)
@@ -231,7 +223,6 @@ kotlin {
             dependsOn(coroutinesWorkersMain)
             dependencies {
                 implementation(libs.ktor.client.darwin)
-                implementation(libs.sqldelight.native)
             }
         }
         iosArm64Main { dependsOn(iosMain.get()) }
@@ -305,24 +296,6 @@ koinCompiler {
 
 room3 {
     schemaDirectory("$projectDir/schemas")
-}
-
-sqldelight {
-    databases {
-        create("Database") {
-            generateAsync.set(true)
-            packageName.set("org.centrexcursionistalcoi.app.database")
-            schemaOutputDirectory.set(file("src/commonMain/sqldelight"))
-            verifyMigrations.set(true)
-        }
-    }
-}
-
-project.gradle.taskGraph.whenReady {
-    // Disable verification of migrations because the tasks just gets frozen
-    tasks.named("verifyCommonMainDatabaseMigration") {
-        enabled = false
-    }
 }
 
 compose.desktop {
