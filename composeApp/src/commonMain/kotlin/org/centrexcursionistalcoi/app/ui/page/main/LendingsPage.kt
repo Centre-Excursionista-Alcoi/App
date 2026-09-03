@@ -33,10 +33,13 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,8 +52,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import cea_app.composeapp.generated.resources.*
-import kotlin.uuid.Uuid
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.home_lending_department
+import cea_app.composeapp.generated.resources.home_lending_items
+import cea_app.composeapp.generated.resources.lending_category_without_department
+import cea_app.composeapp.generated.resources.lending_details_history
+import cea_app.composeapp.generated.resources.lending_no_active_insurances_action
+import cea_app.composeapp.generated.resources.lending_no_active_insurances_message
+import cea_app.composeapp.generated.resources.lending_no_active_insurances_title
+import cea_app.composeapp.generated.resources.lending_not_confirmed
+import cea_app.composeapp.generated.resources.lending_pending_memory
+import cea_app.composeapp.generated.resources.lending_pending_pickup
+import cea_app.composeapp.generated.resources.lending_pending_return
+import cea_app.composeapp.generated.resources.lending_pending_return_partial
+import cea_app.composeapp.generated.resources.lending_signup_action
+import cea_app.composeapp.generated.resources.lending_signup_required
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
@@ -76,30 +92,41 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
+import org.centrexcursionistalcoi.app.viewmodel.LendingsPageModel
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun LendingsPage(
-    windowSizeClass: WindowSizeClass,
-
-    profile: ProfileResponse,
     onAddInsuranceRequested: () -> Unit,
-
-    inventoryItems: List<ReferencedInventoryItem>?,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
-
-    lendings: List<ReferencedLending>?,
     onLendingSignUpRequested: () -> Unit,
     onLendingHistoryRequest: () -> Unit,
-
-    shoppingList: Map<Uuid, Int>,
-    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onShoppingListChanged: (Map<Uuid, Int>) -> Unit = {},
+    model: LendingsPageModel = koinViewModel(),
 ) {
+    val windowSizeClass = calculateWindowSizeClass()
+
+    val profile by model.profile.collectAsState()
+    val inventoryItems by model.inventoryItems.collectAsState()
+    val lendings by model.lendings.collectAsState()
+    val shoppingList by model.shoppingList.collectAsState()
+    LaunchedEffect(shoppingList) {
+        onShoppingListChanged(shoppingList)
+    }
+
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
     val departments = remember(inventoryItems) { inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList() }
     val itemsWithoutDepartmentExist = remember(inventoryItems) { inventoryItems?.any { it.type.department == null } == true }
 
@@ -139,15 +166,15 @@ fun LendingsPage(
 
             LendingsPage_Content(
                 windowSizeClass = windowSizeClass,
-                profile = profile,
+                profile = profileValue,
                 onAddInsuranceRequested = onAddInsuranceRequested,
                 inventoryItems = inventoryItems?.filter { it.type.department == department },
                 onItemTypeDetailsRequested = onItemTypeDetailsRequested,
                 lendings = lendings,
                 onLendingSignUpRequested = onLendingSignUpRequested,
                 shoppingList = shoppingList,
-                onAddItemToShoppingListRequest = onAddItemToShoppingListRequest,
-                onRemoveItemFromShoppingListRequest = onRemoveItemFromShoppingListRequest,
+                onAddItemToShoppingListRequest = model::addItemToShoppingList,
+                onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
             )
         }
     }
@@ -184,7 +211,6 @@ private fun LendingsPage_Content(
     }
 
     AdaptiveVerticalGrid(
-        windowSizeClass,
         state = scrollState,
         gridMinSize = 200.dp,
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),

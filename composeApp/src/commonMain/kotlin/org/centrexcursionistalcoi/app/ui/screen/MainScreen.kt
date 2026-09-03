@@ -43,7 +43,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -81,25 +80,16 @@ import cea_app.composeapp.generated.resources.nav_profile
 import cea_app.composeapp.generated.resources.settings
 import cea_app.composeapp.generated.resources.shopping_list_selected
 import cea_app.composeapp.generated.resources.shopping_list_view
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
-import org.centrexcursionistalcoi.app.data.Member
-import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.isStub
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
-import org.centrexcursionistalcoi.app.ui.dialog.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingsHistoryDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
@@ -137,7 +127,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
-import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
+import org.centrexcursionistalcoi.app.viewmodel.MainScreenViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -154,72 +144,39 @@ fun MainScreen(
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onCreateMemoryRequested: () -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
+    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
-    model: MainViewModel = koinViewModel(),
+    model: MainScreenViewModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
-    val users by model.users.collectAsState()
-    val members by model.members.collectAsState()
-    val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
-    val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
-    val inventoryItems by model.inventoryItems.collectAsState()
     val lendings by model.lendings.collectAsState()
-    val memories by model.memories.collectAsState()
-    val posts by model.posts.collectAsState()
-    val events by model.events.collectAsState()
+    val activeUserLending by model.activeUserLending.collectAsState()
     val isSyncing by model.isSyncing.collectAsState()
-    val shoppingList by model.shoppingList.collectAsState()
-    val notificationPermissionResult by model.notificationPermissionResult.collectAsState()
-
-    LifecycleResumeEffect(model) {
-        model.refreshPermissions()
-        onPauseOrDispose { /* nothing */ }
-    }
 
     profile?.let {
         MainScreenContent(
             showingAdminItemTypeId = showingAdminItemTypeId,
             showingAdminLendingsScreen = showingAdminLendingsScreen,
-            notificationPermissionResult = notificationPermissionResult,
-            onNotificationPermissionRequest = model::requestNotificationsPermission,
-            onNotificationPermissionDenyRequest = model::denyNotificationsPermission,
             onSettingsRequested = onSettingsRequested,
             profile = it,
             onLogoutRequested = onLogoutRequested,
             departments = departments,
-            onJoinDepartmentRequested = model::requestJoinDepartment,
-            onLeaveDepartmentRequested = model::leaveDepartment,
             lendings = lendings,
+            activeUserLending = activeUserLending,
             onLendingSignUpRequested = onLendingSignUpRequested,
             onLendingCancelRequested = model::cancelLending,
             onLendingClick = onLendingClick,
             onOtherUserLendingClick = onOtherUserLendingClick,
-            onDeleteLendingRequest = model::deleteLending,
-            memories = memories,
+            onDeleteLendingRequest = onDeleteLendingRequest,
             onMemoryEditorRequested = onMemoryEditorRequested,
             onCreateMemoryRequested = onCreateMemoryRequested,
-            onCreateInsurance = model::createInsurance,
-            onFEMECVConnectRequested = model::connectFEMECV,
-            onFEMECVDisconnectRequested = model::disconnectFEMECV,
-            users = users,
-            members = members,
             isSyncing = isSyncing == true,
             onSyncRequested = model::sync,
-            inventoryItemTypes = inventoryItemTypes,
-            inventoryItemTypesCategories = inventoryItemTypesCategories.orEmpty(),
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
-            inventoryItems = inventoryItems,
-            posts = posts,
-            events = events,
-            onConfirmAssistanceRequest = model::confirmEventAssistance,
-            onRejectAssistanceRequest = model::rejectEventAssistance,
-            shoppingList = shoppingList,
-            onAddItemToShoppingListRequest = model::addItemToShoppingList,
-            onRemoveItemFromShoppingListRequest = model::removeItemFromShoppingList,
-            onShoppingListConfirmed = { onShoppingListConfirmed(shoppingList) },
+            onShoppingListConfirmed = onShoppingListConfirmed,
         )
     } ?: LoadingBox()
 }
@@ -310,63 +267,30 @@ private fun MainScreenContent(
     showingAdminItemTypeId: Uuid?,
     showingAdminLendingsScreen: Boolean,
 
-    notificationPermissionResult: NotificationPermissionResult?,
-    onNotificationPermissionRequest: () -> Unit,
-    onNotificationPermissionDenyRequest: () -> Unit,
-
     onSettingsRequested: () -> Unit,
 
     profile: ProfileResponse,
     onLogoutRequested: () -> Unit,
 
     departments: List<Department>?,
-    onJoinDepartmentRequested: (Department) -> Job,
-    onLeaveDepartmentRequested: (Department) -> Job,
 
     lendings: List<ReferencedLending>?,
+    activeUserLending: ReferencedLending?,
     onLendingSignUpRequested: () -> Unit,
     onLendingCancelRequested: (ReferencedLending) -> Job,
     onLendingClick: (ReferencedLending) -> Unit,
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
 
-    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
     onCreateMemoryRequested: () -> Unit,
-
-    onCreateInsurance: CreateInsuranceRequest,
-    onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
-    onFEMECVDisconnectRequested: () -> Job,
-
-    users: List<UserData>?,
-
-    members: List<Member>?,
-
-    inventoryItemTypes: List<ReferencedInventoryItemType>?,
-    inventoryItemTypesCategories: Set<String>,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
-
-    inventoryItems: List<ReferencedInventoryItem>?,
-
-    posts: List<ReferencedPost>?,
-
-    events: List<ReferencedEvent>?,
-    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
-    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
-
-    shoppingList: ShoppingList,
-    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
-    onShoppingListConfirmed: () -> Unit,
+    onShoppingListConfirmed: (ShoppingList) -> Unit,
 
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
-    val activeUserLending = lendings
-        // Get only lendings of the current user
-        ?.filter { it.user.sub == profile.sub || it.user.isStub() }
-        // Find the pending lending
-        ?.find { it.status().isPending() }
+    var shoppingList by remember { mutableStateOf<ShoppingList>(emptyMap()) }
     val isManagerOfAnyDepartment = remember(profile, departments) {
         departments.orEmpty().isManagerOfAny(profile)
     }
@@ -556,7 +480,7 @@ private fun MainScreenContent(
                 exit = slideOutHorizontally { it },
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = onShoppingListConfirmed,
+                    onClick = { onShoppingListConfirmed(shoppingList) },
                 ) {
                     Icon(
                         imageVector = MaterialSymbols.Receipt,
@@ -597,42 +521,19 @@ private fun MainScreenContent(
                 MainScreenPagerContent(
                     page = entry.key,
                     onPageRequested = ::scrollToPage,
-                    snackbarHostState,
-                    selectedManagementItem,
-                    notificationPermissionResult,
-                    onNotificationPermissionRequest,
-                    onNotificationPermissionDenyRequest,
-                    profile,
-                    { scrollToPage(Page.PROFILE, true) },
-                    windowSizeClass,
-                    departments,
-                    onJoinDepartmentRequested,
-                    onLeaveDepartmentRequested,
-                    lendings,
-                    activeUserLending,
-                    onLendingSignUpRequested,
-                    onOtherUserLendingClick,
-                    { cancellingLending = it },
-                    onDeleteLendingRequest,
-                    { showingLendingHistory = true },
-                    memories,
-                    onMemoryEditorRequested,
-                    onCreateInsurance,
-                    onFEMECVConnectRequested,
-                    onFEMECVDisconnectRequested,
-                    users,
-                    members,
-                    inventoryItemTypes,
-                    inventoryItemTypesCategories,
-                    onItemTypeDetailsRequested,
-                    inventoryItems,
-                    posts,
-                    events,
-                    onConfirmAssistanceRequest,
-                    onRejectAssistanceRequest,
-                    shoppingList,
-                    onAddItemToShoppingListRequest,
-                    onRemoveItemFromShoppingListRequest,
+                    snackbarHostState = snackbarHostState,
+                    selectedManagementItem = selectedManagementItem,
+                    profile = profile,
+                    departments = departments,
+                    activeLending = activeUserLending,
+                    onLendingSignUpRequested = onLendingSignUpRequested,
+                    onCancelLendingRequest = { cancellingLending = it },
+                    onLendingHistoryRequest = { showingLendingHistory = true },
+                    onItemTypeDetailsRequested = onItemTypeDetailsRequested,
+                    onOtherUserLendingClick = onOtherUserLendingClick,
+                    onDeleteLendingRequest = onDeleteLendingRequest,
+                    onShoppingListChanged = { shoppingList = it },
+                    onMemoryEditorRequested = onMemoryEditorRequested
                 )
             }
 
@@ -723,129 +624,54 @@ private fun MainScreenPagerContent(
      */
     selectedManagementItem: Pair<Int, Uuid?>?,
 
-    notificationPermissionResult: NotificationPermissionResult?,
-    onNotificationPermissionRequest: () -> Unit,
-    onNotificationPermissionDenyRequest: () -> Unit,
-
     profile: ProfileResponse,
-    onAddInsuranceRequested: () -> Unit,
-
-    windowSizeClass: WindowSizeClass,
 
     departments: List<Department>?,
-    onJoinDepartmentRequested: (Department) -> Job,
-    onLeaveDepartmentRequested: (Department) -> Job,
 
-    lendings: List<ReferencedLending>?,
     activeLending: ReferencedLending?,
     onLendingSignUpRequested: () -> Unit,
-    onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onCancelLendingRequest: (ReferencedLending) -> Unit,
-    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onLendingHistoryRequest: () -> Unit,
-
-    memories: List<ReferencedMemory>?,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
-
-    onCreateInsurance: CreateInsuranceRequest,
-    onFEMECVConnectRequested: (username: String, password: CharArray) -> Deferred<Throwable?>,
-    onFEMECVDisconnectRequested: () -> Job,
-
-    users: List<UserData>?,
-
-    members: List<Member>?,
-
-    inventoryItemTypes: List<ReferencedInventoryItemType>?,
-    inventoryItemTypesCategories: Set<String>,
+    onOtherUserLendingClick: (ReferencedLending) -> Unit,
+    onDeleteLendingRequest: (ReferencedLending, reason: String?) -> Job,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
-
-    inventoryItems: List<ReferencedInventoryItem>?,
-
-    posts: List<ReferencedPost>?,
-
-    events: List<ReferencedEvent>?,
-    onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
-    onRejectAssistanceRequest: (ReferencedEvent) -> Job,
-
-    shoppingList: Map<Uuid, Int>,
-    onAddItemToShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
-    onRemoveItemFromShoppingListRequest: (ReferencedInventoryItemType) -> Unit,
+    onShoppingListChanged: (ShoppingList) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
-            Page.HOME -> HomePage(
-                windowSizeClass,
-                notificationPermissionResult,
-                onNotificationPermissionRequest,
-                onNotificationPermissionDenyRequest,
-                profile,
-                posts,
-                events,
-                onConfirmAssistanceRequest,
-                onRejectAssistanceRequest,
-            )
+            Page.HOME -> HomePage()
 
             Page.LENDINGS -> LendingsPage(
-                windowSizeClass,
-                profile,
-                onAddInsuranceRequested,
-                inventoryItems,
+                onAddInsuranceRequested = { onPageRequested(Page.PROFILE) },
                 onItemTypeDetailsRequested,
-                lendings,
                 onLendingSignUpRequested,
                 onLendingHistoryRequest,
-                shoppingList,
-                onAddItemToShoppingListRequest,
-                onRemoveItemFromShoppingListRequest,
+                onShoppingListChanged = onShoppingListChanged,
             )
 
             Page.LENDING if activeLending != null -> LendingPage(
-                windowSizeClass = windowSizeClass,
-                lending = activeLending,
-                lendings = lendings,
                 onCancelLendingRequest = onCancelLendingRequest,
                 onLendingHistoryRequest = onLendingHistoryRequest,
-                onMemoryEditorRequested = { onMemoryEditorRequested(activeLending) },
+                onMemoryEditorRequested = onMemoryEditorRequested,
             )
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
 
-            Page.ACTIVITIES -> ActivitiesPage(
-                memories = memories?.filter { it.submittedBy == profile }
-            )
+            Page.ACTIVITIES -> ActivitiesPage()
 
             // Management page only for admins or department managers
             Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
-                windowSizeClass,
-                snackbarHostState,
-                selectedManagementItem,
-                profile,
-                lendings,
-                onOtherUserLendingClick,
-                onOtherUserLendingClick,
-                onDeleteLendingRequest,
-                departments,
-                users,
-                members,
-                inventoryItemTypes,
-                inventoryItemTypesCategories,
-                inventoryItems,
-                posts,
-                events,
+                snackbarHostState = snackbarHostState,
+                selectedItem = selectedManagementItem,
+                onGiveRequested = onOtherUserLendingClick,
+                onReceiveRequested = onOtherUserLendingClick,
+                onDeleteRequested = onDeleteLendingRequest,
             )
 
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
-            Page.PROFILE -> ProfilePage(
-                windowSizeClass,
-                profile,
-                onCreateInsurance,
-                onFEMECVConnectRequested,
-                onFEMECVDisconnectRequested,
-                departments,
-                onJoinDepartmentRequested,
-                onLeaveDepartmentRequested,
-            )
+            Page.PROFILE -> ProfilePage()
         }
     }
 }
