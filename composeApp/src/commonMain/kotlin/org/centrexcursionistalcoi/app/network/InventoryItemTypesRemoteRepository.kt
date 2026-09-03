@@ -12,8 +12,10 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class InventoryItemTypesRemoteRepository(
     inventoryItemTypesRepository: InventoryItemTypesRepository,
     departmentsRepository: DepartmentsRepository

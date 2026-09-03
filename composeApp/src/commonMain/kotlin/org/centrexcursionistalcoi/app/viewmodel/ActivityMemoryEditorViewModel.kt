@@ -16,10 +16,13 @@ import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class ActivityMemoryEditorViewModel(
-    private val lendingId: Uuid?,
+    @InjectedParam private val lendingId: Uuid?,
     membersRepository: MembersRepository,
     departmentsRepository: DepartmentsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,

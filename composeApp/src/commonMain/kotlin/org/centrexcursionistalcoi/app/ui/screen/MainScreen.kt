@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.admin
 import cea_app.composeapp.generated.resources.app_name
@@ -96,18 +95,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.isStub
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.EventsRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.MembersRepository
-import org.centrexcursionistalcoi.app.database.MemoriesRepository
-import org.centrexcursionistalcoi.app.database.PostsRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
-import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
@@ -155,7 +142,7 @@ import org.centrexcursionistalcoi.app.viewmodel.MainViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 @Composable
@@ -171,34 +158,7 @@ fun MainScreen(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
-    departmentsRepository: DepartmentsRepository = koinInject(),
-    usersRepository: UsersRepository = koinInject(),
-    membersRepository: MembersRepository = koinInject(),
-    inventoryItemTypesRepository: InventoryItemTypesRepository = koinInject(),
-    inventoryItemsRepository: InventoryItemsRepository = koinInject(),
-    lendingsRepository: LendingsRepository = koinInject(),
-    memoriesRepository: MemoriesRepository = koinInject(),
-    postsRepository: PostsRepository = koinInject(),
-    eventsRepository: EventsRepository = koinInject(),
-    departmentsRemoteRepository: DepartmentsRemoteRepository = koinInject(),
-    eventsRemoteRepository: EventsRemoteRepository = koinInject(),
-    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
-    model: MainViewModel = viewModel {
-        MainViewModel(
-            departmentsRepository,
-            usersRepository,
-            membersRepository,
-            inventoryItemTypesRepository,
-            inventoryItemsRepository,
-            lendingsRepository,
-            memoriesRepository,
-            postsRepository,
-            eventsRepository,
-            departmentsRemoteRepository,
-            eventsRemoteRepository,
-            lendingsRemoteRepository,
-        )
-    }
+    model: MainViewModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()

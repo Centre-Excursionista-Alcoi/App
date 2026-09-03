@@ -27,8 +27,10 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class ManagementViewModel(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository,

@@ -19,11 +19,14 @@ import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.isNotSupported
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.compose.resources.getString
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import org.ncgroup.kscan.Barcode
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class LendingManagementViewModel(
-    private val lendingId: Uuid,
+    @InjectedParam private val lendingId: Uuid,
     private val lendingsRepository: LendingsRepository,
     usersRepository: UsersRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,

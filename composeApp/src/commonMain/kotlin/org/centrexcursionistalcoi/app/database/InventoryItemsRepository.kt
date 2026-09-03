@@ -6,8 +6,10 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class InventoryItemsRepository(
     db: AppDatabase,
     private val inventoryItemTypesRepository: InventoryItemTypesRepository,

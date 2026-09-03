@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.combine
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.database.room.entity.MemoryEntity.Companion.toEntity
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
 /**
@@ -14,6 +15,7 @@ import kotlin.uuid.Uuid
  * this repository stores them independently of [LendingsRepository], regardless of whether they are linked to a
  * lending or not.
  */
+@Singleton
 class MemoriesRepository(
     db: AppDatabase,
     private val usersRepository: UsersRepository,

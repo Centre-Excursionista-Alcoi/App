@@ -5,8 +5,10 @@ import kotlinx.coroutines.flow.combine
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.ReferencedPost.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.PostEntity.Companion.toEntity
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class PostsRepository(
     db: AppDatabase,
     private val departmentsRepository: DepartmentsRepository,

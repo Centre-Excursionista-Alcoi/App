@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.memory_editor_department
 import cea_app.composeapp.generated.resources.memory_editor_description
@@ -66,10 +65,6 @@ import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.displayName
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.MembersRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.data.PastSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
@@ -85,19 +80,14 @@ import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.utils.unaccent
 import org.centrexcursionistalcoi.app.viewmodel.ActivityMemoryEditorViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.uuid.Uuid
 
 @Composable
 fun ActivityMemoryEditor(
     lendingId: Uuid?,
-    membersRepository: MembersRepository = koinInject(),
-    departmentsRepository: DepartmentsRepository = koinInject(),
-    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
-    memoriesRemoteRepository: MemoriesRemoteRepository = koinInject(),
-    model: ActivityMemoryEditorViewModel = viewModel {
-        ActivityMemoryEditorViewModel(lendingId, membersRepository, departmentsRepository, lendingsRemoteRepository, memoriesRemoteRepository)
-    },
+    model: ActivityMemoryEditorViewModel = koinViewModel { parametersOf(lendingId) },
     onBack: () -> Unit
 ) {
     val members by model.members.collectAsState()

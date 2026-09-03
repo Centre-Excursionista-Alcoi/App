@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.management_departments
 import cea_app.composeapp.generated.resources.management_events
@@ -39,13 +38,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
-import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
-import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
-import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
@@ -76,6 +69,7 @@ import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementViewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
@@ -268,24 +262,8 @@ fun ManagementPage(
 
     events: List<ReferencedEvent>?,
 
-    departmentsRemoteRepository: DepartmentsRemoteRepository = koinInject(),
-    inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository = koinInject(),
-    inventoryItemsRemoteRepository: InventoryItemsRemoteRepository = koinInject(),
-    usersRemoteRepository: UsersRemoteRepository = koinInject(),
-    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
-    postsRemoteRepository: PostsRemoteRepository = koinInject(),
     eventsRemoteRepository: EventsRemoteRepository = koinInject(),
-    model: ManagementViewModel = viewModel {
-        ManagementViewModel(
-            departmentsRemoteRepository,
-            inventoryItemTypesRemoteRepository,
-            inventoryItemsRemoteRepository,
-            usersRemoteRepository,
-            lendingsRemoteRepository,
-            postsRemoteRepository,
-            eventsRemoteRepository,
-        )
-    },
+    model: ManagementViewModel = koinViewModel(),
 ) {
     ManagementPage(
         windowSizeClass = windowSizeClass,

@@ -13,9 +13,11 @@ import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_POSTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
+@Singleton
 class PostsRemoteRepository(
     postsRepository: PostsRepository,
     departmentsRepository: DepartmentsRepository,

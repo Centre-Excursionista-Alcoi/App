@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_MEMORIES_SYNC
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
 /**
@@ -35,6 +36,7 @@ import kotlin.uuid.Uuid
  * Reading, updating and deleting are kept available (and synced) so the local database and repository layer are
  * ready to accept lending-less memories once the app exposes creating them.
  */
+@Singleton
 class MemoriesRemoteRepository(
     memoriesRepository: MemoriesRepository,
     usersRepository: UsersRepository,

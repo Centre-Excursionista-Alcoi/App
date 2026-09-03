@@ -11,11 +11,14 @@ import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
 import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 
 @OptIn(ExperimentalSettingsApi::class)
+@KoinViewModel
 class SettingsViewModel(
     private val authBackend: AuthBackend,
-    private val onDeleteAccount: () -> Unit,
+    @InjectedParam private val onDeleteAccount: () -> Unit,
 ) : ErrorViewModel() {
     val fcmToken = FCMTokenManager.tokenFlow.stateInViewModel()
 

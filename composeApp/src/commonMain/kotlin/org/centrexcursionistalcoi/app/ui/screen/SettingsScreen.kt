@@ -30,7 +30,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.arnyminerz
 import cea_app.composeapp.generated.resources.flag_ca
@@ -66,7 +65,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
@@ -88,7 +86,8 @@ import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 data class Language(val code: String, val displayName: String, val flag: DrawableResource)
 
@@ -102,8 +101,7 @@ private val availableLanguages = listOf(
 fun SettingsScreen(
     onBack: () -> Unit,
     onDeleteAccount: () -> Unit,
-    authBackend: AuthBackend = koinInject(),
-    viewModel: SettingsViewModel = viewModel { SettingsViewModel(authBackend, onDeleteAccount) },
+    viewModel: SettingsViewModel = koinViewModel { parametersOf(onDeleteAccount) },
 ) {
     val fcmToken by viewModel.fcmToken.collectAsState()
 

@@ -19,7 +19,9 @@ import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.annotation.Singleton
 
+@Singleton
 class AuthBackend(
     private val lendingsRepository: LendingsRepository,
     private val inventoryItemsRepository: InventoryItemsRepository,

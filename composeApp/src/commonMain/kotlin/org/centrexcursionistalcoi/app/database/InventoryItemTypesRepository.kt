@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemTypeEntity.Companion.toEntity
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class InventoryItemTypesRepository(
     private val db: AppDatabase,
     private val departmentsRepository: DepartmentsRepository,

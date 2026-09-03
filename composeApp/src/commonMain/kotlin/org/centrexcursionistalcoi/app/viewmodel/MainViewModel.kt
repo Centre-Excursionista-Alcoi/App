@@ -34,8 +34,10 @@ import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class MainViewModel(
     private val departmentsRepository: DepartmentsRepository,
     private val usersRepository: UsersRepository,

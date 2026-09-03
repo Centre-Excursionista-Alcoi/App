@@ -5,8 +5,10 @@ import kotlinx.coroutines.flow.combine
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
 import org.centrexcursionistalcoi.app.database.room.entity.EventEntity.Companion.toEntity
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class EventsRepository(
     db: AppDatabase,
     private val departmentsRepository: DepartmentsRepository,

@@ -20,12 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.form_description
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Description
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -34,7 +32,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
 import org.centrexcursionistalcoi.app.viewmodel.InventoryItemTypeDetailsScreenModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,10 +41,7 @@ import kotlin.uuid.Uuid
 fun InventoryItemTypeDetailsScreen(
     typeDisplayName: String,
     typeId: Uuid,
-    inventoryItemTypesRepository: InventoryItemTypesRepository = koinInject(),
-    model: InventoryItemTypeDetailsScreenModel = viewModel {
-        InventoryItemTypeDetailsScreenModel(typeId, inventoryItemTypesRepository)
-    },
+    model: InventoryItemTypeDetailsScreenModel = koinViewModel { parametersOf(typeId) },
     onBack: () -> Unit
 ) {
     val type by model.type.collectAsState()

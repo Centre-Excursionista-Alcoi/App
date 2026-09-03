@@ -19,10 +19,13 @@ import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsExcepti
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class LendingCreationViewModel(
-    private val originalShoppingList: ShoppingList,
+    @InjectedParam private val originalShoppingList: ShoppingList,
     inventoryItemTypesRepository: InventoryItemTypesRepository,
     inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,

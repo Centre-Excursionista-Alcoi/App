@@ -17,8 +17,10 @@ import org.centrexcursionistalcoi.app.database.room.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class LendingsRepository(
     private val db: AppDatabase,
     private val departmentsRepository: DepartmentsRepository,

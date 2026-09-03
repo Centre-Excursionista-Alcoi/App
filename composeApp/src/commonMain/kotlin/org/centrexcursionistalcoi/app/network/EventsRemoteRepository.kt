@@ -18,8 +18,10 @@ import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_EVENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class EventsRemoteRepository(
     eventsRepository: EventsRepository,
     departmentsRepository: DepartmentsRepository,

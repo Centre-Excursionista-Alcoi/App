@@ -42,8 +42,10 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class LendingsRemoteRepository(
     private val lendingsRepository: LendingsRepository,
     inventoryItemTypesRepository: InventoryItemTypesRepository,

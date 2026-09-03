@@ -9,7 +9,9 @@ import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.doMain
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.koin.core.annotation.KoinViewModel
 
+@KoinViewModel
 class LoginViewModel(private val authBackend: AuthBackend) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()

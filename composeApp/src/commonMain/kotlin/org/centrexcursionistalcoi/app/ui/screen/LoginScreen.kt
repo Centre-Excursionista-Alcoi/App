@@ -44,7 +44,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.banner
 import cea_app.composeapp.generated.resources.cancel
@@ -70,7 +69,6 @@ import cea_app.composeapp.generated.resources.register_title
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
@@ -82,13 +80,12 @@ import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AuthScreen(
     changedPassword: Boolean = false,
-    authBackend: AuthBackend = koinInject(),
-    model: LoginViewModel = viewModel { LoginViewModel(authBackend) },
+    model: LoginViewModel = koinViewModel(),
     onLoginSuccess: () -> Unit,
 ) {
     val isLoading by model.isLoading.collectAsState()

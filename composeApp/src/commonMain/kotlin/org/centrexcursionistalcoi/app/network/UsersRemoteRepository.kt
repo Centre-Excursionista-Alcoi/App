@@ -8,7 +8,9 @@ import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_USERS_SYNC
+import org.koin.core.annotation.Singleton
 
+@Singleton
 class UsersRemoteRepository(
     usersRepository: UsersRepository,
 ) : SymmetricRemoteRepository<String, UserData>(

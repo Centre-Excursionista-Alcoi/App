@@ -5,10 +5,13 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.doAsync
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
+@KoinViewModel
 class LendingDetailsModel(
-    private val lendingId: Uuid,
+    @InjectedParam private val lendingId: Uuid,
     lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
 ): ViewModel() {

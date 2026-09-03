@@ -38,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.back
 import cea_app.composeapp.generated.resources.lending_creation_action
@@ -70,11 +69,8 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
-import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.data.FutureSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
@@ -94,7 +90,8 @@ import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.LendingCreationViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -103,12 +100,7 @@ private val log = logging()
 @Composable
 fun LendingCreationScreen(
     originalShoppingList: ShoppingList,
-    inventoryItemTypesRepository: InventoryItemTypesRepository = koinInject(),
-    inventoryItemsRepository: InventoryItemsRepository = koinInject(),
-    lendingsRemoteRepository: LendingsRemoteRepository = koinInject(),
-    model: LendingCreationViewModel = viewModel {
-        LendingCreationViewModel(originalShoppingList, inventoryItemTypesRepository, inventoryItemsRepository, lendingsRemoteRepository)
-    },
+    model: LendingCreationViewModel = koinViewModel { parametersOf(originalShoppingList) },
     onLendingCreated: () -> Unit,
     onBackRequested: () -> Unit,
 ) {

@@ -10,8 +10,10 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
+@Singleton
 class InventoryItemsRemoteRepository(
     inventoryItemsRepository: InventoryItemsRepository,
     inventoryItemTypesRepository: InventoryItemTypesRepository
