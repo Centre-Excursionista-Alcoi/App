@@ -22,6 +22,7 @@ fun initKoin(extraModules: List<Module> = emptyList(), config: KoinApplication.(
         modules(
             databaseModules() +
                 CoreScanModule().module() +
+                PlatformScanModule().module() +
                 RepositoryScanModule().module() +
                 RemoteRepositoryScanModule().module() +
                 ServiceScanModule().module() +

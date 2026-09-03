@@ -22,6 +22,11 @@ import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
+import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
+import org.centrexcursionistalcoi.app.platform.PlatformNFC
+import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
+import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.koin.core.context.startKoin
@@ -54,6 +59,7 @@ class TestKoinModules {
             modules(
                 module { single<AppDatabase> { getRoomDatabase(getDatabaseBuilder(), get<DispatcherProvider>().io) } },
                 CoreScanModule().module(),
+                PlatformScanModule().module(),
                 RepositoryScanModule().module(),
                 RemoteRepositoryScanModule().module(),
                 ServiceScanModule().module(),
@@ -82,6 +88,12 @@ class TestKoinModules {
         assertNotNull(koin.get<LendingsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
+
+        assertNotNull(koin.get<PlatformNFC>())
+        assertNotNull(koin.get<PlatformShareLogic>())
+        assertNotNull(koin.get<PlatformOpenFileLogic>())
+        assertNotNull(koin.get<PlatformCalendarSync>())
+        assertNotNull(koin.get<PlatformDragAndDrop>())
 
         // @KoinViewModel with no runtime params
         assertNotNull(koin.get<LoginViewModel>())
