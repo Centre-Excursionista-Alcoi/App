@@ -152,13 +152,24 @@ kotlin {
             implementation(libs.androidx.room3.runtime)
             implementation(libs.androidx.sqlite.bundled)
 
+            // Koin dependency injection
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.ktor)
+            api(libs.koin.annotations)
+
             api(projects.shared)
+        }
+        named("commonMain").configure {
+            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
+            implementation(libs.koin.test)
         }
 
         // Platforms that require granting permissions
@@ -270,10 +281,19 @@ kotlin {
 }
 
 dependencies {
-    add("kspAndroid", libs.androidx.room3.compiler)
-    add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
-    add("kspIosArm64", libs.androidx.room3.compiler)
-    add("kspJvm", libs.androidx.room3.compiler)
+    listOf(
+        libs.androidx.room3.compiler,
+    ).forEach { dependency ->
+        add("kspAndroid", dependency)
+        add("kspIosSimulatorArm64", dependency)
+        add("kspIosArm64", dependency)
+        add("kspJvm", dependency)
+    }
+}
+
+// Trigger Common Metadata Generation from Native tasks
+tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }.configureEach {
+    dependsOn("kspCommonMainKotlinMetadata")
 }
 
 room3 {
