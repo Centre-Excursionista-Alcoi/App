@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.activities_empty
+import cea_app.composeapp.generated.resources.activities_message
 import cea_app.composeapp.generated.resources.memories_empty
 import cea_app.composeapp.generated.resources.memories_message
 import cea_app.composeapp.generated.resources.memory_from
@@ -37,6 +39,7 @@ import org.centrexcursionistalcoi.app.viewmodel.MemoriesViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
+/** The memories submitted by the current user. Always editable by them. */
 @Composable
 fun MemoriesPage(
     model: MemoriesViewModel = koinViewModel(),
@@ -44,21 +47,52 @@ fun MemoriesPage(
 ) {
     val memories by model.memories.collectAsState()
 
-    memories?.let { MemoriesPage(memories = it, onEditRequest) } ?: LoadingBox()
+    memories?.let {
+        MemoryListContent(
+            memories = it,
+            message = stringResource(Res.string.memories_message),
+            emptyMessage = stringResource(Res.string.memories_empty),
+            onEditRequest = onEditRequest,
+        )
+    } ?: LoadingBox()
+}
+
+/**
+ * The memories the current user is tagged as a participant on, but didn't submit themselves -- read-only, since
+ * only the submitter (or an admin) can modify a memory. This is what distinguishes this "Activities" tab from the
+ * "Memories" one: memories here can be read but never edited.
+ */
+@Composable
+fun TaggedMemoriesPage(model: MemoriesViewModel = koinViewModel()) {
+    val taggedMemories by model.taggedMemories.collectAsState()
+
+    taggedMemories?.let {
+        MemoryListContent(
+            memories = it,
+            message = stringResource(Res.string.activities_message),
+            emptyMessage = stringResource(Res.string.activities_empty),
+            onEditRequest = null,
+        )
+    } ?: LoadingBox()
 }
 
 @Composable
-private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (ReferencedMemory) -> Unit) {
+private fun MemoryListContent(
+    memories: List<ReferencedMemory>,
+    message: String,
+    emptyMessage: String,
+    onEditRequest: ((ReferencedMemory) -> Unit)?,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             Text(
-                text = stringResource(Res.string.memories_message),
+                text = message,
                 modifier = Modifier.padding(8.dp)
             )
         }
 
         if (memories.isEmpty()) item {
-            Text(stringResource(Res.string.memories_empty), modifier = Modifier.padding(8.dp))
+            Text(emptyMessage, modifier = Modifier.padding(8.dp))
         }
 
         val groupedMemories = memories.groupBy { it.from.date.year }
@@ -72,14 +106,14 @@ private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (Refer
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
-                MemoryCard(memory, onEditRequest = { onEditRequest(memory) })
+                MemoryCard(memory, onEditRequest = onEditRequest?.let { callback -> { callback(memory) } })
             }
         }
     }
 }
 
 @Composable
-fun MemoryCard(memory: ReferencedMemory, onEditRequest: () -> Unit) {
+fun MemoryCard(memory: ReferencedMemory, onEditRequest: (() -> Unit)? = null) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         MemoryDialog(

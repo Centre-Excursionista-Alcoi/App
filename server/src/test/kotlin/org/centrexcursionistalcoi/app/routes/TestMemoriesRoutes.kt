@@ -12,6 +12,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.datetime.LocalTime
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -37,6 +38,7 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.time.LocalDate
@@ -203,6 +205,46 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memory = context.dibResult!!
 
         client.get("/memories/${memory.id.value}").apply {
+            assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_get_memory_taggedMemberCanReadButNotModify() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val submitter = FakeUser2.provideEntity()
+            // The logged-in user (FakeUser) is tagged as a participating member, but didn't submit the memory
+            val taggedMember = FakeUser.provideMemberEntity()
+            MemoryEntity.new {
+                this.text = "A shared activity"
+                this.submittedBy = submitter
+                this.members = SizedCollection(listOf(taggedMember))
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+        },
+    ) { context ->
+        val memory = context.dibResult!!
+
+        // The tagged member can see the memory in the list...
+        client.get("/memories").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(ListSerializer(Memory.serializer())) { memories ->
+                assertTrue(memories.any { it.id.toJavaUuid() == memory.id.value }, "Tagged memory should be in the list")
+            }
+        }
+
+        // ...and fetch it directly...
+        client.get("/memories/${memory.id.value}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        // ...but still cannot modify it, since they are not the submitter nor an admin
+        client.patch("/memories/${memory.id.value}") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Nice try")))
+        }.apply {
             assertError(Error.PermissionRejected())
         }
     }
