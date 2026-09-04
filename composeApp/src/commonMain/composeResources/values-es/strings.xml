@@ -525,4 +525,14 @@
     <string name="memory_editor_warning_no_lending">Estás creando una memoria para una actividad sin préstamo. Si usaste material del club para realizarla, por favor, completa la memoria desde el préstamo.</string>
     <string name="memory_editor_from">Fecha de Inicio</string>
     <string name="memory_editor_to">Fecha de Finalización</string>
+    <string name="sync_step_profile">Datos personales</string>
+    <string name="sync_step_departments">Secciones</string>
+    <string name="sync_step_users">Usuarios</string>
+    <string name="sync_step_members">Socios</string>
+    <string name="sync_step_item_types">Tipos de Item</string>
+    <string name="sync_step_items">Items</string>
+    <string name="sync_step_lendings">Préstamos</string>
+    <string name="sync_step_memories">Memorias</string>
+    <string name="sync_step_posts">Anuncios</string>
+    <string name="sync_step_events">Eventos</string>
 </resources>
