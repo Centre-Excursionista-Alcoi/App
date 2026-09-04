@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
@@ -13,6 +14,7 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
@@ -25,7 +27,9 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class ActivityMemoryEditorViewModel(
     @InjectedParam private val lendingId: Uuid?,
+    @InjectedParam private val memoryId: Uuid?,
     membersRepository: MembersRepository,
+    memoriesRepository: MemoriesRepository,
     departmentsRepository: DepartmentsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
@@ -33,6 +37,11 @@ class ActivityMemoryEditorViewModel(
 ) : ViewModel() {
 
     val isForLending = lendingId != null
+
+    val memory = (memoryId?.let { id -> memoriesRepository.getAsFlow(id) }
+        ?: lendingId?.let { id -> memoriesRepository.getByLendingIdAsFlow(id) }
+        ?: flowOf(null)
+            ).stateInViewModel()
 
     /**
      * All active (non disabled) users.
@@ -44,14 +53,14 @@ class ActivityMemoryEditorViewModel(
 
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
-    private val _isSaving = MutableStateFlow(false)
-    val isSaving get() = _isSaving.asStateFlow()
+    val isSaving: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _saveProgress = MutableStateFlow<Progress?>(null)
-    val saveProgress get() = _saveProgress.asStateFlow()
+    val saveProgress: StateFlow<Progress?>
+        field = MutableStateFlow<Progress?>(null)
 
-    private val _uploadSuccessful = MutableStateFlow(false)
-    val uploadSuccessful get() = _uploadSuccessful.asStateFlow()
+    val uploadSuccessful: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     fun save(
         from: ZonedDateTime?,
@@ -65,7 +74,7 @@ class ActivityMemoryEditorViewModel(
         files: List<PlatformFile>
     ) = launch {
         try {
-            _isSaving.value = true
+            isSaving.value = true
             withContext(dispatcherProvider.io) {
                 val markdownText = text.toMarkdown()
                 if (isForLending) {
@@ -78,27 +87,44 @@ class ActivityMemoryEditorViewModel(
                         department,
                         markdownText,
                         files,
-                        ProgressNotifier { _saveProgress.value = it }
+                        ProgressNotifier { saveProgress.value = it }
                     )
                 } else {
                     require(from != null && to != null) { "From and To dates must be provided when creating a memory not for a lending" }
 
-                    memoriesRemoteRepository.create(
-                        place,
-                        members,
-                        externalUsers,
-                        markdownText,
-                        sport,
-                        department,
-                        files,
-                        from,
-                        to
-                    )
+                    if (memoryId != null) {
+                        memoriesRemoteRepository.patch(
+                            memoryId,
+                            place,
+                            members,
+                            externalUsers,
+                            markdownText,
+                            sport,
+                            department,
+                            files,
+                            from,
+                            to,
+                            ProgressNotifier { saveProgress.value = it },
+                        )
+                    } else {
+                        memoriesRemoteRepository.create(
+                            place,
+                            members,
+                            externalUsers,
+                            markdownText,
+                            sport,
+                            department,
+                            files,
+                            from,
+                            to,
+                            ProgressNotifier { saveProgress.value = it },
+                        )
+                    }
                 }
             }
-            _uploadSuccessful.value = true
+            uploadSuccessful.value = true
         } finally {
-            _isSaving.value = false
+            isSaving.value = false
         }
     }
 }

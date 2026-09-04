@@ -27,11 +27,14 @@ class MemoriesRepository(
     override suspend fun get(id: Uuid): ReferencedMemory? = dao.get(id)?.toReferenced()
 
     /** Returns the raw memory linked to the lending with the given [lendingId], if any. */
-    suspend fun getByLendingId(lendingId: Uuid): ReferencedMemory? = dao.getByLendingId(lendingId).firstOrNull()?.toReferenced()
+    suspend fun getByLendingId(lendingId: Uuid): ReferencedMemory? = dao.getByLendingId(lendingId)?.toReferenced()
 
     override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedMemory> = dao.getByIdList(ids).map { it.toReferenced() }
 
     override fun getAsFlow(id: Uuid): Flow<ReferencedMemory?> = dao.getAsFlow(id).map { it?.toReferenced() }
+
+    /** Returns the raw memory linked to the lending with the given [lendingId], if any. */
+    fun getByLendingIdAsFlow(lendingId: Uuid): Flow<ReferencedMemory?> = dao.getByLendingIdAsFlow(lendingId).map { it?.toReferenced() }
 
     override suspend fun selectAll(): List<ReferencedMemory> = dao.selectAll().map { it.toReferenced() }
 

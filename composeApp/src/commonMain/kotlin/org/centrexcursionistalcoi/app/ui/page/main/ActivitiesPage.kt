@@ -14,11 +14,12 @@ import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.activities_activities
 import cea_app.composeapp.generated.resources.activities_memories
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.ui.page.main.activities.MemoriesPage
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun ColumnScope.ActivitiesPage() {
+fun ColumnScope.ActivitiesPage(onEditMemoryRequest: (ReferencedMemory) -> Unit) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { 2 }
 
@@ -42,7 +43,7 @@ fun ColumnScope.ActivitiesPage() {
         modifier = Modifier.fillMaxWidth().weight(1f),
     ) { page ->
         when (page) {
-            0 -> MemoriesPage()
+            0 -> MemoriesPage(onEditRequest = onEditMemoryRequest)
         }
     }
 }

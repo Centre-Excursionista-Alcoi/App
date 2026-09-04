@@ -33,7 +33,11 @@ interface MemoryDao {
 
     @Transaction
     @Query("SELECT * FROM Memories WHERE lending = :lending")
-    suspend fun getByLendingId(lending: Uuid): List<MemoryWithRelations>
+    suspend fun getByLendingId(lending: Uuid): MemoryWithRelations?
+
+    @Transaction
+    @Query("SELECT * FROM Memories WHERE lending = :lending")
+    fun getByLendingIdAsFlow(lending: Uuid): Flow<MemoryWithRelations?>
 
     @Transaction
     @Query("SELECT * FROM Memories")
@@ -47,5 +51,5 @@ interface MemoryDao {
     suspend fun deleteById(id: Uuid)
 
     @Update
-    suspend fun update(memory: org.centrexcursionistalcoi.app.database.entity.MemoryEntity)
+    suspend fun update(memory: MemoryEntity)
 }

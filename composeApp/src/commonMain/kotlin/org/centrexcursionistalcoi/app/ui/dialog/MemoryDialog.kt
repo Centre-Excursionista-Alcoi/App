@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -31,6 +33,7 @@ import cea_app.composeapp.generated.resources.memory_external
 import cea_app.composeapp.generated.resources.memory_from
 import cea_app.composeapp.generated.resources.memory_images
 import cea_app.composeapp.generated.resources.memory_members
+import cea_app.composeapp.generated.resources.memory_modify
 import cea_app.composeapp.generated.resources.memory_place
 import cea_app.composeapp.generated.resources.memory_text
 import cea_app.composeapp.generated.resources.memory_title
@@ -39,13 +42,19 @@ import coil3.compose.AsyncImage
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.data.rememberImageFiles
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Edit
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.CloseButton
 import org.centrexcursionistalcoi.app.ui.screen.MemoryViewButtons
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MemoryDialog(memory: ReferencedMemory, onDismissRequest: () -> Unit) {
+fun MemoryDialog(
+    memory: ReferencedMemory,
+    onEditRequest: (() -> Unit)?,
+    onDismissRequest: () -> Unit
+) {
     Dialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = onDismissRequest
@@ -56,6 +65,16 @@ fun MemoryDialog(memory: ReferencedMemory, onDismissRequest: () -> Unit) {
                     title = { Text(stringResource(Res.string.memory_title)) },
                     navigationIcon = {
                         CloseButton(onDismissRequest)
+                    },
+                    actions = {
+                        onEditRequest?.let {
+                            IconButton(it) {
+                                Icon(
+                                    imageVector = MaterialSymbols.Edit,
+                                    contentDescription = stringResource(Res.string.memory_modify)
+                                )
+                            }
+                        }
                     }
                 )
             }

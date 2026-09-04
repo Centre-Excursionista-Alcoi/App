@@ -37,14 +37,17 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun MemoriesPage(model: MemoriesViewModel = koinViewModel()) {
+fun MemoriesPage(
+    model: MemoriesViewModel = koinViewModel(),
+    onEditRequest: (ReferencedMemory) -> Unit
+) {
     val memories by model.memories.collectAsState()
 
-    memories?.let { MemoriesPage(memories = it) } ?: LoadingBox()
+    memories?.let { MemoriesPage(memories = it, onEditRequest) } ?: LoadingBox()
 }
 
 @Composable
-fun MemoriesPage(memories: List<ReferencedMemory>) {
+private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (ReferencedMemory) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             Text(
@@ -67,17 +70,21 @@ fun MemoriesPage(memories: List<ReferencedMemory>) {
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
-                MemoryCard(memory)
+                MemoryCard(memory, onEditRequest = { onEditRequest(memory) })
             }
         }
     }
 }
 
 @Composable
-fun MemoryCard(memory: ReferencedMemory) {
+fun MemoryCard(memory: ReferencedMemory, onEditRequest: () -> Unit) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
-        MemoryDialog(memory = memory, onDismissRequest = { showingDialog = false })
+        MemoryDialog(
+            memory = memory,
+            onEditRequest = onEditRequest,
+            onDismissRequest = { showingDialog = false }
+        )
     }
 
     OutlinedCard(

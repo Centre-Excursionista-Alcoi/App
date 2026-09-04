@@ -86,6 +86,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.typing.ShoppingList
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
@@ -147,6 +148,7 @@ fun MainScreen(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
+    onEditMemoryRequest: (ReferencedMemory) -> Unit,
     model: MainScreenViewModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
@@ -175,6 +177,7 @@ fun MainScreen(
             onSyncRequested = model::sync,
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             onShoppingListConfirmed = onShoppingListConfirmed,
+            onEditMemoryRequest = onEditMemoryRequest,
         )
     } ?: LoadingBox()
 }
@@ -283,6 +286,8 @@ private fun MainScreenContent(
     onCreateMemoryRequested: () -> Unit,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
+
+    onEditMemoryRequest: (ReferencedMemory) -> Unit,
 
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
@@ -529,7 +534,8 @@ private fun MainScreenContent(
                     onItemTypeDetailsRequested = onItemTypeDetailsRequested,
                     onOtherUserLendingClick = onOtherUserLendingClick,
                     onShoppingListChanged = { shoppingList = it },
-                    onMemoryEditorRequested = onMemoryEditorRequested
+                    onMemoryEditorRequested = onMemoryEditorRequested,
+                    onEditMemoryRequest = onEditMemoryRequest,
                 )
             }
 
@@ -632,6 +638,7 @@ private fun MainScreenPagerContent(
     onOtherUserLendingClick: (ReferencedLending) -> Unit,
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onShoppingListChanged: (ShoppingList) -> Unit,
+    onEditMemoryRequest: (ReferencedMemory) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
@@ -653,7 +660,7 @@ private fun MainScreenPagerContent(
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
 
-            Page.ACTIVITIES -> ActivitiesPage()
+            Page.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
 
             // Management page only for admins or department managers
             Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(

@@ -8,7 +8,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
@@ -106,18 +105,28 @@ class MemoriesRemoteRepository(
     suspend fun patch(
         id: Uuid,
         place: String? = null,
-        members: List<UInt>? = null,
+        members: List<Member>? = null,
         externalUsers: String? = null,
         text: String? = null,
         sport: Sports? = null,
-        department: Uuid? = null,
-        attachments: List<FileWithContext>? = null,
+        department: Department? = null,
+        attachments: List<PlatformFile>? = null,
         from: ZonedDateTime? = null,
         to: ZonedDateTime? = null,
         progressNotifier: ProgressNotifier? = null,
     ) = update(
         id,
-        UpdateMemoryRequest(place, members, externalUsers, text, sport, department, attachments, from, to),
+        UpdateMemoryRequest(
+            place,
+            members?.map { it.id },
+            externalUsers,
+            text,
+            sport,
+            department?.id,
+            attachments?.map { it.fileWithContext() },
+            from,
+            to
+        ),
         UpdateMemoryRequest.serializer(),
         progressNotifier,
     )

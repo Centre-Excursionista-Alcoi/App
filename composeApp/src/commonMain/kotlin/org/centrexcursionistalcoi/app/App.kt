@@ -229,6 +229,9 @@ private fun App(
                         onLogoutRequested = {
                             navigator.navigateClearingStack(Destination.Logout)
                         },
+                        onEditMemoryRequest = {
+                            navigator.navigate(Destination.MemoryEditor(it.id))
+                        },
                     )
                 }
                 destination<Destination.Settings> {
@@ -300,7 +303,12 @@ private fun App(
                 destination<Destination.LendingMemoryEditor> { route ->
                     val lendingId = route.lendingId
 
-                    ActivityMemoryEditor(lendingId) { navigator.goBack() }
+                    ActivityMemoryEditor(lendingId, null) { navigator.goBack() }
+                }
+                destination<Destination.MemoryEditor> { route ->
+                    val memoryId = route.memoryId
+
+                    ActivityMemoryEditor(null, memoryId) { navigator.goBack() }
                 }
             },
         )

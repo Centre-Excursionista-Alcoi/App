@@ -366,6 +366,7 @@
     <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
     <string name="memories_empty">No memories available</string>
     <string name="memory_create">Create new memory</string>
+    <string name="memory_modify">Modify memory</string>
     <string name="memory_title">Activity Memory</string>
     <string name="memory_from">Start Date</string>
     <string name="memory_to">End Date</string>

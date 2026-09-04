@@ -62,6 +62,7 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.displayName
@@ -87,9 +88,11 @@ import kotlin.uuid.Uuid
 @Composable
 fun ActivityMemoryEditor(
     lendingId: Uuid?,
-    model: ActivityMemoryEditorViewModel = koinViewModel { parametersOf(lendingId) },
+    memoryId: Uuid?,
+    model: ActivityMemoryEditorViewModel = koinViewModel { parametersOf(lendingId, memoryId) },
     onBack: () -> Unit
 ) {
+    val memory by model.memory.collectAsState()
     val members by model.members.collectAsState()
     val departments by model.departments.collectAsState()
     val isSaving by model.isSaving.collectAsState()
@@ -104,6 +107,7 @@ fun ActivityMemoryEditor(
 
     ActivityMemoryEditor(
         isForLending = model.isForLending,
+        memory = memory,
         isSaving = isSaving,
         saveProgress = saveProgress,
         members = members,
@@ -117,6 +121,7 @@ fun ActivityMemoryEditor(
 @OptIn(ExperimentalMaterial3Api::class)
 fun ActivityMemoryEditor(
     isForLending: Boolean,
+    memory: ReferencedMemory?,
     isSaving: Boolean,
     saveProgress: Progress?,
     members: List<Member>?,
@@ -125,12 +130,12 @@ fun ActivityMemoryEditor(
     onBack: () -> Unit,
 ) {
     val state = rememberRichTextState()
-    var from by remember { mutableStateOf<ZonedDateTime?>(null) }
-    var to by remember { mutableStateOf<ZonedDateTime?>(null) }
-    var place by remember { mutableStateOf("") }
-    var memberUsers by remember { mutableStateOf<List<Member>>(emptyList()) }
-    var externalUsers by remember { mutableStateOf("") }
-    var sport by remember { mutableStateOf<Sports?>(null) }
+    var from by remember(memory) { mutableStateOf(memory?.from) }
+    var to by remember(memory) { mutableStateOf(memory?.to) }
+    var place by remember(memory) { mutableStateOf(memory?.place ?: "") }
+    var memberUsers by remember(memory) { mutableStateOf(memory?.members ?: emptyList()) }
+    var externalUsers by remember(memory) { mutableStateOf(memory?.externalUsers ?: "") }
+    var sport by remember(memory) { mutableStateOf(memory?.sport) }
     var department by remember { mutableStateOf<Department?>(null) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
@@ -195,6 +200,7 @@ fun ActivityMemoryEditor(
 fun ActivityMemoryEditor_Preview() {
     ActivityMemoryEditor(
         isForLending = false,
+        memory = null,
         isSaving = false,
         saveProgress = null,
         departments = null,
