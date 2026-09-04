@@ -52,6 +52,7 @@ data class ZonedDateTime(
         val shouldDisplayTime = time.hour != 0 && time.minute != 0
 
         fun DateTimeFormatBuilder.WithDateTimeComponents.appendTime() {
+            char(' ')
             hour()
             char(':')
             minute()
