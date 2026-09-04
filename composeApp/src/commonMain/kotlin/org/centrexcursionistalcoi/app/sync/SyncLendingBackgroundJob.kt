@@ -3,35 +3,32 @@ package org.centrexcursionistalcoi.app.sync
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
-import org.koin.core.component.get
-import kotlin.uuid.Uuid
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Singleton
 
-expect class SyncLendingBackgroundJob : BackgroundSyncWorker<SyncLendingBackgroundJobLogic>
-
-object SyncLendingBackgroundJobLogic : BackgroundSyncWorkerLogic() {
-    const val EXTRA_LENDING_ID = "lending_id"
-    const val EXTRA_IS_REMOVAL = "is_removal"
-
+@Singleton
+@Named("SyncLendingBackgroundJobLogic")
+class SyncLendingBackgroundJobLogic(
+    private val lendingsRepository: LendingsRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository
+) : BackgroundSyncWorkerLogic() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val lendingId = input[EXTRA_LENDING_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing lending ID")
         val isRemoval = input[EXTRA_IS_REMOVAL]?.toBoolean() ?: false
 
         if (isRemoval) {
-            get<LendingsRepository>().delete(lendingId)
+            lendingsRepository.delete(lendingId)
         } else {
-            get<LendingsRemoteRepository>().update(lendingId)
+            lendingsRemoteRepository.update(lendingId)
                 ?: return SyncResult.Failure("Lending with ID $lendingId not found on server")
         }
 
         return SyncResult.Success()
     }
 
-    fun scheduleAsync(lendingId: Uuid, isRemoval: Boolean) = BackgroundJobCoordinator.scheduleAsync<SyncLendingBackgroundJobLogic, SyncLendingBackgroundJob>(
-        input = mapOf(
-            EXTRA_LENDING_ID to lendingId.toString(),
-            EXTRA_IS_REMOVAL to isRemoval.toString(),
-        ),
-        logic = SyncLendingBackgroundJobLogic,
-    )
+    companion object {
+        const val EXTRA_LENDING_ID = "lending_id"
+        const val EXTRA_IS_REMOVAL = "is_removal"
+    }
 }

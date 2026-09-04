@@ -4,9 +4,13 @@ import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-actual object PlatformLoadLogic {
+actual object PlatformLoadLogic : KoinComponent {
     private val log = logging()
+
+    private val listener: PushNotifierListener by inject()
 
     actual fun isReady(): Boolean {
         // nothing to check on JVM
@@ -27,6 +31,6 @@ actual object PlatformLoadLogic {
         }
 
         log.d { "Adding push notifier listener..." }
-        NotifierManager.addListener(PushNotifierListener)
+        NotifierManager.addListener(listener)
     }
 }

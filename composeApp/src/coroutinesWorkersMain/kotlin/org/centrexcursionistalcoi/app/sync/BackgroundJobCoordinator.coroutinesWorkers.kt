@@ -9,13 +9,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
+import org.koin.core.qualifier.named
 import kotlin.time.Duration
 import kotlin.uuid.Uuid
 
-actual object BackgroundJobCoordinator : KoinComponent {
-    private val log = logging()
+@Singleton
+actual class BackgroundJobCoordinator : KoinComponent {
+    val coordinatorLog = logging()
 
     private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
     private val jobStateIdMutex = Mutex()
@@ -72,70 +75,67 @@ actual object BackgroundJobCoordinator : KoinComponent {
         }
     }
 
-    fun scheduleJob(
+    inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleJob(
         input: Map<String, String>,
         id: Uuid,
         uniqueName: String?,
         repeatInterval: Duration?,
-        logic: BackgroundSyncWorkerLogic,
     ) {
-        log.info { "Scheduling background job $id (uniqueName=$uniqueName, repeatInterval=$repeatInterval). Input: $input" }
+        coordinatorLog.info { "Scheduling background job $id (uniqueName=$uniqueName, repeatInterval=$repeatInterval). Input: $input" }
         CoroutineScope(get<DispatcherProvider>().io).launch {
             if (repeatInterval != null) {
                 while (true) {
-                    execute(input, id, uniqueName, logic)
+                    execute<Logic>(input, id, uniqueName)
                     emitState(id, uniqueName, BackgroundJobState.ENQUEUED)
                     delay(repeatInterval)
                 }
             } else {
-                execute(input, id, uniqueName, logic)
+                execute<Logic>(input, id, uniqueName)
             }
         }
     }
 
-    private suspend fun execute(
+    suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> execute(
         input: Map<String, String>,
         id: Uuid,
-        uniqueName: String?,
-        logic: BackgroundSyncWorkerLogic,
+        uniqueName: String?
     ) {
         try {
             emitState(id, uniqueName, BackgroundJobState.RUNNING)
+            val logic = get<Logic>(named(Logic::class.simpleName!!))
             with(logic) {
                 BackgroundSyncContext().run(input)
             }
             emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
         } catch (e: Throwable) {
-            log.e(e) { "Job failed." }
+            coordinatorLog.e(e) { "Job failed." }
             emitState(id, uniqueName, BackgroundJobState.FAILED)
         }
     }
 
-    actual suspend inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> schedule(
+    actual suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> schedule(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
         tags: List<String>,
         uniqueName: String?,
         repeatInterval: Duration?,
-        logic: Logic,
     ): ObservableBackgroundJob {
         val id = id ?: Uuid.random()
-        scheduleJob(input, id, uniqueName, repeatInterval, logic)
+        scheduleJob<Logic>(input, id, uniqueName, repeatInterval)
 
         return observe(id)
     }
 
-    actual inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
+    actual inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleAsync(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
         tags: List<String>,
         uniqueName: String?,
         repeatInterval: Duration?,
-        logic: Logic,
     ) {
-        scheduleJob(input, id ?: Uuid.random(), uniqueName, repeatInterval, logic)
+        scheduleJob<Logic>(input, id ?: Uuid.random(), uniqueName, repeatInterval)
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {

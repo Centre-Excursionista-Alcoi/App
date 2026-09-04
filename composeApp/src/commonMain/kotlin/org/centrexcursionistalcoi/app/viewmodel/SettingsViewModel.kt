@@ -20,12 +20,13 @@ import org.koin.core.annotation.KoinViewModel
 class SettingsViewModel(
     private val authBackend: AuthBackend,
     private val dispatcherProvider: DispatcherProvider,
+    sseNotificationsListener: SSENotificationsListener,
     @InjectedParam private val onDeleteAccount: () -> Unit,
 ) : ErrorViewModel() {
     val fcmToken = FCMTokenManager.tokenFlow.stateInViewModel()
 
-    val sseConnected = SSENotificationsListener.isConnected.stateInViewModel(initialValue = false)
-    val sseError = SSENotificationsListener.sseException.stateInViewModel()
+    val sseConnected = sseNotificationsListener.isConnected.stateInViewModel(initialValue = false)
+    val sseError = sseNotificationsListener.sseException.stateInViewModel()
 
     val privacyErrors = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_ERRORS, true)
     val privacyAnalytics = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_ANALYTICS, true)

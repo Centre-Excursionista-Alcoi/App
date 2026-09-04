@@ -86,6 +86,7 @@ import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -146,6 +147,8 @@ private fun SettingsScreen(
     onAccountDeleteRequest: () -> Job,
     onBack: () -> Unit
 ) {
+    val sseNotificationsListener = koinInject<SSENotificationsListener>()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -206,7 +209,7 @@ private fun SettingsScreen(
                         } else {
                             stringResource(Res.string.settings_push_connection_message_disconnected)
                         } + (sseError?.message?.let { "\n$it" } ?: ""),
-                        onClick = if (sseError != null) { { SSENotificationsListener.startListening() } } else null
+                        onClick = if (sseError != null) { { sseNotificationsListener.startListening() } } else null
                     )
                 }
             }

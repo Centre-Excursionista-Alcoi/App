@@ -1,11 +1,12 @@
 package org.centrexcursionistalcoi.app.sync
 
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator.schedule
 
-expect object BackgroundJobCoordinator {
+@Singleton
+expect class BackgroundJobCoordinator {
     /**
-     * Schedules a new unique job with for the given [WorkerType].
+     * Schedules a new unique job with for the given [Logic].
      * @param input Any arguments that the job may need.
      * @param requiresInternet If `true`, the job coordinator will run the job only if Internet access is available.
      * @param id An optional id for the job. Otherwise, a random one will be set.
@@ -13,21 +14,19 @@ expect object BackgroundJobCoordinator {
      * @param uniqueName If not `null`, a unique job will be scheduled. This will force only one instance of this job to be running at any time.
      * If a request is made, and another job is already running or scheduled with this name, it will be overridden.
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
-     * @param logic The logic instance to use for this job.
      * @return An [ObservableBackgroundJob] that allows to watch the job status.
      */
-    suspend inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> schedule(
+    suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> schedule(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
         tags: List<String> = emptyList(),
         uniqueName: String? = null,
         repeatInterval: kotlin.time.Duration? = null,
-        logic: Logic,
     ): ObservableBackgroundJob
 
     /**
-     * Schedules a new unique job with for the given [WorkerType], but unline [schedule], it doesn't wait for the scheduling to complete, it hopes for the best.
+     * Schedules a new unique job with for the given [Logic], but unline [schedule], it doesn't wait for the scheduling to complete, it hopes for the best.
      * @param input Any arguments that the job may need.
      * @param requiresInternet If `true`, the job coordinator will run the job only if Internet access is available.
      * @param id An optional id for the job. Otherwise, a random one will be set.
@@ -35,16 +34,14 @@ expect object BackgroundJobCoordinator {
      * @param uniqueName If not `null`, a unique job will be scheduled. This will force only one instance of this job to be running at any time.
      * If a request is made, and another job is already running or scheduled with this name, it will be overridden.
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
-     * @param logic The logic instance to use for this job.
      */
-    inline fun <Logic: BackgroundSyncWorkerLogic, reified WorkerType: BackgroundSyncWorker<Logic>> scheduleAsync(
+    inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleAsync(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
         tags: List<String> = emptyList(),
         uniqueName: String? = null,
         repeatInterval: kotlin.time.Duration? = null,
-        logic: Logic,
     )
 
     /**

@@ -16,10 +16,10 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
+import org.koin.core.annotation.Named
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -28,6 +28,8 @@ class LoadingViewModel(
     @InjectedParam private val onLoggedInParam: () -> Unit,
     @InjectedParam private val onNotLoggedInParam: () -> Unit,
     private val dispatcherProvider: DispatcherProvider,
+    private val backgroundJobCoordinator: BackgroundJobCoordinator,
+    @Named("SyncAllDataBackgroundJobLogic") private val syncAllDataBackgroundJobLogic: SyncAllDataBackgroundJobLogic
 ) : ViewModel() {
 
     private val log = logging()
@@ -56,15 +58,14 @@ class LoadingViewModel(
             if (isUserProfileValid()) {
                 if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
-                    SyncAllDataBackgroundJobLogic.syncAll(true, progressNotifier)
+                    syncAllDataBackgroundJobLogic.syncAll(true, progressNotifier)
                 } else {
                     log.d { "Scheduling periodic sync..." }
-                    BackgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+                    backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic>(
                         input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
                         requiresInternet = true,
                         uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
                         repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
-                        logic = SyncAllDataBackgroundJobLogic,
                     )
                 }
 

@@ -18,6 +18,7 @@ import org.koin.core.annotation.KoinViewModel
 class PlatformInitializerViewModel(
     @InjectedParam url: Url?,
     dispatcherProvider: DispatcherProvider,
+    private val sseNotificationsListener: SSENotificationsListener,
 ) : ViewModel() {
     private val log = logging()
 
@@ -38,7 +39,7 @@ class PlatformInitializerViewModel(
             }
 
             log.d { "Listening for SSE notifications..." }
-            SSENotificationsListener.startListening()
+            sseNotificationsListener.startListening()
 
             log.d { "Platform is ready." }
             _isReady.emit(true)

@@ -30,38 +30,38 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
-import org.koin.core.component.get
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Singleton
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
-expect class SyncAllDataBackgroundJob : BackgroundSyncWorker<SyncAllDataBackgroundJobLogic>
+@Singleton
+@Named("SyncAllDataBackgroundJobLogic")
+class SyncAllDataBackgroundJobLogic(
+    private val departmentsRemoteRepository: DepartmentsRemoteRepository,
+    private val usersRemoteRepository: UsersRemoteRepository,
+    private val membersRemoteRepository: MembersRemoteRepository,
+    private val postsRemoteRepository: PostsRemoteRepository,
+    private val eventsRemoteRepository: EventsRemoteRepository,
+    private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository,
+    private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val memoriesRemoteRepository: MemoriesRemoteRepository,
 
-object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
+    private val departmentsRepository: DepartmentsRepository,
+    private val usersRepository: UsersRepository,
+    private val membersRepository: MembersRepository,
+    private val postsRepository: PostsRepository,
+    private val eventsRepository: EventsRepository,
+    private val inventoryItemTypesRepository: InventoryItemTypesRepository,
+    private val inventoryItemsRepository: InventoryItemsRepository,
+    private val lendingsRepository: LendingsRepository,
+    private val memoriesRepository: MemoriesRepository,
+
+    private val authBackend: AuthBackend,
+) : BackgroundSyncWorkerLogic() {
     private val log = logging()
-
-    private const val SETTINGS_LAST_SYNC = "lastSync"
-    private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncDbVersion"
-
-    const val EXTRA_FORCE_SYNC = "force_sync"
-
-    /** Run sync every hour */
-    const val SYNC_EVERY_SECONDS = 60 * 60
-
-    const val UNIQUE_NAME = "SyncAllDataBackgroundJob"
-
-    /**
-     * The interval at which this job should be periodically scheduled.
-     */
-    val periodicSyncInterval = 4.hours
-
-    /**
-     * Checks if the database version has been upgraded since the last sync.
-     */
-    fun databaseVersionUpgrade(): Boolean {
-        val lastSyncVersion = settings.getIntOrNull(SETTINGS_LAST_SYNC_VERSION)
-        return lastSyncVersion == null || lastSyncVersion < DATABASE_VERSION
-    }
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val forceSync = input[EXTRA_FORCE_SYNC]?.toBoolean() ?: false
@@ -97,34 +97,34 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
             ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
 
             // Departments does not depend on any other entity, so we sync it first
-            get<DepartmentsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Users does not depend on any other entity
-            get<UsersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            usersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Members do not depend on any other entity
-            get<MembersRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            membersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Posts requires Departments
-            get<PostsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            postsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Events requires Departments and Users
             // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
-            get<EventsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            eventsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Item Types requires Departments
-            get<InventoryItemTypesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            inventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Inventory Items requires Inventory Item Types
-            get<InventoryItemsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            inventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Lendings requires Users, Inventory Item Types and Inventory Items
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
-            get<LendingsRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            lendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
 
             // Memories requires Departments and (optionally) Lendings
-            get<MemoriesRemoteRepository>().synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -135,15 +135,15 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
                 log.d { "Removing all data..." }
                 // Order is important due to foreign key constraints: children before their parents (the reverse of
                 // the sync order above, since Memories has a FK to Lendings).
-                get<MemoriesRepository>().deleteAll()
-                get<LendingsRepository>().deleteAll()
-                get<InventoryItemsRepository>().deleteAll()
-                get<InventoryItemTypesRepository>().deleteAll()
-                get<EventsRepository>().deleteAll()
-                get<PostsRepository>().deleteAll()
-                get<MembersRepository>().deleteAll()
-                get<UsersRepository>().deleteAll()
-                get<DepartmentsRepository>().deleteAll()
+                memoriesRepository.deleteAll()
+                lendingsRepository.deleteAll()
+                inventoryItemsRepository.deleteAll()
+                inventoryItemTypesRepository.deleteAll()
+                eventsRepository.deleteAll()
+                postsRepository.deleteAll()
+                membersRepository.deleteAll()
+                usersRepository.deleteAll()
+                departmentsRepository.deleteAll()
 
                 log.d { "Removing all files..." }
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
@@ -154,7 +154,7 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         } catch (e: ServerException) {
             if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
                 log.w { "Not logged in. Credentials may have expired. Logging out..." }
-                get<AuthBackend>().logout()
+                authBackend.logout()
             } else {
                 log.e(e) { "Server error during synchronization. Failing..." }
                 throw e
@@ -167,5 +167,30 @@ object SyncAllDataBackgroundJobLogic : BackgroundSyncWorkerLogic() {
 
         settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
         settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
+    }
+
+    companion object {
+        private const val SETTINGS_LAST_SYNC = "lastSync"
+        private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncDbVersion"
+
+        const val EXTRA_FORCE_SYNC = "force_sync"
+
+        /** Run sync every hour */
+        const val SYNC_EVERY_SECONDS = 60 * 60
+
+        const val UNIQUE_NAME = "SyncAllDataBackgroundJob"
+
+        /**
+         * The interval at which this job should be periodically scheduled.
+         */
+        val periodicSyncInterval = 4.hours
+
+        /**
+         * Checks if the database version has been upgraded since the last sync.
+         */
+        fun databaseVersionUpgrade(): Boolean {
+            val lastSyncVersion = settings.getIntOrNull(SETTINGS_LAST_SYNC_VERSION)
+            return lastSyncVersion == null || lastSyncVersion < DATABASE_VERSION
+        }
     }
 }

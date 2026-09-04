@@ -9,7 +9,6 @@ import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
-import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
 import org.koin.core.annotation.KoinViewModel
 
@@ -17,12 +16,13 @@ import org.koin.core.annotation.KoinViewModel
 class MainViewModel(
     private val lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val backgroundJobCoordinator: BackgroundJobCoordinator
 ) : ViewModel() {
     companion object {
         private val log = logging()
     }
 
-    val isSyncing = BackgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
+    val isSyncing = backgroundJobCoordinator.observeUnique(SyncAllDataBackgroundJobLogic.UNIQUE_NAME)
         .stateFlow()
         .map { it in listOf(BackgroundJobState.RUNNING) }
         .stateInViewModel()
@@ -37,11 +37,10 @@ class MainViewModel(
 
     fun sync() = launch {
         log.d { "Scheduling data sync..." }
-        BackgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic, SyncAllDataBackgroundJob>(
+        backgroundJobCoordinator.schedule<SyncAllDataBackgroundJobLogic>(
             input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "true"),
             requiresInternet = true,
             uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-            logic = SyncAllDataBackgroundJobLogic,
         )
     }
 

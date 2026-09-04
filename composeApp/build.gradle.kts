@@ -215,6 +215,10 @@ kotlin {
 
                 // Room3 SQLite Wrapper
                 implementation(libs.androidx.room3.sqliteWrapper)
+
+                // Koin Extensions for Android
+                implementation(libs.koin.android)
+                implementation(libs.koin.androidx.workmanager)
             }
         }
 

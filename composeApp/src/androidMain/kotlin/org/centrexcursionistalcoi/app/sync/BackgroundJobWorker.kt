@@ -7,11 +7,21 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.process.Progress
+import org.koin.android.annotation.KoinWorker
+import org.koin.core.qualifier.named
+import org.koin.java.KoinJavaComponent.inject
 
-private val log = logging()
+@KoinWorker
+class BackgroundJobWorker(
+    appContext: Context,
+    workerParams: WorkerParameters,
+) : CoroutineWorker(appContext, workerParams) {
+    private val logic: BackgroundSyncWorkerLogic by inject(
+        BackgroundSyncWorkerLogic::class.java,
+        named(workerParams.inputData.getString(EXTRA_LOGIC_NAME) ?: throw IllegalArgumentException("Missing logic name in input data"))
+    )
 
-actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
-    protected abstract val logicInstance: Logic
+    private val log = logging()
 
     @Suppress("UNCHECKED_CAST")
     @SuppressLint("RestrictedApi")
@@ -54,9 +64,9 @@ actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(ap
             .toMap()
 
         @Suppress("UNCHECKED_CAST")
-        return with(logicInstance) {
+        return with(logic) {
             try {
-                log.d { "Running ${logicInstance::class.simpleName} with input: $input" }
+                log.d { "Running ${logic::class.simpleName} with input: $input" }
                 log.d { "Input data: ${inputData.keyValueMap.keys}" }
 
                 context.run(input).toWorkerResult()
@@ -75,6 +85,8 @@ actual abstract class BackgroundSyncWorker<Logic : BackgroundSyncWorkerLogic>(ap
 
 
     companion object {
+        const val EXTRA_LOGIC_NAME = "logic_name"
+
         const val RESULT_EXCEPTION_TYPE = "exception.type"
         const val RESULT_EXCEPTION_MESSAGE = "exception.message"
         const val RESULT_EXCEPTION_STACKTRACE = "exception.stacktrace"

@@ -25,10 +25,8 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.data.referenced
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
@@ -50,8 +48,6 @@ class LendingsRemoteRepository(
     private val lendingsRepository: LendingsRepository,
     inventoryItemTypesRepository: InventoryItemTypesRepository,
     usersRepository: UsersRepository,
-    membersRepository: MembersRepository,
-    departmentsRepository: DepartmentsRepository,
     memoriesRepository: MemoriesRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
 ) : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
@@ -63,8 +59,6 @@ class LendingsRemoteRepository(
     remoteToLocalEntityConverter = { lending ->
         val inventoryItemTypes = inventoryItemTypesRepository.selectAll()
         val users = usersRepository.selectAll()
-        val members = membersRepository.selectAll()
-        val departments = departmentsRepository.selectAll()
         // Memories are synced separately (see MemoriesRemoteRepository); this only resolves against what's
         // already cached locally, so Memories must be synced before Lendings for this to be up to date.
         val memory = lending.memory?.let { memoriesRepository.get(it) }
