@@ -348,10 +348,15 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             }
         }
         if (response.status.isSuccess()) {
-            val location = response.headers[HttpHeaders.Location]
-            checkNotNull(location) { "Patch didn't return any location for the new item." }
+            val item = if (response.status == HttpStatusCode.NoContent) {
+                get(id, progressNotifier, ignoreIfModifiedSince = true)
+            } else {
+                val location = response.headers[HttpHeaders.Location]
+                checkNotNull(location) { "Patch didn't return any location for the new item." }
 
-            val item = getUrl(location, ignoreIfModifiedSince = true)
+                getUrl(location, ignoreIfModifiedSince = true)
+            }
+
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
             progressNotifier?.invoke(Progress.LocalDBWrite)
             val localItem = updateRemoteEntity(item)
