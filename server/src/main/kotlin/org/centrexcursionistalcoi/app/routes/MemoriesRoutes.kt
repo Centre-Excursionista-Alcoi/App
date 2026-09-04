@@ -90,6 +90,46 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession): MemoryEn
     return memory
 }
 
+/**
+ * (Re)generates the memory's summary PDF from its current data and stores it as [MemoryEntity.pdf], deleting the
+ * previous one (if any). Must be called after all field changes (including patched ones) have already been persisted.
+ */
+private fun regenerateMemoryPdf(memory: MemoryEntity) {
+    val baos = ByteArrayOutputStream()
+    baos.use { output ->
+        val (referencedMemory, itemsUsed, submittedByName) = Database {
+            val users = UserReferenceEntity.all().map { it.toData() }
+            val departments = DepartmentEntity.all().map { it.toData() }
+            val referencedMemory = memory.toData().referenced(
+                users = users,
+                members = memory.members.map { it.toMember() },
+                departments = departments,
+            )
+            val itemsUsed = memory.lending?.items?.toList().orEmpty().map { item ->
+                item.toData().referenced(item.type.toData().referenced(departments))
+            }
+            Triple(referencedMemory, itemsUsed, memory.submittedBy.fullName)
+        }
+        PdfGeneratorService.generateLendingPdf(
+            referencedMemory,
+            itemsUsed = itemsUsed,
+            submittedBy = submittedByName,
+            photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
+            outputStream = output,
+        )
+    }
+
+    Database {
+        val oldPdf = memory.pdf
+        memory.pdf = FileEntity.new {
+            name = "memory_${memory.id.value}.pdf"
+            contentType = ContentType.Application.Pdf
+            bytes = baos.toByteArray()
+        }
+        oldPdf?.delete()
+    }
+}
+
 fun Route.memoriesRoutes() {
     post("memories") {
         assertContentType(ContentType.MultiPart.FormData) ?: return@post
@@ -243,38 +283,7 @@ fun Route.memoriesRoutes() {
         }
 
         // Generate the summary PDF for the memory
-        val baos = ByteArrayOutputStream()
-        baos.use { output ->
-            val users = Database { UserReferenceEntity.all().map { it.toData() } }
-            val departments = Database { DepartmentEntity.all().map { it.toData() } }
-            val referencedMemory = Database {
-                memoryEntity.toData().referenced(
-                    users = users,
-                    members = MemberEntity.find { Members.id inList (members.orEmpty()) }.map { it.toMember() },
-                    departments = departments,
-                )
-            }
-            val itemsUsed = Database {
-                lending?.items?.toList().orEmpty().map { item ->
-                    item.toData().referenced(item.type.toData().referenced(departments))
-                }
-            }
-            PdfGeneratorService.generateLendingPdf(
-                referencedMemory,
-                itemsUsed = itemsUsed,
-                submittedBy = userReference.fullName,
-                photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
-                outputStream = output,
-            )
-        }
-        val pdfDocumentEntity = Database {
-            FileEntity.new {
-                name = "memory_${memoryEntity.id.value}.pdf"
-                contentType = ContentType.Application.Pdf
-                bytes = baos.toByteArray()
-            }
-        }
-        Database { memoryEntity.pdf = pdfDocumentEntity }
+        regenerateMemoryPdf(memoryEntity)
 
         memoryEntity.updated()
 
@@ -375,6 +384,7 @@ fun Route.memoriesRoutes() {
         }
 
         Database { memory.patch(request) }
+        regenerateMemoryPdf(memory)
         memory.updated()
 
         call.respond(HttpStatusCode.NoContent)

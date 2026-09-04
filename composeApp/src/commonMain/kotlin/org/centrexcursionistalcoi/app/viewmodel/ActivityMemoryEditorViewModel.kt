@@ -40,10 +40,10 @@ class ActivityMemoryEditorViewModel(
         val memoryId: Uuid? = null,
     )
 
-    val isForLending = params?.lendingId != null
+    val isForLending = params.lendingId != null
 
-    val memory = (params?.memoryId?.let { id -> memoriesRepository.getAsFlow(id) }
-        ?: params?.lendingId?.let { id -> memoriesRepository.getByLendingIdAsFlow(id) }
+    val memory = (params.memoryId?.let { id -> memoriesRepository.getAsFlow(id) }
+        ?: params.lendingId?.let { id -> memoriesRepository.getByLendingIdAsFlow(id) }
         ?: flowOf(null)
             ).stateInViewModel()
 
