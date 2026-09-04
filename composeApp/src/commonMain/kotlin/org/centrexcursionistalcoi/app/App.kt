@@ -303,12 +303,12 @@ private fun App(
                 destination<Destination.LendingMemoryEditor> { route ->
                     val lendingId = route.lendingId
 
-                    ActivityMemoryEditor(lendingId, null) { navigator.goBack() }
+                    ActivityMemoryEditor(lendingId = lendingId, memoryId = null) { navigator.goBack() }
                 }
                 destination<Destination.MemoryEditor> { route ->
                     val memoryId = route.memoryId
 
-                    ActivityMemoryEditor(null, memoryId) { navigator.goBack() }
+                    ActivityMemoryEditor(lendingId = null, memoryId = memoryId) { navigator.goBack() }
                 }
             },
         )

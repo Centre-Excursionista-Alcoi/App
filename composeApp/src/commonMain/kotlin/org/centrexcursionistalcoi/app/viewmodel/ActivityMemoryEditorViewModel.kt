@@ -26,8 +26,7 @@ import kotlin.uuid.Uuid
 
 @KoinViewModel
 class ActivityMemoryEditorViewModel(
-    @InjectedParam private val lendingId: Uuid?,
-    @InjectedParam private val memoryId: Uuid?,
+    @InjectedParam private val params: Params,
     membersRepository: MembersRepository,
     memoriesRepository: MemoriesRepository,
     departmentsRepository: DepartmentsRepository,
@@ -36,10 +35,15 @@ class ActivityMemoryEditorViewModel(
     private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
 
-    val isForLending = lendingId != null
+    data class Params(
+        val lendingId: Uuid? = null,
+        val memoryId: Uuid? = null,
+    )
 
-    val memory = (memoryId?.let { id -> memoriesRepository.getAsFlow(id) }
-        ?: lendingId?.let { id -> memoriesRepository.getByLendingIdAsFlow(id) }
+    val isForLending = params?.lendingId != null
+
+    val memory = (params?.memoryId?.let { id -> memoriesRepository.getAsFlow(id) }
+        ?: params?.lendingId?.let { id -> memoriesRepository.getByLendingIdAsFlow(id) }
         ?: flowOf(null)
             ).stateInViewModel()
 
@@ -79,7 +83,7 @@ class ActivityMemoryEditorViewModel(
                 val markdownText = text.toMarkdown()
                 if (isForLending) {
                     lendingsRemoteRepository.submitMemory(
-                        lendingId!!,
+                        params.lendingId!!,
                         place,
                         members,
                         externalUsers,
@@ -92,9 +96,9 @@ class ActivityMemoryEditorViewModel(
                 } else {
                     require(from != null && to != null) { "From and To dates must be provided when creating a memory not for a lending" }
 
-                    if (memoryId != null) {
+                    if (params.memoryId != null) {
                         memoriesRemoteRepository.patch(
-                            memoryId,
+                            params.memoryId,
                             place,
                             members,
                             externalUsers,
