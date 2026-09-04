@@ -7,7 +7,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncEventBackgroundJobLogic")
+@Named("SyncEventBackgroundJob")
 class SyncEventBackgroundJob(
     private val eventsRemoteRepository: EventsRemoteRepository,
     private val eventsRepository: EventsRepository
