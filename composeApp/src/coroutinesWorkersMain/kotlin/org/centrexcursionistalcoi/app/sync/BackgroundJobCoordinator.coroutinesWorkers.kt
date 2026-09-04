@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -132,7 +133,7 @@ actual class BackgroundJobCoordinator(
             val logic = get<Logic>(named(Logic::class.simpleName!!))
             with(logic) {
                 BackgroundSyncContext(
-                    progressNotifier = { progress ->
+                    progressNotifier = ProgressNotifier { progress ->
                         emitProgressById(id, progress)
                     }
                 ).run(input)
