@@ -5,14 +5,19 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
+import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
+import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.relation.EventWithRelations
 import kotlin.uuid.Uuid
 
 @Dao
 interface EventDao {
     @Insert
-    suspend fun insert(event: org.centrexcursionistalcoi.app.database.entity.EventEntity)
+    suspend fun insert(event: EventEntity)
+
+    @Upsert
+    suspend fun upsert(event: EventEntity)
 
     @Transaction
     @Query("SELECT * FROM Events WHERE id = :id LIMIT 1")

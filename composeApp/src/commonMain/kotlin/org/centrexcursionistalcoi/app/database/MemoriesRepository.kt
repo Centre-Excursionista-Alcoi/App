@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
@@ -44,6 +45,18 @@ class MemoriesRepository(
     suspend fun insertOrUpdate(memory: Memory) {
         if (dao.get(memory.id) != null) updateRaw(memory) else insertRaw(memory)
     }
+
+    /**
+     * Writes only the [MemoryEntity] row -- unlike [insertOrUpdate]/[insert]/[update] of [Memory]/[ReferencedMemory],
+     * this does not touch [MemoryMemberCrossRef] rows.
+     */
+    suspend fun insert(item: MemoryEntity) = dao.insert(item)
+
+    /** @see insert */
+    suspend fun update(item: MemoryEntity) = dao.update(item)
+
+    /** @see insert */
+    suspend fun upsert(item: MemoryEntity) = dao.upsert(item)
 
     private suspend fun insertRaw(memory: Memory) {
         dao.insert(memory.toEntity())

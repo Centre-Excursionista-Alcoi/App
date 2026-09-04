@@ -231,11 +231,17 @@ object LocalNotifications : KoinComponent {
                     when (notification.entityClass) {
                         Post::class.simpleName -> {
                             val postId = notification.entityUuid ?: return log.w { "Invalid post ID: ${notification.entityId}" }
-                            runBlocking {
-                                get<PostsRepository>().get(postId) ?: get<PostsRemoteRepository>().get(postId)
-                            }?.let { post ->
-                                showNotification({ post.title }, { post.content }, data)
-                            } ?: log.w { "Could not find Post#${notification.entityId}" }
+                            val localPost = runBlocking { get<PostsRepository>().get(postId) }
+                            if (localPost != null) {
+                                showNotification({ localPost.title }, { localPost.content }, data)
+                            } else {
+                                val remotePost = runBlocking { get<PostsRemoteRepository>().get(postId) }
+                                if (remotePost != null) {
+                                    showNotification({ remotePost.title }, { remotePost.content }, data)
+                                } else {
+                                    log.w { "Could not find Post#${notification.entityId}" }
+                                }
+                            }
                         }
                     }
                 }

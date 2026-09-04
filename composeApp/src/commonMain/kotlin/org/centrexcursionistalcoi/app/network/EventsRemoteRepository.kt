@@ -9,6 +9,7 @@ import kotlinx.datetime.toInstant
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
@@ -20,7 +21,7 @@ import kotlin.uuid.Uuid
 
 @Singleton
 class EventsRemoteRepository(
-    eventsRepository: EventsRepository,
+    private val eventsRepository: EventsRepository,
 ) : RemoteRepository<Uuid, ReferencedEvent, Uuid, Event>(
     "/events",
     SETTINGS_LAST_EVENTS_SYNC,
@@ -109,5 +110,20 @@ class EventsRemoteRepository(
         val response = httpClient.post("/events/$eventId/reject")
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
         update(eventId)
+    }
+
+    override suspend fun insertRemoteEntity(entity: Event): ReferencedEvent {
+        eventsRepository.insert(entity.toEntity())
+        return eventsRepository.get(entity.id)!!
+    }
+
+    override suspend fun updateRemoteEntity(entity: Event): ReferencedEvent {
+        eventsRepository.update(entity.toEntity())
+        return eventsRepository.get(entity.id)!!
+    }
+
+    override suspend fun upsertRemoteEntity(entity: Event): ReferencedEvent {
+        eventsRepository.upsert(entity.toEntity())
+        return eventsRepository.get(entity.id)!!
     }
 }

@@ -4,6 +4,7 @@ import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
@@ -13,7 +14,7 @@ import kotlin.uuid.Uuid
 
 @Singleton
 class InventoryItemsRemoteRepository(
-    inventoryItemsRepository: InventoryItemsRepository,
+    private val inventoryItemsRepository: InventoryItemsRepository,
 ) : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
     "/inventory/items",
     SETTINGS_LAST_INVENTORY_ITEMS_SYNC,
@@ -59,5 +60,20 @@ class InventoryItemsRemoteRepository(
             UpdateInventoryItemRequest.serializer(),
             progressNotifier
         )
+    }
+
+    override suspend fun insertRemoteEntity(entity: InventoryItem): ReferencedInventoryItem {
+        inventoryItemsRepository.insert(entity.toEntity())
+        return inventoryItemsRepository.get(entity.id)!!
+    }
+
+    override suspend fun updateRemoteEntity(entity: InventoryItem): ReferencedInventoryItem {
+        inventoryItemsRepository.update(entity.toEntity())
+        return inventoryItemsRepository.get(entity.id)!!
+    }
+
+    override suspend fun upsertRemoteEntity(entity: InventoryItem): ReferencedInventoryItem {
+        inventoryItemsRepository.upsert(entity.toEntity())
+        return inventoryItemsRepository.get(entity.id)!!
     }
 }

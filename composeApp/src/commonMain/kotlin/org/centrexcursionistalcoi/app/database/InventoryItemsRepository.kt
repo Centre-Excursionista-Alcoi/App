@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
@@ -28,13 +29,19 @@ class InventoryItemsRepository(db: AppDatabase) : Repository<ReferencedInventory
 
     override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItem?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
-    override suspend fun insert(item: ReferencedInventoryItem) = dao.insert(
-        item.dereference().toEntity()
-    )
+    override suspend fun insert(item: ReferencedInventoryItem) {
+        dao.insert(item.dereference().toEntity())
+    }
 
-    override suspend fun update(item: ReferencedInventoryItem) = dao.update(
-        item.dereference().toEntity()
-    )
+    override suspend fun update(item: ReferencedInventoryItem) {
+        dao.update(item.dereference().toEntity())
+    }
+
+    suspend fun insert(item: InventoryItemEntity) = dao.insert(item)
+
+    suspend fun update(item: InventoryItemEntity) = dao.update(item)
+
+    suspend fun upsert(item: InventoryItemEntity) = dao.upsert(item)
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

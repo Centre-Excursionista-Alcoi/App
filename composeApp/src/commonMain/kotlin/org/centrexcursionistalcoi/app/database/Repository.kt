@@ -43,22 +43,6 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
         }
     }
 
-    /**
-     * Inserts or updates the given [item] in the repository.
-     *
-     * If an item already exists with the id of [item], it will be updated. Otherwise. it will be inserted.
-     * @param item The item to insert/update.
-     * @throws NoSuchElementException If the item exists, and it has a missing reference.
-     */
-    suspend fun insertOrUpdate(item: T) {
-        val existingItem = get(item.id)
-        if (existingItem == null) {
-            insert(item)
-        } else {
-            update(item)
-        }
-    }
-
     suspend fun delete(id: IdType)
 
     suspend fun deleteByIdList(ids: List<IdType>) {

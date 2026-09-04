@@ -5,6 +5,7 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
+import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.relation.PostWithRelations
@@ -14,6 +15,9 @@ import kotlin.uuid.Uuid
 interface PostDao {
     @Insert
     suspend fun insert(post: PostEntity)
+
+    @Upsert
+    suspend fun upsert(post: PostEntity)
 
     @Transaction
     @Query("SELECT * FROM Posts WHERE id = :id")

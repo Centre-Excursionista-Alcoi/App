@@ -5,6 +5,7 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
+import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.relation.MemoryWithRelations
@@ -14,6 +15,9 @@ import kotlin.uuid.Uuid
 interface MemoryDao {
     @Insert
     suspend fun insert(memory: MemoryEntity)
+
+    @Upsert
+    suspend fun upsert(memory: MemoryEntity)
 
     @Transaction
     @Query("SELECT * FROM Memories WHERE id = :id")

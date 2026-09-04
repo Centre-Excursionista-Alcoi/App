@@ -5,14 +5,19 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
+import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.relation.InventoryItemTypeWithRelations
 import kotlin.uuid.Uuid
 
 @Dao
 interface InventoryItemTypeDao {
     @Insert
-    suspend fun insert(inventoryItemType: org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity)
+    suspend fun insert(inventoryItemType: InventoryItemTypeEntity)
+
+    @Upsert
+    suspend fun upsert(inventoryItemType: InventoryItemTypeEntity)
 
     @Transaction
     @Query("SELECT * FROM InventoryItemTypes WHERE id = :id LIMIT 1")

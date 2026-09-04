@@ -6,6 +6,7 @@ import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.entity.PostEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
@@ -17,7 +18,7 @@ import kotlin.uuid.Uuid
 
 @Singleton
 class PostsRemoteRepository(
-    postsRepository: PostsRepository,
+    private val postsRepository: PostsRepository,
 ) : RemoteRepository<Uuid, ReferencedPost, Uuid, Post>(
     "/posts",
     SETTINGS_LAST_POSTS_SYNC,
@@ -73,5 +74,20 @@ class PostsRemoteRepository(
             UpdatePostRequest.serializer(),
             progressNotifier
         )
+    }
+
+    override suspend fun insertRemoteEntity(entity: Post): ReferencedPost {
+        postsRepository.insert(entity.toEntity())
+        return postsRepository.get(entity.id)!!
+    }
+
+    override suspend fun updateRemoteEntity(entity: Post): ReferencedPost {
+        postsRepository.update(entity.toEntity())
+        return postsRepository.get(entity.id)!!
+    }
+
+    override suspend fun upsertRemoteEntity(entity: Post): ReferencedPost {
+        postsRepository.upsert(entity.toEntity())
+        return postsRepository.get(entity.id)!!
     }
 }
