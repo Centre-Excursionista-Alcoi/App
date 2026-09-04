@@ -384,7 +384,7 @@ fun LazyListScope.lendingManagementScreenContent(
                         color = MaterialTheme.colorScheme.error,
                     )
                 } else {
-                    MemoryViewButtons(lending.memory!!)
+                    MemoryViewButtons(lending.memory!!, snackbarHostState)
                 }
             }
 

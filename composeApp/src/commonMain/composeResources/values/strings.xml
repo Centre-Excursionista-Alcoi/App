@@ -111,6 +111,7 @@
     <string name="barcode">Bar Code</string>
     <string name="unknown">Unknown</string>
     <string name="share">Share</string>
+    <string name="save">Save</string>
     <string name="logout">Logout</string>
     <string name="none">None</string>
     <string name="remove">Remove</string>
@@ -376,6 +377,8 @@
     <string name="memory_images">Images</string>
     <string name="memory_members">Participating Members</string>
     <string name="memory_external">Other people</string>
+    <string name="memory_saved">Memory stored successfully</string>
+    <string name="memory_open_file">Open</string>
 
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
