@@ -210,10 +210,14 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      */
     suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false) {
         try {
-            val remoteList = getAll(progress, ignoreIfModifiedSince) // all entries from the remote server
-
             progress?.invoke(Progress.LocalDBRead)
             val localList = repository.selectAll() // all entries from the local database
+
+            // A stored "last synced" timestamp cannot be trusted when the local table is empty: the server may
+            // legitimately report "not modified" even though there's nothing to show locally (e.g. after the local
+            // database was reset without also clearing the per-repository sync timestamps). Force a full fetch then.
+            val forceFetch = ignoreIfModifiedSince || localList.isEmpty()
+            val remoteList = getAll(progress, forceFetch) // all entries from the remote server
 
             progress?.invoke(Progress.DataProcessing)
             val toUpdate = mutableListOf<RemoteEntity>()
