@@ -19,9 +19,9 @@ class DepartmentsRepository(db: AppDatabase) : Repository<Department, Uuid> {
 
     override suspend fun selectAll() = dao.selectAll().map { it.toDepartment() }
 
-    override suspend fun get(id: Uuid): Department? {
-        return dao.get(id)?.toDepartment()
-    }
+    override suspend fun get(id: Uuid): Department? = dao.get(id)?.toDepartment()
+
+    override suspend fun getByIdList(ids: List<Uuid>): List<Department> = dao.getByIdList(ids).map { it.toDepartment() }
 
     override fun getAsFlow(id: Uuid): Flow<Department?> {
         return dao

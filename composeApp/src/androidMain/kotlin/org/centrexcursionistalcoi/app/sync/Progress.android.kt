@@ -4,7 +4,7 @@ import androidx.work.Data
 import org.centrexcursionistalcoi.app.process.Progress
 
 fun Data.toProgress(): Progress {
-    val type = getString(BackgroundJobWorker.PROGRESS_KEY_TYPE) ?: throw IllegalArgumentException("Progress type is missing")
+    val type = getString(BackgroundJobWorker.PROGRESS_KEY_TYPE) ?: return Progress.Default
     val current = getLong(BackgroundJobWorker.PROGRESS_KEY_CURRENT, -1)
     val total = getLong(BackgroundJobWorker.PROGRESS_KEY_TOTAL, -1).takeIf { it >= 0 }
     val name = getString(BackgroundJobWorker.PROGRESS_KEY_NAME)

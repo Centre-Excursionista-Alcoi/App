@@ -3,6 +3,8 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
@@ -19,6 +21,8 @@ class LendingsRepository(
 
     override suspend fun get(id: Uuid): ReferencedLending? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedLending> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedLending?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override fun selectAllAsFlow(): Flow<List<ReferencedLending>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
@@ -27,7 +31,7 @@ class LendingsRepository(
 
     override suspend fun insert(item: ReferencedLending) {
         dao.insert(item.dereference().toEntity())
-        item.memory?.let { memoriesRepository.insertOrUpdate(it) }
+        item.memory?.let { insertOrUpdateMemory(it) }
 
         val lendingItemDao = db.lendingItemDao()
         for (inventoryItem in item.items) {
@@ -53,7 +57,7 @@ class LendingsRepository(
 
     override suspend fun update(item: ReferencedLending) {
         dao.update(item.dereference().toEntity())
-        item.memory?.let { memoriesRepository.insertOrUpdate(it) }
+        item.memory?.let { insertOrUpdateMemory(it) }
 
         val lendingItemDao = db.lendingItemDao()
         lendingItemDao.deleteByLendingId(item.id)
@@ -72,6 +76,26 @@ class LendingsRepository(
             receivedItemDao.insert(receivedItem.toEntity())
         }
     }
+
+    /**
+     * Writes only the [LendingEntity] row -- unlike [insert]/[update] of [ReferencedLending], this does not touch
+     * the associated memory, [LendingItemEntity] or [org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows.
+     */
+    private suspend fun insertOrUpdateMemory(memory: ReferencedMemory) {
+        if (memoriesRepository.get(memory.id) == null) memoriesRepository.insert(memory) else memoriesRepository.update(memory)
+    }
+
+    /**
+     * Writes only the [LendingEntity] row -- unlike [insert]/[update] of [ReferencedLending], this does not touch
+     * the associated memory, [LendingItemEntity] or [org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows.
+     */
+    suspend fun insert(item: LendingEntity) = dao.insert(item)
+
+    /** @see insert */
+    suspend fun update(item: LendingEntity) = dao.update(item)
+
+    /** @see insert */
+    suspend fun upsert(item: LendingEntity) = dao.upsert(item)
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

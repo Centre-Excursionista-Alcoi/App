@@ -4,6 +4,7 @@ import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
@@ -17,6 +18,8 @@ class InventoryItemTypesRepository(private val db: AppDatabase) : Repository<Ref
 
     override suspend fun get(id: Uuid): ReferencedInventoryItemType? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedInventoryItemType> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItemType?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override fun selectAllAsFlow(): Flow<List<ReferencedInventoryItemType>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
@@ -27,13 +30,19 @@ class InventoryItemTypesRepository(private val db: AppDatabase) : Repository<Ref
         .selectAllWithCategoriesAsFlow()
         .map { list -> list.flatMap { it.categories.orEmpty() }.toSet() }
 
-    override suspend fun insert(item: ReferencedInventoryItemType) = dao.insert(
-        item.dereference().toEntity()
-    )
+    override suspend fun insert(item: ReferencedInventoryItemType) {
+        dao.insert(item.dereference().toEntity())
+    }
 
-    override suspend fun update(item: ReferencedInventoryItemType) = dao.update(
-        item.dereference().toEntity()
-    )
+    override suspend fun update(item: ReferencedInventoryItemType) {
+        dao.update(item.dereference().toEntity())
+    }
+
+    suspend fun insert(item: InventoryItemTypeEntity) = dao.insert(item)
+
+    suspend fun update(item: InventoryItemTypeEntity) = dao.update(item)
+
+    suspend fun upsert(item: InventoryItemTypeEntity) = dao.upsert(item)
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

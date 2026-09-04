@@ -4,10 +4,9 @@ import io.github.vinceglb.filekit.PlatformFile
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.fileWithContext
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC
@@ -17,18 +16,13 @@ import kotlin.uuid.Uuid
 
 @Singleton
 class InventoryItemTypesRemoteRepository(
-    inventoryItemTypesRepository: InventoryItemTypesRepository,
-    departmentsRepository: DepartmentsRepository
+    private val inventoryItemTypesRepository: InventoryItemTypesRepository,
 ) : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
     "/inventory/types",
     SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC,
     InventoryItemType.serializer(),
     inventoryItemTypesRepository,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { inventoryItemType ->
-        val departments = departmentsRepository.selectAll()
-        inventoryItemType.referenced(departments)
-    },
 ) {
     suspend fun create(
         displayName: String,
@@ -57,5 +51,20 @@ class InventoryItemTypesRemoteRepository(
             UpdateInventoryItemTypeRequest(displayName, description, categories, weight, department?.id, image?.fileWithContext()),
             UpdateInventoryItemTypeRequest.serializer(),
         )
+    }
+
+    override suspend fun insertRemoteEntity(entity: InventoryItemType): ReferencedInventoryItemType {
+        inventoryItemTypesRepository.insert(entity.toEntity())
+        return inventoryItemTypesRepository.get(entity.id)!!
+    }
+
+    override suspend fun updateRemoteEntity(entity: InventoryItemType): ReferencedInventoryItemType {
+        inventoryItemTypesRepository.update(entity.toEntity())
+        return inventoryItemTypesRepository.get(entity.id)!!
+    }
+
+    override suspend fun upsertRemoteEntity(entity: InventoryItemType): ReferencedInventoryItemType {
+        inventoryItemTypesRepository.upsert(entity.toEntity())
+        return inventoryItemTypesRepository.get(entity.id)!!
     }
 }

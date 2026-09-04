@@ -3,29 +3,35 @@ package org.centrexcursionistalcoi.app.database.dao
 import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.Query
+import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 
 @Dao
 interface MemberDao {
     @Insert
-    suspend fun insert(member: org.centrexcursionistalcoi.app.database.entity.MemberEntity)
+    suspend fun insert(member: MemberEntity)
 
     @Query("SELECT * FROM Members WHERE memberNumber = :memberNumber")
-    suspend fun get(memberNumber: Long): org.centrexcursionistalcoi.app.database.entity.MemberEntity?
+    suspend fun get(memberNumber: Long): MemberEntity?
+
+    @Transaction
+    @Query("SELECT * FROM Members WHERE memberNumber IN (:memberNumbers)")
+    suspend fun getByMemberNumbers(memberNumbers: List<Long>): List<MemberEntity>
 
     @Query("SELECT * FROM Members WHERE memberNumber = :memberNumber")
-    fun getAsFlow(memberNumber: Long): Flow<org.centrexcursionistalcoi.app.database.entity.MemberEntity?>
+    fun getAsFlow(memberNumber: Long): Flow<MemberEntity?>
 
     @Query("SELECT * FROM Members")
-    suspend fun selectAll(): List<org.centrexcursionistalcoi.app.database.entity.MemberEntity>
+    suspend fun selectAll(): List<MemberEntity>
 
     @Query("SELECT * FROM Members")
-    fun selectAllAsFlow(): Flow<List<org.centrexcursionistalcoi.app.database.entity.MemberEntity>>
+    fun selectAllAsFlow(): Flow<List<MemberEntity>>
 
     @Query("DELETE FROM Members WHERE memberNumber = :memberNumber")
     suspend fun deleteById(memberNumber: Long)
 
     @Update
-    suspend fun update(member: org.centrexcursionistalcoi.app.database.entity.MemberEntity)
+    suspend fun update(member: MemberEntity)
 }

@@ -23,6 +23,8 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
      */
     suspend fun get(id: IdType): T?
 
+    suspend fun getByIdList(ids: List<IdType>): List<T>
+
     fun getAsFlow(id: IdType): Flow<T?>
 
     suspend fun insert(item: T)
@@ -37,22 +39,6 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
 
     suspend fun update(items: List<T>) {
         for (item in items) {
-            update(item)
-        }
-    }
-
-    /**
-     * Inserts or updates the given [item] in the repository.
-     *
-     * If an item already exists with the id of [item], it will be updated. Otherwise. it will be inserted.
-     * @param item The item to insert/update.
-     * @throws NoSuchElementException If the item exists, and it has a missing reference.
-     */
-    suspend fun insertOrUpdate(item: T) {
-        val existingItem = get(item.id)
-        if (existingItem == null) {
-            insert(item)
-        } else {
             update(item)
         }
     }

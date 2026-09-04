@@ -15,10 +15,8 @@ import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.fileWithContext
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -38,10 +36,7 @@ import kotlin.uuid.Uuid
  */
 @Singleton
 class MemoriesRemoteRepository(
-    memoriesRepository: MemoriesRepository,
-    usersRepository: UsersRepository,
-    membersRepository: MembersRepository,
-    departmentsRepository: DepartmentsRepository,
+    private val memoriesRepository: MemoriesRepository,
 ) : RemoteRepository<Uuid, ReferencedMemory, Uuid, Memory>(
     "/memories",
     SETTINGS_LAST_MEMORIES_SYNC,
@@ -49,9 +44,6 @@ class MemoriesRemoteRepository(
     memoriesRepository,
     isCreationSupported = false,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { memory ->
-        memory.referenced(usersRepository.selectAll(), membersRepository.selectAll(), departmentsRepository.selectAll())
-    },
 ) {
     suspend fun create(
         place: String?,
@@ -129,4 +121,19 @@ class MemoriesRemoteRepository(
         UpdateMemoryRequest.serializer(),
         progressNotifier,
     )
+
+    override suspend fun insertRemoteEntity(entity: Memory): ReferencedMemory {
+        memoriesRepository.insert(entity.toEntity())
+        return memoriesRepository.get(entity.id)!!
+    }
+
+    override suspend fun updateRemoteEntity(entity: Memory): ReferencedMemory {
+        memoriesRepository.update(entity.toEntity())
+        return memoriesRepository.get(entity.id)!!
+    }
+
+    override suspend fun upsertRemoteEntity(entity: Memory): ReferencedMemory {
+        memoriesRepository.upsert(entity.toEntity())
+        return memoriesRepository.get(entity.id)!!
+    }
 }

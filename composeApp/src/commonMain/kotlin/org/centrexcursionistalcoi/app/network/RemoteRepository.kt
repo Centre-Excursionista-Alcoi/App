@@ -53,7 +53,6 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private val isCreationSupported: Boolean = true,
     private val isPatchSupported: Boolean = true,
     private val remoteToLocalIdConverter: (RemoteIdType) -> LocalIdType,
-    private val remoteToLocalEntityConverter: suspend (RemoteEntity) -> LocalEntity,
 ) {
     /**
      * The version code since which this endpoint is available.
@@ -101,7 +100,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * @throws ServerException if the server returns an error response.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
-    suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<LocalEntity> {
+    suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<RemoteEntity> {
         if (!endpointSupported()) return emptyList()
 
         val response = httpClient.get(endpoint) {
@@ -116,8 +115,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
             val raw = response.bodyAsText().cleanNullFields()
-            val remoteEntity = json.decodeFromString(ListSerializer(serializer), raw)
-            return remoteEntity.map { remoteToLocalEntityConverter(it) }
+            val remoteEntities = json.decodeFromString(ListSerializer(serializer), raw)
+            return remoteEntities
         } else {
             val error = response.bodyAsError()
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
@@ -136,7 +135,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         url: String,
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
-    ): LocalEntity? {
+    ): RemoteEntity? {
         if (!endpointSupported()) return null
 
         val response = httpClient.get(url) {
@@ -152,7 +151,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)
-            return remoteToLocalEntityConverter(remoteEntity)
+            return remoteEntity
         } else {
             val error = response.bodyAsError()
             if (error is Error.EntityNotFound) {
@@ -176,7 +175,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         id: RemoteIdType,
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
-    ): LocalEntity? = getUrl("$endpoint/$id", progress, ignoreIfModifiedSince)
+    ): RemoteEntity? = getUrl("$endpoint/$id", progress, ignoreIfModifiedSince)
 
     /**
      * Fetches the entity with the given ID from the remote server and updates or inserts it into the local database.
@@ -193,11 +192,11 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         id: RemoteIdType,
         progressNotifier: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
-    ): LocalEntity? {
+    ): RemoteEntity? {
         val item = get(id, progressNotifier, ignoreIfModifiedSince)
         if (item != null) {
             progressNotifier?.invoke(Progress.LocalDBWrite)
-            repository.insertOrUpdate(item)
+            upsertRemoteEntity(item)
         }
         return item
     }
@@ -217,8 +216,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val localList = repository.selectAll() // all entries from the local database
 
             progress?.invoke(Progress.DataProcessing)
-            val toUpdate = mutableListOf<LocalEntity>()
-            val toInsert = mutableListOf<LocalEntity>()
+            val toUpdate = mutableListOf<RemoteEntity>()
+            val toInsert = mutableListOf<RemoteEntity>()
             for (item in remoteList) {
                 if (localList.find { it.id == item.id } != null) {
                     toUpdate += item
@@ -227,7 +226,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 }
             }
             // IDs of items that should remain in the database
-            val existingIds = toUpdate.map { it.id } + toInsert.map { it.id }
+            val existingIds = toUpdate.map { remoteToLocalIdConverter(it.id) } + toInsert.map { remoteToLocalIdConverter(it.id) }
 
             // Delete items that are not in the server response
             val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
@@ -238,9 +237,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             progress?.invoke(Progress.LocalDBWrite)
             // Insert new items
-            repository.insert(toInsert)
+            toInsert.forEach { insertRemoteEntity(it) }
             // Update existing items
-            repository.update(toUpdate)
+            toUpdate.forEach { updateRemoteEntity(it) }
             // Delete removed items
             repository.deleteByIdList(toDelete)
 
@@ -315,9 +314,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val item = getUrl(location, progressNotifier, ignoreIfModifiedSince = true)
                 checkNotNull(item) { "Could not retrieve the created item from the server." }
                 progressNotifier?.invoke(Progress.LocalDBWrite)
-                repository.insert(item)
+                val localItem = insertRemoteEntity(item)
 
-                downloadFileForEntity(item, progressNotifier)
+                downloadFileForEntity(localItem, progressNotifier)
             } catch (e: IllegalStateException) {
                 log.e { "${e.message} Synchronizing completely with server..." }
                 synchronizeWithDatabase(progressNotifier)
@@ -355,9 +354,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val item = getUrl(location, ignoreIfModifiedSince = true)
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
             progressNotifier?.invoke(Progress.LocalDBWrite)
-            repository.update(item)
+            val localItem = updateRemoteEntity(item)
 
-            downloadFileForEntity(item, progressNotifier)
+            downloadFileForEntity(localItem, progressNotifier)
         } else {
             val error = response.bodyAsError()
             log.e { "Failed to update $name#$id: $error" }
@@ -395,6 +394,30 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
+
+    /**
+     * Updates the given remote entity in the local database.
+     * @param entity The remote entity to update.
+     * @return The updated local entity.
+     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     */
+    protected abstract suspend fun updateRemoteEntity(entity: RemoteEntity): LocalEntity
+
+    /**
+     * Inserts the given remote entity into the local database.
+     * @param entity The remote entity to insert.
+     * @return The inserted local entity.
+     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     */
+    protected abstract suspend fun insertRemoteEntity(entity: RemoteEntity): LocalEntity
+
+    /**
+     * Updates or inserts the given remote entity into the local database.
+     * @param entity The remote entity to upsert.
+     * @return The upserted local entity.
+     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     */
+    protected abstract suspend fun upsertRemoteEntity(entity: RemoteEntity): LocalEntity
 
 
     companion object {
