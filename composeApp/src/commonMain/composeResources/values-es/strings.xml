@@ -161,7 +161,7 @@
     <string name="management_promote_user_title">Promocionar usuario</string>
     <string name="management_promote_user_confirmation">Seguro que quieres promocionar %1$s para que sea un administrador?</string>
     <string name="delete_dialog_title">Eliminar %1$s</string>
-    <string name="delete_dialog_message">Seguro que quieres eliminar \"%1$s\"? Esta acción no se puede deshacer.</string>
+    <string name="delete_dialog_message">Seguro que quieres eliminar \\"%1$s\\"? Esta acción no se puede deshacer.</string>
     <string name="inventory_item_type_title">Detalles del elemento</string>
     <string name="inventory_item_type_not_found">Tipo no encontrado</string>
     <string name="inventory_item_type">Tipo: %1$s</string>
@@ -210,7 +210,7 @@
     <string name="femecv_username">Nombre de Usuario</string>
     <string name="femecv_password">Contraseña</string>
     <string name="femecv_logo">Logo FEMECV</string>
-    <string name="femecv_notice">Esta app no está relacionada ni financiada por la FEMECV. Esta conexión es unicamente una utilidad para facilitar la administración de tus licencias. Después de hacer click al botón de iniciar sesión, autorizas al Centre Excursionista d\'Alcoi a obtener y procesar tus licencias de la FEMECV.</string>
+    <string name="femecv_notice">Esta app no está relacionada ni financiada por la FEMECV. Esta conexión es unicamente una utilidad para facilitar la administración de tus licencias. Después de hacer click al botón de iniciar sesión, autorizas al Centre Excursionista d\\'Alcoi a obtener y procesar tus licencias de la FEMECV.</string>
     <string name="form_display_name">Nombre a mostrar</string>
     <string name="form_description">Descripción</string>
     <string name="form_select_image">Seleccionar imagen</string>
@@ -272,7 +272,7 @@
     <string name="settings_report_session_title">Recolectar información de reproducción de sesiones</string>
     <string name="settings_report_session_summary">Si está habilitado, la app recolectará automaticamente datos de reproducción de sesiones para a mejorar la experiencia de usuario.</string>
     <string name="settings_dev_credit_title">App desarrollada por %1$s</string>
-    <string name="settings_dev_credit_message">Esta app ha sido desarrollada de manera desinteresada por el Centre Excursionista d\'Alcoi per %1$s.</string>
+    <string name="settings_dev_credit_message">Esta app ha sido desarrollada de manera desinteresada por el Centre Excursionista d\\'Alcoi per %1$s.</string>
     <string name="settings_dev_credit_website">Sitio Web</string>
     <string name="settings_dev_credit_email">Email</string>
     <string name="nav_home">Inicio</string>
@@ -418,7 +418,7 @@
     <string name="personal_info_email_none">El usuario no tiene una dirección de correo electrónico válida.</string>
     <string name="personal_info_not_registered">El usuario aún no se ha registrado en la app.</string>
     <string name="personal_info_not_a_member">El usuario ya no es socio/socia del club.</string>
-    <string name="personal_info_member_pending">Puede que el usuario ya no forme parte del club: el estado es \"Pendiente\".</string>
+    <string name="personal_info_member_pending">Puede que el usuario ya no forme parte del club: el estado es \\"Pendiente\\".</string>
     <string name="memory_editor_department">Sección</string>
     <string name="notification_join_request_denied_title">Solicitud de unión a sección denegada</string>
     <string name="notification_join_request_denied_message">Tu solicitud para unirte a una sección ha sido denegada.</string>

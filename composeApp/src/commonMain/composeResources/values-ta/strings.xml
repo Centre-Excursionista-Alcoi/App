@@ -233,7 +233,7 @@
     <string name="management_user_registered">உறுப்பினர் பதிவு செய்யப்பட்டுள்ளார்</string>
     <string name="management_user_not_registered">உறுப்பினர் பதிவு செய்யப்படவில்லை</string>
     <string name="delete_dialog_title">%1$sஐ நீக்கு</string>
-    <string name="delete_dialog_message">\"%1$s\" ஐ நிச்சயமாக நீக்க விரும்புகிறீர்களா? இந்தச் செயலைச் செயல்தவிர்க்க முடியாது.</string>
+    <string name="delete_dialog_message">\\"%1$s\\" ஐ நிச்சயமாக நீக்க விரும்புகிறீர்களா? இந்தச் செயலைச் செயல்தவிர்க்க முடியாது.</string>
     <string name="delete_dialog_no_name_title">நீக்குதலை உறுதிப்படுத்தவும்</string>
     <string name="delete_dialog_no_name_message">இந்த உறுப்பை நிச்சயமாக நீக்க விரும்புகிறீர்களா? இந்தச் செயலைச் செயல்தவிர்க்க முடியாது.</string>
     <string name="delete_dialog_reason">நீக்குவதற்கான காரணம்</string>
@@ -312,7 +312,7 @@
     <string name="femecv_username">பயனர் பெயர்</string>
     <string name="femecv_password">கடவுச்சொல்</string>
     <string name="femecv_logo">FEMECV லோகோ</string>
-    <string name="femecv_notice">இந்த பயன்பாடு FEMECV உடன் தொடர்புடையது அல்லது அங்கீகரிக்கப்படவில்லை. இந்த இணைப்பு செயல்முறை உங்கள் உரிமங்களின் நிர்வாகத்தை எளிதாக்குவதற்கான ஒரு பயன்பாட்டு செயல்பாடாகும். உள்நுழைவு பொத்தானை அழுத்திய பிறகு, உங்களின் FEMECV உரிமங்களை நிர்வகிக்கவும் செயலாக்கவும் சென்டர் எக்ச்கர்சனிச்டா டி\'அல்கோயை அங்கீகரிக்கிறீர்கள்.</string>
+    <string name="femecv_notice">இந்த பயன்பாடு FEMECV உடன் தொடர்புடையது அல்லது அங்கீகரிக்கப்படவில்லை. இந்த இணைப்பு செயல்முறை உங்கள் உரிமங்களின் நிர்வாகத்தை எளிதாக்குவதற்கான ஒரு பயன்பாட்டு செயல்பாடாகும். உள்நுழைவு பொத்தானை அழுத்திய பிறகு, உங்களின் FEMECV உரிமங்களை நிர்வகிக்கவும் செயலாக்கவும் சென்டர் எக்ச்கர்சனிச்டா டி\\'அல்கோயை அங்கீகரிக்கிறீர்கள்.</string>
     <string name="form_display_name">காட்சி பெயர்</string>
     <string name="form_description">விவரம்</string>
     <string name="form_select_image">படத்தைத் தேர்ந்தெடுக்கவும்</string>
@@ -408,7 +408,7 @@
     <string name="settings_remove_account_summary">உங்கள் கணக்கையும் அதனுடன் தொடர்புடைய எல்லா தரவையும் சேவையகத்திலிருந்து நீக்குகிறது. இந்தச் செயலைச் செயல்தவிர்க்க முடியாது.</string>
     <string name="settings_remove_account_message">நீங்கள் ஏற்றுக்கொண்டால், உங்கள் கணக்கு மற்றும் அதனுடன் தொடர்புடைய அனைத்து தரவுகளும் சேவையகத்திலிருந்து அகற்றப்படும். உங்கள் அமர்வு மூடப்படும், மேலும் உங்களால் மீண்டும் உள்நுழைய முடியாது. இது உங்களை கிளப்பில் இருந்து நீக்காது என்பதை நினைவில் கொள்ளவும், அவ்வாறு செய்ய சம்பந்தப்பட்ட அதிகாரிகளை நீங்கள் தொடர்பு கொள்ள வேண்டும். இது பயன்பாட்டின் சேவையகங்களிலிருந்து உங்களுடன் தொடர்புடைய எல்லா தரவையும் திறம்பட அகற்றும்.</string>
     <string name="settings_dev_credit_title">பயன்பாடு %1$s ஆல் உருவாக்கப்பட்டது</string>
-    <string name="settings_dev_credit_message">இந்த ஆப்ச் %1$s ஆல் நடுவண் Excursionista d\'Alcoi க்காக இலவசமாக உருவாக்கப்பட்டது.</string>
+    <string name="settings_dev_credit_message">இந்த ஆப்ச் %1$s ஆல் நடுவண் Excursionista d\\'Alcoi க்காக இலவசமாக உருவாக்கப்பட்டது.</string>
     <string name="settings_dev_credit_website">இணையதளம்</string>
     <string name="settings_dev_credit_email">மின்னஞ்சல்</string>
     <string name="days_of_week_short_monday">திங்கள்.</string>
