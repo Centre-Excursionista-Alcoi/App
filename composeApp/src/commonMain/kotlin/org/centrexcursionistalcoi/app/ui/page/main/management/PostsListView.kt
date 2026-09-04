@@ -54,6 +54,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.localizedDate
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Link
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -85,8 +86,8 @@ fun PostsListView(model: PostsManagementViewModel = koinViewModel()) {
 private fun PostsListView(
     posts: List<ReferencedPost>?,
     departments: List<Department>?,
-    onCreate: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdate: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: (Progress) -> Unit) -> Job,
+    onCreate: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: ProgressNotifier) -> Job,
+    onUpdate: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: ProgressNotifier) -> Job,
     onDelete: (ReferencedPost) -> Job,
 ) {
     ListView(
@@ -187,9 +188,7 @@ private fun PostsListView(
                 onClick = {
                     isLoading = true
                     val job = if (post == null) {
-                        onCreate(title, department, content, link, newFiles) {
-                            progress = it
-                        }
+                        onCreate(title, department, content, link, newFiles, ProgressNotifier { progress = it })
                     } else {
                         onUpdate(
                             post.id,
@@ -199,9 +198,8 @@ private fun PostsListView(
                             link.takeIf { it != post.link },
                             removedFiles,
                             newFiles,
-                        ) {
-                            progress = it
-                        }
+                            ProgressNotifier { progress = it }
+                        )
                     }
                     job.invokeOnCompletion {
                         isLoading = false

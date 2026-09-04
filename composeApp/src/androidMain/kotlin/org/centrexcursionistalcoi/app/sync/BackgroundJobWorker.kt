@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.android.annotation.KoinWorker
 import org.koin.core.qualifier.named
 import org.koin.java.KoinJavaComponent.inject
@@ -40,18 +41,24 @@ class BackgroundJobWorker(
 
     override suspend fun doWork(): Result {
         val context = BackgroundSyncContext(
-            progressNotifier = { progress ->
+            progressNotifier = ProgressNotifier { progress ->
                 val isIndeterminate = if (progress is Progress.Transfer) {
                     progress.isIndeterminate
                 } else {
                     true
                 }
+                val name = if (progress is Progress.NamedProgress) {
+                    progress.name
+                } else {
+                    null
+                }
                 setProgress(
                     workDataOf(
-                        "type" to progress::class.simpleName,
-                        "is_indeterminate" to isIndeterminate,
-                        "current" to (progress as? Progress.Transfer)?.current,
-                        "total" to (progress as? Progress.Transfer)?.total,
+                        PROGRESS_KEY_TYPE to progress::class.simpleName,
+                        PROGRESS_KEY_IS_INDETERMINATE to isIndeterminate,
+                        PROGRESS_KEY_CURRENT to (progress as? Progress.Transfer)?.current,
+                        PROGRESS_KEY_TOTAL to (progress as? Progress.Transfer)?.total,
+                        PROGRESS_KEY_NAME to name,
                     )
                 )
             }
@@ -86,6 +93,12 @@ class BackgroundJobWorker(
 
     companion object {
         const val EXTRA_LOGIC_NAME = "logic_name"
+
+        const val PROGRESS_KEY_TYPE = "type"
+        const val PROGRESS_KEY_IS_INDETERMINATE = "is_indeterminate"
+        const val PROGRESS_KEY_CURRENT = "current"
+        const val PROGRESS_KEY_TOTAL = "total"
+        const val PROGRESS_KEY_NAME = "name"
 
         const val RESULT_EXCEPTION_TYPE = "exception.type"
         const val RESULT_EXCEPTION_MESSAGE = "exception.message"

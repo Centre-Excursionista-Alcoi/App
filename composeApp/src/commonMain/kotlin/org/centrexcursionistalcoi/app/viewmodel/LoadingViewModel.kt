@@ -6,7 +6,7 @@ import com.diamondedge.logging.logging
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -18,35 +18,31 @@ import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.await
-import org.koin.core.annotation.InjectedParam
+import org.centrexcursionistalcoi.app.sync.copyToProgress
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class LoadingViewModel(
-    @InjectedParam private val onLoggedInParam: () -> Unit,
-    @InjectedParam private val onNotLoggedInParam: () -> Unit,
     private val dispatcherProvider: DispatcherProvider,
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
 ) : ViewModel() {
 
     private val log = logging()
 
-    private val _progress = MutableStateFlow<Progress?>(null)
-    val progress = _progress.asStateFlow()
+    val progress: StateFlow<Progress?>
+        field = MutableStateFlow<Progress?>(null)
 
-    private val _error = MutableStateFlow<Throwable?>(null)
-    val error = _error.asStateFlow()
+    val error: StateFlow<Throwable?>
+        field = MutableStateFlow<Throwable?>(null)
 
-    private val progressNotifier: ProgressNotifier = { progress ->
-        _progress.value = progress
-    }
+    private val progressNotifier: ProgressNotifier = ProgressNotifier { progress.value = it }
 
-    private fun load(
+    fun load(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
     ) = viewModelScope.launch(dispatcherProvider.io) {
         log.d { "Loading app content..." }
-        _error.value = null
+        error.value = null
 
         Server.loadInfo()
 
@@ -59,7 +55,7 @@ class LoadingViewModel(
                         input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "true"),
                         requiresInternet = true,
                         uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
-                    ).await()
+                    ).copyToProgress(progressNotifier, dispatcherProvider.io).await()
                 } else {
                     log.d { "Scheduling periodic sync..." }
                     backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
@@ -70,7 +66,7 @@ class LoadingViewModel(
                     )
                 }
 
-                _progress.value = null
+                progress.value = null
                 withContext(dispatcherProvider.main) { onLoggedIn() }
             } else {
                 // Clear Sentry user context
@@ -78,13 +74,13 @@ class LoadingViewModel(
                     scope.user = null
                 }
 
-                _progress.value = null
+                progress.value = null
                 withContext(dispatcherProvider.main) { onNotLoggedIn() }
             }
         } catch (e: Exception) {
             log.e(e) { "Error while loading." }
-            _progress.value = null
-            _error.value = e
+            progress.value = null
+            error.value = e
         }
     }
 
@@ -115,10 +111,5 @@ class LoadingViewModel(
 
         log.d { "Load finished!" }
         return true
-    }
-
-    init {
-        log.d { "Initialized LoadingViewModel..." }
-        load(onLoggedInParam, onNotLoggedInParam)
     }
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.process.Progress
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -17,7 +18,9 @@ import kotlin.time.Duration
 import kotlin.uuid.Uuid
 
 @Singleton
-actual class BackgroundJobCoordinator : KoinComponent {
+actual class BackgroundJobCoordinator(
+    val dispatcherProvider: DispatcherProvider
+) : KoinComponent {
     val coordinatorLog = logging()
 
     private var jobStateIdFlows = mapOf<Uuid, MutableStateFlow<BackgroundJobState>>()
@@ -25,6 +28,9 @@ actual class BackgroundJobCoordinator : KoinComponent {
 
     private var jobStateUniqueNameFlows = mutableStateMapOf<String, MutableStateFlow<BackgroundJobState>>()
     private val jobStateUniqueNameMutex = Mutex()
+
+    private var jobProgressFlows = mapOf<Uuid, MutableStateFlow<Progress>>()
+    private val jobProgressMutex = Mutex()
 
     suspend fun emitStateById(id: Uuid, state: BackgroundJobState) {
         jobStateIdMutex.withLock {
@@ -42,6 +48,27 @@ actual class BackgroundJobCoordinator : KoinComponent {
             jobStateIdFlows[id] ?: run {
                 val newFlow = MutableStateFlow(BackgroundJobState.ENQUEUED)
                 jobStateIdFlows = jobStateIdFlows + (id to newFlow)
+                newFlow
+            }
+        }
+    }
+
+    suspend fun emitProgressById(id: Uuid, progress: Progress) {
+        jobProgressMutex.withLock {
+            val flow = jobProgressFlows[id] ?: run {
+                val newFlow = MutableStateFlow(progress)
+                jobProgressFlows = jobProgressFlows + (id to newFlow)
+                newFlow
+            }
+            flow.emit(progress)
+        }
+    }
+
+    suspend fun fetchProgressStateFlowById(id: Uuid): MutableStateFlow<Progress> {
+        return jobProgressMutex.withLock {
+            jobProgressFlows[id] ?: run {
+                val newFlow = MutableStateFlow<Progress>(Progress.Default)
+                jobProgressFlows = jobProgressFlows + (id to newFlow)
                 newFlow
             }
         }
@@ -82,7 +109,7 @@ actual class BackgroundJobCoordinator : KoinComponent {
         repeatInterval: Duration?,
     ) {
         coordinatorLog.info { "Scheduling background job $id (uniqueName=$uniqueName, repeatInterval=$repeatInterval). Input: $input" }
-        CoroutineScope(get<DispatcherProvider>().io).launch {
+        CoroutineScope(dispatcherProvider.io).launch {
             if (repeatInterval != null) {
                 while (true) {
                     execute<Logic>(input, id, uniqueName)
@@ -104,7 +131,11 @@ actual class BackgroundJobCoordinator : KoinComponent {
             emitState(id, uniqueName, BackgroundJobState.RUNNING)
             val logic = get<Logic>(named(Logic::class.simpleName!!))
             with(logic) {
-                BackgroundSyncContext().run(input)
+                BackgroundSyncContext(
+                    progressNotifier = { progress ->
+                        emitProgressById(id, progress)
+                    }
+                ).run(input)
             }
             emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
         } catch (e: Throwable) {

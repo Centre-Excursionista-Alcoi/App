@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
@@ -76,8 +77,9 @@ class ActivityMemoryEditorViewModel(
                         sport,
                         department,
                         markdownText,
-                        files
-                    ) { _saveProgress.value = it }
+                        files,
+                        ProgressNotifier { _saveProgress.value = it }
+                    )
                 } else {
                     require(from != null && to != null) { "From and To dates must be provided when creating a memory not for a lending" }
 

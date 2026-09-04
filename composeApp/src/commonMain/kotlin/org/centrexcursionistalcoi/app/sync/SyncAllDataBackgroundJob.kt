@@ -1,5 +1,16 @@
 package org.centrexcursionistalcoi.app.sync
 
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.sync_step_departments
+import cea_app.composeapp.generated.resources.sync_step_events
+import cea_app.composeapp.generated.resources.sync_step_item_types
+import cea_app.composeapp.generated.resources.sync_step_items
+import cea_app.composeapp.generated.resources.sync_step_lendings
+import cea_app.composeapp.generated.resources.sync_step_members
+import cea_app.composeapp.generated.resources.sync_step_memories
+import cea_app.composeapp.generated.resources.sync_step_posts
+import cea_app.composeapp.generated.resources.sync_step_profile
+import cea_app.composeapp.generated.resources.sync_step_users
 import com.diamondedge.logging.logging
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
@@ -27,7 +38,6 @@ import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
-import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
 import org.koin.core.annotation.Named
@@ -77,7 +87,10 @@ class SyncAllDataBackgroundJob(
             log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
-            syncAll(forceSync, progressNotifier)
+            synchronizeAllRepositories(forceSync)
+
+            settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
+            settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
 
             SyncResult.Success()
         } else {
@@ -87,44 +100,43 @@ class SyncAllDataBackgroundJob(
         }
     }
 
-    private suspend fun synchronizeAllRepositories(
+    private suspend fun BackgroundSyncContext.synchronizeAllRepositories(
         force: Boolean,
-        progressNotifier: ProgressNotifier?,
         isRetry: Boolean = false,
     ) {
         try {
             // First, synchronize the user profile
-            ProfileRemoteRepository.synchronize(progressNotifier, ignoreIfModifiedSince = force)
+            ProfileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
 
             // Departments does not depend on any other entity, so we sync it first
-            departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_departments), ignoreIfModifiedSince = force)
 
             // Users does not depend on any other entity
-            usersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            usersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_users), ignoreIfModifiedSince = force)
 
             // Members do not depend on any other entity
-            membersRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            membersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_members), ignoreIfModifiedSince = force)
 
             // Posts requires Departments
-            postsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            postsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_posts), ignoreIfModifiedSince = force)
 
             // Events requires Departments and Users
             // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
-            eventsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            eventsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_events), ignoreIfModifiedSince = force)
 
             // Inventory Item Types requires Departments
-            inventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            inventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_item_types), ignoreIfModifiedSince = force)
 
             // Inventory Items requires Inventory Item Types
-            inventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            inventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_items), ignoreIfModifiedSince = force)
 
             // Lendings requires Users, Inventory Item Types and Inventory Items
             // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
             // lending user info will not be valid for non-admins, StubUser will be filled on those cases
-            lendingsRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            lendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_lendings), ignoreIfModifiedSince = force)
 
             // Memories requires Departments and (optionally) Lendings
-            memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier, ignoreIfModifiedSince = force)
+            memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_memories), ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -149,7 +161,7 @@ class SyncAllDataBackgroundJob(
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
 
                 log.d { "Running sync again..." }
-                synchronizeAllRepositories(true, progressNotifier, isRetry = true)
+                synchronizeAllRepositories(true, isRetry = true)
             }
         } catch (e: ServerException) {
             if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
@@ -160,13 +172,6 @@ class SyncAllDataBackgroundJob(
                 throw e
             }
         }
-    }
-
-    suspend fun syncAll(force: Boolean = false, progressNotifier: ProgressNotifier? = null) {
-        synchronizeAllRepositories(force, progressNotifier)
-
-        settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
-        settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
     }
 
     companion object {

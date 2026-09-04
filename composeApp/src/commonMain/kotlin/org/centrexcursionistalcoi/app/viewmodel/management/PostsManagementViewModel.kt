@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
-import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.viewmodel.launch
 import org.centrexcursionistalcoi.app.viewmodel.stateInViewModel
 import org.koin.core.annotation.KoinViewModel
@@ -32,7 +32,7 @@ class PostsManagementViewModel(
         content: RichTextState,
         link: String,
         files: List<PlatformFile>,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) = launch {
         withContext(dispatcherProvider.io) {
             val contentMarkdown = content.toMarkdown()
@@ -56,7 +56,7 @@ class PostsManagementViewModel(
         link: String?,
         removedFiles: List<Uuid>,
         files: List<PlatformFile>,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) = launch {
         withContext(dispatcherProvider.io) {
             val contentMarkdown = content?.toMarkdown()

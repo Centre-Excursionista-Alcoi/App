@@ -24,7 +24,7 @@ class FileProviderModel(
     private val _progress = MutableStateFlow<Progress?>(null)
     val progress = _progress.asStateFlow()
 
-    private val progressNotifier: ProgressNotifier = { _progress.value = it }
+    private val progressNotifier: ProgressNotifier = ProgressNotifier { _progress.value = it }
 
     fun openFile(contentType: ContentType = ContentType.Application.Pdf, pathProvider: suspend (ProgressNotifier) -> String) {
         if (!openFileLogic.isSupported) return
