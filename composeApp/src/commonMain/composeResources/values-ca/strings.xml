@@ -365,13 +365,13 @@
     <string name="management_no_posts">Sense publicacions</string>
     <string name="management_memory_pdf_not_available">Memòria no disponible en format PDF.</string>
     <string name="memory_editor_place">Lloc</string>
-    <string name="memory_editor_place_help">On es va dur a terme l\'activitat</string>
+    <string name="memory_editor_place_help">On es va dur a terme l\\'activitat</string>
     <string name="memory_editor_member_participants">Membres Participants</string>
     <string name="memory_editor_external_participants">Participants Externs</string>
-    <string name="memory_editor_external_participants_help">Persones que van participar en l\'activitat des de fora del club.</string>
+    <string name="memory_editor_external_participants_help">Persones que van participar en l\\'activitat des de fora del club.</string>
     <string name="memory_editor_upload_image">Puja imatges</string>
     <string name="memory_editor_sport">Esport</string>
-    <string name="memory_editor_description">Descripció de l\'Activitat</string>
+    <string name="memory_editor_description">Descripció de l\\'Activitat</string>
     <string name="post_by">Per %1$s</string>
     <string name="home_posts">Anuncis</string>
     <string name="days_of_week_monday">Dilluns</string>
