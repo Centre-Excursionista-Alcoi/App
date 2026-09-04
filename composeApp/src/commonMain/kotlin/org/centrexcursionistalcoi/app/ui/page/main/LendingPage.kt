@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.ui.page.main
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -24,6 +25,7 @@ fun LendingPage(
     onCancelLendingRequest: (ReferencedLending) -> Unit,
     onLendingHistoryRequest: () -> Unit,
     onMemoryEditorRequested: (ReferencedLending) -> Unit,
+    snackbarHostState: SnackbarHostState? = null,
     model: LendingPageModel = koinViewModel(),
 ) {
     val windowSizeClass = calculateWindowSizeClass()
@@ -54,6 +56,7 @@ fun LendingPage(
         LendingDetailsScreen_Content(
             lending = activeLending,
             modifier = Modifier.fillMaxSize(),
+            snackbarHostState = snackbarHostState,
             onMemoryEditorRequest = { onMemoryEditorRequested(activeLending) },
         )
     }

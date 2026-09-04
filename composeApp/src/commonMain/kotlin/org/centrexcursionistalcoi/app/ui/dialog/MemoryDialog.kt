@@ -18,10 +18,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +62,8 @@ fun MemoryDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
         onDismissRequest = onDismissRequest
     ) {
+        val snackbarHostState = remember { SnackbarHostState() }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -77,7 +82,8 @@ fun MemoryDialog(
                         }
                     }
                 )
-            }
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             MemoryDisplay(
                 memory = memory,
@@ -105,7 +111,7 @@ fun LabelWithTitle(title: String, text: String) {
 }
 
 @Composable
-fun MemoryDisplay(memory: ReferencedMemory, modifier: Modifier = Modifier) {
+fun MemoryDisplay(memory: ReferencedMemory, modifier: Modifier = Modifier, snackbarHostState: SnackbarHostState? = null) {
     Column(modifier) {
         memory.department?.let { department ->
             OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -176,6 +182,6 @@ fun MemoryDisplay(memory: ReferencedMemory, modifier: Modifier = Modifier) {
             )
         }
 
-        MemoryViewButtons(memory)
+        MemoryViewButtons(memory, snackbarHostState)
     }
 }
