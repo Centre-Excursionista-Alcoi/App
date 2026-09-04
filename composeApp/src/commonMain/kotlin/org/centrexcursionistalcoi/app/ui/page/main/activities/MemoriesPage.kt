@@ -27,6 +27,7 @@ import cea_app.composeapp.generated.resources.memory_from
 import cea_app.composeapp.generated.resources.memory_place
 import cea_app.composeapp.generated.resources.memory_to
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.MemoryDialog
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
@@ -37,18 +38,23 @@ import org.centrexcursionistalcoi.app.viewmodel.MemoriesViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
+/** Whether [profile] is allowed to modify this memory: only its submitter, or an admin. Tagged members can only view it. */
+private fun ReferencedMemory.canBeEditedBy(profile: ProfileResponse): Boolean =
+    submittedBy == profile || profile.isAdmin
+
 @Composable
 fun MemoriesPage(
     model: MemoriesViewModel = koinViewModel(),
     onEditRequest: (ReferencedMemory) -> Unit
 ) {
     val memories by model.memories.collectAsState()
+    val profile by model.profile.collectAsState()
 
-    memories?.let { MemoriesPage(memories = it, onEditRequest) } ?: LoadingBox()
+    memories?.let { MemoriesPage(memories = it, profile = profile, onEditRequest) } ?: LoadingBox()
 }
 
 @Composable
-private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (ReferencedMemory) -> Unit) {
+private fun MemoriesPage(memories: List<ReferencedMemory>, profile: ProfileResponse?, onEditRequest: (ReferencedMemory) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             Text(
@@ -72,14 +78,15 @@ private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (Refer
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
-                MemoryCard(memory, onEditRequest = { onEditRequest(memory) })
+                val canEdit = profile != null && memory.canBeEditedBy(profile)
+                MemoryCard(memory, onEditRequest = { onEditRequest(memory) }.takeIf { canEdit })
             }
         }
     }
 }
 
 @Composable
-fun MemoryCard(memory: ReferencedMemory, onEditRequest: () -> Unit) {
+fun MemoryCard(memory: ReferencedMemory, onEditRequest: (() -> Unit)? = null) {
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         MemoryDialog(

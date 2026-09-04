@@ -36,6 +36,7 @@ import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
+import org.centrexcursionistalcoi.app.database.table.MemoriesMembers
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Error
@@ -58,18 +59,24 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 
 /**
  * Fetches the memory with the id given in the call parameters (`id`), making sure the requesting session is allowed
- * to see it: admins can see every memory, while regular users can only see memories they submitted themselves.
+ * to see it: admins can see every memory, and regular users can always see memories they submitted themselves.
+ *
+ * If [requireOwnerOrAdmin] is `false`, a regular user tagged as a participating member of the memory is also allowed
+ * through -- used for read access. Modifying a memory ([requireOwnerOrAdmin] `true`, the default) always stays
+ * restricted to the submitter or an admin, regardless of tagging.
  *
  * If any error occurs, a response is sent to the user, and the function returns `null`.
  */
-private suspend fun RoutingContext.memoryRequest(session: UserSession): MemoryEntity? {
+private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOwnerOrAdmin: Boolean = true): MemoryEntity? {
     val id = call.parameters["id"]?.toUUIDOrNull()
     if (id == null) {
         respondError(Error.MalformedId())
@@ -82,7 +89,12 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession): MemoryEn
         return null
     }
 
-    if (!session.isAdmin() && Database { memory.submittedBy.sub.value } != session.sub) {
+    val isOwnerOrAdmin = session.isAdmin() || Database { memory.submittedBy.sub.value } == session.sub
+    val isAllowed = isOwnerOrAdmin || (!requireOwnerOrAdmin && Database {
+        val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
+        userMemberNumber != null && memory.members.any { it.memberNumber == userMemberNumber }
+    })
+    if (!isAllowed) {
         respondError(Error.PermissionRejected())
         return null
     }
@@ -350,7 +362,12 @@ fun Route.memoriesRoutes() {
             if (session.isAdmin()) {
                 MemoryEntity.all().toList()
             } else {
-                MemoryEntity.find { Memories.submittedBy eq session.sub }.toList()
+                // Regular users see memories they submitted, plus memories they're tagged as a participant on.
+                val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
+                val taggedMemoryIds = userMemberNumber?.let { memberNumber ->
+                    MemoriesMembers.selectAll().where { MemoriesMembers.member eq memberNumber }.map { it[MemoriesMembers.memory] }
+                }.orEmpty()
+                MemoryEntity.find { (Memories.submittedBy eq session.sub) or (Memories.id inList taggedMemoryIds) }.toList()
             }
         }
 
@@ -360,7 +377,7 @@ fun Route.memoriesRoutes() {
     }
     get("memories/{id}") {
         val session = getUserSessionOrFail() ?: return@get
-        val memory = memoryRequest(session) ?: return@get
+        val memory = memoryRequest(session, requireOwnerOrAdmin = false) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(memory, MemoryEntity)
