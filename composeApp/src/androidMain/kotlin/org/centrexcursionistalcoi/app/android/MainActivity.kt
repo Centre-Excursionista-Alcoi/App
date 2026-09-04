@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
 import com.mmk.kmpnotifier.notification.NotifierManager
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.init
 import io.ktor.http.Url
 import org.centrexcursionistalcoi.app.MainApp
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
@@ -19,6 +21,8 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        FileKit.init(this)
 
         PermissionInitiation.setActivity(this)
 

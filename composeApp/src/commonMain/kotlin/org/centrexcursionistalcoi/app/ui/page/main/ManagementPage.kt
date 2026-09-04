@@ -325,7 +325,7 @@ private fun ManagementPageContent(
         when (page) {
             ManagementPage.Lendings -> LendingsListView(snackbarHostState, onGiveRequested, onReceiveRequested)
 
-            ManagementPage.Memories -> MemoriesManagementListView()
+            ManagementPage.Memories -> MemoriesManagementListView(snackbarHostState)
 
             ManagementPage.Departments -> DepartmentsListView()
 

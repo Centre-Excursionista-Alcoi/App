@@ -656,6 +656,7 @@ private fun MainScreenPagerContent(
                 onCancelLendingRequest = onCancelLendingRequest,
                 onLendingHistoryRequest = onLendingHistoryRequest,
                 onMemoryEditorRequested = onMemoryEditorRequested,
+                snackbarHostState = snackbarHostState,
             )
             // If lending is selected, but there's no active lending, move to home
             Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }

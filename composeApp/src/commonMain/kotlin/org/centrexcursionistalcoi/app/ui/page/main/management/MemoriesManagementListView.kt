@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +28,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 @Composable
-fun MemoriesManagementListView(model: MemoriesManagementViewModel = koinViewModel()) {
+fun MemoriesManagementListView(snackbarHostState: SnackbarHostState? = null, model: MemoriesManagementViewModel = koinViewModel()) {
     val departments by model.departments.collectAsState()
     val members by model.members.collectAsState()
     val memories by model.memories.collectAsState()
@@ -36,7 +37,8 @@ fun MemoriesManagementListView(model: MemoriesManagementViewModel = koinViewMode
         memories = memories,
         members = members,
         departments = departments,
-        onDelete = model::delete
+        onDelete = model::delete,
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -45,7 +47,8 @@ private fun MemoriesManagementListView(
     memories: List<ReferencedMemory>?,
     members: List<Member>?,
     departments: List<Department>?,
-    onDelete: (ReferencedMemory) -> Job
+    onDelete: (ReferencedMemory) -> Job,
+    snackbarHostState: SnackbarHostState? = null
 ) {
     ListView(
         items = memories,
@@ -121,7 +124,8 @@ private fun MemoriesManagementListView(
         },
     ) { memory ->
         MemoryDisplay(
-            memory = memory
+            memory = memory,
+            snackbarHostState = snackbarHostState,
         )
     }
 }
