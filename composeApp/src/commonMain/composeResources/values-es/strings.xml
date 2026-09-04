@@ -403,7 +403,7 @@
     <string name="departments_member_none">Miembro de ninguna sección.</string>
     <string name="departments_member_pending">Petición pendiente.</string>
     <string name="departments_leave_title">Abandonando sección</string>
-    <string name="departments_leave_message">¿Seguro que quieres abandonar el departamento %1$s?</string>
+    <string name="departments_leave_message">¿Seguro que quieres abandonar la sección %1$s?</string>
     <string name="departments_leave">Abandonar</string>
     <string name="departments_kick_title">Expulsando de la sección</string>
     <string name="departments_kick_message">¿Seguro que quieres expulsar al usuario desde el departamento %1$s?</string>
@@ -503,4 +503,26 @@
     <string name="notification_lending_deleted_title">Préstec Eliminat</string>
     <string name="notification_lending_deleted_message">El teu préstec ha sigut eliminat per un administrador.</string>
     <string name="notification_lending_deleted_reason_message">El teu préstec ha sigut eliminat per un administrador. Motiu: %1$s</string>
+    <string name="nav_activities">Actividades</string>
+    <string name="sort_by_date_asc">Ordena por Fecha (antiguos primero)</string>
+    <string name="sort_by_date_desc">Ordena por Fecha (nuevos primero)</string>
+    <string name="management_no_memories">Sin memorias</string>
+    <string name="management_memories">Memorias</string>
+    <string name="activities_memories">Memorias</string>
+    <string name="activities_activities">Actividades</string>
+    <string name="memories_message">Aquí puedes ver todas las memorias que has enviado.</string>
+    <string name="memories_empty">No hay memorias disponibles</string>
+    <string name="memory_create">Crear nueva memoria</string>
+    <string name="memory_title">Memoria de Actividad</string>
+    <string name="memory_from">Fecha de Inicio</string>
+    <string name="memory_to">Fecha de Finalización</string>
+    <string name="memory_place">Lugar</string>
+    <string name="memory_submitted_by">Enviada por</string>
+    <string name="memory_text">Texto</string>
+    <string name="memory_images">Imágenes</string>
+    <string name="memory_members">Socios Participantes</string>
+    <string name="memory_external">Otras personas</string>
+    <string name="memory_editor_warning_no_lending">Estás creando una memoria para una actividad sin préstamo. Si usaste material del club para realizarla, por favor, completa la memoria desde el préstamo.</string>
+    <string name="memory_editor_from">Fecha de Inicio</string>
+    <string name="memory_editor_to">Fecha de Finalización</string>
 </resources>
