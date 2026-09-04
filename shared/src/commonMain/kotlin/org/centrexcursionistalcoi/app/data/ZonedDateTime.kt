@@ -49,7 +49,7 @@ data class ZonedDateTime(
      */
     fun toStringCompact(): String {
         // Do not display time if it's midnight, as it is not relevant in most cases
-        val shouldDisplayTime = time.hour != 0 || time.minute != 0
+        val shouldHideTime = time.hour == 0 && time.minute == 0
 
         fun DateTimeFormatBuilder.WithDateTimeComponents.appendTime() {
             char(' ')
@@ -70,7 +70,7 @@ data class ZonedDateTime(
             char('/')
             day()
 
-            if (shouldDisplayTime) appendTime()
+            if (!shouldHideTime) appendTime()
             if (timeZone != TimeZone.currentSystemDefault()) appendTimezone()
         }
         return format(format)
