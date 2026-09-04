@@ -6,6 +6,7 @@ import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -41,8 +42,10 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.LocalDate as KotlinLocalDate
@@ -220,6 +223,20 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memoryId = location.substringAfterLast('/').toUUIDOrNull()
         assertNotNull(memoryId)
 
+        val originalPdfId = client.get(location).run {
+            assertStatusCode(HttpStatusCode.OK)
+            var pdfId: kotlin.uuid.Uuid? = null
+            assertBody(Memory.serializer()) { memory ->
+                pdfId = memory.pdf
+                assertNotNull(pdfId, "A summary PDF should have been generated on creation")
+            }
+            pdfId!!
+        }
+        val originalPdfBytes = client.get("/download/$originalPdfId").run {
+            assertStatusCode(HttpStatusCode.OK)
+            bodyAsBytes()
+        }
+
         client.patch(location) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated place")))
@@ -227,13 +244,27 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.NoContent)
         }
 
-        client.get(location).apply {
+        val newPdfId = client.get(location).run {
             assertStatusCode(HttpStatusCode.OK)
+            var pdfId: kotlin.uuid.Uuid? = null
             assertBody(Memory.serializer()) { memory ->
                 assertEquals("Updated place", memory.place)
                 assertEquals(memoryId.toString(), memory.id.toJavaUuid().toString())
+                pdfId = memory.pdf
+                assertNotNull(pdfId, "The summary PDF should still be present after patching")
             }
+            pdfId!!
         }
+
+        // The PDF must have been regenerated: a new file, with content reflecting the patched data
+        assertNotEquals(originalPdfId, newPdfId, "The PDF should have been regenerated (a new file) after patching")
+        client.get("/download/$newPdfId").run {
+            assertStatusCode(HttpStatusCode.OK)
+            assertTrue(!bodyAsBytes().contentEquals(originalPdfBytes), "The regenerated PDF's content should reflect the patched data")
+        }
+
+        // The old PDF file is no longer referenced by anything, so it should have been deleted
+        client.get("/download/$originalPdfId").assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
