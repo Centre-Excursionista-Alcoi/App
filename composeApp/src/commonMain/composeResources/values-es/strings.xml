@@ -535,5 +535,4 @@
     <string name="sync_step_memories">Memorias</string>
     <string name="sync_step_posts">Anuncios</string>
     <string name="sync_step_events">Eventos</string>
-    <string name="memory_modify"></string>
 </resources>

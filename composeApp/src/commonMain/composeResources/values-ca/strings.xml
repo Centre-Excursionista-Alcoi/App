@@ -551,5 +551,4 @@
     <string name="sync_step_memories">Memòries</string>
     <string name="sync_step_posts">Anuncis</string>
     <string name="sync_step_events">Esdeveniments</string>
-    <string name="memory_modify"></string>
 </resources>
