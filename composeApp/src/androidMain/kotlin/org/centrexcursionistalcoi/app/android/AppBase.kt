@@ -10,7 +10,6 @@ import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfig
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.annotation.KoinApplication
@@ -38,8 +37,6 @@ class AppBase : Application(), KoinComponent {
             androidContext(this@AppBase)
             workManagerFactory()
         }
-
-        BackgroundJobCoordinator.initialize(applicationContext)
 
         NotifierManager.initialize(
             configuration = NotificationPlatformConfiguration.Android(

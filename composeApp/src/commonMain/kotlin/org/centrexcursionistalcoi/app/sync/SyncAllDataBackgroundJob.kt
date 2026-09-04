@@ -37,8 +37,8 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
 @Singleton
-@Named("SyncAllDataBackgroundJobLogic")
-class SyncAllDataBackgroundJobLogic(
+@Named("SyncAllDataBackgroundJob")
+class SyncAllDataBackgroundJob(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
     private val membersRemoteRepository: MembersRemoteRepository,
@@ -60,7 +60,7 @@ class SyncAllDataBackgroundJobLogic(
     private val memoriesRepository: MemoriesRepository,
 
     private val authBackend: AuthBackend,
-) : BackgroundSyncWorkerLogic() {
+) : BackgroundJob() {
     private val log = logging()
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {

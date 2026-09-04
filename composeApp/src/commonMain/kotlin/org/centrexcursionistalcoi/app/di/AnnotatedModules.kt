@@ -33,7 +33,7 @@ class CoreScanModule
 @ComponentScan("org.centrexcursionistalcoi.app.platform")
 class PlatformScanModule
 
-/** Scans `sync` for `@Singleton`-annotated background job logics (e.g. [org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJobLogic]). */
+/** Scans `sync` for `@Singleton`-annotated background job logics (e.g. [org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob]). */
 @Module
 @ComponentScan("org.centrexcursionistalcoi.app.sync")
 class SyncScanModule

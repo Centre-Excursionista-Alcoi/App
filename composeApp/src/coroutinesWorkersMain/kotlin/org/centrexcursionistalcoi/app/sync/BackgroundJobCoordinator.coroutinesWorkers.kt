@@ -75,7 +75,7 @@ actual class BackgroundJobCoordinator : KoinComponent {
         }
     }
 
-    inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleJob(
+    inline fun <reified Logic: BackgroundJob> scheduleJob(
         input: Map<String, String>,
         id: Uuid,
         uniqueName: String?,
@@ -95,7 +95,7 @@ actual class BackgroundJobCoordinator : KoinComponent {
         }
     }
 
-    suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> execute(
+    suspend inline fun <reified Logic: BackgroundJob> execute(
         input: Map<String, String>,
         id: Uuid,
         uniqueName: String?
@@ -113,7 +113,7 @@ actual class BackgroundJobCoordinator : KoinComponent {
         }
     }
 
-    actual suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> schedule(
+    actual suspend inline fun <reified Logic: BackgroundJob> schedule(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -127,7 +127,7 @@ actual class BackgroundJobCoordinator : KoinComponent {
         return observe(id)
     }
 
-    actual inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleAsync(
+    actual inline fun <reified Logic: BackgroundJob> scheduleAsync(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,

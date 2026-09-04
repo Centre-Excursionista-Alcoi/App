@@ -16,8 +16,8 @@ class BackgroundJobWorker(
     appContext: Context,
     workerParams: WorkerParameters,
 ) : CoroutineWorker(appContext, workerParams) {
-    private val logic: BackgroundSyncWorkerLogic by inject(
-        BackgroundSyncWorkerLogic::class.java,
+    private val logic: BackgroundJob by inject(
+        BackgroundJob::class.java,
         named(workerParams.inputData.getString(EXTRA_LOGIC_NAME) ?: throw IllegalArgumentException("Missing logic name in input data"))
     )
 

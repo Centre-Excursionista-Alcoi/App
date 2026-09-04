@@ -22,8 +22,8 @@ import org.koin.core.annotation.Singleton
 import org.koin.core.component.get
 
 @Singleton
-@Named("SyncEntityBackgroundJobLogic")
-class SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
+@Named("SyncEntityBackgroundJob")
+class SyncEntityBackgroundJob : BackgroundJob() {
     private val log = logging()
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {

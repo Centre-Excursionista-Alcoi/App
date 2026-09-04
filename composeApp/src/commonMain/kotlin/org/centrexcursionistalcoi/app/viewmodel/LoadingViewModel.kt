@@ -16,20 +16,17 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJobLogic
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
+import org.centrexcursionistalcoi.app.sync.await
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
-import org.koin.core.annotation.Named
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
 @KoinViewModel
 class LoadingViewModel(
     @InjectedParam private val onLoggedInParam: () -> Unit,
     @InjectedParam private val onNotLoggedInParam: () -> Unit,
     private val dispatcherProvider: DispatcherProvider,
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
-    @Named("SyncAllDataBackgroundJobLogic") private val syncAllDataBackgroundJobLogic: SyncAllDataBackgroundJobLogic
 ) : ViewModel() {
 
     private val log = logging()
@@ -56,16 +53,20 @@ class LoadingViewModel(
         try {
             // Try to fetch the profile to see if the session is still valid
             if (isUserProfileValid()) {
-                if (SyncAllDataBackgroundJobLogic.databaseVersionUpgrade()) {
+                if (SyncAllDataBackgroundJob.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
-                    syncAllDataBackgroundJobLogic.syncAll(true, progressNotifier)
+                    backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                        input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "true"),
+                        requiresInternet = true,
+                        uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                    ).await()
                 } else {
                     log.d { "Scheduling periodic sync..." }
-                    backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJobLogic>(
-                        input = mapOf(SyncAllDataBackgroundJobLogic.EXTRA_FORCE_SYNC to "false"),
+                    backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                        input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "false"),
                         requiresInternet = true,
-                        uniqueName = SyncAllDataBackgroundJobLogic.UNIQUE_NAME,
-                        repeatInterval = SyncAllDataBackgroundJobLogic.periodicSyncInterval,
+                        uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                        repeatInterval = SyncAllDataBackgroundJob.periodicSyncInterval,
                     )
                 }
 

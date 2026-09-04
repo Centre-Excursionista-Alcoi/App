@@ -23,17 +23,12 @@ import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 
 @Singleton
-actual object BackgroundJobCoordinator {
+actual class BackgroundJobCoordinator(context: Context) {
     val log = logging()
 
-    var workManager: WorkManager? = null
-        private set
+    val workManager: WorkManager = WorkManager.getInstance(context)
 
-    fun initialize(context: Context) {
-        workManager = WorkManager.getInstance(context)
-    }
-
-    inline fun <reified WorkerType: BackgroundSyncWorkerLogic> enqueueJob(
+    inline fun <reified WorkerType: BackgroundJob> enqueueJob(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: UUID?,
@@ -41,9 +36,6 @@ actual object BackgroundJobCoordinator {
         uniqueName: String?,
         repeatInterval: Duration?,
     ): Operation {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
         val builder = if (repeatInterval != null) {
             PeriodicWorkRequestBuilder<BackgroundJobWorker>(repeatInterval)
         } else {
@@ -95,7 +87,7 @@ actual object BackgroundJobCoordinator {
         }
     }
 
-    actual suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> schedule(
+    actual suspend inline fun <reified Logic: BackgroundJob> schedule(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -103,9 +95,6 @@ actual object BackgroundJobCoordinator {
         uniqueName: String?,
         repeatInterval: kotlin.time.Duration?
     ): ObservableBackgroundJob {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
         val id = id?.toJavaUuid() ?: UUID.randomUUID()
 
         enqueueJob<Logic>(input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration()).await()
@@ -113,7 +102,7 @@ actual object BackgroundJobCoordinator {
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
     }
 
-    actual inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleAsync(
+    actual inline fun <reified Logic: BackgroundJob> scheduleAsync(
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -121,26 +110,17 @@ actual object BackgroundJobCoordinator {
         uniqueName: String?,
         repeatInterval: kotlin.time.Duration?
     ) {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
         val id = id?.toJavaUuid() ?: UUID.randomUUID()
 
         enqueueJob<Logic>(input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration())
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
         val id = id.toJavaUuid()
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
     }
 
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
-        val workManager = workManager
-        require(workManager != null) { "Coordinator not initialized." }
-
         return ObservableUniqueBackgroundJob(name, flowProvider = { workManager.getWorkInfosForUniqueWorkFlow(name).mapNotNull { it.firstOrNull() } })
     }
 }

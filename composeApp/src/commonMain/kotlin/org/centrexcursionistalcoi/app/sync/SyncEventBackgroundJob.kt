@@ -8,10 +8,10 @@ import org.koin.core.annotation.Singleton
 
 @Singleton
 @Named("SyncEventBackgroundJobLogic")
-class SyncEventBackgroundJobLogic(
+class SyncEventBackgroundJob(
     private val eventsRemoteRepository: EventsRemoteRepository,
     private val eventsRepository: EventsRepository
-) : BackgroundSyncWorkerLogic() {
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val eventId = input[EXTRA_EVENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing event ID")

@@ -8,11 +8,11 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncPostBackgroundJobLogic")
-class SyncPostBackgroundJobLogic(
+@Named("SyncPostBackgroundJob")
+class SyncPostBackgroundJob(
     private val postsRepository: PostsRepository,
     private val postsRemoteRepository: PostsRemoteRepository
-) : BackgroundSyncWorkerLogic() {
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val postId = input[EXTRA_POST_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing post ID")

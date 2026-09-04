@@ -7,11 +7,11 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncLendingBackgroundJobLogic")
-class SyncLendingBackgroundJobLogic(
+@Named("SyncLendingBackgroundJob")
+class SyncLendingBackgroundJob(
     private val lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository
-) : BackgroundSyncWorkerLogic() {
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val lendingId = input[EXTRA_LENDING_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing lending ID")

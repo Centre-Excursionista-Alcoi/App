@@ -7,12 +7,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic.Companion.EXTRA_IS_REMOVAL
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJobLogic.Companion.EXTRA_LENDING_ID
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_IS_REMOVAL
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_LENDING_ID
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -39,7 +39,7 @@ class PushNotifierListener(
             when (notification) {
                 is PushNotification.LendingUpdated -> {
                     log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
-                    coordinator.scheduleAsync<SyncLendingBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncLendingBackgroundJob>(
                         input = mapOf(
                             EXTRA_LENDING_ID to notification.lendingId.toString(),
                             EXTRA_IS_REMOVAL to false.toString(),
@@ -49,47 +49,47 @@ class PushNotifierListener(
 
                 is PushNotification.EventAssistanceUpdated -> {
                     log.d { "Received an event notification. ID: ${notification.eventId}" }
-                    coordinator.scheduleAsync<SyncEventBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncEventBackgroundJob>(
                         input = mapOf(
-                            SyncEventBackgroundJobLogic.EXTRA_EVENT_ID to notification.eventId.toString(),
+                            SyncEventBackgroundJob.EXTRA_EVENT_ID to notification.eventId.toString(),
                         ),
                     )
                 }
 
                 is PushNotification.DepartmentJoinRequestUpdated -> {
                     log.d { "Received department join request update notification for request ID: ${notification.requestId}" }
-                    coordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncDepartmentBackgroundJob>(
                         input = mapOf(
-                            SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                            SyncDepartmentBackgroundJob.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
                         ),
                     )
                 }
 
                 is PushNotification.DepartmentKicked -> {
                     log.d { "Received department kicked notification for department ID: ${notification.departmentId}" }
-                    coordinator.scheduleAsync<SyncDepartmentBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncDepartmentBackgroundJob>(
                         input = mapOf(
-                            SyncDepartmentBackgroundJobLogic.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
+                            SyncDepartmentBackgroundJob.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
                         ),
                     )
                 }
 
                 is PushNotification.EntityUpdated -> {
                     log.d { "Received entity updated notification for ${notification.entityClass}#${notification.entityId}" }
-                    coordinator.scheduleAsync<SyncEntityBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncEntityBackgroundJob>(
                         input = mapOf(
-                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
-                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_CLASS to notification.entityClass,
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.entityId,
                         ),
                     )
                 }
                 is PushNotification.EntityDeleted -> {
                     log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }
-                    coordinator.scheduleAsync<SyncEntityBackgroundJobLogic>(
+                    coordinator.scheduleAsync<SyncEntityBackgroundJob>(
                         input = mapOf(
-                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_CLASS to notification.entityClass,
-                            SyncEntityBackgroundJobLogic.EXTRA_ENTITY_ID to notification.entityId,
-                            SyncEntityBackgroundJobLogic.EXTRA_IS_DELETE to "true",
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_CLASS to notification.entityClass,
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.entityId,
+                            SyncEntityBackgroundJob.EXTRA_IS_DELETE to "true",
                         ),
                     )
                 }

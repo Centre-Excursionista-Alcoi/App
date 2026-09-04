@@ -7,11 +7,11 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncDepartmentBackgroundJobLogic")
-class SyncDepartmentBackgroundJobLogic(
+@Named("SyncDepartmentBackgroundJob")
+class SyncDepartmentBackgroundJob(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val departmentsRepository: DepartmentsRepository
-) : BackgroundSyncWorkerLogic() {
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val departmentId = input[EXTRA_DEPARTMENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing department ID")

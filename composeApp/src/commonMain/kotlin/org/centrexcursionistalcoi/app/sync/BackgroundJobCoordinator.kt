@@ -16,7 +16,7 @@ expect class BackgroundJobCoordinator {
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
      * @return An [ObservableBackgroundJob] that allows to watch the job status.
      */
-    suspend inline fun <reified Logic: BackgroundSyncWorkerLogic> schedule(
+    suspend inline fun <reified Logic: BackgroundJob> schedule(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
@@ -35,7 +35,7 @@ expect class BackgroundJobCoordinator {
      * If a request is made, and another job is already running or scheduled with this name, it will be overridden.
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
      */
-    inline fun <reified Logic: BackgroundSyncWorkerLogic> scheduleAsync(
+    inline fun <reified Logic: BackgroundJob> scheduleAsync(
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
