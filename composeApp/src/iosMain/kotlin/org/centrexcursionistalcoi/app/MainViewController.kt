@@ -7,8 +7,8 @@ import com.diamondedge.logging.PrintLogger
 import platform.UIKit.UIViewController
 
 /**
- * Koin is started from Swift's `AppDelegate.application(_:didFinishLaunchingWithOptions:)` (via `KoinKt.initKoin()`)
- * rather than here, since notification setup there needs it before this ever runs.
+ * Koin is started from Swift's `AppDelegate.application(_:didFinishLaunchingWithOptions:)` (via
+ * `KoinIosKt.initKoinIos()`) rather than here, since notification setup there needs it before this ever runs.
  */
 fun MainViewController(): UIViewController {
     KmLogging.setLoggers(PrintLogger(FixedLogLevel(true)))

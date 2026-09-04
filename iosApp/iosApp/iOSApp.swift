@@ -11,7 +11,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       FirebaseApp.configure() //important
 
       // Koin must be started before anything below resolves a Koin-managed dependency (e.g. PushNotifierListener).
-      KoinKt.initKoin(extraModules: [], config: { _ in })
+      KoinIosKt.initKoinIos()
 
       //By default showPushNotification value is true.
       //When set showPushNotification to false foreground push  notification will not be shown.
