@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
@@ -49,24 +48,14 @@ class MemoriesRepository(
         if (dao.get(memory.id) != null) updateRaw(memory) else insertRaw(memory)
     }
 
-    /**
-     * Writes only the [MemoryEntity] row -- unlike [insertOrUpdate]/[insert]/[update] of [Memory]/[ReferencedMemory],
-     * this does not touch [MemoryMemberCrossRef] rows.
-     */
-    suspend fun insert(item: MemoryEntity) = dao.insert(item)
-
-    /** @see insert */
-    suspend fun update(item: MemoryEntity) = dao.update(item)
-
-    /** @see insert */
-    suspend fun upsert(item: MemoryEntity) = dao.upsert(item)
-
-    private suspend fun insertRaw(memory: Memory) {
+    /** Inserts the given raw [memory] (including its [MemoryMemberCrossRef] rows), without needing to resolve its members/department/submitter first. */
+    suspend fun insertRaw(memory: Memory) {
         dao.insert(memory.toEntity())
         insertMemberCrossRefs(memory)
     }
 
-    private suspend fun updateRaw(memory: Memory) {
+    /** Updates the given raw [memory] (including its [MemoryMemberCrossRef] rows), without needing to resolve its members/department/submitter first. */
+    suspend fun updateRaw(memory: Memory) {
         dao.update(memory.toEntity())
         val crossRefDao = db.memoryMemberCrossRefDao()
         crossRefDao.deleteByMemoryId(memory.id)

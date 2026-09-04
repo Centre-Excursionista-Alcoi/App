@@ -15,7 +15,6 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
-import org.centrexcursionistalcoi.app.database.entity.MemoryEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -132,17 +131,17 @@ class MemoriesRemoteRepository(
     )
 
     override suspend fun insertRemoteEntity(entity: Memory): ReferencedMemory {
-        memoriesRepository.insert(entity.toEntity())
+        memoriesRepository.insertRaw(entity)
         return memoriesRepository.get(entity.id)!!
     }
 
     override suspend fun updateRemoteEntity(entity: Memory): ReferencedMemory {
-        memoriesRepository.update(entity.toEntity())
+        memoriesRepository.updateRaw(entity)
         return memoriesRepository.get(entity.id)!!
     }
 
     override suspend fun upsertRemoteEntity(entity: Memory): ReferencedMemory {
-        memoriesRepository.upsert(entity.toEntity())
+        memoriesRepository.insertOrUpdate(entity)
         return memoriesRepository.get(entity.id)!!
     }
 }

@@ -2,8 +2,8 @@ package org.centrexcursionistalcoi.app.database
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.EventUserCrossRef
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
@@ -24,34 +24,42 @@ class EventsRepository(private val db: AppDatabase) : Repository<ReferencedEvent
 
     override suspend fun selectAll(): List<ReferencedEvent> = dao.selectAll().map { it.toReferenced() }
 
-    /** Writes only the [EventEntity] row -- unlike [insert]/[update] of [ReferencedEvent], this does not touch [EventUserCrossRef] rows. */
-    suspend fun insert(item: EventEntity) = dao.insert(item)
-
     override suspend fun insert(item: ReferencedEvent) {
         dao.insert(item.dereference().toEntity())
-        insertUserCrossRefs(item)
+        insertUserCrossRefs(item.id, item.userSubList.map { it.sub })
     }
-
-    /** @see insert */
-    suspend fun update(item: EventEntity) = dao.update(item)
 
     override suspend fun update(item: ReferencedEvent) {
         dao.update(item.dereference().toEntity())
-        val crossRefDao = db.eventUserCrossRefDao()
-        crossRefDao.deleteByEventId(item.id)
-        insertUserCrossRefs(item)
+        db.eventUserCrossRefDao().deleteByEventId(item.id)
+        insertUserCrossRefs(item.id, item.userSubList.map { it.sub })
     }
 
-    /** @see insert */
-    suspend fun upsert(item: EventEntity) = dao.upsert(item)
+    /** Inserts the given raw [event] (including its [EventUserCrossRef] rows), without needing to resolve its department/users first. */
+    suspend fun insertRaw(event: Event) {
+        dao.insert(event.toEntity())
+        insertUserCrossRefs(event.id, event.userSubList)
+    }
 
-    private suspend fun insertUserCrossRefs(item: ReferencedEvent) {
+    /** Updates the given raw [event] (including its [EventUserCrossRef] rows), without needing to resolve its department/users first. */
+    suspend fun updateRaw(event: Event) {
+        dao.update(event.toEntity())
+        db.eventUserCrossRefDao().deleteByEventId(event.id)
+        insertUserCrossRefs(event.id, event.userSubList)
+    }
+
+    /** Inserts or updates the given raw [event], without needing to resolve its department/users first. */
+    suspend fun insertOrUpdate(event: Event) {
+        if (dao.get(event.id) != null) updateRaw(event) else insertRaw(event)
+    }
+
+    private suspend fun insertUserCrossRefs(eventId: Uuid, subs: List<String>) {
         val crossRefDao = db.eventUserCrossRefDao()
-        for (user in item.userSubList) {
+        for (sub in subs) {
             crossRefDao.insert(
                 EventUserCrossRef(
-                    eventId = item.id,
-                    userSub = user.sub
+                    eventId = eventId,
+                    userSub = sub
                 )
             )
         }

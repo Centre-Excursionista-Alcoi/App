@@ -2,9 +2,9 @@ package org.centrexcursionistalcoi.app.database
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
@@ -77,25 +77,66 @@ class LendingsRepository(
         }
     }
 
-    /**
-     * Writes only the [LendingEntity] row -- unlike [insert]/[update] of [ReferencedLending], this does not touch
-     * the associated memory, [LendingItemEntity] or [org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows.
-     */
     private suspend fun insertOrUpdateMemory(memory: ReferencedMemory) {
         if (memoriesRepository.get(memory.id) == null) memoriesRepository.insert(memory) else memoriesRepository.update(memory)
     }
 
     /**
-     * Writes only the [LendingEntity] row -- unlike [insert]/[update] of [ReferencedLending], this does not touch
-     * the associated memory, [LendingItemEntity] or [org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows.
+     * Inserts the given raw [lending] (including its [LendingItemEntity]/[org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows),
+     * without needing to resolve its items first. Unlike [insert] of [ReferencedLending], this does not persist [Lending.memory]
+     * -- memories are their own resource, synced separately.
      */
-    suspend fun insert(item: LendingEntity) = dao.insert(item)
+    suspend fun insertRaw(lending: Lending) {
+        dao.insert(lending.toEntity())
 
-    /** @see insert */
-    suspend fun update(item: LendingEntity) = dao.update(item)
+        val lendingItemDao = db.lendingItemDao()
+        for (item in lending.items) {
+            val exists = lendingItemDao.get(lending.id, item.id) != null
+            if (!exists) {
+                lendingItemDao.insert(
+                    LendingItemEntity(
+                        lendingId = lending.id,
+                        itemId = item.id
+                    )
+                )
+            }
+        }
 
-    /** @see insert */
-    suspend fun upsert(item: LendingEntity) = dao.upsert(item)
+        val receivedItemDao = db.receivedItemDao()
+        for (receivedItem in lending.receivedItems) {
+            val exists = receivedItemDao.get(receivedItem.id) != null
+            if (!exists) {
+                receivedItemDao.insert(receivedItem.toEntity())
+            }
+        }
+    }
+
+    /** @see insertRaw */
+    suspend fun updateRaw(lending: Lending) {
+        dao.update(lending.toEntity())
+
+        val lendingItemDao = db.lendingItemDao()
+        lendingItemDao.deleteByLendingId(lending.id)
+        for (item in lending.items) {
+            lendingItemDao.insert(
+                LendingItemEntity(
+                    lendingId = lending.id,
+                    itemId = item.id
+                )
+            )
+        }
+
+        val receivedItemDao = db.receivedItemDao()
+        receivedItemDao.deleteByLendingId(lending.id)
+        for (receivedItem in lending.receivedItems) {
+            receivedItemDao.insert(receivedItem.toEntity())
+        }
+    }
+
+    /** Inserts or updates the given raw [lending]. @see insertRaw */
+    suspend fun insertOrUpdate(lending: Lending) {
+        if (dao.get(lending.id) != null) updateRaw(lending) else insertRaw(lending)
+    }
 
     override suspend fun delete(id: Uuid) {
         dao.deleteById(id)

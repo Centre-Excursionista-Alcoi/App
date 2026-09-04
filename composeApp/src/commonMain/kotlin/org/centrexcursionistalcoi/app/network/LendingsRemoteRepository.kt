@@ -25,7 +25,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
@@ -307,17 +306,17 @@ class LendingsRemoteRepository(
     }
 
     override suspend fun insertRemoteEntity(entity: Lending): ReferencedLending {
-        lendingsRepository.insert(entity.toEntity())
+        lendingsRepository.insertRaw(entity)
         return lendingsRepository.get(entity.id)!!
     }
 
     override suspend fun updateRemoteEntity(entity: Lending): ReferencedLending {
-        lendingsRepository.update(entity.toEntity())
+        lendingsRepository.updateRaw(entity)
         return lendingsRepository.get(entity.id)!!
     }
 
     override suspend fun upsertRemoteEntity(entity: Lending): ReferencedLending {
-        lendingsRepository.upsert(entity.toEntity())
+        lendingsRepository.insertOrUpdate(entity)
         return lendingsRepository.get(entity.id)!!
     }
 }

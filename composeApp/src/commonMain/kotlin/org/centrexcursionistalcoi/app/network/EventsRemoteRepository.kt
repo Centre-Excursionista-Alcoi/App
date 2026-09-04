@@ -9,7 +9,6 @@ import kotlinx.datetime.toInstant
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.EventsRepository
-import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
@@ -113,17 +112,17 @@ class EventsRemoteRepository(
     }
 
     override suspend fun insertRemoteEntity(entity: Event): ReferencedEvent {
-        eventsRepository.insert(entity.toEntity())
+        eventsRepository.insertRaw(entity)
         return eventsRepository.get(entity.id)!!
     }
 
     override suspend fun updateRemoteEntity(entity: Event): ReferencedEvent {
-        eventsRepository.update(entity.toEntity())
+        eventsRepository.updateRaw(entity)
         return eventsRepository.get(entity.id)!!
     }
 
     override suspend fun upsertRemoteEntity(entity: Event): ReferencedEvent {
-        eventsRepository.upsert(entity.toEntity())
+        eventsRepository.insertOrUpdate(entity)
         return eventsRepository.get(entity.id)!!
     }
 }
