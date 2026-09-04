@@ -23,8 +23,19 @@ fun ObservableBackgroundJob.copyToProgress(
     context: CoroutineContext,
 ): ObservableBackgroundJob = also {
     CoroutineScope(context).launch {
-        progressStateFlow().collect { progress ->
-            notifier(progress)
+        val progressJob = launch {
+            progressStateFlow().collect { progress ->
+                notifier(progress)
+            }
+        }
+        try {
+            stateFlow().cancellable().collect { state ->
+                if (state.isFinished) throw JobDoneThrowable()
+            }
+        } catch (_: JobDoneThrowable) {
+            // Job finished
+        } finally {
+            progressJob.cancel()
         }
     }
 }
