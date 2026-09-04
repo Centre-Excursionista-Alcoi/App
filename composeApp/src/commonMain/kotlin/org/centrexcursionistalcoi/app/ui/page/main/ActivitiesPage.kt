@@ -16,6 +16,7 @@ import cea_app.composeapp.generated.resources.activities_memories
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.ui.page.main.activities.MemoriesPage
+import org.centrexcursionistalcoi.app.ui.page.main.activities.TaggedMemoriesPage
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -44,6 +45,7 @@ fun ColumnScope.ActivitiesPage(onEditMemoryRequest: (ReferencedMemory) -> Unit) 
     ) { page ->
         when (page) {
             0 -> MemoriesPage(onEditRequest = onEditMemoryRequest)
+            1 -> TaggedMemoriesPage()
         }
     }
 }
