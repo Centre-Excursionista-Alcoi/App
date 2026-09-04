@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.memories_empty
@@ -66,7 +67,8 @@ private fun MemoriesPage(memories: List<ReferencedMemory>, onEditRequest: (Refer
                 Text(
                     text = year.toString(),
                     modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    style = MaterialTheme.typography.labelLargeEmphasized
+                    style = MaterialTheme.typography.titleMediumEmphasized,
+                    fontWeight = FontWeight.Bold,
                 )
             }
             items(memories, key = { it.id }, contentType = { "memory" }) { memory ->
