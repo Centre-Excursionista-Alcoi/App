@@ -519,4 +519,26 @@
     <string name="notification_lending_deleted_title">Préstamo eliminado</string>
     <string name="notification_lending_deleted_message">Tu préstamo ha sido eliminado por un administrador.</string>
     <string name="notification_lending_deleted_reason_message">Tu préstamo ha sido eliminado por un administrador. Razón: %1$s</string>
+    <string name="nav_activities">Activitats</string>
+    <string name="sort_by_date_asc">Ordena per Data (antics primer)</string>
+    <string name="sort_by_date_desc">Ordenar per Data (nous primer)</string>
+    <string name="management_no_memories">Sense memòries</string>
+    <string name="management_memories">Memòries</string>
+    <string name="activities_memories">Memòries</string>
+    <string name="activities_activities">Activitats</string>
+    <string name="memories_message">Ací pots veure totes les memòries que has enviat.</string>
+    <string name="memories_empty">Cap memòria disponible</string>
+    <string name="memory_create">Crear nova memòria</string>
+    <string name="memory_title">Memòria d\'Activitat</string>
+    <string name="memory_from">Data d\'Inici</string>
+    <string name="memory_to">Data de finalització</string>
+    <string name="memory_place">Lloc</string>
+    <string name="memory_submitted_by">Enviada per</string>
+    <string name="memory_text">Text</string>
+    <string name="memory_images">Imatges</string>
+    <string name="memory_members">Socis Participants</string>
+    <string name="memory_external">Altres persones</string>
+    <string name="memory_editor_warning_no_lending">Estàs creant una memòria per a una activitat sense préstec. Si vas fer servir material del club per a realitzar l\'activitat, per favor, completa la memòria al préstec.</string>
+    <string name="memory_editor_from">Data d\'Inici</string>
+    <string name="memory_editor_to">Data de Finalització</string>
 </resources>
