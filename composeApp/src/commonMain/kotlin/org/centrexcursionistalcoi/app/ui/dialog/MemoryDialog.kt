@@ -87,7 +87,8 @@ fun MemoryDialog(
         ) { paddingValues ->
             MemoryDisplay(
                 memory = memory,
-                modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState()),
+                snackbarHostState = snackbarHostState,
             )
         }
     }
