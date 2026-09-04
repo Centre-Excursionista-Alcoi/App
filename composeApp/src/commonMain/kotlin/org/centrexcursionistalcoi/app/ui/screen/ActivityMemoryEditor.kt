@@ -46,19 +46,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.memory_editor_department
+import cea_app.composeapp.generated.resources.memory_editor_description
+import cea_app.composeapp.generated.resources.memory_editor_external_participants
+import cea_app.composeapp.generated.resources.memory_editor_external_participants_help
+import cea_app.composeapp.generated.resources.memory_editor_from
+import cea_app.composeapp.generated.resources.memory_editor_member_participants
+import cea_app.composeapp.generated.resources.memory_editor_place
+import cea_app.composeapp.generated.resources.memory_editor_place_help
+import cea_app.composeapp.generated.resources.memory_editor_previous_image_delete
+import cea_app.composeapp.generated.resources.memory_editor_previous_image_uuid
+import cea_app.composeapp.generated.resources.memory_editor_save
+import cea_app.composeapp.generated.resources.memory_editor_sport
+import cea_app.composeapp.generated.resources.memory_editor_title
+import cea_app.composeapp.generated.resources.memory_editor_to
+import cea_app.composeapp.generated.resources.memory_editor_upload_image
+import cea_app.composeapp.generated.resources.memory_editor_upload_image_content_description
+import cea_app.composeapp.generated.resources.memory_editor_warning_no_lending
+import cea_app.composeapp.generated.resources.remove
 import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.name
-import io.ktor.client.request.invoke
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ImageFileListContainer
 import org.centrexcursionistalcoi.app.data.Member
@@ -468,15 +482,26 @@ fun MemoryEditor_Content(
             }
 
             items(images, key = { it.name }, contentType = { "new-image" }) { file ->
-                AssistChip(
-                    enabled = !isSaving,
-                    onClick = { onImagesChange(images - file) },
-                    label = { Text(file.name) },
-                    trailingIcon = {
+                Box(
+                    modifier = Modifier.padding(horizontal = 4.dp).height(200.dp)
+                ) {
+                    Badge(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .zIndex(1f)
+                            .padding(4.dp)
+                            .clickable { onImagesChange(images - file) }
+                    ) {
                         Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
-                    },
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                )
+                    }
+
+                    AsyncImage(
+                        model = file,
+                        contentDescription = stringResource(Res.string.memory_editor_upload_image_content_description, file.name),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+                }
             }
             item { Spacer(Modifier.width(8.dp)) }
         }
