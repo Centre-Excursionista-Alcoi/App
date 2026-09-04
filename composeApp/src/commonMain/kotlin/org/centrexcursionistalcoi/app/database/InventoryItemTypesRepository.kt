@@ -17,6 +17,8 @@ class InventoryItemTypesRepository(private val db: AppDatabase) : Repository<Ref
 
     override suspend fun get(id: Uuid): ReferencedInventoryItemType? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedInventoryItemType> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItemType?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override fun selectAllAsFlow(): Flow<List<ReferencedInventoryItemType>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }

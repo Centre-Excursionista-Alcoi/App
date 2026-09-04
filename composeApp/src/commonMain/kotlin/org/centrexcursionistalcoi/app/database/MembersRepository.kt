@@ -20,6 +20,8 @@ class MembersRepository(db: AppDatabase) : Repository<Member, UInt> {
         return dao.get(id.toLong())?.toMember()
     }
 
+    override suspend fun getByIdList(ids: List<UInt>): List<Member> = dao.getByMemberNumbers(ids.map { it.toLong() }).map { it.toMember() }
+
     override fun getAsFlow(id: UInt): Flow<Member?> {
         return dao
             .getAsFlow(id.toLong())

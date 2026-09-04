@@ -15,6 +15,8 @@ class EventsRepository(private val db: AppDatabase) : Repository<ReferencedEvent
 
     override suspend fun get(id: Uuid): ReferencedEvent? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedEvent> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedEvent?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override fun selectAllAsFlow(): Flow<List<ReferencedEvent>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }

@@ -14,6 +14,8 @@ class PostsRepository(db: AppDatabase) : Repository<ReferencedPost, Uuid> {
 
     override suspend fun get(id: Uuid): ReferencedPost? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedPost> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedPost?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override fun selectAllAsFlow(): Flow<List<ReferencedPost>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }

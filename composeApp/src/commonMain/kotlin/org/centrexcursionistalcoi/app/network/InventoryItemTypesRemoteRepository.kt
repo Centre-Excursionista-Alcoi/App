@@ -4,9 +4,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.fileWithContext
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
@@ -18,17 +16,12 @@ import kotlin.uuid.Uuid
 @Singleton
 class InventoryItemTypesRemoteRepository(
     inventoryItemTypesRepository: InventoryItemTypesRepository,
-    departmentsRepository: DepartmentsRepository
 ) : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
     "/inventory/types",
     SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC,
     InventoryItemType.serializer(),
     inventoryItemTypesRepository,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { inventoryItemType ->
-        val departments = departmentsRepository.selectAll()
-        inventoryItemType.referenced(departments)
-    },
 ) {
     suspend fun create(
         displayName: String,

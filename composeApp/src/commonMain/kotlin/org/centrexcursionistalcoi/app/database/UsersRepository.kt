@@ -18,6 +18,8 @@ class UsersRepository(db: AppDatabase) : Repository<UserData, String> {
         return dao.get(id)?.toUser()
     }
 
+    override suspend fun getByIdList(ids: List<String>): List<UserData> = dao.getBySubList(ids).map { it.toUser() }
+
     override fun getAsFlow(id: String): Flow<UserData?> {
         return dao
             .getAsFlow(id)

@@ -19,5 +19,4 @@ abstract class SymmetricRemoteRepository<IdType : Any, EntityType : Entity<IdTyp
     isCreationSupported,
     isPatchSupported,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { it }
 )

@@ -1,8 +1,5 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -10,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.management_no_memories
 import cea_app.composeapp.generated.resources.memory_create
@@ -110,9 +106,6 @@ private fun MemoriesManagementListView(
                 onSportChange = { sport = it },
                 onDepartmentChange = { department = it },
                 onFilesChange = { files = it },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
             )
         },
     ) { memory ->

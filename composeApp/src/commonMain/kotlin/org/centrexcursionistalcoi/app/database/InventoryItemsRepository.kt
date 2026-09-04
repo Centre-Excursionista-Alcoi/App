@@ -24,6 +24,8 @@ class InventoryItemsRepository(db: AppDatabase) : Repository<ReferencedInventory
 
     override suspend fun get(id: Uuid): ReferencedInventoryItem? = dao.get(id)?.toReferenced()
 
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedInventoryItem> = dao.getByIdList(ids).map { it.toReferenced() }
+
     override fun getAsFlow(id: Uuid): Flow<ReferencedInventoryItem?> = dao.getAsFlow(id).map { it?.toReferenced() }
 
     override suspend fun insert(item: ReferencedInventoryItem) = dao.insert(

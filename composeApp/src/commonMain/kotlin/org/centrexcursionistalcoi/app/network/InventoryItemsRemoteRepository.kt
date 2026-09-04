@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.network
 import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
@@ -16,17 +14,12 @@ import kotlin.uuid.Uuid
 @Singleton
 class InventoryItemsRemoteRepository(
     inventoryItemsRepository: InventoryItemsRepository,
-    inventoryItemTypesRepository: InventoryItemTypesRepository
 ) : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
     "/inventory/items",
     SETTINGS_LAST_INVENTORY_ITEMS_SYNC,
     InventoryItem.serializer(),
     inventoryItemsRepository,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { item ->
-        val type = inventoryItemTypesRepository.get(item.type) ?: throw NoSuchElementException("No inventory item type with ID ${item.type} found for inventory item ${item.id}")
-        item.referenced(type)
-    },
 ) {
     private val log = logging()
 

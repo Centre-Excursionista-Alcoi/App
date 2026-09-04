@@ -23,6 +23,8 @@ interface Repository<T : Entity<IdType>, IdType: Any> {
      */
     suspend fun get(id: IdType): T?
 
+    suspend fun getByIdList(ids: List<IdType>): List<T>
+
     fun getAsFlow(id: IdType): Flow<T?>
 
     suspend fun insert(item: T)

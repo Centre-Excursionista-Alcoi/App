@@ -8,10 +8,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
@@ -24,19 +21,12 @@ import kotlin.uuid.Uuid
 @Singleton
 class EventsRemoteRepository(
     eventsRepository: EventsRepository,
-    departmentsRepository: DepartmentsRepository,
-    usersRepository: UsersRepository,
 ) : RemoteRepository<Uuid, ReferencedEvent, Uuid, Event>(
     "/events",
     SETTINGS_LAST_EVENTS_SYNC,
     Event.serializer(),
     eventsRepository,
     remoteToLocalIdConverter = { it },
-    remoteToLocalEntityConverter = { event ->
-        val departments = departmentsRepository.selectAll()
-        val users = usersRepository.selectAll()
-        event.referenced(departments, users)
-    },
 ) {
     override val availableSinceVersionCode: Int = 285
 

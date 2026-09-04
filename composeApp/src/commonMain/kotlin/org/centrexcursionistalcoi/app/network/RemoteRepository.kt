@@ -53,7 +53,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     private val isCreationSupported: Boolean = true,
     private val isPatchSupported: Boolean = true,
     private val remoteToLocalIdConverter: (RemoteIdType) -> LocalIdType,
-    private val remoteToLocalEntityConverter: suspend (RemoteEntity) -> LocalEntity,
+    // private val remoteToLocalEntityConverter: suspend (RemoteEntity) -> LocalEntity,
 ) {
     /**
      * The version code since which this endpoint is available.
@@ -116,8 +116,13 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
             val raw = response.bodyAsText().cleanNullFields()
-            val remoteEntity = json.decodeFromString(ListSerializer(serializer), raw)
-            return remoteEntity.map { remoteToLocalEntityConverter(it) }
+            val remoteEntities = json.decodeFromString(ListSerializer(serializer), raw)
+            val localEntities = remoteEntities
+                // First fetch all the IDs, and convert them to the local type
+                .map { remote -> remoteToLocalIdConverter(remote.id) }
+                // Now fetch all the local entities from the database, which will also include any relations
+                .let { ids -> repository.getByIdList(ids) }
+            return localEntities
         } else {
             val error = response.bodyAsError()
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
@@ -152,7 +157,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)
-            return remoteToLocalEntityConverter(remoteEntity)
+            val localEntity = remoteToLocalIdConverter(remoteEntity.id)
+                .let { id -> repository.get(id) }
+            return localEntity
         } else {
             val error = response.bodyAsError()
             if (error is Error.EntityNotFound) {
