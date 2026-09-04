@@ -3,8 +3,8 @@ package org.centrexcursionistalcoi.app.database.relation
 import androidx.room3.Embedded
 import androidx.room3.Relation
 import org.centrexcursionistalcoi.app.data.ReferencedPost
-import org.centrexcursionistalcoi.app.database.room.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.room.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.PostEntity
 
 data class PostWithRelations(
     @Embedded val post: PostEntity,

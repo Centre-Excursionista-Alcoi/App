@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
@@ -33,7 +34,7 @@ class LendingsRepository(
             val exists = lendingItemDao.get(item.id, inventoryItem.id) != null
             if (!exists) {
                 lendingItemDao.insert(
-                    _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingItemEntity(
+                    LendingItemEntity(
                         lendingId = item.id,
                         itemId = inventoryItem.id
                     )
@@ -58,7 +59,7 @@ class LendingsRepository(
         lendingItemDao.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
             lendingItemDao.insert(
-                _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingItemEntity(
+                LendingItemEntity(
                     lendingId = item.id,
                     itemId = inventoryItem.id
                 )

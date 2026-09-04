@@ -4,10 +4,10 @@ import androidx.room3.Embedded
 import androidx.room3.Junction
 import androidx.room3.Relation
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.database.room.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.room.entity.EventEntity
-import org.centrexcursionistalcoi.app.database.room.entity.EventUserCrossRef
-import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.entity.EventUserCrossRef
+import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
 data class EventWithRelations(
     @Embedded val event: EventEntity,

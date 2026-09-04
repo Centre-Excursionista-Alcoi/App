@@ -4,11 +4,11 @@ import androidx.room3.Embedded
 import androidx.room3.Junction
 import androidx.room3.Relation
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.database.room.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.room.entity.MemberEntity
-import org.centrexcursionistalcoi.app.database.room.entity.MemoryEntity
-import org.centrexcursionistalcoi.app.database.room.entity.MemoryMemberCrossRef
-import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.MemberEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
+import org.centrexcursionistalcoi.app.database.entity.UserEntity
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 
 data class MemoryWithRelations(

@@ -4,8 +4,8 @@ import androidx.room3.Embedded
 import androidx.room3.Relation
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
-import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemEntity
-import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemTypeEntity
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 
 data class InventoryItemWithRelations(

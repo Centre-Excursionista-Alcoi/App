@@ -7,25 +7,38 @@ import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.CoroutineDispatcher
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.entity.EventUserCrossRef
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
+import org.centrexcursionistalcoi.app.database.entity.MemberEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
+import org.centrexcursionistalcoi.app.database.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
+import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
 const val DATABASE_VERSION = 1
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(
     entities = [
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.DepartmentEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.EventEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.EventUserCrossRef::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingItemEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.MemberEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.MemoryEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.PostEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity::class,
-        _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.UserEntity::class,
+        DepartmentEntity::class,
+        EventEntity::class,
+        EventUserCrossRef::class,
+        InventoryItemTypeEntity::class,
+        InventoryItemEntity::class,
+        LendingEntity::class,
+        LendingItemEntity::class,
+        MemberEntity::class,
+        MemoryEntity::class,
+        MemoryMemberCrossRef::class,
+        PostEntity::class,
+        ReceivedItemEntity::class,
+        UserEntity::class,
     ],
     version = DATABASE_VERSION,
 )

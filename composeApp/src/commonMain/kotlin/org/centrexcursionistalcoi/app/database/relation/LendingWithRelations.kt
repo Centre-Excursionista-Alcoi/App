@@ -4,12 +4,12 @@ import androidx.room3.Embedded
 import androidx.room3.Junction
 import androidx.room3.Relation
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemEntity
-import org.centrexcursionistalcoi.app.database.room.entity.LendingEntity
-import org.centrexcursionistalcoi.app.database.room.entity.LendingItemEntity
-import org.centrexcursionistalcoi.app.database.room.entity.MemoryEntity
-import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity
-import org.centrexcursionistalcoi.app.database.room.entity.UserEntity
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
+import org.centrexcursionistalcoi.app.database.entity.UserEntity
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 
 data class LendingWithRelations(

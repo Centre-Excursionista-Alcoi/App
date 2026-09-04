@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -58,7 +59,7 @@ class MemoriesRepository(
         val crossRefDao = db.memoryMemberCrossRefDao()
         for (memberNumber in memory.members) {
             crossRefDao.insert(
-                _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef(
+                MemoryMemberCrossRef(
                     memoryId = memory.id,
                     memberNumber = memberNumber.toLong()
                 )
