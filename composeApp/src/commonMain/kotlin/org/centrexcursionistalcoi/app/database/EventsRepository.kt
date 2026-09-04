@@ -3,9 +3,8 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
-import org.centrexcursionistalcoi.app.database.room.entity.EventEntity.Companion.toEntity
-import org.centrexcursionistalcoi.app.database.room.entity.EventUserCrossRef
-import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
+import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -36,7 +35,12 @@ class EventsRepository(private val db: AppDatabase) : Repository<ReferencedEvent
     private suspend fun insertUserCrossRefs(item: ReferencedEvent) {
         val crossRefDao = db.eventUserCrossRefDao()
         for (user in item.userSubList) {
-            crossRefDao.insert(EventUserCrossRef(eventId = item.id, userSub = user.sub))
+            crossRefDao.insert(
+                _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.EventUserCrossRef(
+                    eventId = item.id,
+                    userSub = user.sub
+                )
+            )
         }
     }
 

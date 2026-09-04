@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.database.room.entity.DepartmentEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity.Companion.toEntity
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 

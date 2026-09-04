@@ -3,10 +3,9 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.database.room.entity.LendingEntity.Companion.toEntity
-import org.centrexcursionistalcoi.app.database.room.entity.LendingItemEntity
-import org.centrexcursionistalcoi.app.database.room.entity.ReceivedItemEntity.Companion.toEntity
-import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -33,7 +32,12 @@ class LendingsRepository(
         for (inventoryItem in item.items) {
             val exists = lendingItemDao.get(item.id, inventoryItem.id) != null
             if (!exists) {
-                lendingItemDao.insert(LendingItemEntity(lendingId = item.id, itemId = inventoryItem.id))
+                lendingItemDao.insert(
+                    _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingItemEntity(
+                        lendingId = item.id,
+                        itemId = inventoryItem.id
+                    )
+                )
             }
         }
 
@@ -53,7 +57,12 @@ class LendingsRepository(
         val lendingItemDao = db.lendingItemDao()
         lendingItemDao.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
-            lendingItemDao.insert(LendingItemEntity(lendingId = item.id, itemId = inventoryItem.id))
+            lendingItemDao.insert(
+                _root_ide_package_.org.centrexcursionistalcoi.app.database.entity.LendingItemEntity(
+                    lendingId = item.id,
+                    itemId = inventoryItem.id
+                )
+            )
         }
 
         val receivedItemDao = db.receivedItemDao()

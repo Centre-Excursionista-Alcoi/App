@@ -4,8 +4,8 @@ import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
-import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemTypeEntity.Companion.toEntity
-import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 

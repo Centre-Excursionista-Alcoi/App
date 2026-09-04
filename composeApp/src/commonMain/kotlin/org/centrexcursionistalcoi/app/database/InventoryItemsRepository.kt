@@ -3,8 +3,8 @@ package org.centrexcursionistalcoi.app.database
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.database.room.entity.InventoryItemEntity.Companion.toEntity
-import org.centrexcursionistalcoi.app.database.room.relation.toReferenced
+import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.toReferenced
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
