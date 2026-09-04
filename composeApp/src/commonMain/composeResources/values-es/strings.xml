@@ -210,7 +210,7 @@
     <string name="femecv_username">Nombre de Usuario</string>
     <string name="femecv_password">Contraseña</string>
     <string name="femecv_logo">Logo FEMECV</string>
-    <string name="femecv_notice">Esta app no está relacionada ni financiada por la FEMECV. Esta conexión es unicamente una utilidad para facilitar la administración de tus licencias. Después de hacer click al botón de iniciar sesión, autorizas al Centre Excursionista d\'Alcoi a obtener y procesar tus licencias de la FEMECV.</string>
+    <string name="femecv_notice">Esta app no está relacionada ni financiada por la FEMECV. Esta conexión es unicamente una utilidad para facilitar la administración de tus licencias. Después de hacer click al botón de iniciar sesión, autorizas al Centre Excursionista d\\'Alcoi a obtener y procesar tus licencias de la FEMECV.</string>
     <string name="form_display_name">Nombre a mostrar</string>
     <string name="form_description">Descripción</string>
     <string name="form_select_image">Seleccionar imagen</string>
@@ -272,7 +272,7 @@
     <string name="settings_report_session_title">Recolectar información de reproducción de sesiones</string>
     <string name="settings_report_session_summary">Si está habilitado, la app recolectará automaticamente datos de reproducción de sesiones para a mejorar la experiencia de usuario.</string>
     <string name="settings_dev_credit_title">App desarrollada por %1$s</string>
-    <string name="settings_dev_credit_message">Esta app ha sido desarrollada de manera desinteresada por el Centre Excursionista d\'Alcoi per %1$s.</string>
+    <string name="settings_dev_credit_message">Esta app ha sido desarrollada de manera desinteresada por el Centre Excursionista d\\'Alcoi per %1$s.</string>
     <string name="settings_dev_credit_website">Sitio Web</string>
     <string name="settings_dev_credit_email">Email</string>
     <string name="nav_home">Inicio</string>
