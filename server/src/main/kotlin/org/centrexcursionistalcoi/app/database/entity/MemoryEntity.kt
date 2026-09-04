@@ -22,6 +22,7 @@ import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import java.time.Instant
 import java.util.UUID
 import kotlin.time.toJavaInstant
@@ -109,8 +110,15 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         request.from?.let { from = it }
         request.to?.let { to = it }
         request.attachments?.forEach { fileWithContext ->
-            FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
+            val fileEntity = FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
                 MemoriesFiles.deleteWhere { (MemoriesFiles.memory eq this@MemoryEntity.id) and (MemoriesFiles.file eq fileEntity.id) }
+            }
+            if (fileEntity != null) {
+                // A new attachment was created (fileWithContext had bytes) -- link it to this memory.
+                MemoriesFiles.insert {
+                    it[memory] = this@MemoryEntity.id
+                    it[file] = fileEntity.id
+                }
             }
         }
     }

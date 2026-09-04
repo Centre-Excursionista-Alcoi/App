@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,13 +19,12 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
-import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.ui.dialog.MemoryDisplay
 import org.centrexcursionistalcoi.app.ui.screen.MemoryEditor_Content
 import org.centrexcursionistalcoi.app.viewmodel.management.MemoriesManagementViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.uuid.Uuid
 
 @Composable
 fun MemoriesManagementListView(model: MemoriesManagementViewModel = koinViewModel()) {
@@ -71,14 +71,22 @@ private fun MemoriesManagementListView(
         onDeleteRequest = onDelete,
         editItemContent = { memory ->
             val state = rememberRichTextState()
-            var from by remember { mutableStateOf<ZonedDateTime?>(null) }
-            var to by remember { mutableStateOf<ZonedDateTime?>(null) }
-            var place by remember { mutableStateOf("") }
-            var memberUsers by remember { mutableStateOf<List<Member>>(emptyList()) }
-            var externalUsers by remember { mutableStateOf("") }
-            var sport by remember { mutableStateOf<Sports?>(null) }
-            var department by remember { mutableStateOf<Department?>(null) }
-            var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
+            var from by remember(memory) { mutableStateOf(memory?.from) }
+            var to by remember(memory) { mutableStateOf(memory?.to) }
+            var place by remember(memory) { mutableStateOf(memory?.place.orEmpty()) }
+            var memberUsers by remember(memory) { mutableStateOf(memory?.members.orEmpty()) }
+            var externalUsers by remember(memory) { mutableStateOf(memory?.externalUsers.orEmpty()) }
+            var sport by remember(memory) { mutableStateOf(memory?.sport) }
+            var department by remember(memory) { mutableStateOf(memory?.department) }
+
+            var images by remember(memory) { mutableStateOf<List<PlatformFile>>(emptyList()) }
+            var removedImages by remember { mutableStateOf<List<Uuid>>(emptyList()) }
+
+            LaunchedEffect(memory) {
+                memory?.let {
+                    state.setMarkdown(it.text)
+                }
+            }
 
             var isSaving by remember { mutableStateOf(false) }
 
@@ -97,7 +105,9 @@ private fun MemoriesManagementListView(
                 externalUsers = externalUsers,
                 sport = sport,
                 department = department,
-                files = files,
+                previousImagesContainer = memory,
+                removedPreviousImages = removedImages,
+                images = images,
                 onFromChange = { from = it },
                 onToChange = { to = it },
                 onPlaceChange = { place = it },
@@ -105,7 +115,8 @@ private fun MemoriesManagementListView(
                 onExternalUsersChange = { externalUsers = it },
                 onSportChange = { sport = it },
                 onDepartmentChange = { department = it },
-                onFilesChange = { files = it },
+                onImagesChange = { images = it },
+                onModifyRemovedPreviousImages = { removedImages = it },
             )
         },
     ) { memory ->

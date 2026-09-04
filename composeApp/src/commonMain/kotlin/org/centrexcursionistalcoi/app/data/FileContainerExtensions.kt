@@ -236,7 +236,7 @@ fun ImageFileListContainer?.rememberImageFiles(
     scope: CoroutineScope = GlobalScope,
     dispatcherProvider: DispatcherProvider = koinInject(),
 ): SnapshotStateMap<Uuid, ByteArray?> {
-    val state = mutableStateMapOf<Uuid, ByteArray?>()
+    val state = remember { mutableStateMapOf<Uuid, ByteArray?>() }
     LaunchedEffect(this) {
         if (this@rememberImageFiles == null) return@LaunchedEffect
         for (image in images) {
