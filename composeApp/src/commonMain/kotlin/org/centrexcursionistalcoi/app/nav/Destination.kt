@@ -113,7 +113,7 @@ sealed interface Destination : NavKey {
             .associate { it.substringBefore('=').toUuid() to it.substringAfter('=').toInt() }
     }
 
-    @Serializable @SerialName("memoryEditor") data class MemoryEditor(
+    @Serializable @SerialName("lendingMemoryEditor") data class LendingMemoryEditor(
         val lendingId: Uuid? = null
     ) : Destination
 

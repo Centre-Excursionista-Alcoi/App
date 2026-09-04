@@ -25,7 +25,7 @@ val destinationSavedStateConfiguration = SavedStateConfiguration {
             subclass(Destination.Admin.LendingManagement::class, Destination.Admin.LendingManagement.serializer())
             subclass(Destination.LendingSignUp::class, Destination.LendingSignUp.serializer())
             subclass(Destination.LendingCreation::class, Destination.LendingCreation.serializer())
-            subclass(Destination.MemoryEditor::class, Destination.MemoryEditor.serializer())
+            subclass(Destination.LendingMemoryEditor::class, Destination.LendingMemoryEditor.serializer())
             subclass(Destination.External.ResetPassword::class, Destination.External.ResetPassword.serializer())
         }
     }

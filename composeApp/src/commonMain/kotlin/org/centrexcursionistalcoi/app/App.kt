@@ -209,10 +209,10 @@ private fun App(
                             navigator.navigate(Destination.LendingDetails(it))
                         },
                         onMemoryEditorRequested = {
-                            navigator.navigate(Destination.MemoryEditor(it.id))
+                            navigator.navigate(Destination.LendingMemoryEditor(it.id))
                         },
                         onCreateMemoryRequested = {
-                            navigator.navigate(Destination.MemoryEditor(null))
+                            navigator.navigate(Destination.LendingMemoryEditor(null))
                         },
                         onOtherUserLendingClick = {
                             navigator.navigate(Destination.Admin.LendingManagement(it))
@@ -248,7 +248,7 @@ private fun App(
                     LendingDetailsScreen(
                         lendingId = lendingId,
                         onMemoryEditorRequested = {
-                            navigator.navigate(Destination.MemoryEditor(lendingId))
+                            navigator.navigate(Destination.LendingMemoryEditor(lendingId))
                         },
                         onBack = { navigator.goBack() }
                     )
@@ -297,7 +297,7 @@ private fun App(
                         }
                     ) { navigator.goBack() }
                 }
-                destination<Destination.MemoryEditor> { route ->
+                destination<Destination.LendingMemoryEditor> { route ->
                     val lendingId = route.lendingId
 
                     ActivityMemoryEditor(lendingId) { navigator.goBack() }
