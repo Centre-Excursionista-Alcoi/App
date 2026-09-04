@@ -10,6 +10,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
       FirebaseApp.configure() //important
 
+      // Koin must be started before anything below resolves a Koin-managed dependency (e.g. PushNotifierListener).
+      KoinKt.initKoin(extraModules: [], config: { _ in })
+
       //By default showPushNotification value is true.
       //When set showPushNotification to false foreground push  notification will not be shown.
       //You can still get notification content using #onPushNotification listener method.
@@ -25,7 +28,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       //     Napier.d(message, tag = "NotifierManager")
       // }
 
-      NotifierManager.shared.addListener(listener: PushNotifierListener.shared)
+      NotifierManager.shared.addListener(listener: PushNotifierListenerIosKt.pushNotifierListener())
 
     return true
   }
