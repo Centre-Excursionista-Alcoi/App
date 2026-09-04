@@ -8,6 +8,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
@@ -100,6 +101,8 @@ class MemoriesRemoteRepository(
     /**
      * Patches the memory with the given [id]. Named `patch` (rather than `update`) to avoid ambiguity with the
      * inherited no-op-body [update] overload, since every parameter here is optional too.
+     * @param attachments New images to attach.
+     * @param removedAttachments IDs of previously-attached images to remove.
      */
     suspend fun patch(
         id: Uuid,
@@ -110,6 +113,7 @@ class MemoriesRemoteRepository(
         sport: Sports? = null,
         department: Department? = null,
         attachments: List<PlatformFile>? = null,
+        removedAttachments: List<Uuid> = emptyList(),
         from: ZonedDateTime? = null,
         to: ZonedDateTime? = null,
         progressNotifier: ProgressNotifier? = null,
@@ -122,7 +126,7 @@ class MemoriesRemoteRepository(
             text,
             sport,
             department?.id,
-            attachments?.map { it.fileWithContext() },
+            attachments?.map { it.fileWithContext() }.orEmpty() + removedAttachments.map { FileWithContext(byteArrayOf(), id = it) },
             from,
             to
         ),

@@ -75,7 +75,9 @@ class ActivityMemoryEditorViewModel(
         sport: Sports?,
         department: Department?,
         text: RichTextState,
-        files: List<PlatformFile>
+        files: List<PlatformFile>,
+        /** Only applies when editing. Files removed that already exist on the memory. */
+        removedFiles: List<Uuid>
     ) = launch {
         try {
             isSaving.value = true
@@ -106,6 +108,7 @@ class ActivityMemoryEditorViewModel(
                             sport,
                             department,
                             files,
+                            removedFiles,
                             from,
                             to,
                             ProgressNotifier { saveProgress.value = it },

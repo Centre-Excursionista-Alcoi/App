@@ -1,7 +1,11 @@
 package org.centrexcursionistalcoi.app.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Badge
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,44 +36,41 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.memory_editor_department
-import cea_app.composeapp.generated.resources.memory_editor_description
-import cea_app.composeapp.generated.resources.memory_editor_external_participants
-import cea_app.composeapp.generated.resources.memory_editor_external_participants_help
-import cea_app.composeapp.generated.resources.memory_editor_from
-import cea_app.composeapp.generated.resources.memory_editor_member_participants
-import cea_app.composeapp.generated.resources.memory_editor_place
-import cea_app.composeapp.generated.resources.memory_editor_place_help
-import cea_app.composeapp.generated.resources.memory_editor_save
-import cea_app.composeapp.generated.resources.memory_editor_sport
-import cea_app.composeapp.generated.resources.memory_editor_title
-import cea_app.composeapp.generated.resources.memory_editor_to
-import cea_app.composeapp.generated.resources.memory_editor_upload_image
-import cea_app.composeapp.generated.resources.memory_editor_warning_no_lending
-import cea_app.composeapp.generated.resources.remove
+import cea_app.composeapp.generated.resources.*
+import coil3.compose.AsyncImage
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.name
+import io.ktor.client.request.invoke
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.ImageFileListContainer
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.data.displayName
+import org.centrexcursionistalcoi.app.data.rememberImageFiles
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.data.PastSelectableDates
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Remove
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Upload
@@ -128,7 +130,7 @@ fun ActivityMemoryEditor(
     saveProgress: Progress?,
     members: List<Member>?,
     departments: List<Department>?,
-    onSave: (from: ZonedDateTime?, to: ZonedDateTime?, place: String, memberUsers: List<Member>, externalUsers: String, sport: Sports?, department: Department?, description: RichTextState, files: List<PlatformFile>) -> Unit,
+    onSave: (from: ZonedDateTime?, to: ZonedDateTime?, place: String, memberUsers: List<Member>, externalUsers: String, sport: Sports?, department: Department?, description: RichTextState, files: List<PlatformFile>, removedFiles: List<Uuid>) -> Unit,
     onBack: () -> Unit,
 ) {
     val state = rememberRichTextState()
@@ -139,7 +141,9 @@ fun ActivityMemoryEditor(
     var externalUsers by remember(memory) { mutableStateOf(memory?.externalUsers.orEmpty()) }
     var sport by remember(memory) { mutableStateOf(memory?.sport) }
     var department by remember(memory) { mutableStateOf(memory?.department) }
-    var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
+
+    var images by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
+    var removedImages by remember { mutableStateOf<List<Uuid>>(emptyList()) }
 
     LaunchedEffect(memory) {
         memory?.let {
@@ -167,7 +171,8 @@ fun ActivityMemoryEditor(
                                 sport,
                                 department,
                                 state,
-                                files
+                                images,
+                                removedImages
                             )
                         }
                     ) {
@@ -198,7 +203,9 @@ fun ActivityMemoryEditor(
             externalUsers = externalUsers,
             sport = sport,
             department = department,
-            files = files,
+            previousImagesContainer = memory,
+            removedPreviousImages = removedImages,
+            images = images,
             onFromChange = { from = it },
             onToChange = { to = it },
             onPlaceChange = { place = it },
@@ -206,7 +213,8 @@ fun ActivityMemoryEditor(
             onExternalUsersChange = { externalUsers = it },
             onSportChange = { sport = it },
             onDepartmentChange = { department = it },
-            onFilesChange = { files = it },
+            onImagesChange = { images = it },
+            onModifyRemovedPreviousImages = { removedImages = it },
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -229,7 +237,7 @@ fun ActivityMemoryEditor_Preview() {
             Member(2u, Member.Status.ACTIVE, "Bob", "12345678Z", "bob@example.com"),
             Member(3u, Member.Status.ACTIVE, "Charlie", "11223344B", "charlie@example.com"),
         ),
-        onSave = { _, _, _, _, _, _, _, _, _ -> },
+        onSave = { _, _, _, _, _, _, _, _, _, _ -> },
         onBack = {},
     )
 }
@@ -249,7 +257,9 @@ fun MemoryEditor_Content(
     externalUsers: String,
     sport: Sports?,
     department: Department?,
-    files: List<PlatformFile>,
+    previousImagesContainer: ImageFileListContainer?,
+    removedPreviousImages: List<Uuid>,
+    images: List<PlatformFile>,
     onFromChange: (ZonedDateTime?) -> Unit,
     onToChange: (ZonedDateTime?) -> Unit,
     onPlaceChange: (String) -> Unit,
@@ -257,9 +267,12 @@ fun MemoryEditor_Content(
     onExternalUsersChange: (String) -> Unit,
     onSportChange: (Sports?) -> Unit,
     onDepartmentChange: (Department?) -> Unit,
-    onFilesChange: (List<PlatformFile>) -> Unit,
+    onImagesChange: (List<PlatformFile>) -> Unit,
+    onModifyRemovedPreviousImages: (List<Uuid>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val density = LocalDensity.current
+
     Column(modifier = modifier) {
         if (!isForLending) {
             OutlinedCard(
@@ -396,11 +409,76 @@ fun MemoryEditor_Content(
 
         // Images
         val imagePicker = rememberFilePickerLauncher(
-            FileKitType.ImageAndVideo,
+            FileKitType.Image,
             mode = FileKitMode.Multiple()
         ) { pickedFiles ->
             if (pickedFiles == null) return@rememberFilePickerLauncher
-            onFilesChange(files + pickedFiles)
+            onImagesChange(images + pickedFiles)
+        }
+
+        val previousImages = previousImagesContainer.rememberImageFiles()
+
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            item { Spacer(Modifier.width(8.dp)) }
+
+            items(previousImages.toList(), key = { it.first }, contentType = { "existing-image" }) { (uuid, bytes) ->
+                val isRemoved = removedPreviousImages.contains(uuid)
+                Box(
+                    modifier = Modifier.padding(horizontal = 4.dp).height(200.dp)
+                ) {
+                    var imageWidth by remember { mutableStateOf(0.dp) }
+
+                    if (isRemoved) {
+                        // Show an overlay to indicate that the image is removed (and will be removed when saving)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(imageWidth)
+                                .zIndex(1f)
+                                .clickable { onModifyRemovedPreviousImages(removedPreviousImages - uuid) }
+                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                MaterialSymbols.Delete,
+                                stringResource(Res.string.memory_editor_previous_image_delete),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    } else {
+                        Badge(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .zIndex(1f)
+                                .padding(4.dp)
+                                .clickable { onModifyRemovedPreviousImages(removedPreviousImages + uuid) }
+                        ) {
+                            Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
+                        }
+                    }
+
+                    AsyncImage(
+                        model = bytes,
+                        contentDescription = stringResource(Res.string.memory_editor_previous_image_uuid, uuid.toString()),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .onGloballyPositioned { imageWidth = with(density) { it.size.width.toDp() } }
+                    )
+                }
+            }
+
+            items(images, key = { it.name }, contentType = { "new-image" }) { file ->
+                AssistChip(
+                    enabled = !isSaving,
+                    onClick = { onImagesChange(images - file) },
+                    label = { Text(file.name) },
+                    trailingIcon = {
+                        Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
+                    },
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            }
+            item { Spacer(Modifier.width(8.dp)) }
         }
         OutlinedButton(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -410,21 +488,6 @@ fun MemoryEditor_Content(
             Icon(MaterialSymbols.AttachFile, stringResource(Res.string.memory_editor_upload_image))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(Res.string.memory_editor_upload_image))
-        }
-        LazyRow(modifier = Modifier.fillMaxWidth()) {
-            item { Spacer(Modifier.width(8.dp)) }
-            items(files) { file ->
-                AssistChip(
-                    enabled = !isSaving,
-                    onClick = { onFilesChange(files - file) },
-                    label = { Text(file.name) },
-                    trailingIcon = {
-                        Icon(MaterialSymbols.Remove, stringResource(Res.string.remove))
-                    },
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                )
-            }
-            item { Spacer(Modifier.width(8.dp)) }
         }
 
         Spacer(Modifier.height(56.dp))

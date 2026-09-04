@@ -419,6 +419,8 @@
     <string name="memory_editor_external_participants">External Participants</string>
     <string name="memory_editor_external_participants_help">People that participated on the activity from outside the club.</string>
     <string name="memory_editor_upload_image">Upload Images</string>
+    <string name="memory_editor_previous_image_uuid">Image uploaded previously with UUID %1$s</string>
+    <string name="memory_editor_previous_image_delete">This image will be deleted on upload</string>
     <string name="memory_editor_sport">Sport</string>
     <string name="memory_editor_department">Department</string>
     <string name="memory_editor_description">Activity description</string>
