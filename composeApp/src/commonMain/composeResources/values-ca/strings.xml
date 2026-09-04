@@ -551,4 +551,12 @@
     <string name="sync_step_memories">Memòries</string>
     <string name="sync_step_posts">Anuncis</string>
     <string name="sync_step_events">Esdeveniments</string>
+    <string name="save">Guardar</string>
+    <string name="activities_message">Ací pots veure les activitats en les què has sigut etiquetat. Pots veure-les, però només l'autor les pots editar.</string>
+    <string name="activities_empty">No has sigut etiquetat en cap activitat encara</string>
+    <string name="memory_modify">Modificar memòria</string>
+    <string name="memory_saved">Memòria desada correctament</string>
+    <string name="memory_open_file">Obrir</string>
+    <string name="memory_editor_previous_image_uuid">Imatge pujada anteriorment amb UUID %1$s</string>
+    <string name="memory_editor_previous_image_delete">Aquesta imatge s'eliminarà en guardar</string>
 </resources>
