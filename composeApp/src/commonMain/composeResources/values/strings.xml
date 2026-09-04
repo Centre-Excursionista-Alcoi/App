@@ -12,6 +12,17 @@
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
 
+    <string name="sync_step_profile">Personal data</string>
+    <string name="sync_step_departments">Departments</string>
+    <string name="sync_step_users">Users</string>
+    <string name="sync_step_members">Members</string>
+    <string name="sync_step_item_types">Item Types</string>
+    <string name="sync_step_items">Items</string>
+    <string name="sync_step_lendings">Lendings</string>
+    <string name="sync_step_memories">Memories</string>
+    <string name="sync_step_posts">Posts</string>
+    <string name="sync_step_events">Events</string>
+
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_action">Login</string>
     <string name="login_password_changed_title">Password updated!</string>

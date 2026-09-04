@@ -215,6 +215,10 @@ kotlin {
 
                 // Room3 SQLite Wrapper
                 implementation(libs.androidx.room3.sqliteWrapper)
+
+                // Koin Extensions for Android
+                implementation(libs.koin.android)
+                implementation(libs.koin.androidx.workmanager)
             }
         }
 
@@ -230,7 +234,6 @@ kotlin {
     }
 
     compilerOptions {
-        freeCompilerArgs.add("-Xcontext-parameters")
         freeCompilerArgs.add("-Xexpect-actual-classes")
         optIn.add("kotlin.time.ExperimentalTime")
         optIn.add("kotlin.uuid.ExperimentalUuidApi")

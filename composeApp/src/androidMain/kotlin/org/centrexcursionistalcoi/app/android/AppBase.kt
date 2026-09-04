@@ -10,10 +10,14 @@ import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfig
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
+import org.koin.core.annotation.KoinApplication
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
-class AppBase : Application() {
+@KoinApplication
+class AppBase : Application(), KoinComponent {
     companion object {
         private val log = logging()
         
@@ -31,9 +35,8 @@ class AppBase : Application() {
 
         initKoin {
             androidContext(this@AppBase)
+            workManagerFactory()
         }
-
-        BackgroundJobCoordinator.initialize(applicationContext)
 
         NotifierManager.initialize(
             configuration = NotificationPlatformConfiguration.Android(
@@ -46,7 +49,7 @@ class AppBase : Application() {
             log.d(tag = "NotifierManager") { message }
         }
 
-        NotifierManager.addListener(PushNotifierListener)
+        NotifierManager.addListener(get<PushNotifierListener>())
     }
 
     override fun onTerminate() {

@@ -13,7 +13,7 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_EVENTS_SYNC
@@ -51,7 +51,7 @@ class EventsRemoteRepository(
         requiresInsurance: Boolean,
         departmentId: Uuid?,
         image: PlatformFile?,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) {
         val inMemoryImage = image?.let { InMemoryFileAllocator.put(it) }
 
@@ -86,7 +86,7 @@ class EventsRemoteRepository(
         requiresInsurance: Boolean?,
         departmentId: Uuid?,
         image: PlatformFile?,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) {
         val inMemoryImage = image?.let { InMemoryFileAllocator.put(it) }
 

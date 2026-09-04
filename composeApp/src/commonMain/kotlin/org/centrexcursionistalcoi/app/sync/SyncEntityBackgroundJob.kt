@@ -17,15 +17,13 @@ import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Singleton
 import org.koin.core.component.get
 
-expect class SyncEntityBackgroundJob : BackgroundSyncWorker<SyncEntityBackgroundJobLogic>
-
-object SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
-    const val EXTRA_ENTITY_CLASS = "entity_class"
-    const val EXTRA_ENTITY_ID = "entity_id"
-    const val EXTRA_IS_DELETE = "is_delete"
-
+@Singleton
+@Named("SyncEntityBackgroundJob")
+class SyncEntityBackgroundJob : BackgroundJob() {
     private val log = logging()
 
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
@@ -81,5 +79,11 @@ object SyncEntityBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         }
 
         return SyncResult.Success()
+    }
+
+    companion object {
+        const val EXTRA_ENTITY_CLASS = "entity_class"
+        const val EXTRA_ENTITY_ID = "entity_id"
+        const val EXTRA_IS_DELETE = "is_delete"
     }
 }

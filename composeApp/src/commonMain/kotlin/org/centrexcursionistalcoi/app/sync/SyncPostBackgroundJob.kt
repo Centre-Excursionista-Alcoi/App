@@ -4,20 +4,22 @@ import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.push.LocalNotifications
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
-import org.koin.core.component.get
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Singleton
 
-expect class SyncPostBackgroundJob : BackgroundSyncWorker<SyncPostBackgroundJobLogic>
-
-object SyncPostBackgroundJobLogic : BackgroundSyncWorkerLogic() {
-    const val EXTRA_POST_ID = "post_id"
-
+@Singleton
+@Named("SyncPostBackgroundJob")
+class SyncPostBackgroundJob(
+    private val postsRepository: PostsRepository,
+    private val postsRemoteRepository: PostsRemoteRepository
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val postId = input[EXTRA_POST_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing post ID")
 
-        val post = get<PostsRemoteRepository>().get(postId, progressNotifier)
+        val post = postsRemoteRepository.get(postId, progressNotifier)
             ?: return SyncResult.Failure("Post with ID $postId not found on server")
-        get<PostsRepository>().insertOrUpdate(post)
+        postsRepository.insertOrUpdate(post)
 
         LocalNotifications.showNotification(
             { post.title },
@@ -26,5 +28,9 @@ object SyncPostBackgroundJobLogic : BackgroundSyncWorkerLogic() {
         )
 
         return SyncResult.Success()
+    }
+
+    companion object {
+        const val EXTRA_POST_ID = "post_id"
     }
 }

@@ -173,13 +173,13 @@ private fun DepartmentsListView(
                 onClick = {
                     isLoading = true
                     val job = if (department == null) {
-                        onCreate(displayName, image) {
+                        onCreate(displayName, image, ProgressNotifier {
                             progress = it
-                        }
+                        })
                     } else {
-                        onUpdate(department.id, displayName, image) {
+                        onUpdate(department.id, displayName, image,ProgressNotifier {
                             progress = it
-                        }
+                        })
                     }
                     job.invokeOnCompletion {
                         isLoading = false

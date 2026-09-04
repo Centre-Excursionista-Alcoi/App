@@ -11,7 +11,7 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
-import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.viewmodel.launch
 import org.centrexcursionistalcoi.app.viewmodel.stateInViewModel
 import org.koin.core.annotation.KoinViewModel
@@ -38,7 +38,7 @@ class EventsManagementViewModel(
         requiresInsurance: Boolean,
         department: Department?,
         image: PlatformFile?,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) = launch {
         withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description.toMarkdown()
@@ -71,7 +71,7 @@ class EventsManagementViewModel(
         requiresInsurance: Boolean?,
         department: Department?,
         image: PlatformFile?,
-        progressNotifier: (Progress) -> Unit
+        progressNotifier: ProgressNotifier
     ) = launch {
         withContext(dispatcherProvider.io) {
             val descriptionMarkdown = description?.toMarkdown()

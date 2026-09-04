@@ -58,6 +58,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
+import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Distance
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Groups
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
@@ -97,8 +98,8 @@ fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
 private fun EventsListView(
     events: List<ReferencedEvent>?,
     departments: List<Department>?,
-    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
-    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: (Progress) -> Unit) -> Job,
+    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
+    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
     onDelete: (ReferencedEvent) -> Job,
 ) {
     ListView(
@@ -259,10 +260,9 @@ private fun EventsListView(
                             requiresConfirmation,
                             requiresInsurance,
                             department,
-                            image
-                        ) {
-                            progress = it
-                        }
+                            image,
+                            ProgressNotifier { progress = it }
+                        )
                     } else {
                         onUpdate(
                             event.id,
@@ -275,8 +275,9 @@ private fun EventsListView(
                             requiresConfirmation.takeIf { it != event.requiresConfirmation },
                             requiresInsurance.takeIf { it != event.requiresInsurance },
                             department.takeIf { it?.id != event.department?.id },
-                            image
-                        ) { progress = it }
+                            image,
+                            ProgressNotifier { progress = it }
+                        )
                     }
                     job.invokeOnCompletion {
                         isLoading = false

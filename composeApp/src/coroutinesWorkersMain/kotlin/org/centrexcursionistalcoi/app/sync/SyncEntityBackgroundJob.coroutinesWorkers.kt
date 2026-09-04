@@ -1,3 +1,0 @@
-package org.centrexcursionistalcoi.app.sync
-
-actual class SyncEntityBackgroundJob : BackgroundSyncWorker<SyncEntityBackgroundJobLogic>(SyncEntityBackgroundJobLogic)
