@@ -89,7 +89,9 @@ import kotlin.uuid.Uuid
 fun ActivityMemoryEditor(
     lendingId: Uuid?,
     memoryId: Uuid?,
-    model: ActivityMemoryEditorViewModel = koinViewModel { parametersOf(lendingId, memoryId) },
+    model: ActivityMemoryEditorViewModel = koinViewModel {
+        parametersOf(ActivityMemoryEditorViewModel.Params(lendingId, memoryId))
+    },
     onBack: () -> Unit
 ) {
     val memory by model.memory.collectAsState()
@@ -132,12 +134,18 @@ fun ActivityMemoryEditor(
     val state = rememberRichTextState()
     var from by remember(memory) { mutableStateOf(memory?.from) }
     var to by remember(memory) { mutableStateOf(memory?.to) }
-    var place by remember(memory) { mutableStateOf(memory?.place ?: "") }
-    var memberUsers by remember(memory) { mutableStateOf(memory?.members ?: emptyList()) }
-    var externalUsers by remember(memory) { mutableStateOf(memory?.externalUsers ?: "") }
+    var place by remember(memory) { mutableStateOf(memory?.place.orEmpty()) }
+    var memberUsers by remember(memory) { mutableStateOf(memory?.members.orEmpty()) }
+    var externalUsers by remember(memory) { mutableStateOf(memory?.externalUsers.orEmpty()) }
     var sport by remember(memory) { mutableStateOf(memory?.sport) }
-    var department by remember { mutableStateOf<Department?>(null) }
+    var department by remember(memory) { mutableStateOf(memory?.department) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
+
+    LaunchedEffect(memory) {
+        memory?.let {
+            state.setMarkdown(it.text)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -149,7 +157,19 @@ fun ActivityMemoryEditor(
                 actions = {
                     IconButton(
                         enabled = !isSaving,
-                        onClick = { onSave(from, to, place, memberUsers, externalUsers, sport, department, state, files) }
+                        onClick = {
+                            onSave(
+                                from,
+                                to,
+                                place,
+                                memberUsers,
+                                externalUsers,
+                                sport,
+                                department,
+                                state,
+                                files
+                            )
+                        }
                     ) {
                         Icon(
                             MaterialSymbols.Upload,
@@ -294,7 +314,10 @@ fun MemoryEditor_Content(
             onValueChange = { searchingForUser = it },
             label = { Text(stringResource(Res.string.memory_editor_member_participants)) },
             suggestions = members.orEmpty()
-                .filter { member -> member.fullName.uppercase().unaccent().contains(searchingForUser.uppercase().unaccent()) }
+                .filter { member ->
+                    member.fullName.uppercase().unaccent()
+                        .contains(searchingForUser.uppercase().unaccent())
+                }
                 .toSet(),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             toString = { it.fullName },
@@ -372,7 +395,10 @@ fun MemoryEditor_Content(
         )
 
         // Images
-        val imagePicker = rememberFilePickerLauncher(FileKitType.ImageAndVideo, mode = FileKitMode.Multiple()) { pickedFiles ->
+        val imagePicker = rememberFilePickerLauncher(
+            FileKitType.ImageAndVideo,
+            mode = FileKitMode.Multiple()
+        ) { pickedFiles ->
             if (pickedFiles == null) return@rememberFilePickerLauncher
             onFilesChange(files + pickedFiles)
         }
