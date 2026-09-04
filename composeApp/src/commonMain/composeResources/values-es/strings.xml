@@ -535,4 +535,12 @@
     <string name="sync_step_memories">Memorias</string>
     <string name="sync_step_posts">Anuncios</string>
     <string name="sync_step_events">Eventos</string>
+    <string name="save">Guardar</string>
+    <string name="activities_message">Aquí puedes ver las actividades en las que has sido etiquetado. Puedes verlas, pero solo el autor puede editarlas.</string>
+    <string name="activities_empty">Aún no te han etiquetado en ninguna actividad</string>
+    <string name="memory_modify">Modificar memoria</string>
+    <string name="memory_saved">Memoria guardada correctamente</string>
+    <string name="memory_open_file">Abrir</string>
+    <string name="memory_editor_previous_image_uuid">Imagen subida con anterioridad con UUID %1$s</string>
+    <string name="memory_editor_previous_image_delete">Esta imagen será eliminada cuando se suba</string>
 </resources>
