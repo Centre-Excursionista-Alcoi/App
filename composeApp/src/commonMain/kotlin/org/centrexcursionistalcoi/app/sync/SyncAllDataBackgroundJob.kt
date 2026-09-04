@@ -47,7 +47,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
 @Singleton
-@Named("SyncAllDataBackgroundJob")
+@Named(SyncAllDataBackgroundJob.UNIQUE_NAME)
 class SyncAllDataBackgroundJob(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
@@ -183,6 +183,7 @@ class SyncAllDataBackgroundJob(
         /** Run sync every hour */
         const val SYNC_EVERY_SECONDS = 60 * 60
 
+        /** Doubles as both the WorkManager unique-work name and this job's Koin qualifier (see [Named]). */
         const val UNIQUE_NAME = "SyncAllDataBackgroundJob"
 
         /**

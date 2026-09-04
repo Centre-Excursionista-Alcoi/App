@@ -6,7 +6,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncDepartmentBackgroundJob")
+@Named(SyncDepartmentBackgroundJob.NAME)
 class SyncDepartmentBackgroundJob(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
 ) : BackgroundJob() {
@@ -21,6 +21,7 @@ class SyncDepartmentBackgroundJob(
     }
 
     companion object {
+        const val NAME = "SyncDepartmentBackgroundJob"
         const val EXTRA_DEPARTMENT_ID = "department_id"
     }
 }

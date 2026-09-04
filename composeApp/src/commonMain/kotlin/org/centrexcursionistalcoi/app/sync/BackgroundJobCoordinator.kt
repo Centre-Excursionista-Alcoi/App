@@ -7,6 +7,9 @@ import kotlin.uuid.Uuid
 expect class BackgroundJobCoordinator {
     /**
      * Schedules a new unique job with for the given [Logic].
+     * @param name [Logic]'s own Koin qualifier (its `NAME` constant, e.g. [SyncEventBackgroundJob.NAME]). Must match
+     * the `@Named` qualifier [Logic] is registered under -- it cannot be derived from [Logic] at runtime, since the
+     * class name is not stable across minified (R8/ProGuard) builds.
      * @param input Any arguments that the job may need.
      * @param requiresInternet If `true`, the job coordinator will run the job only if Internet access is available.
      * @param id An optional id for the job. Otherwise, a random one will be set.
@@ -17,6 +20,7 @@ expect class BackgroundJobCoordinator {
      * @return An [ObservableBackgroundJob] that allows to watch the job status.
      */
     suspend inline fun <reified Logic: BackgroundJob> schedule(
+        name: String,
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,
@@ -27,6 +31,9 @@ expect class BackgroundJobCoordinator {
 
     /**
      * Schedules a new unique job with for the given [Logic], but unline [schedule], it doesn't wait for the scheduling to complete, it hopes for the best.
+     * @param name [Logic]'s own Koin qualifier (its `NAME` constant, e.g. [SyncEventBackgroundJob.NAME]). Must match
+     * the `@Named` qualifier [Logic] is registered under -- it cannot be derived from [Logic] at runtime, since the
+     * class name is not stable across minified (R8/ProGuard) builds.
      * @param input Any arguments that the job may need.
      * @param requiresInternet If `true`, the job coordinator will run the job only if Internet access is available.
      * @param id An optional id for the job. Otherwise, a random one will be set.
@@ -36,6 +43,7 @@ expect class BackgroundJobCoordinator {
      * @param repeatInterval If not `null`, the job will be scheduled to repeat at the given interval.
      */
     inline fun <reified Logic: BackgroundJob> scheduleAsync(
+        name: String,
         input: Map<String, String> = emptyMap(),
         requiresInternet: Boolean = false,
         id: Uuid? = null,

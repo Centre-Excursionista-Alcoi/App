@@ -40,6 +40,7 @@ class PushNotifierListener(
                 is PushNotification.LendingUpdated -> {
                     log.d { "Received lending update notification for lending ID: ${notification.lendingId}" }
                     coordinator.scheduleAsync<SyncLendingBackgroundJob>(
+                        name = SyncLendingBackgroundJob.NAME,
                         input = mapOf(
                             EXTRA_LENDING_ID to notification.lendingId.toString(),
                             EXTRA_IS_REMOVAL to false.toString(),
@@ -50,6 +51,7 @@ class PushNotifierListener(
                 is PushNotification.EventAssistanceUpdated -> {
                     log.d { "Received an event notification. ID: ${notification.eventId}" }
                     coordinator.scheduleAsync<SyncEventBackgroundJob>(
+                        name = SyncEventBackgroundJob.NAME,
                         input = mapOf(
                             SyncEventBackgroundJob.EXTRA_EVENT_ID to notification.eventId.toString(),
                         ),
@@ -59,6 +61,7 @@ class PushNotifierListener(
                 is PushNotification.DepartmentJoinRequestUpdated -> {
                     log.d { "Received department join request update notification for request ID: ${notification.requestId}" }
                     coordinator.scheduleAsync<SyncDepartmentBackgroundJob>(
+                        name = SyncDepartmentBackgroundJob.NAME,
                         input = mapOf(
                             SyncDepartmentBackgroundJob.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
                         ),
@@ -68,6 +71,7 @@ class PushNotifierListener(
                 is PushNotification.DepartmentKicked -> {
                     log.d { "Received department kicked notification for department ID: ${notification.departmentId}" }
                     coordinator.scheduleAsync<SyncDepartmentBackgroundJob>(
+                        name = SyncDepartmentBackgroundJob.NAME,
                         input = mapOf(
                             SyncDepartmentBackgroundJob.EXTRA_DEPARTMENT_ID to notification.departmentId.toString(),
                         ),
@@ -77,6 +81,7 @@ class PushNotifierListener(
                 is PushNotification.EntityUpdated -> {
                     log.d { "Received entity updated notification for ${notification.entityClass}#${notification.entityId}" }
                     coordinator.scheduleAsync<SyncEntityBackgroundJob>(
+                        name = SyncEntityBackgroundJob.NAME,
                         input = mapOf(
                             SyncEntityBackgroundJob.EXTRA_ENTITY_CLASS to notification.entityClass,
                             SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.entityId,
@@ -86,6 +91,7 @@ class PushNotifierListener(
                 is PushNotification.EntityDeleted -> {
                     log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }
                     coordinator.scheduleAsync<SyncEntityBackgroundJob>(
+                        name = SyncEntityBackgroundJob.NAME,
                         input = mapOf(
                             SyncEntityBackgroundJob.EXTRA_ENTITY_CLASS to notification.entityClass,
                             SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.entityId,

@@ -104,6 +104,7 @@ actual class BackgroundJobCoordinator(
     }
 
     inline fun <reified Logic: BackgroundJob> scheduleJob(
+        name: String,
         input: Map<String, String>,
         id: Uuid,
         uniqueName: String?,
@@ -113,24 +114,25 @@ actual class BackgroundJobCoordinator(
         CoroutineScope(dispatcherProvider.io).launch {
             if (repeatInterval != null) {
                 while (true) {
-                    execute<Logic>(input, id, uniqueName)
+                    execute<Logic>(name, input, id, uniqueName)
                     emitState(id, uniqueName, BackgroundJobState.ENQUEUED)
                     delay(repeatInterval)
                 }
             } else {
-                execute<Logic>(input, id, uniqueName)
+                execute<Logic>(name, input, id, uniqueName)
             }
         }
     }
 
     suspend inline fun <reified Logic: BackgroundJob> execute(
+        name: String,
         input: Map<String, String>,
         id: Uuid,
         uniqueName: String?
     ) {
         try {
             emitState(id, uniqueName, BackgroundJobState.RUNNING)
-            val logic = get<Logic>(named(Logic::class.simpleName!!))
+            val logic = get<Logic>(named(name))
             with(logic) {
                 BackgroundSyncContext(
                     progressNotifier = ProgressNotifier { progress ->
@@ -146,6 +148,7 @@ actual class BackgroundJobCoordinator(
     }
 
     actual suspend inline fun <reified Logic: BackgroundJob> schedule(
+        name: String,
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -154,12 +157,13 @@ actual class BackgroundJobCoordinator(
         repeatInterval: Duration?,
     ): ObservableBackgroundJob {
         val id = id ?: Uuid.random()
-        scheduleJob<Logic>(input, id, uniqueName, repeatInterval)
+        scheduleJob<Logic>(name, input, id, uniqueName, repeatInterval)
 
         return observe(id)
     }
 
     actual inline fun <reified Logic: BackgroundJob> scheduleAsync(
+        name: String,
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -167,7 +171,7 @@ actual class BackgroundJobCoordinator(
         uniqueName: String?,
         repeatInterval: Duration?,
     ) {
-        scheduleJob<Logic>(input, id ?: Uuid.random(), uniqueName, repeatInterval)
+        scheduleJob<Logic>(name, input, id ?: Uuid.random(), uniqueName, repeatInterval)
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {

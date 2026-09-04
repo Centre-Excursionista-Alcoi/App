@@ -41,6 +41,7 @@ class MainScreenViewModel(
 
     fun sync() = launch {
         backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+            name = SyncAllDataBackgroundJob.UNIQUE_NAME,
             input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "true"),
             requiresInternet = true,
             uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME

@@ -28,7 +28,8 @@ actual class BackgroundJobCoordinator(context: Context) {
 
     val workManager: WorkManager = WorkManager.getInstance(context)
 
-    inline fun <reified WorkerType: BackgroundJob> enqueueJob(
+    fun enqueueJob(
+        name: String,
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: UUID?,
@@ -50,7 +51,7 @@ actual class BackgroundJobCoordinator(context: Context) {
             }
             .setInputData(
                 workDataOf(
-                    BackgroundJobWorker.EXTRA_LOGIC_NAME to WorkerType::class.simpleName,
+                    BackgroundJobWorker.EXTRA_LOGIC_NAME to name,
                     *input.toList().toTypedArray()
                 )
             )
@@ -67,7 +68,7 @@ actual class BackgroundJobCoordinator(context: Context) {
             )
             .build()
 
-        log.d { "Scheduling ${WorkerType::class.simpleName} with id $id..." }
+        log.d { "Scheduling $name with id $id..." }
         return if (uniqueName != null) {
             when (request) {
                 is PeriodicWorkRequest -> {
@@ -88,6 +89,7 @@ actual class BackgroundJobCoordinator(context: Context) {
     }
 
     actual suspend inline fun <reified Logic: BackgroundJob> schedule(
+        name: String,
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -97,12 +99,13 @@ actual class BackgroundJobCoordinator(context: Context) {
     ): ObservableBackgroundJob {
         val id = id?.toJavaUuid() ?: UUID.randomUUID()
 
-        enqueueJob<Logic>(input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration()).await()
+        enqueueJob(name, input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration()).await()
 
         return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
     }
 
     actual inline fun <reified Logic: BackgroundJob> scheduleAsync(
+        name: String,
         input: Map<String, String>,
         requiresInternet: Boolean,
         id: Uuid?,
@@ -112,7 +115,7 @@ actual class BackgroundJobCoordinator(context: Context) {
     ) {
         val id = id?.toJavaUuid() ?: UUID.randomUUID()
 
-        enqueueJob<Logic>(input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration())
+        enqueueJob(name, input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration())
     }
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {

@@ -52,6 +52,7 @@ class LoadingViewModel(
                 if (SyncAllDataBackgroundJob.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
                     backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                        name = SyncAllDataBackgroundJob.UNIQUE_NAME,
                         input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "true"),
                         requiresInternet = true,
                         uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
@@ -59,6 +60,7 @@ class LoadingViewModel(
                 } else {
                     log.d { "Scheduling periodic sync..." }
                     backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                        name = SyncAllDataBackgroundJob.UNIQUE_NAME,
                         input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "false"),
                         requiresInternet = true,
                         uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,

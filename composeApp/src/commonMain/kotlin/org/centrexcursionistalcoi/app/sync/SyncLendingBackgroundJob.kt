@@ -7,7 +7,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncLendingBackgroundJob")
+@Named(SyncLendingBackgroundJob.NAME)
 class SyncLendingBackgroundJob(
     private val lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository
@@ -28,6 +28,7 @@ class SyncLendingBackgroundJob(
     }
 
     companion object {
+        const val NAME = "SyncLendingBackgroundJob"
         const val EXTRA_LENDING_ID = "lending_id"
         const val EXTRA_IS_REMOVAL = "is_removal"
     }

@@ -22,7 +22,7 @@ import org.koin.core.annotation.Singleton
 import org.koin.core.component.get
 
 @Singleton
-@Named("SyncEntityBackgroundJob")
+@Named(SyncEntityBackgroundJob.NAME)
 class SyncEntityBackgroundJob : BackgroundJob() {
     private val log = logging()
 
@@ -82,6 +82,7 @@ class SyncEntityBackgroundJob : BackgroundJob() {
     }
 
     companion object {
+        const val NAME = "SyncEntityBackgroundJob"
         const val EXTRA_ENTITY_CLASS = "entity_class"
         const val EXTRA_ENTITY_ID = "entity_id"
         const val EXTRA_IS_DELETE = "is_delete"

@@ -6,7 +6,7 @@ import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Singleton
-@Named("SyncEventBackgroundJob")
+@Named(SyncEventBackgroundJob.NAME)
 class SyncEventBackgroundJob(
     private val eventsRemoteRepository: EventsRemoteRepository,
 ) : BackgroundJob() {
@@ -21,6 +21,7 @@ class SyncEventBackgroundJob(
     }
 
     companion object {
+        const val NAME = "SyncEventBackgroundJob"
         const val EXTRA_EVENT_ID = "event_id"
     }
 }
