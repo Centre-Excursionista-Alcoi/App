@@ -12,6 +12,7 @@ import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.Database
@@ -130,7 +131,7 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.department = department1
                 this.userReference = fakeUser
                 this.confirmed = true
-                this.isManager = true
+                this.roles = listOf(DepartmentRole.PEOPLE_MANAGER)
             }
             DepartmentMemberEntity.new {
                 this.department = department1

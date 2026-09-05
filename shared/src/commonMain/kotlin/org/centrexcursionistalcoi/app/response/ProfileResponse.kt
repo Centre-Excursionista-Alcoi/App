@@ -3,6 +3,8 @@ package org.centrexcursionistalcoi.app.response
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.MEMBERS_MANAGER_GROUP_NAME
+import org.centrexcursionistalcoi.app.USERS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import kotlin.time.Clock
@@ -25,6 +27,12 @@ data class ProfileResponse(
     val femecvLastSync: Instant?,
 ) {
     val isAdmin: Boolean get() = ADMIN_GROUP_NAME in groups
+
+    /** General (non-department) role: manages user accounts globally. Implied by [isAdmin]. */
+    val isUsersManager: Boolean get() = isAdmin || USERS_MANAGER_GROUP_NAME in groups
+
+    /** General (non-department) role: manages the federation member roster. Implied by [isAdmin]. */
+    val isMembersManager: Boolean get() = isAdmin || MEMBERS_MANAGER_GROUP_NAME in groups
 
     /**
      * Obtains a list of all the user's insurances active now in the given [timeZone].
