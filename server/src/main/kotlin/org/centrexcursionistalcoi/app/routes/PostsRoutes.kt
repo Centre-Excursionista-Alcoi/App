@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.content.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -124,5 +125,9 @@ fun Route.postsRoutes() {
             PostEntity.find { Posts.department eq department.id }.empty()
         },
         updater = UpdatePostRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.CONTENT_MANAGER,
+            departmentOfEntity = { it.department?.id?.value },
+        ),
     )
 }

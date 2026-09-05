@@ -26,6 +26,8 @@ import cea_app.composeapp.generated.resources.management_users
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.hasAnyDepartmentRole
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
@@ -90,20 +92,8 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             )
         }
     ) {
-        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedLending>?): Boolean {
-            // Admins can always see the page
-            if (profile.isAdmin) return true
-
-            // If user is not an admin, check whether they are manager of at least one department among the departments identifying all the items
-            // A department identifies a lending if all the items inside the lending are from the same department.
-            val isManager = items.orEmpty().any { lending ->
-                val departments = lending.items.mapNotNull { it.type.department }.distinctBy { it.id }
-                val department = departments.takeIf { it.size == 1 }?.firstOrNull()
-                department?.members.orEmpty()
-                    // Find the member info for the current user, while checking if confirmed and manager
-                    .find { it.userSub == profile.sub && it.confirmed && it.isManager } != null
-            }
-            return isManager
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedLending>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.LENDING_MANAGER)
         }
     }
 
@@ -117,7 +107,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<Memory>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.MEMORY_MANAGER)
+        }
+    }
 
     object Departments : ManagementPage<Uuid, Department>(
         key = "departments",
@@ -130,19 +124,8 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             )
         }
     ) {
-        override fun shouldShow(profile: ProfileResponse, items: List<Department>?): Boolean {
-            // Admins can always see the page
-            if (profile.isAdmin) return true
-
-            // If user is not admin, check whether they are manager of at least one department
-            val isManager = items.orEmpty().any { department ->
-                department.members.orEmpty()
-                    // Find the member info for the current user
-                    .find { it.userSub == profile.sub }
-                    // Check if that member is a manager
-                    ?.isManager == true
-            }
-            return isManager
+        override fun shouldShow(profile: ProfileResponse, items: List<Department>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || items.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER)
         }
     }
 
@@ -156,7 +139,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<UserData>?, departments: List<Department>?): Boolean {
+            return profile.isUsersManager || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER)
+        }
+    }
 
     object Posts : ManagementPage<Uuid, ReferencedPost>(
         key = "posts",
@@ -168,7 +155,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedPost>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.CONTENT_MANAGER)
+        }
+    }
 
     object Events : ManagementPage<Uuid, ReferencedEvent>(
         key = "events",
@@ -180,7 +171,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedEvent>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.CONTENT_MANAGER)
+        }
+    }
 
     object Inventory : ManagementPage<Uuid, ReferencedInventoryItemType>(
         key = "inventory",
@@ -192,7 +187,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 it
             )
         }
-    )
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedInventoryItemType>?, departments: List<Department>?): Boolean {
+            return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.INVENTORY_MANAGER)
+        }
+    }
 
 
     override fun equals(other: Any?): Boolean {
@@ -206,7 +205,7 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         return key.hashCode()
     }
 
-    open fun shouldShow(profile: ProfileResponse, items: List<EntityType>?): Boolean = profile.isAdmin
+    open fun shouldShow(profile: ProfileResponse, items: List<EntityType>?, departments: List<Department>?): Boolean = profile.isAdmin
 
 
     companion object {
@@ -216,13 +215,13 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             departments: List<Department>?,
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
-                Lendings.takeIf { Lendings.shouldShow(profile, lendings) },
-                Memories.takeIf { Memories.shouldShow(profile, null) },
-                Departments.takeIf { Departments.shouldShow(profile, departments) },
-                Users.takeIf { Users.shouldShow(profile, null) },
-                Posts.takeIf { Posts.shouldShow(profile, null) },
-                Events.takeIf { Events.shouldShow(profile, null) },
-                Inventory.takeIf { Inventory.shouldShow(profile, null) },
+                Lendings.takeIf { Lendings.shouldShow(profile, lendings, departments) },
+                Memories.takeIf { Memories.shouldShow(profile, null, departments) },
+                Departments.takeIf { Departments.shouldShow(profile, departments, departments) },
+                Users.takeIf { Users.shouldShow(profile, null, departments) },
+                Posts.takeIf { Posts.shouldShow(profile, null, departments) },
+                Events.takeIf { Events.shouldShow(profile, null, departments) },
+                Inventory.takeIf { Inventory.shouldShow(profile, null, departments) },
             )
         }
 

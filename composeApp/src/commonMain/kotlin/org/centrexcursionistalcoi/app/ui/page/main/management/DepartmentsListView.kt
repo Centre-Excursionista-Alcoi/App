@@ -33,6 +33,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
@@ -93,9 +94,12 @@ private fun DepartmentsListView(
             // Admin can see all departments
             departments
         } else {
-            // Non-admin can see only the departments they are managing
+            // Non-admin can see only the departments they hold PEOPLE_MANAGER (or ADMIN, which implies it) in
             departments?.filter { department ->
-                department.members?.any { it.userSub == profile.sub && it.isManager } == true
+                department.members?.any { member ->
+                    member.userSub == profile.sub && member.confirmed &&
+                        (DepartmentRole.PEOPLE_MANAGER in member.roles || DepartmentRole.ADMIN in member.roles)
+                } == true
             }
         }
     }

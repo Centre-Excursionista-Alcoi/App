@@ -21,12 +21,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.MemberEntity
@@ -49,10 +51,10 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendE
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.UserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -90,7 +92,10 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOw
     }
 
     val isOwnerOrAdmin = session.isAdmin() || Database { memory.submittedBy.sub.value } == session.sub
-    val isAllowed = isOwnerOrAdmin || (!requireOwnerOrAdmin && Database {
+    val isDeptManager = Database { memory.department }?.let { department ->
+        session.hasDepartmentRole(department.id.value, DepartmentRole.MEMORY_MANAGER)
+    } == true
+    val isAllowed = isOwnerOrAdmin || isDeptManager || (!requireOwnerOrAdmin && Database {
         val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
         userMemberNumber != null && memory.members.any { it.memberNumber == userMemberNumber }
     })
@@ -362,12 +367,21 @@ fun Route.memoriesRoutes() {
             if (session.isAdmin()) {
                 MemoryEntity.all().toList()
             } else {
-                // Regular users see memories they submitted, plus memories they're tagged as a participant on.
+                // Regular users see memories they submitted, memories they're tagged as a participant on, plus
+                // memories of departments they're a MEMORY_MANAGER of (mirroring how lendings extend list
+                // visibility to managed departments).
                 val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
                 val taggedMemoryIds = userMemberNumber?.let { memberNumber ->
                     MemoriesMembers.selectAll().where { MemoriesMembers.member eq memberNumber }.map { it[MemoriesMembers.memory] }
                 }.orEmpty()
-                MemoryEntity.find { (Memories.submittedBy eq session.sub) or (Memories.id inList taggedMemoryIds) }.toList()
+                val managedDepartmentIds = DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                    .filter { it.hasRole(DepartmentRole.MEMORY_MANAGER) }
+                    .map { it.department.id.value }
+                MemoryEntity.find {
+                    (Memories.submittedBy eq session.sub) or
+                        (Memories.id inList taggedMemoryIds) or
+                        (Memories.department inList managedDepartmentIds)
+                }.toList()
             }
         }
 
@@ -407,7 +421,7 @@ fun Route.memoriesRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     delete("memories/{id}") {
-        assertAdmin() ?: return@delete
+        val session = getUserSessionOrFail() ?: return@delete
 
         val id = call.parameters["id"]?.toUUIDOrNull()
         if (id == null) {
@@ -417,6 +431,14 @@ fun Route.memoriesRoutes() {
         val memory = Database { MemoryEntity.findById(id) }
         if (memory == null) {
             respondError(Error.EntityNotFound("Memory", id.toString()))
+            return@delete
+        }
+
+        val isDeptManager = Database { memory.department }?.let { department ->
+            session.hasDepartmentRole(department.id.value, DepartmentRole.MEMORY_MANAGER)
+        } == true
+        if (!session.isAdmin() && !isDeptManager) {
+            respondError(Error.PermissionRejected())
             return@delete
         }
 

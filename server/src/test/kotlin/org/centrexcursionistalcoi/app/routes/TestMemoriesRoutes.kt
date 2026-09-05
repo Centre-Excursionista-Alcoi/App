@@ -19,15 +19,18 @@ import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
@@ -39,6 +42,7 @@ import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.time.LocalDate
@@ -246,6 +250,56 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Nice try")))
         }.apply {
             assertError(Error.PermissionRejected())
+        }
+    }
+
+    @Test
+    fun test_get_and_patch_memory_departmentMemoryManager() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val submitter = FakeUser2.provideEntity()
+            val department = DepartmentEntity.new { displayName = "Test Department" }
+
+            // The logged-in user (FakeUser) holds MEMORY_MANAGER in the memory's department, but didn't submit it
+            // and isn't tagged as a participant.
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = FakeUser.SUB
+                it[DepartmentMembers.departmentId] = department.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.MEMORY_MANAGER.storageName)
+            }
+
+            MemoryEntity.new {
+                this.text = "A department activity"
+                this.submittedBy = submitter
+                this.department = department
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+        },
+    ) { context ->
+        val memory = context.dibResult!!
+
+        // The department's memory manager sees the memory in the list...
+        client.get("/memories").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(ListSerializer(Memory.serializer())) { memories ->
+                assertTrue(memories.any { it.id.toJavaUuid() == memory.id.value }, "Managed department's memory should be in the list")
+            }
+        }
+
+        // ...can fetch it directly...
+        client.get("/memories/${memory.id.value}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }
+
+        // ...and can modify it, unlike a mere tagged member.
+        client.patch("/memories/${memory.id.value}") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
+        }.apply {
+            assertStatusCode(HttpStatusCode.NoContent)
         }
     }
 

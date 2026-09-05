@@ -5,16 +5,19 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -27,52 +30,47 @@ import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
+import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
-private fun UserSession.isManager(department: DepartmentEntity): Boolean {
-    return Database {
-        DepartmentMemberEntity
-            .find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq this@isManager.sub) and (DepartmentMembers.isManager eq true) }
-            .empty()
-            .not()
-    }
-}
-
-private suspend fun RoutingContext.departmentRequest(isRestricted: Boolean = false): Pair<UserSession, DepartmentEntity>? {
+/**
+ * Fetches the department with the id given in the call parameters (`id`).
+ *
+ * If [requiredRole] is `null`, any logged-in user may proceed (used by e.g. `/join`, self `/leave`), and a missing
+ * department responds [Error.EntityNotFound]. Otherwise the caller must be a global admin, or hold [requiredRole]
+ * (or [DepartmentRole.ADMIN], which implies every role) in this department -- and, to avoid leaking whether a
+ * department id exists to a caller without permissions, a missing department responds [Error.PermissionRejected]
+ * instead (matching the previous behavior of this restricted path).
+ *
+ * If any error occurs, a response is sent to the user, and the function returns `null`.
+ */
+private suspend fun RoutingContext.departmentRequest(requiredRole: DepartmentRole? = null): Pair<UserSession, DepartmentEntity>? {
     val session = getUserSessionOrFail() ?: return null
 
-    val departmentId = call.parameters["id"]?.toUUIDOrNull()
-
-    return if (isRestricted) {
-        // Endpoint is restricted, verify that the user has permissions
-
+    return if (requiredRole != null) {
+        val departmentId = call.parameters["id"]?.toUUIDOrNull()
         val department = departmentId?.let { Database { DepartmentEntity.findById(it) } }
         if (department == null) {
-            // Department was not found, cannot check for permissions, so return missing permissions
             call.respondError(Error.PermissionRejected())
             return null
         }
-        // Department was found, check if the user is a manager, or an admin
-        if (!session.isAdmin() && !session.isManager(department)) {
+        if (!session.isAdmin() && !session.hasDepartmentRole(department.id.value, requiredRole)) {
             call.respondError(Error.PermissionRejected())
             return null
         }
-        // User has permissions, continue
         session to department
     } else {
-        // Endpoint is not restricted, just get the department
-
         val departmentId = assertIdParameter() ?: return null
         val department = Database { DepartmentEntity.findById(departmentId) }
         if (department == null) {
             call.respondError(Error.EntityNotFound(DepartmentEntity::class, departmentId))
             return null
         }
-
         session to department
     }
 }
@@ -118,7 +116,14 @@ fun Route.departmentsRoutes() {
                 }
             }
         },
-        updater = UpdateDepartmentRequest.serializer()
+        updater = UpdateDepartmentRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.ADMIN,
+            // Editing/deleting an existing department is scoped to that department's own admin role. Creating a
+            // brand-new department still requires global admin "for free": nobody can hold a role in a department
+            // that doesn't exist yet at creation time, so this check always falls back to admin-only for POST.
+            departmentOfEntity = { it.id.value },
+        ),
     )
 
     // Allows a user to join a department
@@ -180,7 +185,7 @@ fun Route.departmentsRoutes() {
         }
     }
     post("/departments/{id}/leave/{sub}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
         val sub = call.parameters["sub"]
         if (sub == null) {
@@ -218,7 +223,7 @@ fun Route.departmentsRoutes() {
         val (session, department) = departmentRequest() ?: return@get
 
         val pendingRequests = Database {
-            if (session.isAdmin() || session.isManager(department)) {
+            if (session.isAdmin() || session.hasDepartmentRole(department.id.value, DepartmentRole.PEOPLE_MANAGER)) {
                 DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
             } else {
                 // There should only be one match or none
@@ -238,9 +243,9 @@ fun Route.departmentsRoutes() {
         )
     }
 
-    // Allows an admin to confirm and deny join requests
+    // Allows an admin or people manager to confirm and deny join requests
     post("/departments/{id}/confirm/{requestId}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
         val requestId = call.parameters["requestId"]?.toUUIDOrNull()
         if (requestId == null) {
@@ -279,7 +284,7 @@ fun Route.departmentsRoutes() {
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
     }
     post("/departments/{id}/deny/{requestId}") {
-        val (_, department) = departmentRequest(true) ?: return@post
+        val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
         val requestId = call.parameters["requestId"]?.toUUIDOrNull()
         if (requestId == null) {
@@ -311,5 +316,43 @@ fun Route.departmentsRoutes() {
         }
 
         call.respondText("Join request denied", status = HttpStatusCode.OK)
+    }
+
+    // Allows a department admin (or global admin) to (re)assign a confirmed member's roles within the department.
+    // Gated by DepartmentRole.ADMIN specifically -- not any lesser role -- since assigning roles (including ADMIN
+    // itself) is privilege-escalation-capable.
+    patch("/departments/{id}/members/{memberId}/roles") {
+        val (_, department) = departmentRequest(DepartmentRole.ADMIN) ?: return@patch
+
+        val memberId = call.parameters["memberId"]?.toUUIDOrNull()
+        if (memberId == null) {
+            call.respondError(Error.MalformedId())
+            return@patch
+        }
+
+        val member = Database {
+            DepartmentMemberEntity
+                .find { (DepartmentMembers.id eq memberId) and (DepartmentMembers.departmentId eq department.id) }
+                .firstOrNull()
+        }
+        if (member == null) {
+            call.respondError(Error.EntityNotFound(DepartmentMemberEntity::class, memberId))
+            return@patch
+        }
+
+        val body = call.receiveText()
+        val request = try {
+            json.decodeFromString(UpdateDepartmentMemberRolesRequest.serializer(), body)
+        } catch (e: Exception) {
+            call.respondError(Error.MalformedRequest())
+            return@patch
+        }
+
+        Database {
+            member.roles = request.roles
+        }
+        department.updated()
+
+        call.respond(HttpStatusCode.NoContent)
     }
 }

@@ -8,6 +8,7 @@ import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -115,6 +116,10 @@ fun Route.inventoryRoutes() {
             }
         },
         updater = UpdateInventoryItemTypeRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.INVENTORY_MANAGER,
+            departmentOfEntity = { it.department?.id?.value },
+        ),
     )
     provideEntityRoutes(
         base = "inventory/items",
@@ -190,5 +195,9 @@ fun Route.inventoryRoutes() {
                 .empty()
         },
         updater = UpdateInventoryItemRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.INVENTORY_MANAGER,
+            departmentOfEntity = { it.type.department?.id?.value },
+        ),
     )
 }

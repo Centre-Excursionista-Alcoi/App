@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
@@ -648,7 +649,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub
                 it[DepartmentMembers.departmentId] = department1.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             val userLending = LendingEntity.new {
@@ -1062,7 +1063,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a lending with items from the managed department
@@ -1102,7 +1103,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department1.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a lending with items from department2
@@ -1145,7 +1146,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department1.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a lending with items from both departments
@@ -1189,7 +1190,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a lending with items that have no department
@@ -1229,7 +1230,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a lending with items from the managed department
@@ -1274,7 +1275,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a confirmed lending with items from the managed department
@@ -1319,7 +1320,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 it[DepartmentMembers.userSub] = user.sub.value
                 it[DepartmentMembers.departmentId] = department.id
                 it[DepartmentMembers.confirmed] = true
-                it[DepartmentMembers.isManager] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.LENDING_MANAGER.storageName)
             }
 
             // Create a taken lending with items from the managed department

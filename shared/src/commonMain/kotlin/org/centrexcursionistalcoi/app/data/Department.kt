@@ -22,11 +22,23 @@ data class Department(
         fun List<Department>.getDepartment(id: Uuid): Department = this.firstOrNull { it.id == id } ?: throw DepartmentNotFoundException(id)
 
         /**
-         * Checks if the profile is a manager of any department in the list.
+         * Checks if the profile holds any role (of any kind) in any department in the list.
          */
         fun List<Department>.isManagerOfAny(profile: ProfileResponse): Boolean {
             return this.any { department ->
-                department.members.orEmpty().find { it.userSub == profile.sub }?.isManager == true
+                department.members.orEmpty().find { it.userSub == profile.sub && it.confirmed }?.roles?.isNotEmpty() == true
+            }
+        }
+
+        /**
+         * Checks if the profile holds the given [role] (or [DepartmentRole.ADMIN], which implies every role) in
+         * any department in the list.
+         */
+        fun List<Department>.hasAnyDepartmentRole(profile: ProfileResponse, role: DepartmentRole): Boolean {
+            return this.any { department ->
+                department.members.orEmpty().find { it.userSub == profile.sub && it.confirmed }?.roles?.let {
+                    role in it || DepartmentRole.ADMIN in it
+                } == true
             }
         }
     }

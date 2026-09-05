@@ -6,6 +6,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -21,22 +22,23 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
-import org.jetbrains.exposed.v1.core.and
+import org.centrexcursionistalcoi.app.security.isMembersManager
+import org.centrexcursionistalcoi.app.security.isUsersManager
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 
 fun Route.usersRoutes() {
-    // Provides a list of all users. Admins get all users, non-admins only get users in departments they manage (if they
-    // don't manage any department, only themselves will be included in the list).
+    // Provides a list of all users. Admins and Users Managers get all users, everyone else only gets users in
+    // departments they hold PEOPLE_MANAGER in (if they hold that role in no department, only themselves are
+    // included in the list).
     get("/users") {
         val session = getUserSessionOrFail() ?: return@get
         var managingDepartments: List<DepartmentEntity>? = null
-        if (!session.isAdmin()) {
-            // We have to check whether the user is managing a department
+        if (!session.isAdmin() && !session.isUsersManager()) {
+            // We have to check whether the user is a people manager of a department
             managingDepartments = Database {
-                // We check whether the user is a confirmed manager in any department. Even though it should not be required to check whether it's
-                // confirmed, we do it anyway for safety.
-                DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
+                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                    .filter { it.hasRole(DepartmentRole.PEOPLE_MANAGER) }
                     .map { it.department }
             }
         }
@@ -140,8 +142,8 @@ fun Route.usersRoutes() {
 
         var members = Database { MemberEntity.all().map { it.toMember() } }
 
-        // Non-admins get stripped member data
-        if (!session.isAdmin()) {
+        // Non-admins/non-Members-Managers get stripped member data
+        if (!session.isAdmin() && !session.isMembersManager()) {
             members = members.map { it.strip() }
         }
 
