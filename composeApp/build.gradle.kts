@@ -190,6 +190,10 @@ kotlin {
             }
         }
 
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+        }
+
         val phonesMain by creating {
             dependsOn(permissionsMain)
         }
