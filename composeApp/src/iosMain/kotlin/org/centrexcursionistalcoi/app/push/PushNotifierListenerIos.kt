@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.push
 import org.koin.mp.KoinPlatformTools
 
 /**
- * Resolves the Koin-managed [PushNotifierListener] singleton, for Swift to pass to `NotifierManager.addListener`.
+ * Resolves the Koin-managed [PushNotifierListener] singleton, for Swift to pass to `KMPNotifier.addPushListener`.
  *
  * [PushNotifierListener] is a regular Koin-injected class (not a Kotlin `object`), so it has no `.shared` accessor
  * on the Swift side -- this is the iOS equivalent of Android's `get<PushNotifierListener>()` in `AppBase`.

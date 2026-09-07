@@ -16,25 +16,27 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       //By default showPushNotification value is true.
       //When set showPushNotification to false foreground push  notification will not be shown.
       //You can still get notification content using #onPushNotification listener method.
-      NotifierManager.shared.initialize(configuration: NotificationPlatformConfigurationIos(
-            showPushNotification: false,
-            askNotificationPermissionOnStart: true,
-            notificationSoundName: nil
-          )
+      KMPNotifier.shared.initialize(
+          configuration: NotificationPlatformConfigurationIos(
+              showPushNotification: false,
+              askNotificationPermissionOnStart: true,
+              notificationSoundName: nil
+          ),
+          extensions: [FirebasePush.shared]
       )
 
       // TODO: Properly implement this in swift
-      // NotifierManager.setLogger { message ->
+      // KMPNotifier.setLogger { message ->
       //     Napier.d(message, tag = "NotifierManager")
       // }
 
-      NotifierManager.shared.addListener(listener: PushNotifierListenerIosKt.pushNotifierListener())
+      KMPNotifier.shared.addPushListener(listener: PushNotifierListenerIosKt.pushNotifierListener())
 
     return true
   }
 
    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) async -> UIBackgroundFetchResult {
-        NotifierManager.shared.onApplicationDidReceiveRemoteNotification(userInfo: userInfo)
+        KMPNotifier.shared.onApplicationDidReceiveRemoteNotification(userInfo: userInfo)
         return UIBackgroundFetchResult.newData
    }
 
