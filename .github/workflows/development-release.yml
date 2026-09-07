@@ -309,6 +309,195 @@ jobs:
           inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed
 
+  # iOS - mirrors publish_internal_release above: every push to master that touches app code
+  # gets built and pushed straight to TestFlight, same as Android's "internal" track.
+  publish_ios_testflight:
+    name: iOS - Publish Bleeding-edge to TestFlight
+    runs-on: macos-26
+
+    needs: [run_shared_tests, run_app_tests]
+    # Inherits the conditional logic from run_shared_tests/run_app_tests automatically because
+    # of 'needs', but strictly checking is good practice:
+    if: ${{ always() && needs.run_shared_tests.result == 'success' && needs.run_app_tests.result == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          java-package: jdk
+          cache: 'gradle'
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v6
+        with:
+          path: iosApp/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # --- Install Signing Assets ---
+      - name: Install Certificate and Profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//')
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Create GoogleService.plist
+        env:
+          GOOGLE_SERVICE_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_PLIST_BASE64 }}
+        run: |
+          rm iosApp/iosApp/GoogleService-Info.plist
+          printf '%s\n' "$GOOGLE_SERVICE_PLIST_BASE64" | base64 --decode > iosApp/iosApp/GoogleService-Info.plist
+      - name: Verify GoogleService-Info.plist integrity
+        env:
+          GOOGLE_SERVICE_INFO_SHA256: 2dffdbd64e2c8d027a2b3f51199afa60f1a6414e5bac4ead873674f6490ddcd6
+        run: |
+          cd iosApp/iosApp
+          echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | shasum -a 256 -c -
+
+      - name: Install CocoaPods
+        run: |
+          ./gradlew :composeApp:generateDummyFramework
+          cd iosApp
+          pod install --repo-update
+
+      - name: Archive iOS App
+        run: |
+          xcodebuild -workspace iosApp/iosApp.xcworkspace \
+            -scheme iosApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $PWD/build/iosApp.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="CEA App" \
+            DEVELOPMENT_TEAM="UQSVPP37UL" \
+            clean archive
+
+      - name: Generate ExportOptions.plist
+        env:
+          TEAM_ID: "UQSVPP37UL"
+          BUNDLE_ID: "org.centrexcursionistalcoi.app"
+          PROFILE_NAME: "CEA App"
+        run: |
+          cat <<EOF > iosApp/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+
+              <key>signingStyle</key>
+              <string>manual</string>
+
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>$BUNDLE_ID</key>
+                  <string>$PROFILE_NAME</string>
+              </dict>
+
+              <key>stripSwiftSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $PWD/build/iosApp.xcarchive \
+            -exportOptionsPlist iosApp/ExportOptions.plist \
+            -exportPath $PWD/build/output
+
+      - name: IPA Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: IPA Artifact
+          path: build/output/*.ipa
+
+      # --- Upload to App Store Connect (TestFlight) ---
+      - name: Upload to App Store Connect
+        env:
+          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_ID: ${{ secrets.APP_STORE_CONNECT_APP_APPLE_ID }}
+        run: |
+          IPA_PATH=$(find build/output -name "*.ipa" | head -n 1)
+
+          if [ -z "$IPA_PATH" ]; then
+            echo "Error: No IPA file found in build/output"
+            exit 1
+          fi
+
+          echo "Found IPA at: $IPA_PATH"
+
+          APP_PLIST_ENTRY=$(unzip -Z1 "$IPA_PATH" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -n 1)
+          unzip -p "$IPA_PATH" "$APP_PLIST_ENTRY" > "$RUNNER_TEMP/app-info.plist"
+          BUNDLE_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$RUNNER_TEMP/app-info.plist")
+          BUNDLE_SHORT_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$RUNNER_TEMP/app-info.plist")
+          echo "Bundle version: $BUNDLE_VERSION ($BUNDLE_SHORT_VERSION)"
+
+          mkdir -p ~/.private_keys
+          echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$API_KEY_ID.p8
+
+          echo "Uploading to App Store Connect..."
+          xcrun altool --upload-package "$IPA_PATH" \
+            --type ios \
+            --apple-id "$APPLE_ID" \
+            --bundle-id "org.centrexcursionistalcoi.app" \
+            --bundle-version "$BUNDLE_VERSION" \
+            --bundle-short-version-string "$BUNDLE_SHORT_VERSION" \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
+
+      - name: Sentry - Upload iOS Debug Files (dSYMs & Source)
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+
+          DSYM_PATH="$PWD/iosApp/build/iosApp.xcarchive/dSYMs"
+
+          sentry-cli debug-files upload \
+            --include-sources \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project ${{ secrets.SENTRY_PROJECT }} \
+            "$DSYM_PATH"
+
   # 4. Server Jobs (Only runs if server files changed)
   run_server_tests:
     name: Run server tests

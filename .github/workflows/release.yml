@@ -497,6 +497,7 @@ jobs:
           API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_ID: ${{ secrets.APP_STORE_CONNECT_APP_APPLE_ID }}
         run: |
           # 1. Debug: Print what files were actually exported
           echo "Listing exported files:"
@@ -512,17 +513,32 @@ jobs:
           fi
 
           echo "Found IPA at: $IPA_PATH"
-          
+
+          # altool's --upload-package needs the exact bundle version/short version of the
+          # built app -- pull them straight out of the archived Info.plist rather than
+          # re-deriving them, so they can never drift from what was actually built.
+          APP_PLIST_ENTRY=$(unzip -Z1 "$IPA_PATH" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -n 1)
+          unzip -p "$IPA_PATH" "$APP_PLIST_ENTRY" > "$RUNNER_TEMP/app-info.plist"
+          BUNDLE_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$RUNNER_TEMP/app-info.plist")
+          BUNDLE_SHORT_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$RUNNER_TEMP/app-info.plist")
+          echo "Bundle version: $BUNDLE_VERSION ($BUNDLE_SHORT_VERSION)"
+
           # 1. Create the AuthKey file from the Secret
           mkdir -p ~/.private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$API_KEY_ID.p8
-          
+
           # 2. Validate and Upload
           # 'altool' is the standard command line tool for this provided by Xcode.
+          # --upload-app is deprecated; --upload-package is its replacement, but it needs the
+          # app's numeric App Store Connect "Apple ID" (App Information > General Information)
+          # plus the bundle id/version explicitly, since it no longer inspects the ipa itself.
           echo "Uploading to App Store Connect..."
-          xcrun altool --upload-app \
+          xcrun altool --upload-package "$IPA_PATH" \
             --type ios \
-            --file "$IPA_PATH" \
+            --apple-id "$APPLE_ID" \
+            --bundle-id "org.centrexcursionistalcoi.app" \
+            --bundle-version "$BUNDLE_VERSION" \
+            --bundle-short-version-string "$BUNDLE_SHORT_VERSION" \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
 
