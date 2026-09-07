@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.platform
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
+import com.mmk.kmpnotifier.push.firebase.FirebasePush
 import com.mmk.kmpnotifier.push.firebase.addPushListener
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.koin.core.component.KoinComponent
@@ -23,7 +24,8 @@ actual object PlatformLoadLogic : KoinComponent {
         KMPNotifier.initialize(
             NotificationPlatformConfiguration.Desktop(
                 showPushNotification = false,
-            )
+            ),
+            FirebasePush,
         )
 
         log.d { "Setting logger for notifications..." }

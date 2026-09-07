@@ -7,6 +7,7 @@ import com.diamondedge.logging.PlatformLogger
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
+import com.mmk.kmpnotifier.push.firebase.FirebasePush
 import com.mmk.kmpnotifier.push.firebase.addPushListener
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
@@ -43,7 +44,8 @@ class AppBase : Application(), KoinComponent {
             configuration = NotificationPlatformConfiguration.Android(
                 notificationIconResId = R.drawable.ic_notification,
                 showPushNotification = false,
-            )
+            ),
+            FirebasePush,
         )
 
         KMPNotifier.setLogger { message ->
