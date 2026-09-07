@@ -2,7 +2,8 @@
 # platform :ios, '16.6'
 
 # See: https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
-deployment_target = '15.6'
+# KMPNotifier 2.0 requires iOS 16.0 as the minimum deployment target.
+deployment_target = '16.0'
 
 target 'iosApp' do
   use_frameworks!

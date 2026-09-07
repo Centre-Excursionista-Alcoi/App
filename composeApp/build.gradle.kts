@@ -248,8 +248,9 @@ kotlin {
         homepage = "Link to the Shared Module homepage"
 
         // If changed, also update Podfile
+        // KMPNotifier 2.0 requires iOS 16.0 as the minimum deployment target.
         // https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
-        ios.deploymentTarget = "15.6"
+        ios.deploymentTarget = "16.0"
 
         version = appVersionName
         podfile = project.file("../iosApp/Podfile")

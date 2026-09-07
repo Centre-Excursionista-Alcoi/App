@@ -41,7 +41,7 @@ class AppBase : Application(), KoinComponent {
         }
 
         KMPNotifier.initialize(
-            configuration = NotificationPlatformConfiguration.Android(
+            NotificationPlatformConfiguration.Android(
                 notificationIconResId = R.drawable.ic_notification,
                 showPushNotification = false,
             ),
