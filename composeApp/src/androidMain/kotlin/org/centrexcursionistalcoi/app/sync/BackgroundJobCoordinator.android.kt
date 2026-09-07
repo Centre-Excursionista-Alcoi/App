@@ -101,7 +101,7 @@ actual class BackgroundJobCoordinator(context: Context) {
 
         enqueueJob(name, input, requiresInternet, id, tags, uniqueName, repeatInterval?.toJavaDuration()).await()
 
-        return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
+        return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it } })
     }
 
     actual inline fun <reified Logic: BackgroundJob> scheduleAsync(
@@ -120,7 +120,7 @@ actual class BackgroundJobCoordinator(context: Context) {
 
     actual fun observe(id: Uuid): ObservableBackgroundJob {
         val id = id.toJavaUuid()
-        return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it!! } })
+        return ObservableBackgroundJob(id, flowProvider = { workManager.getWorkInfoByIdFlow(id).mapNotNull { it } })
     }
 
     actual fun observeUnique(name: String): ObservableUniqueBackgroundJob {
