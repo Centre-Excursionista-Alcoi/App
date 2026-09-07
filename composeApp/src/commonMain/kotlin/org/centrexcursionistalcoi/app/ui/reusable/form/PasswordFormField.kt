@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.reusable.form
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ fun PasswordFormField(
             .semantics {
                 contentType = if (semanticsIsNewPassword) ContentType.NewPassword else ContentType.Password
             },
+        lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = if (showNextButton) ImeAction.Next else ImeAction.Done),
         trailingIcon = {
             IconButton(
