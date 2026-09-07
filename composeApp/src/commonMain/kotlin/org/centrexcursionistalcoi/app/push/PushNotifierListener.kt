@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
-import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.PayloadData
+import com.mmk.kmpnotifier.push.PushListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -17,7 +17,7 @@ import org.koin.core.component.KoinComponent
 class PushNotifierListener(
     private val dispatcherProvider: DispatcherProvider,
     private val coordinator: BackgroundJobCoordinator,
-) : NotifierManager.Listener, KoinComponent {
+) : PushListener, KoinComponent {
     private val log = logging()
 
     override fun onNewToken(token: String) {
