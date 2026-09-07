@@ -107,11 +107,12 @@ fun Route.eventsRoutes() {
                     this.department = department
                     this.image = imageEntity
                 }
-            }.also { eventEntity ->
-                Telegram.launch {
-                    val event = Database { eventEntity.toData() }
-                    Telegram.sendEvent(event)
-                }
+            }
+        },
+        afterCreate = { eventEntity ->
+            Telegram.launch {
+                val event = Database { eventEntity.toData() }
+                Telegram.sendEvent(event)
             }
         },
         deleteReferencesCheck = { department ->

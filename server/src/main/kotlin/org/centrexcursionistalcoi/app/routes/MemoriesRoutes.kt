@@ -414,7 +414,23 @@ fun Route.memoriesRoutes() {
             return@patch
         }
 
-        Database { memory.patch(request) }
+        // The patch can reassign `department` -- a MEMORY_MANAGER of the memory's current department must also
+        // hold that role in the requested destination, or they could move a memory into a department they don't
+        // manage. Applying the patch and re-checking inside the same transaction keeps the move atomic: on
+        // rejection, the exception propagates out of the `Database { }` block and rolls the reassignment back.
+        try {
+            Database {
+                memory.patch(request)
+                val newDepartment = memory.department
+                val isAllowed = session.isAdmin() ||
+                    Database { memory.submittedBy.sub.value } == session.sub ||
+                    (newDepartment != null && session.hasDepartmentRole(newDepartment.id.value, DepartmentRole.MEMORY_MANAGER))
+                if (!isAllowed) throw PermissionDeniedException()
+            }
+        } catch (_: PermissionDeniedException) {
+            respondError(Error.PermissionRejected())
+            return@patch
+        }
         regenerateMemoryPdf(memory)
         memory.updated()
 

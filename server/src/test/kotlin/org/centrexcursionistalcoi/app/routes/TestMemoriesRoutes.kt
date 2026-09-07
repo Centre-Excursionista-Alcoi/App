@@ -54,6 +54,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 class TestMemoriesRoutes : ApplicationTestBase() {
@@ -301,6 +302,61 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }.apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
+    }
+
+    @Test
+    fun test_patch_memory_departmentManager_cannotReassignToUnmanagedDepartment() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val managed = DepartmentEntity.new { displayName = "Managed Department" }
+            val other = DepartmentEntity.new { displayName = "Other Department" }
+
+            // The logged-in user (FakeUser) holds MEMORY_MANAGER in "managed" only, and didn't submit the memory.
+            DepartmentMembers.insert {
+                it[DepartmentMembers.userSub] = FakeUser.SUB
+                it[DepartmentMembers.departmentId] = managed.id
+                it[DepartmentMembers.confirmed] = true
+                it[DepartmentMembers.roles] = listOf(DepartmentRole.MEMORY_MANAGER.storageName)
+            }
+
+            val submitter = FakeUser2.provideEntity()
+            val memory = MemoryEntity.new {
+                this.text = "A department activity"
+                this.submittedBy = submitter
+                this.department = managed
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+            Triple(memory, managed, other)
+        },
+    ) { context ->
+        val (memory, managedDepartment, otherDepartment) = context.dibResult!!
+
+        // The manager can patch fields while keeping the memory in their own department...
+        client.patch("/memories/${memory.id.value}") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
+        }.apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        // ...but cannot move it into a department they don't hold MEMORY_MANAGER in.
+        client.patch("/memories/${memory.id.value}") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                json.encodeToString(
+                    UpdateMemoryRequest.serializer(),
+                    UpdateMemoryRequest(department = otherDepartment.id.value.toKotlinUuid()),
+                )
+            )
+        }.apply {
+            assertError(Error.PermissionRejected())
+        }
+
+        // The rejected reassignment must have been rolled back: the memory still belongs to the managed department.
+        val departmentIdAfter = Database { memory.department?.id?.value }
+        assertEquals(managedDepartment.id.value, departmentIdAfter)
     }
 
     @Test

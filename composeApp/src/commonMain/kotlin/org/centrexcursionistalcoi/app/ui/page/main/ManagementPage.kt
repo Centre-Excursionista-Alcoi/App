@@ -141,7 +141,8 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     ) {
         override fun shouldShow(profile: ProfileResponse, items: List<UserData>?, departments: List<Department>?): Boolean {
-            return profile.isUsersManager || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER)
+            return profile.isUsersManager || profile.isMembersManager ||
+                departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER)
         }
     }
 

@@ -113,11 +113,12 @@ fun Route.postsRoutes() {
                         }
                     }
                 }
-            }.also { postEntity ->
-                Telegram.launch {
-                    val post = Database { postEntity.toData() }
-                    Telegram.sendPost(post)
-                }
+            }
+        },
+        afterCreate = { postEntity ->
+            Telegram.launch {
+                val post = Database { postEntity.toData() }
+                Telegram.sendPost(post)
             }
         },
         deleteReferencesCheck = { department ->

@@ -40,6 +40,7 @@ import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.centrexcursionistalcoi.app.security.assertDepartmentRole
 import org.centrexcursionistalcoi.app.security.hasAnyDepartmentRole
+import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -48,6 +49,13 @@ import org.slf4j.LoggerFactory
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 private val logger = LoggerFactory.getLogger("RoutesBase")
+
+/**
+ * Thrown from inside a [Database] transaction block to abort and roll it back when a permission check fails
+ * after some mutation within that same block has already been applied (e.g. a patch that reassigns an entity's
+ * department). Never escapes past the `try`/`catch` that wraps the transaction it was thrown from.
+ */
+class PermissionDeniedException : Exception()
 
 /**
  * Describes the department-scoped role required to create/patch/delete an entity via [provideEntityRoutes].
@@ -101,7 +109,12 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      */
     noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
     writePermission: EntityWritePermission<EE>? = null,
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission)
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    noinline afterCreate: suspend (EE) -> Unit = {},
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission, afterCreate)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -130,7 +143,12 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      */
     noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
     writePermission: EntityWritePermission<EE>? = null,
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission)
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    noinline afterCreate: suspend (EE) -> Unit = {},
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission, afterCreate)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -160,6 +178,11 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      */
     deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
     writePermission: EntityWritePermission<EE>? = null,
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    afterCreate: suspend (EE) -> Unit = {},
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
@@ -267,6 +290,10 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             item.updated()
         }
 
+        // Only reached once the department-scoped permission check above has passed, so external side effects
+        // (e.g. Telegram announcements) never fire for a creation that ends up rejected.
+        afterCreate(item)
+
         Push.launch {
             Push.sendPushNotificationToAll(
                 PushNotification.EntityUpdated(entityKClass, item.id.value.toString(), true),
@@ -303,7 +330,22 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
         @Suppress("UNCHECKED_CAST")
         val patcher = item as EntityPatcher<UER>
-        Database { patcher.patch(request) }
+        // The patch may reassign the entity to a different department (or type, for inventory items) -- re-check
+        // the *destination* inside the same transaction as the patch, so an unauthorized move is rolled back
+        // atomically rather than left half-applied.
+        try {
+            Database {
+                patcher.patch(request)
+                if (writePermission != null && !session.isAdmin()) {
+                    val newDepartmentId = writePermission.departmentOfEntity(item)
+                    val allowed = newDepartmentId != null && session.hasDepartmentRole(newDepartmentId, writePermission.role)
+                    if (!allowed) throw PermissionDeniedException()
+                }
+            }
+        } catch (_: PermissionDeniedException) {
+            respondError(Error.PermissionRejected())
+            return@patch
+        }
 
         if (item is LastUpdateEntity) {
             item.updated()
