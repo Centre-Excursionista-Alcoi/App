@@ -120,6 +120,13 @@ fun Route.inventoryRoutes() {
             role = DepartmentRole.INVENTORY_MANAGER,
             departmentOfEntity = { it.department?.id?.value },
         ),
+        onWriteRejected = { type ->
+            // The image (if any) was uploaded and persisted before the department could be authorized -- clean
+            // it up too, or a rejected creation would leave it orphaned in the files table.
+            val image = type.image
+            type.delete()
+            image?.delete()
+        },
     )
     provideEntityRoutes(
         base = "inventory/items",

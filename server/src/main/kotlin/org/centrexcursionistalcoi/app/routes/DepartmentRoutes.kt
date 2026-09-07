@@ -124,6 +124,13 @@ fun Route.departmentsRoutes() {
             // that doesn't exist yet at creation time, so this check always falls back to admin-only for POST.
             departmentOfEntity = { it.id.value },
         ),
+        onWriteRejected = { department ->
+            // The image (if any) was uploaded and persisted before the department could be authorized -- clean
+            // it up too, or a rejected creation would leave it orphaned in the files table.
+            val image = department.image
+            department.delete()
+            image?.delete()
+        },
     )
 
     // Allows a user to join a department

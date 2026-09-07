@@ -115,6 +115,13 @@ fun Route.eventsRoutes() {
                 Telegram.sendEvent(event)
             }
         },
+        onWriteRejected = { event ->
+            // The image (if any) was uploaded and persisted before the department could be authorized -- clean
+            // it up too, or a rejected creation would leave it orphaned in the files table.
+            val image = event.image
+            event.delete()
+            image?.delete()
+        },
         deleteReferencesCheck = { department ->
             // departments are referenced in events, make sure no events reference the department before deleting
             EventEntity.find { Events.department eq department.id }.empty()

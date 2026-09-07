@@ -114,7 +114,13 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
      */
     noinline afterCreate: suspend (EE) -> Unit = {},
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission, afterCreate)
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -148,7 +154,13 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
      */
     noinline afterCreate: suspend (EE) -> Unit = {},
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission, afterCreate)
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -183,6 +195,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
      */
     afterCreate: suspend (EE) -> Unit = {},
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
@@ -280,9 +298,11 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
 
         // The fine-grained check can only run once the entity (and thus its department) exists -- multipart
-        // bodies can't be peeked twice. If the caller isn't allowed after all, roll the creation back.
+        // bodies can't be peeked twice. If the caller isn't allowed after all, roll the creation back -- including
+        // any dependent rows (e.g. uploaded files) onWriteRejected cleans up, so a rejected creation never leaves
+        // orphaned data behind.
         if (assertWritePermission(session, item) == null) {
-            Database { item.delete() }
+            Database { onWriteRejected(item) }
             return@post
         }
 

@@ -5,16 +5,19 @@ import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
@@ -99,6 +102,52 @@ class TestEventsRoutes : ApplicationTestBase() {
         // The rejected creation must not leave an orphaned row behind.
         val remaining = Database { EventEntity.all().toList() }
         assertEquals(0, remaining.size, "Rejected event creation should have been rolled back")
+    }
+
+    @Test
+    fun test_create_event_contentManager_otherDepartment_withImage_doesNotOrphanFile() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val managed = DepartmentEntity.new { displayName = "Managed Department" }
+            val other = DepartmentEntity.new { displayName = "Other Department" }
+            DepartmentMembers.insert {
+                it[userSub] = FakeUser.SUB
+                it[departmentId] = managed.id
+                it[confirmed] = true
+                it[roles] = listOf(DepartmentRole.CONTENT_MANAGER.storageName)
+            }
+            other
+        },
+    ) { context ->
+        val otherDepartment = context.dibResult!!
+
+        client.submitFormWithBinaryData(
+            "/events",
+            formData {
+                append("start", Instant.now().toEpochMilli())
+                append("title", "Cross-department event with image")
+                append("place", "Somewhere")
+                append("department", otherDepartment.id.value.toString())
+                append(
+                    "image",
+                    ResourcesUtils.bytesFromResource("/square.png"),
+                    Headers.build {
+                        append(HttpHeaders.ContentType, ContentType.Image.PNG.toString())
+                        append(HttpHeaders.ContentDisposition, "filename=\"square.png\"")
+                    },
+                )
+            }
+        ).apply {
+            assertError(Error.PermissionRejected())
+        }
+
+        // Neither the event nor the image it referenced (uploaded and persisted before the department could be
+        // authorized) may survive the rejection.
+        val remainingEvents = Database { EventEntity.all().toList() }
+        val remainingFiles = Database { FileEntity.all().toList() }
+        assertEquals(0, remainingEvents.size, "Rejected event creation should have been rolled back")
+        assertEquals(0, remainingFiles.size, "Rejected event creation should not leave an orphaned file behind")
     }
 
     @Test
