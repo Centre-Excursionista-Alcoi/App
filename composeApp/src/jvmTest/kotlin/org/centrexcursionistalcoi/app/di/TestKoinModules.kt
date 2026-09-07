@@ -29,10 +29,15 @@ import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
+import org.centrexcursionistalcoi.app.sync.BackgroundJob
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.koin.core.context.startKoin
@@ -107,6 +112,18 @@ class TestKoinModules {
         // @Named-qualified background jobs -- resolved by concrete type + qualifier, like BackgroundJobCoordinator does
         assertNotNull(koin.get<SyncEntityBackgroundJob>(named(SyncEntityBackgroundJob.NAME)))
         assertNotNull(koin.get<SyncDepartmentBackgroundJob>(named(SyncDepartmentBackgroundJob.NAME)))
+
+        // The concrete-type lookups above are NOT how these are actually resolved at runtime: BackgroundJobWorker
+        // (the real WorkManager entry point) injects by the *base* type -- `inject(BackgroundJob::class.java,
+        // named(...))`. A definition registered only under its concrete type is invisible to that lookup and
+        // fails with NoDefinitionFoundException, silently breaking all background sync without tripping the
+        // assertions above. Cover the actual lookup shape for every background job here.
+        assertNotNull(koin.get<BackgroundJob>(named(SyncAllDataBackgroundJob.UNIQUE_NAME)))
+        assertNotNull(koin.get<BackgroundJob>(named(SyncDepartmentBackgroundJob.NAME)))
+        assertNotNull(koin.get<BackgroundJob>(named(SyncEntityBackgroundJob.NAME)))
+        assertNotNull(koin.get<BackgroundJob>(named(SyncEventBackgroundJob.NAME)))
+        assertNotNull(koin.get<BackgroundJob>(named(SyncLendingBackgroundJob.NAME)))
+        assertNotNull(koin.get<BackgroundJob>(named(SyncPostBackgroundJob.NAME)))
 
         // @KoinViewModel with no runtime params
         assertNotNull(koin.get<LoginViewModel>())
