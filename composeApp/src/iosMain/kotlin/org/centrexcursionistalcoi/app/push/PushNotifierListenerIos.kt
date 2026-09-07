@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
+import com.mmk.kmpnotifier.logger.Logger
 import org.koin.mp.KoinPlatformTools
 
 /**
@@ -16,9 +17,10 @@ fun pushNotifierListener(): PushNotifierListener = KoinPlatformTools.defaultCont
 private val log = logging()
 
 /**
- * Forwards a `KMPNotifier.setLogger` message to the shared km-logging pipeline, for Swift to pass as the closure
- * body -- mirrors Android's and Desktop's `KMPNotifier.setLogger { log.d(tag = "NotifierManager") { message } }`.
+ * A [Logger] forwarding to the shared km-logging pipeline, for Swift to pass to `KMPNotifier.setLogger`. Built here
+ * (not as a Swift closure) because [Logger] is a `fun interface` from a transitively-exported dependency
+ * (`kmm-notifier-core`), and cross-module SAM conversion doesn't reach Swift through the export boundary --
+ * Kotlin's own SAM conversion always works within the same compilation, so the finished object is handed over
+ * instead of asking Swift to build one.
  */
-fun notifierManagerLog(message: String) {
-    log.d(tag = "NotifierManager") { message }
-}
+fun notifierManagerLogger(): Logger = Logger { message -> log.d(tag = "NotifierManager") { message } }
