@@ -54,11 +54,14 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Distance
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Groups
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
@@ -67,6 +70,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.PersonCheck
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
@@ -81,10 +85,18 @@ import kotlin.uuid.Uuid
 
 @Composable
 fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
+    val profile by model.profile.collectAsState()
     val events by model.events.collectAsState()
     val departments by model.departments.collectAsState()
 
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
     EventsListView(
+        profile = profileValue,
         events = events,
         departments = departments,
         onCreate = model::createEvent,
@@ -96,21 +108,33 @@ fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventsListView(
+    profile: ProfileResponse,
     events: List<ReferencedEvent>?,
     departments: List<Department>?,
     onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
     onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
     onDelete: (ReferencedEvent) -> Job,
 ) {
+    // Mirrors the server's CONTENT_MANAGER check for events: creating/editing an event scoped to a department
+    // requires that role there (or global admin); an event with no department (public/global) requires admin.
+    val managedDepartments = remember(profile, departments) {
+        departments.orEmpty().departmentsWithRole(profile, DepartmentRole.CONTENT_MANAGER)
+    }
+    val departmentOptions = if (profile.isAdmin) departments.orEmpty() else managedDepartments
+    val canCreate = profile.isAdmin || managedDepartments.isNotEmpty()
+
     ListView(
         items = events,
         itemIdProvider = { it.id },
         itemDisplayName = { it.title },
         itemSupportingContent = { Text(it.localizedDateRange()) },
         emptyItemsText = stringResource(Res.string.management_no_events),
-        isCreatingSupported = true,
+        isCreatingSupported = canCreate,
         createTitle = stringResource(Res.string.management_event_create),
         onDeleteRequest = onDelete,
+        canModify = { event ->
+            profile.isAdmin || event.department?.let { d -> managedDepartments.any { it.id == d.id } } == true
+        },
         editItemContent = { event ->
             var isLoading by remember { mutableStateOf(false) }
             var progress by remember { mutableStateOf<Progress?>(null) }
@@ -123,7 +147,9 @@ private fun EventsListView(
             var maxPeople by remember { mutableStateOf(event?.maxPeople?.toString() ?: "") }
             var requiresConfirmation by remember { mutableStateOf(event?.requiresConfirmation ?: false) }
             var requiresInsurance by remember { mutableStateOf(event?.requiresInsurance ?: false) }
-            var department by remember { mutableStateOf(event?.department) }
+            // For a non-admin creating a new event, default to their (only allowed) department instead of
+            // leaving it at "no department" -- global/public events require admin.
+            var department by remember { mutableStateOf(event?.department ?: managedDepartments.firstOrNull().takeIf { !profile.isAdmin }) }
             var image by remember { mutableStateOf<PlatformFile?>(null) }
 
             LaunchedEffect(event) {
@@ -222,11 +248,12 @@ private fun EventsListView(
             DropdownField(
                 value = department,
                 onValueChange = { department = it },
-                options = departments.orEmpty(),
+                options = departmentOptions,
                 label = stringResource(Res.string.event_department).optional(),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 itemToString = { it?.displayName ?: stringResource(Res.string.event_department_generic) },
-                allowNull = true,
+                // Only a global admin may leave an event without a department (public/global content).
+                allowNull = profile.isAdmin,
             )
 
             RichTextStyleRow(

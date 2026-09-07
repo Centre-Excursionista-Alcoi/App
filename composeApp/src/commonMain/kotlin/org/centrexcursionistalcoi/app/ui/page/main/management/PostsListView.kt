@@ -51,15 +51,19 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.localizedDate
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AttachFile
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Link
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.centrexcursionistalcoi.app.viewmodel.management.PostsManagementViewModel
@@ -69,10 +73,18 @@ import kotlin.uuid.Uuid
 
 @Composable
 fun PostsListView(model: PostsManagementViewModel = koinViewModel()) {
+    val profile by model.profile.collectAsState()
     val posts by model.posts.collectAsState()
     val departments by model.departments.collectAsState()
 
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
     PostsListView(
+        profile = profileValue,
         posts = posts,
         departments = departments,
         onCreate = model::createPost,
@@ -84,27 +96,41 @@ fun PostsListView(model: PostsManagementViewModel = koinViewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PostsListView(
+    profile: ProfileResponse,
     posts: List<ReferencedPost>?,
     departments: List<Department>?,
     onCreate: (title: String, department: Department?, content: RichTextState, link: String, files: List<PlatformFile>, progressNotifier: ProgressNotifier) -> Job,
     onUpdate: (postId: Uuid, title: String?, department: Department?, content: RichTextState?, link: String?, removedFiles: List<Uuid>, files: List<PlatformFile>, progressNotifier: ProgressNotifier) -> Job,
     onDelete: (ReferencedPost) -> Job,
 ) {
+    // Mirrors the server's CONTENT_MANAGER check for posts: creating/editing a post scoped to a department
+    // requires that role there (or global admin); a post with no department (public/global) requires admin.
+    val managedDepartments = remember(profile, departments) {
+        departments.orEmpty().departmentsWithRole(profile, DepartmentRole.CONTENT_MANAGER)
+    }
+    val departmentOptions = if (profile.isAdmin) departments.orEmpty() else managedDepartments
+    val canCreate = profile.isAdmin || managedDepartments.isNotEmpty()
+
     ListView(
         items = posts,
         itemIdProvider = { it.id },
         itemDisplayName = { it.title },
         itemSupportingContent = { Text(it.localizedDate()) },
         emptyItemsText = stringResource(Res.string.management_no_posts),
-        isCreatingSupported = true,
+        isCreatingSupported = canCreate,
         createTitle = stringResource(Res.string.management_post_create),
         onDeleteRequest = onDelete,
+        canModify = { post ->
+            profile.isAdmin || post.department?.let { d -> managedDepartments.any { it.id == d.id } } == true
+        },
         editItemContent = { post ->
             var isLoading by remember { mutableStateOf(false) }
             var progress by remember { mutableStateOf<Progress?>(null) }
 
             var title by remember { mutableStateOf(post?.title ?: "") }
-            var department by remember { mutableStateOf(post?.department) }
+            // For a non-admin creating a new post, default to their (only allowed) department instead of
+            // leaving it at "no department" -- global/public posts require admin.
+            var department by remember { mutableStateOf(post?.department ?: managedDepartments.firstOrNull().takeIf { !profile.isAdmin }) }
             val content = rememberRichTextState()
             var link by remember { mutableStateOf(post?.link ?: "") }
             var removedFiles by remember { mutableStateOf(emptyList<Uuid>()) }
@@ -128,11 +154,12 @@ private fun PostsListView(
             DropdownField(
                 value = department,
                 onValueChange = { department = it },
-                options = departments.orEmpty(),
+                options = departmentOptions,
                 label = stringResource(Res.string.post_department).optional(),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 itemToString = { it?.displayName ?: stringResource(Res.string.post_department_generic) },
-                allowNull = true,
+                // Only a global admin may leave a post without a department (public/global content).
+                allowNull = profile.isAdmin,
             )
 
             OutlinedTextField(

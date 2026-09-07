@@ -9,6 +9,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
@@ -26,6 +27,7 @@ class InventoryManagementViewModel(
     private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
     private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository
 ) : ViewModel() {
+    val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val inventoryItems = inventoryItemsRepository.selectAllAsFlow().stateInViewModel()
     val inventoryItemTypes = inventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()

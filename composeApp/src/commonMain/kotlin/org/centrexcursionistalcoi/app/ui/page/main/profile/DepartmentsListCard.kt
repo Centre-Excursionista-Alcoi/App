@@ -32,6 +32,9 @@ import org.jetbrains.compose.resources.stringResource
  * @param onJoinDepartmentRequested A callback invoked when the user requests to join a department.
  * @param onLeaveDepartmentRequested A callback invoked when the user requests to leave a department.
  * @param isLeavingKick Whether the leave action is a kick (removal) instead of a voluntary leave.
+ * @param canLeaveDepartment Whether the viewer is allowed to trigger [onLeaveDepartmentRequested] for the given
+ *   department -- e.g. when kicking, whether the viewer holds PEOPLE_MANAGER in that specific department. Rows
+ *   for a department where this is `false` are shown (the membership is still informative) but not clickable.
  */
 @Composable
 fun DepartmentsListCard(
@@ -40,6 +43,7 @@ fun DepartmentsListCard(
     onJoinDepartmentRequested: ((Department) -> Job)?,
     onLeaveDepartmentRequested: ((Department) -> Job)?,
     isLeavingKick: Boolean = false,
+    canLeaveDepartment: (Department) -> Boolean = { true },
 ) {
     val userDepartments = remember(userSub, departments) {
         departments?.filter { dept -> dept.members.orEmpty().find { it.userSub == userSub } != null }.orEmpty()
@@ -141,7 +145,9 @@ fun DepartmentsListCard(
                         Text(stringResource(Res.string.departments_member_pending))
                     }
                 },
-                modifier = Modifier.clickable { leavingDepartment = department },
+                modifier = Modifier.clickable(enabled = onLeaveDepartmentRequested != null && canLeaveDepartment(department)) {
+                    leavingDepartment = department
+                },
             )
         }
         if (userDepartments.isEmpty()) {

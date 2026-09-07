@@ -9,6 +9,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -24,6 +25,7 @@ class EventsManagementViewModel(
     departmentsRepository: DepartmentsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository
 ) : ViewModel() {
+    val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
 

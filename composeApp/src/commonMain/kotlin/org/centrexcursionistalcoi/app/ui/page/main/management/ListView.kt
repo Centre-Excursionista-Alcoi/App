@@ -144,6 +144,13 @@ fun <T> ListView(
     itemTrailingContent: (@Composable RowScope.(T) -> Unit)? = null,
     itemSupportingContent: (@Composable (T) -> Unit)? = null,
     itemToolbarActions: (@Composable RowScope.(T) -> Unit)? = null,
+    /**
+     * Whether the current viewer is allowed to edit/delete/act on the given item. Gates the edit and delete
+     * icons and [itemToolbarActions] in the detail panel, so an item the viewer can only view (not modify) never
+     * shows a control that would just be rejected by the server. Does not affect whether the item is listed or
+     * viewable at all -- only [items] and [itemEnabled] control that.
+     */
+    canModify: (T) -> Boolean = { true },
     itemEnabled: (T) -> Boolean = { true },
     searchBarActions: (@Composable RowScope.() -> Unit)? = null,
     editItemContent: (@Composable EditorContext.(T?) -> Unit)? = null,
@@ -249,14 +256,16 @@ fun <T> ListView(
             if (selectedItem != null || isCreating) {
                 ListView_Content(
                     itemDisplayName = selectedItem?.let(itemDisplayName) ?: createTitle,
-                    itemToolbarActions = selectedItem?.let { item -> { itemToolbarActions?.invoke(this, item) } },
+                    itemToolbarActions = selectedItem?.let { item ->
+                        if (canModify(item)) { { itemToolbarActions?.invoke(this, item) } } else null
+                    },
                     onCloseRequested = {
                         selectedItem = null
                         isEditing = false
                         isCreating = false
                     },
                     itemContent = { actualItemContent() },
-                    isEditSupported = editItemContent != null,
+                    isEditSupported = editItemContent != null && (selectedItem?.let(canModify) ?: true),
                     isEditing = isEditing || isCreating,
                     onEditRequest = { isEditing = true },
                     onEditCancelled = {
@@ -264,7 +273,7 @@ fun <T> ListView(
                         isCreating = false
                     },
                     onDeleteRequest = selectedItem?.let { item ->
-                        if (onDeleteRequest != null) {
+                        if (onDeleteRequest != null && canModify(item)) {
                             { isDeleting = item }
                         } else null
                     },
@@ -287,14 +296,16 @@ fun <T> ListView(
 
             ListView_Content(
                 itemDisplayName = selectedItem?.let(itemDisplayName) ?: createTitle,
-                itemToolbarActions = selectedItem?.let { item -> { itemToolbarActions?.invoke(this, item) } },
+                itemToolbarActions = selectedItem?.let { item ->
+                    if (canModify(item)) { { itemToolbarActions?.invoke(this, item) } } else null
+                },
                 onCloseRequested = {
                     selectedItem = null
                     isEditing = false
                     isCreating = false
                 },
                 itemContent = { actualItemContent() },
-                isEditSupported = editItemContent != null,
+                isEditSupported = editItemContent != null && (selectedItem?.let(canModify) ?: true),
                 isEditing = isEditing || isCreating,
                 onEditRequest = { isEditing = true },
                 onEditCancelled = {
@@ -302,7 +313,7 @@ fun <T> ListView(
                     isCreating = false
                 },
                 onDeleteRequest = selectedItem?.let { item ->
-                    if (onDeleteRequest != null) {
+                    if (onDeleteRequest != null && canModify(item)) {
                         { isDeleting = item }
                     } else null
                 },

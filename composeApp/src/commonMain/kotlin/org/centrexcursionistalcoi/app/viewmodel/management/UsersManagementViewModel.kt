@@ -6,6 +6,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -23,6 +24,7 @@ class UsersManagementViewModel(
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
 ) : ViewModel() {
+    val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val members = membersRepository.selectAllAsFlow().stateInViewModel()
     val users = usersRepository.selectAllAsFlow().stateInViewModel()
