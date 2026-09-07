@@ -3,8 +3,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
-import java.util.Calendar
-import java.util.Properties
+import java.util.*
 
 plugins {
     alias(libs.plugins.androidx.room3)
@@ -168,7 +167,7 @@ kotlin {
         }
 
         // Platforms that require granting permissions
-        val permissionsMain by creating {
+        val permissionsMain = create("permissionsMain") {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.kmm.permission)
@@ -177,7 +176,7 @@ kotlin {
 
         // Implements workers with Kotlin Coroutines
         // Includes: jvm, iOS
-        val coroutinesWorkersMain by creating {
+        val coroutinesWorkersMain = create("coroutinesWorkersMain") {
             dependsOn(commonMain.get())
         }
 
@@ -194,7 +193,7 @@ kotlin {
             implementation(libs.mockk)
         }
 
-        val phonesMain by creating {
+        val phonesMain = create("phonesMain") {
             dependsOn(permissionsMain)
         }
 
