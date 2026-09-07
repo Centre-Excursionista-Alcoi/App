@@ -18,6 +18,8 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 iosApp/Pods
 iosApp/Podfile.lock
+# Kotlin Gradle plugin's SwiftPM dependency resolution cache (swiftPMDependencies {})
+.swiftpm-locks/
 keystore.jks
 google-services.json
 credentials.properties

@@ -25,9 +25,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
           extensions: [FirebasePush.shared]
       )
 
-      KMPNotifier.shared.setLogger { message in
-          PushNotifierListenerIosKt.notifierManagerLog(message: message)
-      }
+      KMPNotifier.shared.setLogger(logger: PushNotifierListenerIosKt.notifierManagerLogger())
 
       KMPNotifier.shared.addPushListener(listener: PushNotifierListenerIosKt.pushNotifierListener())
 
