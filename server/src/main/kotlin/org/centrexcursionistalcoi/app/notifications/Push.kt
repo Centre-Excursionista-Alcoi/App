@@ -105,7 +105,8 @@ object Push {
             .putAllData(data)
             .addAllTokens(tokens)
             // The app has no "notification" payload, only "data" -- iOS needs content-available=1 to
-            // wake the app in the background/killed state and let PushNotifierListener build the local notification.
+            // wake the app while backgrounded and let PushNotifierListener build the local notification.
+            // Note: iOS never delivers this to an app the user has force-quit.
             .setApnsConfig(
                 ApnsConfig.builder()
                     // Apple requires priority 5 for content-available-only (silent) pushes.
