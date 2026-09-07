@@ -28,6 +28,7 @@ import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.test.*
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
@@ -138,6 +139,10 @@ abstract class ApplicationTestBase {
             Push.disable = false
 
             Database.clear()
+            // RedisStoreMap.fromEnv falls back to a process-lifetime InMemoryStoreMap when no Redis is configured
+            // (the case in tests), so entries written by handleIfModified/notifyUpdateForEntity in one test would
+            // otherwise leak into every later test's If-Modified-Since checks for the same entity type.
+            RedisStoreMap.fromEnv.clear()
             finally()
 
             resetTimeFunctions()
