@@ -5,11 +5,11 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.diamondedge.logging.logging
+import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
-import com.mmk.kmpnotifier.notification.NotifierManager
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
-import io.ktor.http.Url
+import io.ktor.http.*
 import org.centrexcursionistalcoi.app.MainApp
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
@@ -28,7 +28,7 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         PlatformAppUpdates.initialize(this, appUpdateResultLauncher)
 
-        NotifierManager.onCreateOrOnNewIntent(intent)
+        KMPNotifier.onCreateOrOnNewIntent(intent)
 
         val pushNotification = getPushNotificationFromIntent()
         val url = getUrlFromIntent()
@@ -51,7 +51,7 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        NotifierManager.onCreateOrOnNewIntent(intent)
+        KMPNotifier.onCreateOrOnNewIntent(intent)
     }
 
     private fun getPushNotificationFromIntent(): PushNotification? {
