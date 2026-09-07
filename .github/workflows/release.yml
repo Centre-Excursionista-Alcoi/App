@@ -375,14 +375,6 @@ jobs:
           java-package: jdk
           cache: 'gradle'
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v6
-        with:
-          path: iosApp/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
       # Refresh the version name again just in case
       - name: Update version name
         run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
@@ -427,11 +419,11 @@ jobs:
           cd iosApp/iosApp
           echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | shasum -a 256 -c -
 
-      - name: Install CocoaPods
+      # Xcode's package resolution can otherwise race with the "Compile Kotlin Framework" build phase during
+      # archive (the phase can start before packages are fully resolved), so run it as its own upfront step.
+      - name: Resolve SwiftPM Dependencies
         run: |
-          ./gradlew :composeApp:generateDummyFramework
-          cd iosApp
-          pod install --repo-update
+          xcodebuild -resolvePackageDependencies -workspace iosApp/iosApp.xcworkspace -scheme iosApp
 
       - name: Archive iOS App
         run: |
