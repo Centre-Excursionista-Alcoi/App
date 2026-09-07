@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -299,6 +300,7 @@ private fun AuthScreen_Login(
                         enabled = !isLoading,
                         label = { Text(stringResource(Res.string.email)) },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        lineLimits = TextFieldLineLimits.SingleLine,
                     )
                 }
             },
@@ -345,6 +347,7 @@ private fun AuthScreen_Login(
                 .semantics {
                     contentType = ContentType.EmailAddress
                 },
+            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         )
         PasswordFormField(
@@ -399,6 +402,7 @@ private fun AuthScreen_Register(
                 .semantics {
                     contentType = ContentType.EmailAddress
                 },
+            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         )
         PasswordFormField(
