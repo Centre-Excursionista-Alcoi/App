@@ -1,7 +1,8 @@
 package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
-import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.KMPNotifier
+import com.mmk.kmpnotifier.push.firebase.firebasePushNotifier
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getStringOrNullFlow
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -17,10 +18,10 @@ object FCMTokenManager {
 
     /**
      * Renovate the FCM token if needed.
-     * The token is obtained from the [NotifierManager].
+     * The token is obtained from the [KMPNotifier].
      */
     suspend fun renovate() {
-        val token = NotifierManager.getPushNotifier().getToken()
+        val token = KMPNotifier.firebasePushNotifier.getToken()
         if (token != null) {
             renovate(token)
         }

@@ -140,7 +140,7 @@ kotlin {
             // implementation(libs.kmm.permission)
 
             // Push Notifications (must be API for exporting to iOS)
-            api(libs.kmm.notifier)
+            api(libs.kmm.notifier.firebase)
 
             // Room 3
             implementation(libs.androidx.room3.runtime)
@@ -269,7 +269,7 @@ kotlin {
             isStatic = true
             linkerOpts += "-lsqlite3"
             export(libs.sentry.kotlinMultiplatform)
-            export(libs.kmm.notifier)
+            export(libs.kmm.notifier.firebase)
         }
 
         // Maps custom Xcode configuration to NativeBuildType
