@@ -313,7 +313,7 @@ jobs:
   # gets built and pushed straight to TestFlight, same as Android's "internal" track.
   publish_ios_testflight:
     name: iOS - Publish Bleeding-edge to TestFlight
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
 
     needs: [run_shared_tests, run_app_tests]
     # Inherits the conditional logic from run_shared_tests/run_app_tests automatically because
@@ -497,6 +497,14 @@ jobs:
             --org ${{ secrets.SENTRY_ORG }} \
             --project ${{ secrets.SENTRY_PROJECT }} \
             "$DSYM_PATH"
+
+      # This runner is self-hosted and persists between jobs, unlike GitHub-hosted runners.
+      # "security create-keychain" above adds this job's temp keychain to the user's login
+      # keychain search list; without deleting it here, every run leaves behind a dangling
+      # entry pointing at a file that $RUNNER_TEMP already cleaned up.
+      - name: Remove temporary keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
 
   # 4. Server Jobs (Only runs if server files changed)
   run_server_tests:
