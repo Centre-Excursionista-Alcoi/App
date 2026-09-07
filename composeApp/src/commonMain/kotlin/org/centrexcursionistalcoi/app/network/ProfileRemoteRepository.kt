@@ -2,15 +2,10 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.isSuccess
-import io.ktor.http.parameters
-import kotlin.time.Clock
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.toFormData
@@ -26,6 +21,7 @@ import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.centrexcursionistalcoi.app.storage.settings
+import kotlin.time.Clock
 
 object ProfileRemoteRepository {
     private val log = logging()
@@ -115,30 +111,38 @@ object ProfileRemoteRepository {
      * @throws InternetAccessNotAvailable if there is no internet connection.
      * @throws Exception for other errors.
      */
-    suspend fun synchronize(progressNotifier: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): Boolean {
-        try {
-            val profile = getProfile(progressNotifier, ignoreIfModifiedSince)
-            if (profile != null) {
-                log.d { "User is logged in, updating cached profile data..." }
-                ProfileRepository.update(profile)
+    suspend fun synchronize(
+        progressNotifier: ProgressNotifier? = null,
+        ignoreIfModifiedSince: Boolean = false,
+        maxAttempts: Int = 10
+    ): Boolean {
+        var exception: Throwable? = null
+        for (attempt in 0 until maxAttempts) {
+            try {
+                val profile = getProfile(progressNotifier, ignoreIfModifiedSince)
+                if (profile != null) {
+                    log.d { "User is logged in, updating cached profile data..." }
+                    ProfileRepository.update(profile)
+                    return true
+                } else {
+                    log.i { "User is not logged in" }
+                    ProfileRepository.clear()
+                    return false
+                }
+            } catch (_: ResourceNotModifiedException) {
+                log.d { "Profile not modified, no update needed." }
                 return true
-            } else {
-                log.i { "User is not logged in" }
-                ProfileRepository.clear()
-                return false
-            }
-        } catch (_: ResourceNotModifiedException) {
-            log.d { "Profile not modified, no update needed." }
-            return true
-        } catch (e: Exception) {
-            if (isNoConnectionError(e)) {
-                log.w { "No internet connection, cannot synchronize profile." }
-                throw InternetAccessNotAvailable()
-            } else {
-                log.e(e) { "Error synchronizing profile" }
-                throw e
+            } catch (e: Exception) {
+                if (isNoConnectionError(e)) {
+                    log.w { "Attempt=$attempt. No internet connection, cannot synchronize profile." }
+                    exception = InternetAccessNotAvailable()
+                } else {
+                    log.e(e) { "Attempt=$attempt. Error synchronizing profile" }
+                    exception = e
+                }
             }
         }
+        throw exception ?: IllegalStateException("Failed to synchronize profile after $maxAttempts attempts")
     }
 
     suspend fun connectFEMECV(username: String, password: CharArray, progressNotifier: ProgressNotifier? = null) {
