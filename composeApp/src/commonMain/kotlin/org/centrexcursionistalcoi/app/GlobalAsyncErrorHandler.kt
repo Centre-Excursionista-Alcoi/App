@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app
 
 import com.diamondedge.logging.logging
+import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,7 @@ object GlobalAsyncErrorHandler {
         }
 
         log.e(throwable) { "Unhandled exception" }
+        Sentry.captureException(throwable)
         _error.value = throwable
     }
 
