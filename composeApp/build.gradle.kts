@@ -359,6 +359,21 @@ compose.desktop {
                 packageName = "CEA App"
                 packageVersion = appVersionName
                 dockName = "CEA App"
+
+                // Signing/notarization identity is only present on CI (or when a developer
+                // opts in locally); without it, unsigned dev builds still work as before.
+                fun env(name: String) = System.getenv(name)?.takeIf { it.isNotBlank() }
+
+                val signingIdentity = env("MACOS_SIGNING_IDENTITY")
+                signing {
+                    sign.set(signingIdentity != null)
+                    signingIdentity?.let { identity.set(it) }
+                }
+                notarization {
+                    env("NOTARIZATION_APPLE_ID")?.let { appleID.set(it) }
+                    env("NOTARIZATION_PASSWORD")?.let { password.set(it) }
+                    env("NOTARIZATION_TEAM_ID")?.let { teamID.set(it) }
+                }
             }
         }
     }
