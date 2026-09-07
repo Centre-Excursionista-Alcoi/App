@@ -86,6 +86,15 @@
 
     <string name="management_department_create">Create Department</string>
     <string name="management_department_members">Members</string>
+    <string name="management_department_edit_roles">Edit roles</string>
+    <string name="management_department_member_roles_title">Roles for %1$s</string>
+    <string name="management_department_member_no_roles">No roles assigned</string>
+    <string name="department_role_admin">Admin</string>
+    <string name="department_role_people_manager">People Manager</string>
+    <string name="department_role_inventory_manager">Inventory Manager</string>
+    <string name="department_role_lending_manager">Lending Manager</string>
+    <string name="department_role_memory_manager">Memory Manager</string>
+    <string name="department_role_content_manager">Content Manager</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>

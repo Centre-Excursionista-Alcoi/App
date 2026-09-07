@@ -7,6 +7,7 @@ import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -84,5 +85,11 @@ class DepartmentsManagementViewModel(
 
     fun denyDepartmentJoinRequest(request: DepartmentMemberInfo) = launch {
         departmentsRemoteRepository.denyJoinRequest(request)
+    }
+
+    fun updateMemberRoles(member: DepartmentMemberInfo, roles: List<DepartmentRole>) = launch {
+        withContext(dispatcherProvider.io) {
+            departmentsRemoteRepository.updateMemberRoles(member.departmentId, member.id, roles)
+        }
     }
 }

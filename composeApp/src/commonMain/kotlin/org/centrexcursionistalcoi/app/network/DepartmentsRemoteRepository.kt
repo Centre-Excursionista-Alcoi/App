@@ -1,15 +1,22 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
@@ -113,6 +120,29 @@ class DepartmentsRemoteRepository(
             // Try to decode the error
             val error = response.bodyAsError()
             log.e { "Failed to kick from department: $error" }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+        }
+    }
+
+    /**
+     * Replaces [memberId]'s full set of [DepartmentRole]s within [departmentId]. Requires the caller to be a
+     * global admin or hold [DepartmentRole.ADMIN] in that department -- enforced server-side, since assigning
+     * roles (including ADMIN itself) is privilege-escalation-capable.
+     */
+    suspend fun updateMemberRoles(departmentId: Uuid, memberId: Uuid, roles: List<DepartmentRole>) {
+        log.i { "Updating roles for member $memberId in department $departmentId: $roles" }
+
+        val response = httpClient.patch("/departments/$departmentId/members/$memberId/roles") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(roles)))
+        }
+        if (response.status.isSuccess()) {
+            log.i { "Roles updated successfully." }
+            update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
+        } else {
+            // Try to decode the error
+            val error = response.bodyAsError()
+            log.e { "Failed to update member roles: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
