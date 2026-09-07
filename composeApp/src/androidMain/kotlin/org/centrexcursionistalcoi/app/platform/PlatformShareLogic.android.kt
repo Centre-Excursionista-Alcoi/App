@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.utils.div
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
 import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 import org.koin.core.annotation.Singleton
@@ -27,7 +27,10 @@ actual class PlatformShareLogic(private val context: Context) : PlatformProvider
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_STREAM, uri)
             type = contentType.toString()
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+
+            // The receiving app needs permission to read the FileProvider URI
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         try {
             val chooser = Intent.createChooser(intent, null).apply {
