@@ -5,8 +5,10 @@ import com.diamondedge.logging.FixedLogLevel
 import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.PlatformLogger
 import com.diamondedge.logging.logging
-import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
+import com.mmk.kmpnotifier.push.firebase.FirebasePush
+import com.mmk.kmpnotifier.push.firebase.addPushListener
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
@@ -38,18 +40,19 @@ class AppBase : Application(), KoinComponent {
             workManagerFactory()
         }
 
-        NotifierManager.initialize(
-            configuration = NotificationPlatformConfiguration.Android(
+        KMPNotifier.initialize(
+            NotificationPlatformConfiguration.Android(
                 notificationIconResId = R.drawable.ic_notification,
                 showPushNotification = false,
-            )
+            ),
+            FirebasePush,
         )
 
-        NotifierManager.setLogger { message ->
+        KMPNotifier.setLogger { message ->
             log.d(tag = "NotifierManager") { message }
         }
 
-        NotifierManager.addListener(get<PushNotifierListener>())
+        KMPNotifier.addPushListener(get<PushNotifierListener>())
     }
 
     override fun onTerminate() {

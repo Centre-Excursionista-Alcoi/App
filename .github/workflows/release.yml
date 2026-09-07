@@ -360,8 +360,6 @@ jobs:
 
     needs: [shared-tests, app-tests]
 
-    if: false  # Temporarily disabled due to issues with GoogleService-Info.plist not being found on runtime
-
     steps:
       - uses: actions/checkout@v7
 
@@ -499,6 +497,7 @@ jobs:
           API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_ID: ${{ secrets.APP_STORE_CONNECT_APP_APPLE_ID }}
         run: |
           # 1. Debug: Print what files were actually exported
           echo "Listing exported files:"
@@ -514,17 +513,32 @@ jobs:
           fi
 
           echo "Found IPA at: $IPA_PATH"
-          
+
+          # altool's --upload-package needs the exact bundle version/short version of the
+          # built app -- pull them straight out of the archived Info.plist rather than
+          # re-deriving them, so they can never drift from what was actually built.
+          APP_PLIST_ENTRY=$(unzip -Z1 "$IPA_PATH" | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -n 1)
+          unzip -p "$IPA_PATH" "$APP_PLIST_ENTRY" > "$RUNNER_TEMP/app-info.plist"
+          BUNDLE_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$RUNNER_TEMP/app-info.plist")
+          BUNDLE_SHORT_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$RUNNER_TEMP/app-info.plist")
+          echo "Bundle version: $BUNDLE_VERSION ($BUNDLE_SHORT_VERSION)"
+
           # 1. Create the AuthKey file from the Secret
           mkdir -p ~/.private_keys
           echo -n "$API_KEY_BASE64" | base64 --decode -o ~/.private_keys/AuthKey_$API_KEY_ID.p8
-          
+
           # 2. Validate and Upload
           # 'altool' is the standard command line tool for this provided by Xcode.
+          # --upload-app is deprecated; --upload-package is its replacement, but it needs the
+          # app's numeric App Store Connect "Apple ID" (App Information > General Information)
+          # plus the bundle id/version explicitly, since it no longer inspects the ipa itself.
           echo "Uploading to App Store Connect..."
-          xcrun altool --upload-app \
+          xcrun altool --upload-package "$IPA_PATH" \
             --type ios \
-            --file "$IPA_PATH" \
+            --apple-id "$APPLE_ID" \
+            --bundle-id "org.centrexcursionistalcoi.app" \
+            --bundle-version "$BUNDLE_VERSION" \
+            --bundle-short-version-string "$BUNDLE_SHORT_VERSION" \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
 
@@ -564,7 +578,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04, windows-latest]
+        os: [ubuntu-24.04, ubuntu-22.04, windows-latest, macos-latest]
 
     needs: [shared-tests, app-tests]
 
@@ -596,14 +610,71 @@ jobs:
       - name: Write local.properties
         run: echo '${{ secrets.LOCAL_PROPERTIES }}' > local.properties
 
+      - name: Import macOS Signing Certificate
+        if: runner.os == 'macOS'
+        id: macos_signing
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/macos_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/macos-signing.keychain-db
+
+          echo -n "$MACOS_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//')
+
+          # Resolve the exact signing identity string (e.g. "Developer ID Application: Name (TEAMID)")
+          # rather than hard-coding it, so a certificate renewal doesn't require touching the workflow.
+          IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
+          if [ -z "$IDENTITY" ]; then
+            echo "::error::No 'Developer ID Application' identity found in the imported certificate"
+            exit 1
+          fi
+          echo "identity=$IDENTITY" >> $GITHUB_OUTPUT
+
       - name: Build
         env:
           PRODUCTION: true
+          MACOS_SIGNING_IDENTITY: ${{ steps.macos_signing.outputs.identity }}
+          NOTARIZATION_APPLE_ID: ${{ secrets.NOTARIZATION_APPLE_ID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+          NOTARIZATION_TEAM_ID: "UQSVPP37UL"
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+
+      - name: Notarize DMG
+        if: runner.os == 'macOS'
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ steps.macos_signing.outputs.identity }}
+          NOTARIZATION_APPLE_ID: ${{ secrets.NOTARIZATION_APPLE_ID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+          NOTARIZATION_TEAM_ID: "UQSVPP37UL"
+        run: |
+          # The exact task name has varied across Compose Multiplatform releases
+          # (e.g. notarizeDmg vs notarizeReleaseDmg), so resolve it instead of hard-coding it.
+          NOTARIZE_TASK=$(./gradlew :composeApp:tasks --all --console=plain 2>/dev/null | grep -oE '^notarize[A-Za-z]*Dmg' | head -1)
+          if [ -z "$NOTARIZE_TASK" ]; then
+            echo "::error::Could not find a notarize*Dmg Gradle task"
+            exit 1
+          fi
+          echo "Running :composeApp:$NOTARIZE_TASK"
+          ./gradlew ":composeApp:$NOTARIZE_TASK"
 
       - name: Rename deb
         if: startsWith(matrix.os, 'ubuntu')
         run: mv composeApp/build/compose/binaries/main-release/deb/*.deb composeApp/build/compose/binaries/main-release/deb/cea-app_${{ matrix.os }}_amd64.deb
+
+      - name: Rename dmg
+        if: runner.os == 'macOS'
+        run: mv composeApp/build/compose/binaries/main-release/dmg/*.dmg composeApp/build/compose/binaries/main-release/dmg/cea-app_macos_${{ runner.arch }}.dmg
 
       - name: Release
         uses: softprops/action-gh-release@v3
@@ -612,6 +683,7 @@ jobs:
           files: |
             composeApp/build/compose/binaries/main-release/**/*.exe
             composeApp/build/compose/binaries/main-release/**/*.deb
+            composeApp/build/compose/binaries/main-release/**/*.dmg
 
   sentry-desktop:
     name: Release Desktop to Sentry

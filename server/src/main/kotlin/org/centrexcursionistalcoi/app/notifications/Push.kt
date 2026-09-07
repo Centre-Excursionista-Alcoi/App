@@ -3,6 +3,8 @@ package org.centrexcursionistalcoi.app.notifications
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.messaging.ApnsConfig
+import com.google.firebase.messaging.Aps
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.MulticastMessage
 import kotlinx.coroutines.CoroutineScope
@@ -102,6 +104,16 @@ object Push {
         val message = MulticastMessage.builder()
             .putAllData(data)
             .addAllTokens(tokens)
+            // The app has no "notification" payload, only "data" -- iOS needs content-available=1 to
+            // wake the app while backgrounded and let PushNotifierListener build the local notification.
+            // Note: iOS never delivers this to an app the user has force-quit.
+            .setApnsConfig(
+                ApnsConfig.builder()
+                    // Apple requires priority 5 for content-available-only (silent) pushes.
+                    .putHeader("apns-priority", "5")
+                    .setAps(Aps.builder().setContentAvailable(true).build())
+                    .build()
+            )
             .build()
         val response = FirebaseMessaging.getInstance().sendEachForMulticast(message)
         if (response.failureCount > 0) {

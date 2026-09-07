@@ -1,35 +1,9 @@
 package org.centrexcursionistalcoi.app.push
 
-import cea_app.composeapp.generated.resources.Res
-import cea_app.composeapp.generated.resources.notification_department_kicked_message
-import cea_app.composeapp.generated.resources.notification_department_kicked_title
-import cea_app.composeapp.generated.resources.notification_event_cancelled_message
-import cea_app.composeapp.generated.resources.notification_event_cancelled_title
-import cea_app.composeapp.generated.resources.notification_join_request_approved_message
-import cea_app.composeapp.generated.resources.notification_join_request_approved_title
-import cea_app.composeapp.generated.resources.notification_join_request_denied_message
-import cea_app.composeapp.generated.resources.notification_join_request_denied_title
-import cea_app.composeapp.generated.resources.notification_lending_cancelled_message
-import cea_app.composeapp.generated.resources.notification_lending_cancelled_title
-import cea_app.composeapp.generated.resources.notification_lending_confirmed_message
-import cea_app.composeapp.generated.resources.notification_lending_confirmed_title
-import cea_app.composeapp.generated.resources.notification_lending_created_message
-import cea_app.composeapp.generated.resources.notification_lending_created_title
-import cea_app.composeapp.generated.resources.notification_lending_deleted_message
-import cea_app.composeapp.generated.resources.notification_lending_deleted_reason_message
-import cea_app.composeapp.generated.resources.notification_lending_deleted_title
-import cea_app.composeapp.generated.resources.notification_lending_given_message
-import cea_app.composeapp.generated.resources.notification_lending_given_title
-import cea_app.composeapp.generated.resources.notification_lending_returned_message
-import cea_app.composeapp.generated.resources.notification_lending_returned_other_message
-import cea_app.composeapp.generated.resources.notification_lending_returned_other_title
-import cea_app.composeapp.generated.resources.notification_lending_returned_partial_message
-import cea_app.composeapp.generated.resources.notification_lending_returned_partial_title
-import cea_app.composeapp.generated.resources.notification_lending_returned_title
-import cea_app.composeapp.generated.resources.notification_lending_taken_message
-import cea_app.composeapp.generated.resources.notification_lending_taken_title
+import cea_app.composeapp.generated.resources.*
 import com.diamondedge.logging.logging
-import com.mmk.kmpnotifier.notification.NotifierManager
+import com.mmk.kmpnotifier.KMPNotifier
+import com.mmk.kmpnotifier.local.localNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -64,7 +38,7 @@ object LocalNotifications : KoinComponent {
     }
 
     private fun notify(notificationTitle: String, notificationBody: String, data: Map<String, *>) {
-        NotifierManager.getLocalNotifier().notify {
+        KMPNotifier.localNotifier.notify {
             id = Random.nextInt()
             title = notificationTitle
             body = notificationBody

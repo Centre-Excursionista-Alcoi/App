@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
 import org.centrexcursionistalcoi.app.sync.await
 import org.centrexcursionistalcoi.app.sync.copyToProgress
@@ -25,6 +26,7 @@ import org.koin.core.annotation.KoinViewModel
 class LoadingViewModel(
     private val dispatcherProvider: DispatcherProvider,
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
+    private val databaseIntegrityVerifier: DatabaseIntegrityVerifier,
 ) : ViewModel() {
 
     private val log = logging()
@@ -57,16 +59,20 @@ class LoadingViewModel(
                         requiresInternet = true,
                         uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
                     ).copyToProgress(progressNotifier, dispatcherProvider.io).await()
-                } else {
-                    log.d { "Scheduling periodic sync..." }
-                    backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
-                        name = SyncAllDataBackgroundJob.UNIQUE_NAME,
-                        input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "false"),
-                        requiresInternet = true,
-                        uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
-                        repeatInterval = SyncAllDataBackgroundJob.periodicSyncInterval,
-                    )
                 }
+
+                // Verify the integrity of the database and fix any missing cross-references if possible
+                log.d { "Verifying database integrity..." }
+                databaseIntegrityVerifier.verifyAndFixReferences()
+
+                log.d { "Scheduling periodic sync..." }
+                backgroundJobCoordinator.scheduleAsync<SyncAllDataBackgroundJob>(
+                    name = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                    input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "false"),
+                    requiresInternet = true,
+                    uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                    repeatInterval = SyncAllDataBackgroundJob.periodicSyncInterval,
+                )
 
                 progress.value = null
                 withContext(dispatcherProvider.main) { onLoggedIn() }

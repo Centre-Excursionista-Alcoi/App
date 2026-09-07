@@ -3,8 +3,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
-import java.util.Calendar
-import java.util.Properties
+import java.util.*
 
 plugins {
     alias(libs.plugins.androidx.room3)
@@ -141,7 +140,7 @@ kotlin {
             // implementation(libs.kmm.permission)
 
             // Push Notifications (must be API for exporting to iOS)
-            api(libs.kmm.notifier)
+            api(libs.kmm.notifier.firebase)
 
             // Room 3
             implementation(libs.androidx.room3.runtime)
@@ -168,7 +167,7 @@ kotlin {
         }
 
         // Platforms that require granting permissions
-        val permissionsMain by creating {
+        val permissionsMain = create("permissionsMain") {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.kmm.permission)
@@ -177,7 +176,7 @@ kotlin {
 
         // Implements workers with Kotlin Coroutines
         // Includes: jvm, iOS
-        val coroutinesWorkersMain by creating {
+        val coroutinesWorkersMain = create("coroutinesWorkersMain") {
             dependsOn(commonMain.get())
         }
 
@@ -190,7 +189,11 @@ kotlin {
             }
         }
 
-        val phonesMain by creating {
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+        }
+
+        val phonesMain = create("phonesMain") {
             dependsOn(permissionsMain)
         }
 
@@ -245,8 +248,9 @@ kotlin {
         homepage = "Link to the Shared Module homepage"
 
         // If changed, also update Podfile
+        // KMPNotifier 2.0 requires iOS 16.0 as the minimum deployment target.
         // https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
-        ios.deploymentTarget = "15.6"
+        ios.deploymentTarget = "16.0"
 
         version = appVersionName
         podfile = project.file("../iosApp/Podfile")
@@ -265,7 +269,7 @@ kotlin {
             isStatic = true
             linkerOpts += "-lsqlite3"
             export(libs.sentry.kotlinMultiplatform)
-            export(libs.kmm.notifier)
+            export(libs.kmm.notifier.firebase)
         }
 
         // Maps custom Xcode configuration to NativeBuildType
@@ -310,7 +314,7 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Exe, TargetFormat.Deb, TargetFormat.Dmg)
 
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = appVersionName
@@ -347,6 +351,30 @@ compose.desktop {
                 appRelease = appVersionCode
                 debPackageVersion = appVersionName
                 rpmPackageVersion = appVersionName
+            }
+            macOS {
+                iconFile.set(
+                    File(iconsDir, "icon.icns")
+                )
+                bundleID = "org.centrexcursionistalcoi.app"
+                packageName = "CEA App"
+                packageVersion = appVersionName
+                dockName = "CEA App"
+
+                // Signing/notarization identity is only present on CI (or when a developer
+                // opts in locally); without it, unsigned dev builds still work as before.
+                fun env(name: String) = System.getenv(name)?.takeIf { it.isNotBlank() }
+
+                val signingIdentity = env("MACOS_SIGNING_IDENTITY")
+                signing {
+                    sign.set(signingIdentity != null)
+                    signingIdentity?.let { identity.set(it) }
+                }
+                notarization {
+                    env("NOTARIZATION_APPLE_ID")?.let { appleID.set(it) }
+                    env("NOTARIZATION_PASSWORD")?.let { password.set(it) }
+                    env("NOTARIZATION_TEAM_ID")?.let { teamID.set(it) }
+                }
             }
         }
     }

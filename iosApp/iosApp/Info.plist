@@ -11,8 +11,12 @@
 		<string>cea</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>604</string>
+	<string>616</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
