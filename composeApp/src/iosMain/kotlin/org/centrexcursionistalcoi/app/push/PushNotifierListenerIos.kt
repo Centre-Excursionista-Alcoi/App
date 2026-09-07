@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.push
 
+import com.diamondedge.logging.logging
 import org.koin.mp.KoinPlatformTools
 
 /**
@@ -11,3 +12,13 @@ import org.koin.mp.KoinPlatformTools
  * Must be called after [org.centrexcursionistalcoi.app.di.initKoin] has run.
  */
 fun pushNotifierListener(): PushNotifierListener = KoinPlatformTools.defaultContext().get().get()
+
+private val log = logging()
+
+/**
+ * Forwards a `KMPNotifier.setLogger` message to the shared km-logging pipeline, for Swift to pass as the closure
+ * body -- mirrors Android's and Desktop's `KMPNotifier.setLogger { log.d(tag = "NotifierManager") { message } }`.
+ */
+fun notifierManagerLog(message: String) {
+    log.d(tag = "NotifierManager") { message }
+}
