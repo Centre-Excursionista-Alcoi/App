@@ -110,6 +110,7 @@ filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakarta-mail" }
+kmm-notifier-core = { module = "io.github.mirzemehdi:kmpnotifier-core", version.ref = "kmm-notifier" }
 kmm-notifier-firebase = { module = "io.github.mirzemehdi:kmpnotifier-push-firebase", version.ref = "kmm-notifier" }
 kmm-permission = { module = "tech.kotlinlang:permission", version.ref = "kmm-permission" }
 kmm-settings-core = { module = "com.russhwolf:multiplatform-settings", version.ref = "kmm-settings" }
@@ -185,7 +186,6 @@ testcontainers = ["testcontainers-junit-jupiter", "testcontainers-postgresql"]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidx-room3 = { id = "androidx.room3", version.ref = "androidx-room3" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
-cocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "gms" }
