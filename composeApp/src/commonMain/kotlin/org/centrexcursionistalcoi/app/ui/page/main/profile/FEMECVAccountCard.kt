@@ -52,6 +52,7 @@ fun FEMECVAccountCard(
                         onValueChange = { username = it },
                         label = { Text(stringResource(Res.string.femecv_username)) },
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         enabled = !isLoading,
                     )
