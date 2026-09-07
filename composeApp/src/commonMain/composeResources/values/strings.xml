@@ -90,11 +90,17 @@
     <string name="management_department_member_roles_title">Roles for %1$s</string>
     <string name="management_department_member_no_roles">No roles assigned</string>
     <string name="department_role_admin">Admin</string>
+    <string name="department_role_admin_description">Full control of this department, including its settings and every other role below</string>
     <string name="department_role_people_manager">People Manager</string>
+    <string name="department_role_people_manager_description">Approve or deny join requests and manage the department's members</string>
     <string name="department_role_inventory_manager">Inventory Manager</string>
+    <string name="department_role_inventory_manager_description">Create and edit the department's inventory items and item types</string>
     <string name="department_role_lending_manager">Lending Manager</string>
+    <string name="department_role_lending_manager_description">Manage the department's lendings</string>
     <string name="department_role_memory_manager">Memory Manager</string>
+    <string name="department_role_memory_manager_description">Manage the department's memories</string>
     <string name="department_role_content_manager">Content Manager</string>
+    <string name="department_role_content_manager_description">Create and edit the department's posts and events</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>
