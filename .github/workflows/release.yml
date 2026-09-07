@@ -564,7 +564,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04, windows-latest]
+        os: [ubuntu-24.04, ubuntu-22.04, windows-latest, macos-latest]
 
     needs: [shared-tests, app-tests]
 
@@ -596,14 +596,71 @@ jobs:
       - name: Write local.properties
         run: echo '${{ secrets.LOCAL_PROPERTIES }}' > local.properties
 
+      - name: Import macOS Signing Certificate
+        if: runner.os == 'macOS'
+        id: macos_signing
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/macos_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/macos-signing.keychain-db
+
+          echo -n "$MACOS_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//')
+
+          # Resolve the exact signing identity string (e.g. "Developer ID Application: Name (TEAMID)")
+          # rather than hard-coding it, so a certificate renewal doesn't require touching the workflow.
+          IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
+          if [ -z "$IDENTITY" ]; then
+            echo "::error::No 'Developer ID Application' identity found in the imported certificate"
+            exit 1
+          fi
+          echo "identity=$IDENTITY" >> $GITHUB_OUTPUT
+
       - name: Build
         env:
           PRODUCTION: true
+          MACOS_SIGNING_IDENTITY: ${{ steps.macos_signing.outputs.identity }}
+          NOTARIZATION_APPLE_ID: ${{ secrets.NOTARIZATION_APPLE_ID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+          NOTARIZATION_TEAM_ID: "UQSVPP37UL"
         run: ./gradlew :composeApp:packageReleaseDistributionForCurrentOS
+
+      - name: Notarize DMG
+        if: runner.os == 'macOS'
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ steps.macos_signing.outputs.identity }}
+          NOTARIZATION_APPLE_ID: ${{ secrets.NOTARIZATION_APPLE_ID }}
+          NOTARIZATION_PASSWORD: ${{ secrets.NOTARIZATION_PASSWORD }}
+          NOTARIZATION_TEAM_ID: "UQSVPP37UL"
+        run: |
+          # The exact task name has varied across Compose Multiplatform releases
+          # (e.g. notarizeDmg vs notarizeReleaseDmg), so resolve it instead of hard-coding it.
+          NOTARIZE_TASK=$(./gradlew :composeApp:tasks --all --console=plain 2>/dev/null | grep -oE '^notarize[A-Za-z]*Dmg' | head -1)
+          if [ -z "$NOTARIZE_TASK" ]; then
+            echo "::error::Could not find a notarize*Dmg Gradle task"
+            exit 1
+          fi
+          echo "Running :composeApp:$NOTARIZE_TASK"
+          ./gradlew ":composeApp:$NOTARIZE_TASK"
 
       - name: Rename deb
         if: startsWith(matrix.os, 'ubuntu')
         run: mv composeApp/build/compose/binaries/main-release/deb/*.deb composeApp/build/compose/binaries/main-release/deb/cea-app_${{ matrix.os }}_amd64.deb
+
+      - name: Rename dmg
+        if: runner.os == 'macOS'
+        run: mv composeApp/build/compose/binaries/main-release/dmg/*.dmg composeApp/build/compose/binaries/main-release/dmg/cea-app_macos_${{ runner.arch }}.dmg
 
       - name: Release
         uses: softprops/action-gh-release@v3
@@ -612,6 +669,7 @@ jobs:
           files: |
             composeApp/build/compose/binaries/main-release/**/*.exe
             composeApp/build/compose/binaries/main-release/**/*.deb
+            composeApp/build/compose/binaries/main-release/**/*.dmg
 
   sentry-desktop:
     name: Release Desktop to Sentry
