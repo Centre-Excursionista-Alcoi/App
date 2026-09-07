@@ -356,7 +356,7 @@ jobs:
 
   build-ios:
     name: Build for iOS
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
 
     needs: [shared-tests, app-tests]
 
@@ -546,6 +546,14 @@ jobs:
             --org ${{ secrets.SENTRY_ORG }} \
             --project ${{ secrets.SENTRY_PROJECT }} \
             "$DSYM_PATH"
+
+      # This runner is self-hosted and persists between jobs, unlike GitHub-hosted runners.
+      # "security create-keychain" above adds this job's temp keychain to the user's login
+      # keychain search list; without deleting it here, every run leaves behind a dangling
+      # entry pointing at a file that $RUNNER_TEMP already cleaned up.
+      - name: Remove temporary keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
 
   sentry-ios:
     name: Release iOS to Sentry
