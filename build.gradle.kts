@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidx.room3) apply false
     alias(libs.plugins.buildkonfig) apply false
-    alias(libs.plugins.cocoapods) apply false
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.googleServices) apply false

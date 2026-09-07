@@ -2,19 +2,21 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import java.util.*
 
 plugins {
     alias(libs.plugins.androidx.room3)
     alias(libs.plugins.buildkonfig)
-    alias(libs.plugins.cocoapods)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
-    alias(libs.plugins.koinCompilerPlugin)
+    // TODO: re-enable once Koin supports Kotlin 2.4.20+ -- crashes with an IrGenerationExtensionException
+    //  (IrUtilsKt.getValueArgument signature changed). Manual replacement for what this plugin generated
+    //  lives in di/ManualModules.kt. See https://github.com/Centre-Excursionista-Alcoi/App/issues/590
+    //  and https://github.com/InsertKoinIO/koin-compiler-plugin/issues/89
+    // alias(libs.plugins.koinCompilerPlugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
 }
@@ -61,10 +63,13 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { target ->
         target.binaries.framework {
-            baseName = "CEAApp"
+            baseName = "ComposeApp"
             isStatic = true
             // Required when using NativeSQLiteDriver
             linkerOpts.add("-lsqlite3")
+            export(libs.sentry.kotlinMultiplatform)
+            export(libs.kmm.notifier.core)
+            export(libs.kmm.notifier.firebase)
         }
     }
 
@@ -140,6 +145,11 @@ kotlin {
             // implementation(libs.kmm.permission)
 
             // Push Notifications (must be API for exporting to iOS)
+            // kmm-notifier-core is only a transitive dependency of kmm-notifier-firebase, but Kotlin/Native's
+            // export() only flattens the ObjC/Swift naming (e.g. "KMPNotifier" instead of a module-qualified
+            // "ComposeAppKmpnotifier_coreKMPNotifier") for dependencies exported directly -- it must be declared
+            // and exported here too, or Swift call sites referencing bare "KMPNotifier" won't compile.
+            api(libs.kmm.notifier.core)
             api(libs.kmm.notifier.firebase)
 
             // Room 3
@@ -242,40 +252,6 @@ kotlin {
         optIn.add("kotlin.uuid.ExperimentalUuidApi")
     }
 
-    cocoapods {
-        // rest of configuration
-        summary = "Some description for the Shared Module"
-        homepage = "Link to the Shared Module homepage"
-
-        // If changed, also update Podfile
-        // KMPNotifier 2.0 requires iOS 16.0 as the minimum deployment target.
-        // https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html#supported-platforms
-        ios.deploymentTarget = "16.0"
-
-        version = appVersionName
-        podfile = project.file("../iosApp/Podfile")
-
-        // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
-        // https://github.com/getsentry/sentry-kotlin-multiplatform?tab=readme-ov-file#cocoa-sdk-version-compatibility-table
-        pod("Sentry") {
-            // Check the version compatibility table for the correct version
-            version = "8.57.1"
-            linkOnly = true
-            extraOpts += listOf("-compiler-option", "-fmodules")
-        }
-
-        framework {
-            baseName = "ComposeApp"
-            isStatic = true
-            linkerOpts += "-lsqlite3"
-            export(libs.sentry.kotlinMultiplatform)
-            export(libs.kmm.notifier.firebase)
-        }
-
-        // Maps custom Xcode configuration to NativeBuildType
-        xcodeConfigurationToNativeBuildType["CUSTOM_DEBUG"] = NativeBuildType.DEBUG
-        xcodeConfigurationToNativeBuildType["CUSTOM_RELEASE"] = NativeBuildType.RELEASE
-    }
 }
 
 dependencies {
@@ -294,12 +270,13 @@ tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMet
     dependsOn("kspCommonMainKotlinMetadata")
 }
 
-koinCompiler {
-    // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
-    // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
-    // missing even though they resolve correctly at runtime. Disable it until upstream fixes the detector.
-    compileSafety = false
-}
+// TODO: re-enable alongside the `koinCompilerPlugin` alias above (see issue link there).
+// koinCompiler {
+//     // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
+//     // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
+//     // missing even though they resolve correctly at runtime. Disable it until upstream fixes the detector.
+//     compileSafety = false
+// }
 
 room3 {
     schemaDirectory("$projectDir/schemas")
@@ -456,4 +433,55 @@ buildkonfig {
 
 configurations.configureEach {
     exclude(group = "org.jetbrains.compose.material", module = "material")
+}
+
+// Gate Apple-only configuration behind an actual Apple build being requested: anything in here that runs
+// an external process during Gradle's configuration phase would otherwise make the configuration cache
+// fail on every invocation, including unrelated ones.
+val isBuildingAppleTarget = gradle.startParameter.taskNames.any {
+    it.contains("Ios", ignoreCase = true) || it.contains("Apple", ignoreCase = true)
+}
+if (isBuildingAppleTarget) sentryKmp {
+    autoInstall {
+        linker {
+            // Sentry Cocoa is now consumed via the SwiftPM reference on the iosApp target
+            // (see project.pbxproj) rather than CocoaPods. Without an explicit path, the
+            // plugin walks the filesystem for *any* .xcodeproj to read its build settings from,
+            // which can find an unrelated one belonging to a transitive SPM dependency instead
+            // of ours -- pointing it here directly avoids that.
+            xcodeprojPath = rootDir.resolve("iosApp/iosApp.xcodeproj").absolutePath
+
+            // The plugin's own search strategies only ever look under the default
+            // ~/Library/Developer/Xcode/DerivedData, so they never find anything on a machine
+            // where Xcode's DerivedData location has been redirected elsewhere
+            // (Xcode > Settings > Locations > Derived Data, i.e. IDECustomDerivedDataLocation).
+            // Resolve the framework ourselves under whatever location is actually configured.
+            // Best-effort and macOS-only: never break non-Apple builds (JVM/Android tests, etc.)
+            // if this can't be determined.
+            frameworkPath = runCatching {
+                // Uses providers.exec (not a raw ProcessBuilder) specifically because this runs during Gradle's
+                // configuration phase: the configuration cache tracks this as a proper input instead of
+                // rejecting it as an untracked external process.
+                val customLocation = providers.exec {
+                    commandLine("defaults", "read", "com.apple.dt.Xcode", "IDECustomDerivedDataLocation")
+                    isIgnoreExitValue = true
+                }.standardOutput.asText.get().trim().takeIf { it.isNotBlank() }
+                val derivedDataRoot = File(
+                    customLocation ?: "${System.getProperty("user.home")}/Library/Developer/Xcode/DerivedData"
+                )
+                // Xcode can have more than one "iosApp-<hash>" folder at once (e.g. a
+                // project-level xcodebuild invocation used for diagnostics gets its own
+                // bucket, separate from the real workspace build) -- picking the most
+                // recently touched one is unreliable, so check each for the actual file
+                // instead, preferring the most recently modified one that has it.
+                derivedDataRoot
+                    .listFiles { file -> file.isDirectory && file.name.startsWith("iosApp-") }
+                    ?.sortedByDescending { it.lastModified() }
+                    ?.asSequence()
+                    ?.map { it.resolve("SourcePackages/artifacts/sentry-cocoa/Sentry/Sentry.xcframework") }
+                    ?.firstOrNull { it.exists() }
+                    ?.absolutePath
+            }.getOrNull()
+        }
+    }
 }

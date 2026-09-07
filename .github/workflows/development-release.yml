@@ -313,7 +313,7 @@ jobs:
   # gets built and pushed straight to TestFlight, same as Android's "internal" track.
   publish_ios_testflight:
     name: iOS - Publish Bleeding-edge to TestFlight
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
 
     needs: [run_shared_tests, run_app_tests]
     # Inherits the conditional logic from run_shared_tests/run_app_tests automatically because
@@ -337,14 +337,6 @@ jobs:
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
-
-      - name: Cache CocoaPods
-        uses: actions/cache@v6
-        with:
-          path: iosApp/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
 
       # --- Install Signing Assets ---
       - name: Install Certificate and Profile
@@ -386,11 +378,11 @@ jobs:
           cd iosApp/iosApp
           echo "${{ env.GOOGLE_SERVICE_INFO_SHA256 }}  GoogleService-Info.plist" | shasum -a 256 -c -
 
-      - name: Install CocoaPods
+      # Xcode's package resolution can otherwise race with the "Compile Kotlin Framework" build phase during
+      # archive (the phase can start before packages are fully resolved), so run it as its own upfront step.
+      - name: Resolve SwiftPM Dependencies
         run: |
-          ./gradlew :composeApp:generateDummyFramework
-          cd iosApp
-          pod install --repo-update
+          xcodebuild -resolvePackageDependencies -workspace iosApp/iosApp.xcworkspace -scheme iosApp
 
       - name: Archive iOS App
         run: |
@@ -485,10 +477,12 @@ jobs:
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
 
+      # sentry-cli is installed globally on the self-hosted runner (not per-run like the Android job's
+      # ubuntu-latest one below): the installer's default sudo-to-/usr/local/bin install fails in a
+      # non-interactive shell ("sudo: a password is required"), and there's no need to reinstall it on every
+      # run anyway on a machine that persists between jobs.
       - name: Sentry - Upload iOS Debug Files (dSYMs & Source)
         run: |
-          curl -sL https://sentry.io/get-cli/ | bash
-
           DSYM_PATH="$PWD/iosApp/build/iosApp.xcarchive/dSYMs"
 
           sentry-cli debug-files upload \
@@ -497,6 +491,14 @@ jobs:
             --org ${{ secrets.SENTRY_ORG }} \
             --project ${{ secrets.SENTRY_PROJECT }} \
             "$DSYM_PATH"
+
+      # This runner is self-hosted and persists between jobs, unlike GitHub-hosted runners.
+      # "security create-keychain" above adds this job's temp keychain to the user's login
+      # keychain search list; without deleting it here, every run leaves behind a dangling
+      # entry pointing at a file that $RUNNER_TEMP already cleaned up.
+      - name: Remove temporary keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
 
   # 4. Server Jobs (Only runs if server files changed)
   run_server_tests:
