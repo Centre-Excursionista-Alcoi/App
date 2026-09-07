@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
@@ -48,13 +49,13 @@ class TestDepartment {
                     userReference = user
                     department = departmentEntity
                     confirmed = true
-                    isManager = true
+                    roles = listOf(DepartmentRole.ADMIN)
                 }
                 DepartmentMemberEntity.new(departmentMember2Id) {
                     userReference = user2
                     department = departmentEntity
                     confirmed = false
-                    isManager = false
+                    roles = emptyList()
                 }
             }
         }
@@ -69,14 +70,14 @@ class TestDepartment {
                     userSub = FakeUser.SUB,
                     departmentId = departmentId.toKotlinUuid(),
                     confirmed = true,
-                    isManager = true,
+                    roles = listOf(DepartmentRole.ADMIN),
                 ),
                 DepartmentMemberInfo(
                     id = departmentMember2Id.toKotlinUuid(),
                     userSub = FakeUser2.SUB,
                     departmentId = departmentId.toKotlinUuid(),
                     confirmed = false,
-                    isManager = false,
+                    roles = emptyList(),
                 )
             )
         )

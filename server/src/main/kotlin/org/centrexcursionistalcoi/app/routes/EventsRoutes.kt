@@ -9,6 +9,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
@@ -106,18 +107,30 @@ fun Route.eventsRoutes() {
                     this.department = department
                     this.image = imageEntity
                 }
-            }.also { eventEntity ->
-                Telegram.launch {
-                    val event = Database { eventEntity.toData() }
-                    Telegram.sendEvent(event)
-                }
             }
+        },
+        afterCreate = { eventEntity ->
+            Telegram.launch {
+                val event = Database { eventEntity.toData() }
+                Telegram.sendEvent(event)
+            }
+        },
+        onWriteRejected = { event ->
+            // The image (if any) was uploaded and persisted before the department could be authorized -- clean
+            // it up too, or a rejected creation would leave it orphaned in the files table.
+            val image = event.image
+            event.delete()
+            image?.delete()
         },
         deleteReferencesCheck = { department ->
             // departments are referenced in events, make sure no events reference the department before deleting
             EventEntity.find { Events.department eq department.id }.empty()
         },
         updater = UpdateEventRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.CONTENT_MANAGER,
+            departmentOfEntity = { it.department?.id?.value },
+        ),
     )
     get("/events/calendar") {
         val session = call.getUserSession()

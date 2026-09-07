@@ -17,6 +17,7 @@ import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
@@ -26,7 +27,6 @@ import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
-import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
@@ -46,6 +46,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
+import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
@@ -90,16 +91,6 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
         return true
     }
 
-    // Get a list of all the departments the user is a manager of
-    val userManagingDepartmentsIds = Database {
-        DepartmentMemberEntity.find { (DepartmentMembers.userSub eq sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
-            .map { it.department.id.value }
-    }
-    // If the list is empty, the user is not managing any department, do not allow to manage
-    if (userManagingDepartmentsIds.isEmpty()) {
-        return false
-    }
-
     // Fetch the descriptive department of the lending
     val lendingDepartment = Database {
         lending.items
@@ -117,12 +108,8 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
     if (lendingDepartment == null) {
         return false
     }
-    // If the department is not in the list of departments the user is managing, it cannot be managed
-    if (lendingDepartment.id.value !in userManagingDepartmentsIds) {
-        return false
-    }
-    // Finally, the user can manage it
-    return true
+    // Finally, the user can manage it if they hold LENDING_MANAGER (or ADMIN) in that department
+    return hasDepartmentRole(lendingDepartment.id.value, DepartmentRole.LENDING_MANAGER)
 }
 
 /**
@@ -325,7 +312,8 @@ fun Route.lendingsRoutes() {
             // If all the items from a lending are from the same department, it's considered that the lending is from that department, and as such,
             // the manager of the department (if any) can see and act upon the lending just like an admin.
             val managedDepartmentsIds = Database {
-                DepartmentMemberEntity.find { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) and (DepartmentMembers.isManager eq true) }
+                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                    .filter { it.hasRole(DepartmentRole.LENDING_MANAGER) }
                     .map { it.department.id.value }
             }
             if (managedDepartmentsIds.isNotEmpty()) {

@@ -8,6 +8,7 @@ import java.util.UUID
 import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -115,6 +116,17 @@ fun Route.inventoryRoutes() {
             }
         },
         updater = UpdateInventoryItemTypeRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.INVENTORY_MANAGER,
+            departmentOfEntity = { it.department?.id?.value },
+        ),
+        onWriteRejected = { type ->
+            // The image (if any) was uploaded and persisted before the department could be authorized -- clean
+            // it up too, or a rejected creation would leave it orphaned in the files table.
+            val image = type.image
+            type.delete()
+            image?.delete()
+        },
     )
     provideEntityRoutes(
         base = "inventory/items",
@@ -190,5 +202,9 @@ fun Route.inventoryRoutes() {
                 .empty()
         },
         updater = UpdateInventoryItemRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.INVENTORY_MANAGER,
+            departmentOfEntity = { it.type.department?.id?.value },
+        ),
     )
 }

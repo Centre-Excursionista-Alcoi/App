@@ -32,7 +32,9 @@ import cea_app.composeapp.generated.resources.submit
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
@@ -93,11 +95,19 @@ private fun DepartmentsListView(
             // Admin can see all departments
             departments
         } else {
-            // Non-admin can see only the departments they are managing
+            // Non-admin can see only the departments they hold PEOPLE_MANAGER (or ADMIN, which implies it) in
             departments?.filter { department ->
-                department.members?.any { it.userSub == profile.sub && it.isManager } == true
+                department.members?.any { member ->
+                    member.userSub == profile.sub && member.confirmed &&
+                        (DepartmentRole.PEOPLE_MANAGER in member.roles || DepartmentRole.ADMIN in member.roles)
+                } == true
             }
         }
+    }
+    // Editing/deleting a department's own fields (displayName, image) requires department ADMIN specifically --
+    // PEOPLE_MANAGER (who can still see it above, to manage members/join requests) is not enough.
+    val adminDepartmentIds = remember(profile, departments) {
+        departments.orEmpty().departmentsWithRole(profile, DepartmentRole.ADMIN).map { it.id }.toSet()
     }
 
     var deleting by remember { mutableStateOf<Department?>(null) }
@@ -137,6 +147,12 @@ private fun DepartmentsListView(
                 onClick = { deleting = it }
             )
         },
+        // Only a department's own ADMIN (or a global admin) may edit/delete it -- a PEOPLE_MANAGER can still see
+        // it above (to manage members/join requests), but is not authorized to change its own fields.
+        canModify = { department -> profile.isAdmin || department.id in adminDepartmentIds },
+        // Creating a brand-new department always requires global admin: nobody can hold ADMIN in a department
+        // that doesn't exist yet.
+        isCreatingSupported = profile.isAdmin,
         createTitle = stringResource(Res.string.management_department_create),
         editItemContent = { department: Department? ->
             var isLoading by remember { mutableStateOf(false) }

@@ -1,10 +1,14 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,10 +22,13 @@ import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
@@ -371,5 +378,104 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
         val entity = Database { DepartmentMemberEntity.findById(context.dibResult.id) }
         assertNull(entity)
+    }
+
+    @Test
+    fun test_setRoles_asDepartmentAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            // The logged-in user (FakeUser) is a department ADMIN, and may (re)assign roles.
+            DepartmentMemberEntity.new {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = listOf(DepartmentRole.ADMIN)
+            }
+            // The target member being promoted to INVENTORY_MANAGER.
+            DepartmentMemberEntity.new(joinRequestId) {
+                userReference = FakeUser2.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = emptyList()
+            }
+        }
+    ) { context ->
+        val member = context.dibResult!!
+
+        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.INVENTORY_MANAGER))))
+        }.apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        val updatedRoles = Database { DepartmentMemberEntity.findById(member.id.value)?.roles }
+        assertEquals(listOf(DepartmentRole.INVENTORY_MANAGER), updatedRoles)
+    }
+
+    @Test
+    fun test_setRoles_asPeopleManagerOnly_forbidden() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            // The logged-in user (FakeUser) is only a PEOPLE_MANAGER, not a department ADMIN.
+            DepartmentMemberEntity.new {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = listOf(DepartmentRole.PEOPLE_MANAGER)
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userReference = FakeUser2.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = emptyList()
+            }
+        }
+    ) { context ->
+        val member = context.dibResult!!
+
+        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.INVENTORY_MANAGER))))
+        }.apply {
+            assertError(Error.PermissionRejected())
+        }
+
+        val updatedRoles = Database { DepartmentMemberEntity.findById(member.id.value)?.roles }
+        assertEquals(emptyList(), updatedRoles)
+    }
+
+    @Test
+    fun test_setRoles_asGlobalAdmin() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) {
+                displayName = "Test Department"
+            }
+            DepartmentMemberEntity.new(joinRequestId) {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = emptyList()
+            }
+        }
+    ) { context ->
+        val member = context.dibResult!!
+
+        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.LENDING_MANAGER))))
+        }.apply {
+            assertStatusCode(HttpStatusCode.NoContent)
+        }
+
+        val updatedRoles = Database { DepartmentMemberEntity.findById(member.id.value)?.roles }
+        assertEquals(listOf(DepartmentRole.LENDING_MANAGER), updatedRoles)
     }
 }

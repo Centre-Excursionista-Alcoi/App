@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -23,6 +24,7 @@ class PostsManagementViewModel(
     postsRepository: PostsRepository,
     private val postsRemoteRepository: PostsRemoteRepository,
 ) : ViewModel() {
+    val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val posts = postsRepository.selectAllAsFlow().stateInViewModel()
 

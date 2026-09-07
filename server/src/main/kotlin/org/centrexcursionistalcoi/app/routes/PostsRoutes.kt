@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.content.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -112,17 +113,31 @@ fun Route.postsRoutes() {
                         }
                     }
                 }
-            }.also { postEntity ->
-                Telegram.launch {
-                    val post = Database { postEntity.toData() }
-                    Telegram.sendPost(post)
-                }
             }
+        },
+        afterCreate = { postEntity ->
+            Telegram.launch {
+                val post = Database { postEntity.toData() }
+                Telegram.sendPost(post)
+            }
+        },
+        onWriteRejected = { post ->
+            // The attached files were uploaded and persisted before the department could be authorized. `post`
+            // has ON DELETE CASCADE on PostFiles, so deleting it drops the join rows, but the file rows themselves
+            // (RESTRICT on delete while referenced) must be captured first and deleted afterwards, or they'd be
+            // left orphaned in the files table.
+            val files = post.files.toList()
+            post.delete()
+            files.forEach { it.delete() }
         },
         deleteReferencesCheck = { department ->
             // departments are referenced in posts, make sure no posts reference the department before deleting
             PostEntity.find { Posts.department eq department.id }.empty()
         },
         updater = UpdatePostRequest.serializer(),
+        writePermission = EntityWritePermission(
+            role = DepartmentRole.CONTENT_MANAGER,
+            departmentOfEntity = { it.department?.id?.value },
+        ),
     )
 }

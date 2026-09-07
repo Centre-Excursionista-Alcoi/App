@@ -40,9 +40,12 @@ import cea_app.composeapp.generated.resources.personal_info_not_a_member
 import cea_app.composeapp.generated.resources.personal_info_not_registered
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AccountCircle
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AccountCircleOff
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AddModerator
@@ -52,6 +55,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.PersonOff
 import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIcon
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
@@ -63,11 +67,19 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun UsersListView(model: UsersManagementViewModel = koinViewModel()) {
+    val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val members by model.members.collectAsState()
     val users by model.users.collectAsState()
 
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
     UsersListView(
+        profile = profileValue,
         users = users,
         members = members,
         departments = departments,
@@ -79,12 +91,18 @@ fun UsersListView(model: UsersManagementViewModel = koinViewModel()) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun UsersListView(
+    profile: ProfileResponse,
     users: List<UserData>?,
     members: List<Member>?,
     departments: List<Department>?,
     onPromote: (UserData) -> Job,
     onKickFromDepartment: (UserData, Department) -> Job,
 ) {
+    // Kicking a member from a department requires PEOPLE_MANAGER (or ADMIN) *in that specific department* --
+    // being able to see this tab at all (e.g. as a global USERS_MANAGER) does not imply that.
+    val managedPeopleDepartmentIds = remember(profile, departments) {
+        departments.orEmpty().departmentsWithRole(profile, DepartmentRole.PEOPLE_MANAGER).map { it.id }.toSet()
+    }
     var promotingUser by remember { mutableStateOf<UserData?>(null) }
     promotingUser?.let { user ->
         var isPromoting by remember { mutableStateOf(false) }
@@ -182,6 +200,8 @@ private fun UsersListView(
                 )
             }
         },
+        // Promoting to admin is admin-only server-side.
+        canModify = { profile.isAdmin },
         itemToolbarActions = { user ->
             if (user !is UserData) return@ListView
 
@@ -301,6 +321,8 @@ private fun UsersListView(
                 onLeaveDepartmentRequested = { department ->
                     onKickFromDepartment(user, department)
                 },
+                isLeavingKick = true,
+                canLeaveDepartment = { department -> profile.isAdmin || department.id in managedPeopleDepartmentIds },
             )
         }
     }

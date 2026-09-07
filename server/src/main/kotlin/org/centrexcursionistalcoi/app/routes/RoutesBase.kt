@@ -20,6 +20,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
@@ -31,12 +32,15 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
+import org.centrexcursionistalcoi.app.security.assertDepartmentRole
+import org.centrexcursionistalcoi.app.security.hasAnyDepartmentRole
+import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -45,6 +49,28 @@ import org.slf4j.LoggerFactory
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 private val logger = LoggerFactory.getLogger("RoutesBase")
+
+/**
+ * Thrown from inside a [Database] transaction block to abort and roll it back when a permission check fails
+ * after some mutation within that same block has already been applied (e.g. a patch that reassigns an entity's
+ * department). Never escapes past the `try`/`catch` that wraps the transaction it was thrown from.
+ */
+class PermissionDeniedException : Exception()
+
+/**
+ * Describes the department-scoped role required to create/patch/delete an entity via [provideEntityRoutes].
+ *
+ * @param role The [DepartmentRole] required (or [UserSession.isAdmin], which always suffices regardless of role).
+ * @param departmentOfEntity Resolves the department id the entity belongs to, for an already-existing entity
+ *   (used for PATCH/DELETE, and -- since a brand-new entity's department can only be known once it has been
+ *   created -- also for POST, checked immediately after creation). Return `null` if the entity isn't
+ *   department-scoped (e.g. a shared/global entity with no owning department), in which case the write falls
+ *   back to requiring global admin.
+ */
+class EntityWritePermission<EE>(
+    val role: DepartmentRole,
+    val departmentOfEntity: (EE) -> UUID?,
+)
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
     val requestContentType = call.request.contentType()
@@ -82,7 +108,19 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      * If it returns `false`, the deletion is aborted and an error is returned.
      */
     noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck)
+    writePermission: EntityWritePermission<EE>? = null,
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    noinline afterCreate: suspend (EE) -> Unit = {},
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -110,7 +148,19 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * If it returns `false`, the deletion is aborted and an error is returned.
      */
     noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck)
+    writePermission: EntityWritePermission<EE>? = null,
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    noinline afterCreate: suspend (EE) -> Unit = {},
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -139,10 +189,51 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * If it returns `false`, the deletion is aborted and an error is returned.
      */
     deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
+    writePermission: EntityWritePermission<EE>? = null,
+    /**
+     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
+     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
+     */
+    afterCreate: suspend (EE) -> Unit = {},
+    /**
+     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
+     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
+     * otherwise be orphaned by a rejected creation.
+     */
+    onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
 ) {
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
+
+    /**
+     * Coarse pre-check, before the entity is looked up (PATCH/DELETE) or created (POST): requires global admin,
+     * or -- for a department-scoped [writePermission] -- holding its role in at least one department. This must
+     * run before touching the entity/request body at all, so that a caller who could never qualify is rejected
+     * without leaking whether a given entity exists, and without running body/validation logic first.
+     */
+    suspend fun RoutingContext.assertMayWriteAtAll(): UserSession? {
+        val session = getUserSessionOrFail() ?: return null
+        if (session.isAdmin()) return session
+        val allowed = if (writePermission == null) false else session.hasAnyDepartmentRole(writePermission.role)
+        return if (allowed) session else { respondError(if (writePermission == null) Error.NotAnAdmin() else Error.PermissionRejected()); null }
+    }
+
+    /**
+     * Fine-grained check once the entity is available: resolves its department via [EntityWritePermission.departmentOfEntity]
+     * and requires [EntityWritePermission.role] there. An entity with no resolvable department (e.g. a shared/global
+     * entity) requires global admin. [session] is assumed to have already passed [assertMayWriteAtAll].
+     */
+    suspend fun RoutingContext.assertWritePermission(session: UserSession, entity: EE): UserSession? {
+        if (session.isAdmin()) return session
+        val departmentId = writePermission?.let { wp -> Database { wp.departmentOfEntity(entity) } }
+        return if (writePermission == null || departmentId == null) {
+            respondError(Error.NotAnAdmin())
+            null
+        } else {
+            assertDepartmentRole(session, departmentId, writePermission.role)
+        }
+    }
 
     suspend fun RoutingContext.getId(): EID? {
         val id = call.parameters["id"]?.let(idTypeConverter)
@@ -183,7 +274,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     post("/$base") {
         assertContentType() ?: return@post
-        assertAdmin() ?: return@post
+        val session = assertMayWriteAtAll() ?: return@post
 
         val multipart = call.receiveMultipart()
         val item = try {
@@ -206,9 +297,22 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             return@post
         }
 
+        // The fine-grained check can only run once the entity (and thus its department) exists -- multipart
+        // bodies can't be peeked twice. If the caller isn't allowed after all, roll the creation back -- including
+        // any dependent rows (e.g. uploaded files) onWriteRejected cleans up, so a rejected creation never leaves
+        // orphaned data behind.
+        if (assertWritePermission(session, item) == null) {
+            Database { onWriteRejected(item) }
+            return@post
+        }
+
         if (item is LastUpdateEntity) {
             item.updated()
         }
+
+        // Only reached once the department-scoped permission check above has passed, so external side effects
+        // (e.g. Telegram announcements) never fire for a creation that ends up rejected.
+        afterCreate(item)
 
         Push.launch {
             Push.sendPushNotificationToAll(
@@ -228,8 +332,9 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
         val id = getId() ?: return@patch
         assertContentType(ContentType.Application.Json) ?: return@patch
-        assertAdmin() ?: return@patch
+        val session = assertMayWriteAtAll() ?: return@patch
         val item = assertEntity(id) ?: return@patch
+        assertWritePermission(session, item) ?: return@patch
 
         val body = call.receiveText()
         val request = try {
@@ -245,7 +350,22 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
         @Suppress("UNCHECKED_CAST")
         val patcher = item as EntityPatcher<UER>
-        Database { patcher.patch(request) }
+        // The patch may reassign the entity to a different department (or type, for inventory items) -- re-check
+        // the *destination* inside the same transaction as the patch, so an unauthorized move is rolled back
+        // atomically rather than left half-applied.
+        try {
+            Database {
+                patcher.patch(request)
+                if (writePermission != null && !session.isAdmin()) {
+                    val newDepartmentId = writePermission.departmentOfEntity(item)
+                    val allowed = newDepartmentId != null && session.hasDepartmentRole(newDepartmentId, writePermission.role)
+                    if (!allowed) throw PermissionDeniedException()
+                }
+            }
+        } catch (_: PermissionDeniedException) {
+            respondError(Error.PermissionRejected())
+            return@patch
+        }
 
         if (item is LastUpdateEntity) {
             item.updated()
@@ -263,8 +383,9 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 
     delete("$base/{id}") {
         val id = getId() ?: return@delete
-        assertAdmin() ?: return@delete
+        val session = assertMayWriteAtAll() ?: return@delete
         val item = assertEntity(id) ?: return@delete
+        assertWritePermission(session, item) ?: return@delete
 
         val referencesCheck = Database { deleteReferencesCheck(item) }
         if (!referencesCheck) {

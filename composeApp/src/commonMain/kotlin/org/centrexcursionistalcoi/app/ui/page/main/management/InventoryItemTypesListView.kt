@@ -55,12 +55,15 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.permission.launchWithCameraPermission
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.isNotSupported
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.CreateInventoryItemDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.InventoryItemInformationDialog
@@ -69,6 +72,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.QrCodeScanner
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownField
+import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.Scanner
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
@@ -88,13 +92,21 @@ fun InventoryItemTypesListView(
     selectedItemId: Uuid?,
     model: InventoryManagementViewModel = koinViewModel()
 ) {
+    val profile by model.profile.collectAsState()
     val departments by model.departments.collectAsState()
     val inventoryItems by model.inventoryItems.collectAsState()
     val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
     val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
 
+    val profileValue = profile
+    if (profileValue == null) {
+        LoadingBox()
+        return
+    }
+
     InventoryItemTypesListView(
         selectedItemId = selectedItemId,
+        profile = profileValue,
         types = inventoryItemTypes,
         allCategories = inventoryItemTypesCategories.orEmpty(),
         departments = departments,
@@ -112,6 +124,7 @@ fun InventoryItemTypesListView(
 @Composable
 private fun InventoryItemTypesListView(
     selectedItemId: Uuid?,
+    profile: ProfileResponse,
     types: List<ReferencedInventoryItemType>?,
     allCategories: Set<String>,
     departments: List<Department>?,
@@ -123,6 +136,13 @@ private fun InventoryItemTypesListView(
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
     onUpdateInventoryItemManufacturerData: (ReferencedInventoryItem, String) -> Job,
 ) {
+    // Mirrors the server's INVENTORY_MANAGER check: creating/editing/deleting a type (or an item of it) scoped
+    // to a department requires that role there (or global admin); a type with no department requires admin.
+    val managedDepartments = remember(profile, departments) {
+        departments.orEmpty().departmentsWithRole(profile, DepartmentRole.INVENTORY_MANAGER)
+    }
+    val departmentOptions = if (profile.isAdmin) departments.orEmpty() else managedDepartments
+    val canCreate = profile.isAdmin || managedDepartments.isNotEmpty()
     val nfcLogic = koinInject<PlatformNFC>()
 
     val scope = rememberCoroutineScope()
@@ -217,9 +237,12 @@ private fun InventoryItemTypesListView(
             )
         },
         emptyItemsText = stringResource(Res.string.management_no_item_types),
-        isCreatingSupported = true,
+        isCreatingSupported = canCreate,
         createTitle = stringResource(Res.string.management_inventory_item_type_create),
         onDeleteRequest = { (type) -> onDelete(type) },
+        canModify = { (type) ->
+            profile.isAdmin || type.department?.let { d -> managedDepartments.any { it.id == d.id } } == true
+        },
         searchBarActions = {
             TooltipIconButton(
                 imageVector = MaterialSymbols.QrCodeScanner,
@@ -237,7 +260,9 @@ private fun InventoryItemTypesListView(
             var displayName by remember { mutableStateOf(type?.displayName ?: "") }
             var description by remember { mutableStateOf(type?.description ?: "") }
             var weight by remember { mutableStateOf(type?.weight?.toString() ?: "") }
-            var department by remember { mutableStateOf<Department?>(type?.department) }
+            // For a non-admin creating a new type, default to their (only allowed) department instead of
+            // leaving it unset -- a type with no department requires admin.
+            var department by remember { mutableStateOf(type?.department ?: managedDepartments.firstOrNull().takeIf { !profile.isAdmin }) }
 
             val isDirty = if (type == null) true else
                 displayName != type.displayName ||
@@ -278,7 +303,7 @@ private fun InventoryItemTypesListView(
                 value = department,
                 onValueChange = { department = it },
                 label = stringResource(Res.string.management_inventory_item_type_department),
-                options = departments.orEmpty(),
+                options = departmentOptions,
                 itemToString = { it?.displayName ?: stringResource(Res.string.none) },
                 itemLeadingContent = {
                     it?.let { department ->
@@ -291,8 +316,9 @@ private fun InventoryItemTypesListView(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                enabled = !isLoading && !departments.isNullOrEmpty(),
-                allowNull = true,
+                enabled = !isLoading && departmentOptions.isNotEmpty(),
+                // Only a global admin may leave a type without a department.
+                allowNull = profile.isAdmin,
             )
 
             OutlinedTextField(

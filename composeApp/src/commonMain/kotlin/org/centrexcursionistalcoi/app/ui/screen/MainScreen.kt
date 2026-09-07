@@ -294,7 +294,7 @@ private fun MainScreenContent(
 ) {
     var shoppingList by remember { mutableStateOf<ShoppingList>(emptyMap()) }
     val isManagerOfAnyDepartment = remember(profile, departments) {
-        departments.orEmpty().isManagerOfAny(profile)
+        profile.isUsersManager || profile.isMembersManager || departments.orEmpty().isManagerOfAny(profile)
     }
     val navigationItems = remember(profile, activeUserLending) {
         navigationItems(isAdmin = profile.isAdmin, isManagerOfAnyDepartment, anyActiveLending = activeUserLending != null)
@@ -663,8 +663,8 @@ private fun MainScreenPagerContent(
 
             Page.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
 
-            // Management page only for admins or department managers
-            Page.MANAGEMENT if (profile.isAdmin || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
+            // Management page only for admins, global managers, or department managers
+            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
                 snackbarHostState = snackbarHostState,
                 selectedItem = selectedManagementItem,
                 onGiveRequested = onOtherUserLendingClick,

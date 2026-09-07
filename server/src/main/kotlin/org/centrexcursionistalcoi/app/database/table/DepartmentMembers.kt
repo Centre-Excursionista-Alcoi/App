@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 
 object DepartmentMembers : UUIDTable("department_members") {
@@ -9,7 +10,9 @@ object DepartmentMembers : UUIDTable("department_members") {
     val departmentId = reference("department_id", Departments, ReferenceOption.CASCADE, ReferenceOption.RESTRICT)
 
     val confirmed = bool("confirmed").default(false)
-    val isManager = bool("is_manager").default(false)
+
+    /** The [org.centrexcursionistalcoi.app.data.DepartmentRole.storageName]s held by this member in this department. */
+    val roles = array("roles", TextColumnType()).default(emptyList())
 
     init {
         // A user can only be member of a department once

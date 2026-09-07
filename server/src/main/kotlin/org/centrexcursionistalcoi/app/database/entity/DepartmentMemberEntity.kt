@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database.entity
 import java.util.UUID
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.push.PushNotification
@@ -24,7 +25,14 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var department by DepartmentEntity referencedOn DepartmentMembers.departmentId
     var userReference by UserReferenceEntity referencedOn DepartmentMembers.userSub
     var confirmed by DepartmentMembers.confirmed
-    var isManager by DepartmentMembers.isManager
+    private var rolesRaw by DepartmentMembers.roles
+
+    var roles: List<DepartmentRole>
+        get() = rolesRaw.mapNotNull { DepartmentRole.fromStorageName(it) }
+        set(value) { rolesRaw = value.map { it.storageName } }
+
+    /** `true` if this member holds [role], or holds [DepartmentRole.ADMIN] (which implies every role). */
+    fun hasRole(role: DepartmentRole): Boolean = role in roles || DepartmentRole.ADMIN in roles
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
@@ -32,7 +40,7 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         userSub = userReference.id.value,
         departmentId = department.id.value.toKotlinUuid(),
         confirmed = confirmed,
-        isManager = isManager,
+        roles = roles,
     )
 
     fun confirmedNotification() = Database {
