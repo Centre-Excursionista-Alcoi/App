@@ -313,7 +313,7 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Exe, TargetFormat.Deb, TargetFormat.Dmg)
 
             packageName = "org.centrexcursionistalcoi.app"
             packageVersion = appVersionName
@@ -350,6 +350,15 @@ compose.desktop {
                 appRelease = appVersionCode
                 debPackageVersion = appVersionName
                 rpmPackageVersion = appVersionName
+            }
+            macOS {
+                iconFile.set(
+                    File(iconsDir, "icon.icns")
+                )
+                bundleID = "org.centrexcursionistalcoi.app"
+                packageName = "CEA App"
+                packageVersion = appVersionName
+                dockName = "CEA App"
             }
         }
     }
