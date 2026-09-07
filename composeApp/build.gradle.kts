@@ -435,10 +435,9 @@ configurations.configureEach {
     exclude(group = "org.jetbrains.compose.material", module = "material")
 }
 
-// Only configure the Sentry Cocoa linker when actually building something Apple-related: the lookup below
-// starts an external "defaults read" process during Gradle's configuration phase, which the configuration
-// cache flags as an error for *any* invocation (even an unrelated `:composeApp:jvmTest`) unless gated like
-// this, since it can't tell whether the result would ever change between runs.
+// Gate Apple-only configuration behind an actual Apple build being requested: anything in here that runs
+// an external process during Gradle's configuration phase would otherwise make the configuration cache
+// fail on every invocation, including unrelated ones.
 val isBuildingAppleTarget = gradle.startParameter.taskNames.any {
     it.contains("Ios", ignoreCase = true) || it.contains("Apple", ignoreCase = true)
 }
