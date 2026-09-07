@@ -18,6 +18,8 @@ object ProfileRepository {
         return data?.let { json.decodeFromString(ProfileResponse.serializer(), it) }
     }
 
+    fun isLoggedIn(): Boolean = getProfile() != null
+
     fun update(profile: ProfileResponse) {
         settings.putString("profile", json.encodeToString(ProfileResponse.serializer(), profile))
     }
