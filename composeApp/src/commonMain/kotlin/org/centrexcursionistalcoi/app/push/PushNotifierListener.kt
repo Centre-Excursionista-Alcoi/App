@@ -5,20 +5,17 @@ import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.PayloadData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
-import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
-import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
+import org.centrexcursionistalcoi.app.sync.*
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_IS_REMOVAL
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_LENDING_ID
 import org.koin.core.annotation.Singleton
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 
 @Singleton
 class PushNotifierListener(
+    private val dispatcherProvider: DispatcherProvider,
     private val coordinator: BackgroundJobCoordinator,
 ) : NotifierManager.Listener, KoinComponent {
     private val log = logging()
@@ -26,7 +23,12 @@ class PushNotifierListener(
     override fun onNewToken(token: String) {
         log.i { "onNewToken: $token" }
 
-        CoroutineScope(get<DispatcherProvider>().io).launch {
+        if (!ProfileRepository.isLoggedIn()) {
+            log.i { "User is not logged in, skipping token registration." }
+            return
+        }
+
+        CoroutineScope(dispatcherProvider.io).launch {
             FCMTokenManager.renovate(token)
         }
     }
