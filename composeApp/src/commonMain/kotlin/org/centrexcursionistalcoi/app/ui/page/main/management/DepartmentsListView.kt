@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.page.main.management
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,12 +14,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -25,6 +29,8 @@ import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.delete
 import cea_app.composeapp.generated.resources.form_display_name
 import cea_app.composeapp.generated.resources.management_department_create
+import cea_app.composeapp.generated.resources.management_department_edit_roles
+import cea_app.composeapp.generated.resources.management_department_member_no_roles
 import cea_app.composeapp.generated.resources.management_department_members
 import cea_app.composeapp.generated.resources.management_no_departments
 import cea_app.composeapp.generated.resources.management_other_users_join_requests
@@ -41,7 +47,10 @@ import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
+import org.centrexcursionistalcoi.app.ui.dialog.DepartmentMemberRolesDialog
+import org.centrexcursionistalcoi.app.ui.dialog.joinedDisplayNames
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Edit
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.page.main.home.DepartmentPendingJoinRequest
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
@@ -74,7 +83,8 @@ fun DepartmentsListView(model: DepartmentsManagementViewModel = koinViewModel())
         onUpdate = model::updateDepartment,
         onDelete = model::delete,
         onApproveDepartmentJoinRequest = model::approveDepartmentJoinRequest,
-        onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest
+        onDenyDepartmentJoinRequest = model::denyDepartmentJoinRequest,
+        onUpdateMemberRoles = model::updateMemberRoles,
     )
 }
 
@@ -89,6 +99,7 @@ private fun DepartmentsListView(
     onDelete: (Department) -> Job,
     onApproveDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
     onDenyDepartmentJoinRequest: (DepartmentMemberInfo) -> Job,
+    onUpdateMemberRoles: (DepartmentMemberInfo, List<DepartmentRole>) -> Job,
 ) {
     val filteredDepartments = remember(profile, departments) {
         if (profile.isAdmin) {
@@ -208,6 +219,17 @@ private fun DepartmentsListView(
         },
     ) { department ->
         val members = remember(department) { department.members.orEmpty() }
+        val canEditRoles = profile.isAdmin || department.id in adminDepartmentIds
+
+        var editingRolesFor by remember(department) { mutableStateOf<Pair<DepartmentMemberInfo, UserData>?>(null) }
+        editingRolesFor?.let { (memberInfo, userData) ->
+            DepartmentMemberRolesDialog(
+                memberName = userData.fullName,
+                currentRoles = memberInfo.roles,
+                onSave = { roles -> onUpdateMemberRoles(memberInfo, roles) },
+                onDismissRequested = { editingRolesFor = null },
+            )
+        }
 
         if (department.image != null) {
             val image by department.rememberImageFile()
@@ -247,9 +269,9 @@ private fun DepartmentsListView(
             members
                 .filter { it.confirmed }
                 .mapNotNull { memberInfo ->
-                    users?.find { it.sub == memberInfo.userSub }
+                    users?.find { it.sub == memberInfo.userSub }?.let { memberInfo to it }
                 }
-                .sortedBy { it.fullName }
+                .sortedBy { (_, userData) -> userData.fullName }
         }
         if (confirmedMembers.isNotEmpty()) {
             Text(
@@ -257,12 +279,35 @@ private fun DepartmentsListView(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             )
-            for (userData in confirmedMembers) {
-                Text(
-                    text = "\u2022 ${userData.fullName}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            for ((memberInfo, userData) in confirmedMembers) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "\u2022 ${userData.fullName}",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text(
+                            text = if (memberInfo.roles.isEmpty()) {
+                                stringResource(Res.string.management_department_member_no_roles)
+                            } else {
+                                memberInfo.roles.joinedDisplayNames()
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                    if (canEditRoles) {
+                        TooltipIconButton(
+                            imageVector = MaterialSymbols.Edit,
+                            tooltip = stringResource(Res.string.management_department_edit_roles),
+                            positioning = TooltipAnchorPosition.Left,
+                            onClick = { editingRolesFor = memberInfo to userData },
+                        )
+                    }
+                }
             }
         }
     }
