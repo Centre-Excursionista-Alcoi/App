@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformSaveFileLogic
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
+import org.centrexcursionistalcoi.app.sync.BackgroundJob
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
@@ -60,6 +61,7 @@ import org.centrexcursionistalcoi.app.viewmodel.management.UsersManagementViewMo
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
@@ -107,18 +109,23 @@ val manualModule = module {
 
     // sync -- SyncScanModule
     single { DatabaseIntegrityVerifier(get(), get(), get(), get(), get(), get()) }
+    // Also bound as BackgroundJob (in addition to each concrete type, which Koin infers from the lambda return
+    // type and keeps resolvable on its own): BackgroundJobWorker looks these up via
+    // `inject(BackgroundJob::class.java, named(...))`, so a definition registered only under its concrete type is
+    // invisible to that lookup and every job fails immediately with NoDefinitionFoundException -- silently
+    // breaking all background sync.
     single(named(SyncAllDataBackgroundJob.UNIQUE_NAME)) {
         SyncAllDataBackgroundJob(
             get(), get(), get(), get(), get(), get(), get(), get(), get(),
             get(), get(), get(), get(), get(), get(), get(), get(), get(),
             get(),
         )
-    }
-    single(named(SyncDepartmentBackgroundJob.NAME)) { SyncDepartmentBackgroundJob(get()) }
-    single(named(SyncEntityBackgroundJob.NAME)) { SyncEntityBackgroundJob() }
-    single(named(SyncEventBackgroundJob.NAME)) { SyncEventBackgroundJob(get()) }
-    single(named(SyncLendingBackgroundJob.NAME)) { SyncLendingBackgroundJob(get(), get()) }
-    single(named(SyncPostBackgroundJob.NAME)) { SyncPostBackgroundJob(get()) }
+    } bind BackgroundJob::class
+    single(named(SyncDepartmentBackgroundJob.NAME)) { SyncDepartmentBackgroundJob(get()) } bind BackgroundJob::class
+    single(named(SyncEntityBackgroundJob.NAME)) { SyncEntityBackgroundJob() } bind BackgroundJob::class
+    single(named(SyncEventBackgroundJob.NAME)) { SyncEventBackgroundJob(get()) } bind BackgroundJob::class
+    single(named(SyncLendingBackgroundJob.NAME)) { SyncLendingBackgroundJob(get(), get()) } bind BackgroundJob::class
+    single(named(SyncPostBackgroundJob.NAME)) { SyncPostBackgroundJob(get()) } bind BackgroundJob::class
 
     // push -- PushScanModule
     single { PushNotifierListener(get(), get()) }
