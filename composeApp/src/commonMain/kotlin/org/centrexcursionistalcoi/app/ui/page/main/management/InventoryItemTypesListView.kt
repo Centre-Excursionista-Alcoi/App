@@ -21,9 +21,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,10 +36,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.inventory_item_create
+import cea_app.composeapp.generated.resources.inventory_item_nfc_id
+import cea_app.composeapp.generated.resources.inventory_item_variation
+import cea_app.composeapp.generated.resources.management_inventory_item_type_categories
+import cea_app.composeapp.generated.resources.management_inventory_item_type_create
+import cea_app.composeapp.generated.resources.management_inventory_item_type_department
+import cea_app.composeapp.generated.resources.management_inventory_item_type_description
+import cea_app.composeapp.generated.resources.management_inventory_item_type_display_name
+import cea_app.composeapp.generated.resources.management_inventory_item_type_identifiers
+import cea_app.composeapp.generated.resources.management_no_item_types
+import cea_app.composeapp.generated.resources.none
+import cea_app.composeapp.generated.resources.scanner_open
+import cea_app.composeapp.generated.resources.submit
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.centrexcursionistalcoi.app.data.Department
@@ -62,14 +74,43 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.AutocompleteMultipleFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.centrexcursionistalcoi.app.viewmodel.management.InventoryManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.Uuid
 
 private val log = logging()
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryItemTypesListView(
-    windowSizeClass: WindowSizeClass,
+    selectedItemId: Uuid?,
+    model: InventoryManagementViewModel = koinViewModel()
+) {
+    val departments by model.departments.collectAsState()
+    val inventoryItems by model.inventoryItems.collectAsState()
+    val inventoryItemTypes by model.inventoryItemTypes.collectAsState()
+    val inventoryItemTypesCategories by model.inventoryItemTypesCategories.collectAsState()
+
+    InventoryItemTypesListView(
+        selectedItemId = selectedItemId,
+        types = inventoryItemTypes,
+        allCategories = inventoryItemTypesCategories.orEmpty(),
+        departments = departments,
+        items = inventoryItems,
+        onCreate = model::createInventoryItemType,
+        onUpdate = model::updateInventoryItemType,
+        onDelete = model::delete,
+        onCreateInventoryItem = model::createInventoryItem,
+        onDeleteInventoryItem = model::delete,
+        onUpdateInventoryItemManufacturerData = model::updateInventoryItemManufacturerData
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InventoryItemTypesListView(
     selectedItemId: Uuid?,
     types: List<ReferencedInventoryItemType>?,
     allCategories: Set<String>,
@@ -82,6 +123,8 @@ fun InventoryItemTypesListView(
     onDeleteInventoryItem: (ReferencedInventoryItem) -> Job,
     onUpdateInventoryItemManufacturerData: (ReferencedInventoryItem, String) -> Job,
 ) {
+    val nfcLogic = koinInject<PlatformNFC>()
+
     val scope = rememberCoroutineScope()
 
     var selectedItemTypeId by remember { mutableStateOf(selectedItemId) }
@@ -90,15 +133,15 @@ fun InventoryItemTypesListView(
     var highlightItemNfcId by remember { mutableStateOf<ByteArray?>(null) }
     LaunchedEffect(highlightItemId, highlightItemNfcId) {
         if (highlightItemId != null || highlightItemNfcId != null) {
-            delay(3000) // Highlight for 3 seconds
+            delay(3.seconds) // Highlight for 3 seconds
             highlightItemId = null
             highlightItemNfcId = null
         }
     }
     LaunchedEffect(Unit) {
-        if (PlatformNFC.isNotSupported) return@LaunchedEffect
+        if (nfcLogic.isNotSupported) return@LaunchedEffect
         while (true) {
-            val payload = PlatformNFC.readNFC() ?: continue
+            val payload = nfcLogic.readNFC() ?: continue
             log.d { "NFC tag read: $payload" }
             payload.uuid()?.let { highlightItemId = it }
             payload.id?.let { highlightItemNfcId = it }
@@ -149,7 +192,6 @@ fun InventoryItemTypesListView(
         }.map { type -> type to emptyList<ReferencedInventoryItem>() }
     }
     ListView(
-        windowSizeClass = windowSizeClass,
         selectedItemId = selectedItemTypeId,
         items = groupedItems + typesWithoutItems,
         itemIdProvider = { (type) -> type.id },

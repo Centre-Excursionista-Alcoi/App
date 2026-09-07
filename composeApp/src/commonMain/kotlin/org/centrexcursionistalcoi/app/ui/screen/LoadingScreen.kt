@@ -13,13 +13,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.error_unknown
+import cea_app.composeapp.generated.resources.loading_screen_error
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -27,16 +29,20 @@ import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoadingScreen(
     onLoggedIn: () -> Unit,
-    onNotLoggedIn: () -> Unit
+    onNotLoggedIn: () -> Unit,
+    model: LoadingViewModel = koinViewModel()
 ) {
-    val vm = viewModel { LoadingViewModel(onLoggedIn, onNotLoggedIn) }
+    val error by model.error.collectAsState()
+    val progress by model.progress.collectAsState()
 
-    val error by vm.error.collectAsState()
-    val progress by vm.progress.collectAsState()
+    LaunchedEffect(Unit) {
+        model.load(onLoggedIn, onNotLoggedIn)
+    }
 
     LoadingScreen(error, progress, stringResource(Res.string.loading_screen_error))
 }

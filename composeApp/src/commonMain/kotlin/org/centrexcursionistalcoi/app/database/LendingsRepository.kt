@@ -1,242 +1,145 @@
 package org.centrexcursionistalcoi.app.database
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import org.centrexcursionistalcoi.app.data.*
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository.toInventoryItemType
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository.toInventoryItem
-import org.centrexcursionistalcoi.app.database.UsersRepository.toUser
-import org.centrexcursionistalcoi.app.database.data.*
-import org.centrexcursionistalcoi.app.storage.databaseInstance
+import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
+import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.toReferenced
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
-object LendingsRepository : DatabaseRepository<ReferencedLending, Uuid>() {
-    override val queries by lazy { databaseInstance.lendingsQueries }
-    private val lendingItemsQueries by lazy { databaseInstance.lendingItemsQueries }
-    private val inventoryItemsQueries by lazy { databaseInstance.inventoryItemsQueries }
-    private val inventoryItemTypesQueries by lazy { databaseInstance.inventoryItemTypesQueries }
-    private val usersQueries by lazy { databaseInstance.usersQueries }
-    private val receivedItemsQueries by lazy { databaseInstance.receivedItemsQueries }
+@Singleton
+class LendingsRepository(
+    private val db: AppDatabase,
+    private val memoriesRepository: MemoriesRepository,
+) : Repository<ReferencedLending, Uuid> {
+    private val dao = db.lendingDao()
 
-    override suspend fun get(id: Uuid): ReferencedLending? {
-        val lending = queries.get(id).executeAsOneOrNull() ?: return null
-        val items = lendingItemsQueries.getByLendingId(id).awaitAsList()
-        val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
-        val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
-        val users = usersQueries.selectAll().awaitAsList()
-        val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
-        val departments = DepartmentsRepository.selectAll()
-        return lending.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
-    }
+    override suspend fun get(id: Uuid): ReferencedLending? = dao.get(id)?.toReferenced()
 
-    override fun getAsFlow(id: Uuid, dispatcher: CoroutineDispatcher): Flow<ReferencedLending?> {
-        val lendingFlow = queries.get(id).asFlow().mapToList(dispatcher).map { it.firstOrNull() }
-        val lendingItemsFlow = lendingItemsQueries.getByLendingId(id).asFlow().mapToList(dispatcher)
-        val inventoryItemsFlow = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
-        val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
-        val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
-        val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
-        val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
-        @Suppress("UNCHECKED_CAST")
-        return combine(
-            lendingFlow,
-            lendingItemsFlow,
-            inventoryItemsFlow,
-            inventoryItemTypesFlow,
-            usersQueries,
-            receivedItemsFlow,
-            departments,
-        ) { flows ->
-            val lending = flows[0] as Lendings?
-            val items = flows[1] as List<LendingItems>
-            val inventoryItems = flows[2] as List<InventoryItems>
-            val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
-            val users = flows[4] as List<Users>
-            val receivedItems = flows[5] as List<ReceivedItems>
-            val departments = flows[6] as List<Department>
-            lending?.toLending(items, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedLending> = dao.getByIdList(ids).map { it.toReferenced() }
+
+    override fun getAsFlow(id: Uuid): Flow<ReferencedLending?> = dao.getAsFlow(id).map { it?.toReferenced() }
+
+    override fun selectAllAsFlow(): Flow<List<ReferencedLending>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
+
+    override suspend fun selectAll(): List<ReferencedLending> = dao.selectAll().map { it.toReferenced() }
+
+    override suspend fun insert(item: ReferencedLending) {
+        dao.insert(item.dereference().toEntity())
+        item.memory?.let { insertOrUpdateMemory(it) }
+
+        val lendingItemDao = db.lendingItemDao()
+        for (inventoryItem in item.items) {
+            val exists = lendingItemDao.get(item.id, inventoryItem.id) != null
+            if (!exists) {
+                lendingItemDao.insert(
+                    LendingItemEntity(
+                        lendingId = item.id,
+                        itemId = inventoryItem.id
+                    )
+                )
+            }
         }
-    }
 
-    override fun selectAllAsFlow(dispatcher: CoroutineDispatcher): Flow<List<ReferencedLending>> {
-        val lendingsFlow = queries.selectAll().asFlow().mapToList(dispatcher)
-        val lendingItemsFlow = lendingItemsQueries.selectAll().asFlow().mapToList(dispatcher)
-        val inventoryItemsQueries = inventoryItemsQueries.selectAll().asFlow().mapToList(dispatcher)
-        val inventoryItemTypesFlow = inventoryItemTypesQueries.selectAll().asFlow().mapToList(dispatcher)
-        val usersQueries = usersQueries.selectAll().asFlow().mapToList(dispatcher)
-        val receivedItemsFlow = receivedItemsQueries.selectAll().asFlow().mapToList(dispatcher)
-        val departments = DepartmentsRepository.selectAllAsFlow(dispatcher)
-        @Suppress("UNCHECKED_CAST")
-        return combine(
-            lendingsFlow,
-            lendingItemsFlow,
-            inventoryItemsQueries,
-            inventoryItemTypesFlow,
-            usersQueries,
-            receivedItemsFlow,
-            departments
-        ) { flows ->
-            val lendings = flows[0] as List<Lendings>
-            val items = flows[1] as List<LendingItems>
-            val inventoryItems = flows[2] as List<InventoryItems>
-            val inventoryItemTypes = flows[3] as List<InventoryItemTypes>
-            val users = flows[4] as List<Users>
-            val receivedItems = flows[5] as List<ReceivedItems>
-            val departments = flows[6] as List<Department>
-            lendings.map { lending ->
-                val relatedItems = items.filter { it.lendingId == lending.id }
-                lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
+        val receivedItemDao = db.receivedItemDao()
+        for (receivedItem in item.receivedItems) {
+            val exists = receivedItemDao.get(receivedItem.id) != null
+            if (!exists) {
+                receivedItemDao.insert(receivedItem.toEntity())
             }
         }
     }
 
-    override suspend fun selectAll(): List<ReferencedLending> {
-        val lendings = queries.selectAll().awaitAsList()
-        val items = lendingItemsQueries.selectAll().awaitAsList()
-        val inventoryItems = inventoryItemsQueries.selectAll().awaitAsList()
-        val inventoryItemTypes = inventoryItemTypesQueries.selectAll().awaitAsList()
-        val users = usersQueries.selectAll().awaitAsList()
-        val receivedItems = receivedItemsQueries.selectAll().awaitAsList()
-        val departments = DepartmentsRepository.selectAll()
-        return lendings.map { lending ->
-            val relatedItems = items.filter { it.lendingId == lending.id }
-            lending.toLending(relatedItems, inventoryItems, inventoryItemTypes, users, receivedItems, departments)
-        }
-    }
+    override suspend fun update(item: ReferencedLending) {
+        dao.update(item.dereference().toEntity())
+        item.memory?.let { insertOrUpdateMemory(it) }
 
-    override suspend fun insert(item: ReferencedLending): Long {
-        queries.insert(
-            id = item.id,
-            userSub = item.user.sub,
-            timestamp = item.timestamp,
-            fromDate = item.from,
-            toDate = item.to,
-            notes = item.notes,
-            confirmed = item.confirmed,
-            taken = item.taken,
-            givenBy = item.givenBy?.sub,
-            givenAt = item.givenAt,
-            returned = item.returned,
-            memorySubmitted = item.memorySubmitted,
-            memorySubmittedAt = item.memorySubmittedAt,
-            memory = item.memory,
-            memoryReviewed = item.memoryReviewed,
-            memoryPdf = item.memoryPdf,
-        )
+        val lendingItemDao = db.lendingItemDao()
+        lendingItemDao.deleteByLendingId(item.id)
         for (inventoryItem in item.items) {
-            val exists = lendingItemsQueries.get(item.id, inventoryItem.id).executeAsOneOrNull() != null
-            if (!exists) {
-                lendingItemsQueries.insert(
+            lendingItemDao.insert(
+                LendingItemEntity(
                     lendingId = item.id,
                     itemId = inventoryItem.id
                 )
-            }
+            )
         }
+
+        val receivedItemDao = db.receivedItemDao()
+        receivedItemDao.deleteByLendingId(item.id)
         for (receivedItem in item.receivedItems) {
-            val exists = receivedItemsQueries.get(receivedItem.id).executeAsOneOrNull() != null
+            receivedItemDao.insert(receivedItem.toEntity())
+        }
+    }
+
+    private suspend fun insertOrUpdateMemory(memory: ReferencedMemory) {
+        if (memoriesRepository.get(memory.id) == null) memoriesRepository.insert(memory) else memoriesRepository.update(memory)
+    }
+
+    /**
+     * Inserts the given raw [lending] (including its [LendingItemEntity]/[org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity] rows),
+     * without needing to resolve its items first. Unlike [insert] of [ReferencedLending], this does not persist [Lending.memory]
+     * -- memories are their own resource, synced separately.
+     */
+    suspend fun insertRaw(lending: Lending) {
+        dao.insert(lending.toEntity())
+
+        val lendingItemDao = db.lendingItemDao()
+        for (item in lending.items) {
+            val exists = lendingItemDao.get(lending.id, item.id) != null
             if (!exists) {
-                receivedItemsQueries.insert(
-                    id = receivedItem.id,
-                    lending = item.id,
-                    item = receivedItem.itemId,
-                    notes = receivedItem.notes,
-                    receivedBy = receivedItem.receivedBy,
-                    receivedAt = receivedItem.receivedAt,
+                lendingItemDao.insert(
+                    LendingItemEntity(
+                        lendingId = lending.id,
+                        itemId = item.id
+                    )
                 )
             }
         }
-        return 1L
+
+        val receivedItemDao = db.receivedItemDao()
+        for (receivedItem in lending.receivedItems) {
+            val exists = receivedItemDao.get(receivedItem.id) != null
+            if (!exists) {
+                receivedItemDao.insert(receivedItem.toEntity())
+            }
+        }
     }
 
-    override suspend fun update(item: ReferencedLending): Long {
-        queries.update(
-            id = item.id,
-            userSub = item.user.sub,
-            timestamp = item.timestamp,
-            fromDate = item.from,
-            toDate = item.to,
-            notes = item.notes,
-            confirmed = item.confirmed,
-            taken = item.taken,
-            givenBy = item.givenBy?.sub,
-            givenAt = item.givenAt,
-            returned = item.returned,
-            memorySubmitted = item.memorySubmitted,
-            memorySubmittedAt = item.memorySubmittedAt,
-            memory = item.memory,
-            memoryReviewed = item.memoryReviewed,
-            memoryPdf = item.memoryPdf,
-        )
+    /** @see insertRaw */
+    suspend fun updateRaw(lending: Lending) {
+        dao.update(lending.toEntity())
 
-        lendingItemsQueries.deleteByLendingId(item.id)
-        for (inventoryItem in item.items) {
-            lendingItemsQueries.insert(
-                lendingId = item.id,
-                itemId = inventoryItem.id
+        val lendingItemDao = db.lendingItemDao()
+        lendingItemDao.deleteByLendingId(lending.id)
+        for (item in lending.items) {
+            lendingItemDao.insert(
+                LendingItemEntity(
+                    lendingId = lending.id,
+                    itemId = item.id
+                )
             )
         }
 
-        receivedItemsQueries.deleteByLendingId(item.id)
-        for (receivedItem in item.receivedItems) {
-            receivedItemsQueries.insert(
-                id = receivedItem.id,
-                lending = item.id,
-                item = receivedItem.itemId,
-                notes = receivedItem.notes,
-                receivedBy = receivedItem.receivedBy,
-                receivedAt = receivedItem.receivedAt,
-            )
+        val receivedItemDao = db.receivedItemDao()
+        receivedItemDao.deleteByLendingId(lending.id)
+        for (receivedItem in lending.receivedItems) {
+            receivedItemDao.insert(receivedItem.toEntity())
         }
+    }
 
-        return 1L
+    /** Inserts or updates the given raw [lending]. @see insertRaw */
+    suspend fun insertOrUpdate(lending: Lending) {
+        if (dao.get(lending.id) != null) updateRaw(lending) else insertRaw(lending)
     }
 
     override suspend fun delete(id: Uuid) {
-        queries.deleteById(id)
+        dao.deleteById(id)
     }
 
-    fun ReceivedItems.toReceivedItem(): ReceivedItem = ReceivedItem(
-        id = id,
-        lendingId = lending,
-        itemId = item,
-        notes = notes,
-        receivedBy = receivedBy,
-        receivedAt = receivedAt,
-    )
-
-    fun Lendings.toLending(
-        items: List<LendingItems>,
-        inventoryItems: List<InventoryItems>,
-        inventoryItemTypes: List<InventoryItemTypes>,
-        users: List<Users>,
-        receivedItems: List<ReceivedItems>,
-        departments: List<Department>,
-    ) = Lending(
-        id = id,
-        userSub = userSub,
-        timestamp = timestamp,
-        from = fromDate,
-        to = toDate,
-        notes = notes,
-        confirmed = confirmed,
-        taken = taken,
-        givenBy = givenBy,
-        givenAt = givenAt,
-        returned = returned,
-        memorySubmitted = memorySubmitted,
-        memorySubmittedAt = memorySubmittedAt,
-        memory = memory,
-        memoryPdf = memoryPdf,
-        memoryReviewed = memoryReviewed,
-        items = items.mapNotNull { item -> inventoryItems.find { it.id == item.itemId }?.toInventoryItem() },
-        receivedItems = receivedItems.filter { it.lending == id }.map { it.toReceivedItem() }
-    ).referenced(
-        users.map { it.toUser() },
-        inventoryItemTypes.map { it.toInventoryItemType(departments) }
-    )
 }

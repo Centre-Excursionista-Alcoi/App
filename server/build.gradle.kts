@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -47,7 +47,6 @@ application {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21 // Use JVM target 21
-        freeCompilerArgs.add("-Xcontext-parameters")
         optIn.add("kotlin.uuid.ExperimentalUuidApi")
         optIn.add("kotlin.time.ExperimentalTime")
     }

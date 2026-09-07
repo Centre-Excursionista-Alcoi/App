@@ -1,8 +1,10 @@
 package org.centrexcursionistalcoi.app.platform
 
+import org.koin.core.annotation.Singleton
 import kotlin.time.Instant
 
-actual object PlatformCalendarSync : PlatformProvider {
+@Singleton
+actual class PlatformCalendarSync : PlatformProvider {
     actual override val isSupported: Boolean = false
 
     actual fun addCalendarEvent(

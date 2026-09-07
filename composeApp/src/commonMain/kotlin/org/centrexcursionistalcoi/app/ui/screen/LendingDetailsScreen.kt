@@ -20,6 +20,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
@@ -31,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,12 +43,38 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
-import kotlin.time.Clock
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.insurance_view_document
+import cea_app.composeapp.generated.resources.inventory_item_amount
+import cea_app.composeapp.generated.resources.lending_details_cancel
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_message
+import cea_app.composeapp.generated.resources.lending_details_cancel_confirm_title
+import cea_app.composeapp.generated.resources.lending_details_complete
+import cea_app.composeapp.generated.resources.lending_details_confirmation_pending_message
+import cea_app.composeapp.generated.resources.lending_details_confirmation_pending_title
+import cea_app.composeapp.generated.resources.lending_details_from
+import cea_app.composeapp.generated.resources.lending_details_id
+import cea_app.composeapp.generated.resources.lending_details_incomplete_return_message
+import cea_app.composeapp.generated.resources.lending_details_incomplete_return_title
+import cea_app.composeapp.generated.resources.lending_details_items
+import cea_app.composeapp.generated.resources.lending_details_memory
+import cea_app.composeapp.generated.resources.lending_details_memory_pending_message
+import cea_app.composeapp.generated.resources.lending_details_memory_pending_title
+import cea_app.composeapp.generated.resources.lending_details_memory_view
+import cea_app.composeapp.generated.resources.lending_details_notes
+import cea_app.composeapp.generated.resources.lending_details_pickup_pending_message
+import cea_app.composeapp.generated.resources.lending_details_pickup_pending_title
+import cea_app.composeapp.generated.resources.lending_details_return_pending_message
+import cea_app.composeapp.generated.resources.lending_details_return_pending_title
+import cea_app.composeapp.generated.resources.lending_details_title
+import cea_app.composeapp.generated.resources.lending_details_until
+import cea_app.composeapp.generated.resources.memory_editor
+import cea_app.composeapp.generated.resources.memory_open_file
+import cea_app.composeapp.generated.resources.memory_saved
+import cea_app.composeapp.generated.resources.save
+import cea_app.composeapp.generated.resources.share
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -54,12 +84,11 @@ import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedLending
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fetchFilePath
 import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.data.rememberImageFile
-import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AssignmentReturn
@@ -73,6 +102,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NoteAdd
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Notes
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Numbers
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Pending
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Save
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Share
 import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
@@ -83,12 +113,18 @@ import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Composable
 fun LendingDetailsScreen(
     lendingId: Uuid,
-    model: LendingDetailsModel = viewModel { LendingDetailsModel(lendingId) },
+    model: LendingDetailsModel = koinViewModel { parametersOf(lendingId) },
     onMemoryEditorRequested: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -122,6 +158,8 @@ private fun LendingDetailsScreen(
             onDismissRequested = { showingCancelConfirmation = false }
         )
     }
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -164,11 +202,13 @@ private fun LendingDetailsScreen(
                     }
                 },
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LendingDetailsScreen_Content(
             lending = lending,
             modifier = Modifier.fillMaxSize().padding(paddingValues),
+            snackbarHostState = snackbarHostState,
             onMemoryEditorRequest = onMemoryEditorRequest,
         )
     }
@@ -178,6 +218,7 @@ private fun LendingDetailsScreen(
 fun LendingDetailsScreen_Content(
     lending: ReferencedLending,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState? = null,
     onMemoryEditorRequest: () -> Unit,
 ) {
     LazyColumnWidthWrapper(modifier) {
@@ -266,7 +307,7 @@ fun LendingDetailsScreen_Content(
 
         val isMemorySubmitted = lending.status() == Lending.Status.MEMORY_SUBMITTED
         if (isMemorySubmitted) item("memory_visualization") {
-            MemoryVisualization(lending)
+            MemoryVisualization(lending.memory ?: return@item, snackbarHostState)
         }
 
         item("basic_details") {
@@ -449,10 +490,9 @@ fun MemoryActions(
 
 @Composable
 fun MemoryVisualization(
-    lending: ReferencedLending,
+    memory: ReferencedMemory,
+    snackbarHostState: SnackbarHostState? = null
 ) {
-    lending.memoryPdf ?: return
-
     OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(Res.string.lending_details_memory_view),
@@ -460,31 +500,50 @@ fun MemoryVisualization(
             modifier = Modifier.padding(12.dp)
         )
 
-        MemoryViewButtons(lending)
+        MemoryViewButtons(memory, snackbarHostState)
     }
 }
 
 @Composable
 fun MemoryViewButtons(
-    lending: ReferencedLending,
-    fpm: FileProviderModel = viewModel { FileProviderModel() },
+    memory: ReferencedMemory,
+    snackbarHostState: SnackbarHostState? = null,
+    fpm: FileProviderModel = koinViewModel(),
 ) {
-    val memoryPdf = lending.memoryPdf ?: return
+    val scope = rememberCoroutineScope()
+    val memoryPdf = memory.pdf ?: return
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        if (PlatformShareLogic.isSupported) {
+        if (fpm.isSharingFileSupported) {
             IconButton(
                 onClick = {
-                    fpm.shareFile { lending.fetchFilePath(memoryPdf) }
+                    fpm.shareFile { memory.fetchFilePath(memoryPdf) }
                 },
             ) {
                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
             }
         }
-        if (PlatformOpenFileLogic.isSupported) {
+        IconButton(
+            onClick = {
+                fpm.saveFile(memory, suggestedName = memory.id.toString()).invokeOnCompletion {
+                    scope.launch {
+                        val result = snackbarHostState?.showSnackbar(
+                            message = getString(Res.string.memory_saved),
+                            actionLabel = if (fpm.isOpeningFileSupported) getString(Res.string.memory_open_file) else null
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            fpm.openFile { memory.fetchFilePath(memoryPdf) }
+                        }
+                    }
+                }
+            },
+        ) {
+            Icon(MaterialSymbols.Save, stringResource(Res.string.save))
+        }
+        if (fpm.isOpeningFileSupported) {
             OutlinedButton(
                 onClick = {
-                    fpm.openFile { lending.fetchFilePath(memoryPdf) }
+                    fpm.openFile { memory.fetchFilePath(memoryPdf) }
                 },
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
@@ -536,13 +595,12 @@ private val previewLending = Lending(
     memorySubmitted = false,
     memorySubmittedAt = null,
     memory = null,
-    memoryPdf = null,
     memoryReviewed = false,
     from = LocalDate(2025, 12, 23),
     to = LocalDate(2025, 12, 25),
     notes = null,
-    items = listOf(previewItem.referencedEntity)
-).referenced(listOf(previewUserData), listOf(previewItemType))
+    items = listOf(previewItem.dereference())
+).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
 
 @Preview(showBackground = true)
 @Composable

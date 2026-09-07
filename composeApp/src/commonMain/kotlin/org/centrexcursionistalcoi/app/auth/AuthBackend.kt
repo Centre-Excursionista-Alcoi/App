@@ -19,8 +19,19 @@ import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.annotation.Singleton
 
-object AuthBackend {
+@Singleton
+class AuthBackend(
+    private val lendingsRepository: LendingsRepository,
+    private val inventoryItemsRepository: InventoryItemsRepository,
+    private val inventoryItemTypesRepository: InventoryItemTypesRepository,
+    private val eventsRepository: EventsRepository,
+    private val postsRepository: PostsRepository,
+    private val membersRepository: MembersRepository,
+    private val usersRepository: UsersRepository,
+    private val departmentsRepository: DepartmentsRepository,
+) {
     private val log = logging()
     
     suspend fun register(email: String, password: String) {
@@ -62,14 +73,14 @@ object AuthBackend {
         if (response.status.isSuccess()) {
             log.d { "Logged out. Removing all data..." }
             // order is important due to foreign key constraints
-            LendingsRepository.deleteAll()
-            InventoryItemsRepository.deleteAll()
-            InventoryItemTypesRepository.deleteAll()
-            EventsRepository.deleteAll()
-            PostsRepository.deleteAll()
-            MembersRepository.deleteAll()
-            UsersRepository.deleteAll()
-            DepartmentsRepository.deleteAll()
+            lendingsRepository.deleteAll()
+            inventoryItemsRepository.deleteAll()
+            inventoryItemTypesRepository.deleteAll()
+            eventsRepository.deleteAll()
+            postsRepository.deleteAll()
+            membersRepository.deleteAll()
+            usersRepository.deleteAll()
+            departmentsRepository.deleteAll()
             log.d { "Removing all files..." }
             FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
             log.d { "Revoking FCM token..." }
@@ -103,14 +114,14 @@ object AuthBackend {
             log.w { "Account delete request successful." }
             log.w { "Account deleted from server. Removing all data..." }
             // order is important due to foreign key constraints
-            LendingsRepository.deleteAll()
-            InventoryItemsRepository.deleteAll()
-            InventoryItemTypesRepository.deleteAll()
-            EventsRepository.deleteAll()
-            PostsRepository.deleteAll()
-            MembersRepository.deleteAll()
-            UsersRepository.deleteAll()
-            DepartmentsRepository.deleteAll()
+            lendingsRepository.deleteAll()
+            inventoryItemsRepository.deleteAll()
+            inventoryItemTypesRepository.deleteAll()
+            eventsRepository.deleteAll()
+            postsRepository.deleteAll()
+            membersRepository.deleteAll()
+            usersRepository.deleteAll()
+            departmentsRepository.deleteAll()
             log.w { "Removing all files..." }
             FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
             log.w { "Revoking FCM token..." }

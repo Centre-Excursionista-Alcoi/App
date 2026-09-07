@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
-import kotlin.uuid.Uuid
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -15,22 +13,30 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.defaultAsyncDispatcher
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
 import org.centrexcursionistalcoi.app.exception.NoValidInsuranceForPeriodException
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.typing.ShoppingList
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
+import kotlin.uuid.Uuid
 
+@KoinViewModel
 class LendingCreationViewModel(
-    private val originalShoppingList: ShoppingList
+    @InjectedParam private val originalShoppingList: ShoppingList,
+    inventoryItemTypesRepository: InventoryItemTypesRepository,
+    inventoryItemsRepository: InventoryItemsRepository,
+    private val lendingsRemoteRepository: LendingsRemoteRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
     companion object {
         private val log = logging()
     }
-    
-    val inventoryItemTypes = InventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
 
-    val inventoryItems = InventoryItemsRepository.selectAllAsFlow().stateInViewModel()
+    val inventoryItemTypes = inventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()
+
+    val inventoryItems = inventoryItemsRepository.selectAllAsFlow().stateInViewModel()
 
     private val _from = MutableStateFlow<LocalDate?>(null)
     val from = _from.asStateFlow()
@@ -114,7 +120,7 @@ class LendingCreationViewModel(
         }
     }
 
-    private fun allocateItems() = viewModelScope.launch(defaultAsyncDispatcher) {
+    private fun allocateItems() = viewModelScope.launch(dispatcherProvider.io) {
         val from = from.value ?: return@launch
         val to = to.value ?: return@launch
 
@@ -125,7 +131,7 @@ class LendingCreationViewModel(
         for ((typeId, amount) in shoppingList.value) {
             try {
                 log.i { "Trying to allocate x$amount of $typeId from $from to $to..." }
-                val items = LendingsRemoteRepository.allocate(typeId, from, to, amount)
+                val items = lendingsRemoteRepository.allocate(typeId, from, to, amount)
                 log.d { "Items allocated. IDs: $items" }
                 allocatedItemsIds.addAll(items)
             } catch (e: CannotAllocateEnoughItemsException) {
@@ -166,13 +172,13 @@ class LendingCreationViewModel(
         val to = to.value ?: return log.w { "To date not set" }
         val items = allocatedItems.value ?: return log.w { "Items allocation not ready" }
 
-        viewModelScope.launch(defaultAsyncDispatcher) {
+        viewModelScope.launch(dispatcherProvider.io) {
             val itemIds = items.map { it.id }
 
             try {
-                LendingsRemoteRepository.create(from, to, itemIds, null)
+                lendingsRemoteRepository.create(from, to, itemIds, null)
                 log.i { "Lending created" }
-                withContext(Dispatchers.Main) { onSuccess() }
+                withContext(dispatcherProvider.main) { onSuccess() }
             } catch (e: Exception) {
                 log.e(e) { "Failed to create lending." }
                 addError(e)

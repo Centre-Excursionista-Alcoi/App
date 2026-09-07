@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.request.post
+import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
@@ -13,13 +13,18 @@ import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
-object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>(
+@Singleton
+class DepartmentsRemoteRepository(
+    departmentsRepository: DepartmentsRepository,
+    private val inventoryItemTypesRepository: InventoryItemTypesRepository
+) : SymmetricRemoteRepository<Uuid, Department>(
     "/departments",
     SETTINGS_LAST_DEPARTMENTS_SYNC,
     Department.serializer(),
-    DepartmentsRepository
+    departmentsRepository
 ) {
     private val log = logging()
 
@@ -85,7 +90,7 @@ object DepartmentsRemoteRepository : SymmetricRemoteRepository<Uuid, Department>
 
             // Clean up inventory items and item types associated with this department
             log.i { "Deleting items associated with the left department..." }
-            InventoryItemTypesRepository.deleteByDepartmentId(departmentId)
+            inventoryItemTypesRepository.deleteByDepartmentId(departmentId)
 
             log.i { "Updating locally stored department..." }
             update(departmentId, ignoreIfModifiedSince = true) // Refresh department data

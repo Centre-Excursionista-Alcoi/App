@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import org.centrexcursionistalcoi.app.ui.reusable.buttons.CloseButton
+import org.centrexcursionistalcoi.app.ui.reusable.buttons.CloseTextButton
 
 @Composable
 fun <T: Any> SettingsOptionsRow(
@@ -57,7 +57,7 @@ fun <T: Any> SettingsOptionsRow(
                 }
             },
             confirmButton = {
-                CloseButton { showingDialog = false }
+                CloseTextButton { showingDialog = false }
             },
         )
     }

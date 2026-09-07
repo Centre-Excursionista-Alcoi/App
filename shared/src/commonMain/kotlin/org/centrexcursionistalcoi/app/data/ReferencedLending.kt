@@ -24,25 +24,36 @@ data class ReferencedLending(
 
     val memorySubmitted: Boolean,
     @Serializable(InstantSerializer::class) val memorySubmittedAt: Instant?,
-    val memory: LendingMemory?,
-    val memoryPdf: Uuid?,
+    val memory: ReferencedMemory?,
     val memoryReviewed: Boolean,
 
     val from: LocalDate,
     val to: LocalDate,
     val notes: String?,
     val items: List<ReferencedInventoryItem>,
+) : ReferencedEntity<Uuid, Lending> {
 
-    override val referencedEntity: Lending
-) : ReferencedEntity<Uuid, Lending>(), FileContainer, SubReferencedFileContainer {
+   override fun dereference() = Lending(
+       id = id,
+       userSub = user.sub,
+       timestamp = timestamp,
+       confirmed = confirmed,
+       taken = taken,
+       givenBy = givenBy?.sub,
+       givenAt = givenAt,
+       returned = returned,
+       receivedItems = receivedItems,
+       memorySubmitted = memorySubmitted,
+       memorySubmittedAt = memorySubmittedAt,
+       memory = memory?.id,
+       memoryReviewed = memoryReviewed,
+       from = from,
+       to = to,
+       notes = notes,
+       items = items.map { it.dereference() },
+   )
 
-    val durationDays: Int = from.daysUntil(to) + 1
+   val durationDays: Int = from.daysUntil(to) + 1
 
-    fun status(): Status = referencedEntity.status()
-
-    override val files: Map<String, Uuid?> = mapOf(
-        "memoryPdf" to memoryPdf
-    )
-
-    override val referencedFiles: List<Triple<String, Uuid?, String>> get() = referencedEntity.referencedFiles
+   fun status(): Status = dereference().status()
 }

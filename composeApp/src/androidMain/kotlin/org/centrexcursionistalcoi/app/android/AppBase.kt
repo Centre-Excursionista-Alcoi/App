@@ -7,15 +7,17 @@ import com.diamondedge.logging.PlatformLogger
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.notification.NotifierManager
 import com.mmk.kmpnotifier.notification.configuration.NotificationPlatformConfiguration
-import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
-import org.centrexcursionistalcoi.app.storage.DriverFactory
-import org.centrexcursionistalcoi.app.storage.createDatabase
-import org.centrexcursionistalcoi.app.storage.databaseInstance
-import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
+import org.koin.core.annotation.KoinApplication
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
-class AppBase : Application() {
+@KoinApplication
+class AppBase : Application(), KoinComponent {
     companion object {
         private val log = logging()
         
@@ -31,9 +33,10 @@ class AppBase : Application() {
 
         initializeSentry()
 
-        databaseInstance = runBlocking { createDatabase(DriverFactory(this@AppBase)) }
-
-        BackgroundJobCoordinator.initialize(applicationContext)
+        initKoin {
+            androidContext(this@AppBase)
+            workManagerFactory()
+        }
 
         NotifierManager.initialize(
             configuration = NotificationPlatformConfiguration.Android(
@@ -46,7 +49,7 @@ class AppBase : Application() {
             log.d(tag = "NotifierManager") { message }
         }
 
-        NotifierManager.addListener(PushNotifierListener)
+        NotifierManager.addListener(get<PushNotifierListener>())
     }
 
     override fun onTerminate() {

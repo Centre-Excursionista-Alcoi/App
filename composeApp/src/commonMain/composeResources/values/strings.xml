@@ -12,6 +12,17 @@
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
 
+    <string name="sync_step_profile">Personal data</string>
+    <string name="sync_step_departments">Departments</string>
+    <string name="sync_step_users">Users</string>
+    <string name="sync_step_members">Members</string>
+    <string name="sync_step_item_types">Item Types</string>
+    <string name="sync_step_items">Items</string>
+    <string name="sync_step_lendings">Lendings</string>
+    <string name="sync_step_memories">Memories</string>
+    <string name="sync_step_posts">Posts</string>
+    <string name="sync_step_events">Events</string>
+
     <string name="login_title">Welcome to CEA App</string>
     <string name="login_action">Login</string>
     <string name="login_password_changed_title">Password updated!</string>
@@ -34,12 +45,15 @@
     <string name="nav_lendings">Lendings</string>
     <string name="nav_lending">Lending</string>
     <string name="nav_lendings_disabled">You have pending lendings</string>
+    <string name="nav_activities">Activities</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_management">Management</string>
 
     <string name="search">Search...</string>
     <string name="sort_by_name_asc">Sort by Name (A-Z)</string>
     <string name="sort_by_name_desc">Sort by Name (Z-A)</string>
+    <string name="sort_by_date_asc">Sort by Date (oldest first)</string>
+    <string name="sort_by_date_desc">Sort by Date (newest first)</string>
     <string name="sort_by_has_insurance_first">Has Insurance First</string>
     <string name="sort_by_has_insurance_last">Has Insurance Last</string>
     <string name="sort_by_signed_lendings_first">Signed Up for Lendings First</string>
@@ -97,6 +111,7 @@
     <string name="barcode">Bar Code</string>
     <string name="unknown">Unknown</string>
     <string name="share">Share</string>
+    <string name="save">Save</string>
     <string name="logout">Logout</string>
     <string name="none">None</string>
     <string name="remove">Remove</string>
@@ -213,6 +228,7 @@
     <string name="management_no_items">No items</string>
     <string name="management_no_lendings">No lendings</string>
     <string name="management_no_posts">No posts</string>
+    <string name="management_no_memories">No memories</string>
     <string name="management_no_events">No events</string>
 
     <plurals name="management_items_amount">
@@ -223,6 +239,8 @@
     <string name="management_lendings">Lendings</string>
     <string name="management_active_lendings">Active Lendings</string>
     <string name="management_complete_lendings">Complete Lendings</string>
+
+    <string name="management_memories">Memories</string>
 
     <string name="management_other_users_lendings">Lendings from other users</string>
     <string name="management_unconfirmed_lendings">Lendings awaiting confirmation</string>
@@ -343,6 +361,27 @@
     <string name="lending_details_scan_error_not_found">Item not found in lending</string>
     <string name="lending_details_history">Old Lendings</string>
 
+    <string name="activities_memories">Memories</string>
+    <string name="activities_activities">Activities</string>
+
+    <string name="memories_message">Here you can take a look at all the memories you have submitted.</string>
+    <string name="memories_empty">No memories available</string>
+    <string name="activities_message">Here you can see the activities you have been tagged in. You can read them, but only their author can edit them.</string>
+    <string name="activities_empty">You have not been tagged in any activities yet</string>
+    <string name="memory_create">Create new memory</string>
+    <string name="memory_modify">Modify memory</string>
+    <string name="memory_title">Activity Memory</string>
+    <string name="memory_from">Start Date</string>
+    <string name="memory_to">End Date</string>
+    <string name="memory_place">Place</string>
+    <string name="memory_submitted_by">Submitted by</string>
+    <string name="memory_text">Text</string>
+    <string name="memory_images">Images</string>
+    <string name="memory_members">Participating Members</string>
+    <string name="memory_external">Other people</string>
+    <string name="memory_saved">Memory stored successfully</string>
+    <string name="memory_open_file">Open</string>
+
     <string name="personal_info">Personal Information</string>
     <string name="personal_info_disabled">The user is disabled.</string>
     <string name="personal_info_full_name">Full Name</string>
@@ -373,15 +412,21 @@
     <string name="memory_pending">Pending Memories</string>
     <string name="memory_pending_lending">Memory submission is pending.</string>
     <string name="memory_pick">Pick memory file</string>
+    <string name="memory_editor_warning_no_lending">You are creating a memory for an activity without a lending. If you did take material from the club to do the activity, please, complete the memory from that lending.</string>
     <string name="memory_editor">Open memory editor</string>
     <string name="memory_editor_title">Activity Memory Editor</string>
     <string name="memory_editor_save">Save Memory</string>
+    <string name="memory_editor_from">Start Date</string>
+    <string name="memory_editor_to">End Date</string>
     <string name="memory_editor_place">Place</string>
     <string name="memory_editor_place_help">Where the activity took place</string>
     <string name="memory_editor_member_participants">Member Participants</string>
     <string name="memory_editor_external_participants">External Participants</string>
     <string name="memory_editor_external_participants_help">People that participated on the activity from outside the club.</string>
     <string name="memory_editor_upload_image">Upload Images</string>
+    <string name="memory_editor_upload_image_content_description"></string>
+    <string name="memory_editor_previous_image_uuid">Image uploaded previously with UUID %1$s</string>
+    <string name="memory_editor_previous_image_delete">This image will be deleted on upload</string>
     <string name="memory_editor_sport">Sport</string>
     <string name="memory_editor_department">Department</string>
     <string name="memory_editor_description">Activity description</string>

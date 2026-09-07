@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.Department.Companion.getDepartment
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Serializable
 data class ReferencedPost(
@@ -14,9 +14,7 @@ data class ReferencedPost(
     val department: Department?,
     val link: String?,
     val files: List<FileWithContext>,
-
-    override val referencedEntity: Post
-): ReferencedEntity<Uuid, Post>(), ImageFileListContainer {
+): ReferencedEntity<Uuid, Post>, ImageFileListContainer {
     companion object {
         fun Post.referenced(departments: List<Department>) = ReferencedPost(
             id = this.id,
@@ -26,9 +24,18 @@ data class ReferencedPost(
             department = this.department?.let { deptId -> departments.getDepartment(deptId) },
             link = this.link,
             files = this.files,
-            referencedEntity = this
         )
     }
+
+    override fun dereference() = Post(
+        id = id,
+        date = date,
+        title = title,
+        content = content,
+        department = department?.id,
+        link = link,
+        files = files,
+    )
 
     override val images: List<Uuid> = files.mapNotNull { it.id }
 }

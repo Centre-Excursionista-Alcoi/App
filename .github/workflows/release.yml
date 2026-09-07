@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
 
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -52,9 +52,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -90,9 +90,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
@@ -123,11 +123,11 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
 
@@ -135,9 +135,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
@@ -343,7 +343,7 @@ jobs:
     needs: build-android
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Android
         uses: getsentry/action-release@v3
         env:
@@ -363,22 +363,22 @@ jobs:
     if: false  # Temporarily disabled due to issues with GoogleService-Info.plist not being found on runtime
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # --- Setup Environment ---
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
 
       - name: Cache CocoaPods
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: iosApp/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('iosApp/Podfile.lock') }}
@@ -548,7 +548,7 @@ jobs:
     needs: build-ios
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - iOS
         uses: getsentry/action-release@v3
         env:
@@ -569,8 +569,8 @@ jobs:
     needs: [shared-tests, app-tests]
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
 
@@ -578,9 +578,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
@@ -620,7 +620,7 @@ jobs:
     needs: build-desktop
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Desktop
         uses: getsentry/action-release@v3
         env:
@@ -639,7 +639,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -648,9 +648,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
@@ -676,7 +676,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -685,7 +685,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.6.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -731,7 +731,7 @@ jobs:
     needs: release-server
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Create Sentry release - Server
         uses: getsentry/action-release@v3
         env:

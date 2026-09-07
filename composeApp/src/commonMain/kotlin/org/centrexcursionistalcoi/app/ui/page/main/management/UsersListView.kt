@@ -2,20 +2,54 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.cancel
+import cea_app.composeapp.generated.resources.lending_signup_phone
+import cea_app.composeapp.generated.resources.management_no_users
+import cea_app.composeapp.generated.resources.management_promote_user
+import cea_app.composeapp.generated.resources.management_promote_user_confirmation
+import cea_app.composeapp.generated.resources.management_promote_user_title
+import cea_app.composeapp.generated.resources.management_user_disabled
+import cea_app.composeapp.generated.resources.management_user_has_insurance
+import cea_app.composeapp.generated.resources.management_user_not_registered
+import cea_app.composeapp.generated.resources.management_user_registered
+import cea_app.composeapp.generated.resources.management_user_signed_up_for_lendings
+import cea_app.composeapp.generated.resources.personal_info_disabled
+import cea_app.composeapp.generated.resources.personal_info_email
+import cea_app.composeapp.generated.resources.personal_info_full_name
+import cea_app.composeapp.generated.resources.personal_info_member_pending
+import cea_app.composeapp.generated.resources.personal_info_not_a_member
+import cea_app.composeapp.generated.resources.personal_info_not_registered
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.*
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AccountCircle
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AccountCircleOff
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AddModerator
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.PersonOff
 import org.centrexcursionistalcoi.app.ui.page.main.profile.DepartmentsListCard
 import org.centrexcursionistalcoi.app.ui.page.main.profile.InsurancesListCard
 import org.centrexcursionistalcoi.app.ui.reusable.TooltipIcon
@@ -23,12 +57,28 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.reusable.form.ReadOnlyFormField
 import org.centrexcursionistalcoi.app.ui.utils.orUnknown
 import org.centrexcursionistalcoi.app.ui.utils.unknown
+import org.centrexcursionistalcoi.app.viewmodel.management.UsersManagementViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+
+@Composable
+fun UsersListView(model: UsersManagementViewModel = koinViewModel()) {
+    val departments by model.departments.collectAsState()
+    val members by model.members.collectAsState()
+    val users by model.users.collectAsState()
+
+    UsersListView(
+        users = users,
+        members = members,
+        departments = departments,
+        onPromote = model::promote,
+        onKickFromDepartment = model::kickFromDepartment,
+    )
+}
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun UsersListView(
-    windowSizeClass: WindowSizeClass,
+private fun UsersListView(
     users: List<UserData>?,
     members: List<Member>?,
     departments: List<Department>?,
@@ -67,7 +117,6 @@ fun UsersListView(
     val filteredMembers = members.orEmpty().filter { it.memberNumber !in userMemberNumbers }
 
     ListView(
-        windowSizeClass = windowSizeClass,
         items = (users.orEmpty() + filteredMembers).ifEmpty { null },
         itemIdProvider = { user -> (user as? Member)?.id?.toLong() ?: user.id },
         itemDisplayName = { user ->

@@ -1,8 +1,10 @@
 package org.centrexcursionistalcoi.app.platform
 
 import io.ktor.http.ContentType
+import org.koin.core.annotation.Singleton
 
-actual object PlatformOpenFileLogic : PlatformProvider {
+@Singleton
+actual class PlatformOpenFileLogic : PlatformProvider {
     actual override val isSupported: Boolean = false
 
     actual fun open(path: String, contentType: ContentType) {

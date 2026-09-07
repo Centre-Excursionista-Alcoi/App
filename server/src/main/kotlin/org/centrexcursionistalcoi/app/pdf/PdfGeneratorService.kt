@@ -8,14 +8,12 @@ import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
-import org.centrexcursionistalcoi.app.data.ReferencedLendingMemory
+import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.io.OutputStream
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.UUID
 import kotlin.uuid.toJavaUuid
 
 object PdfGeneratorService {
@@ -45,10 +43,9 @@ object PdfGeneratorService {
     }
 
     fun generateLendingPdf(
-        memory: ReferencedLendingMemory,
+        memory: ReferencedMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
-        dateRange: Pair<LocalDate, LocalDate>,
         photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream
     ) {
@@ -151,8 +148,9 @@ object PdfGeneratorService {
             // =========================================
             drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
-            val fmt = DateTimeFormatter.ofPattern("dd MMMM, yyyy")
-            drawText("Dates: des del ${dateRange.first.format(fmt)} fins al ${dateRange.second.format(fmt)}", fontRegular, FONT_SIZE_BODY)
+            val fromDate = memory.from.toStringCompact()
+            val toDate = memory.to.toStringCompact()
+            drawText("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
 
             if (memory.place != null) {
                 drawText("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)
@@ -167,29 +165,35 @@ object PdfGeneratorService {
             // =========================================
             // 3. Participants
             // =========================================
-            drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
-            memory.members.forEach { member ->
-                drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
-            }
-            yPosition -= 10
-
-            drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
-            val externalUsers = memory.externalUsers
-            if (!externalUsers.isNullOrBlank()) {
-                externalUsers.split("\n").forEach { user ->
-                    drawText("- $user", fontRegular, FONT_SIZE_BODY)
+            if (memory.members.isNotEmpty()) {
+                drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
+                memory.members.forEach { member ->
+                    drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
                 }
+                yPosition -= 10
             }
-            yPosition -= 10
+
+            if (!memory.externalUsers.isNullOrEmpty()) {
+                drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
+                val externalUsers = memory.externalUsers
+                if (!externalUsers.isNullOrBlank()) {
+                    externalUsers.split("\n").forEach { user ->
+                        drawText("- $user", fontRegular, FONT_SIZE_BODY)
+                    }
+                }
+                yPosition -= 10
+            }
 
             // =========================================
             // 4. Items Used
             // =========================================
-            drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
-            itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
-                drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
+            if (itemsUsed.isNotEmpty()) {
+                drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
+                itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
+                    drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
+                }
+                yPosition -= 10
             }
-            yPosition -= 10
 
             // =========================================
             // 5. Markdown Text (Long Text)
@@ -213,10 +217,10 @@ object PdfGeneratorService {
             // =========================================
             // 6. Photos
             // =========================================
-            if (memory.files.isNotEmpty()) {
+            if (memory.attachments.isNotEmpty()) {
                 drawText("Fotos:", fontTitles, FONT_SIZE_HEADER)
 
-                memory.files.forEach { uuid ->
+                memory.attachments.forEach { uuid ->
                     try {
                         val photo = photoProvider(uuid.toJavaUuid())
                         val pdImage = PDImageXObject.createFromByteArray(document, photo, uuid.toString())

@@ -13,14 +13,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.error_dialog_message
+import cea_app.composeapp.generated.resources.error_dialog_stacktrace
+import cea_app.composeapp.generated.resources.error_dialog_title
+import cea_app.composeapp.generated.resources.error_dialog_type
+import cea_app.composeapp.generated.resources.share
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.utils.orUnknown
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 @Composable
 fun ErrorDialog(exception: Throwable? = null, message: String? = exception?.message, onDismissRequest: () -> Unit) {
+    val share = koinInject<PlatformShareLogic>()
+
     if (exception == null && message == null) {
         onDismissRequest()
     }
@@ -53,11 +62,11 @@ fun ErrorDialog(exception: Throwable? = null, message: String? = exception?.mess
             }
         },
         confirmButton = {
-            if (PlatformShareLogic.isSupported) {
+            if (share.isSupported) {
                 TextButton(
                     onClick = {
                         val msg = message ?: exception.toString()
-                        PlatformShareLogic.share(msg)
+                        share.share(msg)
                     }
                 ) {
                     Text(stringResource(Res.string.share))
@@ -71,7 +80,7 @@ fun ErrorDialog(exception: Throwable? = null, message: String? = exception?.mess
             }
         },
         dismissButton = {
-            if (PlatformShareLogic.isSupported) {
+            if (share.isSupported) {
                 // Only show the dismiss button if sharing is available, because otherwise there would be two identical buttons
                 TextButton(
                     onClick = onDismissRequest,

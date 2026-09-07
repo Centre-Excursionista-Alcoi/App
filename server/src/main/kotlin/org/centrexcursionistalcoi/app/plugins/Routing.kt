@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
+import org.centrexcursionistalcoi.app.routes.memoriesRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
@@ -69,6 +70,7 @@ fun Application.configureRouting() {
         usersRoutes()
         inventoryRoutes()
         lendingsRoutes()
+        memoriesRoutes()
 
         route("/webdav") {
             webDavRoutes()

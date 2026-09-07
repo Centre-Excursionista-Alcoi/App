@@ -15,13 +15,13 @@ import cea_app.composeapp.generated.resources.delete
 import cea_app.composeapp.generated.resources.delete_dialog_no_name_message
 import cea_app.composeapp.generated.resources.delete_dialog_no_name_title
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialogContext
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 @Composable
 fun DeleteButton(
@@ -31,6 +31,7 @@ fun DeleteButton(
     requireConfirmation: Boolean = false,
     onClick: DeleteDialogContext?.() -> Unit
 ) {
+    val dispatcherProvider = koinInject<DispatcherProvider>()
     var showingDialog by remember { mutableStateOf(false) }
     if (showingDialog) {
         DeleteDialog(
@@ -38,7 +39,7 @@ fun DeleteButton(
             message = stringResource(Res.string.delete_dialog_no_name_message),
             showReasonField = showReasonField,
             onDelete = {
-                CoroutineScope(Dispatchers.IO).launch {
+                CoroutineScope(dispatcherProvider.io).launch {
                     onClick()
                 }
             },

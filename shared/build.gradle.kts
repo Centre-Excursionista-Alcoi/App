@@ -8,9 +8,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "org.centrexcursionistalcoi.app.shared"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        compileSdk {
+            version = release(libs.versions.android.compileSdk.get().toInt()) {
+                minorApiLevel = 0
+            }
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
@@ -39,6 +43,13 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        wasmJsMain.dependencies {
+            // kotlinx-datetime has no bundled IANA time zone database on Wasm/JS: named zones (e.g. "Europe/Madrid")
+            // are resolved through this npm package instead. See JsJodaTimeZone.kt for the required init hook.
+            // Pinned to 2.23.0 (not latest): 2.24.0+ requires @js-joda/core >=5.7.0 as a peer, but kotlinx-datetime
+            // 0.8.0 bundles @js-joda/core 3.2.0 -- 2.23.0 is the last release still compatible with that (>=1.11.0).
+            implementation(npm("@js-joda/timezone", "2.23.0"))
         }
     }
 

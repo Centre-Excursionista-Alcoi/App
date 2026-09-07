@@ -1,22 +1,27 @@
 package org.centrexcursionistalcoi.app.sync
 
-import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Singleton
 
-expect class SyncEventBackgroundJob : BackgroundSyncWorker<SyncEventBackgroundJobLogic>
-
-object SyncEventBackgroundJobLogic : BackgroundSyncWorkerLogic() {
-    const val EXTRA_EVENT_ID = "event_id"
-
+@Singleton
+@Named(SyncEventBackgroundJob.NAME)
+class SyncEventBackgroundJob(
+    private val eventsRemoteRepository: EventsRemoteRepository,
+) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val eventId = input[EXTRA_EVENT_ID]?.toUuidOrNull()
             ?: return SyncResult.Failure("Invalid or missing event ID")
 
-        val event = EventsRemoteRepository.get(eventId, progressNotifier, ignoreIfModifiedSince = true)
+        eventsRemoteRepository.update(eventId, progressNotifier, ignoreIfModifiedSince = true)
             ?: return SyncResult.Failure("Event with ID $eventId not found on server")
-        EventsRepository.insertOrUpdate(event)
 
         return SyncResult.Success()
+    }
+
+    companion object {
+        const val NAME = "SyncEventBackgroundJob"
+        const val EXTRA_EVENT_ID = "event_id"
     }
 }

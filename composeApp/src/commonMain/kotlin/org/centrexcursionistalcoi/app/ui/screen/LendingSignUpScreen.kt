@@ -28,8 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.back
+import cea_app.composeapp.generated.resources.lending_signup_accept
+import cea_app.composeapp.generated.resources.lending_signup_message
+import cea_app.composeapp.generated.resources.lending_signup_phone
+import cea_app.composeapp.generated.resources.lending_signup_sports
+import cea_app.composeapp.generated.resources.lending_signup_title
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.displayName
@@ -39,12 +44,13 @@ import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.DropdownSelector
 import org.centrexcursionistalcoi.app.viewmodel.LendingSignUpViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 typealias LendingPageOnCreate = (phoneNumber: String, sports: List<Sports>) -> Job
 
 @Composable
 fun LendingSignUpScreen(
-    model: LendingSignUpViewModel = viewModel { LendingSignUpViewModel() },
+    model: LendingSignUpViewModel = koinViewModel(),
     onSignUpComplete: () -> Unit,
     onBackRequested: () -> Unit
 ) {

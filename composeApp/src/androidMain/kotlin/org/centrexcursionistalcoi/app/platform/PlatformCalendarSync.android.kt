@@ -1,12 +1,15 @@
 package org.centrexcursionistalcoi.app.platform
 
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import com.diamondedge.logging.logging
-import org.centrexcursionistalcoi.app.android.MainActivity
+import org.koin.core.annotation.Singleton
 import kotlin.time.Instant
 
-actual object PlatformCalendarSync : PlatformProvider {
+@Singleton
+actual class PlatformCalendarSync(private val context: Context) : PlatformProvider {
     private val log = logging()
 
     actual override val isSupported: Boolean = true
@@ -20,6 +23,7 @@ actual object PlatformCalendarSync : PlatformProvider {
     ): Boolean {
         val intent = Intent(Intent.ACTION_INSERT).apply {
             data = CalendarContract.Events.CONTENT_URI
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
             putExtra(CalendarContract.Events.TITLE, title)
             putExtra(CalendarContract.Events.EVENT_LOCATION, location)
             putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin.toEpochMilliseconds())
@@ -28,17 +32,11 @@ actual object PlatformCalendarSync : PlatformProvider {
             putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, false)
         }
 
-        val context = MainActivity.instance
-        if (context == null) {
-            log.e { "There's no available activity." }
-            return false
-        }
-
-        if (intent.resolveActivity(context.packageManager) != null) {
+        try {
             context.startActivity(intent)
             return true
-        } else {
-            log.e { "No calendar app is available." }
+        } catch (e: ActivityNotFoundException) {
+            log.e(e) { "No calendar app is available." }
             return false
         }
     }

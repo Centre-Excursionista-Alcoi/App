@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database.entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -27,9 +28,10 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     var memorySubmitted by Lendings.memorySubmitted
     var memorySubmittedAt by Lendings.memorySubmittedAt
-    var memory by Lendings.memory
-    var memoryPdf by FileEntity optionalReferencedOn Lendings.memoryPdf
     var memoryReviewed by Lendings.memoryReviewed
+
+    // Memories are linked to lendings via the Memories table, there's an optional column in Memories that references the lending
+    val memory by MemoryEntity optionalBackReferencedOn Memories.lending
 
     var from by Lendings.from
     var to by Lendings.to

@@ -14,9 +14,7 @@ data class ReferencedInventoryItemType(
     val weight: Double?,
     val department: Department?,
     @Serializable(NullableUUIDSerializer::class) override val image: Uuid?,
-
-    override val referencedEntity: InventoryItemType
-): ReferencedEntity<Uuid, InventoryItemType>(), ImageFileContainer {
+): ReferencedEntity<Uuid, InventoryItemType>, ImageFileContainer {
     companion object {
         /**
          * Gets an [ReferencedInventoryItemType] from a list by its [id].
@@ -32,9 +30,18 @@ data class ReferencedInventoryItemType(
             weight = this.weight,
             department = this.department?.let { deptId -> departments.firstOrNull { it.id == deptId } },
             image = this.image,
-            referencedEntity = this
         )
     }
+
+    override fun dereference() = InventoryItemType(
+        id = id,
+        displayName = displayName,
+        description = description,
+        categories = categories,
+        weight = weight,
+        department = department?.id,
+        image = image,
+    )
 
     override val files: Map<String, Uuid?> = mapOf("image" to image)
 

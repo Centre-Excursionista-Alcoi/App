@@ -20,9 +20,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import cea_app.composeapp.generated.resources.*
-import kotlin.uuid.Uuid
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.close
+import cea_app.composeapp.generated.resources.femecv_2026
+import cea_app.composeapp.generated.resources.insurance
+import cea_app.composeapp.generated.resources.insurance_company
+import cea_app.composeapp.generated.resources.insurance_end_date
+import cea_app.composeapp.generated.resources.insurance_policy_number
+import cea_app.composeapp.generated.resources.insurance_start_date
+import cea_app.composeapp.generated.resources.insurance_view_document
+import cea_app.composeapp.generated.resources.share
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
@@ -40,6 +47,9 @@ import org.centrexcursionistalcoi.app.viewmodel.FileProviderModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import kotlin.uuid.Uuid
 
 @Composable
 private fun InsuranceInfoText(labelRes: StringResource, value: String) {
@@ -58,7 +68,7 @@ private fun InsuranceInfoText(labelRes: StringResource, value: String) {
 @Composable
 fun InsuranceDialog(
     insurance: UserInsurance,
-    fpm: FileProviderModel = viewModel { FileProviderModel() },
+    fpm: FileProviderModel = koinViewModel(),
     onDismissRequest: () -> Unit
 ) {
     InsuranceDialog(
@@ -82,6 +92,9 @@ private fun InsuranceDialog(
     onOpenFile: (pathProvider: suspend (ProgressNotifier) -> String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
+    val share = koinInject<PlatformShareLogic>()
+    val openFile = koinInject<PlatformOpenFileLogic>()
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(Res.string.insurance)) },
@@ -111,7 +124,7 @@ private fun InsuranceDialog(
                 val hasDocument = insurance.documentId != null && documentId != null
                 if (hasDocument) {
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                        if (PlatformShareLogic.isSupported) {
+                        if (share.isSupported) {
                             IconButton(
                                 onClick = {
                                     onShareFile { insurance.fetchFilePath(documentId) }
@@ -120,7 +133,7 @@ private fun InsuranceDialog(
                                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
                             }
                         }
-                        if (PlatformOpenFileLogic.isSupported) {
+                        if (openFile.isSupported) {
                             OutlinedButton(
                                 onClick = {
                                     onOpenFile { insurance.fetchFilePath(documentId) }

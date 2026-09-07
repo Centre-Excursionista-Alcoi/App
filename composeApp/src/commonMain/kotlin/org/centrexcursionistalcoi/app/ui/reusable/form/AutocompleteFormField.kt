@@ -61,7 +61,11 @@ fun <T> AutocompleteFormField(
     ) {
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = {
+                onValueChange(it)
+                // When writing, expand suggestions automatically
+                expanded = true
+            },
             label = label,
             singleLine = true,
             enabled = enabled,
