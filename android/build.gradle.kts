@@ -93,6 +93,15 @@ dependencies {
 // local dev build should need or have), and only for pushes to master for now: no PR-triggered build exists to
 // upload a comparison build with a base_sha, so this is master-branch size history only, not a PR status check.
 sentry {
+    // io.sentry:sentry-kotlin-multiplatform already brings its own compatible
+    // io.sentry:sentry-android runtime dependency. Letting this plugin auto-install
+    // its own (newer) version bumps sentry-android past what the KMP SDK was built
+    // against, which trips Sentry's mixed-SDK-versions check and crashes the app on
+    // every launch. This plugin is only used here for Size Analysis.
+    autoInstallation {
+        enabled = false
+    }
+
     sizeAnalysis {
         enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
     }
