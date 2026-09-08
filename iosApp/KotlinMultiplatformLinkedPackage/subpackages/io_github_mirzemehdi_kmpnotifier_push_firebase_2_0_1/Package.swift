@@ -1,15 +1,15 @@
 // swift-tools-version: 5.9
 import PackageDescription
 let package = Package(
-  name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_0",
+  name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1",
   platforms: [
     .iOS("16.0")
   ],
   products: [
     .library(
-      name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_0",
+      name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1",
       type: .none,
-      targets: ["io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_0"]
+      targets: ["io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1"]
     )
   ],
   dependencies: [
@@ -20,7 +20,7 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_0",
+      name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1",
       dependencies: [
         .product(
           name: "FirebaseMessaging",
