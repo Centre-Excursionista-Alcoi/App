@@ -511,6 +511,21 @@ jobs:
             --project ${{ secrets.SENTRY_PROJECT }} \
             "$DSYM_PATH"
 
+      # https://docs.sentry.io/platforms/apple/guides/ios/size-analysis/ -- master-branch size history only (see
+      # the equivalent comment on :android's `sentry { sizeAnalysis { ... } }` block): no base_sha is set here,
+      # since there's no PR-triggered build to compare against yet.
+      - name: Sentry - Upload Size Analysis
+        run: |
+          sentry-cli build upload "$PWD/build/iosApp.xcarchive" \
+            --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
+            --org ${{ secrets.SENTRY_ORG }} \
+            --project app-ios \
+            --build-configuration Release \
+            --head-sha "${{ github.sha }}" \
+            --head-ref "${{ github.ref_name }}" \
+            --head-repo-name "${{ github.repository }}" \
+            --vcs-provider github
+
       # This runner is self-hosted and persists between jobs, unlike GitHub-hosted runners.
       # "security create-keychain" above adds this job's temp keychain to the user's login
       # keychain search list; without deleting it here, every run leaves behind a dangling
