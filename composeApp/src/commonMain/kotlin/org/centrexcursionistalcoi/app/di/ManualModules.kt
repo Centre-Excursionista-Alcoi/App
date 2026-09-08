@@ -105,7 +105,7 @@ val manualModule = module {
     single { UsersRemoteRepository(get()) }
 
     // auth -- ServiceScanModule
-    single { AuthBackend(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AuthBackend(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // sync -- SyncScanModule
     single { DatabaseIntegrityVerifier(get(), get(), get(), get(), get(), get()) }
