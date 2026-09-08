@@ -197,5 +197,6 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 koinCompilerPlugin = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-compiler-plugin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+sentryAndroid = { id = "io.sentry.android.gradle", version.ref = "sentry" }
 sentryJvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
 sentryMultiplatform = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry-multiplatform" }

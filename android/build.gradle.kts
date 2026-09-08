@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.sentryAndroid)
 }
 
 fun readProperties(fileName: String, root: File = projectDir): Properties? {
@@ -85,4 +86,27 @@ android {
 dependencies {
     implementation(projects.composeApp)
     coreLibraryDesugaring(libs.android.desugaring)
+}
+
+// https://docs.sentry.io/platforms/android/size-analysis/ -- uploads the release AAB built by
+// `:android:bundleRelease` for build-size tracking. Only meaningful in CI (SENTRY_AUTH_TOKEN isn't something a
+// local dev build should need or have), and only for pushes to master for now: no PR-triggered build exists to
+// upload a comparison build with a base_sha, so this is master-branch size history only, not a PR status check.
+sentry {
+    sizeAnalysis {
+        enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+    }
+
+    org = "centre-excursionista-alcoi"
+    projectName = "app-android"
+    authToken = getCredential("SENTRY_AUTH_TOKEN").also {
+        if (it == null) System.err.println("SENTRY_AUTH_TOKEN was not given, size analysis won't be uploaded to Sentry")
+    }
+
+    vcsInfo {
+        headSha.set(providers.environmentVariable("GITHUB_SHA"))
+        headRef.set(providers.environmentVariable("GITHUB_REF_NAME"))
+        headRepoName.set(providers.environmentVariable("GITHUB_REPOSITORY"))
+        vcsProvider.set("github")
+    }
 }
