@@ -112,6 +112,21 @@ abstract class ApplicationTestBase {
 
                             call.respondText("Logged in as ${fakeUser.fullName}")
                         }
+                        get("/test-login-2") {
+                            // Simulate a second, distinct user -- for tests that need to switch sessions
+                            // mid-test to check cross-user access (e.g. that one user can't read another's data).
+                            val fakeUser = UserSession(
+                                sub = FakeUser2.SUB,
+                                fullName = FakeUser2.FULL_NAME,
+                                email = FakeUser2.EMAIL,
+                                groups = FakeUser2.groups
+                            )
+
+                            call.sessions.set(fakeUser)
+                            getUserSessionOrFail()
+
+                            call.respondText("Logged in as ${fakeUser.fullName}")
+                        }
                     }
                 }
                 val cookiesStorage = AcceptAllCookiesStorage()
@@ -162,6 +177,17 @@ abstract class ApplicationTestBase {
 
     suspend fun ApplicationTestBuilder.loginAsFakeAdminUser() {
         val response = client.get("/test-login-admin")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("true", response.headers["CEA-LoggedIn"])
+        assertNotNull(
+            response.setCookie().find { it.name == UserSession.COOKIE_NAME },
+            "Session cookie not found in response"
+        )
+        System.err.println("Logged in successfully!")
+    }
+
+    suspend fun ApplicationTestBuilder.loginAsFakeUser2() {
+        val response = client.get("/test-login-2")
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("true", response.headers["CEA-LoggedIn"])
         assertNotNull(

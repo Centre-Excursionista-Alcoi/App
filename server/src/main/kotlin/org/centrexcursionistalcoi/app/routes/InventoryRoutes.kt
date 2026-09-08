@@ -50,6 +50,7 @@ fun Route.inventoryRoutes() {
                 }
             }
         },
+        visibleTo = { type, session -> type.isVisibleTo(session) },
         creator = { formParameters ->
             var displayName: String? = null
             var description: String? = null
@@ -150,6 +151,7 @@ fun Route.inventoryRoutes() {
                 }
             }
         },
+        visibleTo = { item, session -> item.isVisibleTo(session) },
         creator = { formParameters ->
             var variation: String? = null
             var type: UUID? = null

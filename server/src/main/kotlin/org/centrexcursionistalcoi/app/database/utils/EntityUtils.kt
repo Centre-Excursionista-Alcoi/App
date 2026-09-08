@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.centrexcursionistalcoi.app.data.JsonSerializable
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
@@ -58,11 +59,11 @@ import kotlin.reflect.full.companionObjectInstance
 // combined "from"/"to" fields through CustomTableSerializer instead of their raw storage columns.
 private val ignoreColumns = listOf("lastUpdate", "fromInstant", "fromZone", "toInstant", "toZone")
 
-fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>): String {
-    return encodeToString(entityClass.serializer(), entity)
+fun <ID : Any, E : Entity<ID>> Json.encodeEntityToString(entity: E, entityClass: EntityClass<ID, E>, session: UserSession? = null): String {
+    return encodeToString(entityClass.serializer(session), entity)
 }
 
-inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityToString(entity: E): String {
+inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityToString(entity: E, session: UserSession? = null): String {
     // Companion object must be the EntityClass
     val companion = E::class.companionObjectInstance
     requireNotNull(companion) { "Entity class does not have a companion" }
@@ -71,14 +72,14 @@ inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityToString(entity: 
     @Suppress("UNCHECKED_CAST")
     companion as EntityClass<ID, E>
 
-    return encodeEntityToString(entity, companion)
+    return encodeEntityToString(entity, companion, session)
 }
 
-fun <ID : Any, E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>, entityClass: EntityClass<ID, E>): String {
-    return encodeToString(entityClass.serializer().list(), entities)
+fun <ID : Any, E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>, entityClass: EntityClass<ID, E>, session: UserSession? = null): String {
+    return encodeToString(entityClass.serializer(session).list(), entities)
 }
 
-inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>): String {
+inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityListToString(entities: List<E>, session: UserSession? = null): String {
     // If the list is empty, return an empty JSON array
     if (entities.isEmpty()) return "[]"
 
@@ -90,17 +91,17 @@ inline fun <ID : Any, reified E : Entity<ID>> Json.encodeEntityListToString(enti
     @Suppress("UNCHECKED_CAST")
     companion as EntityClass<ID, E>
 
-    return encodeEntityListToString(entities, companion)
+    return encodeEntityListToString(entities, companion, session)
 }
 
-fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(): SerializationStrategy<E> {
+fun <ID : Any, E : Entity<ID>> EntityClass<ID, E>.serializer(session: UserSession? = null): SerializationStrategy<E> {
     val className = if (this::class.isCompanion) this::class.java.enclosingClass.simpleName else this::class.simpleName
     val serialName = "org.centrexcursionistalcoi.app.database.entity.$className"
 
-    return table.serializer(serialName)
+    return table.serializer(serialName, session)
 }
 
-private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): SerializationStrategy<E> {
+private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, session: UserSession?): SerializationStrategy<E> {
     val logger = LoggerFactory.getLogger("EntitySerializer<$serialName>")
 
     return object : KSerializer<E> {
@@ -268,7 +269,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String): Ser
                     with(this@serializer as CustomTableSerializer<ID, E>) {
                         val serializers = columnSerializers()
                         logger.debug("Encoding extra columns from CustomTableSerializer:")
-                        val columns = extraColumns(value)
+                        val columns = extraColumns(value, session)
                         for ((column, value) in columns) {
                             val serializer = serializers[column] ?: error("No serializer found for extra column \"$column\"")
                             val idx = descriptor.getElementIndex(column)

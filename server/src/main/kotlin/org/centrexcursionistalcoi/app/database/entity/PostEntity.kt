@@ -13,19 +13,58 @@ import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
-    companion object : UUIDEntityClass<PostEntity>(Posts)
+    companion object : UUIDEntityClass<PostEntity>(Posts) {
+        context(_: JdbcTransaction)
+        fun forSession(session: UserSession?) = when {
+            session == null -> {
+                // Not logged in, only show public posts (without department)
+                find { Posts.department eq null }
+            }
+            session.isAdmin() -> {
+                // If admin, show all posts
+                all()
+            }
+            else -> {
+                // Logged in, show public posts, and posts for the user's department
+                val userDepartments = transaction {
+                    DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).map { it.department.id.value }
+                }
+                find {
+                    (Posts.department eq null) or (Posts.department inList userDepartments)
+                }
+            }
+        }
+    }
+
+    /**
+     * Whether this single post is visible to [session] -- must stay in sync with [forSession], which is the
+     * same rule applied at the list level. Evaluated directly against this entity's own department (one
+     * department lookup for the caller, not a query over every post), so this is safe to call per single-item GET.
+     */
+    context(_: JdbcTransaction)
+    fun isVisibleTo(session: UserSession?): Boolean {
+        val postDepartmentId = department?.id?.value ?: return true
+        return session != null && (
+            session.isAdmin() ||
+                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).any { it.department.id.value == postDepartmentId }
+            )
+    }
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 

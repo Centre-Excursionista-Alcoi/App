@@ -50,6 +50,7 @@ fun Route.eventsRoutes() {
         entityClass = EventEntity,
         idTypeConverter = { UUID.fromString(it) },
         listProvider = { session -> EventEntity.forSession(session) },
+        visibleTo = { event, session -> event.isVisibleTo(session) },
         creator = { formParameters ->
             var start: Instant? = null
             var end: Instant? = null

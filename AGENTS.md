@@ -246,6 +246,39 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   the request body at all, then a fine-grained per-entity check after. This matters for POST specifically —
   the entity doesn't exist yet when the coarse check runs, so a rejected create must roll back cleanly
   (`onWriteRejected` hook) rather than leaving a half-created row.
+- **`GET /{base}/{id}` is only ever as restrictive as `listProvider`.** `provideEntityRoutes` fetches the
+  single-item GET's entity via `assertVisibleEntity()`, which checks the id against `listProvider(session)`
+  before returning it — so a resource is never individually readable by id if the caller couldn't also see it
+  in the list. This was **not always true**: until it was fixed, the single-item GET called
+  `entityClass.findById(id)` directly with no check at all, so e.g. a department-private event/post, or an
+  inventory item/type (whose list is empty for a non-member), was still fully readable by anyone who knew or
+  guessed its UUID. When adding a resource via `provideEntityRoutes`, don't assume the single-item route is
+  safe just because `listProvider` is restrictive — that's exactly the assumption that was wrong; the fix is
+  in `RoutesBase.kt` itself now, but a hand-written single-item GET route (like `/users/{sub}`, see below)
+  still needs its own explicit check.
+- **`CustomTableSerializer.extraColumns(entity, session)` must filter itself — nothing upstream does it.** A
+  handful of entities (`Departments`, `Events`, `Memories`, `Lendings`) attach extra JSON fields outside their
+  own table's columns (e.g. Department's `members` roster) via this interface; `session` is the *viewer's*
+  session, passed through from `RoutesBase.kt`'s GET handlers via `Json.encodeEntityToString(..., session)` /
+  `encodeEntityListToString(..., session)`. `Departments.extraColumns` is the one that actually needs it: it mirrors `GET /departments/{id}/members`'s
+  rule (self / admin / department `PEOPLE_MANAGER` see the roster, everyone else sees nothing) — until fixed,
+  it always returned every member's sub/roles/confirmation-status (including pending join requests) to
+  literally anyone, since the roster isn't a table column and so was never covered by the generic-GET fix
+  above. If you add a new `CustomTableSerializer.extraColumns` that embeds another entity's data (not just the
+  current one's own fields), ask whether that embedded data has its own access rule elsewhere in the app —
+  if so, re-apply it here explicitly.
+- **`FileEntity.rules` (`security/FileReadWriteRules.kt`) is opt-in and nothing sets it by default.**
+  `GET /download/{uuid}` requires at least a logged-in session when `rules` is `null` (the common case) —
+  that's a safety-net default, not a real permission check, since the interface's own `isPublic()` treats "no
+  rules" as public and a good chunk of files (department/event/post/inventory images) are fine being visible
+  to any logged-in user. For anything sensitive to a specific user (an insurance document, a memory's PDF or
+  attachments), set `rules = FileReadWriteRules(readUsers = listOf(ownerSub), readGroups =
+  listOf(ADMIN_GROUP_NAME))` explicitly at the `FileEntity.new { }` call site (see `ProfileRoutes.kt`'s
+  insurance upload, `UserReferenceEntity.refreshFEMECVData()`, and `MemoriesRoutes.kt`'s PDF/attachments for
+  the pattern) — nothing infers this from the parent entity's own permissions for you. Known limitation:
+  `FileReadWriteRules` only supports flat user/group lists, not department-role checks, so a department
+  `MEMORY_MANAGER`/`LENDING_MANAGER` who can see a memory/lending's *data* still can't download its files —
+  acceptable (under-granting, not over-granting) but worth knowing if this ever needs closing properly.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the
   server to reject; (2) per-item actions (edit/delete on a specific row) must check the viewer's role in

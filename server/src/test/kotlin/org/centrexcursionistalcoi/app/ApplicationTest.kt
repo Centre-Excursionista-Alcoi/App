@@ -45,6 +45,12 @@ class ApplicationTest: ApplicationTestBase() {
         // non-existing UUID
         client.get("/download/00000000-0000-0000-0000-000000000000").assertStatusCode(HttpStatusCode.NotFound)
 
+        // A file with no rules set requires at least a logged-in session (see Routing.kt) -- it's not a
+        // deliberate "public" file, just one nothing ever restricted.
+        client.get("/download/$fileId").assertStatusCode(HttpStatusCode.Unauthorized)
+
+        loginAsFakeUser()
+
         val rawFile = bytesFromResource("/square.png")
 
         client.get("/download/$fileId").let { response ->

@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -13,6 +14,7 @@ import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertError
+import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -20,12 +22,14 @@ import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -184,5 +188,77 @@ class TestEventsRoutes : ApplicationTestBase() {
         // The reassignment attempt must have been rolled back: the event still belongs to the managed department.
         val departmentIdAfter = Database { event.department?.id?.value }
         assertEquals(managedDepartment.id.value, departmentIdAfter)
+    }
+
+    // GET /events/{id} must respect the same department-scoped visibility as GET /events (EventEntity.forSession):
+    // it previously fetched the entity directly with no check at all, leaking a department-private event's full
+    // details (including its confirmed attendee list) to any caller who knew or guessed its id.
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_notVisibleToOutsider() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Private event"
+                place = "Somewhere"
+                department = otherDepartment
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        // FakeUser is logged in, but not a member of the event's department.
+        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+    }
+
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_visibleToDepartmentMember() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val dept = DepartmentEntity.new { displayName = "Managed Department" }
+            DepartmentMembers.insert {
+                it[userSub] = FakeUser.SUB
+                it[departmentId] = dept.id
+                it[confirmed] = true
+                it[roles] = emptyList()
+            }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Department event"
+                place = "Somewhere"
+                department = dept
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.OK)
+    }
+
+    // Visibility must be checked before handleIfModified: otherwise an outsider could send If-Modified-Since on
+    // a private event's id and get a 304 (or its Last-Modified header) back, confirming the event's existence
+    // and last-modified time despite not being allowed to see it at all.
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_ifModifiedSince_stillNotFoundForOutsider() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Private event"
+                place = "Somewhere"
+                department = otherDepartment
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.get("/events/${event.id.value}") {
+            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Instant.now().atZone(ZoneOffset.UTC)))
+        }.assertStatusCode(HttpStatusCode.NotFound)
     }
 }

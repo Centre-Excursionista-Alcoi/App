@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.*
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessi
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
@@ -156,7 +158,9 @@ fun Route.profileRoutes() {
 
         val userReference = Database { UserReferenceEntity[session.sub] }
 
-        val documentFile = document.takeIf { it.isNotEmpty() }?.newEntity()
+        val documentFile = document.takeIf { it.isNotEmpty() }?.newEntity(
+            rules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME)),
+        )
         Database {
             UserInsuranceEntity.new {
                 userSub = userReference

@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.assertSuccess
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
@@ -477,5 +478,81 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
         val updatedRoles = Database { DepartmentMemberEntity.findById(member.id.value)?.roles }
         assertEquals(listOf(DepartmentRole.LENDING_MANAGER), updatedRoles)
+    }
+
+    // GET /departments/{id} (and /departments) embed the member roster (sub, roles, confirmation status --
+    // including pending join requests) via Departments.extraColumns, which is not gated by GET
+    // /departments/{id}/members's own permission check. It previously returned the full roster to anyone,
+    // logged in or not.
+    @Test
+    fun test_get_department_byId_notLoggedIn_membersHidden() = runApplicationTest(
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) { displayName = "Test Department" }
+            DepartmentMemberEntity.new {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+            }
+        }
+    ) {
+        client.get("/departments/$departmentId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Department.serializer()) { department ->
+                assertTrue(department.members.orEmpty().isEmpty(), "Anonymous caller should not see any member")
+            }
+        }
+    }
+
+    @Test
+    fun test_get_department_byId_plainMember_seesOnlyOwnRow() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) { displayName = "Test Department" }
+            DepartmentMemberEntity.new {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+            }
+            DepartmentMemberEntity.new {
+                userReference = FakeUser2.provideEntity()
+                this.department = department
+                confirmed = true
+            }
+        }
+    ) {
+        client.get("/departments/$departmentId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Department.serializer()) { department ->
+                val members = department.members.orEmpty()
+                assertEquals(1, members.size, "A plain member should only see their own row")
+                assertEquals(FakeUser.SUB, members.single().userSub)
+            }
+        }
+    }
+
+    @Test
+    fun test_get_department_byId_peopleManager_seesAllMembers() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val department = DepartmentEntity.new(departmentId) { displayName = "Test Department" }
+            DepartmentMemberEntity.new {
+                userReference = FakeUser.provideEntity()
+                this.department = department
+                confirmed = true
+                roles = listOf(DepartmentRole.PEOPLE_MANAGER)
+            }
+            DepartmentMemberEntity.new {
+                userReference = FakeUser2.provideEntity()
+                this.department = department
+                confirmed = false
+            }
+        }
+    ) {
+        client.get("/departments/$departmentId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Department.serializer()) { department ->
+                assertEquals(2, department.members.orEmpty().size, "A people manager should see every member, including unconfirmed ones")
+            }
+        }
     }
 }

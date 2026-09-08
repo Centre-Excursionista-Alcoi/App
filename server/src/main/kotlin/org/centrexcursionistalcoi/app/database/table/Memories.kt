@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.lessEq
@@ -57,7 +58,7 @@ object Memories : UUIDTable("memories"), CustomTableSerializer<UUID, MemoryEntit
     )
 
     context(_: JdbcTransaction)
-    override fun extraColumns(entity: MemoryEntity): Map<String, Any?> = mapOf(
+    override fun extraColumns(entity: MemoryEntity, session: UserSession?): Map<String, Any?> = mapOf(
         "members" to entity.members.map { it.memberNumber },
         "attachments" to entity.files.map { it.id.value.toKotlinUuid() },
         "from" to entity.from,

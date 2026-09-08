@@ -47,7 +47,19 @@ fun Application.configureRouting() {
             }
 
             val session = getUserSession()
-            if (file.rules?.canBeReadBy(session) == false) {
+            val rules = file.rules
+            if (rules == null) {
+                // No rules were ever recorded for this file -- nothing in this codebase actually sets them (see
+                // FileReadWriteRules), so this is the overwhelming common case, not a deliberate "public" choice.
+                // Require at least a logged-in session as a safe default; per-resource-type rules restricting
+                // reads further (e.g. to the owning user) are set explicitly where the file is created.
+                if (session == null) {
+                    return@get call.respondText(
+                        "You must be logged in to access this file",
+                        status = HttpStatusCode.Unauthorized
+                    )
+                }
+            } else if (!rules.canBeReadBy(session)) {
                 return@get call.respondText(
                     "You don't have permission to access this file",
                     status = HttpStatusCode.Forbidden

@@ -103,6 +103,13 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
     noinline creator: suspend (MultiPartData) -> EE,
     noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
     /**
+     * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
+     * with [listProvider] but without scanning its whole result. Defaults to doing exactly that scan (correct
+     * but potentially O(n) per single-item GET); override with a direct predicate whenever [listProvider] does
+     * more than trivial filtering.
+     */
+    noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
+    /**
      * A check to be performed before deleting an entity.
      * Verifies whether there are references to this entity that would prevent its deletion.
      * If it returns `false`, the deletion is aborted and an error is returned.
@@ -120,7 +127,7 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -143,6 +150,13 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     updater: KSerializer<UER>,
     noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
     /**
+     * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
+     * with [listProvider] but without scanning its whole result. Defaults to doing exactly that scan (correct
+     * but potentially O(n) per single-item GET); override with a direct predicate whenever [listProvider] does
+     * more than trivial filtering.
+     */
+    noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
+    /**
      * A check to be performed before deleting an entity.
      * Verifies whether there are references to this entity that would prevent its deletion.
      * If it returns `false`, the deletion is aborted and an error is returned.
@@ -160,7 +174,7 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -183,6 +197,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      */
     updater: KSerializer<UER>? = null,
     listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
+    /**
+     * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
+     * with [listProvider] but without scanning its whole result. Defaults to doing exactly that scan (correct
+     * but potentially O(n) per single-item GET); override with a direct predicate whenever [listProvider] does
+     * more than trivial filtering.
+     */
+    visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
     /**
      * A check to be performed before deleting an entity.
      * Verifies whether there are references to this entity that would prevent its deletion.
@@ -252,23 +273,45 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         return item
     }
 
+    /**
+     * Fetches the entity by [id], but only if it's also visible to [session] per [visibleTo] -- otherwise
+     * responds [Error.EntityNotFound], exactly as if it didn't exist. Unlike [assertEntity] (used by
+     * PATCH/DELETE, which are gated by [writePermission] instead), this is what GET /$base/{id} uses, so a
+     * resource can never be read individually by ID if the caller couldn't also see it in the list.
+     */
+    suspend fun RoutingContext.assertVisibleEntity(id: EID, session: UserSession?): EE? {
+        val item = Database {
+            val entity = entityClass.findById(id) ?: return@Database null
+            entity.takeIf { visibleTo(it, session) }
+        }
+        if (item == null) {
+            respondError(Error.EntityNotFound(entityKClass, id))
+            return null
+        }
+        return item
+    }
+
     get("/$base") {
         val session = getUserSession()
         handleIfModifiedForType(entityClass) ?: return@get
         val list = Database { listProvider(session).toList() }
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(list, entityClass)
+            json.encodeEntityListToString(list, entityClass, session)
         }
     }
 
     get("/$base/{id}") {
         val id = getId() ?: return@get
+        val session = getUserSession()
+        // Visibility must be checked before handleIfModified: a 304 (or its Last-Modified header) would
+        // otherwise confirm an invisible entity's existence/last-modified time to a caller who can't see it,
+        // via a path that skips assertVisibleEntity entirely.
+        val item = assertVisibleEntity(id, session) ?: return@get
         handleIfModified(entityClass, id) ?: return@get
-        val item = assertEntity(id) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(item, entityClass)
+            json.encodeEntityToString(item, entityClass, session)
         }
     }
 

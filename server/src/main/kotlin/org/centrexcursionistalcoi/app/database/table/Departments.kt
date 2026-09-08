@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
@@ -22,8 +23,12 @@ object Departments : UUIDTable("departments"), CustomTableSerializer<UUID, Depar
         return mapOf("members" to DepartmentMemberInfo.serializer().list())
     }
 
+    // The department itself (displayName/image) is public, but its member roster is not: it includes each
+    // member's sub, roles, and confirmation status (so pending join requests too), matching what
+    // GET /departments/{id}/members already restricts by hand -- see DepartmentEntity.visibleMembersFor, the
+    // single shared implementation of that rule both routes call.
     context(_: JdbcTransaction)
-    override fun extraColumns(entity: DepartmentEntity): Map<String, Any?> {
-        return mapOf("members" to entity.members.map { it.toData() })
+    override fun extraColumns(entity: DepartmentEntity, session: UserSession?): Map<String, Any?> {
+        return mapOf("members" to entity.visibleMembersFor(session).map { it.toData() })
     }
 }
