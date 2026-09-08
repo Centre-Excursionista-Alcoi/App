@@ -321,7 +321,7 @@ jobs:
         run: |
           VERSION_NAME=$(grep '^VERSION_NAME=' version.properties | cut -d'=' -f2)
           VERSION_CODE=$(grep '^VERSION_CODE=' version.properties | cut -d'=' -f2)
-          echo "release=$VERSION_NAME/$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "release=$VERSION_NAME-$VERSION_CODE" >> "$GITHUB_OUTPUT"
       - name: Create Sentry release - Android
         uses: getsentry/action-release@v3
         env:
@@ -536,7 +536,7 @@ jobs:
         run: |
           VERSION_NAME=$(grep '^VERSION_NAME=' version.properties | cut -d'=' -f2)
           VERSION_CODE=$(grep '^VERSION_CODE=' version.properties | cut -d'=' -f2)
-          echo "release=$VERSION_NAME/$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "release=$VERSION_NAME-$VERSION_CODE" >> "$GITHUB_OUTPUT"
       - name: Create Sentry release - iOS
         uses: getsentry/action-release@v3
         env:
