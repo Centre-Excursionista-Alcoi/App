@@ -426,6 +426,11 @@ jobs:
           xcodebuild -resolvePackageDependencies -workspace iosApp/iosApp.xcworkspace -scheme iosApp
 
       - name: Archive iOS App
+        env:
+          # Without this, BuildKonfig.DEBUG defaults to true (see composeApp/build.gradle.kts), so the
+          # published App Store build would report environment: "development" to Sentry instead of
+          # "production" -- matching the PRODUCTION=true already set for the Android/Desktop release builds.
+          PRODUCTION: true
         run: |
           xcodebuild -workspace iosApp/iosApp.xcworkspace \
             -scheme iosApp \
