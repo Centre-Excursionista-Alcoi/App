@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.ViaLink
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.lessEq
@@ -61,7 +62,7 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
     )
 
     context(_: JdbcTransaction)
-    override fun extraColumns(entity: LendingEntity): Map<String, Any?> = buildMap {
+    override fun extraColumns(entity: LendingEntity, session: UserSession?): Map<String, Any?> = buildMap {
         put("receivedItems", entity.receivedItems.map { it.toReceivedItem() })
         // "memory" only holds the linked memory's id (memories are their own resource, fetched separately), so
         // it's only included when present to avoid encoding a null value.

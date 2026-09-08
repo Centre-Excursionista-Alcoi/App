@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.toUUID
@@ -82,10 +83,23 @@ class TestDepartment {
             )
         )
 
+        val adminSession = UserSession(FakeAdminUser.SUB, FakeAdminUser.FULL_NAME, FakeAdminUser.EMAIL, FakeAdminUser.groups)
         assertJsonEquals(
-            json.encodeEntityToString(departmentEntity),
+            json.encodeEntityToString(departmentEntity, adminSession),
             json.encodeToString(Department.serializer(), departmentClass)
         )
+
+        // The member roster is filtered per-viewer (see Departments.extraColumns): an anonymous caller sees none
+        // of it, and a plain member sees only their own row -- both regardless of the roster's real content.
+        val anonymous = json.encodeToString(Department.serializer(), departmentClass.copy(members = emptyList()))
+        assertJsonEquals(json.encodeEntityToString(departmentEntity, session = null), anonymous)
+
+        val user2Session = UserSession(FakeUser2.SUB, FakeUser2.FULL_NAME, FakeUser2.EMAIL, FakeUser2.groups)
+        val selfOnly = json.encodeToString(
+            Department.serializer(),
+            departmentClass.copy(members = departmentClass.members.orEmpty().filter { it.userSub == FakeUser2.SUB }),
+        )
+        assertJsonEquals(json.encodeEntityToString(departmentEntity, user2Session), selfOnly)
     }
 
     @Test
