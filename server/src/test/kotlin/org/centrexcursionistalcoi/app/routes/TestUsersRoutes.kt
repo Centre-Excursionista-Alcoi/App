@@ -1,13 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import java.time.LocalDate
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
-import kotlin.uuid.toJavaUuid
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -21,8 +15,17 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.uuid.toJavaUuid
 
 class TestUsersRoutes: ApplicationTestBase() {
     @Test
@@ -224,6 +227,121 @@ class TestUsersRoutes: ApplicationTestBase() {
             val users = bodyAsJson(ListSerializer(UserData.serializer()))
             assertEquals(1, users.size, "Non-admin user should only see themself")
             assertEquals(FakeUser.SUB, users[0].sub)
+        }
+    }
+
+    // --- GET /users/{sub} permission checks ---
+    // Mirrors the visibility rule of GET /users: a user may always fetch themself; fetching someone
+    // else requires being an admin, a users manager, or a people manager of a department the target
+    // belongs to. Anyone outside that gets a 404 (not a 403), so the endpoint never leaks whether an
+    // arbitrary sub exists.
+
+    @Test
+    fun test_users_sub_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/users/${FakeUser.SUB}")
+
+    @Test
+    fun test_users_sub_self() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        client.get("/users/${FakeUser.SUB}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            val user = bodyAsJson(UserData.serializer())
+            assertEquals(FakeUser.SUB, user.sub)
+        }
+    }
+
+    @Test
+    fun test_users_sub_admin_canViewAnyone() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+        }
+    ) {
+        client.get("/users/${FakeUser.SUB}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            val user = bodyAsJson(UserData.serializer())
+            assertEquals(FakeUser.SUB, user.sub)
+        }
+    }
+
+    @Test
+    fun test_users_sub_departmentPeopleManager_canViewManagedMember() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val fakeUser = FakeUser.provideEntity()
+            val fakeUser2 = FakeUser2.provideEntity()
+
+            val department = transaction { DepartmentEntity.new { this.displayName = "example" } }
+
+            DepartmentMemberEntity.new {
+                this.department = department
+                this.userReference = fakeUser
+                this.confirmed = true
+                this.roles = listOf(DepartmentRole.PEOPLE_MANAGER)
+            }
+            DepartmentMemberEntity.new {
+                this.department = department
+                this.userReference = fakeUser2
+                this.confirmed = true
+            }
+        }
+    ) {
+        client.get("/users/${FakeUser2.SUB}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            val user = bodyAsJson(UserData.serializer())
+            assertEquals(FakeUser2.SUB, user.sub)
+        }
+    }
+
+    @Test
+    fun test_users_sub_departmentPeopleManager_cannotViewUnmanagedMember() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val fakeUser = FakeUser.provideEntity()
+            val fakeUser2 = FakeUser2.provideEntity()
+
+            val (managedDepartment, otherDepartment) = transaction {
+                DepartmentEntity.new { this.displayName = "managed" } to DepartmentEntity.new { this.displayName = "other" }
+            }
+
+            DepartmentMemberEntity.new {
+                this.department = managedDepartment
+                this.userReference = fakeUser
+                this.confirmed = true
+                this.roles = listOf(DepartmentRole.PEOPLE_MANAGER)
+            }
+            DepartmentMemberEntity.new {
+                this.department = otherDepartment
+                this.userReference = fakeUser2
+                this.confirmed = true
+            }
+        }
+    ) {
+        // fakeUser2 is in a department fakeUser doesn't manage, so this must behave exactly like
+        // the sub not existing at all -- not a 403, which would confirm fakeUser2's existence.
+        client.get("/users/${FakeUser2.SUB}").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_users_sub_regularUser_cannotViewUnrelatedUser() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser2.provideEntity()
+        }
+    ) {
+        client.get("/users/${FakeUser2.SUB}").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
+    fun test_users_sub_unknown_returnsNotFound() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+    ) {
+        client.get("/users/does-not-exist").apply {
+            assertStatusCode(HttpStatusCode.NotFound)
         }
     }
 }

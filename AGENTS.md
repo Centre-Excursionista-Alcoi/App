@@ -253,6 +253,21 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
 - Granting/changing a member's roles: `PATCH /departments/{id}/members/{memberId}/roles`, gated by
   department `ADMIN` specifically (privilege-escalation-capable). Client UI is
   `ui/dialog/DepartmentMemberRolesDialog.kt`.
+- **`/users` and `/users/{sub}` visibility rule** (`server/.../routes/UsersRoutes.kt`) — hand-written, not
+  routed through `provideEntityRoutes`, so this rule lives only here and must be kept in sync by hand across
+  both routes:
+  - A session may always see **itself**.
+  - Global admin or `USERS_MANAGER_GROUP_NAME` (`session.isUsersManager()`) may see **anyone**.
+  - A department `PEOPLE_MANAGER` (or department `ADMIN`, which implies it) may see **members of a
+    department they manage** — checked by re-querying `DepartmentMemberEntity.getUserDepartments(session.sub)`
+    fresh per request, not by caching a role list.
+  - Everyone else gets `Error.EntityNotFound` (**404**), never `Error.PermissionRejected` (403), for a sub
+    they can't see — a 403 would confirm the sub exists, which is exactly the leak this route must not have.
+  - This is a stricter model than `/members`, which is deliberately public field-stripping
+    (`Member.strip()` nulls `nif`/`email`/`status` for non-admin/non-members-manager viewers) rather than
+    per-record access control — `/members` is a directory anyone logged in can browse; `/users` is not.
+    Don't reach for `.strip()`-style field masking on `UserData` as a substitute for the visibility check
+    above; `UserData` has no `.strip()` and isn't meant to.
 
 ## 6. Other gotchas worth knowing upfront
 
@@ -277,6 +292,16 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   in `:shared`'s `Constants.kt`, stored in `user_references.groups`) is distinct from per-department
   `DepartmentRole.ADMIN`. A global admin implicitly passes every department permission check; a department
   `ADMIN` role only grants control within that one department.
+- **A new single-entity `GET /{base}/{id}` route does not inherit its list route's access restrictions —
+  each route enforces its own.** `provideEntityRoutes`'s generic `GET /{base}/{id}` has no extra permission
+  check beyond authentication, because for most resources that's correct (any logged-in user may fetch any
+  single item). But hand-written route files like `UsersRoutes.kt` are a different case: `GET /users` (list)
+  already narrows non-privileged callers down to just themselves, and it is easy to add a matching
+  `GET /users/{sub}` that copies the list's *shape* (auth-only, `getUserSessionOrFail()`) without copying its
+  *restriction*, silently letting any authenticated caller fetch anyone's full record by sub. There is no
+  shared enforcement between routes in Ktor — when adding a single-item GET next to an existing restricted
+  list endpoint, re-derive and re-apply that same restriction explicitly; don't assume "it's just a GET,
+  the list endpoint already locked this down" carries over.
 
 ## 7. Testing cheat sheet
 

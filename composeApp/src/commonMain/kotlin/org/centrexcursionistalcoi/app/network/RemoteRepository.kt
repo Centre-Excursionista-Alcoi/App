@@ -1,31 +1,16 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.onUpload
-import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
+import io.ktor.client.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
-import org.centrexcursionistalcoi.app.data.DocumentFileContainer
-import org.centrexcursionistalcoi.app.data.Entity
-import org.centrexcursionistalcoi.app.data.FileContainer
-import org.centrexcursionistalcoi.app.data.ImageFileContainer
-import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
-import org.centrexcursionistalcoi.app.data.fetchImageFilePath
-import org.centrexcursionistalcoi.app.data.filePaths
-import org.centrexcursionistalcoi.app.data.toFormData
+import org.centrexcursionistalcoi.app.data.*
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -152,14 +137,14 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)
             return remoteEntity
+        } else if (status == HttpStatusCode.NotFound) {
+            // A 404 always means "not found" regardless of whether the body could be parsed as
+            // an Error.EntityNotFound -- some 404s (e.g. an unmatched route) carry no body at all.
+            log.e { "$name #${url.substringAfterLast('/')} was not found." }
+            return null
         } else {
             val error = response.bodyAsError()
-            if (error is Error.EntityNotFound) {
-                log.e { "$name #${url.substringAfterLast('/')} was not found." }
-                return null
-            } else {
-                throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
-            }
+            throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
     }
 
