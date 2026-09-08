@@ -89,7 +89,7 @@ and it picks up code changes on restart without reinstalling.)
 
 ### Android client on an emulator
 
-1. **`SERVER_URL` defaults to production** (`https://server.cea.arnaumora.com`, set in
+1. **`SERVER_URL` defaults to production** (`https://server.centrexcursionistalcoi.app`, set in
    `composeApp/build.gradle.kts` around the `buildkonfig` block) whenever the env var isn't set at *build*
    time. **This is the single most dangerous gotcha in this repo** — a plain `./gradlew :android:installDebug`
    silently builds an app that talks to the real production server. Always set it explicitly for local
