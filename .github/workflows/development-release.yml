@@ -95,7 +95,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Run Shared Tests
         id: shared_tests
@@ -134,7 +133,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Copy dummy google-services.json
         run: |
@@ -180,7 +178,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Determine In-App Update Priority
         id: determine_priority
@@ -359,7 +356,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       # --- Install Signing Assets ---
       - name: Install Certificate and Profile
@@ -571,7 +567,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Set Docker API version
         run: echo api.version=1.44 >> ~/.docker-java.properties

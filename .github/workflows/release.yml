@@ -57,7 +57,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Run Shared Tests
         id: shared_tests
@@ -95,7 +94,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Copy dummy google-services.json
         run: |
@@ -140,7 +138,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       # Refresh the version name again just in case
       - name: Update version name
@@ -373,7 +370,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       # Refresh the version name again just in case
       - name: Update version name
@@ -604,7 +600,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       # Refresh the version name again just in case
       - name: Update version name
@@ -732,7 +727,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
 
       - name: Run Server Tests
         id: server_tests
