@@ -98,6 +98,13 @@ object LocalNotifications : KoinComponent {
                 )
             }
             is PushNotification.LendingDeleted -> {
+                // Admins are CC'd on every lending deletion for oversight (server-side includeAdmins=true),
+                // but the notification text always reads "your lending" -- only show it to the actual owner.
+                if (!notification.checkIsSelf()) {
+                    log.d { "Ignoring lending deleted notification for another user: ${notification.userSub}" }
+                    return
+                }
+
                 val message = notification.message
                 if (message == null) {
                     showNotification(
