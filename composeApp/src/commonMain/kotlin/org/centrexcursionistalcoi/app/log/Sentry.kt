@@ -28,8 +28,12 @@ fun initializeSentry() {
         // Set the environment
         options.environment = if (BuildKonfig.DEBUG) "development" else "production"
 
-        // Set the release name
-        options.release = BuildKonfig.VERSION_NAME + "/" + BuildKonfig.VERSION_CODE
+        // Set the release name. Must match exactly what CI passes to `sentry-cli`/`action-release` when
+        // creating the corresponding Release record (see development-release.yml's "Read app version" steps) --
+        // and, unlike this SDK field, sentry-cli's `releases new` rejects a version containing a slash
+        // ("Invalid release version. Slashes and certain whitespace characters are not permitted."), so this
+        // can't use "/" as the separator even though the SDK itself would accept it.
+        options.release = BuildKonfig.VERSION_NAME + "-" + BuildKonfig.VERSION_CODE
 
         // Disable ANR tracking
         options.isAnrEnabled = false
