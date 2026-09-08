@@ -1,0 +1,3182 @@
+{
+  "build.gradle.kts": {
+    "mtime": 1788783725.7070038,
+    "seen": 1788798244.4539146,
+    "ast_hash": "09bb48ab27cf29347e19714b3e7db267",
+    "semantic_hash": "09bb48ab27cf29347e19714b3e7db267"
+  },
+  "schemas/org.centrexcursionistalcoi.app.database.AppDatabase/1.json": {
+    "mtime": 1788762266.7762587,
+    "seen": 1788798244.4539182,
+    "ast_hash": "2b0d5a97d94268cbc77ad4e420aa7899",
+    "semantic_hash": "2b0d5a97d94268cbc77ad4e420aa7899"
+  },
+  "schemas/org.centrexcursionistalcoi.app.database.AppDatabase/2.json": {
+    "mtime": 1788779225.8690681,
+    "seen": 1788798244.45392,
+    "ast_hash": "9b7748e64533e43b40cf91d61a6bf7da",
+    "semantic_hash": "9b7748e64533e43b40cf91d61a6bf7da"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/android/AppBase.kt": {
+    "mtime": 1788776544.5353637,
+    "seen": 1788798244.453921,
+    "ast_hash": "e70c18f251958a045c816cbf9a5264b3",
+    "semantic_hash": "e70c18f251958a045c816cbf9a5264b3"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/android/ContextProvider.kt": {
+    "mtime": 1769669985.4141548,
+    "seen": 1788798244.4539218,
+    "ast_hash": "b6025ca647992c547dfd6de8e586766f",
+    "semantic_hash": "b6025ca647992c547dfd6de8e586766f"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/android/MainActivity.kt": {
+    "mtime": 1788776544.5353637,
+    "seen": 1788798244.4539227,
+    "ast_hash": "201f7140a08b316f2b43194825a77822",
+    "semantic_hash": "201f7140a08b316f2b43194825a77822"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/android/NfcIntentHandlerActivity.kt": {
+    "mtime": 1788762266.7767007,
+    "seen": 1788798244.453924,
+    "ast_hash": "7df09ce63d4f4266d6115ce9cd9c83ab",
+    "semantic_hash": "7df09ce63d4f4266d6115ce9cd9c83ab"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/android/nfc/NfcUtils.kt": {
+    "mtime": 1764312481.063131,
+    "seen": 1788798244.4539247,
+    "ast_hash": "a76f2515eb5d4280f9966688dd06db79",
+    "semantic_hash": "a76f2515eb5d4280f9966688dd06db79"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/database/Database.android.kt": {
+    "mtime": 1788762266.7767007,
+    "seen": 1788798244.4539254,
+    "ast_hash": "858cec305340e7da7538de2df1acb404",
+    "semantic_hash": "858cec305340e7da7538de2df1acb404"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/di/DatabaseModule.android.kt": {
+    "mtime": 1788762266.7767007,
+    "seen": 1788798244.4539263,
+    "ast_hash": "83446388d9c3ac4b8c15fa17d1a4d375",
+    "semantic_hash": "83446388d9c3ac4b8c15fa17d1a4d375"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/di/ManualModules.android.kt": {
+    "mtime": 1788783725.708004,
+    "seen": 1788798244.4539273,
+    "ast_hash": "7eabec1624bb0c900ae4601ce7cc6d84",
+    "semantic_hash": "7eabec1624bb0c900ae4601ce7cc6d84"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/network/ErrorHandling.android.kt": {
+    "mtime": 1764312481.063131,
+    "seen": 1788798244.4539282,
+    "ast_hash": "b91320f883f501ab8624aa32c0994f96",
+    "semantic_hash": "b91320f883f501ab8624aa32c0994f96"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.android.kt": {
+    "mtime": 1764312481.0632603,
+    "seen": 1788798244.453929,
+    "ast_hash": "89d88600bcfcda3aa6d73902efed7c60",
+    "semantic_hash": "89d88600bcfcda3aa6d73902efed7c60"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformAppUpdates.android.kt": {
+    "mtime": 1764773570.2585123,
+    "seen": 1788798244.45393,
+    "ast_hash": "229be21c9339ce77b48128c10d0d7442",
+    "semantic_hash": "229be21c9339ce77b48128c10d0d7442"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformCalendarSync.android.kt": {
+    "mtime": 1788762266.7767007,
+    "seen": 1788798244.4539309,
+    "ast_hash": "fd2788a5b5b2373a29778e3fb11942ef",
+    "semantic_hash": "fd2788a5b5b2373a29778e3fb11942ef"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformClipboard.android.kt": {
+    "mtime": 1764312481.063378,
+    "seen": 1788798244.4539316,
+    "ast_hash": "05b1af1dec46fda7c7bf42809d9597a7",
+    "semantic_hash": "05b1af1dec46fda7c7bf42809d9597a7"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformDragAndDrop.android.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.4539323,
+    "ast_hash": "6f1c893d5ab9bb80d66f28d9e125846e",
+    "semantic_hash": "6f1c893d5ab9bb80d66f28d9e125846e"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformLoadLogic.android.kt": {
+    "mtime": 1764312481.063378,
+    "seen": 1788798244.4539332,
+    "ast_hash": "703efab71782cd36ee72ff4ecaaa56df",
+    "semantic_hash": "703efab71782cd36ee72ff4ecaaa56df"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformNFC.android.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.4539342,
+    "ast_hash": "8151915de5c3db9baa800e4c0b43d080",
+    "semantic_hash": "8151915de5c3db9baa800e4c0b43d080"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformOpenFileLogic.android.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.4539351,
+    "ast_hash": "03da9a2735f8193820fad8740e867f90",
+    "semantic_hash": "03da9a2735f8193820fad8740e867f90"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformPrinter.android.kt": {
+    "mtime": 1764312481.063378,
+    "seen": 1788798244.4539359,
+    "ast_hash": "36c41c26c71e9463ad3c9a6685c41459",
+    "semantic_hash": "36c41c26c71e9463ad3c9a6685c41459"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformShareLogic.android.kt": {
+    "mtime": 1788776544.5353637,
+    "seen": 1788798244.4539368,
+    "ast_hash": "4edf27fb53804dfdde345d81dc12a7c5",
+    "semantic_hash": "4edf27fb53804dfdde345d81dc12a7c5"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/FilePermissionsUtil.kt": {
+    "mtime": 1764312481.0636659,
+    "seen": 1788798244.453938,
+    "ast_hash": "6f2741f6adfb3d7446acaed96946ec12",
+    "semantic_hash": "6f2741f6adfb3d7446acaed96946ec12"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/SystemDataPath.android.kt": {
+    "mtime": 1769669985.4150052,
+    "seen": 1788798244.453939,
+    "ast_hash": "52f2d5a11e6b7188a1a1caa8fec15f81",
+    "semantic_hash": "52f2d5a11e6b7188a1a1caa8fec15f81"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobCoordinator.android.kt": {
+    "mtime": 1788779824.591121,
+    "seen": 1788798244.4539397,
+    "ast_hash": "b3d9d2cafad71c7e5e858f52044ae90b",
+    "semantic_hash": "b3d9d2cafad71c7e5e858f52044ae90b"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobStateExtensions.kt": {
+    "mtime": 1764312481.063823,
+    "seen": 1788798244.4539404,
+    "ast_hash": "18214fd97f374c6032cfe27bb50d644d",
+    "semantic_hash": "18214fd97f374c6032cfe27bb50d644d"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobWorker.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.4539413,
+    "ast_hash": "0c8e19851b657ddc67fab9d18896eef1",
+    "semantic_hash": "0c8e19851b657ddc67fab9d18896eef1"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJob.android.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.453942,
+    "ast_hash": "c02919be121fd857f25ddd336ef6cf41",
+    "semantic_hash": "c02919be121fd857f25ddd336ef6cf41"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJobs.android.kt": {
+    "mtime": 1764312481.0638628,
+    "seen": 1788798244.4539428,
+    "ast_hash": "5d3ff64c9a52e0d14f5db4fb546bb00c",
+    "semantic_hash": "5d3ff64c9a52e0d14f5db4fb546bb00c"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableUniqueBackgroundJob.android.kt": {
+    "mtime": 1764312481.0638628,
+    "seen": 1788798244.4539435,
+    "ast_hash": "5130bcc504d204b26751df31a6d659ab",
+    "semantic_hash": "5130bcc504d204b26751df31a6d659ab"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/sync/Progress.android.kt": {
+    "mtime": 1788762266.7777007,
+    "seen": 1788798244.4539442,
+    "ast_hash": "d62a83d7af676add2822aedc8c6f54f5",
+    "semantic_hash": "d62a83d7af676add2822aedc8c6f54f5"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/PlatformBackHandler.android.kt": {
+    "mtime": 1764312481.0641432,
+    "seen": 1788798244.4539452,
+    "ast_hash": "0e5626f92ee6ab1b51f6437eba6f98db",
+    "semantic_hash": "0e5626f92ee6ab1b51f6437eba6f98db"
+  },
+  "src/androidMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/WindowSizeClass.android.kt": {
+    "mtime": 1788762266.7787006,
+    "seen": 1788798244.453946,
+    "ast_hash": "cddc02159819966c2fc654659eed167b",
+    "semantic_hash": "cddc02159819966c2fc654659eed167b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/App.kt": {
+    "mtime": 1788762266.7797008,
+    "seen": 1788798244.4539468,
+    "ast_hash": "80687c651bc69e8d06c1856319c55b83",
+    "semantic_hash": "80687c651bc69e8d06c1856319c55b83"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/GlobalAsyncErrorHandler.kt": {
+    "mtime": 1788776544.5353637,
+    "seen": 1788798244.4539475,
+    "ast_hash": "0d42519096549abbb26e09f9e6e5cab4",
+    "semantic_hash": "0d42519096549abbb26e09f9e6e5cab4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/auth/AuthBackend.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.4539487,
+    "ast_hash": "65ff17409454cff88cac607a9bf5bc6a",
+    "semantic_hash": "65ff17409454cff88cac607a9bf5bc6a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/EntityExtensions.kt": {
+    "mtime": 1764326880.6919837,
+    "seen": 1788798244.4539495,
+    "ast_hash": "b5fc576473361f959a5de508800dea38",
+    "semantic_hash": "b5fc576473361f959a5de508800dea38"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/EventExtensions.kt": {
+    "mtime": 1764589246.2605207,
+    "seen": 1788798244.4539504,
+    "ast_hash": "5e9f46bc008a440bf7ce6cce0171946e",
+    "semantic_hash": "5e9f46bc008a440bf7ce6cce0171946e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/FileContainerExtensions.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.4539511,
+    "ast_hash": "97bdffb3e82dafdf9ce0ef8521bd9a18",
+    "semantic_hash": "97bdffb3e82dafdf9ce0ef8521bd9a18"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/NfcPayload.kt": {
+    "mtime": 1764312481.0828629,
+    "seen": 1788798244.453952,
+    "ast_hash": "1cafa268150ca455ba13531435dc8534",
+    "semantic_hash": "1cafa268150ca455ba13531435dc8534"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/PlatformFileExtensions.kt": {
+    "mtime": 1764312481.0828629,
+    "seen": 1788798244.4539528,
+    "ast_hash": "bd487e12299ccb85e11f4daa16ad98a4",
+    "semantic_hash": "bd487e12299ccb85e11f4daa16ad98a4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/PostExtensions.kt": {
+    "mtime": 1764326880.0622168,
+    "seen": 1788798244.4539537,
+    "ast_hash": "9456aa4edba769bacf1a8ebf2b3b0833",
+    "semantic_hash": "9456aa4edba769bacf1a8ebf2b3b0833"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/ReferencedLendingExtensions.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.4539545,
+    "ast_hash": "ca41087af62fdebd79465e79c1ffa474",
+    "semantic_hash": "ca41087af62fdebd79465e79c1ffa474"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/SportsExtensions.kt": {
+    "mtime": 1764312481.0828629,
+    "seen": 1788798244.4539592,
+    "ast_hash": "a4894e293b5a1bfa5992fe0ad8af66bb",
+    "semantic_hash": "a4894e293b5a1bfa5992fe0ad8af66bb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/UserDataExtensions.kt": {
+    "mtime": 1765443558.0144813,
+    "seen": 1788798244.45396,
+    "ast_hash": "bcf0f4df003e1dfa64b1b379acccb848",
+    "semantic_hash": "bcf0f4df003e1dfa64b1b379acccb848"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/manufacturer/BasePetzlItemDetails.kt": {
+    "mtime": 1765541268.5040953,
+    "seen": 1788798244.4539607,
+    "ast_hash": "6927fbb03982715553b150ec622a2ab3",
+    "semantic_hash": "6927fbb03982715553b150ec622a2ab3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/manufacturer/ManufacturerItemDetails.kt": {
+    "mtime": 1765541268.5050545,
+    "seen": 1788798244.4539614,
+    "ast_hash": "8418b689fb9d645ec00b50f072899b65",
+    "semantic_hash": "8418b689fb9d645ec00b50f072899b65"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/manufacturer/PetzlItemDetails.kt": {
+    "mtime": 1765541268.5050545,
+    "seen": 1788798244.4539626,
+    "ast_hash": "22d02fae94ab1fc1f5ecc8b302d77b8b",
+    "semantic_hash": "22d02fae94ab1fc1f5ecc8b302d77b8b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/data/manufacturer/PetzlOldItemDetails.kt": {
+    "mtime": 1765541268.5050545,
+    "seen": 1788798244.4539633,
+    "ast_hash": "38424f4705594bd7e6b179c100a65760",
+    "semantic_hash": "38424f4705594bd7e6b179c100a65760"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/Database.kt": {
+    "mtime": 1788776544.5363636,
+    "seen": 1788798244.4539642,
+    "ast_hash": "1105ae37c8ba8fad7a6099ef212a8246",
+    "semantic_hash": "1105ae37c8ba8fad7a6099ef212a8246"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/DepartmentsRepository.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.453965,
+    "ast_hash": "a711fd41f0b0c1c175fb03e47fe110dd",
+    "semantic_hash": "a711fd41f0b0c1c175fb03e47fe110dd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/EventsRepository.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.453966,
+    "ast_hash": "ea30e854ddaef086f91ca218f344f4bd",
+    "semantic_hash": "ea30e854ddaef086f91ca218f344f4bd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/InventoryItemTypesRepository.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.4539666,
+    "ast_hash": "c213934242bbe2e31f30c6448bcadef5",
+    "semantic_hash": "c213934242bbe2e31f30c6448bcadef5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/InventoryItemsRepository.kt": {
+    "mtime": 1788762266.7807007,
+    "seen": 1788798244.4539676,
+    "ast_hash": "563f1d1d69dce648455ece645de05407",
+    "semantic_hash": "563f1d1d69dce648455ece645de05407"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/LendingsRepository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539683,
+    "ast_hash": "08410e4060ac2565fd8c2b62f92336b6",
+    "semantic_hash": "08410e4060ac2565fd8c2b62f92336b6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/MembersRepository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539695,
+    "ast_hash": "dc36ecc92318cfdbfcb73bc0118a7006",
+    "semantic_hash": "dc36ecc92318cfdbfcb73bc0118a7006"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/MemoriesRepository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539704,
+    "ast_hash": "1844ffa599d4d6935a38d94bfad2f8af",
+    "semantic_hash": "1844ffa599d4d6935a38d94bfad2f8af"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/PostsRepository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539711,
+    "ast_hash": "ac942ae47014c99eb146218b160c030f",
+    "semantic_hash": "ac942ae47014c99eb146218b160c030f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/ProfileRepository.kt": {
+    "mtime": 1788776544.5363636,
+    "seen": 1788798244.4539723,
+    "ast_hash": "6e5f32dbb7ea4b147a0792d0596d742f",
+    "semantic_hash": "6e5f32dbb7ea4b147a0792d0596d742f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/Repository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.453973,
+    "ast_hash": "cde8fa6df81eb23d769708b993a5bd91",
+    "semantic_hash": "cde8fa6df81eb23d769708b993a5bd91"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/RoomConverters.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.45398,
+    "ast_hash": "87501b55aa2e143e7437482d17c29891",
+    "semantic_hash": "87501b55aa2e143e7437482d17c29891"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/UsersRepository.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539807,
+    "ast_hash": "f0dd1f4129d796ebbe10021a89325508",
+    "semantic_hash": "f0dd1f4129d796ebbe10021a89325508"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/DepartmentDao.kt": {
+    "mtime": 1788762266.7817006,
+    "seen": 1788798244.4539816,
+    "ast_hash": "5bbbcf53260fb371873ea6aa7715495a",
+    "semantic_hash": "5bbbcf53260fb371873ea6aa7715495a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/EventDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539824,
+    "ast_hash": "eb894d59e705da6b29683ec86efe5a36",
+    "semantic_hash": "eb894d59e705da6b29683ec86efe5a36"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/EventUserCrossRefDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539833,
+    "ast_hash": "367e2feea59b76a20883384f74d6e71c",
+    "semantic_hash": "367e2feea59b76a20883384f74d6e71c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/InventoryItemDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.453984,
+    "ast_hash": "c8dbbca67672132d9d46bacfed5381f6",
+    "semantic_hash": "c8dbbca67672132d9d46bacfed5381f6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/InventoryItemTypeDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539847,
+    "ast_hash": "7ffef76c6a9f90311eda226cb6d25749",
+    "semantic_hash": "7ffef76c6a9f90311eda226cb6d25749"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/LendingDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539855,
+    "ast_hash": "fb81ee2963f242a8a94d87909a77292e",
+    "semantic_hash": "fb81ee2963f242a8a94d87909a77292e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/LendingItemDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539864,
+    "ast_hash": "fb5c80417253add3379eab9ba69bea4f",
+    "semantic_hash": "fb5c80417253add3379eab9ba69bea4f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/MemberDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539871,
+    "ast_hash": "af658dcb7b7919de16637384042cc429",
+    "semantic_hash": "af658dcb7b7919de16637384042cc429"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/MemoryDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539878,
+    "ast_hash": "76c59e71159375ca57de32686281f424",
+    "semantic_hash": "76c59e71159375ca57de32686281f424"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/MemoryMemberCrossRefDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539886,
+    "ast_hash": "f9a258d1f6d6963d7b92c148daed9d49",
+    "semantic_hash": "f9a258d1f6d6963d7b92c148daed9d49"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/PostDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539893,
+    "ast_hash": "eed9bb6d9915a27166f98ed1e9592bf2",
+    "semantic_hash": "eed9bb6d9915a27166f98ed1e9592bf2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/ReceivedItemDao.kt": {
+    "mtime": 1788762266.7826316,
+    "seen": 1788798244.4539902,
+    "ast_hash": "6dd169aa005f55d68334e62e46a141a0",
+    "semantic_hash": "6dd169aa005f55d68334e62e46a141a0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/dao/UserDao.kt": {
+    "mtime": 1788762266.7827008,
+    "seen": 1788798244.453991,
+    "ast_hash": "88394713a79789c9b31087ae66952129",
+    "semantic_hash": "88394713a79789c9b31087ae66952129"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/DepartmentEntity.kt": {
+    "mtime": 1788762266.7827008,
+    "seen": 1788798244.4539917,
+    "ast_hash": "afdac5e5fe2a58596b7e5e6270d85f9e",
+    "semantic_hash": "afdac5e5fe2a58596b7e5e6270d85f9e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/EventEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539924,
+    "ast_hash": "a7057db56505a0460be696b4f27bb91d",
+    "semantic_hash": "a7057db56505a0460be696b4f27bb91d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/EventUserCrossRef.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539933,
+    "ast_hash": "25df02ec37b085ee2e8a5f3f0feb26c5",
+    "semantic_hash": "25df02ec37b085ee2e8a5f3f0feb26c5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/InventoryItemEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539943,
+    "ast_hash": "6c797574029b6c2db64802474635b5da",
+    "semantic_hash": "6c797574029b6c2db64802474635b5da"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/InventoryItemTypeEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.453995,
+    "ast_hash": "7060ba580716efcb2ee2feddd08ccba5",
+    "semantic_hash": "7060ba580716efcb2ee2feddd08ccba5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/LendingEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539957,
+    "ast_hash": "bc0514d94be713fc8feadf13b26b7e82",
+    "semantic_hash": "bc0514d94be713fc8feadf13b26b7e82"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/LendingItemEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539967,
+    "ast_hash": "f86fe0c6a5548ba7462551d24201947f",
+    "semantic_hash": "f86fe0c6a5548ba7462551d24201947f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/MemberEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539974,
+    "ast_hash": "c73c5197e93fdfc83976199d3d1c956f",
+    "semantic_hash": "c73c5197e93fdfc83976199d3d1c956f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/MemoryEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.453998,
+    "ast_hash": "67c6e6e45d2ad3e93142338e07388398",
+    "semantic_hash": "67c6e6e45d2ad3e93142338e07388398"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/MemoryMemberCrossRef.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539988,
+    "ast_hash": "a3c74950c361e3dd5c712f36afe64ea5",
+    "semantic_hash": "a3c74950c361e3dd5c712f36afe64ea5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/PostEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4539995,
+    "ast_hash": "77cd5121ff44eb40d4e882652ebf2661",
+    "semantic_hash": "77cd5121ff44eb40d4e882652ebf2661"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/ReceivedItemEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4540012,
+    "ast_hash": "d63175f4b4bfcf61ce449b6eda63be57",
+    "semantic_hash": "d63175f4b4bfcf61ce449b6eda63be57"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/entity/UserEntity.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.454002,
+    "ast_hash": "30c4429a8cc8b2048b87162b938cd8b2",
+    "semantic_hash": "30c4429a8cc8b2048b87162b938cd8b2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/EventWithRelations.kt": {
+    "mtime": 1788762266.7832208,
+    "seen": 1788798244.4540026,
+    "ast_hash": "6d48485748137f650fee59123c9e36d8",
+    "semantic_hash": "6d48485748137f650fee59123c9e36d8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/InventoryItemTypeWithRelations.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.4540036,
+    "ast_hash": "30761c55308af2346e7b4e0279b8a099",
+    "semantic_hash": "30761c55308af2346e7b4e0279b8a099"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/InventoryItemWithRelations.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.4540043,
+    "ast_hash": "9fbcdd51069017d9610c43897456736c",
+    "semantic_hash": "9fbcdd51069017d9610c43897456736c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/LendingWithRelations.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.454005,
+    "ast_hash": "184af83148c4943047f1d1406858f5ba",
+    "semantic_hash": "184af83148c4943047f1d1406858f5ba"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/MemoryWithRelations.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.4540079,
+    "ast_hash": "d0f4d5d2c193e8246cffe8ed360d7d39",
+    "semantic_hash": "d0f4d5d2c193e8246cffe8ed360d7d39"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/database/relation/PostWithRelations.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.4540086,
+    "ast_hash": "d25e261d55aeda65bc1cd73d8b51af6d",
+    "semantic_hash": "d25e261d55aeda65bc1cd73d8b51af6d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/di/AnnotatedModules.kt": {
+    "mtime": 1788762266.783933,
+    "seen": 1788798244.4540093,
+    "ast_hash": "f581d1cf551800f36aa66cd118d24224",
+    "semantic_hash": "f581d1cf551800f36aa66cd118d24224"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/di/DatabaseModule.kt": {
+    "mtime": 1788762266.7842927,
+    "seen": 1788798244.45401,
+    "ast_hash": "7df583c7a7a47140bc7359875f5d3a1b",
+    "semantic_hash": "7df583c7a7a47140bc7359875f5d3a1b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/di/DispatcherProvider.kt": {
+    "mtime": 1788762266.7842927,
+    "seen": 1788798244.454011,
+    "ast_hash": "90d18953cf60faffb7af1d2171cb56a7",
+    "semantic_hash": "90d18953cf60faffb7af1d2171cb56a7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/di/Koin.kt": {
+    "mtime": 1788783725.709004,
+    "seen": 1788798244.4540117,
+    "ast_hash": "e54ef7d6bc0353fac01f85c1b267903c",
+    "semantic_hash": "e54ef7d6bc0353fac01f85c1b267903c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/di/ManualModules.kt": {
+    "mtime": 1788794430.2812665,
+    "seen": 1788798244.4540126,
+    "ast_hash": "5f2e5f2f78e2c04c8dfbe15db2160eca",
+    "semantic_hash": "5f2e5f2f78e2c04c8dfbe15db2160eca"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/CannotAllocateEnoughItemsException.kt": {
+    "mtime": 1764312481.0834968,
+    "seen": 1788798244.4540133,
+    "ast_hash": "bb06db6115b8365e5bec4180143b3936",
+    "semantic_hash": "bb06db6115b8365e5bec4180143b3936"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/InternetAccessNotAvailable.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540143,
+    "ast_hash": "e732f7b327567e830c177ee534c8c4ee",
+    "semantic_hash": "e732f7b327567e830c177ee534c8c4ee"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/MissingCrossReferenceException.kt": {
+    "mtime": 1769669985.417321,
+    "seen": 1788798244.454015,
+    "ast_hash": "e022a90059aa348d3af497362742606a",
+    "semantic_hash": "e022a90059aa348d3af497362742606a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/NfcException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.454016,
+    "ast_hash": "1113d1e6284e4e8913a275c38adb1458",
+    "semantic_hash": "1113d1e6284e4e8913a275c38adb1458"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/NfcTagFormatNotSupportedException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540167,
+    "ast_hash": "d87b083d988815d634e287661016fb16",
+    "semantic_hash": "d87b083d988815d634e287661016fb16"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/NfcTagIsReadOnlyException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540176,
+    "ast_hash": "1182ebdab8414ca36431d33b90cd2184",
+    "semantic_hash": "1182ebdab8414ca36431d33b90cd2184"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/NfcTagMemorySmallException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540184,
+    "ast_hash": "920a71040441eb16b87fa221a93e8c74",
+    "semantic_hash": "920a71040441eb16b87fa221a93e8c74"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/NoValidInsuranceForPeriodException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.454019,
+    "ast_hash": "d46a4b5fa83a64f49b0bad19c69a9d8e",
+    "semantic_hash": "d46a4b5fa83a64f49b0bad19c69a9d8e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/exception/ResourceNotModifiedException.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540198,
+    "ast_hash": "a1095ae10b26bc01707d85052523234d",
+    "semantic_hash": "a1095ae10b26bc01707d85052523234d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/log/FileLogger.kt": {
+    "mtime": 1765443558.0144813,
+    "seen": 1788798244.4540205,
+    "ast_hash": "a2dd095d538c56c3b3e5c1b09b806797",
+    "semantic_hash": "a2dd095d538c56c3b3e5c1b09b806797"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/log/Sentry.kt": {
+    "mtime": 1764312481.0836604,
+    "seen": 1788798244.4540215,
+    "ast_hash": "9ae25c19abd4304fb619617e99647881",
+    "semantic_hash": "9ae25c19abd4304fb619617e99647881"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/log/SentryLogger.kt": {
+    "mtime": 1765449092.6917021,
+    "seen": 1788798244.4540222,
+    "ast_hash": "f94baa57147c005ca8638306fe229946",
+    "semantic_hash": "f94baa57147c005ca8638306fe229946"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/nav/Destination.kt": {
+    "mtime": 1788762266.7842927,
+    "seen": 1788798244.454023,
+    "ast_hash": "d2c9083b8ead7c044acfc8de54b3c0a0",
+    "semantic_hash": "d2c9083b8ead7c044acfc8de54b3c0a0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/nav/LocalTransitionContext.kt": {
+    "mtime": 1764312481.0840003,
+    "seen": 1788798244.4540236,
+    "ast_hash": "17bfca73b5b26afe92472d4b68efe8ff",
+    "semantic_hash": "17bfca73b5b26afe92472d4b68efe8ff"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/nav/NavSerialization.kt": {
+    "mtime": 1788762266.7842927,
+    "seen": 1788798244.4540246,
+    "ast_hash": "a0eee230655f9e4a8721d47cc1d6aa30",
+    "semantic_hash": "a0eee230655f9e4a8721d47cc1d6aa30"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/nav/Navigator.kt": {
+    "mtime": 1788762266.7842927,
+    "seen": 1788798244.4540255,
+    "ast_hash": "d619374e33f3d069a9970ae257643186",
+    "semantic_hash": "d619374e33f3d069a9970ae257643186"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/DepartmentsRemoteRepository.kt": {
+    "mtime": 1788794430.2632666,
+    "seen": 1788798244.4540262,
+    "ast_hash": "f131800eecb7ace84f1de28b84ce6f11",
+    "semantic_hash": "f131800eecb7ace84f1de28b84ce6f11"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/ErrorHandling.kt": {
+    "mtime": 1764312481.0841842,
+    "seen": 1788798244.454027,
+    "ast_hash": "c5157cd4ef538916a8644b829a0c63e9",
+    "semantic_hash": "c5157cd4ef538916a8644b829a0c63e9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/EventsRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.454028,
+    "ast_hash": "64ce04b7db26fedbbf91ad682f23333c",
+    "semantic_hash": "64ce04b7db26fedbbf91ad682f23333c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/HttpClient.kt": {
+    "mtime": 1764312481.0841842,
+    "seen": 1788798244.4540286,
+    "ast_hash": "b12083b462700eaa597cb75f315c8c50",
+    "semantic_hash": "b12083b462700eaa597cb75f315c8c50"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.kt": {
+    "mtime": 1764312481.0841842,
+    "seen": 1788798244.4540293,
+    "ast_hash": "fa273e2d33b69b6ff412c1d82156a3a9",
+    "semantic_hash": "fa273e2d33b69b6ff412c1d82156a3a9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/HttpDateFormatter.kt": {
+    "mtime": 1764312481.0841842,
+    "seen": 1788798244.45403,
+    "ast_hash": "218672a9700cace4bfaefbadc3148213",
+    "semantic_hash": "218672a9700cace4bfaefbadc3148213"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/InventoryItemTypesRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.4540308,
+    "ast_hash": "29bb919e5569a4fee706b0730a165184",
+    "semantic_hash": "29bb919e5569a4fee706b0730a165184"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/InventoryItemsRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.4540317,
+    "ast_hash": "57065f53e82b0d5f70c9e797d9d150ea",
+    "semantic_hash": "57065f53e82b0d5f70c9e797d9d150ea"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/LendingsRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.4540324,
+    "ast_hash": "864c79c0491120eb7ea46d8c8bbf8bc2",
+    "semantic_hash": "864c79c0491120eb7ea46d8c8bbf8bc2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/MembersRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.454035,
+    "ast_hash": "aa1b811dac2713d67658ca2d833cd993",
+    "semantic_hash": "aa1b811dac2713d67658ca2d833cd993"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/MemoriesRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.4540358,
+    "ast_hash": "013e52bcc2e1567ea8ea51eb44e388cf",
+    "semantic_hash": "013e52bcc2e1567ea8ea51eb44e388cf"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/PostsRemoteRepository.kt": {
+    "mtime": 1788762266.7847006,
+    "seen": 1788798244.4540365,
+    "ast_hash": "79b48ad3639040cb1f33f6bec18aa58a",
+    "semantic_hash": "79b48ad3639040cb1f33f6bec18aa58a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/ProfileRemoteRepository.kt": {
+    "mtime": 1788776544.5363636,
+    "seen": 1788798244.4540372,
+    "ast_hash": "2596e7b982ee38c6c07130fce8ce6534",
+    "semantic_hash": "2596e7b982ee38c6c07130fce8ce6534"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/RemoteRepository.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540384,
+    "ast_hash": "0f303b20607434a37902c5b9334dea20",
+    "semantic_hash": "0f303b20607434a37902c5b9334dea20"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/Server.kt": {
+    "mtime": 1764941871.806915,
+    "seen": 1788798244.454039,
+    "ast_hash": "9164f18459afdd477082a905c1a896ab",
+    "semantic_hash": "9164f18459afdd477082a905c1a896ab"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/SymmetricRemoteRepository.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540398,
+    "ast_hash": "3adcd6e3df7046a2fa9750f9a229d3de",
+    "semantic_hash": "3adcd6e3df7046a2fa9750f9a229d3de"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/network/UsersRemoteRepository.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540405,
+    "ast_hash": "4f64e295a18d6baaa6262677c6ed863e",
+    "semantic_hash": "4f64e295a18d6baaa6262677c6ed863e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/HelperHolder.kt": {
+    "mtime": 1764312481.0841842,
+    "seen": 1788798244.4540412,
+    "ast_hash": "972b135ab16baf97b01ace26a5e78deb",
+    "semantic_hash": "972b135ab16baf97b01ace26a5e78deb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/Permission.kt": {
+    "mtime": 1764312481.0847204,
+    "seen": 1788798244.4540422,
+    "ast_hash": "2e604b899e64f6dae5fb167a0692f4aa",
+    "semantic_hash": "2e604b899e64f6dae5fb167a0692f4aa"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/PermissionHelper.kt": {
+    "mtime": 1764312481.0847204,
+    "seen": 1788798244.454043,
+    "ast_hash": "a8a7ec6eb47a5ebb62257f37756af72a",
+    "semantic_hash": "a8a7ec6eb47a5ebb62257f37756af72a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/PermissionUtils.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540436,
+    "ast_hash": "7e16669b6414ce4b16b010faec0728f5",
+    "semantic_hash": "7e16669b6414ce4b16b010faec0728f5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/result/CameraPermissionResult.kt": {
+    "mtime": 1764312481.0847204,
+    "seen": 1788798244.4540446,
+    "ast_hash": "44ef8b56260f7b00a93487efa431e470",
+    "semantic_hash": "44ef8b56260f7b00a93487efa431e470"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/result/LocationPermissionResult.kt": {
+    "mtime": 1764312481.0848408,
+    "seen": 1788798244.4540455,
+    "ast_hash": "870f44c7bb3087d2b27991da6109ab10",
+    "semantic_hash": "870f44c7bb3087d2b27991da6109ab10"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/result/NotificationPermissionResult.kt": {
+    "mtime": 1764312481.0848408,
+    "seen": 1788798244.4540462,
+    "ast_hash": "d414223cec90c1e57d36f708b8022af1",
+    "semantic_hash": "d414223cec90c1e57d36f708b8022af1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/result/PermissionResult.kt": {
+    "mtime": 1764312481.0848408,
+    "seen": 1788798244.454047,
+    "ast_hash": "af159ae94cb5b9231284576210502032",
+    "semantic_hash": "af159ae94cb5b9231284576210502032"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/permission/result/RecordAudioPermissionResult.kt": {
+    "mtime": 1764312481.0848627,
+    "seen": 1788798244.4540477,
+    "ast_hash": "f70c21127dced37983cc58f6a0f0d83b",
+    "semantic_hash": "f70c21127dced37983cc58f6a0f0d83b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformAppUpdates.kt": {
+    "mtime": 1764312481.0848627,
+    "seen": 1788798244.4540484,
+    "ast_hash": "1711baeea54b958f12df50bc6ab9d378",
+    "semantic_hash": "1711baeea54b958f12df50bc6ab9d378"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformCalendarSync.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540493,
+    "ast_hash": "dfbfabe5f784b5046024ce526722666e",
+    "semantic_hash": "dfbfabe5f784b5046024ce526722666e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformClipboard.kt": {
+    "mtime": 1764312481.0849957,
+    "seen": 1788798244.45405,
+    "ast_hash": "3d1636835f77a760c1c15be0f0de6e6d",
+    "semantic_hash": "3d1636835f77a760c1c15be0f0de6e6d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformDragAndDrop.kt": {
+    "mtime": 1788762266.7857008,
+    "seen": 1788798244.4540508,
+    "ast_hash": "118efeca2267b3eae0481ff26d100cde",
+    "semantic_hash": "118efeca2267b3eae0481ff26d100cde"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformLoadLogic.kt": {
+    "mtime": 1764312481.0849957,
+    "seen": 1788798244.4540517,
+    "ast_hash": "514a908c0c200f4f785088cf5c10ade9",
+    "semantic_hash": "514a908c0c200f4f785088cf5c10ade9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformNFC.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540527,
+    "ast_hash": "05b333e7d049ffb1e868dd167de81a89",
+    "semantic_hash": "05b333e7d049ffb1e868dd167de81a89"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformOpenFileLogic.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540534,
+    "ast_hash": "8810092efe6682c34cbb6752680c3a2b",
+    "semantic_hash": "8810092efe6682c34cbb6752680c3a2b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformPrinter.kt": {
+    "mtime": 1764312481.0849957,
+    "seen": 1788798244.454054,
+    "ast_hash": "aa11e1027690f5528016e0cf0d4afe09",
+    "semantic_hash": "aa11e1027690f5528016e0cf0d4afe09"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformProvider.kt": {
+    "mtime": 1764312481.0849957,
+    "seen": 1788798244.4540548,
+    "ast_hash": "a99a5b6a98861d1fe4eb058ecaa62227",
+    "semantic_hash": "a99a5b6a98861d1fe4eb058ecaa62227"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformSaveFileLogic.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540558,
+    "ast_hash": "7a357b1460d278a70ae0a07300878605",
+    "semantic_hash": "7a357b1460d278a70ae0a07300878605"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformShareLogic.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540565,
+    "ast_hash": "4093d254a265a75727e56c64e263d213",
+    "semantic_hash": "4093d254a265a75727e56c64e263d213"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/process/Progress.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540575,
+    "ast_hash": "8df46cd582b0e542a59d347949a3dd9c",
+    "semantic_hash": "8df46cd582b0e542a59d347949a3dd9c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/process/ProgressNotifier.kt": {
+    "mtime": 1788762266.7867007,
+    "seen": 1788798244.4540582,
+    "ast_hash": "f2095b70a097b7f7aee5700ce1e6ec7a",
+    "semantic_hash": "f2095b70a097b7f7aee5700ce1e6ec7a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/FCMTokenManager.kt": {
+    "mtime": 1788776544.5363636,
+    "seen": 1788798244.4540591,
+    "ast_hash": "2e9502916bff4aa841c70614bbd7b8d0",
+    "semantic_hash": "2e9502916bff4aa841c70614bbd7b8d0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/FCMTokenRemote.kt": {
+    "mtime": 1764312481.0853546,
+    "seen": 1788798244.4540598,
+    "ast_hash": "3db0a4d58f668eb2da083964bb5dbef9",
+    "semantic_hash": "3db0a4d58f668eb2da083964bb5dbef9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/LocalNotifications.kt": {
+    "mtime": 1788776544.5363636,
+    "seen": 1788798244.4540606,
+    "ast_hash": "e006fd346a47779fdfec1bb62be41b3f",
+    "semantic_hash": "e006fd346a47779fdfec1bb62be41b3f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/PlatformSSEConfiguration.kt": {
+    "mtime": 1764312481.0853546,
+    "seen": 1788798244.4540613,
+    "ast_hash": "b2697527b05ac5dbd9a3fd595ba54de9",
+    "semantic_hash": "b2697527b05ac5dbd9a3fd595ba54de9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/PushNotifierListener.kt": {
+    "mtime": 1788776544.5373638,
+    "seen": 1788798244.4540622,
+    "ast_hash": "0ae78e1ca068b78dcf101fe250f5315e",
+    "semantic_hash": "0ae78e1ca068b78dcf101fe250f5315e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/push/SSENotificationsListener.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.4540632,
+    "ast_hash": "f5668568f2b9dc51fbaff8276de591e7",
+    "semantic_hash": "f5668568f2b9dc51fbaff8276de591e7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/storage/InMemoryFileAllocator.kt": {
+    "mtime": 1764770781.4432056,
+    "seen": 1788798244.454064,
+    "ast_hash": "2b7a67be2561f241bcd8250a466e75c8",
+    "semantic_hash": "2b7a67be2561f241bcd8250a466e75c8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/storage/Settings.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.4540646,
+    "ast_hash": "e8c9471cb1d5691f983730f2529fc039",
+    "semantic_hash": "e8c9471cb1d5691f983730f2529fc039"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/storage/SettingsCookiesStorage.kt": {
+    "mtime": 1764312481.085636,
+    "seen": 1788798244.4540653,
+    "ast_hash": "94cd470c0fadecfd2d30ef2ebf713c9b",
+    "semantic_hash": "94cd470c0fadecfd2d30ef2ebf713c9b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/FileSystem.kt": {
+    "mtime": 1764312481.085636,
+    "seen": 1788798244.4540663,
+    "ast_hash": "d754622e8052c109c3feb112b72d0b63",
+    "semantic_hash": "d754622e8052c109c3feb112b72d0b63"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/SystemDataPath.kt": {
+    "mtime": 1764312481.0858,
+    "seen": 1788798244.454067,
+    "ast_hash": "39e3626a284b4d8e00c0bf968a9ea6eb",
+    "semantic_hash": "39e3626a284b4d8e00c0bf968a9ea6eb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJob.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.4540677,
+    "ast_hash": "0eeff1b9ca7ac705ac857dd131166b64",
+    "semantic_hash": "0eeff1b9ca7ac705ac857dd131166b64"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobCoordinator.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.4540687,
+    "ast_hash": "86de06b773a43ad4f85ca111161a718a",
+    "semantic_hash": "86de06b773a43ad4f85ca111161a718a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobState.kt": {
+    "mtime": 1764312481.0858924,
+    "seen": 1788798244.4540696,
+    "ast_hash": "37831440e879f5e1ac4925de81883e52",
+    "semantic_hash": "37831440e879f5e1ac4925de81883e52"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundSyncContext.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.454077,
+    "ast_hash": "1ff9ddd3dbc7fff3ffdae0438f77acd1",
+    "semantic_hash": "1ff9ddd3dbc7fff3ffdae0438f77acd1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/DatabaseIntegrityVerifier.kt": {
+    "mtime": 1788776544.5373638,
+    "seen": 1788798244.4540782,
+    "ast_hash": "fe628357dd1f3c572486938022aac525",
+    "semantic_hash": "fe628357dd1f3c572486938022aac525"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJob.kt": {
+    "mtime": 1788762266.7877007,
+    "seen": 1788798244.4540794,
+    "ast_hash": "df684b3b1878c4f30a5bb11b06709efa",
+    "semantic_hash": "df684b3b1878c4f30a5bb11b06709efa"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJobs.kt": {
+    "mtime": 1764312481.0858924,
+    "seen": 1788798244.4540818,
+    "ast_hash": "48bded606d3cd0365744861b1650be81",
+    "semantic_hash": "48bded606d3cd0365744861b1650be81"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableUniqueBackgroundJob.kt": {
+    "mtime": 1764312481.0858924,
+    "seen": 1788798244.4540825,
+    "ast_hash": "0ba1790312da4a7bfae8a53cb50e3cb8",
+    "semantic_hash": "0ba1790312da4a7bfae8a53cb50e3cb8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncAllDataBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540834,
+    "ast_hash": "b42900cea713a262d81ba5015989db09",
+    "semantic_hash": "b42900cea713a262d81ba5015989db09"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncDepartmentBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540842,
+    "ast_hash": "92f0c24adbb9011e82f715b4c3dbee91",
+    "semantic_hash": "92f0c24adbb9011e82f715b4c3dbee91"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncEntityBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540849,
+    "ast_hash": "8d8806d3edc320a3f021fcccebd07f10",
+    "semantic_hash": "8d8806d3edc320a3f021fcccebd07f10"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncEventBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540856,
+    "ast_hash": "d436cbc10b6442b32976b7bdfad6b176",
+    "semantic_hash": "d436cbc10b6442b32976b7bdfad6b176"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncLendingBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540863,
+    "ast_hash": "e6b6ee71107debcf71a96ed2b11aa037",
+    "semantic_hash": "e6b6ee71107debcf71a96ed2b11aa037"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncPostBackgroundJob.kt": {
+    "mtime": 1788762266.7887008,
+    "seen": 1788798244.4540875,
+    "ast_hash": "57e8a287f1d3d1b2de9e2ebe45da8e2d",
+    "semantic_hash": "57e8a287f1d3d1b2de9e2ebe45da8e2d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/sync/SyncResult.kt": {
+    "mtime": 1764312481.0858924,
+    "seen": 1788798244.4540882,
+    "ast_hash": "8ed9971c1fe6b428ff465e366de13d7b",
+    "semantic_hash": "8ed9971c1fe6b428ff465e366de13d7b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/typing/ShoppingList.kt": {
+    "mtime": 1764312481.0858924,
+    "seen": 1788798244.454089,
+    "ast_hash": "31f56f0eb99bba701330aa75c8b384f2",
+    "semantic_hash": "31f56f0eb99bba701330aa75c8b384f2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/animation/SharedBounds.kt": {
+    "mtime": 1764312481.0863492,
+    "seen": 1788798244.4540896,
+    "ast_hash": "9bddc8b74f392f7dd832c4aeecb918f1",
+    "semantic_hash": "9bddc8b74f392f7dd832c4aeecb918f1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/composition/LocalNavigationBarVisibility.kt": {
+    "mtime": 1765541268.5050545,
+    "seen": 1788798244.4540906,
+    "ast_hash": "8432ccf17b7822dda59baae56929ae9d",
+    "semantic_hash": "8432ccf17b7822dda59baae56929ae9d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/DialogContext.kt": {
+    "mtime": 1770981388.6950622,
+    "seen": 1788798244.4540913,
+    "ast_hash": "caa95bddedd82598c27f5a9149f2eaa3",
+    "semantic_hash": "caa95bddedd82598c27f5a9149f2eaa3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/FutureSelectableDates.kt": {
+    "mtime": 1764312481.0864475,
+    "seen": 1788798244.454092,
+    "ast_hash": "985caa0ec3af70eb5db97eddf4aa05cb",
+    "semantic_hash": "985caa0ec3af70eb5db97eddf4aa05cb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/GrammaticalGender.kt": {
+    "mtime": 1764312481.0864475,
+    "seen": 1788798244.4540927,
+    "ast_hash": "280169372a7fd91b88945cc903bddf54",
+    "semantic_hash": "280169372a7fd91b88945cc903bddf54"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/IconAction.kt": {
+    "mtime": 1764312481.0864475,
+    "seen": 1788798244.4540935,
+    "ast_hash": "c208007511e571f3959342f472698f2f",
+    "semantic_hash": "c208007511e571f3959342f472698f2f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/PastSelectableDates.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4540944,
+    "ast_hash": "5f895e3e98a05bf6b313c5b16bd6bd51",
+    "semantic_hash": "5f895e3e98a05bf6b313c5b16bd6bd51"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/data/RangeSelectableDates.kt": {
+    "mtime": 1764312481.0864475,
+    "seen": 1788798244.4540975,
+    "ast_hash": "b4e0f113818422e7d12011e9b4c52e9a",
+    "semantic_hash": "b4e0f113818422e7d12011e9b4c52e9a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/AddInsuranceDialog.kt": {
+    "mtime": 1764771345.9284616,
+    "seen": 1788798244.4540982,
+    "ast_hash": "add5aae7430264ad5cfe323441d7bf23",
+    "semantic_hash": "add5aae7430264ad5cfe323441d7bf23"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/CreateInventoryItemDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.454099,
+    "ast_hash": "c7f5ee21578142a5a7597ac95fe09e9e",
+    "semantic_hash": "c7f5ee21578142a5a7597ac95fe09e9e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/CreateInventoryItemTypeDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4540997,
+    "ast_hash": "2e74eb227ae25f4c071cfc1b7cf7a9dc",
+    "semantic_hash": "2e74eb227ae25f4c071cfc1b7cf7a9dc"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/DeleteDialog.kt": {
+    "mtime": 1770981427.6750374,
+    "seen": 1788798244.4541004,
+    "ast_hash": "a77917dedbd217f3f687dfc248b5c070",
+    "semantic_hash": "a77917dedbd217f3f687dfc248b5c070"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/DepartmentMemberRolesDialog.kt": {
+    "mtime": 1788796551.634,
+    "seen": 1788798244.4541013,
+    "ast_hash": "d2bbdc03e99ae8e5f6392c813dfbfc61",
+    "semantic_hash": "d2bbdc03e99ae8e5f6392c813dfbfc61"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/EditDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.454102,
+    "ast_hash": "10c129b714b82cc0fa2e91cce8c27ef9",
+    "semantic_hash": "10c129b714b82cc0fa2e91cce8c27ef9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/EditInventoryItemDialog.kt": {
+    "mtime": 1779186465.2054942,
+    "seen": 1788798244.4541028,
+    "ast_hash": "0fe46790d797b57dc9ead2b208f21398",
+    "semantic_hash": "0fe46790d797b57dc9ead2b208f21398"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/EditInventoryItemTypeDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4541037,
+    "ast_hash": "744008850bb0b19ab46b237cdcdbb40a",
+    "semantic_hash": "744008850bb0b19ab46b237cdcdbb40a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/ErrorDialog.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541047,
+    "ast_hash": "9a777b3c3b1d4c6a223f8c0b0a564530",
+    "semantic_hash": "9a777b3c3b1d4c6a223f8c0b0a564530"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/InsuranceDialog.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541054,
+    "ast_hash": "ffa529b91dead1a60521c9c6f876c1eb",
+    "semantic_hash": "ffa529b91dead1a60521c9c6f876c1eb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/InventoryItemDetailsDialog.kt": {
+    "mtime": 1770982022.136474,
+    "seen": 1788798244.454106,
+    "ast_hash": "a76eb58d3e6eacf70937f883917485b8",
+    "semantic_hash": "a76eb58d3e6eacf70937f883917485b8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/InventoryItemInformationDialog.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541068,
+    "ast_hash": "30c2fd62d258b9038d68ff9a9d0748a1",
+    "semantic_hash": "30c2fd62d258b9038d68ff9a9d0748a1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/LendingsHistoryDialog.kt": {
+    "mtime": 1766498313.1205232,
+    "seen": 1788798244.4541078,
+    "ast_hash": "fa521fb27c8d5656f2f4427748541c73",
+    "semantic_hash": "fa521fb27c8d5656f2f4427748541c73"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/LogoutConfirmationDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4541085,
+    "ast_hash": "5ac65d309713777d53f20cfbbb869b93",
+    "semantic_hash": "5ac65d309713777d53f20cfbbb869b93"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/MemoryDialog.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541092,
+    "ast_hash": "c8ac96bdb70cd8a8b3156fa17481ca88",
+    "semantic_hash": "c8ac96bdb70cd8a8b3156fa17481ca88"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/RemoveAccountDialog.kt": {
+    "mtime": 1765455612.0897934,
+    "seen": 1788798244.45411,
+    "ast_hash": "11c42d5116bf1e85bff775c17693c366",
+    "semantic_hash": "11c42d5116bf1e85bff775c17693c366"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/UpdateAvailableDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4541106,
+    "ast_hash": "32d8cdcecf7c5974cbc16b964206166a",
+    "semantic_hash": "32d8cdcecf7c5974cbc16b964206166a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/UpdateProgressDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4541116,
+    "ast_hash": "de4f47272a623be03499063d5727e9dc",
+    "semantic_hash": "de4f47272a623be03499063d5727e9dc"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/dialog/UpdateRestartRequiredDialog.kt": {
+    "mtime": 1764312481.0868628,
+    "seen": 1788798244.4541123,
+    "ast_hash": "9c8832178c4d11e4503ffe8cc9a55fd8",
+    "semantic_hash": "9c8832178c4d11e4503ffe8cc9a55fd8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/BrandIcons.kt": {
+    "mtime": 1764312481.0878627,
+    "seen": 1788798244.454113,
+    "ast_hash": "88950fd699f8c9c093b451306ac9ce4c",
+    "semantic_hash": "88950fd699f8c9c093b451306ac9ce4c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/FEMECV.kt": {
+    "mtime": 1764312481.0878627,
+    "seen": 1788798244.4541137,
+    "ast_hash": "9401c1a190b71cbc8444215a30cbd655",
+    "semantic_hash": "9401c1a190b71cbc8444215a30cbd655"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/WhatsApp.kt": {
+    "mtime": 1764312481.0878627,
+    "seen": 1788798244.4541147,
+    "ast_hash": "d009dbbdb9131c5048865d15e1ec58a2",
+    "semantic_hash": "d009dbbdb9131c5048865d15e1ec58a2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/material/CalendarEndOutline.kt": {
+    "mtime": 1764851168.3478012,
+    "seen": 1788798244.4541156,
+    "ast_hash": "29264393aec4064b5b6c023257228be5",
+    "semantic_hash": "29264393aec4064b5b6c023257228be5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/material/CalendarStartOutline.kt": {
+    "mtime": 1764851168.365801,
+    "seen": 1788798244.4541163,
+    "ast_hash": "91ff00e631bb872be6b26b134e8e4739",
+    "semantic_hash": "91ff00e631bb872be6b26b134e8e4739"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AccountCircle.kt": {
+    "mtime": 1765443558.0154812,
+    "seen": 1788798244.454117,
+    "ast_hash": "0df65312885062b1943275ebc6c9d0e3",
+    "semantic_hash": "0df65312885062b1943275ebc6c9d0e3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AccountCircleOff.kt": {
+    "mtime": 1765443558.0154812,
+    "seen": 1788798244.4541178,
+    "ast_hash": "6d744ea83b563d152da39983e93345d7",
+    "semantic_hash": "6d744ea83b563d152da39983e93345d7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Add.kt": {
+    "mtime": 1764850942.0171866,
+    "seen": 1788798244.4541187,
+    "ast_hash": "c52f6eb31e0e79c619b77539048b67ac",
+    "semantic_hash": "c52f6eb31e0e79c619b77539048b67ac"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AddCircle.kt": {
+    "mtime": 1764850942.0911865,
+    "seen": 1788798244.4541194,
+    "ast_hash": "5584487b3d03841018b4720a4388772e",
+    "semantic_hash": "5584487b3d03841018b4720a4388772e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AddModerator.kt": {
+    "mtime": 1764850942.0721865,
+    "seen": 1788798244.4541202,
+    "ast_hash": "8c732182aebb88b6c6fb76fa1d6cdc71",
+    "semantic_hash": "8c732182aebb88b6c6fb76fa1d6cdc71"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/ArrowBack.kt": {
+    "mtime": 1764850942.0901864,
+    "seen": 1788798244.4541209,
+    "ast_hash": "b7241c1bc98be8031797879ae061b32d",
+    "semantic_hash": "b7241c1bc98be8031797879ae061b32d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Article.kt": {
+    "mtime": 1764850942.1151865,
+    "seen": 1788798244.4541218,
+    "ast_hash": "4ec59f9b8af98674ee23d8fb15cd5fe2",
+    "semantic_hash": "4ec59f9b8af98674ee23d8fb15cd5fe2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/ArticleFilled.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541225,
+    "ast_hash": "5449d9723a4eaff897bbd28a801370f2",
+    "semantic_hash": "5449d9723a4eaff897bbd28a801370f2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AssignmentReturn.kt": {
+    "mtime": 1764850942.0211866,
+    "seen": 1788798244.4541233,
+    "ast_hash": "c22f3188565f4ab9cd10e9172a938275",
+    "semantic_hash": "c22f3188565f4ab9cd10e9172a938275"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/AttachFile.kt": {
+    "mtime": 1764850942.0931864,
+    "seen": 1788798244.454124,
+    "ast_hash": "1a27aace630d8868984113598bd0ff48",
+    "semantic_hash": "1a27aace630d8868984113598bd0ff48"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Badge.kt": {
+    "mtime": 1764850942.0231864,
+    "seen": 1788798244.4541247,
+    "ast_hash": "8d0cefb4affdf11c079a8f18659d078b",
+    "semantic_hash": "8d0cefb4affdf11c079a8f18659d078b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Call.kt": {
+    "mtime": 1764850942.1161864,
+    "seen": 1788798244.4541256,
+    "ast_hash": "3049fdf0d9c36186f0bb890c07bbf614",
+    "semantic_hash": "3049fdf0d9c36186f0bb890c07bbf614"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CallMade.kt": {
+    "mtime": 1764850942.1171863,
+    "seen": 1788798244.4541264,
+    "ast_hash": "b6c3ddd75e6286b82c59b2a8af975323",
+    "semantic_hash": "b6c3ddd75e6286b82c59b2a8af975323"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Cancel.kt": {
+    "mtime": 1764852051.2995377,
+    "seen": 1788798244.454127,
+    "ast_hash": "87ca673a9f2f26f0da5fef69e54e87a8",
+    "semantic_hash": "87ca673a9f2f26f0da5fef69e54e87a8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Category.kt": {
+    "mtime": 1764850942.0411866,
+    "seen": 1788798244.4541278,
+    "ast_hash": "3fc3098768b4fa82eb433a61ecdf989c",
+    "semantic_hash": "3fc3098768b4fa82eb433a61ecdf989c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CategoryFilled.kt": {
+    "mtime": 1764852098.5655847,
+    "seen": 1788798244.454129,
+    "ast_hash": "b9713645f446b15f7ec3ae0096712bfd",
+    "semantic_hash": "b9713645f446b15f7ec3ae0096712bfd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Check.kt": {
+    "mtime": 1764850942.0521865,
+    "seen": 1788798244.4541297,
+    "ast_hash": "93e22886e81a792aeeba2f74ed366ea1",
+    "semantic_hash": "93e22886e81a792aeeba2f74ed366ea1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CheckCircle.kt": {
+    "mtime": 1764850942.1181865,
+    "seen": 1788798244.4541304,
+    "ast_hash": "8c58749b3ed3c75f67aec1156ecb820f",
+    "semantic_hash": "8c58749b3ed3c75f67aec1156ecb820f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CheckCircleFilled.kt": {
+    "mtime": 1764850942.1191864,
+    "seen": 1788798244.4541311,
+    "ast_hash": "0f5d6e88b02815c229e453d3fd0ea468",
+    "semantic_hash": "0f5d6e88b02815c229e453d3fd0ea468"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Checkbox.kt": {
+    "mtime": 1764850942.0735137,
+    "seen": 1788798244.454132,
+    "ast_hash": "553cc4712d6c4d627cb6cf5ef99c1a43",
+    "semantic_hash": "553cc4712d6c4d627cb6cf5ef99c1a43"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CheckboxUnchecked.kt": {
+    "mtime": 1764850942.074512,
+    "seen": 1788798244.4541328,
+    "ast_hash": "59eb3e48f2e11731be5ce82cfd24c338",
+    "semantic_hash": "59eb3e48f2e11731be5ce82cfd24c338"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/ChevronLeft.kt": {
+    "mtime": 1765541268.5050545,
+    "seen": 1788798244.4541335,
+    "ast_hash": "61bb6f094a00ae8a6edc833c55c384b8",
+    "semantic_hash": "61bb6f094a00ae8a6edc833c55c384b8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/ChevronRight.kt": {
+    "mtime": 1764850942.0621865,
+    "seen": 1788798244.4541345,
+    "ast_hash": "540b7009bc72c1a8ca011ba32edee84c",
+    "semantic_hash": "540b7009bc72c1a8ca011ba32edee84c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Circle.kt": {
+    "mtime": 1764850942.0943246,
+    "seen": 1788798244.4541352,
+    "ast_hash": "e732011df46a2f31e42dac61fe75e692",
+    "semantic_hash": "e732011df46a2f31e42dac61fe75e692"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CircleFilled.kt": {
+    "mtime": 1764850942.095047,
+    "seen": 1788798244.4541361,
+    "ast_hash": "4f34abee92c9957ad7864060232cd040",
+    "semantic_hash": "4f34abee92c9957ad7864060232cd040"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Close.kt": {
+    "mtime": 1764850942.0241866,
+    "seen": 1788798244.4541368,
+    "ast_hash": "7f16594358a12059399548ee49fa126e",
+    "semantic_hash": "7f16594358a12059399548ee49fa126e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CloudOff.kt": {
+    "mtime": 1764850942.0759463,
+    "seen": 1788798244.4541376,
+    "ast_hash": "5e35fd4e6b17681f641e134890198f89",
+    "semantic_hash": "5e35fd4e6b17681f641e134890198f89"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/CloudSync.kt": {
+    "mtime": 1764850942.0771863,
+    "seen": 1788798244.4541383,
+    "ast_hash": "f2b2c7fa8b8f9afa81179ee8901aac72",
+    "semantic_hash": "f2b2c7fa8b8f9afa81179ee8901aac72"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Code.kt": {
+    "mtime": 1764850942.0951865,
+    "seen": 1788798244.4541392,
+    "ast_hash": "ec8c448d1a99a3598e5573b9ce8cb36e",
+    "semantic_hash": "ec8c448d1a99a3598e5573b9ce8cb36e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/ContactPhone.kt": {
+    "mtime": 1764850942.1207595,
+    "seen": 1788798244.45414,
+    "ast_hash": "07745c4dc34ea4b0eb85c5cf6c9c4cfd",
+    "semantic_hash": "07745c4dc34ea4b0eb85c5cf6c9c4cfd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Delete.kt": {
+    "mtime": 1764850942.0641866,
+    "seen": 1788798244.4541407,
+    "ast_hash": "96557d845412ed87ad7f25b5eea44396",
+    "semantic_hash": "96557d845412ed87ad7f25b5eea44396"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Description.kt": {
+    "mtime": 1764850942.0965395,
+    "seen": 1788798244.4541414,
+    "ast_hash": "b4d1890eea81927577f3ca4eb2967875",
+    "semantic_hash": "b4d1890eea81927577f3ca4eb2967875"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Distance.kt": {
+    "mtime": 1764850942.0661864,
+    "seen": 1788798244.454142,
+    "ast_hash": "4a44084f240aa1583f7b52598f0e5a92",
+    "semantic_hash": "4a44084f240aa1583f7b52598f0e5a92"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Edit.kt": {
+    "mtime": 1764850942.0781865,
+    "seen": 1788798244.454143,
+    "ast_hash": "3ab8fa07d4b69fe332b6d3e8c5016fee",
+    "semantic_hash": "3ab8fa07d4b69fe332b6d3e8c5016fee"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Error.kt": {
+    "mtime": 1764850942.0971863,
+    "seen": 1788798244.4541438,
+    "ast_hash": "3fa338db9d13a751d8cb84d33bed98cf",
+    "semantic_hash": "3fa338db9d13a751d8cb84d33bed98cf"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Event.kt": {
+    "mtime": 1764850942.0421865,
+    "seen": 1788798244.4541447,
+    "ast_hash": "0e1d0246a61ce769aadffec973cd84cc",
+    "semantic_hash": "0e1d0246a61ce769aadffec973cd84cc"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/EventFilled.kt": {
+    "mtime": 1764850942.0541866,
+    "seen": 1788798244.4541454,
+    "ast_hash": "be4bb2416d1a02755533740166407322",
+    "semantic_hash": "be4bb2416d1a02755533740166407322"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Face.kt": {
+    "mtime": 1764850942.0441866,
+    "seen": 1788798244.4541464,
+    "ast_hash": "0ce3b44f1be611744d1148c321939e5b",
+    "semantic_hash": "0ce3b44f1be611744d1148c321939e5b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FaceFilled.kt": {
+    "mtime": 1764850942.0561864,
+    "seen": 1788798244.454147,
+    "ast_hash": "cce4c18240a7f05404e6dab0ddee8b3c",
+    "semantic_hash": "cce4c18240a7f05404e6dab0ddee8b3c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FilterList.kt": {
+    "mtime": 1764850942.0791864,
+    "seen": 1788798244.4541478,
+    "ast_hash": "327efc852d63e9c183801430221d0735",
+    "semantic_hash": "327efc852d63e9c183801430221d0735"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FilterListOff.kt": {
+    "mtime": 1764850942.0801864,
+    "seen": 1788798244.4541485,
+    "ast_hash": "70571e26d579279ae1b2b10a11b116d3",
+    "semantic_hash": "70571e26d579279ae1b2b10a11b116d3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FirstPage.kt": {
+    "mtime": 1764850942.1215563,
+    "seen": 1788798244.4541495,
+    "ast_hash": "93a2fc52eb6d660dc7eca59cdcbef8f1",
+    "semantic_hash": "93a2fc52eb6d660dc7eca59cdcbef8f1"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatAlignCenter.kt": {
+    "mtime": 1764850942.0990334,
+    "seen": 1788798244.4541502,
+    "ast_hash": "b9d5865dd34d364dac63ace5acaa2325",
+    "semantic_hash": "b9d5865dd34d364dac63ace5acaa2325"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatAlignLeft.kt": {
+    "mtime": 1764850942.1000524,
+    "seen": 1788798244.454151,
+    "ast_hash": "d704df057e3a5f0bcfb534cf14424757",
+    "semantic_hash": "d704df057e3a5f0bcfb534cf14424757"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatAlignRight.kt": {
+    "mtime": 1764850942.1011865,
+    "seen": 1788798244.4541516,
+    "ast_hash": "b8e567021138d3d05fa1cd61174a6751",
+    "semantic_hash": "b8e567021138d3d05fa1cd61174a6751"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatBold.kt": {
+    "mtime": 1764850942.1018558,
+    "seen": 1788798244.4541528,
+    "ast_hash": "8dcc67b5cb35d66fd436945e09f0cff0",
+    "semantic_hash": "8dcc67b5cb35d66fd436945e09f0cff0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatItalic.kt": {
+    "mtime": 1764850942.1021864,
+    "seen": 1788798244.4541535,
+    "ast_hash": "255f4a82a924c6fb9dee374ec8ea346f",
+    "semantic_hash": "255f4a82a924c6fb9dee374ec8ea346f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatListBulleted.kt": {
+    "mtime": 1764850942.1031864,
+    "seen": 1788798244.4541543,
+    "ast_hash": "ac0df0b08b50c9e7f00f605dbb028df0",
+    "semantic_hash": "ac0df0b08b50c9e7f00f605dbb028df0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatListNumbered.kt": {
+    "mtime": 1764850942.1051865,
+    "seen": 1788798244.454155,
+    "ast_hash": "920f17a558e5502fb7d037d923abf39e",
+    "semantic_hash": "920f17a558e5502fb7d037d923abf39e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatSize.kt": {
+    "mtime": 1764850942.1061864,
+    "seen": 1788798244.4541557,
+    "ast_hash": "00580ae0c3736d7f449ef5beac435800",
+    "semantic_hash": "00580ae0c3736d7f449ef5beac435800"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatStrikethrough.kt": {
+    "mtime": 1764850942.1073525,
+    "seen": 1788798244.4541566,
+    "ast_hash": "7bbe804c4f346b98b405f057b6fb8c51",
+    "semantic_hash": "7bbe804c4f346b98b405f057b6fb8c51"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FormatUnderlined.kt": {
+    "mtime": 1764850942.1081767,
+    "seen": 1788798244.4541574,
+    "ast_hash": "6b4215f578ba2d1781aa011607b1ab4d",
+    "semantic_hash": "6b4215f578ba2d1781aa011607b1ab4d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/FreeCancellation.kt": {
+    "mtime": 1764850942.1231244,
+    "seen": 1788798244.454158,
+    "ast_hash": "9492ad1415a7ca832a107070c18f7971",
+    "semantic_hash": "9492ad1415a7ca832a107070c18f7971"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Groups.kt": {
+    "mtime": 1764850942.0691864,
+    "seen": 1788798244.4541588,
+    "ast_hash": "1196f07036ea30c3c146bcf95e5c7254",
+    "semantic_hash": "1196f07036ea30c3c146bcf95e5c7254"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/HealthAndSafety.kt": {
+    "mtime": 1764850942.0271866,
+    "seen": 1788798244.4541595,
+    "ast_hash": "0976b7cf27f4e3c92acd5169abf973b7",
+    "semantic_hash": "0976b7cf27f4e3c92acd5169abf973b7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Help.kt": {
+    "mtime": 1764850942.124544,
+    "seen": 1788798244.4541607,
+    "ast_hash": "971044fe0a73f8c84563b8db2a7a5df7",
+    "semantic_hash": "971044fe0a73f8c84563b8db2a7a5df7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Hiking.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541614,
+    "ast_hash": "5888ffdca37b96c61794fe8164cb5b67",
+    "semantic_hash": "5888ffdca37b96c61794fe8164cb5b67"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/History.kt": {
+    "mtime": 1766129451.182403,
+    "seen": 1788798244.4541621,
+    "ast_hash": "29f9285813146ad0129ee72f51752943",
+    "semantic_hash": "29f9285813146ad0129ee72f51752943"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Home.kt": {
+    "mtime": 1764851822.821174,
+    "seen": 1788798244.4541628,
+    "ast_hash": "98d7612f19d1d62838c21185177b013a",
+    "semantic_hash": "98d7612f19d1d62838c21185177b013a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/HomeFilled.kt": {
+    "mtime": 1764851822.8231738,
+    "seen": 1788798244.4541638,
+    "ast_hash": "cf559d0942db723f7e892997154774c6",
+    "semantic_hash": "cf559d0942db723f7e892997154774c6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Info.kt": {
+    "mtime": 1764850942.0811865,
+    "seen": 1788798244.4541645,
+    "ast_hash": "00fefc325169a7d58bf8ddffbcee68b4",
+    "semantic_hash": "00fefc325169a7d58bf8ddffbcee68b4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Inventory.kt": {
+    "mtime": 1764850942.0451865,
+    "seen": 1788798244.4541652,
+    "ast_hash": "ca7a62e3cb9d3c80956364a856f81d29",
+    "semantic_hash": "ca7a62e3cb9d3c80956364a856f81d29"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Inventory2.kt": {
+    "mtime": 1764850942.0291865,
+    "seen": 1788798244.454166,
+    "ast_hash": "f40b0ff3298f3bfe6c368c55dd513f28",
+    "semantic_hash": "f40b0ff3298f3bfe6c368c55dd513f28"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Inventory2Filled.kt": {
+    "mtime": 1764850942.0571864,
+    "seen": 1788798244.454167,
+    "ast_hash": "860c94de6f5056b954977155bd19e0e8",
+    "semantic_hash": "860c94de6f5056b954977155bd19e0e8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/InventoryFilled.kt": {
+    "mtime": 1764850942.0591865,
+    "seen": 1788798244.4541676,
+    "ast_hash": "e40e45d92b7823fb9c38cb2d08938716",
+    "semantic_hash": "e40e45d92b7823fb9c38cb2d08938716"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/KeyboardDoubleArrowRight.kt": {
+    "mtime": 1764851900.5273263,
+    "seen": 1788798244.4541686,
+    "ast_hash": "e3a5efda7a088d61cf9b3b4769ecf52b",
+    "semantic_hash": "e3a5efda7a088d61cf9b3b4769ecf52b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Language.kt": {
+    "mtime": 1764850942.1251864,
+    "seen": 1788798244.4541693,
+    "ast_hash": "5de0cdf6c3d9bf1b886b74bf8104e5fe",
+    "semantic_hash": "5de0cdf6c3d9bf1b886b74bf8104e5fe"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/LastPage.kt": {
+    "mtime": 1764850942.1271863,
+    "seen": 1788798244.4541702,
+    "ast_hash": "1f9142854d82ccdc0be764a844bd387f",
+    "semantic_hash": "1f9142854d82ccdc0be764a844bd387f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Link.kt": {
+    "mtime": 1764850942.0701864,
+    "seen": 1788798244.454171,
+    "ast_hash": "072bb45ad0ff190dddf72e89ac9b04ee",
+    "semantic_hash": "072bb45ad0ff190dddf72e89ac9b04ee"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Location.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.4541717,
+    "ast_hash": "872cf5b7de2328f8d69e8768791ba2e6",
+    "semantic_hash": "872cf5b7de2328f8d69e8768791ba2e6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Logout.kt": {
+    "mtime": 1764850942.1281865,
+    "seen": 1788798244.4541724,
+    "ast_hash": "fb65ec44de9763cf7c12041f6dd0a9a7",
+    "semantic_hash": "fb65ec44de9763cf7c12041f6dd0a9a7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Mail.kt": {
+    "mtime": 1764850942.1291864,
+    "seen": 1788798244.4541733,
+    "ast_hash": "f1590f888c07a5ab7c33427c2acbcb54",
+    "semantic_hash": "f1590f888c07a5ab7c33427c2acbcb54"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/MaterialSymbols.kt": {
+    "mtime": 1765274641.1554143,
+    "seen": 1788798244.4541743,
+    "ast_hash": "3ef1b246da04c7db04993b02bf9a7d77",
+    "semantic_hash": "3ef1b246da04c7db04993b02bf9a7d77"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Newsmode.kt": {
+    "mtime": 1764850942.0471866,
+    "seen": 1788798244.454175,
+    "ast_hash": "dba3e78fcfa7d1217a989e03731f903d",
+    "semantic_hash": "dba3e78fcfa7d1217a989e03731f903d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/NewsmodeFilled.kt": {
+    "mtime": 1764850942.0611866,
+    "seen": 1788798244.4541757,
+    "ast_hash": "c85f33d7ba5df2236e27cf45f6668c38",
+    "semantic_hash": "c85f33d7ba5df2236e27cf45f6668c38"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Nfc.kt": {
+    "mtime": 1764850942.0134497,
+    "seen": 1788798244.4541764,
+    "ast_hash": "c56a95da0b3f58637997471821638d84",
+    "semantic_hash": "c56a95da0b3f58637997471821638d84"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/NoteAdd.kt": {
+    "mtime": 1764850942.0311866,
+    "seen": 1788798244.4541774,
+    "ast_hash": "09ad95538bc2eeb5090c288fee949bcb",
+    "semantic_hash": "09ad95538bc2eeb5090c288fee949bcb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Notes.kt": {
+    "mtime": 1764850942.1303618,
+    "seen": 1788798244.454178,
+    "ast_hash": "d7a8e0a99af5192e3d2af41dba58dffe",
+    "semantic_hash": "d7a8e0a99af5192e3d2af41dba58dffe"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Notifications.kt": {
+    "mtime": 1764850942.0321865,
+    "seen": 1788798244.4541788,
+    "ast_hash": "3fd4a948c344e65c9c061c8b9c23aab4",
+    "semantic_hash": "3fd4a948c344e65c9c061c8b9c23aab4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Numbers.kt": {
+    "mtime": 1764850942.131373,
+    "seen": 1788798244.4541795,
+    "ast_hash": "93d8f85bc00095566b19935c56bf72c7",
+    "semantic_hash": "93d8f85bc00095566b19935c56bf72c7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Package2.kt": {
+    "mtime": 1766127868.5546067,
+    "seen": 1788798244.4541802,
+    "ast_hash": "1f52e4d8046274fdfa529a42e3990fd5",
+    "semantic_hash": "1f52e4d8046274fdfa529a42e3990fd5"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Package2Filled.kt": {
+    "mtime": 1766127868.5576067,
+    "seen": 1788798244.4541812,
+    "ast_hash": "c70a29e3ef114f21e42f5cab673ce956",
+    "semantic_hash": "c70a29e3ef114f21e42f5cab673ce956"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Pending.kt": {
+    "mtime": 1764850942.0341866,
+    "seen": 1788798244.454182,
+    "ast_hash": "84f34870c44c18d8c06277d1c344672c",
+    "semantic_hash": "84f34870c44c18d8c06277d1c344672c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/PersonCheck.kt": {
+    "mtime": 1765545908.229882,
+    "seen": 1788798244.4541829,
+    "ast_hash": "04b640b633c96d64638524e67c9103c6",
+    "semantic_hash": "04b640b633c96d64638524e67c9103c6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/PersonOff.kt": {
+    "mtime": 1764850942.0821865,
+    "seen": 1788798244.4541836,
+    "ast_hash": "825b55a1e98ed5a676ac0671b55c73b8",
+    "semantic_hash": "825b55a1e98ed5a676ac0671b55c73b8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Print.kt": {
+    "mtime": 1764850942.0151865,
+    "seen": 1788798244.4541845,
+    "ast_hash": "c1df4702566afc0555f9d793ca1c92a4",
+    "semantic_hash": "c1df4702566afc0555f9d793ca1c92a4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/QrCode.kt": {
+    "mtime": 1764850942.1321864,
+    "seen": 1788798244.4541852,
+    "ast_hash": "acf266fc0348582ce6a2dbb83307303b",
+    "semantic_hash": "acf266fc0348582ce6a2dbb83307303b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/QrCodeScanner.kt": {
+    "mtime": 1764851875.2312803,
+    "seen": 1788798244.454186,
+    "ast_hash": "385b8b84a7c2ed0cb1b94aae92440c89",
+    "semantic_hash": "385b8b84a7c2ed0cb1b94aae92440c89"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/RadioButtonChecked.kt": {
+    "mtime": 1764850942.0841863,
+    "seen": 1788798244.4541867,
+    "ast_hash": "7f5a2a769ea82431046b21e0e49d897e",
+    "semantic_hash": "7f5a2a769ea82431046b21e0e49d897e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/RadioButtonUnchecked.kt": {
+    "mtime": 1764850942.0851865,
+    "seen": 1788798244.4541876,
+    "ast_hash": "5cc462444f292081a722d1da45c5e8d4",
+    "semantic_hash": "5cc462444f292081a722d1da45c5e8d4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Receipt.kt": {
+    "mtime": 1764851784.0528116,
+    "seen": 1788798244.4541883,
+    "ast_hash": "526de26ad3ed38a3bc2cdc216886e5b3",
+    "semantic_hash": "526de26ad3ed38a3bc2cdc216886e5b3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Remove.kt": {
+    "mtime": 1764850942.0041866,
+    "seen": 1788798244.454189,
+    "ast_hash": "3c00c6a6d73cafb09890e6ce87c7a9c8",
+    "semantic_hash": "3c00c6a6d73cafb09890e6ce87c7a9c8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Save.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.45419,
+    "ast_hash": "ef5033a3073311c73f51af5fffd031d8",
+    "semantic_hash": "ef5033a3073311c73f51af5fffd031d8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Security.kt": {
+    "mtime": 1764850942.0351865,
+    "seen": 1788798244.4541907,
+    "ast_hash": "98373d4492b3631a8d48ead0cf2944eb",
+    "semantic_hash": "98373d4492b3631a8d48ead0cf2944eb"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Settings.kt": {
+    "mtime": 1764850942.0371866,
+    "seen": 1788798244.4541917,
+    "ast_hash": "de91058ad62e3413ae957ac1496dc315",
+    "semantic_hash": "de91058ad62e3413ae957ac1496dc315"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/SettingsFilled.kt": {
+    "mtime": 1764850942.0391865,
+    "seen": 1788798244.4541924,
+    "ast_hash": "e0c828868f6f82632e58421406266602",
+    "semantic_hash": "e0c828868f6f82632e58421406266602"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Share.kt": {
+    "mtime": 1764850942.0101867,
+    "seen": 1788798244.454193,
+    "ast_hash": "8e982ff5816b1456aa870e60c8821299",
+    "semantic_hash": "8e982ff5816b1456aa870e60c8821299"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Sort.kt": {
+    "mtime": 1764850942.0871863,
+    "seen": 1788798244.4541938,
+    "ast_hash": "130a2e4bed39d4c5a9a1011593622e5a",
+    "semantic_hash": "130a2e4bed39d4c5a9a1011593622e5a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Spellcheck.kt": {
+    "mtime": 1764850942.1081865,
+    "seen": 1788798244.4541948,
+    "ast_hash": "82ffed9ca957cdfca316f153d8e64480",
+    "semantic_hash": "82ffed9ca957cdfca316f153d8e64480"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Square.kt": {
+    "mtime": 1764850942.1091864,
+    "seen": 1788798244.4541955,
+    "ast_hash": "09ddd6cdebdb2207220d918b81b38046",
+    "semantic_hash": "09ddd6cdebdb2207220d918b81b38046"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/SupervisorAccount.kt": {
+    "mtime": 1764850942.1331863,
+    "seen": 1788798244.4541962,
+    "ast_hash": "929fa5f89a71f75ad88b415bf8ebf977",
+    "semantic_hash": "929fa5f89a71f75ad88b415bf8ebf977"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/SupervisorAccountFilled.kt": {
+    "mtime": 1764850942.1341863,
+    "seen": 1788798244.454197,
+    "ast_hash": "b73f537cd40ed740600704b477aab77a",
+    "semantic_hash": "b73f537cd40ed740600704b477aab77a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Sync.kt": {
+    "mtime": 1764850942.1351864,
+    "seen": 1788798244.4541976,
+    "ast_hash": "6199183c57c900df1922e0e7392ee0ba",
+    "semantic_hash": "6199183c57c900df1922e0e7392ee0ba"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/TextDecrease.kt": {
+    "mtime": 1764850942.1101863,
+    "seen": 1788798244.4542005,
+    "ast_hash": "cf6c8a7693abbeb338bb94ed1b2d34a3",
+    "semantic_hash": "cf6c8a7693abbeb338bb94ed1b2d34a3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/TextIncrease.kt": {
+    "mtime": 1764850942.1111865,
+    "seen": 1788798244.4542015,
+    "ast_hash": "2fb6e49702c250f89cecf0e01350fa2c",
+    "semantic_hash": "2fb6e49702c250f89cecf0e01350fa2c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Undo.kt": {
+    "mtime": 1764850942.0071867,
+    "seen": 1788798244.4542022,
+    "ast_hash": "303802ea6e7cd6c25d6d17f428c98aed",
+    "semantic_hash": "303802ea6e7cd6c25d6d17f428c98aed"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Upload.kt": {
+    "mtime": 1764850942.0881865,
+    "seen": 1788798244.454203,
+    "ast_hash": "a002b9fd99640ff33c2cb25460b09874",
+    "semantic_hash": "a002b9fd99640ff33c2cb25460b09874"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Visibility.kt": {
+    "mtime": 1764850942.1121864,
+    "seen": 1788798244.4542036,
+    "ast_hash": "60781db6899e8c753015d716f5d0f356",
+    "semantic_hash": "60781db6899e8c753015d716f5d0f356"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/VisibilityOff.kt": {
+    "mtime": 1764850942.1131864,
+    "seen": 1788798244.4542043,
+    "ast_hash": "42a707e5523ee957d6136fb3b1aff187",
+    "semantic_hash": "42a707e5523ee957d6136fb3b1aff187"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Warning.kt": {
+    "mtime": 1764850942.0891864,
+    "seen": 1788798244.4542053,
+    "ast_hash": "61275bdc8f8003914b3dec74c0ec927c",
+    "semantic_hash": "61275bdc8f8003914b3dec74c0ec927c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/icons/materialsymbols/Web.kt": {
+    "mtime": 1764850942.1361864,
+    "seen": 1788798244.4542062,
+    "ast_hash": "0de1f54a2152020a25185b51a62cc2ee",
+    "semantic_hash": "0de1f54a2152020a25185b51a62cc2ee"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/ActivitiesPage.kt": {
+    "mtime": 1788762266.7897007,
+    "seen": 1788798244.454207,
+    "ast_hash": "537ede8983f714bb0b9bb5061ab7f06b",
+    "semantic_hash": "537ede8983f714bb0b9bb5061ab7f06b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/HomePage.kt": {
+    "mtime": 1788762266.7907007,
+    "seen": 1788798244.4542077,
+    "ast_hash": "58f10dd9015c6cf3e94de4f2bfaad148",
+    "semantic_hash": "58f10dd9015c6cf3e94de4f2bfaad148"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/LendingPage.kt": {
+    "mtime": 1788762266.7907007,
+    "seen": 1788798244.4542086,
+    "ast_hash": "bfb6b2dcf17eb4e038e1b146bc708cb9",
+    "semantic_hash": "bfb6b2dcf17eb4e038e1b146bc708cb9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/LendingsPage.kt": {
+    "mtime": 1788762266.7907007,
+    "seen": 1788798244.4542093,
+    "ast_hash": "3d85f77ef38d4139bd6819958a97a593",
+    "semantic_hash": "3d85f77ef38d4139bd6819958a97a593"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/ManagementPage.kt": {
+    "mtime": 1788794382.607315,
+    "seen": 1788798244.45421,
+    "ast_hash": "5bd21b6ca0613169f4e84e765fe688ea",
+    "semantic_hash": "5bd21b6ca0613169f4e84e765fe688ea"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/ProfilePage.kt": {
+    "mtime": 1788762266.7917008,
+    "seen": 1788798244.4542108,
+    "ast_hash": "7dbd0a4a6cc16f8d1a7c67a491240f4d",
+    "semantic_hash": "7dbd0a4a6cc16f8d1a7c67a491240f4d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/activities/MemoriesPage.kt": {
+    "mtime": 1788762266.7917008,
+    "seen": 1788798244.4542115,
+    "ast_hash": "c7b072cbc95212b5103c7780b62ede73",
+    "semantic_hash": "c7b072cbc95212b5103c7780b62ede73"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/home/DepartmentPendingJoinRequest.kt": {
+    "mtime": 1764852917.4665983,
+    "seen": 1788798244.4542124,
+    "ast_hash": "43612325b5e69491242c5fe3e4b8d037",
+    "semantic_hash": "43612325b5e69491242c5fe3e4b8d037"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/home/EventItem.kt": {
+    "mtime": 1788762266.7917008,
+    "seen": 1788798244.4542134,
+    "ast_hash": "a405d9c5387f558d41d32b2a3c086a7d",
+    "semantic_hash": "a405d9c5387f558d41d32b2a3c086a7d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/home/FeedItem.kt": {
+    "mtime": 1769670502.7510235,
+    "seen": 1788798244.454214,
+    "ast_hash": "8fb450cf64a32d2507febc06bd3699ab",
+    "semantic_hash": "8fb450cf64a32d2507febc06bd3699ab"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/home/PostItem.kt": {
+    "mtime": 1769670873.7112327,
+    "seen": 1788798244.4542148,
+    "ast_hash": "4069d3c56037e5540627eee9ec35c349",
+    "semantic_hash": "4069d3c56037e5540627eee9ec35c349"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/DepartmentsListView.kt": {
+    "mtime": 1788794430.2642665,
+    "seen": 1788798244.4542158,
+    "ast_hash": "98f34428b54468faa98c7a3712ef8a3d",
+    "semantic_hash": "98f34428b54468faa98c7a3712ef8a3d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/EventsListView.kt": {
+    "mtime": 1788794382.6083152,
+    "seen": 1788798244.4542165,
+    "ast_hash": "98d62482ad8d2a323aa839c1f21389f8",
+    "semantic_hash": "98d62482ad8d2a323aa839c1f21389f8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/InventoryItemTypesListView.kt": {
+    "mtime": 1788794382.6083152,
+    "seen": 1788798244.4542172,
+    "ast_hash": "03c953cf28f99a85563dc3993a12880e",
+    "semantic_hash": "03c953cf28f99a85563dc3993a12880e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/LendingsListView.kt": {
+    "mtime": 1788762266.7927008,
+    "seen": 1788798244.454218,
+    "ast_hash": "d6bae608f41f65e0135fb9ef93e45783",
+    "semantic_hash": "d6bae608f41f65e0135fb9ef93e45783"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/ListView.kt": {
+    "mtime": 1788794382.6083152,
+    "seen": 1788798244.454219,
+    "ast_hash": "a47d18b0211e0cadc7de93583409678c",
+    "semantic_hash": "a47d18b0211e0cadc7de93583409678c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/MemoriesManagementListView.kt": {
+    "mtime": 1788762266.7927008,
+    "seen": 1788798244.4542198,
+    "ast_hash": "dd691463a6ad1b84408f1dd19aaba16c",
+    "semantic_hash": "dd691463a6ad1b84408f1dd19aaba16c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/PostsListView.kt": {
+    "mtime": 1788794382.6093152,
+    "seen": 1788798244.4542205,
+    "ast_hash": "44a74d3a78cb4b1c23edf30fd7f36c0a",
+    "semantic_hash": "44a74d3a78cb4b1c23edf30fd7f36c0a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/management/UsersListView.kt": {
+    "mtime": 1788794382.6093152,
+    "seen": 1788798244.4542232,
+    "ast_hash": "48a5bc8b44a70f2bec13b9d4fe3759ab",
+    "semantic_hash": "48a5bc8b44a70f2bec13b9d4fe3759ab"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/profile/DepartmentsListCard.kt": {
+    "mtime": 1788794382.6093152,
+    "seen": 1788798244.4542239,
+    "ast_hash": "41b073f50abcdf7ad9de63dffc565c7d",
+    "semantic_hash": "41b073f50abcdf7ad9de63dffc565c7d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/profile/FEMECVAccountCard.kt": {
+    "mtime": 1788798146.9023323,
+    "seen": 1788798244.4542246,
+    "ast_hash": "a49c2d81b878a9b66430f0d2459af5e8",
+    "semantic_hash": "a49c2d81b878a9b66430f0d2459af5e8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/profile/InsurancesListCard.kt": {
+    "mtime": 1764852917.4145982,
+    "seen": 1788798244.4542258,
+    "ast_hash": "0cd7f36138226590681a1fc142f0494c",
+    "semantic_hash": "0cd7f36138226590681a1fc142f0494c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/profile/NoInsurancesCard.kt": {
+    "mtime": 1769669985.4182186,
+    "seen": 1788798244.4542265,
+    "ast_hash": "6bf8d21f3f8e21c5bf8fe1812d02934e",
+    "semantic_hash": "6bf8d21f3f8e21c5bf8fe1812d02934e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/page/main/profile/PersonalInformationCard.kt": {
+    "mtime": 1764312481.0890858,
+    "seen": 1788798244.4542272,
+    "ast_hash": "319daee7b7bdc845d94164456582bcf6",
+    "semantic_hash": "319daee7b7bdc845d94164456582bcf6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/Hover.kt": {
+    "mtime": 1764312481.0890858,
+    "seen": 1788798244.454228,
+    "ast_hash": "670f5947fb4e0c778e71e83128c54bbe",
+    "semantic_hash": "670f5947fb4e0c778e71e83128c54bbe"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/PlatformBackHandler.kt": {
+    "mtime": 1764312481.089306,
+    "seen": 1788798244.4542286,
+    "ast_hash": "3aab9f845b37a4f09593e84de3505cde",
+    "semantic_hash": "3aab9f845b37a4f09593e84de3505cde"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/WindowSizeClass.kt": {
+    "mtime": 1788433471.3238342,
+    "seen": 1788798244.4542296,
+    "ast_hash": "5be0a69e3e444e51c3bfce29e044f0ff",
+    "semantic_hash": "5be0a69e3e444e51c3bfce29e044f0ff"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/AdaptiveTabRow.kt": {
+    "mtime": 1788762266.7937007,
+    "seen": 1788798244.4542303,
+    "ast_hash": "58a63a0e857f01e01e7b7a0024fefa31",
+    "semantic_hash": "58a63a0e857f01e01e7b7a0024fefa31"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/AdaptiveVerticalGrid.kt": {
+    "mtime": 1788762266.7937007,
+    "seen": 1788798244.454231,
+    "ast_hash": "b1dc91094843a10c360ae9812d927368",
+    "semantic_hash": "b1dc91094843a10c360ae9812d927368"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/AsyncByteImage.kt": {
+    "mtime": 1764852917.4245982,
+    "seen": 1788798244.4542317,
+    "ast_hash": "2194616cae80953a521901114ff8b667",
+    "semantic_hash": "2194616cae80953a521901114ff8b667"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/CardWithIcon.kt": {
+    "mtime": 1769669985.4182186,
+    "seen": 1788798244.4542327,
+    "ast_hash": "317e52cb370d5ffd16fe37471233a783",
+    "semantic_hash": "317e52cb370d5ffd16fe37471233a783"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/ClickInteractionSource.kt": {
+    "mtime": 1764312481.08943,
+    "seen": 1788798244.4542334,
+    "ast_hash": "1fece31ffe2b57d2adb998fad07cca6b",
+    "semantic_hash": "1fece31ffe2b57d2adb998fad07cca6b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/ColumnWidthWrapper.kt": {
+    "mtime": 1764312481.08943,
+    "seen": 1788798244.4542344,
+    "ast_hash": "e24f0ea1e500f1b9ee868ce2ddf87a44",
+    "semantic_hash": "e24f0ea1e500f1b9ee868ce2ddf87a44"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/ConditionalBadge.kt": {
+    "mtime": 1766076186.7172463,
+    "seen": 1788798244.4542353,
+    "ast_hash": "8e530d8f309419f72f48721b9814bb00",
+    "semantic_hash": "8e530d8f309419f72f48721b9814bb00"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/DropdownField.kt": {
+    "mtime": 1764852917.3985984,
+    "seen": 1788798244.4542365,
+    "ast_hash": "15b973fb44582a8d5cbf6d82162e1377",
+    "semantic_hash": "15b973fb44582a8d5cbf6d82162e1377"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/DropdownSelector.kt": {
+    "mtime": 1764852917.4815984,
+    "seen": 1788798244.4542375,
+    "ast_hash": "5e2024211338b7cb9b69fc6d90160335",
+    "semantic_hash": "5e2024211338b7cb9b69fc6d90160335"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/InformationCard.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542384,
+    "ast_hash": "ef293a9cfab782d2248dd96ea68353ed",
+    "semantic_hash": "ef293a9cfab782d2248dd96ea68353ed"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/LazyColumnWidthWrapper.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542396,
+    "ast_hash": "1331db4defaaa27781d7fa9c83782bfd",
+    "semantic_hash": "1331db4defaaa27781d7fa9c83782bfd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/LinearLoadingIndicator.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542403,
+    "ast_hash": "9590e2a66d846ba62ca52ead66974dbf",
+    "semantic_hash": "9590e2a66d846ba62ca52ead66974dbf"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/ListCard.kt": {
+    "mtime": 1770982022.1434739,
+    "seen": 1788798244.4542413,
+    "ast_hash": "50e8fea52d7d11c721e1185ac064ffb9",
+    "semantic_hash": "50e8fea52d7d11c721e1185ac064ffb9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/LoadingBox.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542422,
+    "ast_hash": "afa7d98b856deb45440a0e8cf2bceb10",
+    "semantic_hash": "afa7d98b856deb45440a0e8cf2bceb10"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/OutlinedButtonWithIcon.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542434,
+    "ast_hash": "bec09b9b0c529daaaa940d3e63d32db7",
+    "semantic_hash": "bec09b9b0c529daaaa940d3e63d32db7"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/ReusableCanvas.kt": {
+    "mtime": 1764312481.0898628,
+    "seen": 1788798244.4542444,
+    "ast_hash": "c6425a61f3dbbf981ba92cbe60dbd5be",
+    "semantic_hash": "c6425a61f3dbbf981ba92cbe60dbd5be"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/Scanner.kt": {
+    "mtime": 1765629449.2430313,
+    "seen": 1788798244.4542453,
+    "ast_hash": "0e9f874c3f0b558b841be55826b94115",
+    "semantic_hash": "0e9f874c3f0b558b841be55826b94115"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/TooltipIcon.kt": {
+    "mtime": 1765443558.0164812,
+    "seen": 1788798244.4542463,
+    "ast_hash": "9073c70ca7f8d2d424eb253c3b1d9ce2",
+    "semantic_hash": "9073c70ca7f8d2d424eb253c3b1d9ce2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/BackButton.kt": {
+    "mtime": 1764852917.4965982,
+    "seen": 1788798244.4542472,
+    "ast_hash": "1ab86516ccd875cd36cf5d5ad222fa44",
+    "semantic_hash": "1ab86516ccd875cd36cf5d5ad222fa44"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/CloseButton.kt": {
+    "mtime": 1788762266.7937007,
+    "seen": 1788798244.454248,
+    "ast_hash": "1f5f13bae90dae7843b5568da13973f2",
+    "semantic_hash": "1f5f13bae90dae7843b5568da13973f2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/CloseTextButton.kt": {
+    "mtime": 1788762266.7937007,
+    "seen": 1788798244.4542487,
+    "ast_hash": "1c97f5e1a89a52885d511e0fbd32e174",
+    "semantic_hash": "1c97f5e1a89a52885d511e0fbd32e174"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/DeleteButton.kt": {
+    "mtime": 1788762266.7947009,
+    "seen": 1788798244.4542494,
+    "ast_hash": "c28db8f2545eaaf594ef71b0b0789199",
+    "semantic_hash": "c28db8f2545eaaf594ef71b0b0789199"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/DropdownIconButton.kt": {
+    "mtime": 1764312481.0902834,
+    "seen": 1788798244.4542503,
+    "ast_hash": "d3b922d9fee21f951b6c071858cd2123",
+    "semantic_hash": "d3b922d9fee21f951b6c071858cd2123"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/buttons/TooltipIconButton.kt": {
+    "mtime": 1765443558.017481,
+    "seen": 1788798244.454251,
+    "ast_hash": "4694c18e4106bc3d30c0e9e227fd5301",
+    "semantic_hash": "4694c18e4106bc3d30c0e9e227fd5301"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/editor/RichTextStyleButton.kt": {
+    "mtime": 1764312481.0902834,
+    "seen": 1788798244.4542518,
+    "ast_hash": "cba4f318492e7a68a85e58185a39d7b8",
+    "semantic_hash": "cba4f318492e7a68a85e58185a39d7b8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/editor/RichTextStyleRow.kt": {
+    "mtime": 1766482375.0822577,
+    "seen": 1788798244.4542525,
+    "ast_hash": "bb3d53c249adcd079882aeb206a65a1f",
+    "semantic_hash": "bb3d53c249adcd079882aeb206a65a1f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/editor/SpellCheck.kt": {
+    "mtime": 1788762266.7947009,
+    "seen": 1788798244.4542537,
+    "ast_hash": "78ae16da7f9b1e89e864055ec519b210",
+    "semantic_hash": "78ae16da7f9b1e89e864055ec519b210"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/AutocompleteFormField.kt": {
+    "mtime": 1788762266.7947009,
+    "seen": 1788798244.4542544,
+    "ast_hash": "d4a71f434f3c46cfe57746dab1ba5294",
+    "semantic_hash": "d4a71f434f3c46cfe57746dab1ba5294"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/AutocompleteMultipleFormField.kt": {
+    "mtime": 1764852917.5005982,
+    "seen": 1788798244.4542553,
+    "ast_hash": "26e0b1cf412fba848f752218a44925ea",
+    "semantic_hash": "26e0b1cf412fba848f752218a44925ea"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/DatePickerFormField.kt": {
+    "mtime": 1764326880.063733,
+    "seen": 1788798244.4542563,
+    "ast_hash": "bf4dba8f69bbcd0b59111a703085a80b",
+    "semantic_hash": "bf4dba8f69bbcd0b59111a703085a80b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/DateTimePickerFormField.kt": {
+    "mtime": 1788762266.7947009,
+    "seen": 1788798244.4542575,
+    "ast_hash": "29f0fa8d9b18c14151ddf94efc1248e2",
+    "semantic_hash": "29f0fa8d9b18c14151ddf94efc1248e2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/FormFilePicker.kt": {
+    "mtime": 1775551778.2064457,
+    "seen": 1788798244.4542584,
+    "ast_hash": "855f8bb63d627f253f32dc2c9583c4dd",
+    "semantic_hash": "855f8bb63d627f253f32dc2c9583c4dd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/FormImagePicker.kt": {
+    "mtime": 1764312481.0906365,
+    "seen": 1788798244.4542592,
+    "ast_hash": "f66ff3c91c008b37aa88474ec697fb8a",
+    "semantic_hash": "f66ff3c91c008b37aa88474ec697fb8a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/FormSwitchRow.kt": {
+    "mtime": 1788796340.9693875,
+    "seen": 1788798244.4542606,
+    "ast_hash": "e2ef504a9d615ffb11d77a8416c68cee",
+    "semantic_hash": "e2ef504a9d615ffb11d77a8416c68cee"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/PasswordFormField.kt": {
+    "mtime": 1764851766.6750414,
+    "seen": 1788798244.4542615,
+    "ast_hash": "407864bce383059748697c60a4fccd41",
+    "semantic_hash": "407864bce383059748697c60a4fccd41"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/form/ReadOnlyFormField.kt": {
+    "mtime": 1764312481.0906365,
+    "seen": 1788798244.4542625,
+    "ast_hash": "f9008a46ed21b2f733cbf7726301b475",
+    "semantic_hash": "f9008a46ed21b2f733cbf7726301b475"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/settings/SettingsCategory.kt": {
+    "mtime": 1764312481.0906365,
+    "seen": 1788798244.4542632,
+    "ast_hash": "9c072e547d9babbdec4d6a0a542cf7ab",
+    "semantic_hash": "9c072e547d9babbdec4d6a0a542cf7ab"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/settings/SettingsOptionsRow.kt": {
+    "mtime": 1788762266.7947009,
+    "seen": 1788798244.4542644,
+    "ast_hash": "c32601ee5d5c374268f0bcdbaff4c95f",
+    "semantic_hash": "c32601ee5d5c374268f0bcdbaff4c95f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/settings/SettingsRow.kt": {
+    "mtime": 1765455612.0897934,
+    "seen": 1788798244.4542654,
+    "ast_hash": "87675ed277a35ee9923c66d7fdd579b4",
+    "semantic_hash": "87675ed277a35ee9923c66d7fdd579b4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/reusable/settings/SettingsSwitchRow.kt": {
+    "mtime": 1764312481.0908804,
+    "seen": 1788798244.4542663,
+    "ast_hash": "265c50fef933e05eb002ce5507ef76a2",
+    "semantic_hash": "265c50fef933e05eb002ce5507ef76a2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/ActivityMemoryEditor.kt": {
+    "mtime": 1788762266.7957008,
+    "seen": 1788798244.454267,
+    "ast_hash": "d9a75863d5647602c9cd28b7780dd160",
+    "semantic_hash": "d9a75863d5647602c9cd28b7780dd160"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/InventoryItemTypeDetailsScreen.kt": {
+    "mtime": 1788762266.7957008,
+    "seen": 1788798244.454268,
+    "ast_hash": "275896a98d3acecd1c7d152d4e76fec9",
+    "semantic_hash": "275896a98d3acecd1c7d152d4e76fec9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LendingCreationScreen.kt": {
+    "mtime": 1788762266.7957008,
+    "seen": 1788798244.4542687,
+    "ast_hash": "70278d35e90cfe52d829ba368f660300",
+    "semantic_hash": "70278d35e90cfe52d829ba368f660300"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LendingDetailsScreen.kt": {
+    "mtime": 1788762266.7957008,
+    "seen": 1788798244.4542694,
+    "ast_hash": "866b7f078bd034ba12db8ccf06d45cbd",
+    "semantic_hash": "866b7f078bd034ba12db8ccf06d45cbd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LendingSignUpScreen.kt": {
+    "mtime": 1788762266.7957008,
+    "seen": 1788798244.4542701,
+    "ast_hash": "45fa17efefaf450f879e84eb080f9561",
+    "semantic_hash": "45fa17efefaf450f879e84eb080f9561"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LoadingScreen.kt": {
+    "mtime": 1788762266.7967007,
+    "seen": 1788798244.454271,
+    "ast_hash": "d79cf303d4c64087d9641bcd9a66f79d",
+    "semantic_hash": "d79cf303d4c64087d9641bcd9a66f79d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LoginScreen.kt": {
+    "mtime": 1788798146.9023323,
+    "seen": 1788798244.4542718,
+    "ast_hash": "6a690060c5a02eb59f9eb9d5d2e17412",
+    "semantic_hash": "6a690060c5a02eb59f9eb9d5d2e17412"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/LogoutScreen.kt": {
+    "mtime": 1788762266.7967007,
+    "seen": 1788798244.4542725,
+    "ast_hash": "acbae6d92c0225b3e774e643b04b1787",
+    "semantic_hash": "acbae6d92c0225b3e774e643b04b1787"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/MainScreen.kt": {
+    "mtime": 1788794382.6093152,
+    "seen": 1788798244.4542732,
+    "ast_hash": "3ac164a378dc11d22d14c03b6558f4dd",
+    "semantic_hash": "3ac164a378dc11d22d14c03b6558f4dd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/SettingsScreen.kt": {
+    "mtime": 1788762266.7967007,
+    "seen": 1788798244.454274,
+    "ast_hash": "529c1be687df1c153a4800f1cb52e013",
+    "semantic_hash": "529c1be687df1c153a4800f1cb52e013"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/screen/admin/LendingManagementScreen.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.454275,
+    "ast_hash": "37802d308a7d3da4e5e5c4eb8d0f0476",
+    "semantic_hash": "37802d308a7d3da4e5e5c4eb8d0f0476"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/theme/AppTheme.kt": {
+    "mtime": 1764312481.0910797,
+    "seen": 1788798244.4542756,
+    "ast_hash": "f883c2eb5cbbb944c38d62828713f0a3",
+    "semantic_hash": "f883c2eb5cbbb944c38d62828713f0a3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/theme/Colors.kt": {
+    "mtime": 1764312481.0918715,
+    "seen": 1788798244.4542763,
+    "ast_hash": "3c4010e0ab51dbe6698b2fb48863c10c",
+    "semantic_hash": "3c4010e0ab51dbe6698b2fb48863c10c"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/theme/Typography.kt": {
+    "mtime": 1764312481.0918715,
+    "seen": 1788798244.454277,
+    "ast_hash": "964918bad5652cd43e06bdd8939c1ba3",
+    "semantic_hash": "964918bad5652cd43e06bdd8939c1ba3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/theme/font/Barlow.kt": {
+    "mtime": 1764312481.0918715,
+    "seen": 1788798244.454278,
+    "ast_hash": "e81d8d25b74c24f69b69b0286916bfca",
+    "semantic_hash": "e81d8d25b74c24f69b69b0286916bfca"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/theme/font/Oswald.kt": {
+    "mtime": 1764312481.0920284,
+    "seen": 1788798244.4542787,
+    "ast_hash": "e7349bd9b5e0d5a25d5f2ec8940bc166",
+    "semantic_hash": "e7349bd9b5e0d5a25d5f2ec8940bc166"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/utils/CompositionLocalUtils.kt": {
+    "mtime": 1764312481.0920284,
+    "seen": 1788798244.4542794,
+    "ast_hash": "98e8b7fe08e6f47b41dbbeb918248fe2",
+    "semantic_hash": "98e8b7fe08e6f47b41dbbeb918248fe2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/utils/CountBadges.kt": {
+    "mtime": 1766076476.4976761,
+    "seen": 1788798244.4542804,
+    "ast_hash": "c0dabe0f5b308a7f69eb17d99ce1f563",
+    "semantic_hash": "c0dabe0f5b308a7f69eb17d99ce1f563"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/utils/ModifierUtils.kt": {
+    "mtime": 1764312481.0921123,
+    "seen": 1788798244.4542813,
+    "ast_hash": "f61ea9edd199ee33c795db4b09d8e006",
+    "semantic_hash": "f61ea9edd199ee33c795db4b09d8e006"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/ui/utils/StringUtils.kt": {
+    "mtime": 1764312481.0921123,
+    "seen": 1788798244.454282,
+    "ast_hash": "b79b46d1505a8f76441a8657f9122854",
+    "semantic_hash": "b79b46d1505a8f76441a8657f9122854"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/utils/ByteReadChannelUtils.kt": {
+    "mtime": 1764312481.0921123,
+    "seen": 1788798244.4542828,
+    "ast_hash": "d461772650891225d5d1e71245c0b55d",
+    "semantic_hash": "d461772650891225d5d1e71245c0b55d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/utils/DateTimeUtils.kt": {
+    "mtime": 1770967039.4267592,
+    "seen": 1788798244.4542835,
+    "ast_hash": "08e7456fb07225051939893957be94dd",
+    "semantic_hash": "08e7456fb07225051939893957be94dd"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/utils/Flow.kt": {
+    "mtime": 1764312481.092229,
+    "seen": 1788798244.4542842,
+    "ast_hash": "53bfd2460b281b0d16483beacf2733be",
+    "semantic_hash": "53bfd2460b281b0d16483beacf2733be"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/utils/StringUtils.kt": {
+    "mtime": 1764312481.092229,
+    "seen": 1788798244.4542851,
+    "ast_hash": "00be1aa378161d9f685d33cb75320869",
+    "semantic_hash": "00be1aa378161d9f685d33cb75320869"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/ActivityMemoryEditorViewModel.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.4542859,
+    "ast_hash": "8338e39132537d7fadbc46314b2bd76b",
+    "semantic_hash": "8338e39132537d7fadbc46314b2bd76b"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/ErrorViewModel.kt": {
+    "mtime": 1764312481.0923784,
+    "seen": 1788798244.4542866,
+    "ast_hash": "186f358f24dabc4956d7309c937042f4",
+    "semantic_hash": "186f358f24dabc4956d7309c937042f4"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/FileProviderModel.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.4542873,
+    "ast_hash": "d9f0586bc70dae1964e2dca2f7478ed8",
+    "semantic_hash": "d9f0586bc70dae1964e2dca2f7478ed8"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/HomePageModel.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.4542882,
+    "ast_hash": "2fa5aa29a2c2e856bbdea97478cccb6a",
+    "semantic_hash": "2fa5aa29a2c2e856bbdea97478cccb6a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/InventoryItemTypeDetailsScreenModel.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.454289,
+    "ast_hash": "8da91b6456d570a72ea2b6473070893e",
+    "semantic_hash": "8da91b6456d570a72ea2b6473070893e"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingCreationViewModel.kt": {
+    "mtime": 1788762266.797701,
+    "seen": 1788798244.4542897,
+    "ast_hash": "1020cbd5a92e89d4a9d79571e44fabd3",
+    "semantic_hash": "1020cbd5a92e89d4a9d79571e44fabd3"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingDetailsModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.4542904,
+    "ast_hash": "63479c17825be3b2f999f6a994c46a98",
+    "semantic_hash": "63479c17825be3b2f999f6a994c46a98"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingManagementViewModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.454291,
+    "ast_hash": "1717c305f5b1f415956b2254e999df57",
+    "semantic_hash": "1717c305f5b1f415956b2254e999df57"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingPageModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.454292,
+    "ast_hash": "415b6f23aabd94bc3e5bb097218a53ba",
+    "semantic_hash": "415b6f23aabd94bc3e5bb097218a53ba"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingSignUpViewModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.4542928,
+    "ast_hash": "108bb5b4f0ed4af45158a6b543fc49e2",
+    "semantic_hash": "108bb5b4f0ed4af45158a6b543fc49e2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LendingsPageModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.4542937,
+    "ast_hash": "8d496f3a898631830add513997ce2636",
+    "semantic_hash": "8d496f3a898631830add513997ce2636"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LoadingViewModel.kt": {
+    "mtime": 1788776544.5373638,
+    "seen": 1788798244.4542944,
+    "ast_hash": "74d984f0948f086e581e59cb7410df8d",
+    "semantic_hash": "74d984f0948f086e581e59cb7410df8d"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LoginViewModel.kt": {
+    "mtime": 1788762266.7987008,
+    "seen": 1788798244.4542954,
+    "ast_hash": "465cdc690573719df87be9f275e1b65f",
+    "semantic_hash": "465cdc690573719df87be9f275e1b65f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/LogoutViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.454296,
+    "ast_hash": "428f2476bbdbd5cfe7711d18cfe8eab0",
+    "semantic_hash": "428f2476bbdbd5cfe7711d18cfe8eab0"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/MainScreenViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4542968,
+    "ast_hash": "326c398df906cecd5e0a4a16cda37a1a",
+    "semantic_hash": "326c398df906cecd5e0a4a16cda37a1a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/MainViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4542975,
+    "ast_hash": "c8f45bd819d55f994bb54b6be7e61a12",
+    "semantic_hash": "c8f45bd819d55f994bb54b6be7e61a12"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/ManagementPageScreenModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4542983,
+    "ast_hash": "8ffe9c142806f8125a5ee4409de05aef",
+    "semantic_hash": "8ffe9c142806f8125a5ee4409de05aef"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/MemoriesViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4542992,
+    "ast_hash": "cb534a8f9cfdfdf6871ae3626b2eec72",
+    "semantic_hash": "cb534a8f9cfdfdf6871ae3626b2eec72"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/PlatformInitializerViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4543,
+    "ast_hash": "06f0511bed8fbcf47f852d0e5b604a41",
+    "semantic_hash": "06f0511bed8fbcf47f852d0e5b604a41"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/ProfilePageModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4543006,
+    "ast_hash": "9ee564270566ec5903146154981a72d2",
+    "semantic_hash": "9ee564270566ec5903146154981a72d2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/SettingsViewModel.kt": {
+    "mtime": 1788762266.7997007,
+    "seen": 1788798244.4543014,
+    "ast_hash": "92a8d0c8a7fd0569e54b13c7b15cbc6a",
+    "semantic_hash": "92a8d0c8a7fd0569e54b13c7b15cbc6a"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/ViewModelUtils.kt": {
+    "mtime": 1788762266.800701,
+    "seen": 1788798244.4543023,
+    "ast_hash": "26f1a6ec77ab44fbd7a433ac9f7b12bf",
+    "semantic_hash": "26f1a6ec77ab44fbd7a433ac9f7b12bf"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/DepartmentsManagementViewModel.kt": {
+    "mtime": 1788794430.2642665,
+    "seen": 1788798244.454303,
+    "ast_hash": "27e71f723fc2eef98935c2d77af98bf9",
+    "semantic_hash": "27e71f723fc2eef98935c2d77af98bf9"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/EventsManagementViewModel.kt": {
+    "mtime": 1788794382.610315,
+    "seen": 1788798244.4543037,
+    "ast_hash": "db95081f61223297fa1e11ffd0f45eaa",
+    "semantic_hash": "db95081f61223297fa1e11ffd0f45eaa"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/InventoryManagementViewModel.kt": {
+    "mtime": 1788794382.610315,
+    "seen": 1788798244.4543047,
+    "ast_hash": "ba2d815e3d158675a20288b86da1e241",
+    "semantic_hash": "ba2d815e3d158675a20288b86da1e241"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/LendingsManagementViewModel.kt": {
+    "mtime": 1788762266.8013642,
+    "seen": 1788798244.4543056,
+    "ast_hash": "950152b5d594136a326c95d1c7a770f2",
+    "semantic_hash": "950152b5d594136a326c95d1c7a770f2"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/MemoriesManagementViewModel.kt": {
+    "mtime": 1788762266.8013642,
+    "seen": 1788798244.4543064,
+    "ast_hash": "72fcd6025823346df025c1d71ffaa87f",
+    "semantic_hash": "72fcd6025823346df025c1d71ffaa87f"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/PostsManagementViewModel.kt": {
+    "mtime": 1788794382.610315,
+    "seen": 1788798244.454307,
+    "ast_hash": "d480645183949b5edbcc7f7163ecdaa6",
+    "semantic_hash": "d480645183949b5edbcc7f7163ecdaa6"
+  },
+  "src/commonMain/kotlin/org/centrexcursionistalcoi/app/viewmodel/management/UsersManagementViewModel.kt": {
+    "mtime": 1788794382.610315,
+    "seen": 1788798244.4543078,
+    "ast_hash": "57ab783d9d75fc4a67e4878bdc715f87",
+    "semantic_hash": "57ab783d9d75fc4a67e4878bdc715f87"
+  },
+  "src/commonTest/kotlin/org/centrexcursionistalcoi/app/network/TestHttpDateFormatter.kt": {
+    "mtime": 1764312481.0978627,
+    "seen": 1788798244.4543085,
+    "ast_hash": "f4836adc442b7413bc242f8b4ff3d79b",
+    "semantic_hash": "f4836adc442b7413bc242f8b4ff3d79b"
+  },
+  "src/coroutinesWorkersMain/kotlin/org/centrexcursionistalcoi/app/sync/BackgroundJobCoordinator.coroutinesWorkers.kt": {
+    "mtime": 1788762266.8013642,
+    "seen": 1788798244.4543095,
+    "ast_hash": "4e5643fd6d169b1732c6d8898f879731",
+    "semantic_hash": "4e5643fd6d169b1732c6d8898f879731"
+  },
+  "src/coroutinesWorkersMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJob.coroutinesWorkers.kt": {
+    "mtime": 1788762266.8017008,
+    "seen": 1788798244.4543104,
+    "ast_hash": "31da12623b8a509919caf2625d4a3e98",
+    "semantic_hash": "31da12623b8a509919caf2625d4a3e98"
+  },
+  "src/coroutinesWorkersMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableBackgroundJobs.coroutinesWorkers.kt": {
+    "mtime": 1764312481.0982122,
+    "seen": 1788798244.4543111,
+    "ast_hash": "b777702c47a5f6d0601a711a5bf66d6f",
+    "semantic_hash": "b777702c47a5f6d0601a711a5bf66d6f"
+  },
+  "src/coroutinesWorkersMain/kotlin/org/centrexcursionistalcoi/app/sync/ObservableUniqueBackgroundJob.coroutinesWorkers.kt": {
+    "mtime": 1788762266.8017008,
+    "seen": 1788798244.4543118,
+    "ast_hash": "614b302e4bacae09b16a8864daeae2ca",
+    "semantic_hash": "614b302e4bacae09b16a8864daeae2ca"
+  },
+  "src/iosArm64Main/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.ios.iosArm64.kt": {
+    "mtime": 1764312481.0985374,
+    "seen": 1788798244.4543128,
+    "ast_hash": "a87e7c8d4f8fe2d1687363b01d086e72",
+    "semantic_hash": "a87e7c8d4f8fe2d1687363b01d086e72"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/MainViewController.kt": {
+    "mtime": 1788762266.8017008,
+    "seen": 1788798244.4543138,
+    "ast_hash": "f15ec1ae508919a74511beb01c0a1c24",
+    "semantic_hash": "f15ec1ae508919a74511beb01c0a1c24"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/database/Database.ios.kt": {
+    "mtime": 1788762266.8017008,
+    "seen": 1788798244.4543145,
+    "ast_hash": "75d6265b8a3d86f6fe2ddbf079c06af9",
+    "semantic_hash": "75d6265b8a3d86f6fe2ddbf079c06af9"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/di/DatabaseModule.ios.kt": {
+    "mtime": 1788762266.8017008,
+    "seen": 1788798244.4543152,
+    "ast_hash": "4e99d92e2763a951075cea5aa7e1b6e0",
+    "semantic_hash": "4e99d92e2763a951075cea5aa7e1b6e0"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/di/KoinIos.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543161,
+    "ast_hash": "8bff6068967ec695d45856a98d9091c1",
+    "semantic_hash": "8bff6068967ec695d45856a98d9091c1"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/di/ManualModules.ios.kt": {
+    "mtime": 1788783725.709004,
+    "seen": 1788798244.4543169,
+    "ast_hash": "570a87ea4718a6909c391b426831a475",
+    "semantic_hash": "570a87ea4718a6909c391b426831a475"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/network/ErrorHandling.ios.kt": {
+    "mtime": 1764312481.0987878,
+    "seen": 1788798244.4543176,
+    "ast_hash": "eca3be0d1a25141260e83feeef5001f8",
+    "semantic_hash": "eca3be0d1a25141260e83feeef5001f8"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.ios.kt": {
+    "mtime": 1764312481.0988355,
+    "seen": 1788798244.4543183,
+    "ast_hash": "1c65047fccdbc9f9acba596ac733f172",
+    "semantic_hash": "1c65047fccdbc9f9acba596ac733f172"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformAppUpdates.ios.kt": {
+    "mtime": 1764312481.0988355,
+    "seen": 1788798244.454319,
+    "ast_hash": "a0a9ecf2769c0f664a7ee65b060d0c26",
+    "semantic_hash": "a0a9ecf2769c0f664a7ee65b060d0c26"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformCalendarSync.ios.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.45432,
+    "ast_hash": "b3d0aef6b76bba7ef9b3ac6786f81070",
+    "semantic_hash": "b3d0aef6b76bba7ef9b3ac6786f81070"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformClipboard.ios.kt": {
+    "mtime": 1764312481.0988626,
+    "seen": 1788798244.454321,
+    "ast_hash": "41892dfb7d96a1012c7c63d79cfbeb4c",
+    "semantic_hash": "41892dfb7d96a1012c7c63d79cfbeb4c"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformDragAndDrop.ios.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543216,
+    "ast_hash": "79b2ada725a8ee19f8875ce7788c301d",
+    "semantic_hash": "79b2ada725a8ee19f8875ce7788c301d"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformLoadLogic.ios.kt": {
+    "mtime": 1764312481.0988626,
+    "seen": 1788798244.4543223,
+    "ast_hash": "703efab71782cd36ee72ff4ecaaa56df",
+    "semantic_hash": "703efab71782cd36ee72ff4ecaaa56df"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformNFC.ios.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543233,
+    "ast_hash": "83dd16ae0cf346632ab7c515fbfe1e59",
+    "semantic_hash": "83dd16ae0cf346632ab7c515fbfe1e59"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformOpenFileLogic.ios.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.454324,
+    "ast_hash": "6f74ba8f503ff27d401e1d3150bfbdab",
+    "semantic_hash": "6f74ba8f503ff27d401e1d3150bfbdab"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformPrinter.ios.kt": {
+    "mtime": 1764312481.0988626,
+    "seen": 1788798244.4543247,
+    "ast_hash": "36c41c26c71e9463ad3c9a6685c41459",
+    "semantic_hash": "36c41c26c71e9463ad3c9a6685c41459"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformShareLogic.ios.kt": {
+    "mtime": 1788776544.5373638,
+    "seen": 1788798244.4543254,
+    "ast_hash": "92e4552a1d121dc063c099fddc1090da",
+    "semantic_hash": "92e4552a1d121dc063c099fddc1090da"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/push/PushNotifierListenerIos.kt": {
+    "mtime": 1788783725.709004,
+    "seen": 1788798244.4543262,
+    "ast_hash": "b07f1efa03533cbfa6ffc0f437b98a57",
+    "semantic_hash": "b07f1efa03533cbfa6ffc0f437b98a57"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/SystemDataPath.ios.kt": {
+    "mtime": 1764312481.0991485,
+    "seen": 1788798244.454327,
+    "ast_hash": "d7d873b92a74a4df5ab874bda04ca57f",
+    "semantic_hash": "d7d873b92a74a4df5ab874bda04ca57f"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/PlatformBackHandler.ios.kt": {
+    "mtime": 1764312481.0992634,
+    "seen": 1788798244.454328,
+    "ast_hash": "8ee304f12dbff2c95f46d01627c65c9a",
+    "semantic_hash": "8ee304f12dbff2c95f46d01627c65c9a"
+  },
+  "src/iosMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/WindowSizeClass.ios.kt": {
+    "mtime": 1788433484.0208209,
+    "seen": 1788798244.4543288,
+    "ast_hash": "cd9a7dbb3d1b8259979f801ed9a6d635",
+    "semantic_hash": "cd9a7dbb3d1b8259979f801ed9a6d635"
+  },
+  "src/iosSimulatorArm64Main/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.ios.iosSimulatorArm64.kt": {
+    "mtime": 1764312481.0994709,
+    "seen": 1788798244.4543295,
+    "ast_hash": "c40bd0250818ece367b485e7e5f138fd",
+    "semantic_hash": "c40bd0250818ece367b485e7e5f138fd"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/JvmLogger.kt": {
+    "mtime": 1764844512.690129,
+    "seen": 1788798244.4543304,
+    "ast_hash": "c79cca931f364735d08c4addc1d49f85",
+    "semantic_hash": "c79cca931f364735d08c4addc1d49f85"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/database/Database.jvm.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543312,
+    "ast_hash": "88cd607e7c51f1393ff72c9c55725ded",
+    "semantic_hash": "88cd607e7c51f1393ff72c9c55725ded"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/di/DatabaseModule.jvm.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543319,
+    "ast_hash": "4e99d92e2763a951075cea5aa7e1b6e0",
+    "semantic_hash": "4e99d92e2763a951075cea5aa7e1b6e0"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/di/ManualModules.jvm.kt": {
+    "mtime": 1788783725.7100039,
+    "seen": 1788798244.4543326,
+    "ast_hash": "570a87ea4718a6909c391b426831a475",
+    "semantic_hash": "570a87ea4718a6909c391b426831a475"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/main.kt": {
+    "mtime": 1788762266.8027315,
+    "seen": 1788798244.4543335,
+    "ast_hash": "d159b75e9ad175bc0237c0af8d640ff9",
+    "semantic_hash": "d159b75e9ad175bc0237c0af8d640ff9"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/network/ErrorHandling.jvm.kt": {
+    "mtime": 1764312481.0997028,
+    "seen": 1788798244.4543343,
+    "ast_hash": "b91320f883f501ab8624aa32c0994f96",
+    "semantic_hash": "b91320f883f501ab8624aa32c0994f96"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/network/HttpClientConfig.jvm.kt": {
+    "mtime": 1764312481.0997941,
+    "seen": 1788798244.454335,
+    "ast_hash": "1cf958f58d2ca43ddb2efd2c0289a70b",
+    "semantic_hash": "1cf958f58d2ca43ddb2efd2c0289a70b"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/permission/HelperHolder.jvm.kt": {
+    "mtime": 1764312481.0997941,
+    "seen": 1788798244.4543357,
+    "ast_hash": "c2aa14cc6b65ef27d5a991df4007b8d1",
+    "semantic_hash": "c2aa14cc6b65ef27d5a991df4007b8d1"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformAppUpdates.jvm.kt": {
+    "mtime": 1788762266.803701,
+    "seen": 1788798244.4543364,
+    "ast_hash": "c0bc84b9a3b7d517842d5f632c6b4efd",
+    "semantic_hash": "c0bc84b9a3b7d517842d5f632c6b4efd"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformCalendarSync.jvm.kt": {
+    "mtime": 1788762266.803701,
+    "seen": 1788798244.4543374,
+    "ast_hash": "0d702907023f4e80eef96ade3d93ca38",
+    "semantic_hash": "0d702907023f4e80eef96ade3d93ca38"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformClipboard.jvm.kt": {
+    "mtime": 1764312481.0999868,
+    "seen": 1788798244.454338,
+    "ast_hash": "590ab33a81e7b0a0d53123c4495a2b20",
+    "semantic_hash": "590ab33a81e7b0a0d53123c4495a2b20"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformDragAndDrop.jvm.kt": {
+    "mtime": 1788762266.803701,
+    "seen": 1788798244.4543388,
+    "ast_hash": "937c9319590d8623eee197d0bba0d068",
+    "semantic_hash": "937c9319590d8623eee197d0bba0d068"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformLoadLogic.jvm.kt": {
+    "mtime": 1788776544.5383637,
+    "seen": 1788798244.4543395,
+    "ast_hash": "0a76716313bb2406c34970fa4ab0b5d9",
+    "semantic_hash": "0a76716313bb2406c34970fa4ab0b5d9"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformNFC.jvm.kt": {
+    "mtime": 1788762266.803701,
+    "seen": 1788798244.4543405,
+    "ast_hash": "495105484b8e22b29148bc1df3054e7f",
+    "semantic_hash": "495105484b8e22b29148bc1df3054e7f"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformOpenFileLogic.jvm.kt": {
+    "mtime": 1788762266.803701,
+    "seen": 1788798244.4543412,
+    "ast_hash": "0fb4d9617465a9c93c0e55128557904f",
+    "semantic_hash": "0fb4d9617465a9c93c0e55128557904f"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformPrinter.jvm.kt": {
+    "mtime": 1764312481.0999868,
+    "seen": 1788798244.454342,
+    "ast_hash": "c465bc27cc8c17bde6587d8473e54f37",
+    "semantic_hash": "c465bc27cc8c17bde6587d8473e54f37"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/platform/PlatformShareLogic.jvm.kt": {
+    "mtime": 1788762266.8047009,
+    "seen": 1788798244.4543428,
+    "ast_hash": "ec60962a0e50785ad59163a384215dc5",
+    "semantic_hash": "ec60962a0e50785ad59163a384215dc5"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/push/PlatformSSEConfiguration.jvm.kt": {
+    "mtime": 1764312481.0999868,
+    "seen": 1788798244.4543438,
+    "ast_hash": "dfd064c5faa7a6f73f8b944330475154",
+    "semantic_hash": "dfd064c5faa7a6f73f8b944330475154"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/storage/fs/SystemDataPath.jvm.kt": {
+    "mtime": 1764312481.1003067,
+    "seen": 1788798244.4543445,
+    "ast_hash": "85dff554e15eb42c7fe7e1cde8c4abc2",
+    "semantic_hash": "85dff554e15eb42c7fe7e1cde8c4abc2"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/transfer/ByteArrayTransferable.kt": {
+    "mtime": 1764312481.1003067,
+    "seen": 1788798244.4543452,
+    "ast_hash": "b4d0d1980c9cecb6e7811458a70838f4",
+    "semantic_hash": "b4d0d1980c9cecb6e7811458a70838f4"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/transfer/FileTransferable.kt": {
+    "mtime": 1764312481.100404,
+    "seen": 1788798244.454346,
+    "ast_hash": "c9c9cf0fb6fd3de6f33e5b3f787f6ba9",
+    "semantic_hash": "c9c9cf0fb6fd3de6f33e5b3f787f6ba9"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/transfer/TextTransferable.kt": {
+    "mtime": 1764312481.100404,
+    "seen": 1788798244.4543467,
+    "ast_hash": "20a774691535947f638b5c2ddf2d1052",
+    "semantic_hash": "20a774691535947f638b5c2ddf2d1052"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/Hover.jvm.kt": {
+    "mtime": 1764312481.100529,
+    "seen": 1788798244.4543478,
+    "ast_hash": "ebe140adb981b41ebaa5800c76312f1d",
+    "semantic_hash": "ebe140adb981b41ebaa5800c76312f1d"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/PlatformBackHandler.jvm.kt": {
+    "mtime": 1788762266.8047009,
+    "seen": 1788798244.4543486,
+    "ast_hash": "9769bb742d6c5c5d49101d4672c94543",
+    "semantic_hash": "9769bb742d6c5c5d49101d4672c94543"
+  },
+  "src/jvmMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/WindowSizeClass.jvm.kt": {
+    "mtime": 1788762266.8047009,
+    "seen": 1788798244.4543493,
+    "ast_hash": "cd9a7dbb3d1b8259979f801ed9a6d635",
+    "semantic_hash": "cd9a7dbb3d1b8259979f801ed9a6d635"
+  },
+  "src/jvmTest/kotlin/org/centrexcursionistalcoi/app/di/TestKoinModules.kt": {
+    "mtime": 1788794430.2812665,
+    "seen": 1788798244.45435,
+    "ast_hash": "f17dd22d21aced8e038a846ba8372d6f",
+    "semantic_hash": "f17dd22d21aced8e038a846ba8372d6f"
+  },
+  "src/jvmTest/kotlin/org/centrexcursionistalcoi/app/storage/fs/TestFileSystem.kt": {
+    "mtime": 1764312481.1008146,
+    "seen": 1788798244.454351,
+    "ast_hash": "3c46d7e10cddfa6ba72d133517cb4c65",
+    "semantic_hash": "3c46d7e10cddfa6ba72d133517cb4c65"
+  },
+  "src/jvmTest/kotlin/org/centrexcursionistalcoi/app/sync/TestDatabaseIntegrityVerifier.kt": {
+    "mtime": 1788776544.5383637,
+    "seen": 1788798244.4543517,
+    "ast_hash": "e8ed88c110658f2f962819c7490b5f2a",
+    "semantic_hash": "e8ed88c110658f2f962819c7490b5f2a"
+  },
+  "src/permissionsMain/kotlin/org/centrexcursionistalcoi/app/permission/Conversion.kt": {
+    "mtime": 1764312481.1010568,
+    "seen": 1788798244.4543524,
+    "ast_hash": "abd009d75595c44777a77341e3c9f060",
+    "semantic_hash": "abd009d75595c44777a77341e3c9f060"
+  },
+  "src/permissionsMain/kotlin/org/centrexcursionistalcoi/app/permission/HelperHolder.permissions.kt": {
+    "mtime": 1764312481.1011229,
+    "seen": 1788798244.454353,
+    "ast_hash": "6f587573e9e7127e5cb8f564622bf7a9",
+    "semantic_hash": "6f587573e9e7127e5cb8f564622bf7a9"
+  },
+  "src/phonesMain/kotlin/org/centrexcursionistalcoi/app/push/PlatformSSEConfiguration.phones.kt": {
+    "mtime": 1764312481.1012762,
+    "seen": 1788798244.4543538,
+    "ast_hash": "b7908c788ebb84e92a164026d1d1e8b9",
+    "semantic_hash": "b7908c788ebb84e92a164026d1d1e8b9"
+  },
+  "src/phonesMain/kotlin/org/centrexcursionistalcoi/app/ui/platform/Hover.phones.kt": {
+    "mtime": 1764312481.1013696,
+    "seen": 1788798244.454355,
+    "ast_hash": "eda15e9c2fcd9129cf1fb2dfacaf2af2",
+    "semantic_hash": "eda15e9c2fcd9129cf1fb2dfacaf2af2"
+  },
+  "flags/flag_ca.svg": {
+    "mtime": 1764312481.0588763,
+    "seen": 1788798244.4543557,
+    "ast_hash": "3eb3a35a978070fd4a68db545c527b54",
+    "semantic_hash": "3eb3a35a978070fd4a68db545c527b54"
+  },
+  "flags/flag_en.svg": {
+    "mtime": 1764312481.0590453,
+    "seen": 1788798244.4543564,
+    "ast_hash": "d264f1845336248617b786cb0e07d5aa",
+    "semantic_hash": "d264f1845336248617b786cb0e07d5aa"
+  },
+  "flags/flag_es.svg": {
+    "mtime": 1764312481.0590453,
+    "seen": 1788798244.4543571,
+    "ast_hash": "dc5b51ce2409c7b113e6241dea0d074c",
+    "semantic_hash": "dc5b51ce2409c7b113e6241dea0d074c"
+  },
+  "icons/icon.png": {
+    "mtime": 1764312481.0618627,
+    "seen": 1788798244.454358,
+    "ast_hash": "cb8d5131a559903c6dfc3e14263eaffd",
+    "semantic_hash": "cb8d5131a559903c6dfc3e14263eaffd"
+  },
+  "src/androidMain/ic_launcher-playstore.png": {
+    "mtime": 1764312481.062515,
+    "seen": 1788798244.4543588,
+    "ast_hash": "ca816c7be55b54e1515f20c779f94c6e",
+    "semantic_hash": "ca816c7be55b54e1515f20c779f94c6e"
+  },
+  "src/androidMain/res/mipmap-hdpi/ic_launcher.webp": {
+    "mtime": 1764312481.0646436,
+    "seen": 1788798244.4543595,
+    "ast_hash": "876264c92a972a76db0c09d75359dc34",
+    "semantic_hash": "876264c92a972a76db0c09d75359dc34"
+  },
+  "src/androidMain/res/mipmap-hdpi/ic_launcher_round.webp": {
+    "mtime": 1764312481.064719,
+    "seen": 1788798244.4543602,
+    "ast_hash": "b2b41632ef821611b052b3e1c9ab5c6c",
+    "semantic_hash": "b2b41632ef821611b052b3e1c9ab5c6c"
+  },
+  "src/androidMain/res/mipmap-mdpi/ic_launcher.webp": {
+    "mtime": 1764312481.064719,
+    "seen": 1788798244.4543612,
+    "ast_hash": "cd71284482ce50105ed73152246e36a2",
+    "semantic_hash": "cd71284482ce50105ed73152246e36a2"
+  },
+  "src/androidMain/res/mipmap-mdpi/ic_launcher_round.webp": {
+    "mtime": 1764312481.0647995,
+    "seen": 1788798244.454362,
+    "ast_hash": "39f7fb271d422fb7d50b817cf5106859",
+    "semantic_hash": "39f7fb271d422fb7d50b817cf5106859"
+  },
+  "src/androidMain/res/mipmap-xhdpi/ic_launcher.webp": {
+    "mtime": 1764312481.0647995,
+    "seen": 1788798244.4543629,
+    "ast_hash": "bc3d067a711976a80211b0604978dfbc",
+    "semantic_hash": "bc3d067a711976a80211b0604978dfbc"
+  },
+  "src/androidMain/res/mipmap-xhdpi/ic_launcher_round.webp": {
+    "mtime": 1764312481.064881,
+    "seen": 1788798244.4543636,
+    "ast_hash": "3d6e9000ea67f63859985b07cca0ed58",
+    "semantic_hash": "3d6e9000ea67f63859985b07cca0ed58"
+  },
+  "src/androidMain/res/mipmap-xxhdpi/ic_launcher.webp": {
+    "mtime": 1764312481.064881,
+    "seen": 1788798244.4543643,
+    "ast_hash": "46b84403ee8ad8684892c69c276490d4",
+    "semantic_hash": "46b84403ee8ad8684892c69c276490d4"
+  },
+  "src/androidMain/res/mipmap-xxhdpi/ic_launcher_round.webp": {
+    "mtime": 1764312481.0649757,
+    "seen": 1788798244.4543653,
+    "ast_hash": "fb3ec4b91d77949ffa525201b891785f",
+    "semantic_hash": "fb3ec4b91d77949ffa525201b891785f"
+  },
+  "src/androidMain/res/mipmap-xxxhdpi/ic_launcher.webp": {
+    "mtime": 1764312481.0649757,
+    "seen": 1788798244.454366,
+    "ast_hash": "73b436aafd51a2fe4d016064791598f0",
+    "semantic_hash": "73b436aafd51a2fe4d016064791598f0"
+  },
+  "src/androidMain/res/mipmap-xxxhdpi/ic_launcher_round.webp": {
+    "mtime": 1764312481.0650675,
+    "seen": 1788798244.4543667,
+    "ast_hash": "d6ee0d3163873ce5bfd4c17037c7d056",
+    "semantic_hash": "d6ee0d3163873ce5bfd4c17037c7d056"
+  },
+  "src/commonMain/composeResources/drawable/arnyminerz.png": {
+    "mtime": 1764312481.0653772,
+    "seen": 1788798244.4543674,
+    "ast_hash": "7dbb8045601853342fa68eb66c521c3a",
+    "semantic_hash": "7dbb8045601853342fa68eb66c521c3a"
+  },
+  "src/commonMain/composeResources/drawable/banner.png": {
+    "mtime": 1764312481.0654728,
+    "seen": 1788798244.4543684,
+    "ast_hash": "7388110026d238be0389b0ea93a163f8",
+    "semantic_hash": "7388110026d238be0389b0ea93a163f8"
+  },
+  "src/commonMain/composeResources/drawable/femecv_2026.png": {
+    "mtime": 1769669985.4168012,
+    "seen": 1788798244.454369,
+    "ast_hash": "9885afb9b107fe096b9b47ca12c42fbb",
+    "semantic_hash": "9885afb9b107fe096b9b47ca12c42fbb"
+  },
+  "src/commonMain/composeResources/drawable/flag_ca.png": {
+    "mtime": 1764312481.0654728,
+    "seen": 1788798244.45437,
+    "ast_hash": "e45a4b097fb04d96c38fc62a02d026bc",
+    "semantic_hash": "e45a4b097fb04d96c38fc62a02d026bc"
+  },
+  "src/commonMain/composeResources/drawable/flag_en.png": {
+    "mtime": 1764312481.0654728,
+    "seen": 1788798244.4543707,
+    "ast_hash": "36c988ce902f272718ede24f3604d0b6",
+    "semantic_hash": "36c988ce902f272718ede24f3604d0b6"
+  },
+  "src/commonMain/composeResources/drawable/flag_es.png": {
+    "mtime": 1764312481.0654728,
+    "seen": 1788798244.4543717,
+    "ast_hash": "0415b701611c90dca80777b7ea7e7de3",
+    "semantic_hash": "0415b701611c90dca80777b7ea7e7de3"
+  },
+  "src/commonMain/composeResources/drawable/forma_pv.png": {
+    "mtime": 1764312481.0654728,
+    "seen": 1788798244.4543724,
+    "ast_hash": "8c8f3a27fa71077b187624264f0bdf34",
+    "semantic_hash": "8c8f3a27fa71077b187624264f0bdf34"
+  },
+  "src/commonMain/composeResources/drawable/icon.png": {
+    "mtime": 1764312481.0678627,
+    "seen": 1788798244.4543731,
+    "ast_hash": "cb8d5131a559903c6dfc3e14263eaffd",
+    "semantic_hash": "cb8d5131a559903c6dfc3e14263eaffd"
+  },
+  "src/commonMain/composeResources/drawable/icon_monochrome.png": {
+    "mtime": 1764312481.0678627,
+    "seen": 1788798244.4543738,
+    "ast_hash": "6294fbe16104e2729e15e30e01d54567",
+    "semantic_hash": "6294fbe16104e2729e15e30e01d54567"
+  },
+  "src/commonMain/composeResources/drawable/logo-femecv.png": {
+    "mtime": 1764312481.0678627,
+    "seen": 1788798244.454375,
+    "ast_hash": "56a9a58c5087205d3570fae5a6aa9c91",
+    "semantic_hash": "56a9a58c5087205d3570fae5a6aa9c91"
+  },
+  "src/commonMain/composeResources/drawable/people.png": {
+    "mtime": 1764312481.0698628,
+    "seen": 1788798244.4543757,
+    "ast_hash": "0bb287cdc3c0585eb92372bbf6f6196c",
+    "semantic_hash": "0bb287cdc3c0585eb92372bbf6f6196c"
+  },
+  "src/commonMain/composeResources/drawable/petzl.png": {
+    "mtime": 1765541268.5030951,
+    "seen": 1788798244.4543765,
+    "ast_hash": "7cc495faf207c80ac2a7c4322a5851ff",
+    "semantic_hash": "7cc495faf207c80ac2a7c4322a5851ff"
+  }
+}
