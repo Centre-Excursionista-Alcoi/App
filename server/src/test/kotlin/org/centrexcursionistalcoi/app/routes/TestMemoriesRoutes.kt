@@ -115,6 +115,43 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
     }
 
+    // The generated summary PDF is only downloadable by its submitter or an admin (see the FileReadWriteRules set
+    // in regenerateMemoryPdf()) -- it previously had no rules at all, making it downloadable by anyone, logged in
+    // or not.
+    @Test
+    fun test_create_memory_pdfDownloadRestricted() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val zone = TimeZone.currentSystemDefault()
+        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+
+        val location = client.submitFormWithBinaryData(
+            "/memories",
+            formData {
+                append("text", "A memory with no lending attached")
+                append("from", from.toString())
+                append("to", to.toString())
+            }
+        ).run {
+            assertStatusCode(HttpStatusCode.Created)
+            headers[HttpHeaders.Location]!!
+        }
+
+        val pdfId = client.get(location).run {
+            assertStatusCode(HttpStatusCode.OK)
+            var id: kotlin.uuid.Uuid? = null
+            assertBody(Memory.serializer()) { memory -> id = memory.pdf }
+            id!!
+        }
+
+        // The submitter can download it.
+        client.get("/download/$pdfId").assertStatusCode(HttpStatusCode.OK)
+
+        // A different, unrelated logged-in user cannot.
+        Database { FakeUser2.provideEntity() }
+        loginAsFakeUser2()
+        client.get("/download/$pdfId").assertStatusCode(HttpStatusCode.Forbidden)
+    }
+
     @Test
     fun test_create_memory_forLending() = runApplicationTest(
         shouldLogIn = LoginType.USER,

@@ -54,6 +54,7 @@ import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
@@ -142,6 +143,11 @@ private fun regenerateMemoryPdf(memory: MemoryEntity) {
             name = "memory_${memory.id.value}.pdf"
             contentType = ContentType.Application.Pdf
             bytes = baos.toByteArray()
+            // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
+            // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
+            // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
+            // department-role checks that read access to the memory itself is based on.
+            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
         }
         oldPdf?.delete()
     }
@@ -273,8 +279,10 @@ fun Route.memoriesRoutes() {
             departmentEntity
         }
 
-        // Store all attachments
-        val documentEntities = attachedFiles.map { file -> Database { file.newEntity() } }
+        // Store all attachments. Best-effort restriction: see the comment on the memory PDF's rules below --
+        // department MEMORY_MANAGERs and tagged members can see the memory's data but not download these files.
+        val attachmentRules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME))
+        val documentEntities = attachedFiles.map { file -> Database { file.newEntity(rules = attachmentRules) } }
 
         val memoryId = UUID.randomUUID()
         val memoryEntity = Database {

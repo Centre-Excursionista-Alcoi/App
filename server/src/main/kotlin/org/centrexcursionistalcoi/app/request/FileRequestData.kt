@@ -11,6 +11,7 @@ import kotlin.io.encoding.Base64
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 
 class FileRequestData : Closeable {
     companion object {
@@ -60,14 +61,18 @@ class FileRequestData : Closeable {
     /**
      * Creates a new [FileEntity] in the database with the data from this file and releases resources.
      * @param close Whether to close this file data after creating the entity. Defaults to true.
+     * @param rules Read/write restrictions to record on the created file (see [FileEntity.rules]). Defaults to
+     *   `null` (no restriction beyond requiring a logged-in session at download time) -- pass an explicit value
+     *   for anything more sensitive than a shared/public asset (e.g. an insurance document or memory attachment).
      * @return The created [FileEntity].
      */
-    fun newEntity(close: Boolean = true): FileEntity {
+    fun newEntity(close: Boolean = true, rules: FileReadWriteRules? = null): FileEntity {
         return Database {
             FileEntity.new {
                 this.name = originalFileName ?: "unknown"
                 this.contentType = this@FileRequestData.contentType ?: ContentType.Application.OctetStream
                 this.bytes = baos.toByteArray()
+                this.rules = rules
             }
         }.also { if (close) close() }
     }

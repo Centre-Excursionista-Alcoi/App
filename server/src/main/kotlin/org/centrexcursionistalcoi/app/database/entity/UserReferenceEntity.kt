@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -117,6 +118,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                         bytes = certificate
                         contentType = ContentType.Application.Pdf
                         name = "certificado.pdf"
+                        rules = FileReadWriteRules(readUsers = listOf(sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
                     }
                 }
 

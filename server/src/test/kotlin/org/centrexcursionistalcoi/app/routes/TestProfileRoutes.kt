@@ -338,4 +338,42 @@ class TestProfileRoutes : ApplicationTestBase() {
             assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo)
         }
     }
+
+    // The uploaded document is only downloadable by its owner or an admin (see FileReadWriteRules wiring in this
+    // route) -- it previously had no rules at all, making it downloadable by anyone, logged in or not.
+    @Test
+    fun test_insurances_post_documentDownloadRestricted() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        client.submitFormWithBinaryData(
+            "/profile/insurances",
+            formData {
+                append("insuranceCompany", "FEMECV")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+
+                val data = ResourcesUtils.bytesFromResource("/document.pdf")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(data),
+                    headers {
+                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+                    },
+                )
+            }
+        ).assertStatusCode(HttpStatusCode.NoContent)
+
+        val documentId = Database {
+            UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.first().document!!.id.value
+        }
+
+        // The owner can download it.
+        client.get("/download/$documentId").assertStatusCode(HttpStatusCode.OK)
+
+        // A different, unrelated logged-in user cannot.
+        Database { FakeUser2.provideEntity() }
+        loginAsFakeUser2()
+        client.get("/download/$documentId").assertStatusCode(HttpStatusCode.Forbidden)
+    }
 }
