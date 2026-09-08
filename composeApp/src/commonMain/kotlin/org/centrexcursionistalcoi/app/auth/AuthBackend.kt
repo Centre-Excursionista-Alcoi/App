@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
+import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -31,6 +32,7 @@ class AuthBackend(
     private val membersRepository: MembersRepository,
     private val usersRepository: UsersRepository,
     private val departmentsRepository: DepartmentsRepository,
+    private val memoriesRepository: MemoriesRepository,
 ) {
     private val log = logging()
     
@@ -72,7 +74,9 @@ class AuthBackend(
         val response = getHttpClient().get("/logout")
         if (response.status.isSuccess()) {
             log.d { "Logged out. Removing all data..." }
-            // order is important due to foreign key constraints
+            // order is important due to foreign key constraints: children before their parents
+            // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
+            memoriesRepository.deleteAll()
             lendingsRepository.deleteAll()
             inventoryItemsRepository.deleteAll()
             inventoryItemTypesRepository.deleteAll()
