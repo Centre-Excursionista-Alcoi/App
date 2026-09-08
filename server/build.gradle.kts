@@ -62,6 +62,12 @@ dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
 
+    // Sentry error tracking, tracing and profiling. Pinned explicitly (see the sentry-jvmSdk
+    // comment in gradle/libs.versions.toml) so this can't drift from what io.sentry.jvm.gradle
+    // auto-installs.
+    implementation(libs.sentry.jvm)
+    implementation(libs.sentry.kotlinExtensions)
+
     // CSV serialization
     implementation(libs.kotlinx.serializationCsv)
 
@@ -163,6 +169,13 @@ tasks.withType<ShadowJar> {
 }
 
 sentry {
+    // The SDK dependency is declared explicitly above (see gradle/libs.versions.toml) so it can be
+    // kept in lockstep with sentry-kotlin-extensions -- letting this plugin auto-install its own
+    // version risks the same mixed-SDK-versions crash fixed on the Android side.
+    autoInstallation {
+        enabled = false
+    }
+
     // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
     // This enables source context, allowing you to see your source
     // code as part of your stack traces in Sentry.
