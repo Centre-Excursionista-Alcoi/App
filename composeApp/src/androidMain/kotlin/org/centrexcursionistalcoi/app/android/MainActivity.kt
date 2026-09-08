@@ -70,7 +70,7 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     private fun getUrlFromIntent(): Url? {
         val uri = intent.data ?: return null
-        if (uri.scheme != "cea" || uri.host == "server.cea.arnaumora.com") return null
+        if (uri.scheme != "cea" || uri.host == "server.centrexcursionistalcoi.app") return null
         return Url(uri.toString())
     }
 
