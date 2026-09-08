@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.diamondedge.logging.logging
+import io.sentry.kotlin.multiplatform.Sentry
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.android.annotation.KoinWorker
@@ -79,6 +80,10 @@ class BackgroundJobWorker(
                 context.run(input).toWorkerResult()
             } catch (e: Exception) {
                 log.e(e) { "Worker failed." }
+                // Nothing reads the exception detail stuffed into the output data below (WorkInfo.state
+                // is all ObservableBackgroundJob exposes), so without this the real cause is only ever
+                // visible in the local device log.
+                Sentry.captureException(e)
                 Result.failure(
                     workDataOf(
                         RESULT_EXCEPTION_TYPE to e::class.simpleName,

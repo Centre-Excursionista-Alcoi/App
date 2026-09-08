@@ -87,6 +87,7 @@ class LoadingViewModel(
             }
         } catch (e: Exception) {
             log.e(e) { "Error while loading." }
+            Sentry.captureException(e)
             progress.value = null
             error.value = e
         }
