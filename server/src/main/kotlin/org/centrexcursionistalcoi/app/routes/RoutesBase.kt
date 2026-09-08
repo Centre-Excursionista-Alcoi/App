@@ -252,23 +252,42 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         return item
     }
 
+    /**
+     * Fetches the entity by [id], but only if it's also visible through [listProvider] for [session] --
+     * otherwise responds [Error.EntityNotFound], exactly as if it didn't exist. Unlike [assertEntity] (used by
+     * PATCH/DELETE, which are gated by [writePermission] instead), this is what GET /$base/{id} uses, so a
+     * resource can never be read individually by ID if the caller couldn't also see it in the list.
+     */
+    suspend fun RoutingContext.assertVisibleEntity(id: EID, session: UserSession?): EE? {
+        val item = Database {
+            val entity = entityClass.findById(id) ?: return@Database null
+            entity.takeIf { listProvider(session).any { visible -> visible.id.value == id } }
+        }
+        if (item == null) {
+            respondError(Error.EntityNotFound(entityKClass, id))
+            return null
+        }
+        return item
+    }
+
     get("/$base") {
         val session = getUserSession()
         handleIfModifiedForType(entityClass) ?: return@get
         val list = Database { listProvider(session).toList() }
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(list, entityClass)
+            json.encodeEntityListToString(list, entityClass, session)
         }
     }
 
     get("/$base/{id}") {
         val id = getId() ?: return@get
         handleIfModified(entityClass, id) ?: return@get
-        val item = assertEntity(id) ?: return@get
+        val session = getUserSession()
+        val item = assertVisibleEntity(id, session) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(item, entityClass)
+            json.encodeEntityToString(item, entityClass, session)
         }
     }
 

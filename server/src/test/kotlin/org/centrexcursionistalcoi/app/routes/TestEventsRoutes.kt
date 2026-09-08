@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -13,6 +14,7 @@ import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertError
+import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -184,5 +186,53 @@ class TestEventsRoutes : ApplicationTestBase() {
         // The reassignment attempt must have been rolled back: the event still belongs to the managed department.
         val departmentIdAfter = Database { event.department?.id?.value }
         assertEquals(managedDepartment.id.value, departmentIdAfter)
+    }
+
+    // GET /events/{id} must respect the same department-scoped visibility as GET /events (EventEntity.forSession):
+    // it previously fetched the entity directly with no check at all, leaking a department-private event's full
+    // details (including its confirmed attendee list) to any caller who knew or guessed its id.
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_notVisibleToOutsider() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Private event"
+                place = "Somewhere"
+                department = otherDepartment
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        // FakeUser is logged in, but not a member of the event's department.
+        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+    }
+
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_visibleToDepartmentMember() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val dept = DepartmentEntity.new { displayName = "Managed Department" }
+            DepartmentMembers.insert {
+                it[userSub] = FakeUser.SUB
+                it[departmentId] = dept.id
+                it[confirmed] = true
+                it[roles] = emptyList()
+            }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Department event"
+                place = "Somewhere"
+                department = dept
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.OK)
     }
 }
