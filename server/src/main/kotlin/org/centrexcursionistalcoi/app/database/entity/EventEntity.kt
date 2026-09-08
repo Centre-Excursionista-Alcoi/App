@@ -64,6 +64,21 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         }
     }
 
+    /**
+     * Whether this single event is visible to [session] -- must stay in sync with [forSession], which is the
+     * same rule applied at the list level. Evaluated directly against this entity's own fields (one department
+     * lookup for the caller, not a query over every event), so this is safe to call per single-item GET.
+     */
+    context(_: JdbcTransaction)
+    fun isVisibleTo(session: UserSession?): Boolean = when {
+        session == null -> department == null
+        session.isAdmin() -> true
+        else -> {
+            val eventDepartmentId = department?.id?.value
+            start >= now() && (eventDepartmentId == null || DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).any { it.department.id.value == eventDepartmentId })
+        }
+    }
+
     val created by Events.created
     override var lastUpdate by Events.lastUpdate
 

@@ -8,7 +8,6 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
-import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.integration.Telegram
@@ -17,13 +16,8 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 
 fun Route.postsRoutes() {
@@ -31,26 +25,8 @@ fun Route.postsRoutes() {
         base = "posts",
         entityClass = PostEntity,
         idTypeConverter = { UUID.fromString(it) },
-        listProvider = { session ->
-            if (session == null) {
-                // Not logged in, only show public posts (without department)
-                PostEntity.find { Posts.department eq null }
-            } else if (session.isAdmin()) {
-                // If admin, show all posts
-                PostEntity.all()
-            } else {
-                // Logged in, show public posts, and posts for the user's department
-                val userDepartments = transaction {
-                    DepartmentMembers.selectAll()
-                        .where { (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true) }
-                        .toList()
-                        .map { it[DepartmentMembers.departmentId] }
-                }
-                PostEntity.find {
-                    (Posts.department eq null) or (Posts.department inList userDepartments)
-                }
-            }
-        },
+        listProvider = { session -> PostEntity.forSession(session) },
+        visibleTo = { post, session -> post.isVisibleTo(session) },
         creator = { formParameters ->
             var title: String? = null
             var content: String? = null

@@ -80,6 +80,12 @@ fun Route.departmentsRoutes() {
         base = "departments",
         entityClass = DepartmentEntity,
         idTypeConverter = { it.toUUIDOrNull() },
+        // The default listProvider (entityClass.all()) is unrestricted for every session, including anonymous --
+        // a department's own displayName/image is public (its member roster is not, see Departments.extraColumns
+        // / DepartmentEntity.visibleMembersFor). Stated explicitly rather than falling through to the default
+        // listProvider-scanning visibleTo, which would otherwise scan every department to confirm what's already
+        // known to always be true.
+        visibleTo = { _, _ -> true },
         creator = { formParameters ->
             var displayName: String? = null
             val image = FileRequestData()
@@ -229,20 +235,16 @@ fun Route.departmentsRoutes() {
     get("/departments/{id}/members") {
         val (session, department) = departmentRequest() ?: return@get
 
+        // Shared with Departments.extraColumns (DepartmentEntity.visibleMembersFor) so this and GET
+        // /departments/{id} can't silently diverge on who's allowed to see the roster.
         val pendingRequests = Database {
-            if (session.isAdmin() || session.hasDepartmentRole(department.id.value, DepartmentRole.PEOPLE_MANAGER)) {
-                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) }
-            } else {
-                // There should only be one match or none
-                DepartmentMemberEntity.find { (DepartmentMembers.departmentId eq department.id) and (DepartmentMembers.userSub eq session.sub) }
+            department.visibleMembersFor(session).map { entity ->
+                DepartmentJoinRequest(
+                    entity.userReference.id.value,
+                    entity.department.id.value.toKotlinUuid(),
+                    entity.id.value.toKotlinUuid()
+                )
             }
-                .map { entity ->
-                    DepartmentJoinRequest(
-                        entity.userReference.id.value,
-                        entity.department.id.value.toKotlinUuid(),
-                        entity.id.value.toKotlinUuid()
-                    )
-                }
         }
         call.respondText(
             json.encodeToString(DepartmentJoinRequest.serializer().list(), pendingRequests),

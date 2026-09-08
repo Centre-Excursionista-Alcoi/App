@@ -22,12 +22,14 @@ import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -234,5 +236,29 @@ class TestEventsRoutes : ApplicationTestBase() {
         val event = context.dibResult!!
 
         client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.OK)
+    }
+
+    // Visibility must be checked before handleIfModified: otherwise an outsider could send If-Modified-Since on
+    // a private event's id and get a 304 (or its Last-Modified header) back, confirming the event's existence
+    // and last-modified time despite not being allowed to see it at all.
+    @Test
+    fun test_get_event_byId_privateDepartmentEvent_ifModifiedSince_stillNotFoundForOutsider() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Private event"
+                place = "Somewhere"
+                department = otherDepartment
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.get("/events/${event.id.value}") {
+            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Instant.now().atZone(ZoneOffset.UTC)))
+        }.assertStatusCode(HttpStatusCode.NotFound)
     }
 }

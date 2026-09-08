@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -19,6 +20,14 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItem, Uuid>, EntityPatcher<UpdateInventoryItemRequest> {
     companion object : UUIDEntityClass<InventoryItemEntity>(InventoryItems)
+
+    /**
+     * Whether this single item is visible to [session] -- delegates entirely to its type's own
+     * [InventoryItemTypeEntity.isVisibleTo], since an item's visibility is defined purely by its type's
+     * department (see the `listProvider` in `InventoryRoutes.kt`).
+     */
+    context(_: JdbcTransaction)
+    fun isVisibleTo(session: UserSession?): Boolean = type.isVisibleTo(session)
 
     override var lastUpdate by InventoryItems.lastUpdate
 

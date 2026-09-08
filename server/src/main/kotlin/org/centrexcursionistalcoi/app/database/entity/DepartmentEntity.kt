@@ -8,9 +8,11 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.entity.base.ImageContainerEntity
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -29,6 +31,26 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, E
     val members by DepartmentMemberEntity referrersOn DepartmentMembers.departmentId
 
     val confirmedMembers get() = members.filter { it.confirmed }
+
+    /**
+     * The subset of [members] visible to [session]: everyone (including pending/unconfirmed requests) for an
+     * admin or a confirmed `PEOPLE_MANAGER` of this department, otherwise just the caller's own row (or none,
+     * for an anonymous caller or a non-member). This is the single source of truth for that rule -- both
+     * `GET /departments/{id}` (via `Departments.extraColumns`) and `GET /departments/{id}/members`
+     * (`DepartmentRoutes.kt`) call this rather than each re-implementing it, so they can't silently diverge.
+     *
+     * Reuses the already-loaded [members] collection instead of issuing a separate department-role query, so
+     * this stays a single query per department (needed for [members] regardless) even when serializing a whole
+     * list of departments.
+     */
+    context(_: JdbcTransaction)
+    fun visibleMembersFor(session: UserSession?): List<DepartmentMemberEntity> {
+        if (session == null) return emptyList()
+        val allMembers = members.toList()
+        val ownMembership = allMembers.find { it.userReference.sub.value == session.sub }
+        val isPeopleManager = ownMembership?.confirmed == true && ownMembership.hasRole(DepartmentRole.PEOPLE_MANAGER)
+        return if (session.isAdmin() || isPeopleManager) allMembers else listOfNotNull(ownMembership)
+    }
 
     context(_: JdbcTransaction)
     override fun toData(): Department = Department(

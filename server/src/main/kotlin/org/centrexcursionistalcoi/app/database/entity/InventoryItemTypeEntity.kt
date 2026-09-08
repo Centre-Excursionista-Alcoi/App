@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.database.entity.base.ImageContainerEntity
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -20,6 +21,20 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItemType, Uuid>, EntityPatcher<UpdateInventoryItemTypeRequest>, ImageContainerEntity {
     companion object : UUIDEntityClass<InventoryItemTypeEntity>(InventoryItemTypes)
+
+    /**
+     * Whether this single item type is visible to [session] -- must stay in sync with the `listProvider` used
+     * for `GET /inventory/types` (`InventoryRoutes.kt`), which returns an *empty* list for a `null` session.
+     * Evaluated directly against this entity's own department (one department lookup for the caller, not a
+     * query over every item type), so this is safe to call per single-item GET.
+     */
+    context(_: JdbcTransaction)
+    fun isVisibleTo(session: UserSession?): Boolean {
+        if (session == null) return false
+        val typeDepartmentId = department?.id?.value ?: return true
+        return session.isAdmin() ||
+            DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).any { it.department.id.value == typeDepartmentId }
+    }
 
     override var lastUpdate by InventoryItemTypes.lastUpdate
 
