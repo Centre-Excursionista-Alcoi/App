@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.error
 
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.*
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.json
 
@@ -16,12 +15,10 @@ suspend fun HttpResponse.bodyAsError(): Error {
         json.decodeFromString(ErrorPolymorphicSerializer, bodyText)
     } catch (e: IllegalArgumentException) {
         // error from ErrorPolymorphicSerializer
-        Error.SerializationError(e.message, bodyText)
+        Error.SerializationError(e.message, bodyText, status)
     } catch (e: SerializationException) {
-        // error with serialization
-        Error.SerializationError(e.message, bodyText)
-    } catch (e: SerializationException) {
-        // error with serialization
-        Error.Exception(e)
+        // error with serialization; preserve the response's real status code instead of
+        // defaulting to 500, since the body just didn't contain the Error JSON we expected
+        Error.SerializationError(e.message, bodyText, status)
     }
 }

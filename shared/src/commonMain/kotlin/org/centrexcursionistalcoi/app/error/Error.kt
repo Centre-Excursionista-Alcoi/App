@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.error
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -248,12 +247,13 @@ sealed interface Error {
 
     @Serializable
     @SerialName("SerializationError")
-    class SerializationError(val message: String?, val content: String?) : Error {
+    class SerializationError(
+        val message: String?,
+        val content: String?,
+        @Serializable(HttpStatusCodeSerializer::class) override val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError,
+    ) : Error {
         override val code: Int = ERROR_SERIALIZATION_ERROR
         override val description: String = "There was a serialization error.\n\tMessage: $message\n\tContent: $content"
-
-        @Serializable(HttpStatusCodeSerializer::class)
-        override val statusCode: HttpStatusCode = HttpStatusCode.InternalServerError
     }
 
     @Serializable
