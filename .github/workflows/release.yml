@@ -540,7 +540,7 @@ jobs:
       # run anyway on a machine that persists between jobs.
       - name: Sentry - Upload iOS Debug Files (dSYMs & Source)
         run: |
-          DSYM_PATH="$PWD/iosApp/build/iosApp.xcarchive/dSYMs"
+          DSYM_PATH="$PWD/build/iosApp.xcarchive/dSYMs"
           
           sentry-cli debug-files upload \
             --include-sources \
