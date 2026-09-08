@@ -1,19 +1,12 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.http.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
-import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
-import org.centrexcursionistalcoi.app.database.entity.MemberEntity
-import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
-import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.entity.*
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
@@ -112,6 +105,29 @@ fun Route.usersRoutes() {
         }
 
         call.respond(users)
+    }
+    get("/users/{sub}") {
+        val session = getUserSessionOrFail() ?: return@get
+        val sub = call.parameters["sub"]!!
+
+        val user = Database {
+            val canView = session.sub == sub || session.isAdmin() || session.isUsersManager() || run {
+                val managingDepartments = DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                    .filter { it.hasRole(DepartmentRole.PEOPLE_MANAGER) }
+                    .map { it.department }
+                managingDepartments.flatMap { it.members }.any { it.userReference.sub.value == sub }
+            }
+            if (!canView) return@Database null
+
+            UserReferenceEntity.find { UserReferences.sub eq sub }
+                .map { it.toData() }
+                .firstOrNull()
+        }
+        if (user == null) {
+            respondError(Error.EntityNotFound(UserReferenceEntity::class, sub))
+            return@get
+        }
+        call.respond(user)
     }
     // Promote a user to admin - admin only
     post("/users/{sub}/promote") {
