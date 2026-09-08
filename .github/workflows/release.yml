@@ -371,6 +371,25 @@ jobs:
           java-version: '21'
           java-package: jdk
 
+      # iosApp/KotlinMultiplatformLinkedPackage is a Kotlin/Native Swift Export synthetic package
+      # checked into git. It must exactly match what the Kotlin Gradle plugin regenerates from the
+      # current dependency graph, or Xcode aborts mid-archive with "Synthetic linkage package
+      # files changed during the build" (see #610). Regenerating and re-syncing it here, before
+      # dependency resolution, means a drifted checked-in copy (e.g. after bumping a dependency
+      # with a native/subpackage shim) gets fixed and committed automatically instead of breaking
+      # the archive (see #612).
+      - name: Sync KotlinMultiplatformLinkedPackage with current dependencies
+        run: |
+          ./gradlew :composeApp:generateSyntheticLinkageSwiftPMImportProjectForEmbedAndSignLinkage || true
+          rsync -a --delete --exclude='.swiftpm' composeApp/build/kotlin/swiftImport/ iosApp/KotlinMultiplatformLinkedPackage/
+
+      - name: Commit synced KotlinMultiplatformLinkedPackage
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: 'Sync KotlinMultiplatformLinkedPackage with current dependency graph'
+          file_pattern: 'iosApp/KotlinMultiplatformLinkedPackage'
+          branch: master
+
       # Refresh the version name again just in case
       - name: Update version name
         run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
