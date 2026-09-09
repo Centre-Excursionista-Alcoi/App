@@ -541,4 +541,19 @@
     <string name="memory_open_file">Abrir</string>
     <string name="memory_editor_previous_image_uuid">Imagen subida con anterioridad con UUID %1$s</string>
     <string name="memory_editor_previous_image_delete">Esta imagen será eliminada cuando se suba</string>
+    <string name="management_department_edit_roles">Editar roles</string>
+    <string name="management_department_member_roles_title">Roles para %1$s</string>
+    <string name="management_department_member_no_roles">Ningun rol asignado</string>
+    <string name="department_role_admin">Admin</string>
+    <string name="department_role_admin_description">Control completo sobre la sección, incluyendo la configuración y todos los otros roles</string>
+    <string name="department_role_people_manager">Administrador de Miembros</string>
+    <string name="department_role_people_manager_description">Aprueba o deniega solicitudes de unión, y administra los miembros de la sección</string>
+    <string name="department_role_inventory_manager">Administrador de Inventario</string>
+    <string name="department_role_inventory_manager_description">Crea y edita los elementos y tipos de elemento del inventario de la sección</string>
+    <string name="department_role_lending_manager">Administrador de Préstamos</string>
+    <string name="department_role_lending_manager_description">Administra los préstamos de la sección</string>
+    <string name="department_role_memory_manager">Administrador de Memorias</string>
+    <string name="department_role_memory_manager_description">Administra las memorias de la sección</string>
+    <string name="department_role_content_manager">Administrador de Contenidos</string>
+    <string name="department_role_content_manager_description">Crea y edita los anuncios y eventos de la sección</string>
 </resources>
