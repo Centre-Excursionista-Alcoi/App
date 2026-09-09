@@ -397,6 +397,13 @@ jobs:
       - uses: actions/checkout@v7
 
       # --- Setup Environment ---
+      # Unlike the GitHub-hosted macos-26 runner this job used to run on, the self-hosted Mac has no bare
+      # `python` on PATH (only /usr/bin/python3) -- explicitly setting one up here, same as every sibling
+      # job in this workflow already does, instead of relying on whatever happens to be preinstalled.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.10'
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
@@ -663,6 +670,9 @@ jobs:
 
       # Refresh the version name again just in case
       - name: Update version name
+        # build-desktop's matrix includes windows-latest, which defaults `run:` to PowerShell (not bash) --
+        # forcing bash here is required for the $(...)/grep syntax below to parse at all on that leg.
+        shell: bash
         run: |
           # The GitHub release name can carry a pre-release suffix (e.g. "2.0.31-rc03") to distinguish it in
           # the GitHub UI/Sentry/etc., but updateVersionName.py (and the Android/iOS version fields it writes)
