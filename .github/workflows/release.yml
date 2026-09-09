@@ -22,7 +22,12 @@ jobs:
           python-version: '3.10'
 
       - name: Update version name
-        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+        run: |
+          # The GitHub release name can carry a pre-release suffix (e.g. "2.0.31-rc03") to distinguish it in
+          # the GitHub UI/Sentry/etc., but updateVersionName.py (and the Android/iOS version fields it writes)
+          # only accepts 1-3 dot-separated integers -- trim anything from the first non-numeric character on.
+          VERSION_NAME=$(echo "${{ github.event.release.name }}" | grep -oE '^[0-9]+(\.[0-9]+){0,2}')
+          python ./scripts/updateVersionName.py --name="$VERSION_NAME"
 
       - name: Increase version code
         id: increase_version_code
@@ -164,7 +169,12 @@ jobs:
 
       # Refresh the version name again just in case
       - name: Update version name
-        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+        run: |
+          # The GitHub release name can carry a pre-release suffix (e.g. "2.0.31-rc03") to distinguish it in
+          # the GitHub UI/Sentry/etc., but updateVersionName.py (and the Android/iOS version fields it writes)
+          # only accepts 1-3 dot-separated integers -- trim anything from the first non-numeric character on.
+          VERSION_NAME=$(echo "${{ github.event.release.name }}" | grep -oE '^[0-9]+(\.[0-9]+){0,2}')
+          python ./scripts/updateVersionName.py --name="$VERSION_NAME"
 
       - name: Determine In-App Update Priority
         id: determine_priority
@@ -418,7 +428,12 @@ jobs:
 
       # Refresh the version name again just in case
       - name: Update version name
-        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+        run: |
+          # The GitHub release name can carry a pre-release suffix (e.g. "2.0.31-rc03") to distinguish it in
+          # the GitHub UI/Sentry/etc., but updateVersionName.py (and the Android/iOS version fields it writes)
+          # only accepts 1-3 dot-separated integers -- trim anything from the first non-numeric character on.
+          VERSION_NAME=$(echo "${{ github.event.release.name }}" | grep -oE '^[0-9]+(\.[0-9]+){0,2}')
+          python ./scripts/updateVersionName.py --name="$VERSION_NAME"
 
       # --- Install Signing Assets ---
       - name: Install Certificate and Profile
@@ -648,7 +663,12 @@ jobs:
 
       # Refresh the version name again just in case
       - name: Update version name
-        run: python ./scripts/updateVersionName.py --name=${{ github.event.release.name }}
+        run: |
+          # The GitHub release name can carry a pre-release suffix (e.g. "2.0.31-rc03") to distinguish it in
+          # the GitHub UI/Sentry/etc., but updateVersionName.py (and the Android/iOS version fields it writes)
+          # only accepts 1-3 dot-separated integers -- trim anything from the first non-numeric character on.
+          VERSION_NAME=$(echo "${{ github.event.release.name }}" | grep -oE '^[0-9]+(\.[0-9]+){0,2}')
+          python ./scripts/updateVersionName.py --name="$VERSION_NAME"
       - name: Clean quote backslashes
         id: clean_backslash
         run: bash ./scripts/clean-backslash.sh
