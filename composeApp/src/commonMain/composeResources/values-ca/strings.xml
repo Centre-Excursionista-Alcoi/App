@@ -557,4 +557,19 @@
     <string name="memory_open_file">Obrir</string>
     <string name="memory_editor_previous_image_uuid">Imatge pujada anteriorment amb UUID %1$s</string>
     <string name="memory_editor_previous_image_delete">Aquesta imatge s'eliminarà en guardar</string>
+    <string name="management_department_edit_roles">Editar rols</string>
+    <string name="management_department_member_roles_title">Rols per a %1$s</string>
+    <string name="management_department_member_no_roles">Cap rol assignat</string>
+    <string name="department_role_admin">Admin</string>
+    <string name="department_role_admin_description">Control complet sobre la secció, incloent la configuració, i tots els rols següents</string>
+    <string name="department_role_people_manager">Administrador de Membres</string>
+    <string name="department_role_people_manager_description">Aprova o denega sol·licituds d'unió i administra els membres de la secció</string>
+    <string name="department_role_inventory_manager">Administrador d'Inventari</string>
+    <string name="department_role_inventory_manager_description">Crea i edita els elements i tipus d'element de l'inventari de la secció</string>
+    <string name="department_role_lending_manager">Administrador de Préstecs</string>
+    <string name="department_role_lending_manager_description">Administra els préstecs de la secció</string>
+    <string name="department_role_memory_manager">Administrador de Memòries</string>
+    <string name="department_role_memory_manager_description">Administra les memòries de la secció</string>
+    <string name="department_role_content_manager">Administrador de Continguts</string>
+    <string name="department_role_content_manager_description">Crea i edita els posts i esdeveniments de la secció</string>
 </resources>
