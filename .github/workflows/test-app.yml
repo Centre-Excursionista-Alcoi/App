@@ -59,14 +59,6 @@ jobs:
 
   run_ios_tests:
     name: Run iOS app tests
-    # Self-hosted: the same machine development-release.yml/release.yml already use for the TestFlight
-    # archive/publish steps. GitHub's hosted macos-26 runners were repeatedly hanging for 15-30+ min on
-    # linkDebugTestIosSimulatorArm64 (linking the test binary against the full Firebase/Sentry/GoogleUtilities
-    # dependency graph) -- a resource ceiling this box doesn't have. Its disk also stays warm between runs, so
-    # there's no need for the explicit ~/.konan/SwiftPM cache steps hosted runners needed.
-    #
-    # Trade-off: this is a single machine also used by the release workflows, so a PR test run and a release
-    # publish now queue behind each other instead of running in parallel the way two hosted runners would.
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 45
     env:

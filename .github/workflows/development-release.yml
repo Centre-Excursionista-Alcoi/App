@@ -156,7 +156,7 @@ jobs:
     name: Run iOS app tests
     needs: [ increase_version_code, check_changes ]
     if: ${{ needs.check_changes.outputs.app == 'true' }}
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 45
 
     steps:

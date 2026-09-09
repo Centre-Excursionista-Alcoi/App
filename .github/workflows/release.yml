@@ -115,7 +115,7 @@ jobs:
 
   ios-tests:
     name: Run iOS app tests
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
     needs: [ update-version-name ]
     timeout-minutes: 45
 
