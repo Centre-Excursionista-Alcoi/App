@@ -59,7 +59,15 @@ jobs:
 
   run_ios_tests:
     name: Run iOS app tests
-    runs-on: macos-26
+    # Self-hosted: the same machine development-release.yml/release.yml already use for the TestFlight
+    # archive/publish steps. GitHub's hosted macos-26 runners were repeatedly hanging for 15-30+ min on
+    # linkDebugTestIosSimulatorArm64 (linking the test binary against the full Firebase/Sentry/GoogleUtilities
+    # dependency graph) -- a resource ceiling this box doesn't have. Its disk also stays warm between runs, so
+    # there's no need for the explicit ~/.konan/SwiftPM cache steps hosted runners needed.
+    #
+    # Trade-off: this is a single machine also used by the release workflows, so a PR test run and a release
+    # publish now queue behind each other instead of running in parallel the way two hosted runners would.
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 45
     env:
       SERVER_URL: http://localhost:8080
@@ -83,28 +91,6 @@ jobs:
         with:
           # PRs restore the default-branch cache; only master refreshes it.
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
-
-      - name: Identify native toolchain
-        id: native_toolchain
-        shell: bash
-        run: |
-          xcode_hash=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')
-          echo "xcode=$xcode_hash" >> "$GITHUB_OUTPUT"
-
-      # These downloads live outside Gradle User Home, so setup-gradle does not cache them.
-      - name: Cache Kotlin Native
-        uses: actions/cache@v6
-        with:
-          path: ~/.konan
-          key: konan-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle.properties') }}
-
-      - name: Cache SwiftPM downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('**/Package.resolved', '**/Package.swift', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-
 
       - name: Copy dummy google-services.json
         run: cp android/google-services.test.json android/google-services.json
