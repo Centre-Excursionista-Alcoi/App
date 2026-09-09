@@ -2,7 +2,9 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.*
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
+import java.util.Calendar
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidx.room3)
@@ -70,6 +72,21 @@ kotlin {
             export(libs.sentry.kotlinMultiplatform)
             export(libs.kmm.notifier.core)
             export(libs.kmm.notifier.firebase)
+        }
+    }
+
+    // Simulator Keychain access requires an application identity embedded in the test executable.
+    // https://youtrack.jetbrains.com/issue/KT-61470
+    iosSimulatorArm64 {
+        val keychainTestEntitlements = project.file("src/iosTest/KeychainTests.entitlements")
+        binaries.getTest("DEBUG").apply {
+            linkerOpts("-sectcreate", "__TEXT", "__entitlements", keychainTestEntitlements.absolutePath)
+            linkTaskProvider.configure { inputs.file(keychainTestEntitlements) }
+        }
+        tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+            // Standalone simctl execution has no Keychain service (errSecNotAvailable).
+            standalone.set(false)
+            device.set("booted") // Override with --device <simulator UUID> if several are booted.
         }
     }
 
@@ -244,6 +261,13 @@ kotlin {
         }
         iosArm64Main { dependsOn(iosMain.get()) }
         iosSimulatorArm64Main { dependsOn(iosMain.get()) }
+
+        // The default hierarchy template is disabled, so wire the shared iOS tests explicitly.
+        iosTest {
+            dependsOn(commonTest.get())
+        }
+        iosArm64Test { dependsOn(iosTest.get()) }
+        iosSimulatorArm64Test { dependsOn(iosTest.get()) }
     }
 
     compilerOptions {
