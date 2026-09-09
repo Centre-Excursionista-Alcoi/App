@@ -154,11 +154,10 @@ private fun App(
     // server-side; treat it the same everywhere instead of leaving whichever screen triggered it to fail
     // unhandled (see #620). SessionExpiryViewModel does the actual silent-relogin-or-logout work (Android only
     // for now, see CredentialsStore) -- kept out of this Composable since it's critical, side-effecting logic.
-    val sessionExpiryViewModel = koinViewModel<SessionExpiryViewModel>()
-    LaunchedEffect(Unit) {
-        sessionExpiryViewModel.loggedOut.collect {
-            navigator.navigateClearingStack(Destination.Login())
-        }
+    // It's handed the navigation callback directly instead of exposing an event Flow for this Composable to
+    // collect, so there's no LaunchedEffect needed here just to forward it.
+    koinViewModel<SessionExpiryViewModel> {
+        parametersOf({ navigator.navigateClearingStack(Destination.Login()) })
     }
 
     val updateAvailable by PlatformAppUpdates.updateAvailable.collectAsState(initial = false)

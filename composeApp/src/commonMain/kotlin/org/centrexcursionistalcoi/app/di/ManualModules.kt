@@ -106,7 +106,7 @@ val manualModule = module {
     single { UsersRemoteRepository(get()) }
 
     // auth -- ServiceScanModule
-    single { AuthBackend(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AuthBackend(get(), get()) }
 
     // sync -- SyncScanModule
     single { DatabaseIntegrityVerifier(get(), get(), get(), get(), get(), get(), get()) }
@@ -157,7 +157,7 @@ val manualModule = module {
     viewModel { MemoriesViewModel(get()) }
     viewModel { (url: io.ktor.http.Url?) -> PlatformInitializerViewModel(url, get(), get()) }
     viewModel { ProfilePageModel(get(), get()) }
-    viewModel { SessionExpiryViewModel(get()) }
+    viewModel { (onLoggedOut: () -> Unit) -> SessionExpiryViewModel(get(), onLoggedOut) }
     viewModel { (onDeleteAccount: () -> Unit) -> SettingsViewModel(get(), get(), get(), onDeleteAccount) }
     viewModel { DepartmentsManagementViewModel(get(), get(), get(), get()) }
     viewModel { EventsManagementViewModel(get(), get(), get(), get()) }

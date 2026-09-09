@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.auth.AuthBackend
@@ -18,17 +16,17 @@ import org.koin.core.annotation.KoinViewModel
  * is. That distinction isn't cosmetic: this used to live directly in `App.kt`, and its effect would
  * self-cancel (`LeftCompositionCancellationException`) mid-relogin whenever an unrelated recomposition
  * happened to land first -- see the discussion on #624.
+ *
+ * [onLoggedOut] is invoked directly (rather than exposing an event `Flow` for the caller to `collect`) so
+ * `App.kt` doesn't need a `LaunchedEffect` of its own just to forward it into navigation -- one less place
+ * doing UI-adjacent work outside a ViewModel.
  */
 @KoinViewModel
 class SessionExpiryViewModel(
     private val authBackend: AuthBackend,
+    private val onLoggedOut: () -> Unit,
 ) : ViewModel() {
     private val log = logging()
-
-    private val _loggedOut = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-
-    /** Emits once whenever the session couldn't be silently restored -- the UI should navigate to Login. */
-    val loggedOut: SharedFlow<Unit> = _loggedOut
 
     init {
         viewModelScope.launch {
@@ -39,7 +37,7 @@ class SessionExpiryViewModel(
                 if (!authBackend.tryAutoRelogin()) {
                     log.d { "Automatic re-login not possible or failed, logging out..." }
                     authBackend.logout()
-                    _loggedOut.emit(Unit)
+                    onLoggedOut()
                 }
                 GlobalAsyncErrorHandler.clearSessionExpired()
             }

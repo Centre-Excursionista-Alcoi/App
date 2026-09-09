@@ -6,15 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
-import org.centrexcursionistalcoi.app.database.DepartmentsRepository
-import org.centrexcursionistalcoi.app.database.EventsRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
-import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
-import org.centrexcursionistalcoi.app.database.LendingsRepository
-import org.centrexcursionistalcoi.app.database.MembersRepository
-import org.centrexcursionistalcoi.app.database.MemoriesRepository
-import org.centrexcursionistalcoi.app.database.PostsRepository
-import org.centrexcursionistalcoi.app.database.UsersRepository
+import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -24,15 +16,7 @@ import org.koin.core.annotation.Singleton
 
 @Singleton
 class AuthBackend(
-    private val lendingsRepository: LendingsRepository,
-    private val inventoryItemsRepository: InventoryItemsRepository,
-    private val inventoryItemTypesRepository: InventoryItemTypesRepository,
-    private val eventsRepository: EventsRepository,
-    private val postsRepository: PostsRepository,
-    private val membersRepository: MembersRepository,
-    private val usersRepository: UsersRepository,
-    private val departmentsRepository: DepartmentsRepository,
-    private val memoriesRepository: MemoriesRepository,
+    private val db: AppDatabase,
     private val credentialsStore: CredentialsStore,
 ) {
     private val log = logging()
@@ -124,17 +108,9 @@ class AuthBackend(
     }
 
     private suspend fun clearLocalData() {
-        // order is important due to foreign key constraints: children before their parents
-        // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
-        memoriesRepository.deleteAll()
-        lendingsRepository.deleteAll()
-        inventoryItemsRepository.deleteAll()
-        inventoryItemTypesRepository.deleteAll()
-        eventsRepository.deleteAll()
-        postsRepository.deleteAll()
-        membersRepository.deleteAll()
-        usersRepository.deleteAll()
-        departmentsRepository.deleteAll()
+        // Room handles the foreign-key-safe order itself, unlike deleting through each repository one by one
+        // (see DatabaseIntegrityVerifier.clearDatabaseAndResync for the same approach).
+        db.clearAllTables()
         log.d { "Removing all files..." }
         FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
         log.d { "Revoking FCM token..." }
@@ -161,26 +137,8 @@ class AuthBackend(
     suspend fun deleteAccount() {
         val response = getHttpClient().post("/delete_account")
         if (response.status.isSuccess()) {
-            log.w { "Account delete request successful." }
-            log.w { "Account deleted from server. Removing all data..." }
-            // order is important due to foreign key constraints: children before their parents
-            // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
-            memoriesRepository.deleteAll()
-            lendingsRepository.deleteAll()
-            inventoryItemsRepository.deleteAll()
-            inventoryItemTypesRepository.deleteAll()
-            eventsRepository.deleteAll()
-            postsRepository.deleteAll()
-            membersRepository.deleteAll()
-            usersRepository.deleteAll()
-            departmentsRepository.deleteAll()
-            log.w { "Removing all files..." }
-            FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
-            log.w { "Revoking FCM token..." }
-            FCMTokenManager.revoke()
-            log.w { "Removing all settings..." }
-            settings.clear()
-            credentialsStore.clear()
+            log.w { "Account delete request successful. Removing all data..." }
+            clearLocalData()
         } else {
             throw response.bodyAsError().toThrowable()
         }

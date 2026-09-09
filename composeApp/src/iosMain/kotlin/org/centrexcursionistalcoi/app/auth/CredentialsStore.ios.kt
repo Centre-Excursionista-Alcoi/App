@@ -5,6 +5,8 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import platform.CoreFoundation.CFDictionaryRef
 import platform.CoreFoundation.CFTypeRefVar
 import platform.Foundation.CFBridgingRelease
@@ -41,6 +43,11 @@ private const val KEYCHAIN_SERVICE = "org.centrexcursionistalcoi.app.credentials
 @OptIn(ExperimentalForeignApi::class)
 @Singleton
 actual class CredentialsStore {
+    // Unlike Android's AccountManager, nothing outside this app's own process can write to this Keychain item,
+    // so there's no OS-level listener needed here -- save()/clear() just update this directly.
+    actual val current: StateFlow<SavedCredentials?>
+        field = MutableStateFlow(readCurrent())
+
     actual fun save(email: String, password: String) {
         // Only one saved account at a time, mirroring the Android actual.
         clear()
@@ -53,9 +60,21 @@ actual class CredentialsStore {
             setObject(passwordData, forKey = kSecValueData as NSString)
         }
         SecItemAdd(attributes.asCFDictionary(), null)
+        current.value = readCurrent()
     }
 
-    actual fun get(): SavedCredentials? {
+    actual fun get(): SavedCredentials? = readCurrent()
+
+    actual fun clear() {
+        val query = NSMutableDictionary().apply {
+            setObject(kSecClassGenericPassword, forKey = kSecClass as NSString)
+            setObject(KEYCHAIN_SERVICE, forKey = kSecAttrService as NSString)
+        }
+        SecItemDelete(query.asCFDictionary())
+        current.value = readCurrent()
+    }
+
+    private fun readCurrent(): SavedCredentials? {
         val query = NSMutableDictionary().apply {
             setObject(kSecClassGenericPassword, forKey = kSecClass as NSString)
             setObject(KEYCHAIN_SERVICE, forKey = kSecAttrService as NSString)
@@ -76,14 +95,6 @@ actual class CredentialsStore {
             val password = NSString.create(data, NSUTF8StringEncoding) as? String ?: return@memScoped null
             SavedCredentials(email, password.toCharArray())
         }
-    }
-
-    actual fun clear() {
-        val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, forKey = kSecClass as NSString)
-            setObject(KEYCHAIN_SERVICE, forKey = kSecAttrService as NSString)
-        }
-        SecItemDelete(query.asCFDictionary())
     }
 }
 
