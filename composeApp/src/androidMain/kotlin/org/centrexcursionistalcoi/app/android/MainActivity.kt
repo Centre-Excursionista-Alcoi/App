@@ -1,9 +1,13 @@
 package org.centrexcursionistalcoi.app.android
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsIntent
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
@@ -30,6 +34,8 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         KMPNotifier.onCreateOrOnNewIntent(intent)
 
+        openWebOnlyLinkIfNeeded(intent)
+
         val pushNotification = getPushNotificationFromIntent()
         val url = getUrlFromIntent()
 
@@ -52,6 +58,47 @@ class MainActivity : NfcIntentHandlerActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         KMPNotifier.onCreateOrOnNewIntent(intent)
+        openWebOnlyLinkIfNeeded(intent)
+    }
+
+    /**
+     * The App Link intent-filter in the manifest claims the whole `server.centrexcursionistalcoi.app` host, but some
+     * paths on it (currently just the password reset flow) are self-contained server-rendered web pages with no
+     * native screen to route to -- if the App Link hijacks them into the bare app shell instead of a browser, the
+     * user gets stranded with no way to finish e.g. resetting their password (see #617). Open those specific paths
+     * in a Custom Tab instead.
+     *
+     * Explicitly targeting a browser package is required, not optional: this device/App Link combination can be in
+     * a domain-verification state where a plain (package-less) `ACTION_VIEW`/`CustomTabsIntent.launchUrl()` on the
+     * same URL resolves straight back to this app's own MainActivity instead of a browser, looping forever
+     * (confirmed on-device -- `pm get-app-links` showed this app as the resolved handler for this host).
+     *
+     * [CustomTabsClient.getPackageName]'s `ignoreDefault=false` path resolves the device's default browser via a
+     * bare `http://` (no host) VIEW intent, which this app's own App Link intent-filter -- scoped to a specific
+     * host -- never matches, so it can't resolve back to us the way the exact reset_password URL can.
+     */
+    private fun openWebOnlyLinkIfNeeded(intent: Intent) {
+        val uri = intent.data ?: return
+        if (uri.scheme != "https" || uri.host != "server.centrexcursionistalcoi.app") return
+        if (uri.path !in WEB_ONLY_PATHS) return
+
+        val customTabsIntent = CustomTabsIntent.Builder().build()
+        val browserPackage = CustomTabsClient.getPackageName(this, emptyList())
+            ?: resolveNonSelfViewHandler(uri)
+        if (browserPackage == null) {
+            log.w { "No browser found to open $uri outside of this app; ignoring App Link." }
+            return
+        }
+        customTabsIntent.intent.setPackage(browserPackage)
+        customTabsIntent.launchUrl(this, uri)
+    }
+
+    /** Falls back to any app (other than this one) that can handle a plain `ACTION_VIEW` for [url], if any. */
+    private fun resolveNonSelfViewHandler(url: Uri): String? {
+        val viewIntent = Intent(Intent.ACTION_VIEW, url)
+        return packageManager.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            .map { it.activityInfo.packageName }
+            .firstOrNull { it != packageName }
     }
 
     private fun getPushNotificationFromIntent(): PushNotification? {
@@ -76,5 +123,8 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     companion object {
         private val log = logging()
+
+        /** Paths on `server.centrexcursionistalcoi.app` that must always open as a web page. See [openWebOnlyLinkIfNeeded]. */
+        private val WEB_ONLY_PATHS = setOf("/reset_password")
     }
 }

@@ -79,6 +79,11 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="*" />
         </intent>
+        <!-- Required for CustomTabsClient#getPackageName() to see installed browsers (used to open web-only
+             links, like password reset, that this app's own App Link intent-filter would otherwise swallow). -->
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
     </queries>
 
 </manifest>
