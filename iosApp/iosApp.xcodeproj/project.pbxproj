@@ -230,7 +230,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.30;
+				MARKETING_VERSION = 2.0.31;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = org.centrexcursionistalcoi.app;
 				PROVISIONING_PROFILE_SPECIFIER = "CEA App";
@@ -332,7 +332,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.30;
+				MARKETING_VERSION = 2.0.31;
 				OTHER_LDFLAGS = "-lsqlite3";
 				PRODUCT_BUNDLE_IDENTIFIER = org.centrexcursionistalcoi.app;
 				PROVISIONING_PROFILE_SPECIFIER = "CEA App";
