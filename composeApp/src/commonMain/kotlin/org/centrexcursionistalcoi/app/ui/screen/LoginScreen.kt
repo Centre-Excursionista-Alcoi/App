@@ -55,6 +55,9 @@ import cea_app.composeapp.generated.resources.login_action
 import cea_app.composeapp.generated.resources.login_error_invalid_credentials
 import cea_app.composeapp.generated.resources.login_error_unknown
 import cea_app.composeapp.generated.resources.login_error_user_not_registered
+import cea_app.composeapp.generated.resources.login_existing_account_logout
+import cea_app.composeapp.generated.resources.login_existing_account_message
+import cea_app.composeapp.generated.resources.login_existing_account_title
 import cea_app.composeapp.generated.resources.login_forgot_password
 import cea_app.composeapp.generated.resources.login_forgot_password_dialog_action
 import cea_app.composeapp.generated.resources.login_forgot_password_dialog_message
@@ -91,11 +94,14 @@ fun AuthScreen(
 ) {
     val isLoading by model.isLoading.collectAsState()
     val error by model.error.collectAsState()
+    val existingAccountEmail by model.existingAccountEmail.collectAsState()
 
     AuthScreen(
         isLoading = isLoading,
         error = error,
         changedPassword = changedPassword,
+        existingAccountEmail = existingAccountEmail,
+        onForgetExistingAccount = model::forgetExistingAccount,
         onLoginRequest = { email, password -> model.login(email, password, onLoginSuccess) },
         onRegisterRequest = { email, password -> model.register(email, password, onLoginSuccess) },
         onForgotPassword = { email, ar -> model.forgotPassword(email, ar) },
@@ -109,6 +115,8 @@ private fun AuthScreen(
     isLoading: Boolean,
     error: Throwable?,
     changedPassword: Boolean,
+    existingAccountEmail: String? = null,
+    onForgetExistingAccount: () -> Unit = {},
     onLoginRequest: (email: String, password: String) -> Unit,
     onRegisterRequest: (email: String, password: String) -> Unit,
     onForgotPassword: (email: String, afterRequest: () -> Unit) -> Job,
@@ -127,6 +135,28 @@ private fun AuthScreen(
             confirmButton = {
                 TextButton(onClick = { showingChangedPasswordDialog = false }) {
                     Text(stringResource(Res.string.close))
+                }
+            }
+        )
+    }
+
+    var dismissedExistingAccountWarning by remember { mutableStateOf(false) }
+    if (existingAccountEmail != null && !dismissedExistingAccountWarning) {
+        AlertDialog(
+            onDismissRequest = { dismissedExistingAccountWarning = true },
+            title = { Text(stringResource(Res.string.login_existing_account_title)) },
+            text = { Text(stringResource(Res.string.login_existing_account_message, existingAccountEmail)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onForgetExistingAccount()
+                    dismissedExistingAccountWarning = true
+                }) {
+                    Text(stringResource(Res.string.login_existing_account_logout))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { dismissedExistingAccountWarning = true }) {
+                    Text(stringResource(Res.string.cancel))
                 }
             }
         )

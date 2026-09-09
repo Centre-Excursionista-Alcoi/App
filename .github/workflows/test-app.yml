@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/test-app.yml'
       - 'composeApp/**'
+      - 'shared/**'
       - '*.gradle.kts'
       - '*.properties'
       - 'gradle/**'
@@ -27,6 +28,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # PRs restore the default-branch cache; only master refreshes it.
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v6
@@ -34,17 +38,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           java-package: jdk
-          cache: 'gradle'
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
 
       - name: Copy dummy google-services.json
         run: |
@@ -59,6 +52,71 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: app-test-results
+          retention-days: 3
+          path: |
+            composeApp/build/test-results
+            composeApp/build/reports/tests
+
+  run_ios_tests:
+    name: Run iOS app tests
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      SERVER_URL: http://localhost:8080
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          java-package: jdk
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # PRs restore the default-branch cache; only master refreshes it.
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+
+      - name: Identify native toolchain
+        id: native_toolchain
+        shell: bash
+        run: |
+          xcode_hash=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')
+          echo "xcode=$xcode_hash" >> "$GITHUB_OUTPUT"
+
+      # These downloads live outside Gradle User Home, so setup-gradle does not cache them.
+      - name: Cache Kotlin Native
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle.properties') }}
+
+      - name: Cache SwiftPM downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('**/Package.resolved', '**/Package.swift', 'gradle/libs.versions.toml') }}
+          restore-keys: |
+            swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-
+
+      - name: Copy dummy google-services.json
+        run: cp android/google-services.test.json android/google-services.json
+
+      - name: Run iOS App Tests
+        uses: ./.github/actions/run-ios-tests
+
+      - name: Upload iOS test results (on failure)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-app-test-results
           retention-days: 3
           path: |
             composeApp/build/test-results

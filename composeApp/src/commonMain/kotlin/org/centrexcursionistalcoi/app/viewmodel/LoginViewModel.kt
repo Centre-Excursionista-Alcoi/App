@@ -3,10 +3,15 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -16,9 +21,27 @@ import org.koin.core.annotation.KoinViewModel
 class LoginViewModel(
     private val authBackend: AuthBackend,
     private val dispatcherProvider: DispatcherProvider,
+    credentialsStore: CredentialsStore,
 ) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
+
+    // Reaching the Login screen with an account already saved shouldn't normally happen (both a normal logout
+    // and an exhausted auto-relogin already clear it, see AuthBackend), but the system "Add account" flow
+    // (AccountAuthenticator.addAccount, Android only) can land here regardless -- surface it so the user can
+    // choose to forget the old one instead of silently ending up with it replaced on a fresh login.
+    //
+    // Derived straight from CredentialsStore.current rather than a one-shot coroutine launched in init: it's
+    // a live StateFlow already (backed by an AccountManager listener on Android), so this just maps/holds it
+    // instead of polling it once, and forgetExistingAccount() below doesn't need to update this manually --
+    // clearing the store updates `current`, which flows through here on its own.
+    val existingAccountEmail: StateFlow<String?> = credentialsStore.current
+        .map { it?.email }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, credentialsStore.current.value?.email)
+
+    fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io) {
+        authBackend.forgetLocalAccount()
+    }
 
     fun login(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
         try {

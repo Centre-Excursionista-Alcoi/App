@@ -68,6 +68,20 @@
                     android:value="androidx.startup"
                     tools:node="remove" />
         </provider>
+
+        <!-- Registers this app as the AccountManager authenticator for its own account type, so
+             CredentialsStore (auth/CredentialsStore.android.kt) can save/read login credentials for
+             AuthBackend.tryAutoRelogin(). -->
+        <service
+                android:name="org.centrexcursionistalcoi.app.auth.AccountAuthenticatorService"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                    android:name="android.accounts.AccountAuthenticator"
+                    android:resource="@xml/authenticator" />
+        </service>
     </application>
 
     <queries>

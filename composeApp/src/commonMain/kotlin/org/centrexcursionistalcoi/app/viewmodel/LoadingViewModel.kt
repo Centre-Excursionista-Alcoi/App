@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.diamondedge.logging.logging
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.Server
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -27,6 +31,7 @@ class LoadingViewModel(
     private val dispatcherProvider: DispatcherProvider,
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
     private val databaseIntegrityVerifier: DatabaseIntegrityVerifier,
+    private val authBackend: AuthBackend,
 ) : ViewModel() {
 
     private val log = logging()
@@ -42,7 +47,7 @@ class LoadingViewModel(
     fun load(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
-    ) = viewModelScope.launch(dispatcherProvider.io) {
+    ): Job = viewModelScope.launch(dispatcherProvider.io) {
         log.d { "Loading app content..." }
         error.value = null
 
@@ -77,13 +82,26 @@ class LoadingViewModel(
                 progress.value = null
                 withContext(dispatcherProvider.main) { onLoggedIn() }
             } else {
-                // Clear Sentry user context
-                Sentry.configureScope { scope ->
-                    scope.user = null
+                handleNotLoggedIn(onNotLoggedIn)
+            }
+        } catch (e: ServerException) {
+            if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
+                // The locally stored profile looked valid, but the server-side session has expired or been
+                // invalidated -- this is an expected condition (see #620's report), not an error to show the user.
+                // Try a silent re-login first (Android only for now) before giving up on the session.
+                log.d { "Session expired while loading, attempting automatic re-login..." }
+                if (authBackend.tryAutoRelogin()) {
+                    load(onLoggedIn, onNotLoggedIn)
+                } else {
+                    log.d { "Automatic re-login not possible or failed, logging out..." }
+                    authBackend.logout()
+                    handleNotLoggedIn(onNotLoggedIn)
                 }
-
+            } else {
+                log.e(e) { "Error while loading." }
+                Sentry.captureException(e)
                 progress.value = null
-                withContext(dispatcherProvider.main) { onNotLoggedIn() }
+                error.value = e
             }
         } catch (e: Exception) {
             log.e(e) { "Error while loading." }
@@ -91,6 +109,16 @@ class LoadingViewModel(
             progress.value = null
             error.value = e
         }
+    }
+
+    private suspend fun handleNotLoggedIn(onNotLoggedIn: () -> Unit) {
+        // Clear Sentry user context
+        Sentry.configureScope { scope ->
+            scope.user = null
+        }
+
+        progress.value = null
+        withContext(dispatcherProvider.main) { onNotLoggedIn() }
     }
 
     /**

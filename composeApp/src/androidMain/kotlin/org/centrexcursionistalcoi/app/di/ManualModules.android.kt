@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.di
 
+import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
@@ -17,4 +18,5 @@ actual fun platformModule(): Module = module {
     single { PlatformOpenFileLogic(androidContext()) }
     single { PlatformShareLogic(androidContext()) }
     single { BackgroundJobCoordinator(androidContext()) }
+    single { CredentialsStore(androidContext()) }
 }

@@ -51,6 +51,7 @@ import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -147,6 +148,16 @@ private fun App(
     val errorState by GlobalAsyncErrorHandler.error.collectAsState()
     errorState?.let { error ->
         ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
+    }
+
+    // A RemoteRepository call anywhere in the app can find the session has expired/been invalidated
+    // server-side; treat it the same everywhere instead of leaving whichever screen triggered it to fail
+    // unhandled (see #620). SessionExpiryViewModel does the actual silent-relogin-or-logout work (Android only
+    // for now, see CredentialsStore) -- kept out of this Composable since it's critical, side-effecting logic.
+    // It's handed the navigation callback directly instead of exposing an event Flow for this Composable to
+    // collect, so there's no LaunchedEffect needed here just to forward it.
+    koinViewModel<SessionExpiryViewModel> {
+        parametersOf({ navigator.navigateClearingStack(Destination.Login()) })
     }
 
     val updateAvailable by PlatformAppUpdates.updateAvailable.collectAsState(initial = false)

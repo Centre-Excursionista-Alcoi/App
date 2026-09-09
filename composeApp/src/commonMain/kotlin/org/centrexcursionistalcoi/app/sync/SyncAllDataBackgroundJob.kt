@@ -14,7 +14,6 @@ import cea_app.composeapp.generated.resources.sync_step_users
 import com.diamondedge.logging.logging
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.until
-import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.database.DATABASE_VERSION
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
@@ -25,9 +24,7 @@ import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
-import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
-import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
@@ -68,8 +65,6 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRepository: LendingsRepository,
     private val memoriesRepository: MemoriesRepository,
-
-    private val authBackend: AuthBackend,
 ) : BackgroundJob() {
     private val log = logging()
 
@@ -163,15 +158,15 @@ class SyncAllDataBackgroundJob(
                 log.d { "Running sync again..." }
                 synchronizeAllRepositories(true, isRetry = true)
             }
-        } catch (e: ServerException) {
-            if (e.errorCode == Error.ERROR_NOT_LOGGED_IN) {
-                log.w { "Not logged in. Credentials may have expired. Logging out..." }
-                authBackend.logout()
-            } else {
-                log.e(e) { "Server error during synchronization. Failing..." }
-                throw e
-            }
         }
+        // ServerException (including a "not logged in" session expiry) is deliberately left to propagate: it's
+        // reported once, centrally, via GlobalAsyncErrorHandler (every RemoteRepository failure funnels through
+        // it -- see RemoteRepository.kt), which tries AuthBackend.tryAutoRelogin() before falling back to a
+        // real logout. Catching and handling "not logged in" here too used to race that global handling: this
+        // job would silently swallow it and report SUCCEEDED, so DatabaseIntegrityVerifier.clearDatabaseAndResync()
+        // (which awaits this job) treated a session that just gave up as if it had synced cleanly, sometimes
+        // navigating to the Main screen with a wiped, empty database while the user was never actually
+        // re-authenticated.
     }
 
     companion object {
