@@ -4,6 +4,7 @@ on:
   release:
     types:
       - released
+      - prereleased
 
 jobs:
   update-version-name:
@@ -350,7 +351,10 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
           packageName: org.centrexcursionistalcoi.app
           releaseFiles: ./android/build/outputs/bundle/release/android-release.aab
-          track: "beta"
+          # GitHub pre-releases stay on the open-testing "beta" track; a full "released" GitHub release now
+          # actually rolls out to Play Store's "production" track for the first time -- previously every
+          # release.yml run (there was no pre-release trigger at all) went to "beta" regardless.
+          track: ${{ github.event.release.prerelease && 'beta' || 'production' }}
           # Priority is dynamically set by the previous script step
           inAppUpdatePriority: ${{ steps.determine_priority.outputs.priority }}
           status: completed
@@ -370,7 +374,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: app-android
         with:
-          environment: production
+          environment: ${{ github.event.release.prerelease && 'beta' || 'production' }}
           version: ${{ github.event.release.name }}
 
   build-ios:
@@ -614,7 +618,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: app-ios
         with:
-          environment: production
+          environment: ${{ github.event.release.prerelease && 'beta' || 'production' }}
           version: ${{ github.event.release.name }}
 
   build-desktop:
@@ -743,7 +747,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: app-desktop
         with:
-          environment: production
+          environment: ${{ github.event.release.prerelease && 'beta' || 'production' }}
           version: ${{ github.event.release.name }}
 
   server-tests:
@@ -785,6 +789,10 @@ jobs:
   release-server:
     name: Build and Publish Server Docker image
     runs-on: ubuntu-latest
+    # A GitHub pre-release ("open beta") only affects the mobile/desktop client apps -- it shouldn't also
+    # rebuild and push a new :latest server Docker image / redeploy the backend. sentry-server (needs:
+    # release-server below) skips automatically along with it.
+    if: ${{ !github.event.release.prerelease }}
 
     needs: [server-tests, shared-tests]
 
