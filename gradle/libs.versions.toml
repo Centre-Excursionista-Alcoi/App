@@ -63,6 +63,10 @@ retrofit = "2.9.0"
 richeditor = "1.2.0"
 sentry = "6.21.0"
 sentry-multiplatform = "0.27.0"
+# The io.sentry.jvm.gradle plugin auto-installs io.sentry:sentry at whatever version it resolves to
+# (currently 8.55.0). Pinned explicitly here so sentry-kotlin-extensions can't drift from it -- a
+# mismatch between Sentry SDK module versions crashes the mixed-versions check at init.
+sentry-jvmSdk = "8.55.0"
 sqlite = "3.53.4.0"
 telegram-bot = "10.0.0"
 # {"message":"client version 1.32 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version"}
@@ -169,6 +173,8 @@ qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qr
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 richeditor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
 sentry-kotlinMultiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry-multiplatform" }
+sentry-jvm = { module = "io.sentry:sentry", version.ref = "sentry-jvmSdk" }
+sentry-kotlinExtensions = { module = "io.sentry:sentry-kotlin-extensions", version.ref = "sentry-jvmSdk" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 telegram-bot = { module = "io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram", version.ref = "telegram-bot" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }

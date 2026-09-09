@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.sentry.ProfileLifecycle
 import io.sentry.Sentry
 import java.time.Instant
 import java.time.LocalDate
@@ -17,6 +18,7 @@ import org.centrexcursionistalcoi.app.plugins.SessionsKeys
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
+import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
 import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
@@ -58,6 +60,15 @@ fun main() {
             options.dsn = dsn
             options.release = version
             options.environment = System.getenv("ENV") ?: "production"
+
+            // Performance tracing: required for profiling below, and for request spans
+            // (e.g. database queries) to show up under their originating request.
+            options.tracesSampleRate = 1.0
+
+            // Continuous profiling, tied to the lifecycle of the trace above, so a profile is
+            // captured for every sampled request.
+            options.profileSessionSampleRate = 1.0
+            options.profileLifecycle = ProfileLifecycle.TRACE
         }
     } ?: logger.warn("SENTRY_DSN environment variable is not set. Sentry error tracking is disabled.")
 
@@ -109,6 +120,7 @@ fun main() {
 }
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
+    configureSentryTracing()
     configureContentNegotiation()
     configureSSE()
     configureRouting()
