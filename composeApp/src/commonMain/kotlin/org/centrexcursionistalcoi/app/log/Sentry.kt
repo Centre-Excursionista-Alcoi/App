@@ -12,6 +12,10 @@ private const val SESSION_REPLAY_ON_ERROR_SAMPLE_RATE = 1.0
 private const val SESSION_REPLAY_SESSION_SAMPLE_RATE = 0.1
 
 fun initializeSentry() {
+    // Debug builds shouldn't report to Sentry at all -- local crashes/dev noise would otherwise pollute the
+    // same project as real user data, and DSN/session-replay is meant for production usage.
+    if (BuildKonfig.DEBUG) return
+
     val reportErrors = settings.getBoolean(SETTINGS_PRIVACY_ERRORS, true)
     val reportAnalytics = settings.getBoolean(SETTINGS_PRIVACY_ANALYTICS, true)
     val reportSessionReplay = settings.getBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, true)
@@ -25,8 +29,8 @@ fun initializeSentry() {
         // Capture screenshots on error events
         options.attachScreenshot = true
 
-        // Set the environment
-        options.environment = if (BuildKonfig.DEBUG) "development" else "production"
+        // Set the environment (always "production": debug builds return above before ever reaching this).
+        options.environment = "production"
 
         // Set the release name. Must match exactly what CI passes to `sentry-cli`/`action-release` when
         // creating the corresponding Release record (see development-release.yml's "Read app version" steps) --
