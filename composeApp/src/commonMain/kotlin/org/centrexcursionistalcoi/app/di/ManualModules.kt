@@ -150,7 +150,7 @@ val manualModule = module {
     viewModel { LendingSignUpViewModel(get()) }
     viewModel { LendingsPageModel(get(), get()) }
     viewModel { LoadingViewModel(get(), get(), get(), get()) }
-    viewModel { LoginViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get()) }
     viewModel { (afterLogout: () -> Unit) -> LogoutViewModel(get(), get(), afterLogout) }
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { ManagementPageScreenModel(get(), get()) }

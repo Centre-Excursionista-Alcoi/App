@@ -35,6 +35,9 @@
     <string name="login_error_unknown">Server error: %1$s</string>
     <string name="login_error_user_not_registered">A user with the given email was not found.</string>
     <string name="login_error_invalid_credentials">Your email or password is not valid. Please, check with an administrator that the email you have in the database is the correct one.</string>
+    <string name="login_existing_account_title">Already have an account saved</string>
+    <string name="login_existing_account_message">You already have an account saved on this device (%1$s). Log out from it before adding a different one?</string>
+    <string name="login_existing_account_logout">Log out</string>
 
     <string name="register_title">Register an Account</string>
     <string name="register_action">Register</string>

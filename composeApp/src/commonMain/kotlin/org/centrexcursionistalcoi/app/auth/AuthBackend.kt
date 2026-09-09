@@ -97,29 +97,51 @@ class AuthBackend(
         val response = getHttpClient().get("/logout")
         if (response.status.isSuccess()) {
             log.d { "Logged out. Removing all data..." }
-            // order is important due to foreign key constraints: children before their parents
-            // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
-            memoriesRepository.deleteAll()
-            lendingsRepository.deleteAll()
-            inventoryItemsRepository.deleteAll()
-            inventoryItemTypesRepository.deleteAll()
-            eventsRepository.deleteAll()
-            postsRepository.deleteAll()
-            membersRepository.deleteAll()
-            usersRepository.deleteAll()
-            departmentsRepository.deleteAll()
-            log.d { "Removing all files..." }
-            FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
-            log.d { "Revoking FCM token..." }
-            FCMTokenManager.revoke()
-            log.d { "Removing all settings..." }
-            settings.clear()
-            credentialsStore.clear()
+            clearLocalData()
         } else {
             val error = response.bodyAsError()
             log.d { "Logout failed (${response.status}): $error" }
             throw error.toThrowable()
         }
+    }
+
+    /**
+     * Wipes the account saved for [AuthBackend.tryAutoRelogin] (see [CredentialsStore]) and all local data, the
+     * same as [logout], but without requiring an active server session -- used when the user chooses to forget
+     * a previously-saved account straight from the Login screen (e.g. after reaching it with one still saved,
+     * see [LoginViewModel]) rather than through a normal in-app logout.
+     */
+    suspend fun forgetLocalAccount() {
+        log.d { "Forgetting locally saved account..." }
+        // Best-effort: there may be no active server session to invalidate at all (that's exactly how the
+        // user could end up back on the Login screen with a saved account in the first place).
+        try {
+            getHttpClient().get("/logout")
+        } catch (e: Exception) {
+            log.d { "No active server session to log out of (or the request failed); ignoring: $e" }
+        }
+        clearLocalData()
+    }
+
+    private suspend fun clearLocalData() {
+        // order is important due to foreign key constraints: children before their parents
+        // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
+        memoriesRepository.deleteAll()
+        lendingsRepository.deleteAll()
+        inventoryItemsRepository.deleteAll()
+        inventoryItemTypesRepository.deleteAll()
+        eventsRepository.deleteAll()
+        postsRepository.deleteAll()
+        membersRepository.deleteAll()
+        usersRepository.deleteAll()
+        departmentsRepository.deleteAll()
+        log.d { "Removing all files..." }
+        FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
+        log.d { "Revoking FCM token..." }
+        FCMTokenManager.revoke()
+        log.d { "Removing all settings..." }
+        settings.clear()
+        credentialsStore.clear()
     }
 
     suspend fun forgotPassword(email: String) {

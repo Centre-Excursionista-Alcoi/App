@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -16,9 +17,28 @@ import org.koin.core.annotation.KoinViewModel
 class LoginViewModel(
     private val authBackend: AuthBackend,
     private val dispatcherProvider: DispatcherProvider,
+    private val credentialsStore: CredentialsStore,
 ) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
+
+    // Reaching the Login screen with an account already saved shouldn't normally happen (both a normal logout
+    // and an exhausted auto-relogin already clear it, see AuthBackend), but the system "Add account" flow
+    // (AccountAuthenticator.addAccount, Android only) can land here regardless -- surface it so the user can
+    // choose to forget the old one instead of silently ending up with it replaced on a fresh login.
+    private val _existingAccountEmail = MutableStateFlow<String?>(null)
+    val existingAccountEmail get() = _existingAccountEmail.asStateFlow()
+
+    init {
+        viewModelScope.launch(dispatcherProvider.io) {
+            _existingAccountEmail.value = credentialsStore.get()?.email
+        }
+    }
+
+    fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io) {
+        authBackend.forgetLocalAccount()
+        _existingAccountEmail.value = null
+    }
 
     fun login(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
         try {
