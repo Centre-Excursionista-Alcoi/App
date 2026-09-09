@@ -152,6 +152,29 @@ jobs:
             composeApp/build/test-results
             composeApp/build/reports/tests
 
+  run_ios_tests:
+    name: Run iOS app tests
+    needs: [ increase_version_code, check_changes ]
+    if: ${{ needs.check_changes.outputs.app == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          java-package: jdk
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Copy dummy google-services.json
+        run: cp android/google-services.test.json android/google-services.json
+      - name: Run iOS tests
+        uses: ./.github/actions/run-ios-tests
+
   # 3. Android Jobs (Only runs if app files changed)
   publish_internal_release:
     name: Android - Publish Internal Release
@@ -335,10 +358,10 @@ jobs:
     name: iOS - Publish Bleeding-edge to TestFlight
     runs-on: [self-hosted, macOS, ARM64]
 
-    needs: [run_shared_tests, run_app_tests]
+    needs: [run_shared_tests, run_app_tests, run_ios_tests]
     # Inherits the conditional logic from run_shared_tests/run_app_tests automatically because
     # of 'needs', but strictly checking is good practice:
-    if: ${{ always() && needs.run_shared_tests.result == 'success' && needs.run_app_tests.result == 'success' }}
+    if: ${{ always() && needs.run_shared_tests.result == 'success' && needs.run_app_tests.result == 'success' && needs.run_ios_tests.result == 'success' }}
 
     steps:
       - name: Checkout code

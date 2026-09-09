@@ -1,0 +1,58 @@
+name: Run iOS simulator tests
+description: Creates a disposable iPhone simulator, runs the iOS tests, and removes it.
+inputs:
+  gradle-task:
+    description: Gradle task to execute
+    required: false
+    default: :composeApp:iosSimulatorArm64Test
+runs:
+  using: composite
+  steps:
+    - name: Create iOS simulator
+      id: simulator
+      shell: bash
+      run: |
+        python3 - <<'PY'
+        import json, os, subprocess
+        devices = json.loads(subprocess.check_output([
+            "xcrun", "simctl", "list", "devices", "available", "--json"
+        ]))["devices"]
+        candidates = [
+            (runtime, device)
+            for runtime, entries in devices.items() if ".iOS-" in runtime
+            for device in entries if device["name"].startswith("iPhone")
+        ]
+        if not candidates:
+            raise SystemExit("No available iPhone simulator runtime is installed")
+        runtime, device = max(candidates, key=lambda item: tuple(
+            int(part) for part in item[0].split(".iOS-")[1].split("-")
+        ))
+        udid = subprocess.check_output([
+            "xcrun", "simctl", "create", "CEA iOS Tests",
+            device["deviceTypeIdentifier"], runtime,
+        ], text=True).strip()
+        with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+            output.write(f"udid={udid}\n")
+
+    - name: Boot iOS simulator
+      env:
+        SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+      shell: bash
+      run: |
+        xcrun simctl boot "$SIMULATOR_UDID"
+        xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+    - name: Run iOS tests
+      env:
+        SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+      shell: bash
+      run: ./gradlew ${{ inputs.gradle-task }} --device "$SIMULATOR_UDID"
+
+    - name: Remove iOS simulator
+      if: ${{ always() && steps.simulator.outputs.udid != '' }}
+      env:
+        SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+      shell: bash
+      run: |
+        xcrun simctl shutdown "$SIMULATOR_UDID" || true
+        xcrun simctl delete "$SIMULATOR_UDID"

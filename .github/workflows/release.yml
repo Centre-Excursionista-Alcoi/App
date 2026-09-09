@@ -113,6 +113,28 @@ jobs:
             composeApp/build/test-results
             composeApp/build/reports/tests
 
+  ios-tests:
+    name: Run iOS app tests
+    runs-on: macos-26
+    needs: [ update-version-name ]
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          java-package: jdk
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Copy dummy google-services.json
+        run: cp android/google-services.test.json android/google-services.json
+      - name: Run iOS tests
+        uses: ./.github/actions/run-ios-tests
+
   build-android:
     name: Build for Android
     runs-on: ubuntu-latest
@@ -355,7 +377,7 @@ jobs:
     name: Build for iOS
     runs-on: [self-hosted, macOS, ARM64]
 
-    needs: [shared-tests, app-tests]
+    needs: [shared-tests, app-tests, ios-tests]
 
     steps:
       - uses: actions/checkout@v7
