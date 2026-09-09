@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/test-app.yml'
       - 'composeApp/**'
+      - 'shared/**'
       - '*.gradle.kts'
       - '*.properties'
       - 'gradle/**'
@@ -63,3 +64,91 @@ jobs:
           path: |
             composeApp/build/test-results
             composeApp/build/reports/tests
+
+  run_ios_tests:
+    name: Run iOS app tests
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      SERVER_URL: http://localhost:8080
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          java-package: jdk
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Copy dummy google-services.json
+        run: cp android/google-services.test.json android/google-services.json
+
+      - name: Create iOS simulator
+        id: simulator
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import subprocess
+
+          devices = json.loads(subprocess.check_output(
+              ["xcrun", "simctl", "list", "devices", "available", "--json"]
+          ))["devices"]
+          candidates = [
+              (runtime, device)
+              for runtime, entries in devices.items() if ".iOS-" in runtime
+              for device in entries if device["name"].startswith("iPhone")
+          ]
+          if not candidates:
+              raise SystemExit("No available iPhone simulator runtime is installed")
+          runtime, device = max(candidates, key=lambda item: tuple(
+              int(part) for part in item[0].split(".iOS-")[1].split("-")
+          ))
+          udid = subprocess.check_output([
+              "xcrun", "simctl", "create", "CEA App Tests",
+              device["deviceTypeIdentifier"], runtime,
+          ], text=True).strip()
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"udid={udid}\n")
+          PY
+
+      - name: Boot iOS simulator
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          xcrun simctl boot "$SIMULATOR_UDID"
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+      - name: Run iOS App Tests
+        id: ios_tests
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: ./gradlew :composeApp:iosSimulatorArm64Test --device "$SIMULATOR_UDID"
+
+      - name: Upload iOS test results (on failure)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-app-test-results
+          retention-days: 3
+          path: |
+            composeApp/build/test-results
+            composeApp/build/reports/tests
+
+      - name: Remove iOS simulator
+        if: ${{ always() && steps.simulator.outputs.udid != '' }}
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
+          xcrun simctl delete "$SIMULATOR_UDID"
