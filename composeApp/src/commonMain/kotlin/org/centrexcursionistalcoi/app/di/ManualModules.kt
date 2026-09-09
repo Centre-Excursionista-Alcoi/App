@@ -50,6 +50,7 @@ import org.centrexcursionistalcoi.app.viewmodel.ManagementPageScreenModel
 import org.centrexcursionistalcoi.app.viewmodel.MemoriesViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 import org.centrexcursionistalcoi.app.viewmodel.ProfilePageModel
+import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.DepartmentsManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
@@ -156,6 +157,7 @@ val manualModule = module {
     viewModel { MemoriesViewModel(get()) }
     viewModel { (url: io.ktor.http.Url?) -> PlatformInitializerViewModel(url, get(), get()) }
     viewModel { ProfilePageModel(get(), get()) }
+    viewModel { SessionExpiryViewModel(get()) }
     viewModel { (onDeleteAccount: () -> Unit) -> SettingsViewModel(get(), get(), get(), onDeleteAccount) }
     viewModel { DepartmentsManagementViewModel(get(), get(), get(), get()) }
     viewModel { EventsManagementViewModel(get(), get(), get(), get()) }

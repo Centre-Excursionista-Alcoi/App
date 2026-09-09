@@ -2,7 +2,19 @@ package org.centrexcursionistalcoi.app.auth
 
 import org.koin.core.annotation.Singleton
 
-data class SavedCredentials(val email: String, val password: String)
+class SavedCredentials(val email: String, val password: CharArray) {
+    // A data class' auto-generated toString() would print password's contents directly if it were a String;
+    // CharArray's default (identity-based) toString() avoids that, so this is deliberately a plain class with
+    // hand-written equals()/hashCode() (CharArray.equals() is reference equality, not content equality) rather
+    // than a data class.
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SavedCredentials) return false
+        return email == other.email && password.contentEquals(other.password)
+    }
+
+    override fun hashCode(): Int = 31 * email.hashCode() + password.contentHashCode()
+}
 
 /**
  * Persists the credentials used for the last successful login, so [AuthBackend.tryAutoRelogin] can silently

@@ -25,7 +25,7 @@ actual class CredentialsStore(context: Context) {
     actual fun get(): SavedCredentials? {
         val account = accountManager.getAccountsByType(ACCOUNT_TYPE).firstOrNull() ?: return null
         val password = accountManager.getPassword(account) ?: return null
-        return SavedCredentials(account.name, password)
+        return SavedCredentials(account.name, password.toCharArray())
     }
 
     actual fun clear() {

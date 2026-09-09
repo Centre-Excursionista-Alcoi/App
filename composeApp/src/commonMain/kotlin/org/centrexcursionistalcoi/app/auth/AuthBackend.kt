@@ -82,7 +82,7 @@ class AuthBackend(
     suspend fun tryAutoRelogin(): Boolean {
         val saved = credentialsStore.get() ?: return false
         return try {
-            login(saved.email, saved.password)
+            login(saved.email, String(saved.password))
             log.d { "Automatic re-login succeeded." }
             true
         } catch (e: Exception) {
