@@ -25,6 +25,7 @@ import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.ktor.http.Url
+import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.rememberNavigator
@@ -51,6 +52,7 @@ import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -147,6 +149,28 @@ private fun App(
     val errorState by GlobalAsyncErrorHandler.error.collectAsState()
     errorState?.let { error ->
         ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
+    }
+
+    // A RemoteRepository call anywhere in the app can find the session has expired/been invalidated
+    // server-side; treat it the same everywhere instead of leaving whichever screen triggered it to fail
+    // unhandled (see #620). Try a silent re-login first (Android only for now, see CredentialsStore) so an
+    // expired cookie doesn't bounce the user back to Login; only log out for real if that isn't possible or
+    // fails too.
+    val authBackend = koinInject<AuthBackend>()
+    val sessionExpired by GlobalAsyncErrorHandler.sessionExpired.collectAsState()
+    LaunchedEffect(sessionExpired) {
+        if (sessionExpired) {
+            // Clearing the flag is what this effect is keyed on -- doing it *before* the actual re-login/logout
+            // work would flip the key mid-flight, and Compose would cancel this coroutine (to relaunch the
+            // effect for the new key value) before tryAutoRelogin() ever got to run. Clear it last instead.
+            log.d { "Session expired, attempting automatic re-login..." }
+            if (!authBackend.tryAutoRelogin()) {
+                log.d { "Automatic re-login not possible or failed, logging out..." }
+                authBackend.logout()
+                navigator.navigateClearingStack(Destination.Login())
+            }
+            GlobalAsyncErrorHandler.clearSessionExpired()
+        }
     }
 
     val updateAvailable by PlatformAppUpdates.updateAvailable.collectAsState(initial = false)

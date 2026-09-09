@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.sync
 
 import androidx.annotation.VisibleForTesting
 import com.diamondedge.logging.logging
+import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
@@ -24,7 +25,9 @@ class DatabaseIntegrityVerifier(
 
     private val usersRepository: UsersRepository,
 
-    private val backgroundJobCoordinator: BackgroundJobCoordinator
+    private val backgroundJobCoordinator: BackgroundJobCoordinator,
+
+    private val authBackend: AuthBackend,
 ) {
     private val log = logging()
 
@@ -48,7 +51,7 @@ class DatabaseIntegrityVerifier(
      * record-by-record.
      * @throws IllegalStateException if the resync job doesn't finish successfully.
      */
-    private suspend fun clearDatabaseAndResync() {
+    private suspend fun clearDatabaseAndResync(isRetryAfterRelogin: Boolean = false) {
         db.clearAllTables()
         val result = backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
             name = SyncAllDataBackgroundJob.UNIQUE_NAME,
@@ -57,6 +60,14 @@ class DatabaseIntegrityVerifier(
             uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
         ).await()
         if (result != BackgroundJobState.SUCCEEDED) {
+            // The sync job also silently gives up and reports FAILED when the session has expired (see
+            // SyncAllDataBackgroundJob) -- try a silent re-login before treating that as a real, unrecoverable
+            // failure, same as everywhere else that reacts to a "not logged in" error (see #620, App.kt,
+            // LoadingViewModel.load()).
+            if (!isRetryAfterRelogin && authBackend.tryAutoRelogin()) {
+                clearDatabaseAndResync(isRetryAfterRelogin = true)
+                return
+            }
             throw IllegalStateException("Failed to sync data after clearing database: $result")
         }
         // The sync was successful, restart the verification process to ensure all references are now valid.

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
@@ -56,6 +57,7 @@ class TestDatabaseIntegrityVerifier {
     private val usersRemoteRepository = mockk<UsersRemoteRepository>()
     private val usersRepository = mockk<UsersRepository>()
     private val backgroundJobCoordinator = mockk<BackgroundJobCoordinator>()
+    private val authBackend = mockk<AuthBackend>()
 
     private lateinit var verifier: DatabaseIntegrityVerifier
 
@@ -69,7 +71,10 @@ class TestDatabaseIntegrityVerifier {
         coEvery { dao.selectAll() } returns emptyList()
         coEvery { memoryDao.selectAll() } returns emptyList()
         coEvery { lendingDao.selectAll() } returns emptyList()
-        verifier = DatabaseIntegrityVerifier(db, remoteRepository, repository, usersRemoteRepository, usersRepository, backgroundJobCoordinator)
+        // Default to "can't silently recover the session" so the existing "...throws when the resync job
+        // fails" tests keep throwing as before; tests of the new retry-after-relogin path override this.
+        coEvery { authBackend.tryAutoRelogin() } returns false
+        verifier = DatabaseIntegrityVerifier(db, remoteRepository, repository, usersRemoteRepository, usersRepository, backgroundJobCoordinator, authBackend)
     }
 
     @AfterTest
@@ -242,6 +247,35 @@ class TestDatabaseIntegrityVerifier {
             verifier.verifyAndFixInventoryItemTypesCrossReferences()
         }
         assertEquals("Failed to sync data after clearing database: FAILED", exception.message)
+    }
+
+    @Test
+    fun `missing type relation retries once and succeeds after a successful auto-relogin`() = runTest {
+        val type = typeEntity()
+        val brokenItem = InventoryItemWithRelations(itemEntity(typeId = type.id), type = null)
+        // First call (from the test itself) finds the broken item; the retry after clearDatabaseAndResync's
+        // internal recursive verifyAndFixReferences() call finds nothing left to fix.
+        coEvery { dao.selectAll() } returnsMany listOf(listOf(brokenItem), emptyList())
+        coEvery { db.clearAllTables() } just Runs
+        coEvery { authBackend.tryAutoRelogin() } returns true
+
+        val failedJob = mockk<ObservableBackgroundJob>()
+        every { failedJob.stateFlow() } returns flowOf(BackgroundJobState.FAILED)
+        val succeededJob = mockk<ObservableBackgroundJob>()
+        every { succeededJob.stateFlow() } returns flowOf(BackgroundJobState.SUCCEEDED)
+        every { backgroundJobCoordinator.coordinatorLog } returns mockk(relaxed = true)
+        every { backgroundJobCoordinator.dispatcherProvider } returns object : DispatcherProvider {
+            override val main = Dispatchers.Unconfined
+            override val io = Dispatchers.Unconfined
+            override val default = Dispatchers.Unconfined
+        }
+        coEvery { backgroundJobCoordinator.emitState(any(), any(), any()) } just Runs
+        every { backgroundJobCoordinator.observe(any()) } returnsMany listOf(failedJob, succeededJob)
+
+        verifier.verifyAndFixInventoryItemTypesCrossReferences()
+
+        coVerify(exactly = 1) { authBackend.tryAutoRelogin() }
+        coVerify(exactly = 2) { db.clearAllTables() }
     }
 
     @Test

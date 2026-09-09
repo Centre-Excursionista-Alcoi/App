@@ -105,10 +105,10 @@ val manualModule = module {
     single { UsersRemoteRepository(get()) }
 
     // auth -- ServiceScanModule
-    single { AuthBackend(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AuthBackend(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // sync -- SyncScanModule
-    single { DatabaseIntegrityVerifier(get(), get(), get(), get(), get(), get()) }
+    single { DatabaseIntegrityVerifier(get(), get(), get(), get(), get(), get(), get()) }
     // Also bound as BackgroundJob (in addition to each concrete type, which Koin infers from the lambda return
     // type and keeps resolvable on its own): BackgroundJobWorker looks these up via
     // `inject(BackgroundJob::class.java, named(...))`, so a definition registered only under its concrete type is
@@ -118,7 +118,6 @@ val manualModule = module {
         SyncAllDataBackgroundJob(
             get(), get(), get(), get(), get(), get(), get(), get(), get(),
             get(), get(), get(), get(), get(), get(), get(), get(), get(),
-            get(),
         )
     } bind BackgroundJob::class
     single(named(SyncDepartmentBackgroundJob.NAME)) { SyncDepartmentBackgroundJob(get()) } bind BackgroundJob::class
@@ -149,7 +148,7 @@ val manualModule = module {
     }
     viewModel { LendingSignUpViewModel(get()) }
     viewModel { LendingsPageModel(get(), get()) }
-    viewModel { LoadingViewModel(get(), get(), get()) }
+    viewModel { LoadingViewModel(get(), get(), get(), get()) }
     viewModel { LoginViewModel(get(), get()) }
     viewModel { (afterLogout: () -> Unit) -> LogoutViewModel(get(), get(), afterLogout) }
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get()) }

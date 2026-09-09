@@ -33,6 +33,7 @@ class AuthBackend(
     private val usersRepository: UsersRepository,
     private val departmentsRepository: DepartmentsRepository,
     private val memoriesRepository: MemoriesRepository,
+    private val credentialsStore: CredentialsStore,
 ) {
     private val log = logging()
     
@@ -64,8 +65,30 @@ class AuthBackend(
         )
         if (response.status.isSuccess()) {
             log.d { "Login successful." }
+            credentialsStore.save(email, password)
         } else {
             throw response.bodyAsError().toThrowable()
+        }
+    }
+
+    /**
+     * Tries to silently re-authenticate using the credentials saved from the last successful [login] (see
+     * [CredentialsStore] -- Android only for now). Used when a session expires unexpectedly, so the user isn't
+     * bounced back to the login screen for what's often just an expired cookie.
+     * @return `true` if re-authentication succeeded (a fresh session is now active); `false` if there were no
+     * saved credentials, or they were rejected -- in which case they're cleared, and the caller should fall
+     * back to a normal [logout].
+     */
+    suspend fun tryAutoRelogin(): Boolean {
+        val saved = credentialsStore.get() ?: return false
+        return try {
+            login(saved.email, saved.password)
+            log.d { "Automatic re-login succeeded." }
+            true
+        } catch (e: Exception) {
+            log.w(e) { "Automatic re-login failed." }
+            credentialsStore.clear()
+            false
         }
     }
 
@@ -91,6 +114,7 @@ class AuthBackend(
             FCMTokenManager.revoke()
             log.d { "Removing all settings..." }
             settings.clear()
+            credentialsStore.clear()
         } else {
             val error = response.bodyAsError()
             log.d { "Logout failed (${response.status}): $error" }
@@ -117,7 +141,9 @@ class AuthBackend(
         if (response.status.isSuccess()) {
             log.w { "Account delete request successful." }
             log.w { "Account deleted from server. Removing all data..." }
-            // order is important due to foreign key constraints
+            // order is important due to foreign key constraints: children before their parents
+            // (Memories has FKs to both Lendings and Departments, see MemoryEntity)
+            memoriesRepository.deleteAll()
             lendingsRepository.deleteAll()
             inventoryItemsRepository.deleteAll()
             inventoryItemTypesRepository.deleteAll()
@@ -132,6 +158,7 @@ class AuthBackend(
             FCMTokenManager.revoke()
             log.w { "Removing all settings..." }
             settings.clear()
+            credentialsStore.clear()
         } else {
             throw response.bodyAsError().toThrowable()
         }
