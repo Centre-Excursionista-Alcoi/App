@@ -59,7 +59,7 @@ jobs:
 
   run_ios_tests:
     name: Run iOS app tests
-    runs-on: macos-26
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 45
     env:
       SERVER_URL: http://localhost:8080
@@ -83,28 +83,6 @@ jobs:
         with:
           # PRs restore the default-branch cache; only master refreshes it.
           cache-read-only: ${{ github.ref != 'refs/heads/master' }}
-
-      - name: Identify native toolchain
-        id: native_toolchain
-        shell: bash
-        run: |
-          xcode_hash=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')
-          echo "xcode=$xcode_hash" >> "$GITHUB_OUTPUT"
-
-      # These downloads live outside Gradle User Home, so setup-gradle does not cache them.
-      - name: Cache Kotlin Native
-        uses: actions/cache@v6
-        with:
-          path: ~/.konan
-          key: konan-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle.properties') }}
-
-      - name: Cache SwiftPM downloads
-        uses: actions/cache@v6
-        with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-${{ hashFiles('**/Package.resolved', '**/Package.swift', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            swiftpm-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.native_toolchain.outputs.xcode }}-
 
       - name: Copy dummy google-services.json
         run: cp android/google-services.test.json android/google-services.json
