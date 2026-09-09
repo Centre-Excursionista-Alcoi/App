@@ -28,3 +28,4 @@ keys/
 bundle/
 sentry-debug-meta.properties
 *.log
+.codex
