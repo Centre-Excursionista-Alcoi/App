@@ -1,9 +1,12 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.defaultForFilePath
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondRedirect
@@ -16,6 +19,7 @@ import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.AdminFileSummary
 import org.centrexcursionistalcoi.app.data.AdminUserSummary
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.database.table.UserReferences
@@ -31,6 +35,7 @@ import org.centrexcursionistalcoi.app.request.ForcePasswordChangeRequest
 import org.centrexcursionistalcoi.app.response.PagedResponse
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.CustomFunction
 import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.Op
@@ -85,6 +90,31 @@ fun Route.adminApiRoutes() {
         }
 
         call.respond(PagedResponse(items, total, limit, offset))
+    }
+
+    // Streams a single file's raw content, for the file manager's preview/download action. Deliberately
+    // bypasses FileReadWriteRules -- unlike the public /download/{uuid} route, an admin managing every file in
+    // the database needs to be able to open any of them regardless of that file's own ACL.
+    get("/files/{id}/content") {
+        assertAdmin() ?: return@get
+
+        val id = call.parameters["id"]?.toUUIDOrNull()
+        if (id == null) {
+            respondError(Error.MalformedId())
+            return@get
+        }
+
+        val file = Database { FileEntity.findById(id) }
+        if (file == null) {
+            respondError(Error.EntityNotFound(FileEntity::class, id))
+            return@get
+        }
+
+        call.response.header(
+            HttpHeaders.ContentDisposition,
+            ContentDisposition.Inline.withParameter(ContentDisposition.Parameters.FileName, file.name ?: id.toString()).toString()
+        )
+        call.respondBytes(contentType = file.contentType) { file.bytes }
     }
 
     // Lists users (lightweight summary, not the fully-hydrated UserData used by /users), searchable by

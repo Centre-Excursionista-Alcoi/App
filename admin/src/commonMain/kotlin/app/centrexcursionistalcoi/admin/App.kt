@@ -20,6 +20,7 @@ import dev.kilua.form.text.textRef
 import dev.kilua.html.BsBgColor
 import dev.kilua.html.ButtonSize
 import dev.kilua.html.ButtonStyle
+import dev.kilua.html.a
 import dev.kilua.html.bsButton
 import dev.kilua.html.div
 import dev.kilua.html.navLink
@@ -132,12 +133,21 @@ private fun IComponent.FilesPage() {
         tabulator<AdminFileSummary>(
             data = page?.items.orEmpty(),
             options = TabulatorOptions(
-                layout = Layout.FitColumns,
+                layout = Layout.FitDataStretch,
                 columns = listOf(
                     ColumnDefinition(title = "Name", field = "name"),
                     ColumnDefinition(title = "Type", field = "type"),
                     ColumnDefinition(title = "Size (bytes)", field = "sizeBytes", hozAlign = Align.Right),
                     ColumnDefinition(title = "Last modified", field = "lastModified"),
+                    ColumnDefinition(
+                        title = "",
+                        formatterComponentFunction = { _, _, data ->
+                            // Same-origin link, opened as a normal top-level navigation so the browser sends
+                            // the admin session cookie automatically -- the server decides inline preview vs.
+                            // download based on the file's content type.
+                            a(href = "/admin/api/files/${data.id}/content", label = "View", target = "_blank")
+                        }
+                    ),
                 )
             )
         )
@@ -208,12 +218,15 @@ private fun IComponent.UsersPage() {
         tabulator<AdminUserSummary>(
             data = page?.items.orEmpty(),
             options = TabulatorOptions(
-                layout = Layout.FitColumns,
+                // FitColumns stretches every column to fill the container width, which looks absurdly wide
+                // for narrow content like "#"/"Disabled" -- FitDataStretch sizes columns to their content
+                // instead, only stretching the last one (Actions).
+                layout = Layout.FitDataStretch,
                 columns = listOf(
-                    ColumnDefinition(title = "#", field = "memberNumber", width = "80px"),
+                    ColumnDefinition(title = "#", field = "memberNumber"),
                     ColumnDefinition(title = "Name", field = "fullName"),
                     ColumnDefinition(title = "Email", field = "email"),
-                    ColumnDefinition(title = "Disabled", field = "isDisabled", width = "100px"),
+                    ColumnDefinition(title = "Disabled", field = "isDisabled"),
                     ColumnDefinition(
                         title = "Actions",
                         formatterComponentFunction = { _, _, data ->
