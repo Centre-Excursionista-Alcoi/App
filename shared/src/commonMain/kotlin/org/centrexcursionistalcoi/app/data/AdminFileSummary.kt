@@ -12,8 +12,8 @@ import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 @Serializable
 data class AdminFileSummary(
     val id: Uuid,
-    val name: String?,
-    val type: String?,
+    val name: String? = null,
+    val type: String? = null,
     val sizeBytes: Long,
     @Serializable(InstantSerializer::class) val lastModified: Instant,
 )

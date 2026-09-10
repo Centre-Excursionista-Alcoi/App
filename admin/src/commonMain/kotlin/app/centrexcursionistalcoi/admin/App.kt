@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package app.centrexcursionistalcoi.admin
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,7 +59,6 @@ class App : Application() {
 @Composable
 private fun IComponent.AdminApp() {
     browserRouter(contextPath = "/admin") {
-        defaultContent { AdminLayout { FilesPage() } }
         route("files") { view { AdminLayout { FilesPage() } } }
         route("users") { view { AdminLayout { UsersPage() } } }
     }
@@ -117,24 +119,29 @@ private fun IComponent.FilesPage() {
                     put("offset", offset.toString())
                 }
             )
-        } catch (_: RemoteRequestException) {
-            toast("Failed to load files", bgColor = BsBgColor.BgDanger)
+        } catch (e: RemoteRequestException) {
+            toast("Failed to load files: ${e.message}", bgColor = BsBgColor.BgDanger)
             null
         }
     }
 
-    tabulator<AdminFileSummary>(
-        data = page?.items.orEmpty(),
-        options = TabulatorOptions(
-            layout = Layout.FitColumns,
-            columns = listOf(
-                ColumnDefinition(title = "Name", field = "name"),
-                ColumnDefinition(title = "Type", field = "type"),
-                ColumnDefinition(title = "Size (bytes)", field = "sizeBytes", hozAlign = Align.Right),
-                ColumnDefinition(title = "Last modified", field = "lastModified"),
+    // Keyed on `page`: Tabulator renders its initial `data` correctly on mount, but doesn't reliably pick up
+    // reactive updates to `data` pushed from a coroutine (LaunchedEffect) afterwards -- forcing a full
+    // remount whenever the fetched page changes sidesteps that instead of relying on its in-place update path.
+    key(page) {
+        tabulator<AdminFileSummary>(
+            data = page?.items.orEmpty(),
+            options = TabulatorOptions(
+                layout = Layout.FitColumns,
+                columns = listOf(
+                    ColumnDefinition(title = "Name", field = "name"),
+                    ColumnDefinition(title = "Type", field = "type"),
+                    ColumnDefinition(title = "Size (bytes)", field = "sizeBytes", hozAlign = Align.Right),
+                    ColumnDefinition(title = "Last modified", field = "lastModified"),
+                )
             )
         )
-    )
+    }
 
     PaginationControls(page, offset) { offset = it }
 }
@@ -159,8 +166,8 @@ private fun IComponent.UsersPage() {
                     put("offset", offset.toString())
                 }
             )
-        } catch (_: RemoteRequestException) {
-            toast("Failed to load users", bgColor = BsBgColor.BgDanger)
+        } catch (e: RemoteRequestException) {
+            toast("Failed to load users: ${e.message}", bgColor = BsBgColor.BgDanger)
             null
         }
     }
@@ -194,57 +201,62 @@ private fun IComponent.UsersPage() {
         }
     }
 
-    tabulator<AdminUserSummary>(
-        data = page?.items.orEmpty(),
-        options = TabulatorOptions(
-            layout = Layout.FitColumns,
-            columns = listOf(
-                ColumnDefinition(title = "#", field = "memberNumber", width = "80px"),
-                ColumnDefinition(title = "Name", field = "fullName"),
-                ColumnDefinition(title = "Email", field = "email"),
-                ColumnDefinition(title = "Disabled", field = "isDisabled", width = "100px"),
-                ColumnDefinition(
-                    title = "Actions",
-                    formatterComponentFunction = { _, _, data ->
-                        div("d-flex gap-1") {
-                            bsButton("Force password", style = ButtonStyle.BtnWarning, size = ButtonSize.BtnSm) {
-                                onClick {
-                                    selectedUser = data
-                                    passwordModal.show()
+    // See the matching comment in FilesPage: forces a full Tabulator remount whenever the fetched page
+    // changes, since in-place `data` updates pushed from a coroutine don't reliably reach Tabulator's own
+    // reactive update path.
+    key(page) {
+        tabulator<AdminUserSummary>(
+            data = page?.items.orEmpty(),
+            options = TabulatorOptions(
+                layout = Layout.FitColumns,
+                columns = listOf(
+                    ColumnDefinition(title = "#", field = "memberNumber", width = "80px"),
+                    ColumnDefinition(title = "Name", field = "fullName"),
+                    ColumnDefinition(title = "Email", field = "email"),
+                    ColumnDefinition(title = "Disabled", field = "isDisabled", width = "100px"),
+                    ColumnDefinition(
+                        title = "Actions",
+                        formatterComponentFunction = { _, _, data ->
+                            div("d-flex gap-1") {
+                                bsButton("Force password", style = ButtonStyle.BtnWarning, size = ButtonSize.BtnSm) {
+                                    onClick {
+                                        selectedUser = data
+                                        passwordModal.show()
+                                    }
                                 }
-                            }
-                            bsButton(
-                                "Send recovery email",
-                                style = ButtonStyle.BtnSecondary,
-                                size = ButtonSize.BtnSm
-                            ) {
-                                onClick {
-                                    confirm(
-                                        caption = "Send recovery email?",
-                                        content = "This will email ${data.fullName} a password reset link.",
-                                        cancelVisible = true,
-                                        yesCallback = {
-                                            scope.launch {
-                                                try {
-                                                    restClient.postDynamic(
-                                                        "/admin/api/users/${data.sub}/send-recovery-email",
-                                                        Unit
-                                                    )
-                                                    toast("Recovery email sent to ${data.fullName}")
-                                                } catch (_: RemoteRequestException) {
-                                                    toast("Failed to send recovery email", bgColor = BsBgColor.BgDanger)
+                                bsButton(
+                                    "Send recovery email",
+                                    style = ButtonStyle.BtnSecondary,
+                                    size = ButtonSize.BtnSm
+                                ) {
+                                    onClick {
+                                        confirm(
+                                            caption = "Send recovery email?",
+                                            content = "This will email ${data.fullName} a password reset link.",
+                                            cancelVisible = true,
+                                            yesCallback = {
+                                                scope.launch {
+                                                    try {
+                                                        restClient.postDynamic(
+                                                            "/admin/api/users/${data.sub}/send-recovery-email",
+                                                            Unit
+                                                        )
+                                                        toast("Recovery email sent to ${data.fullName}")
+                                                    } catch (_: RemoteRequestException) {
+                                                        toast("Failed to send recovery email", bgColor = BsBgColor.BgDanger)
+                                                    }
                                                 }
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
+                    )
                 )
             )
         )
-    )
+    }
 
     PaginationControls(page, offset) { offset = it }
 }

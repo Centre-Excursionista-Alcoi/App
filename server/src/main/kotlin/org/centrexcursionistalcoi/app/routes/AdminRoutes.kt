@@ -6,6 +6,7 @@ import io.ktor.http.defaultForFilePath
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -260,10 +261,19 @@ fun Route.adminUiRoutes() {
             return@get
         }
 
-        val classLoader = call.application.environment.classLoader
         val path = call.parameters.getAll("path")?.joinToString("/").orEmpty()
 
-        val resourcePath = if (path.isEmpty()) "admin-static/index.html" else "admin-static/$path"
+        // The Kilua browserRouter's own "unmatched route" fallback (`view`/`defaultContent`) renders
+        // unconditionally alongside whatever named route also matches, rather than exclusively as a fallback
+        // -- so the bare /admin root is redirected here, server-side, to a real named client route instead of
+        // relying on that.
+        if (path.isEmpty()) {
+            call.respondRedirect("/admin/files")
+            return@get
+        }
+
+        val classLoader = call.application.environment.classLoader
+        val resourcePath = "admin-static/$path"
         val resourceBytes = classLoader.getResourceAsStream(resourcePath)?.use { it.readBytes() }
 
         if (resourceBytes != null) {
