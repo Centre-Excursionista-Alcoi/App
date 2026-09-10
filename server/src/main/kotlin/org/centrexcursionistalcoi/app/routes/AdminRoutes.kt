@@ -16,12 +16,20 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlin.time.toKotlinInstant
 import kotlin.uuid.toKotlinUuid
+import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.AdminFileSummary
+import org.centrexcursionistalcoi.app.data.AdminLendingSummary
+import org.centrexcursionistalcoi.app.data.AdminMemorySummary
+import org.centrexcursionistalcoi.app.data.AdminUserDetail
 import org.centrexcursionistalcoi.app.data.AdminUserSummary
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.LendingEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.Files
+import org.centrexcursionistalcoi.app.database.table.Lendings
+import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
@@ -162,6 +170,70 @@ fun Route.adminApiRoutes() {
         }
 
         call.respond(PagedResponse(items, total, limit, offset))
+    }
+
+    // Full detail for one user: profile, plus their entire lending and memory history. There's no "confirmed
+    // by" actor to report -- Lendings.confirmed has no audit trail -- so this surfaces exactly what's tracked:
+    // who handed the material over at pickup (givenBy/givenAt), and each memory in full.
+    get("/users/{sub}") {
+        assertAdmin() ?: return@get
+
+        val sub = call.parameters["sub"]!!
+
+        val detail = Database {
+            val reference = UserReferenceEntity.find { UserReferences.sub eq sub }.firstOrNull()
+            if (reference == null) {
+                return@Database null
+            }
+
+            val lendings = LendingEntity.find { Lendings.userSub eq sub }.map { lending ->
+                AdminLendingSummary(
+                    id = lending.id.value.toKotlinUuid(),
+                    timestamp = lending.timestamp.toKotlinInstant(),
+                    from = lending.from.toKotlinLocalDate(),
+                    to = lending.to.toKotlinLocalDate(),
+                    confirmed = lending.confirmed,
+                    taken = lending.taken,
+                    givenByName = lending.givenBy?.value?.let { UserReferenceEntity.findById(it)?.fullName },
+                    givenAt = lending.givenAt?.toKotlinInstant(),
+                    returned = lending.returned,
+                    memorySubmitted = lending.memorySubmitted,
+                    memorySubmittedAt = lending.memorySubmittedAt?.toKotlinInstant(),
+                    memoryReviewed = lending.memoryReviewed,
+                    memoryId = lending.memory?.id?.value?.toKotlinUuid(),
+                    notes = lending.notes,
+                    items = lending.items.map { item ->
+                        val displayName = item.type.displayName
+                        item.variation?.let { "$displayName ($it)" } ?: displayName
+                    },
+                )
+            }
+
+            val memories = MemoryEntity.find { Memories.submittedBy eq sub }.map { memory ->
+                AdminMemorySummary(
+                    id = memory.id.value.toKotlinUuid(),
+                    text = memory.text,
+                    place = memory.place,
+                    externalUsers = memory.externalPeople,
+                    sport = memory.sport,
+                    from = memory.from,
+                    to = memory.to,
+                    submittedAt = memory.createdAt.toKotlinInstant(),
+                    lendingId = memory.lending?.id?.value?.toKotlinUuid(),
+                    pdfId = memory.pdf?.id?.value?.toKotlinUuid(),
+                    attachmentIds = memory.files.map { it.id.value.toKotlinUuid() },
+                )
+            }
+
+            AdminUserDetail(profile = reference.toData(), lendings = lendings, memories = memories)
+        }
+
+        if (detail == null) {
+            respondError(Error.UserNotFound())
+            return@get
+        }
+
+        call.respond(detail)
     }
 
     // Admin-forced password change: sets the user's password directly (mirroring /reset_password's logic)

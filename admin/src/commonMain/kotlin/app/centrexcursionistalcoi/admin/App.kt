@@ -42,7 +42,9 @@ import dev.kilua.toast.toast
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 import org.centrexcursionistalcoi.app.data.AdminFileSummary
+import org.centrexcursionistalcoi.app.data.AdminUserDetail
 import org.centrexcursionistalcoi.app.data.AdminUserSummary
 import org.centrexcursionistalcoi.app.request.ForcePasswordChangeRequest
 import org.centrexcursionistalcoi.app.response.PagedResponse
@@ -64,7 +66,26 @@ class App : Application() {
 private fun IComponent.AdminApp() {
     browserRouter(contextPath = "/admin") {
         route("files") { view { AdminLayout { FilesPage() } } }
-        route("users") { view { AdminLayout { UsersPage() } } }
+        route("users") {
+            view { AdminLayout { UsersPage() } }
+            string { view { sub -> AdminLayout { UserDetailPage(sub) } } }
+        }
+    }
+}
+
+private fun formatInstant(instant: Instant): String {
+    val dt = instant.toLocalDateTime(TimeZone.UTC)
+    val hour = dt.hour.toString().padStart(2, '0')
+    val minute = dt.minute.toString().padStart(2, '0')
+    return "${dt.date} $hour:$minute UTC"
+}
+
+@Composable
+private fun IComponent.StatusBadge(disabled: Boolean) {
+    if (disabled) {
+        span(className = "badge bg-danger") { +"Disabled" }
+    } else {
+        span(className = "badge bg-success") { +"Active" }
     }
 }
 
@@ -144,10 +165,7 @@ private fun IComponent.FilesPage() {
                     ColumnDefinition(
                         title = "Last modified",
                         formatterComponentFunction = { _, _, data ->
-                            val dt = data.lastModified.toLocalDateTime(TimeZone.UTC)
-                            val hour = dt.hour.toString().padStart(2, '0')
-                            val minute = dt.minute.toString().padStart(2, '0')
-                            div { +"${dt.date} $hour:$minute UTC" }
+                            div { +formatInstant(data.lastModified) }
                         }
                     ),
                     ColumnDefinition(
@@ -240,18 +258,20 @@ private fun IComponent.UsersPage() {
                     ColumnDefinition(
                         title = "Status",
                         field = "isDisabled",
-                        formatterComponentFunction = { _, _, data ->
-                            if (data.isDisabled) {
-                                span(className = "badge bg-danger") { +"Disabled" }
-                            } else {
-                                span(className = "badge bg-success") { +"Active" }
-                            }
-                        }
+                        formatterComponentFunction = { _, _, data -> StatusBadge(data.isDisabled) }
                     ),
                     ColumnDefinition(
                         title = "Actions",
                         formatterComponentFunction = { _, _, data ->
                             div("d-flex gap-1") {
+                                // Opens in a new tab -- a fresh page load, so it doesn't lose the current
+                                // search/pagination state of the list underneath it.
+                                a(
+                                    href = "/admin/users/${data.sub}",
+                                    label = "Details",
+                                    target = "_blank",
+                                    className = "btn btn-sm btn-outline-primary"
+                                )
                                 bsButton("Force password", style = ButtonStyle.BtnWarning, size = ButtonSize.BtnSm) {
                                     onClick {
                                         selectedUser = data
@@ -293,4 +313,125 @@ private fun IComponent.UsersPage() {
     }
 
     PaginationControls(page, offset) { offset = it }
+}
+
+@Composable
+private fun IComponent.UserDetailPage(sub: String) {
+    var detail by remember { mutableStateOf<AdminUserDetail?>(null) }
+    var loadFailed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(sub) {
+        detail = try {
+            restClient.call<AdminUserDetail>("/admin/api/users/$sub")
+        } catch (e: RemoteRequestException) {
+            loadFailed = true
+            toast("Failed to load user: ${e.message}", bgColor = BsBgColor.BgDanger)
+            null
+        }
+    }
+
+    val current = detail
+    if (current == null) {
+        div { +(if (loadFailed) "Could not load this user." else "Loading...") }
+        return
+    }
+
+    val profile = current.profile
+
+    div("mb-4") {
+        div("d-flex align-items-center gap-2 mb-2") {
+            div("h4 mb-0") { +profile.fullName }
+            StatusBadge(profile.isDisabled)
+        }
+        div { +"Email: ${profile.email}" }
+        div { +"Member #${profile.memberNumber}" }
+        div { +"Groups: ${profile.groups.joinToString(", ").ifEmpty { "(none)" }}" }
+
+        if (profile.departments.isNotEmpty()) {
+            div("mt-3") {
+                div("fw-bold") { +"Departments" }
+                profile.departments.forEach { dept ->
+                    val roles = dept.roles.joinToString(", ").ifEmpty { "(none)" }
+                    val confirmedLabel = if (dept.confirmed) "confirmed" else "pending"
+                    div { +"${dept.departmentId} — roles: $roles ($confirmedLabel)" }
+                }
+            }
+        }
+
+        profile.lendingUser?.let { lendingUser ->
+            div("mt-3") {
+                div("fw-bold") { +"Lending program" }
+                div { +"Phone: ${lendingUser.phoneNumber}" }
+                div { +"Sports: ${lendingUser.sports.joinToString(", ").ifEmpty { "(none)" }}" }
+            }
+        }
+
+        if (profile.insurances.isNotEmpty()) {
+            div("mt-3") {
+                div("fw-bold") { +"Insurances" }
+                profile.insurances.forEach { insurance ->
+                    div { +"${insurance.insuranceCompany} #${insurance.policyNumber} (${insurance.validFrom} to ${insurance.validTo})" }
+                }
+            }
+        }
+    }
+
+    div("mb-4") {
+        div("h5 mb-2") { +"Lendings (${current.lendings.size})" }
+        if (current.lendings.isEmpty()) {
+            div("text-muted") { +"No lendings." }
+        }
+        current.lendings.forEach { lending ->
+            div("border rounded p-3 mb-2") {
+                div("d-flex align-items-center gap-2 mb-2") {
+                    div("fw-bold") { +"${lending.from} → ${lending.to}" }
+                    if (lending.confirmed) {
+                        span(className = "badge bg-success") { +"Confirmed" }
+                    } else {
+                        span(className = "badge bg-secondary") { +"Not confirmed" }
+                    }
+                    if (lending.taken) span(className = "badge bg-info text-dark") { +"Taken" }
+                    if (lending.returned) span(className = "badge bg-success") { +"Returned" }
+                    if (lending.memorySubmitted) span(className = "badge bg-info text-dark") { +"Memory submitted" }
+                    if (lending.memoryReviewed) span(className = "badge bg-success") { +"Memory reviewed" }
+                }
+                div { +"Items: ${lending.items.joinToString(", ").ifEmpty { "(none)" }}" }
+                div {
+                    +if (lending.givenByName != null) {
+                        "Given by ${lending.givenByName}" + (lending.givenAt?.let { " at ${formatInstant(it)}" } ?: "")
+                    } else {
+                        "Not picked up yet"
+                    }
+                }
+                lending.notes?.let { notes -> div { +"Notes: $notes" } }
+            }
+        }
+    }
+
+    div {
+        div("h5 mb-2") { +"Memories (${current.memories.size})" }
+        if (current.memories.isEmpty()) {
+            div("text-muted") { +"No memories." }
+        }
+        current.memories.forEach { memory ->
+            div("border rounded p-3 mb-2") {
+                div("fw-bold") { +"${memory.from} → ${memory.to}" }
+                memory.place?.let { place -> div { +"Place: $place" } }
+                memory.sport?.let { sport -> div { +"Sport: $sport" } }
+                memory.externalUsers?.let { external -> div { +"External people: $external" } }
+                div("mt-2") { +memory.text }
+                div("mt-2 text-muted") { +"Submitted at ${formatInstant(memory.submittedAt)}" }
+                if (memory.pdfId != null || memory.attachmentIds.isNotEmpty()) {
+                    div("mt-2 d-flex gap-2") {
+                        memory.pdfId?.let { pdfId ->
+                            a(href = "/admin/api/files/$pdfId/content", label = "PDF", target = "_blank")
+                        }
+                        memory.attachmentIds.forEachIndexed { index, id ->
+                            a(href = "/admin/api/files/$id/content", label = "Attachment ${index + 1}", target = "_blank")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
