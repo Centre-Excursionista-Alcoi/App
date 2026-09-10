@@ -40,6 +40,8 @@ import dev.kilua.tabulator.tabulator
 import dev.kilua.theme.ThemeManager
 import dev.kilua.toast.toast
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.AdminFileSummary
 import org.centrexcursionistalcoi.app.data.AdminUserSummary
 import org.centrexcursionistalcoi.app.request.ForcePasswordChangeRequest
@@ -139,7 +141,15 @@ private fun IComponent.FilesPage() {
                     ColumnDefinition(title = "Name", field = "name"),
                     ColumnDefinition(title = "Type", field = "type"),
                     ColumnDefinition(title = "Size (bytes)", field = "sizeBytes", hozAlign = Align.Right),
-                    ColumnDefinition(title = "Last modified", field = "lastModified"),
+                    ColumnDefinition(
+                        title = "Last modified",
+                        formatterComponentFunction = { _, _, data ->
+                            val dt = data.lastModified.toLocalDateTime(TimeZone.UTC)
+                            val hour = dt.hour.toString().padStart(2, '0')
+                            val minute = dt.minute.toString().padStart(2, '0')
+                            div { +"${dt.date} $hour:$minute UTC" }
+                        }
+                    ),
                     ColumnDefinition(
                         title = "",
                         formatterComponentFunction = { _, _, data ->
