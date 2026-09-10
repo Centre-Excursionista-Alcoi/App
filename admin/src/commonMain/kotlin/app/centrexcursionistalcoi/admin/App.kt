@@ -24,6 +24,7 @@ import dev.kilua.html.a
 import dev.kilua.html.bsButton
 import dev.kilua.html.div
 import dev.kilua.html.navLink
+import dev.kilua.html.span
 import dev.kilua.modal.confirm
 import dev.kilua.modal.modalRef
 import dev.kilua.rest.RemoteRequestException
@@ -226,7 +227,17 @@ private fun IComponent.UsersPage() {
                     ColumnDefinition(title = "#", field = "memberNumber"),
                     ColumnDefinition(title = "Name", field = "fullName"),
                     ColumnDefinition(title = "Email", field = "email"),
-                    ColumnDefinition(title = "Disabled", field = "isDisabled"),
+                    ColumnDefinition(
+                        title = "Status",
+                        field = "isDisabled",
+                        formatterComponentFunction = { _, _, data ->
+                            if (data.isDisabled) {
+                                span(className = "badge bg-danger") { +"Disabled" }
+                            } else {
+                                span(className = "badge bg-success") { +"Active" }
+                            }
+                        }
+                    ),
                     ColumnDefinition(
                         title = "Actions",
                         formatterComponentFunction = { _, _, data ->
