@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.contentType
@@ -72,6 +73,35 @@ import org.slf4j.LoggerFactory
 val passwordRequestExpiration = 15.minutes
 
 private val logger = LoggerFactory.getLogger("Auth")
+
+/**
+ * Creates a [RecoverPasswordRequests] row for [userReference] and emails them the reset link. Shared by the
+ * self-service `/lost_password` route and the admin-triggered "send recovery email" action, which both need
+ * the exact same request-creation + email-dispatch behavior.
+ */
+suspend fun sendPasswordRecoveryEmail(call: ApplicationCall, userReference: UserReferenceEntity, redirectTo: String? = null) {
+    val request = Database {
+        RecoverPasswordRequests.insert {
+            it[this.id] = generateRandomString(128)
+            it[this.user] = userReference.id
+            it[this.redirectTo] = redirectTo
+        }
+    }
+
+    val locale = call.request.locale()
+
+    Email.sendTemplate(
+        to = listOf(
+            MailerSendEmail(userReference.email, userReference.fullName)
+        ),
+        template = EmailTemplate.LostPassword,
+        locale = locale,
+        args = mapOf(
+            "userName" to userReference.fullName,
+            "resetLink" to "${call.request.origin.scheme}://${call.request.host()}:${call.request.port()}/reset_password?request_id=${request[RecoverPasswordRequests.id]}",
+        ),
+    )
+}
 
 /**
  * Attempts to log in a user with the given email and password.
@@ -193,28 +223,7 @@ fun Route.configureAuthRoutes() {
             return@post call.respondError(Error.UserNotRegistered())
         }
 
-        // Create a new request
-        val request = Database {
-            RecoverPasswordRequests.insert {
-                it[this.id] = generateRandomString(128)
-                it[this.user] = userReference.id
-                it[this.redirectTo] = redirectTo
-            }
-        }
-
-        val locale = call.request.locale()
-
-        Email.sendTemplate(
-            to = listOf(
-                MailerSendEmail(email, userReference.fullName)
-            ),
-            template = EmailTemplate.LostPassword,
-            locale = locale,
-            args = mapOf(
-                "userName" to userReference.fullName,
-                "resetLink" to "${call.request.origin.scheme}://${call.request.host()}:${call.request.port()}/reset_password?request_id=${request[RecoverPasswordRequests.id]}",
-            ),
-        )
+        sendPasswordRecoveryEmail(call, userReference, redirectTo)
 
         call.respond(HttpStatusCode.Accepted)
     }

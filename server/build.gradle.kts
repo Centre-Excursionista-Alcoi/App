@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
+import org.gradle.api.tasks.Copy
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -136,6 +137,35 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.bundles.testcontainers)
+}
+
+// Copies the built admin web panel (Kilua wasmJs bundle, see :admin) into this module's resources, under
+// "admin-static/", so it's embedded in the jar and served by AdminRoutes.kt via the classpath (no runtime
+// filesystem dependency on :admin's own build directory). `from(...)` a task/task-provider (rather than a
+// hardcoded path into :admin/build/...) pulls whatever that task declares as its outputs and wires the task
+// dependency automatically, so this doesn't need to track Kotlin/JS's own output-layout conventions.
+//
+// This does mean `:server:compileTestKotlin`/`test`/`check` now also require a working Node/Yarn toolchain
+// (needed to build :admin's wasmJs bundle) -- unavoidable in this repo regardless of where this is wired in,
+// since the Sentry plugin already makes `compileTestKotlin` depend on `jar` even without this change.
+//
+// Guarded on :admin actually being part of the build: the Dockerfile's dependency-cache stage builds a
+// deliberately slimmed-down project (no composeApp/android, a stub :shared with no wasmJs target) to warm the
+// Gradle cache before the real source is copied in -- :admin isn't included there either, and `project(":admin")`
+// would otherwise fail outright at configuration time.
+if (findProject(":admin") != null) {
+    val copyAdminStatic = tasks.register<Copy>("copyAdminStatic") {
+        from(project(":admin").tasks.named("wasmJsBrowserDistribution"))
+        into(layout.buildDirectory.dir("generated/adminStatic/admin-static"))
+    }
+
+    sourceSets.main {
+        resources.srcDir(layout.buildDirectory.dir("generated/adminStatic"))
+    }
+
+    tasks.named("processResources") {
+        dependsOn(copyAdminStatic)
+    }
 }
 
 fun Manifest.configureAppManifest() {

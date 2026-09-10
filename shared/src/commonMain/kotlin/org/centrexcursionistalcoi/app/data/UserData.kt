@@ -13,7 +13,7 @@ data class UserData(
     val email: String,
     val groups: List<String>,
     val departments: List<DepartmentMemberInfo>,
-    val lendingUser: LendingUser?,
+    val lendingUser: LendingUser? = null,
     val insurances: List<UserInsurance>,
     val isDisabled: Boolean,
 ): Entity<String>, SubReferencedFileContainer {

@@ -29,6 +29,7 @@ firebase-admin = "9.10.0"
 gms = "4.5.0"
 h2 = "2.5.250"
 jakarta-mail = "2.0.2"
+kilua = "0.0.36-RC"
 km-logging = "2.1.2"
 kmm-notifier = "2.0.1"
 kmm-permission = "0.15.0"
@@ -114,6 +115,11 @@ filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose
 firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 jakarta-mail = { module = "com.sun.mail:jakarta.mail", version.ref = "jakarta-mail" }
+kilua = { module = "dev.kilua:kilua", version.ref = "kilua" }
+kilua-bootstrap = { module = "dev.kilua:kilua-bootstrap", version.ref = "kilua" }
+kilua-rest = { module = "dev.kilua:kilua-rest", version.ref = "kilua" }
+kilua-routing = { module = "dev.kilua:kilua-routing", version.ref = "kilua" }
+kilua-tabulator = { module = "dev.kilua:kilua-tabulator", version.ref = "kilua" }
 kmm-notifier-core = { module = "io.github.mirzemehdi:kmpnotifier-core", version.ref = "kmm-notifier" }
 kmm-notifier-firebase = { module = "io.github.mirzemehdi:kmpnotifier-push-firebase", version.ref = "kmm-notifier" }
 kmm-permission = { module = "tech.kotlinlang:permission", version.ref = "kmm-permission" }
@@ -195,6 +201,7 @@ buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig"
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "gms" }
+kilua = { id = "dev.kilua", version.ref = "kilua" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

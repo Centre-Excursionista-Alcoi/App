@@ -32,9 +32,13 @@ RUN echo '        }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '    }' >> /home/gradle/app/shared/build.gradle.kts
 RUN echo '} ' >> /home/gradle/app/shared/build.gradle.kts
 
-# Since we are not copying the composeApp or android source folders, we have to remove it from settings.gradle.kts
+# Since we are not copying the composeApp, android or admin source folders, we have to remove them from
+# settings.gradle.kts. :admin (a Kilua/Kotlin-Wasm web app :server embeds at build time -- see copyAdminStatic
+# in server/build.gradle.kts) is excluded here too since the stub :shared above has no wasmJs target for it to
+# depend on; server/build.gradle.kts guards that wiring on :admin actually being present in the build.
 RUN sed -i '/^include(":composeApp")$/d' /home/gradle/app/settings.gradle.kts
 RUN sed -i '/^include(":android")$/d' /home/gradle/app/settings.gradle.kts
+RUN sed -i '/^include(":admin")$/d' /home/gradle/app/settings.gradle.kts
 
 # Create a dummy version.properties file
 RUN echo 'VERSION_NAME=0.0.0' >> /home/gradle/app/version.properties
