@@ -11,8 +11,6 @@ import io.ktor.server.request.port
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondRedirect
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -229,7 +227,12 @@ fun Route.configureAuthRoutes() {
 
         suspend fun respondError(error: Error) {
             if (webUi) {
-                call.respondRedirect("/reset_password?request_id=$requestId&error=${error.code}")
+                // Keep validation in the current browser page: redirects to this host can be
+                // intercepted as Android App Links and reopen the recovery flow.
+                call.respondTemplate(
+                    WebTemplate.LostPassword,
+                    mapOf("requestId" to requestId, "error" to passwordResetErrorMessage(error.code)),
+                )
             } else {
                 call.respondError(error)
             }
@@ -287,7 +290,7 @@ fun Route.configureAuthRoutes() {
 
         // Success, respond accordingly
         if (webUi) {
-            call.respondText("OK")
+            call.respondTemplate(WebTemplate.LostPassword, mapOf("success" to "true"))
         } else {
             call.respond(HttpStatusCode.OK)
         }
@@ -298,13 +301,7 @@ fun Route.configureAuthRoutes() {
         val errorCode = call.parameters["error"]?.trim()?.toIntOrNull()
         val success = call.parameters["success"]?.trim()?.toBoolean() ?: false
 
-        val error = when (errorCode) {
-            ERROR_MISSING_ARGUMENT -> "Missing arguments."
-            ERROR_PASSWORD_NOT_SAFE_ENOUGH -> "The provided password is not safe enough."
-            ERROR_INVALID_ARGUMENT -> "The given request id is not valid."
-            ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> "The password reset request has expired."
-            else -> null
-        }
+        val error = passwordResetErrorMessage(errorCode)
 
         call.respondTemplate(
             WebTemplate.LostPassword,
@@ -386,4 +383,12 @@ fun Route.configureAuthRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
+}
+
+private fun passwordResetErrorMessage(errorCode: Int?): String? = when (errorCode) {
+    ERROR_MISSING_ARGUMENT -> "Missing arguments."
+    ERROR_PASSWORD_NOT_SAFE_ENOUGH -> "The provided password is not safe enough."
+    ERROR_INVALID_ARGUMENT -> "The given request id is not valid."
+    ERROR_PASSWORD_RESET_REQUEST_EXPIRED -> "The password reset request has expired."
+    else -> null
 }
