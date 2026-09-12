@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
@@ -29,6 +30,14 @@ private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()
     }
     install(ContentNegotiation) {
         json(json)
+    }
+    install(HttpRedirect) {
+        // Ktor only follows redirects for GET/HEAD by default. Our own server infrastructure has
+        // 301-redirected whole domains before (e.g. #608's migration off server.cea.arnaumora.com),
+        // and a client left pointing at a retired domain got a raw redirect response back for any
+        // non-GET call (e.g. FCMTokenRemote.registerNewToken's POST), which it then failed to parse
+        // as JSON (see Sentry APP-ANDROID-2E). Follow redirects for every method so that keeps working.
+        checkHttpMethod = false
     }
     configureLogging()
 }
