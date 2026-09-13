@@ -30,22 +30,23 @@ abstract class WebTemplate(name: String): Template("web", name) {
         </head>
         <body>
         """.trimIndent() +
-        if (args["success"] == "true") {
+        (if (args["success"] == "true") {
             """
             <p>${t("success")}</p>
             """.trimIndent()
         } else {
             """
-            <form method="POST" action="reset_password">
+            <form method="POST" action="/reset_password">
                 <input type="hidden" name="request_id" value="${args["requestId"] ?: ""}"/>
                 <input type="hidden" name="webui" value="true"/>
-                <input type="text" id="password" name="password" />
+                <input type="password" id="password" name="password" autocomplete="new-password" required minlength="8" aria-describedby="password-requirements password-error" />
                 <label for="password">${t("message")}</label>
-                <p style="color: red">${args["error"] ?: ""}</p>
+                <p id="password-requirements">${t("requirements")}</p>
+                <p id="password-error" role="alert" style="color: red">${args["error"] ?: ""}</p>
                 <button type="submit">${t("submit")}</button>
             </form>
             """.trimIndent()
-        } +
+        }) +
         """
         </body>
         </html>
