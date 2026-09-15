@@ -66,7 +66,7 @@ sentry-multiplatform = "0.27.0"
 # The io.sentry.jvm.gradle plugin auto-installs io.sentry:sentry at whatever version it resolves to
 # (currently 8.55.0). Pinned explicitly here so sentry-kotlin-extensions can't drift from it -- a
 # mismatch between Sentry SDK module versions crashes the mixed-versions check at init.
-sentry-jvmSdk = "8.55.0"
+sentry-jvmSdk = "8.56.0"
 sqlite = "3.53.4.0"
 telegram-bot = "10.0.0"
 # {"message":"client version 1.32 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version"}
