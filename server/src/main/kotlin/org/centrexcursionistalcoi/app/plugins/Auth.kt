@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.sessions.sessions
@@ -29,6 +30,8 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.AuthEventType
+import org.centrexcursionistalcoi.app.database.table.AuthEvents
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
@@ -96,6 +99,34 @@ fun login(email: String, password: CharArray): Error? {
     return null
 }
 
+/**
+ * Persists an [AuthEvents] row for [type] -- a login/registration/password-recovery request, successful or not --
+ * so that a support report ("I'm not able to register") can be investigated after the fact by querying that table
+ * directly (there's no API endpoint exposing it).
+ * @param error The failure, or `null` if the request succeeded.
+ */
+private fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, error: Error?) {
+    val remoteHost = call.request.origin.remoteHost
+    val userAgent = call.request.headers[HttpHeaders.UserAgent]
+    Database {
+        AuthEvents.insert {
+            it[this.type] = type
+            it[this.email] = email?.uppercase()
+            it[this.success] = error == null
+            it[this.errorCode] = error?.code
+            it[this.errorDescription] = error?.description
+            it[this.ipAddress] = remoteHost
+            it[this.userAgent] = userAgent
+        }
+    }
+}
+
+/** Records [error] as an [AuthEvents] row for [type], then responds it. */
+private suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: String?, error: Error) {
+    recordAuthEvent(type, email, error)
+    respondError(error)
+}
+
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     post("/login") {
@@ -115,7 +146,7 @@ fun Route.configureAuthRoutes() {
                 val credentials = call.request.basicAuthenticationCredentials()
                 if (credentials == null) {
                     call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
-                    return@post call.respondError(Error.IncorrectPasswordOrEmail())
+                    return@post respondAuthError(AuthEventType.LOGIN, null, Error.IncorrectPasswordOrEmail())
                 }
                 val email = credentials.name.trim().uppercase()
                 val password = credentials.password.trim().toCharArray()
@@ -123,15 +154,16 @@ fun Route.configureAuthRoutes() {
             }
         }
 
-        if (email == null) return@post call.respondError(Error.IncorrectPasswordOrEmail())
-        if (password == null) return@post call.respondError(Error.IncorrectPasswordOrEmail())
+        if (email == null) return@post respondAuthError(AuthEventType.LOGIN, null, Error.IncorrectPasswordOrEmail())
+        if (password == null) return@post respondAuthError(AuthEventType.LOGIN, email, Error.IncorrectPasswordOrEmail())
 
         val error = login(email, password)
         if (error != null) {
-            return@post call.respondError(error)
+            return@post respondAuthError(AuthEventType.LOGIN, email, error)
         }
 
         // Success, set session and respond accordingly
+        recordAuthEvent(AuthEventType.LOGIN, email, null)
         val session = Database { UserSession.fromEmail(email) }
         call.sessions.set(session)
         call.respond(HttpStatusCode.OK)
@@ -144,18 +176,18 @@ fun Route.configureAuthRoutes() {
         val email = parameters["email"]?.trim()?.uppercase()
         val password = parameters["password"]?.trim()?.toCharArray()
 
-        if (email == null) return@post call.respondError(Error.MissingArgument("email"))
-        if (password == null) return@post call.respondError(Error.MissingArgument("password"))
+        if (email == null) return@post respondAuthError(AuthEventType.REGISTER, null, Error.MissingArgument("email"))
+        if (password == null) return@post respondAuthError(AuthEventType.REGISTER, email, Error.MissingArgument("password"))
 
-        if (!EmailValidation.validate(email)) return@post call.respondError(Error.InvalidArgument("email"))
+        if (!EmailValidation.validate(email)) return@post respondAuthError(AuthEventType.REGISTER, email, Error.InvalidArgument("email"))
 
         // validate password
-        if (!Passwords.isSafe(password)) return@post call.respondError(Error.PasswordNotSafeEnough())
+        if (!Passwords.isSafe(password)) return@post respondAuthError(AuthEventType.REGISTER, email, Error.PasswordNotSafeEnough())
 
         // check that the user doesn't exist
         val existingReference = Database { UserReferenceEntity.findByEmail(email) }
         if (existingReference != null) {
-            return@post call.respondError(Error.UserAlreadyRegistered())
+            return@post respondAuthError(AuthEventType.REGISTER, email, Error.UserAlreadyRegistered())
         }
 
         // check that the user is a valid an active member
@@ -163,10 +195,10 @@ fun Route.configureAuthRoutes() {
             MemberEntity.find { Members.email.upperCase() eq email }.limit(1).firstOrNull()
         }
         if (memberReference == null) {
-            return@post call.respondError(Error.EmailNotFound())
+            return@post respondAuthError(AuthEventType.REGISTER, email, Error.EmailNotFound())
         }
         if (memberReference.status != Member.Status.ACTIVE) {
-            return@post call.respondError(Error.MemberIsNotActive())
+            return@post respondAuthError(AuthEventType.REGISTER, email, Error.MemberIsNotActive())
         }
 
         // Update the user's password
@@ -174,6 +206,7 @@ fun Route.configureAuthRoutes() {
         memberReference.insertUser(hashedPassword)
 
         // Success, respond accordingly
+        recordAuthEvent(AuthEventType.REGISTER, email, null)
         call.respond(HttpStatusCode.OK)
     }
 
@@ -181,14 +214,15 @@ fun Route.configureAuthRoutes() {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
-        val email = parameters["email"]?.trim()?.uppercase() ?: return@post call.respondError(Error.MissingArgument("email"))
+        val email = parameters["email"]?.trim()?.uppercase()
+            ?: return@post respondAuthError(AuthEventType.LOST_PASSWORD, null, Error.MissingArgument("email"))
 
         val redirectTo = call.parameters["redirect_to"]?.trim()
 
         // check that the user exists
         val userReference = Database { UserReferenceEntity.findByEmail(email) }
         if (userReference == null) {
-            return@post call.respondError(Error.UserNotRegistered())
+            return@post respondAuthError(AuthEventType.LOST_PASSWORD, email, Error.UserNotRegistered())
         }
 
         // Create a new request
@@ -214,6 +248,7 @@ fun Route.configureAuthRoutes() {
             ),
         )
 
+        recordAuthEvent(AuthEventType.LOST_PASSWORD, email, null)
         call.respond(HttpStatusCode.Accepted)
     }
 
@@ -225,7 +260,12 @@ fun Route.configureAuthRoutes() {
         val requestId = parameters["request_id"]?.trim()
         val newPassword = parameters["password"]?.trim()?.toCharArray()
 
+        // Filled in once the request/user has been resolved below, so failures past that point are recorded
+        // against the right email -- earlier failures (bad/missing request_id or password) have none to attach.
+        var resolvedEmail: String? = null
+
         suspend fun respondError(error: Error) {
+            recordAuthEvent(AuthEventType.RESET_PASSWORD, resolvedEmail, error)
             if (webUi) {
                 // Keep validation in the current browser page: redirects to this host can be
                 // intercepted as Android App Links and reopen the recovery flow.
@@ -262,6 +302,8 @@ fun Route.configureAuthRoutes() {
             UserReferenceEntity.findById(userId)
         } ?: return@post respondError(Error.InvalidArgument("request_id"))
 
+        resolvedEmail = userReference.email
+
         // update the user's password
         val hashedPassword = Passwords.hash(newPassword)
         Database {
@@ -287,6 +329,8 @@ fun Route.configureAuthRoutes() {
                 ),
             )
         }
+
+        recordAuthEvent(AuthEventType.RESET_PASSWORD, userReference.email, null)
 
         // Success, respond accordingly
         if (webUi) {

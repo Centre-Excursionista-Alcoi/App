@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.SessionsKeys
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
+import org.centrexcursionistalcoi.app.plugins.configureForwardedHeaders
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
@@ -120,6 +121,7 @@ fun main() {
 }
 
 fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = false) {
+    configureForwardedHeaders()
     configureSentryTracing()
     configureContentNegotiation()
     configureSSE()
