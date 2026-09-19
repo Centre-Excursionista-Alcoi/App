@@ -14,11 +14,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroid)
     alias(libs.plugins.kotlinxSerialization)
-    // TODO: re-enable once Koin supports Kotlin 2.4.20+ -- crashes with an IrGenerationExtensionException
-    //  (IrUtilsKt.getValueArgument signature changed). Manual replacement for what this plugin generated
-    //  lives in di/ManualModules.kt. See https://github.com/Centre-Excursionista-Alcoi/App/issues/590
-    //  and https://github.com/InsertKoinIO/koin-compiler-plugin/issues/89
-    // alias(libs.plugins.koinCompilerPlugin)
+    alias(libs.plugins.koinCompilerPlugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
 }
@@ -294,13 +290,13 @@ tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMet
     dependsOn("kspCommonMainKotlinMetadata")
 }
 
-// TODO: re-enable alongside the `koinCompilerPlugin` alias above (see issue link there).
-// koinCompiler {
-//     // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
-//     // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
-//     // missing even though they resolve correctly at runtime. Disable it until upstream fixes the detector.
-//     compileSafety = false
-// }
+koinCompiler {
+    // The plugin's compile-time graph verification (auto-enabled once it detects startKoin/@KoinApplication)
+    // misfires on this project as a false positive, reporting @Singleton/@ComponentScan-provided classes as
+    // missing even though they resolve correctly at runtime. Disabled until upstream fixes the detector;
+    // TestKoinModules covers the same ground at runtime instead.
+    compileSafety = false
+}
 
 room3 {
     schemaDirectory("$projectDir/schemas")

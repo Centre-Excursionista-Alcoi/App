@@ -5,8 +5,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
- * Provides the platform-specific filesystem paths the app needs. Platform `single`s are bound in
- * each platform's `platformModule()` (in `ManualModules.<platform>.kt`).
+ * Provides the platform-specific filesystem paths the app needs. Each platform's implementation
+ * (`AndroidPathsProvider`/`IosPathsProvider`/`JvmPathsProvider`, in `PathsProvider.<platform>.kt`) is
+ * `@Singleton`-annotated and bound to this interface automatically by `CoreScanModule`'s `@ComponentScan`.
  */
 interface PathsProvider {
     /** The path where all app data should be stored at. */
