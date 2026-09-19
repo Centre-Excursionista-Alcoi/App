@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.contentNegotiation)
     implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.forwardedHeader)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.sessions)
     implementation(libs.ktor.server.sse)
