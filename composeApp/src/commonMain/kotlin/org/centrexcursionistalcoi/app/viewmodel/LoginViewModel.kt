@@ -3,11 +3,8 @@ package org.centrexcursionistalcoi.app.viewmodel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
@@ -31,13 +28,15 @@ class LoginViewModel(
     // (AccountAuthenticator.addAccount, Android only) can land here regardless -- surface it so the user can
     // choose to forget the old one instead of silently ending up with it replaced on a fresh login.
     //
-    // Derived straight from CredentialsStore.current rather than a one-shot coroutine launched in init: it's
-    // a live StateFlow already (backed by an AccountManager listener on Android), so this just maps/holds it
-    // instead of polling it once, and forgetExistingAccount() below doesn't need to update this manually --
-    // clearing the store updates `current`, which flows through here on its own.
-    val existingAccountEmail: StateFlow<String?> = credentialsStore.current
-        .map { it?.email }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, credentialsStore.current.value?.email)
+    // A one-time snapshot, not a live mirror of CredentialsStore.current: this warns about an account that was
+    // *already* saved when this screen was reached, not one saved as a side effect of using this same screen.
+    // login()/register() below call authBackend.login(), which saves the new credentials as soon as the server
+    // accepts them, well before afterLogin() navigates away -- if this stayed live, that save flipped
+    // existingAccountEmail non-null while still on this screen, popping the "you already have an account saved"
+    // dialog for the account the user had just finished logging into. LoginScreen's own
+    // dismissedExistingAccountWarning flag (not this flow) already handles dismissing the dialog when the user
+    // taps either button, so losing liveness here costs nothing.
+    val existingAccountEmail: StateFlow<String?> = MutableStateFlow(credentialsStore.current.value?.email).asStateFlow()
 
     fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io) {
         authBackend.forgetLocalAccount()
