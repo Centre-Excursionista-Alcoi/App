@@ -136,44 +136,36 @@ adb reverse --remove tcp:8080
 
 ## 3. Koin dependency injection — current state
 
-**The DI setup is mid-migration and easy to misread from old comments/memory.** The intended, "real" setup
-uses the Koin Compiler Plugin with annotations (`@Singleton`, `@KoinViewModel`, `@InjectedParam`,
-`@Module @ComponentScan(...)` in `di/AnnotatedModules.kt`) — but that plugin is **currently disabled**:
+DI is annotation-driven via the Koin Compiler Plugin: `@Singleton`, `@KoinViewModel`, `@InjectedParam`,
+`@Named`, and the `@Module @ComponentScan(...)` scan modules in `di/AnnotatedModules.kt`. `di/Koin.kt`'s
+`initKoin()` wires those scan modules together with `databaseModules()` (manual DSL for `AppDatabase`/its DAOs,
+since platform-specific construction doesn't fit component scanning).
 
-```kotlin
-// composeApp/build.gradle.kts
-// TODO: re-enable once Koin supports Kotlin 2.4.20+ -- crashes with an IrGenerationExtensionException
-//  (IrUtilsKt.getValueArgument signature changed). Manual replacement for what this plugin generated
-//  lives in di/ManualModules.kt. See https://github.com/Centre-Excursionista-Alcoi/App/issues/590
-// alias(libs.plugins.koinCompilerPlugin)
-```
+**When adding a new injectable class: just annotate it** (`@Singleton` for a class resolved by its own or a
+single declared supertype; `@KoinViewModel` for a ViewModel; `@InjectedParam` on a constructor param supplied
+at resolution time, not by Koin). A class with exactly one declared supertype auto-binds to that supertype too
+— no need for an explicit `binds = [...]`, e.g. `AndroidPathsProvider : PathsProvider` resolves as both types
+with a bare `@Singleton`.
 
-**What's actually active right now is `di/ManualModules.kt`** — a hand-written `module { }` DSL that mirrors
-exactly what the compiler plugin would have generated from the (still-present, inert) `@Singleton`/
-`@KoinViewModel`/`@Named`/`@InjectedParam` annotations left on the classes. `di/AnnotatedModules.kt` is a
-disabled drop-in target: once issue #590 is resolved, swap `manualModule` back for `AnnotatedModules`'s scan
-modules in `di/Koin.kt`'s `initKoin()` and delete `ManualModules.kt`.
+This was disabled for a while (issue #590 — the plugin, then pinned at 1.1.0, crashed on the Kotlin 2.4.20 bump
+needed for the SwiftPM migration) in favor of hand-written `di/ManualModules.kt`, replaced by `1.2.1`'s
+Kotlin 2.4.20 support. If you're reading old comments/memory referencing `ManualModules.kt` or "edit the
+manual module by hand", they're stale — that file no longer exists.
 
-**When adding a new injectable class right now: edit `ManualModules.kt` by hand.** The `@Singleton`/
-`@KoinViewModel` annotations on the class itself are currently decorative — they do nothing until the plugin
-is re-enabled, but keep adding them anyway (so `ManualModules.kt` stays a faithful mirror and the eventual
-re-enable is a pure deletion).
-
-**The one gotcha that will silently break things:** Koin's `single(qualifier) { ConcreteJob(...) }` DSL infers
-the registered type from the lambda's return type. If code elsewhere resolves the definition by a *different*
-(usually base/interface) type — e.g. `BackgroundJobWorker` does
-`inject(BackgroundJob::class.java, named(jobName))` while the job is registered as its concrete subclass —
-the lookup throws `NoDefinitionFoundException` **at runtime only**, inside a WorkManager worker whose
-exceptions don't surface anywhere visible. Compile success and even a naive Koin smoke test prove nothing
-here. Fix: append `bind BaseType::class` to the registration. This exact bug shipped and silently broke *all*
-background sync app-wide before being caught (see `git log` around `ManualModules.kt`/`TestKoinModules.kt`
-for the fix and the regression test).
+`compileSafety` is off in the `koinCompiler { }` block (`composeApp/build.gradle.kts`) — the plugin's own
+compile-time graph verification currently false-positives on this project, reporting real, resolvable
+`@Singleton`/`@ComponentScan` classes as missing. This means **a missing or wrong binding fails at runtime
+only**, e.g. a `@Named`-qualified job resolved elsewhere by a *different* (base) type than it was registered
+under throws `NoDefinitionFoundException` inside whatever calls `get()`/`inject()` for it — for a WorkManager
+job specifically, silently, since worker exceptions don't surface anywhere visible. Compile success alone
+proves nothing here.
 
 **`composeApp/src/jvmTest/.../di/TestKoinModules.kt`** is the regression test for the whole graph — it calls
-`startKoin` for real and resolves every registered type. When you add a lookup pattern that differs from how
-something is *registered* (like the base-type lookup above), add an explicit assertion for that exact lookup
-shape, not just the registration shape — a passing test that only re-derives how things were registered
-proves nothing new.
+`startKoin` for real (scan modules, not manual DSL) and resolves every registered type. When you add a lookup
+pattern that differs from how something is *registered* (e.g. resolving a `BackgroundJob` by its base type +
+qualifier, the way the real `BackgroundJobWorker` does, rather than by its concrete type), add an explicit
+assertion for that exact lookup shape, not just the registration shape — a passing test that only re-derives
+how things were registered proves nothing new.
 
 ## 4. Driving the Android app from the CLI (adb / uiautomator)
 

@@ -3,11 +3,13 @@ package org.centrexcursionistalcoi.app.di
 import io.github.vinceglb.filekit.utils.toPath
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.io.files.Path
+import org.koin.core.annotation.Singleton
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 
+@Singleton
 class IosPathsProvider : PathsProvider {
     override val systemDataPath: Path
         get() = getAppDataDirectory().toPath()

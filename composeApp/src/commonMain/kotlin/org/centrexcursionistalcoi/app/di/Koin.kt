@@ -6,10 +6,8 @@ import org.koin.core.module.Module
 
 /**
  * Starts Koin with [databaseModules] (manual DSL for [org.centrexcursionistalcoi.app.database.AppDatabase] and its
- * DAOs, since platform-specific construction doesn't fit component scanning) plus [manualModule] and
- * [platformModule] (hand-written replacements for the annotation-driven modules that `AnnotatedModules.kt` used to
- * provide -- see the TODO on `koinCompilerPlugin` in `composeApp/build.gradle.kts` and
- * https://github.com/Centre-Excursionista-Alcoi/App/issues/590), plus any additional [extraModules].
+ * DAOs, since platform-specific construction doesn't fit component scanning) plus the `@ComponentScan`-driven
+ * modules in `AnnotatedModules.kt`, plus any additional [extraModules].
  *
  * [config] runs before the modules are registered, so platforms that need to configure the [KoinApplication] itself
  * (e.g. Android's `androidContext(...)`, required by [org.centrexcursionistalcoi.app.database.AppDatabase]'s
@@ -22,8 +20,14 @@ fun initKoin(extraModules: List<Module> = emptyList(), config: KoinApplication.(
         config()
         modules(
             databaseModules() +
-                manualModule +
-                platformModule() +
+                CoreScanModule().module() +
+                PlatformScanModule().module() +
+                RepositoryScanModule().module() +
+                RemoteRepositoryScanModule().module() +
+                ServiceScanModule().module() +
+                ViewModelScanModule().module() +
+                SyncScanModule().module() +
+                PushScanModule().module() +
                 extraModules,
         )
     }
