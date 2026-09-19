@@ -7,20 +7,22 @@ import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.QrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
 import io.github.vinceglb.filekit.utils.div
-import io.ktor.http.ContentType
-import io.ktor.http.fileExtensions
+import io.ktor.http.*
+import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
-import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 import org.koin.core.annotation.Singleton
 import java.io.File
 
 @Singleton
-actual class PlatformDragAndDrop(private val context: Context): PlatformProvider {
+actual class PlatformDragAndDrop(
+    private val context: Context,
+    private val pathsProvider: PathsProvider,
+) : PlatformProvider {
     actual override val isSupported: Boolean = true
 
     actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
         // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
-        val filePath = SystemDataPath / path
+        val filePath = pathsProvider.systemDataPath / path
         val file = File(filePath.toString())
         val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 
@@ -36,7 +38,7 @@ actual class PlatformDragAndDrop(private val context: Context): PlatformProvider
     ): DragAndDropTransferData {
         val extension = contentType.fileExtensions().first()
         val name = value.hashCode()
-        val filePath = SystemDataPath / "qr" / "$name.$extension"
+        val filePath = pathsProvider.systemDataPath / "qr" / "$name.$extension"
         val file = File(filePath.toString()).apply {
             parentFile?.mkdirs()
             if (!exists()) {

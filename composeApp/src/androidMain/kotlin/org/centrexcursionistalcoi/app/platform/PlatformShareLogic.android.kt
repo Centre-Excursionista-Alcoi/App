@@ -6,20 +6,23 @@ import android.content.Intent
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.*
+import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
-import org.centrexcursionistalcoi.app.storage.fs.SystemDataPath
 import org.koin.core.annotation.Singleton
 import java.io.File
 
 @Singleton
-actual class PlatformShareLogic(private val context: Context) : PlatformProvider {
+actual class PlatformShareLogic(
+    private val context: Context,
+    private val pathsProvider: PathsProvider,
+) : PlatformProvider {
     private val log = logging()
 
     actual override val isSupported: Boolean = true
 
     actual fun share(path: String, contentType: ContentType) {
         // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
-        val filePath = SystemDataPath / path
+        val filePath = pathsProvider.systemDataPath / path
         val file = File(filePath.toString())
         val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
 

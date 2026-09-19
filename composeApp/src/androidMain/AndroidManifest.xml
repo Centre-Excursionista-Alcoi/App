@@ -52,11 +52,6 @@
                     android:resource="@xml/provider_paths" />
         </provider>
 
-        <provider
-                android:name=".ContextProvider"
-                android:authorities="${applicationId}.AppInitProvider"
-                android:exported="false"/>
-
         <!-- Disable Default WorkManager initializer: handled by Koin -->
         <provider
                 android:name="androidx.startup.InitializationProvider"

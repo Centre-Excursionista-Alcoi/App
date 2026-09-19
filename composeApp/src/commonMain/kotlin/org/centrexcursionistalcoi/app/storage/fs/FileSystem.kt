@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.storage.fs
 
 import io.github.vinceglb.filekit.utils.div
-import io.ktor.util.cio.use
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.asByteWriteChannel
-import io.ktor.utils.io.copyTo
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
 import kotlinx.io.buffered
 import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.Path
@@ -13,14 +11,16 @@ import kotlinx.io.readByteArray
 import org.centrexcursionistalcoi.app.data.DOCUMENTS_PATH
 import org.centrexcursionistalcoi.app.data.FILES_PATH
 import org.centrexcursionistalcoi.app.data.IMAGES_PATH
+import org.centrexcursionistalcoi.app.di.globalPathsProvider
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.utils.copyTo
 
 object FileSystem {
     private val fs = SystemFileSystem
+    private val systemDataPath get() = globalPathsProvider.systemDataPath
 
     suspend fun write(path: String, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
-        val path = SystemDataPath / path
+        val path = systemDataPath / path
         path.parent?.let { fs.createDirectories(it) }
         fs.sink(path).use { sink ->
             sink.asByteWriteChannel().use {
@@ -31,13 +31,13 @@ object FileSystem {
     }
 
     fun read(path: String, progress: (ProgressNotifier)? = null): ByteArray {
-        return fs.source(SystemDataPath / path).use { source ->
+        return fs.source(systemDataPath / path).use { source ->
             source.buffered().readByteArray()
         }
     }
 
     fun exists(path: String, progress: (ProgressNotifier)? = null): Boolean {
-        return fs.exists(SystemDataPath / path)
+        return fs.exists(systemDataPath / path)
     }
 
     /**
@@ -67,9 +67,9 @@ object FileSystem {
     }
 
     fun deleteAll(): Int {
-        var count = deleteRecursively(SystemDataPath / DOCUMENTS_PATH, failOnNotFound = false)
-        count += deleteRecursively(SystemDataPath / IMAGES_PATH, failOnNotFound = false)
-        count += deleteRecursively(SystemDataPath / FILES_PATH, failOnNotFound = false)
+        var count = deleteRecursively(systemDataPath / DOCUMENTS_PATH, failOnNotFound = false)
+        count += deleteRecursively(systemDataPath / IMAGES_PATH, failOnNotFound = false)
+        count += deleteRecursively(systemDataPath / FILES_PATH, failOnNotFound = false)
         return count
     }
 }
