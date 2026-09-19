@@ -22,16 +22,11 @@ import org.koin.core.component.get
 class AppBase : Application(), KoinComponent {
     companion object {
         private val log = logging()
-        
-        var instance: AppBase? = null
-            private set
     }
 
     override fun onCreate() {
         super.onCreate()
         KmLogging.addLogger(PlatformLogger(FixedLogLevel(true)))
-
-        instance = this
 
         initializeSentry()
 
@@ -53,10 +48,5 @@ class AppBase : Application(), KoinComponent {
         }
 
         KMPNotifier.addPushListener(get<PushNotifierListener>())
-    }
-
-    override fun onTerminate() {
-        super.onTerminate()
-        instance = null
     }
 }
