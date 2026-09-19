@@ -23,11 +23,11 @@ class TestFileSystem {
     }
 
     /**
-     * Regression test for #646: a plain deletion failure (kotlinx-io's SystemFileSystem throws a bare
-     * `IOException("Deletion failed")` whenever `File.delete()` returns `false` for an existing path -- e.g. a
-     * directory a concurrent write raced back to non-empty) must not abort the whole recursive delete, only skip
-     * that one entry. Reproduced here via a read-only parent directory, which makes `File.delete()` on its child
-     * fail the same way a concurrent write would.
+     * A plain deletion failure (kotlinx-io's SystemFileSystem throws a bare `IOException("Deletion failed")`
+     * whenever `File.delete()` returns `false` for an existing path -- e.g. a directory a concurrent write raced
+     * back to non-empty) must not abort the whole recursive delete, only skip that one entry. Reproduced here via
+     * a read-only parent directory, which makes `File.delete()` on its child fail the same way a concurrent write
+     * would.
      */
     @Test
     fun test_deleteRecursively_toleratesDeletionFailure() {

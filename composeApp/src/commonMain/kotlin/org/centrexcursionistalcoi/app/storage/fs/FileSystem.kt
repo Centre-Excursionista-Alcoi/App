@@ -68,9 +68,9 @@ object FileSystem {
     /**
      * Deletes [path], swallowing a plain deletion failure (but not "didn't exist" when [mustExist] is true).
      * A directory can go from empty back to non-empty between [deleteRecursively] listing/deleting its children
-     * and deleting the directory itself -- e.g. [write] racing [deleteAll] while local data is wiped on logout
-     * (see #646) -- which SystemFileSystem surfaces as a bare `IOException("Deletion failed")` rather than
-     * something narrower. Losing that one entry isn't worth failing the whole recursive delete over.
+     * and deleting the directory itself -- e.g. [write] racing [deleteAll] while local data is wiped on logout --
+     * which SystemFileSystem surfaces as a bare `IOException("Deletion failed")` rather than something narrower.
+     * Losing that one entry isn't worth failing the whole recursive delete over.
      */
     private fun tryDelete(path: Path, mustExist: Boolean): Boolean = try {
         fs.delete(path, mustExist = mustExist)

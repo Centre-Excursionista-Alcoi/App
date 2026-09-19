@@ -112,9 +112,9 @@ class AuthBackend(
         // (see DatabaseIntegrityVerifier.clearDatabaseAndResync for the same approach).
         db.clearAllTables()
         log.d { "Removing all files..." }
-        // Best-effort: a leftover file (e.g. one FileSystem.deleteRecursively couldn't remove -- see #646) is
-        // stale garbage, not worth failing the rest of this cleanup over -- FCM/settings/credentials must still
-        // be cleared, or this whole (suspend, uncaught) call would blow up logout/forgetLocalAccount entirely.
+        // Best-effort: a leftover file (e.g. one FileSystem.deleteRecursively couldn't remove) is stale garbage,
+        // not worth failing the rest of this cleanup over -- FCM/settings/credentials must still be cleared, or
+        // this whole (suspend, uncaught) call would blow up logout/forgetLocalAccount entirely.
         try {
             FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
         } catch (e: Exception) {
