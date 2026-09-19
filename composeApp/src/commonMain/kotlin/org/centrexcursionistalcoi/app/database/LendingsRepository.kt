@@ -1,10 +1,14 @@
 package org.centrexcursionistalcoi.app.database
 
+import androidx.sqlite.SQLiteException
+import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
+import org.centrexcursionistalcoi.app.database.dao.ReceivedItemDao
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
@@ -18,6 +22,25 @@ class LendingsRepository(
     private val memoriesRepository: MemoriesRepository,
 ) : Repository<ReferencedLending, Uuid> {
     private val dao = db.lendingDao()
+    private val log = logging()
+
+    /**
+     * Inserts [receivedItem], tolerating a foreign key violation (e.g. `item`/`receivedBy` not present locally --
+     * see [org.centrexcursionistalcoi.app.network.LendingsRemoteRepository], which makes a best effort to sync
+     * those first, but can't always guarantee it, e.g. offline, or the referenced item/user is gone server-side)
+     * instead of failing the whole lending sync over one received item's metadata.
+     *
+     * Catches only [SQLiteException] (what Room's bundled SQLite driver throws for a constraint violation) --
+     * deliberately not a broader `Exception`, so this can't also swallow a [kotlinx.coroutines.CancellationException]
+     * from this suspend call being cancelled.
+     */
+    private suspend fun ReceivedItemDao.insertTolerant(receivedItem: ReceivedItem) {
+        try {
+            insert(receivedItem.toEntity())
+        } catch (e: SQLiteException) {
+            log.w(e) { "Failed to store received item ${receivedItem.id} locally; skipping it." }
+        }
+    }
 
     override suspend fun get(id: Uuid): ReferencedLending? = dao.get(id)?.toReferenced()
 
@@ -50,7 +73,7 @@ class LendingsRepository(
         for (receivedItem in item.receivedItems) {
             val exists = receivedItemDao.get(receivedItem.id) != null
             if (!exists) {
-                receivedItemDao.insert(receivedItem.toEntity())
+                receivedItemDao.insertTolerant(receivedItem)
             }
         }
     }
@@ -73,7 +96,7 @@ class LendingsRepository(
         val receivedItemDao = db.receivedItemDao()
         receivedItemDao.deleteByLendingId(item.id)
         for (receivedItem in item.receivedItems) {
-            receivedItemDao.insert(receivedItem.toEntity())
+            receivedItemDao.insertTolerant(receivedItem)
         }
     }
 
@@ -106,7 +129,7 @@ class LendingsRepository(
         for (receivedItem in lending.receivedItems) {
             val exists = receivedItemDao.get(receivedItem.id) != null
             if (!exists) {
-                receivedItemDao.insert(receivedItem.toEntity())
+                receivedItemDao.insertTolerant(receivedItem)
             }
         }
     }
@@ -129,7 +152,7 @@ class LendingsRepository(
         val receivedItemDao = db.receivedItemDao()
         receivedItemDao.deleteByLendingId(lending.id)
         for (receivedItem in lending.receivedItems) {
-            receivedItemDao.insert(receivedItem.toEntity())
+            receivedItemDao.insertTolerant(receivedItem)
         }
     }
 
