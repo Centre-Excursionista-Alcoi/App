@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
+import androidx.sqlite.SQLiteException
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,11 +29,15 @@ class LendingsRepository(
      * see [org.centrexcursionistalcoi.app.network.LendingsRemoteRepository], which makes a best effort to sync
      * those first, but can't always guarantee it, e.g. offline, or the referenced item/user is gone server-side)
      * instead of failing the whole lending sync over one received item's metadata.
+     *
+     * Catches only [SQLiteException] (what Room's bundled SQLite driver throws for a constraint violation) --
+     * deliberately not a broader `Exception`, so this can't also swallow a [kotlinx.coroutines.CancellationException]
+     * from this suspend call being cancelled.
      */
     private suspend fun ReceivedItemDao.insertTolerant(receivedItem: ReceivedItem) {
         try {
             insert(receivedItem.toEntity())
-        } catch (e: Exception) {
+        } catch (e: SQLiteException) {
             log.w(e) { "Failed to store received item ${receivedItem.id} locally; skipping it." }
         }
     }

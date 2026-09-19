@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
+import androidx.sqlite.SQLiteException
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -7,6 +8,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Lending
@@ -18,6 +20,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.to
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -85,7 +88,7 @@ class TestLendingsRepository {
         setUp()
         val receivedItem = aReceivedItem(Uuid.random())
         val lending = aLending(listOf(receivedItem))
-        coEvery { receivedItemDao.insert(receivedItem.toEntity()) } throws IllegalStateException("FOREIGN KEY constraint failed")
+        coEvery { receivedItemDao.insert(receivedItem.toEntity()) } throws SQLiteException("FOREIGN KEY constraint failed")
 
         // Must not throw.
         repository.insertRaw(lending)
@@ -99,12 +102,24 @@ class TestLendingsRepository {
         val failing = aReceivedItem(Uuid.random())
         val succeeding = aReceivedItem(Uuid.random())
         val lending = aLending(listOf(failing, succeeding))
-        coEvery { receivedItemDao.insert(failing.toEntity()) } throws IllegalStateException("FOREIGN KEY constraint failed")
+        coEvery { receivedItemDao.insert(failing.toEntity()) } throws SQLiteException("FOREIGN KEY constraint failed")
         coEvery { receivedItemDao.insert(succeeding.toEntity()) } just Runs
 
         repository.insertRaw(lending)
 
         coVerify(exactly = 1) { receivedItemDao.insert(failing.toEntity()) }
         coVerify(exactly = 1) { receivedItemDao.insert(succeeding.toEntity()) }
+    }
+
+    @Test
+    fun `insertRaw does not swallow cancellation`() = runTest {
+        setUp()
+        val receivedItem = aReceivedItem(Uuid.random())
+        val lending = aLending(listOf(receivedItem))
+        coEvery { receivedItemDao.insert(receivedItem.toEntity()) } throws CancellationException("cancelled")
+
+        assertFailsWith<CancellationException> {
+            repository.insertRaw(lending)
+        }
     }
 }
