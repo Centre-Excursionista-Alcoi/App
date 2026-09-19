@@ -21,4 +21,28 @@ class TestFileSystem {
         assertEquals(4, deletedCount)
         assertTrue(!dir.exists())
     }
+
+    /**
+     * A plain deletion failure (kotlinx-io's SystemFileSystem throws a bare `IOException("Deletion failed")`
+     * whenever `File.delete()` returns `false` for an existing path -- e.g. a directory a concurrent write raced
+     * back to non-empty) must not abort the whole recursive delete, only skip that one entry. Reproduced here via
+     * a read-only parent directory, which makes `File.delete()` on its child fail the same way a concurrent write
+     * would.
+     */
+    @Test
+    fun test_deleteRecursively_toleratesDeletionFailure() {
+        val dir = createTempDirectory().toFile()
+        dir.deleteOnExit()
+        val child = File(dir, "child").apply { createNewFile() }
+
+        dir.setWritable(false)
+        try {
+            val deletedCount = FileSystem.deleteRecursively(dir.toKotlinxIoPath())
+            assertEquals(0, deletedCount)
+            assertTrue(dir.exists())
+            assertTrue(child.exists())
+        } finally {
+            dir.setWritable(true)
+        }
+    }
 }

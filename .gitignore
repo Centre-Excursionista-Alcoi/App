@@ -1,5 +1,6 @@
 *.iml
 .kotlin
+cea-app-debug-files/
 .gradle
 **/build/
 xcuserdata
