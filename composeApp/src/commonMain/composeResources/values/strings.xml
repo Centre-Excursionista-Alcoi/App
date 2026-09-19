@@ -561,6 +561,8 @@
     <string name="months_december">December</string>
 
     <string name="time_picker_title">Pick a Time</string>
+    <string name="date_time_picker_date_tab">Date</string>
+    <string name="date_time_picker_time_tab">Time</string>
 
     <string name="file_picker_pick">Pick a File</string>
 
