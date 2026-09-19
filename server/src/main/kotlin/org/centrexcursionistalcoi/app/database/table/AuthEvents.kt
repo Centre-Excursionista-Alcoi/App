@@ -1,13 +1,20 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import org.centrexcursionistalcoi.app.data.AuthEventType
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /**
+ * The kind of authentication-related request an [AuthEvents] row records.
+ */
+enum class AuthEventType {
+    LOGIN, REGISTER, LOST_PASSWORD, RESET_PASSWORD
+}
+
+/**
  * Records every authentication-related request (login, registration, password recovery...), successful or not,
- * so that a support report ("I'm not able to register") can be investigated after the fact.
+ * so that a support report ("I'm not able to register") can be investigated after the fact by querying this
+ * table directly -- there's no API endpoint exposing it.
  */
 object AuthEvents : UUIDTable("auth_events") {
     val timestamp = timestamp("timestamp").defaultExpression(DatabaseNowExpression)

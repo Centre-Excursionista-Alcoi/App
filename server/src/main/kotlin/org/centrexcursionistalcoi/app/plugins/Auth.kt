@@ -19,11 +19,7 @@ import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
-import org.centrexcursionistalcoi.app.data.AuthEvent
-import org.centrexcursionistalcoi.app.data.AuthEventType
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -34,6 +30,7 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.AuthEventType
 import org.centrexcursionistalcoi.app.database.table.AuthEvents
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
@@ -53,7 +50,6 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.routes.WebTemplate
@@ -63,8 +59,6 @@ import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.utils.generateRandomString
-import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.upperCase
@@ -106,8 +100,9 @@ fun login(email: String, password: CharArray): Error? {
 }
 
 /**
- * Persists an [AuthEvent] row for [type] -- a login/registration/password-recovery request, successful or not --
- * so that a support report ("I'm not able to register") can be investigated after the fact via `GET /auth_events`.
+ * Persists an [AuthEvents] row for [type] -- a login/registration/password-recovery request, successful or not --
+ * so that a support report ("I'm not able to register") can be investigated after the fact by querying that table
+ * directly (there's no API endpoint exposing it).
  * @param error The failure, or `null` if the request succeeded.
  */
 private fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, error: Error?) {
@@ -126,7 +121,7 @@ private fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, 
     }
 }
 
-/** Records [error] as an [AuthEvent] for [type], then responds it. */
+/** Records [error] as an [AuthEvents] row for [type], then responds it. */
 private suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: String?, error: Error) {
     recordAuthEvent(type, email, error)
     respondError(error)
@@ -360,40 +355,6 @@ fun Route.configureAuthRoutes() {
                 "success" to success.toString(),
             ),
         )
-    }
-
-    /**
-     * Lists recorded [AuthEvent]s (login/registration/password-recovery requests, successful and failed),
-     * admin-only, so a support report ("I'm not able to register") can be investigated after the fact.
-     * Optionally filtered by `email`, newest first, capped at `limit` (default 200, max 500).
-     */
-    get("/auth_events") {
-        assertAdmin() ?: return@get
-
-        val emailFilter = call.parameters["email"]?.trim()?.uppercase()
-        val limit = call.parameters["limit"]?.toIntOrNull()?.coerceIn(1, 500) ?: 200
-
-        val events = Database {
-            AuthEvents.selectAll()
-                .where { if (emailFilter != null) AuthEvents.email eq emailFilter else Op.TRUE }
-                .orderBy(AuthEvents.timestamp, SortOrder.DESC)
-                .limit(limit)
-                .map { row ->
-                    AuthEvent(
-                        id = row[AuthEvents.id].value.toKotlinUuid(),
-                        timestamp = row[AuthEvents.timestamp].toKotlinInstant(),
-                        type = row[AuthEvents.type],
-                        email = row[AuthEvents.email],
-                        success = row[AuthEvents.success],
-                        errorCode = row[AuthEvents.errorCode],
-                        errorDescription = row[AuthEvents.errorDescription],
-                        ipAddress = row[AuthEvents.ipAddress],
-                        userAgent = row[AuthEvents.userAgent],
-                    )
-                }
-        }
-
-        call.respond(events)
     }
 
     post("/delete_account") {
