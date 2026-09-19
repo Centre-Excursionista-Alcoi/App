@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.database.Database.TEST_URL
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration.Companion.VERSION
+import org.centrexcursionistalcoi.app.database.table.AuthEvents
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
@@ -68,6 +69,7 @@ object Database {
         FCMRegistrationTokens,
         Events,
         EventMembers,
+        AuthEvents,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 
