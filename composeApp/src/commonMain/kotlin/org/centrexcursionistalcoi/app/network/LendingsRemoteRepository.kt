@@ -18,13 +18,17 @@ import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
+import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.CannotAllocateEnoughItemsException
@@ -43,6 +47,10 @@ import kotlin.uuid.Uuid
 class LendingsRemoteRepository(
     private val lendingsRepository: LendingsRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
+    private val inventoryItemsRepository: InventoryItemsRepository,
+    private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
+    private val usersRepository: UsersRepository,
+    private val usersRemoteRepository: UsersRemoteRepository,
 ) : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
     "/inventory/lendings",
     SETTINGS_LAST_LENDINGS_SYNC,
@@ -50,6 +58,35 @@ class LendingsRemoteRepository(
     lendingsRepository,
     remoteToLocalIdConverter = { it },
 ) {
+    private val log = logging()
+
+    /**
+     * Caching a [Lending]'s [ReceivedItem]s locally requires the [ReceivedItem.itemId] and [ReceivedItem.receivedBy]
+     * rows to already exist in the local database ([org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity]'s
+     * foreign keys) -- but this device may never have independently synced that particular inventory item or user
+     * (e.g. it belongs to a department, or was received by an admin, this device has no other reason to have
+     * cached). Fetch and cache whichever of those are missing before [LendingsRepository] tries to insert the
+     * received items themselves; best-effort -- [LendingsRepository] tolerates a foreign key failure on the insert
+     * itself too, as a backstop for when a fetch here fails (e.g. offline, or the item/user is gone server-side).
+     */
+    private suspend fun ensureReceivedItemDependencies(receivedItems: List<ReceivedItem>) {
+        for (receivedItem in receivedItems) {
+            if (inventoryItemsRepository.get(receivedItem.itemId) == null) {
+                try {
+                    inventoryItemsRemoteRepository.update(receivedItem.itemId, ignoreIfModifiedSince = true)
+                } catch (e: Exception) {
+                    log.w(e) { "Failed to fetch inventory item ${receivedItem.itemId} referenced by received item ${receivedItem.id}." }
+                }
+            }
+            if (usersRepository.get(receivedItem.receivedBy) == null) {
+                try {
+                    usersRemoteRepository.update(receivedItem.receivedBy, ignoreIfModifiedSince = true)
+                } catch (e: Exception) {
+                    log.w(e) { "Failed to fetch user ${receivedItem.receivedBy} referenced by received item ${receivedItem.id}." }
+                }
+            }
+        }
+    }
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
         val response = httpClient.submitForm("inventory/lendings", parameters {
             append("from", from.toString())
@@ -306,16 +343,19 @@ class LendingsRemoteRepository(
     }
 
     override suspend fun insertRemoteEntity(entity: Lending): ReferencedLending {
+        ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.insertRaw(entity)
         return lendingsRepository.get(entity.id)!!
     }
 
     override suspend fun updateRemoteEntity(entity: Lending): ReferencedLending {
+        ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.updateRaw(entity)
         return lendingsRepository.get(entity.id)!!
     }
 
     override suspend fun upsertRemoteEntity(entity: Lending): ReferencedLending {
+        ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.insertOrUpdate(entity)
         return lendingsRepository.get(entity.id)!!
     }

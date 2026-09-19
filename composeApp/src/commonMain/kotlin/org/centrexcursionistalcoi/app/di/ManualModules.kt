@@ -99,7 +99,7 @@ val manualModule = module {
     single { EventsRemoteRepository(get()) }
     single { InventoryItemsRemoteRepository(get()) }
     single { InventoryItemTypesRemoteRepository(get()) }
-    single { LendingsRemoteRepository(get(), get()) }
+    single { LendingsRemoteRepository(get(), get(), get(), get(), get(), get()) }
     single { MembersRemoteRepository(get()) }
     single { MemoriesRemoteRepository(get()) }
     single { PostsRemoteRepository(get()) }

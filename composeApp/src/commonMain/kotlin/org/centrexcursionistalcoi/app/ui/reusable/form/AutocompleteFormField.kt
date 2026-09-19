@@ -11,8 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 @ExperimentalMaterial3Api
@@ -54,6 +57,7 @@ fun <T> AutocompleteFormField(
 ) {
     val anySuggestion = suggestions.isNotEmpty()
     var expanded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     ExposedDropdownMenuBox(
         expanded = anySuggestion && expanded,
@@ -63,8 +67,18 @@ fun <T> AutocompleteFormField(
             value = value,
             onValueChange = {
                 onValueChange(it)
-                // When writing, expand suggestions automatically
-                expanded = true
+                // When writing, expand suggestions automatically -- but debounced the *first* time (typing
+                // usually starts right as the field gains focus, opening the on-screen keyboard): opening the
+                // suggestions popup while the keyboard's own opening animation is still in progress can race
+                // Compose Material3's ExposedDropdownMenuPositionProvider and crash the app (a real bug, still
+                // present as of material3 1.12.0-alpha03 -- https://issuetracker.google.com/issues/230236391).
+                // By the time this fires the keyboard has settled, so there's nothing left to race.
+                if (!expanded) {
+                    scope.launch {
+                        delay(350)
+                        expanded = true
+                    }
+                }
             },
             label = label,
             singleLine = true,
