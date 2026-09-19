@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.storage.fs
 import io.github.vinceglb.filekit.utils.div
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
+import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.Path
@@ -56,14 +57,27 @@ object FileSystem {
             }
         }
         val metadata = fs.metadataOrNull(path) ?: error("Could not fetch metadata for $path")
-        if (metadata.isDirectory) {
-            val count = fs.list(path).sumOf { child -> deleteRecursively(child, failOnNotFound) }
-            fs.delete(path, mustExist = failOnNotFound)
-            return count + 1
+        val deletedChildren = if (metadata.isDirectory) {
+            fs.list(path).sumOf { child -> deleteRecursively(child, failOnNotFound) }
         } else {
-            fs.delete(path, mustExist = failOnNotFound)
-            return 1
+            0
         }
+        return deletedChildren + if (tryDelete(path, mustExist = failOnNotFound)) 1 else 0
+    }
+
+    /**
+     * Deletes [path], swallowing a plain deletion failure (but not "didn't exist" when [mustExist] is true).
+     * A directory can go from empty back to non-empty between [deleteRecursively] listing/deleting its children
+     * and deleting the directory itself -- e.g. [write] racing [deleteAll] while local data is wiped on logout
+     * (see #646) -- which SystemFileSystem surfaces as a bare `IOException("Deletion failed")` rather than
+     * something narrower. Losing that one entry isn't worth failing the whole recursive delete over.
+     */
+    private fun tryDelete(path: Path, mustExist: Boolean): Boolean = try {
+        fs.delete(path, mustExist = mustExist)
+        true
+    } catch (e: IOException) {
+        if (mustExist) throw e
+        false
     }
 
     fun deleteAll(): Int {
