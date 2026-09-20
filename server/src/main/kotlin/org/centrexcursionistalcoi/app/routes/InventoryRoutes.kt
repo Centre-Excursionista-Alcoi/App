@@ -36,7 +36,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/types",
         entityClass = InventoryItemTypeEntity,
-        idTypeConverter = { UUID.fromString(it) },
+        idTypeConverter = { it.toUUIDOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemTypeEntity.all()
@@ -132,7 +132,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/items",
         entityClass = InventoryItemEntity,
-        idTypeConverter = { UUID.fromString(it) },
+        idTypeConverter = { it.toUUIDOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemEntity.all()
