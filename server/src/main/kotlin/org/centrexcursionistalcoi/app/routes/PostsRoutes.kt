@@ -24,7 +24,7 @@ fun Route.postsRoutes() {
     provideEntityRoutes(
         base = "posts",
         entityClass = PostEntity,
-        idTypeConverter = { UUID.fromString(it) },
+        idTypeConverter = { it.toUUIDOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },
         visibleTo = { post, session -> post.isVisibleTo(session) },
         creator = { formParameters ->
