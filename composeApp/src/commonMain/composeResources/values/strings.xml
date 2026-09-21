@@ -650,4 +650,5 @@
     <string name="event_qualifications_needs_department">Choose a department first: an event can only require its own department's qualifications</string>
     <string name="event_qualifications_none_in_department">This department has no qualifications yet</string>
     <string name="event_requires_confirmation_forced">Always on while the event requires qualifications</string>
+    <string name="event_assistance_closed">This event has already started, so your assistance can no longer be changed</string>
 </resources>
