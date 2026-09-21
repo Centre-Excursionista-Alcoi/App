@@ -30,7 +30,6 @@ import cea_app.composeapp.generated.resources.permission_notification_title
 import cea_app.composeapp.generated.resources.permission_settings
 import cea_app.composeapp.generated.resources.posts
 import cea_app.composeapp.generated.resources.upcoming_events
-import cea_app.composeapp.generated.resources.welcome
 import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedPost
@@ -45,6 +44,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
 import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
+import org.centrexcursionistalcoi.app.ui.resources.GenderedStringResource
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveVerticalGrid
 import org.centrexcursionistalcoi.app.ui.reusable.CardWithIcon
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
@@ -126,7 +126,7 @@ fun HomePage(
         if (windowSizeClass.widthSizeClass >= WindowWidthSizeClass.Medium) {
             item("welcome_message", span = { GridItemSpan(maxLineSpan) }) {
                 Text(
-                    text = stringResource(Res.string.welcome, profile.fullName),
+                    text = GenderedStringResource.Welcome.stringResource(profile.fullName),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, top = 12.dp)
                 )

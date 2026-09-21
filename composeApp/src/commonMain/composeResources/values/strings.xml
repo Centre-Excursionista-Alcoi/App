@@ -4,7 +4,9 @@
 
     <string name="admin">Admin</string>
 
-    <string name="welcome">Welcome back %1$s</string>
+    <string name="welcome_masc">Welcome back %1$s</string>
+    <string name="welcome_fem">Welcome back %1$s</string>
+    <string name="welcome_neut">Welcome back %1$s</string>
     <string name="upcoming_events">Upcoming Events</string>
     <string name="posts">Posts</string>
 
@@ -23,7 +25,9 @@
     <string name="sync_step_posts">Posts</string>
     <string name="sync_step_events">Events</string>
 
-    <string name="login_title">Welcome to CEA App</string>
+    <string name="login_title_masc">Welcome to CEA App</string>
+    <string name="login_title_fem">Welcome to CEA App</string>
+    <string name="login_title_neut">Welcome to CEA App</string>
     <string name="login_action">Login</string>
     <string name="login_password_changed_title">Password updated!</string>
     <string name="login_password_changed_message">You can now log in with your new password.</string>

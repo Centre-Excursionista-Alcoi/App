@@ -48,6 +48,7 @@ import org.koin.dsl.module
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 
 /**
@@ -103,6 +104,9 @@ class TestKoinModules {
         assertNotNull(koin.get<AuthBackend>())
 
         assertNotNull(koin.get<PathsProvider>())
+        // Optional: JVM has no implementation, so this must resolve to null instead of throwing
+        assertNull(koin.getOrNull<GenderInflectionProvider>())
+        assertNull(globalGenderInflectionProvider)
         assertNotNull(koin.get<PlatformNFC>())
         assertNotNull(koin.get<PlatformShareLogic>())
         assertNotNull(koin.get<PlatformOpenFileLogic>())
