@@ -38,5 +38,6 @@ fun EventWithRelations.toReferenced(): ReferencedEvent {
         department = department?.toDepartment(),
         image = event.image,
         userSubList = userSubList.map { it.toUser() },
+        qualificationRequirements = event.qualificationRequirements,
     )
 }

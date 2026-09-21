@@ -23,6 +23,9 @@ data class ReferencedEvent(
      * All the users that have confirmed assistance to the event.
      */
     val userSubList: List<UserData>,
+
+    /** See [Event.qualificationRequirements]. */
+    val qualificationRequirements: List<List<Uuid>> = emptyList(),
 ): ReferencedEntity<Uuid, Event>, ImageFileContainer {
     companion object {
         fun Event.referenced(departments: List<Department>, users: List<UserData>) = ReferencedEvent(
@@ -38,6 +41,7 @@ data class ReferencedEvent(
             department = departments.firstOrNull { it.id == this.department },
             image = this.image,
             userSubList = users.filter { it.sub in this.userSubList },
+            qualificationRequirements = this.qualificationRequirements,
         )
     }
 
@@ -54,6 +58,7 @@ data class ReferencedEvent(
         department = department?.id,
         image = image,
         userSubList = userSubList.map { it.sub },
+        qualificationRequirements = qualificationRequirements,
     )
 
     override val files: Map<String, Uuid?> = mapOf("image" to image)

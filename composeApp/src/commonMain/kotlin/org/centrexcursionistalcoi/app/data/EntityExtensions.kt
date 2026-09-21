@@ -40,6 +40,8 @@ fun Map<String, Any?>.toFormData(): List<PartData> {
                             is Double -> json.encodeToString(ListSerializer(Double.serializer()), value as List<Double>)
                             is Boolean -> json.encodeToString(ListSerializer(Boolean.serializer()), value as List<Boolean>)
                             is FileWithContext -> json.encodeToString(ListSerializer(FileWithContext.serializer()), value as List<FileWithContext>)
+                            // A list of groups of ids, e.g. Event.qualificationRequirements
+                            is List<*> -> json.encodeToString(ListSerializer(ListSerializer(Uuid.serializer())), value as List<List<Uuid>>)
                             else -> {
                                 error("Unsupported list item type at $key: ${item?.let { it::class.simpleName } ?: "N/A"}")
                             }

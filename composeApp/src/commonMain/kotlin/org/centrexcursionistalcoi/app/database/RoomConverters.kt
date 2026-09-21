@@ -77,6 +77,14 @@ class RoomConverters {
         value?.let { json.decodeFromString(ListSerializer(Uuid.serializer()), it) }
 
     @ColumnTypeConverter
+    fun uuidGroupsToString(value: List<List<Uuid>>?): String? =
+        value?.let { json.encodeToString(ListSerializer(ListSerializer(Uuid.serializer())), it) }
+
+    @ColumnTypeConverter
+    fun stringToUuidGroups(value: String?): List<List<Uuid>>? =
+        value?.let { json.decodeFromString(ListSerializer(ListSerializer(Uuid.serializer())), it) }
+
+    @ColumnTypeConverter
     fun departmentMemberInfoListToString(value: List<DepartmentMemberInfo>?): String? =
         value?.let { json.encodeToString(ListSerializer(DepartmentMemberInfo.serializer()), it) }
 
