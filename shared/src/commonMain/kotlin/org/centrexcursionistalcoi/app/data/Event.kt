@@ -23,6 +23,17 @@ data class Event(
      * All the users that have confirmed assistance to the event.
      */
     val userSubList: List<String>,
+
+    /**
+     * The qualifications a user must hold to confirm their assistance, as a conjunction of alternatives: the
+     * user must satisfy **every** group (AND), and a group is satisfied by holding **any** of its qualifications
+     * (OR). So `[[A], [B, C]]` reads `A AND (B OR C)`. Empty if the event has no requirements. See
+     * [unmetRequirements].
+     *
+     * Only events that belong to a [department] can have requirements, and only on that department's own
+     * qualifications.
+     */
+    val qualificationRequirements: List<List<Uuid>> = emptyList(),
 ): Entity<Uuid>, ImageFileContainer {
     override val files: Map<String, Uuid?> = mapOf("image" to image)
 
@@ -39,5 +50,6 @@ data class Event(
         "department" to department,
         "image" to image,
         "userSubList" to userSubList,
+        "qualificationRequirements" to qualificationRequirements,
     )
 }

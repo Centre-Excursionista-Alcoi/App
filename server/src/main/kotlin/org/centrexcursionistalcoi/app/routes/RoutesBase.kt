@@ -58,6 +58,14 @@ private val logger = LoggerFactory.getLogger("RoutesBase")
 class PermissionDeniedException : Exception()
 
 /**
+ * Thrown from inside [EntityPatcher.patch] to reject the PATCH with [error] (e.g. a value that's invalid in
+ * combination with the entity's other fields, which can only be checked once the patch is being applied). Like
+ * [PermissionDeniedException], it aborts and rolls back the transaction the patch runs in, so nothing is left
+ * half-applied, and never escapes past the `try`/`catch` that wraps that transaction.
+ */
+class PatchRejectedException(val error: Error) : Exception(error.description)
+
+/**
  * Describes the department-scoped role required to create/patch/delete an entity via [provideEntityRoutes].
  *
  * @param role The [DepartmentRole] required (or [UserSession.isAdmin], which always suffices regardless of role).
@@ -407,6 +415,9 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             }
         } catch (_: PermissionDeniedException) {
             respondError(Error.PermissionRejected())
+            return@patch
+        } catch (e: PatchRejectedException) {
+            respondError(e.error)
             return@patch
         }
 

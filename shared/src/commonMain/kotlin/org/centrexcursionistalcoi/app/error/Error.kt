@@ -536,6 +536,21 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    /**
+     * The user lacks qualifications an event requires. [missing] holds every requirement group (see
+     * [org.centrexcursionistalcoi.app.data.Event.qualificationRequirements]) the user doesn't satisfy; holding
+     * any one qualification of a group would satisfy it.
+     */
+    @Serializable
+    @SerialName("MissingQualifications")
+    class MissingQualifications(val missing: List<List<Uuid>> = emptyList()): Error {
+        override val code: Int = ERROR_MISSING_QUALIFICATIONS
+        override val description: String = "You don't have the qualifications required for this event."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -585,6 +600,7 @@ sealed interface Error {
         const val ERROR_MEMORY_ALREADY_SUBMITTED = 45
         const val ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER = 46
         const val ERROR_QUALIFICATION_ALREADY_EXISTS = 47
+        const val ERROR_MISSING_QUALIFICATIONS = 48
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -635,6 +651,7 @@ sealed interface Error {
             ERROR_MEMORY_ALREADY_SUBMITTED -> MemoryAlreadySubmitted.serializer()
             ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER -> CannotDeleteMemoryLendingCreatedAfter.serializer()
             ERROR_QUALIFICATION_ALREADY_EXISTS -> QualificationAlreadyExists.serializer()
+            ERROR_MISSING_QUALIFICATIONS -> MissingQualifications.serializer()
             else -> null
         }
     }

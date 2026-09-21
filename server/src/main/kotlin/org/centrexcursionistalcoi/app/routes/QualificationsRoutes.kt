@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
@@ -203,9 +204,18 @@ fun Route.qualificationsRoutes() {
         )
     }
 
-    // Deleting a qualification also deletes every grant of it.
+    // Deleting a qualification also deletes every grant of it, but not while an event still requires it: that
+    // would silently drop a requirement from the event and open it to people it was meant to exclude.
     delete("/qualifications/{id}") {
         val request = qualificationRequest(DepartmentRole.QUALIFICATIONS_MANAGER) ?: return@delete
+        val qualificationId = request.qualification.id.value
+        val requiredByAnEvent = Database {
+            EventQualificationRequirements.selectAll().where { EventQualificationRequirements.qualification eq qualificationId }.any()
+        }
+        if (requiredByAnEvent) {
+            call.respondError(Error.EntityDeleteReferencesExist())
+            return@delete
+        }
         Database { request.qualification.delete() }
         call.respond(HttpStatusCode.NoContent)
     }

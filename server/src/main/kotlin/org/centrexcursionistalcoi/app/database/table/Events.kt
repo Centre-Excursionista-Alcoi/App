@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -33,11 +34,13 @@ object Events : UUIDTable("events"), CustomTableSerializer<UUID, EventEntity> {
 
 
     override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
-        "userSubList" to String.serializer().list()
+        "userSubList" to String.serializer().list(),
+        "qualificationRequirements" to UUIDSerializer.list().list(),
     )
 
     context(_: JdbcTransaction)
     override fun extraColumns(entity: EventEntity, session: UserSession?): Map<String, Any?> = mapOf(
-        "userSubList" to entity.userReferences.map { it.id.value }
+        "userSubList" to entity.userReferences.map { it.id.value },
+        "qualificationRequirements" to entity.qualificationRequirements(),
     )
 }
