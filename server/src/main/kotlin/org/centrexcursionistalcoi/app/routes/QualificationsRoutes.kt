@@ -40,7 +40,6 @@ import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
 import org.centrexcursionistalcoi.app.request.UpdateQualificationRequest
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -120,18 +119,24 @@ private fun nameTaken(departmentId: UUID, name: String, exceptId: UUID? = null):
 
 fun Route.qualificationsRoutes() {
     // Qualification definitions are visible to every logged-in user: events list the ones they require.
-    // Optionally narrowed to a single department with ?department=<id>.
     get("/qualifications") {
         getUserSessionOrFail() ?: return@get
-        val departmentParam = call.request.queryParameters["department"]
-        val departmentId = departmentParam?.let { it.toUUIDOrNull() ?: return@get call.respondError(Error.MalformedId()) }
 
         val qualifications = Database {
-            val query = if (departmentId == null) QualificationEntity.all() else QualificationEntity.find { Qualifications.department eq departmentId }
-            query.map { it.toData() }.sortedBy { it.name.lowercase() }
+            QualificationEntity.all().map { it.toData() }.sortedBy { it.name.lowercase() }
         }
         call.respondText(
             json.encodeToString(Qualification.serializer().list(), qualifications),
+            ContentType.Application.Json,
+        )
+    }
+
+    get("/qualifications/{id}") {
+        val request = qualificationRequest() ?: return@get
+
+        val qualification = Database { request.qualification.toData() }
+        call.respondText(
+            json.encodeToString(Qualification.serializer(), qualification),
             ContentType.Application.Json,
         )
     }

@@ -121,24 +121,40 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         }
     }
 
+    // ---- Definitions: single ----
+
     @Test
-    fun test_list_filteredByDepartment() = runApplicationTest(
+    fun test_get_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/qualifications/$qualificationId")
+
+    @Test
+    fun test_get_anyLoggedInUser_canReadAnyDefinition() = runApplicationTest(
         shouldLogIn = LoginType.USER,
+        // not a member of either department: definitions are public
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.get("/qualifications?department=$departmentId").apply {
+        client.get("/qualifications/$qualificationId").apply {
             assertStatusCode(HttpStatusCode.OK)
-            assertBody(Qualification.serializer().list()) { list ->
-                assertEquals(1, list.size)
-                assertEquals("Lead climbing", list[0].name)
-                assertEquals(departmentId.toKotlinUuid(), list[0].departmentId)
+            assertBody(Qualification.serializer()) {
+                assertEquals(qualificationId.toKotlinUuid(), it.id)
+                assertEquals("Lead climbing", it.name)
+                assertEquals(departmentId.toKotlinUuid(), it.departmentId)
             }
+        }
+        // ... including one from another department
+        client.get("/qualifications/$otherQualificationId").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Qualification.serializer()) { assertEquals("Ice climbing", it.name) }
         }
     }
 
     @Test
-    fun test_list_malformedDepartment() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.get("/qualifications?department=nope").assertError(Error.MalformedId())
+    fun test_get_notFound() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.get("/qualifications/$qualificationId").assertError(Error.EntityNotFound(QualificationEntity::class, qualificationId))
+    }
+
+    @Test
+    fun test_get_malformedId() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.get("/qualifications/nope").assertError(Error.MalformedId())
     }
 
     // ---- Definitions: create ----
