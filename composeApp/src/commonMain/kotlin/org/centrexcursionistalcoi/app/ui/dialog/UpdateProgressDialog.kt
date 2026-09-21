@@ -10,10 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import cea_app.composeapp.generated.resources.*
-import kotlin.math.roundToInt
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.update_available_action
+import cea_app.composeapp.generated.resources.update_download_progress_title
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -37,9 +39,11 @@ fun UpdateProgressDialog() {
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = { PlatformAppUpdates.startUpdate() }
-            ) { Text(stringResource(Res.string.update_available_action)) }
+            if (progress == null) {
+                TextButton(
+                    onClick = { PlatformAppUpdates.startUpdate() }
+                ) { Text(stringResource(Res.string.update_available_action)) }
+            }
         },
     )
 }
