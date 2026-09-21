@@ -161,4 +161,38 @@ class TestQualificationsRemoteRepository {
         val thrown = assertFailsWith<ServerException> { repository.create(departmentId, "Lead climbing", null) }
         assertEquals(HttpStatusCode.Conflict.value, thrown.responseStatusCode)
     }
+
+    // ---- snapshot(): what the local copy is synced from ----
+
+    private fun MockRequestHandleScope.snapshotResponses(request: HttpRequestData): HttpResponseData = when (request.path) {
+        "/qualifications" -> json(encode(ListSerializer(Qualification.serializer()), listOf(qualification)))
+        "/profile/qualifications" -> json(encode(ListSerializer(QualificationGrant.serializer()), listOf(grant)))
+        else -> respond("", HttpStatusCode.NotFound)
+    }
+
+    @Test
+    fun snapshot_fetchesDefinitionsAndOwnGrants() = runTest {
+        val snapshot = repository { snapshotResponses(it) }.snapshot()
+
+        assertEquals(listOf(qualification), snapshot?.qualifications)
+        assertEquals(listOf(grant), snapshot?.myGrants)
+    }
+
+    @Test
+    fun snapshot_isNull_forAServerWithoutQualifications() = runTest {
+        // An older server has neither route: nothing to show, and not an error to report
+        assertNull(repository { respond("", HttpStatusCode.NotFound) }.snapshot())
+        // ... nor if only the second one is missing
+        assertNull(repository { if (it.path == "/qualifications") snapshotResponses(it) else respond("", HttpStatusCode.NotFound) }.snapshot())
+    }
+
+    @Test
+    fun snapshot_doesNotMistakeOtherFailuresForNoQualifications() = runTest {
+        val error = Error.NotLoggedIn()
+        val repository = repository { json(encode(Error.serializer(), error), error.statusCode) }
+
+        // A session that expired must surface (and be handled centrally), not silently wipe the local copy
+        assertFailsWith<ServerException> { repository.snapshot() }
+    }
 }
+

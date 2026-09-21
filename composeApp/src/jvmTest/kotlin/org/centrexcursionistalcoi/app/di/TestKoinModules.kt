@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.QualificationsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.getRoomDatabase
@@ -92,6 +93,7 @@ class TestKoinModules {
         assertNotNull(koin.get<EventsRepository>())
         assertNotNull(koin.get<MemoriesRepository>())
         assertNotNull(koin.get<LendingsRepository>())
+        assertNotNull(koin.get<QualificationsRepository>())
 
         assertNotNull(koin.get<DepartmentsRemoteRepository>())
         assertNotNull(koin.get<UsersRemoteRepository>())

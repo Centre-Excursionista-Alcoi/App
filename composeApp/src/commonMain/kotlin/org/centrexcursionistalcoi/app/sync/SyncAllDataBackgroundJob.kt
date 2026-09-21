@@ -23,6 +23,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.QualificationsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -34,6 +35,7 @@ import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.centrexcursionistalcoi.app.storage.settings
@@ -55,6 +57,7 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
+    private val qualificationsRemoteRepository: QualificationsRemoteRepository,
 
     private val departmentsRepository: DepartmentsRepository,
     private val usersRepository: UsersRepository,
@@ -65,6 +68,7 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRepository: LendingsRepository,
     private val memoriesRepository: MemoriesRepository,
+    private val qualificationsRepository: QualificationsRepository,
 ) : BackgroundJob() {
     private val log = logging()
 
@@ -132,6 +136,14 @@ class SyncAllDataBackgroundJob(
 
             // Memories requires Departments and (optionally) Lendings
             memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_memories), ignoreIfModifiedSince = force)
+
+            // Qualifications don't reference (or get referenced by) anything else, so they go last. They have no
+            // lastUpdate to compare against, so they're always fetched (they're few), which is why ignoreIfModifiedSince
+            // doesn't apply.
+            // An older server without them means there is nothing to show, not a failed sync
+            val qualifications = qualificationsRemoteRepository.snapshot()
+            qualificationsRepository.replaceAll(qualifications?.qualifications.orEmpty())
+            qualificationsRepository.replaceMyGrants(qualifications?.myGrants.orEmpty())
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
