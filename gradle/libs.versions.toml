@@ -1,7 +1,7 @@
 [versions]
 # View compatibility in: https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html
 #noinspection AndroidGradlePluginVersion
-agp = "9.1.0"
+agp = "9.3.1"
 android-appUpdate = "2.1.0"
 android-compileSdk = "37"
 android-minSdk = "24"
@@ -12,13 +12,13 @@ androidx-appcompat = "1.8.0"
 androidx-browser = "1.10.0"
 androidx-lifecycle = "2.11.0"
 androidx-navigation3 = "1.1.1"
-androidx-room3 = "3.0.2"
-androidx-sqlite = "2.7.0"
+androidx-room3 = "3.0.3"
+androidx-sqlite = "2.7.1"
 androidx-work = "2.11.2"
-buildkonfig = "0.22.0"
+buildkonfig = "0.23.0"
 bcrypt = "0.10.2"
 calendar ="2.10.1"
-coil = "3.6.2"
+coil = "3.6.3"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
 composeMultiplatform = "1.12.0"
 compose-material3 = "1.12.0-alpha03"
@@ -47,7 +47,7 @@ kreds = "0.9.1"
 kscan = "0.9.2"
 ksoup = "0.2.6"
 ksp = "2.3.12"
-ktor = "3.5.2"
+ktor = "3.6.0"
 localina = "1.0.0-beta2"
 logback = "1.6.3"
 # No not upgrade without testing: crashes
@@ -56,7 +56,7 @@ markdown-renderer = "0.45.0"
 mockk = "1.14.11"
 pdfbox = "3.0.8"
 postgresql = "42.7.13"
-qrose = "1.2.1"
+qrose = "1.3.0"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
 retrofit = "2.9.0"
@@ -66,14 +66,14 @@ sentry-multiplatform = "0.27.0"
 # The io.sentry.jvm.gradle plugin auto-installs io.sentry:sentry at whatever version it resolves to
 # (currently 8.55.0). Pinned explicitly here so sentry-kotlin-extensions can't drift from it -- a
 # mismatch between Sentry SDK module versions crashes the mixed-versions check at init.
-sentry-jvmSdk = "8.56.0"
+sentry-jvmSdk = "8.57.0"
 sqlite = "3.53.4.0"
 telegram-bot = "10.0.0"
 # {"message":"client version 1.32 is too old. Minimum supported API version is 1.44, please upgrade your client to a newer version"}
 testcontainers = "1.21.4"
 turbine = "1.2.1"
 xmlutil = "1.0.2.1"
-zoomable = "2.13.0"
+zoomable = "2.14.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
