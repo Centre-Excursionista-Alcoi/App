@@ -47,7 +47,9 @@ kreds = "0.9.1"
 kscan = "0.10.0"
 ksoup = "0.2.6"
 ksp = "2.3.12"
-ktor = "3.6.0"
+# Pinned below 3.6.0: in 3.6.0 the test host never delivers an SSE response to the SSE client (a bare
+# testApplication + client.sse() times out), which fails TestSSE. Lift the pin once that's fixed upstream (#660).
+ktor = "3.5.2"
 localina = "1.0.0-beta2"
 logback = "1.6.3"
 # No not upgrade without testing: crashes
