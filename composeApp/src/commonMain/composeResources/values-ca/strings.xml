@@ -559,26 +559,4 @@
     <string name="memory_open_file">Obrir</string>
     <string name="memory_editor_previous_image_uuid">Imatge pujada anteriorment amb UUID %1$s</string>
     <string name="memory_editor_previous_image_delete">Aquesta imatge s'eliminarà en guardar</string>
-    <string name="management_qualifications">Qualificacions</string>
-    <string name="management_qualification_none">Encara no hi ha qualificacions</string>
-    <string name="management_qualification_create">Nova qualificació</string>
-    <string name="management_qualification_edit">Edita la qualificació</string>
-    <string name="management_qualification_name">Nom</string>
-    <string name="management_qualification_grant">Concedeix</string>
-    <string name="management_qualification_grant_title">Concedeix %1$s</string>
-    <string name="management_qualification_grant_search">Cerca socis</string>
-    <string name="management_qualification_grant_no_members">No s'ha trobat cap soci</string>
-    <string name="management_qualification_expires">Caduca</string>
-    <string name="management_qualification_expires_on">Vàlida fins al</string>
-    <string name="management_qualification_holders">Titulars</string>
-    <string name="management_qualification_hide_holders">Amaga els titulars</string>
-    <string name="management_qualification_no_holders">Encara ningú té aquesta qualificació</string>
-    <string name="management_qualification_no_expiry">No caduca</string>
-    <string name="management_qualification_valid_until">Vàlida fins al %1$s</string>
-    <string name="management_qualification_expired_on">Caducada el %1$s</string>
-    <string name="management_qualification_revoke">Revoca</string>
-    <string name="department_role_qualifications_manager">Gestor de qualificacions</string>
-    <string name="department_role_qualifications_manager_description">Crea, edita i elimina les qualificacions del departament i les concedeix als socis</string>
-    <string name="department_role_examiner">Examinador</string>
-    <string name="department_role_examiner_description">Concedeix i revoca les qualificacions del departament als socis</string>
 </resources>

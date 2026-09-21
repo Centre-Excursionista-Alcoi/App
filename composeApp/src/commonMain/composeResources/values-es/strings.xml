@@ -543,26 +543,4 @@
     <string name="memory_open_file">Abrir</string>
     <string name="memory_editor_previous_image_uuid">Imagen subida con anterioridad con UUID %1$s</string>
     <string name="memory_editor_previous_image_delete">Esta imagen será eliminada cuando se suba</string>
-    <string name="management_qualifications">Cualificaciones</string>
-    <string name="management_qualification_none">Todavía no hay cualificaciones</string>
-    <string name="management_qualification_create">Nueva cualificación</string>
-    <string name="management_qualification_edit">Editar cualificación</string>
-    <string name="management_qualification_name">Nombre</string>
-    <string name="management_qualification_grant">Conceder</string>
-    <string name="management_qualification_grant_title">Conceder %1$s</string>
-    <string name="management_qualification_grant_search">Buscar socios</string>
-    <string name="management_qualification_grant_no_members">No se ha encontrado ningún socio</string>
-    <string name="management_qualification_expires">Caduca</string>
-    <string name="management_qualification_expires_on">Válida hasta el</string>
-    <string name="management_qualification_holders">Titulares</string>
-    <string name="management_qualification_hide_holders">Ocultar titulares</string>
-    <string name="management_qualification_no_holders">Todavía nadie tiene esta cualificación</string>
-    <string name="management_qualification_no_expiry">No caduca</string>
-    <string name="management_qualification_valid_until">Válida hasta el %1$s</string>
-    <string name="management_qualification_expired_on">Caducada el %1$s</string>
-    <string name="management_qualification_revoke">Revocar</string>
-    <string name="department_role_qualifications_manager">Gestor de cualificaciones</string>
-    <string name="department_role_qualifications_manager_description">Crea, edita y elimina las cualificaciones del departamento y las concede a los socios</string>
-    <string name="department_role_examiner">Examinador</string>
-    <string name="department_role_examiner_description">Concede y revoca las cualificaciones del departamento a los socios</string>
 </resources>

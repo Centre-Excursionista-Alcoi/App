@@ -51,9 +51,9 @@ class QualificationsRemoteRepository {
 
     private suspend fun <T> HttpResponse.decode(serializer: KSerializer<T>): T = json.decodeFromString(serializer, bodyAsText())
 
-    /** Every qualification definition, or just [departmentId]'s. Readable by any logged-in user. */
-    suspend fun list(departmentId: Uuid? = null): List<Qualification> =
-        httpClient.get("/qualifications") { departmentId?.let { parameter("department", it.toString()) } }
+    /** Every qualification definition. Readable by any logged-in user. */
+    suspend fun list(): List<Qualification> =
+        httpClient.get("/qualifications")
             .orThrow("list qualifications")
             .decode(ListSerializer(Qualification.serializer()))
 

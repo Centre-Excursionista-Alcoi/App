@@ -7,7 +7,6 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
@@ -45,24 +44,21 @@ class QualificationsManagementViewModel(
     val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
-    private val _qualifications = MutableStateFlow<List<Qualification>?>(null)
-
     /** Every qualification of every department, or `null` until first loaded. */
-    val qualifications: StateFlow<List<Qualification>?> = _qualifications.asStateFlow()
-
-    private val _grants = MutableStateFlow<Map<Uuid, List<QualificationGrant>>>(emptyMap())
+    val qualifications: StateFlow<List<Qualification>?>
+        field = MutableStateFlow<List<Qualification>?>(null)
 
     /** The holders of each qualification whose holders have been loaded (see [loadGrants]), by qualification id. */
-    val grants: StateFlow<Map<Uuid, List<QualificationGrant>>> = _grants.asStateFlow()
-
-    private val _roster = MutableStateFlow<Map<Uuid, List<DepartmentRosterMember>>>(emptyMap())
+    val grants: StateFlow<Map<Uuid, List<QualificationGrant>>>
+        field = MutableStateFlow<Map<Uuid, List<QualificationGrant>>>(emptyMap())
 
     /** The members of each department whose roster has been loaded (see [loadRoster]), by department id. */
-    val roster: StateFlow<Map<Uuid, List<DepartmentRosterMember>>> = _roster.asStateFlow()
+    val roster: StateFlow<Map<Uuid, List<DepartmentRosterMember>>>
+        field = MutableStateFlow<Map<Uuid, List<DepartmentRosterMember>>>(emptyMap())
 
     fun refresh() = launch {
         val loaded = withContext(dispatcherProvider.io) { qualificationsRemoteRepository.list() }
-        _qualifications.value = loaded
+        qualifications.value = loaded
     }
 
     fun create(departmentId: Uuid, name: String, description: String?) = launch {
@@ -83,13 +79,13 @@ class QualificationsManagementViewModel(
 
     fun delete(qualification: Qualification) = launch {
         withContext(dispatcherProvider.io) { qualificationsRemoteRepository.delete(qualification.id) }
-        _grants.update { it - qualification.id }
+        grants.update { it - qualification.id }
         refresh()
     }
 
     fun loadGrants(qualification: Qualification) = launch {
         val loaded = withContext(dispatcherProvider.io) { qualificationsRemoteRepository.grants(qualification.id) }
-        _grants.update { it + (qualification.id to loaded) }
+        grants.update { it + (qualification.id to loaded) }
     }
 
     fun grant(qualification: Qualification, userSub: String, expiresAt: Instant?) = launch {
@@ -105,7 +101,7 @@ class QualificationsManagementViewModel(
     /** Loads the department's members, to show names instead of ids for the holders of its qualifications. */
     fun loadRoster(departmentId: Uuid) = launch {
         val loaded = withContext(dispatcherProvider.io) { qualificationsRemoteRepository.roster(departmentId, limit = ROSTER_LIMIT) }
-        _roster.update { it + (departmentId to loaded) }
+        roster.update { it + (departmentId to loaded) }
     }
 
     /**

@@ -66,16 +66,13 @@ class TestQualificationsRemoteRepository {
     private val HttpRequestData.path get() = url.encodedPath
 
     @Test
-    fun list_allAndByDepartment() = runTest {
+    fun list_getsEveryDefinition() = runTest {
         val repository = repository { json(encode(ListSerializer(Qualification.serializer()), listOf(qualification))) }
 
         assertEquals(listOf(qualification), repository.list())
-        assertEquals(listOf(qualification), repository.list(departmentId))
 
-        assertEquals(HttpMethod.Get, requests[0].method)
-        assertEquals("/qualifications", requests[0].path)
-        assertNull(requests[0].url.parameters["department"])
-        assertEquals(departmentId.toString(), requests[1].url.parameters["department"])
+        assertEquals(HttpMethod.Get, requests.single().method)
+        assertEquals("/qualifications", requests.single().path)
     }
 
     @Test
