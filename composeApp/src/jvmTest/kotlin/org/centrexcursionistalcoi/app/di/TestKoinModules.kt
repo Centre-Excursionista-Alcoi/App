@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
@@ -40,6 +41,7 @@ import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
+import org.centrexcursionistalcoi.app.viewmodel.management.QualificationsManagementViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.parameter.parametersOf
@@ -100,6 +102,8 @@ class TestKoinModules {
         assertNotNull(koin.get<EventsRemoteRepository>())
         assertNotNull(koin.get<MemoriesRemoteRepository>())
         assertNotNull(koin.get<LendingsRemoteRepository>())
+        // Not a synced entity: plain request/response calls, without a local repository behind it
+        assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
 
@@ -136,6 +140,7 @@ class TestKoinModules {
 
         // @KoinViewModel with no runtime params
         assertNotNull(koin.get<LoginViewModel>())
+        assertNotNull(koin.get<QualificationsManagementViewModel>())
 
         // @KoinViewModel with an @InjectedParam runtime param
         assertNotNull(koin.get<LendingDetailsModel> { parametersOf(Uuid.random()) })

@@ -33,6 +33,9 @@ data class QualificationGrant(
     @Serializable(InstantSerializer::class) val expiresAt: Instant?,
 )
 
+/** `true` if this grant counts at [now]: it has no expiry, or expires after [now]. */
+fun QualificationGrant.isActiveAt(now: Instant): Boolean = expiresAt == null || expiresAt > now
+
 /** A confirmed department member as listed to an examiner picking who to grant a qualification to. */
 @Serializable
 data class DepartmentRosterMember(
