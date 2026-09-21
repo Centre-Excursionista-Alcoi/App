@@ -34,6 +34,7 @@ import kotlinx.coroutines.Job
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.isUpcoming
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
@@ -121,9 +122,7 @@ fun HomePage(
 
     val now = Clock.System.now()
     val futureEvents = remember(events) {
-        events?.filter { event ->
-            event.end?.let { it >= now } ?: (event.start <= now)
-        }
+        events?.filter { it.isUpcoming(now) }
     }
 
     AdaptiveVerticalGrid(
