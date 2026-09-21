@@ -24,24 +24,30 @@ sealed interface Destination : NavKey {
         const val ADMIN_ITEMS = "admin/items"
         const val ADMIN_LENDINGS_MANAGEMENT = "admin/lendings"
 
+        const val RESET_PASSWORD = "reset_password"
+
         /**
          * Resolves the leaf destination a deep link [url] points to, or `null` if it doesn't match any destination.
          *
          * This only returns the destination the link ultimately points to -- use [backStackFor] to build the full
          * back stack (with the appropriate ancestor screens) that should be pushed for it.
+         *
+         * Links are matched on where they point, see [route], and case-insensitively: not every app that shows a link
+         * keeps the case of its host.
          */
         suspend fun fromUrl(url: Url?): Destination? {
             if (url == null) return null
-            if (url.host == ITEM_TYPE) {
+            val route = url.route()
+            if (route.equals(ITEM_TYPE, ignoreCase = true)) {
                 val typeId = url.fragment.toUuidOrNull() ?: return null
                 val type = get<InventoryItemTypesRepository>().get(typeId) ?: return null
                 return ItemTypeDetails(type)
             }
-            if (url.host == ADMIN_ITEMS) {
+            if (route.equals(ADMIN_ITEMS, ignoreCase = true)) {
                 val typeId = url.fragment.toUuidOrNull() ?: return null
                 return Main(showingAdminItemTypeId = typeId)
             }
-            if (url.host == ADMIN_LENDINGS_MANAGEMENT) {
+            if (route.equals(ADMIN_LENDINGS_MANAGEMENT, ignoreCase = true)) {
                 val showingLendingId = url.fragment.toUuidOrNull()
                 return if (showingLendingId != null) {
                     Admin.LendingManagement(showingLendingId)
@@ -49,7 +55,7 @@ sealed interface Destination : NavKey {
                     Main(showingAdminLendingsScreen = true)
                 }
             }
-            if (url.segments[0] == "reset_password") {
+            if (route.equals(RESET_PASSWORD, ignoreCase = true)) {
                 // Reset password request redirection from email
                 val success = url.parameters["success"]?.toBoolean() ?: false
                 return if (success) {
@@ -129,4 +135,16 @@ sealed interface Destination : NavKey {
             @SerialName("request_id") val requestId: String,
         ) : Destination
     }
+}
+
+/**
+ * Where a link points, as a path like `admin/lendings`.
+ *
+ * For the app's own `cea://` scheme the first part of the path lands in the URL's host (`cea://admin/lendings` is
+ * host `admin` and path `/lendings`), so the host and the path are joined. For anything else, such as an `https`
+ * link, it's just the path.
+ */
+internal fun Url.route(): String {
+    val parts = if (protocol.name.equals("cea", ignoreCase = true)) listOf(host) + segments else segments
+    return parts.filter { it.isNotEmpty() }.joinToString("/")
 }
