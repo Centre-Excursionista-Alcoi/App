@@ -572,4 +572,9 @@
     <string name="department_role_memory_manager_description">Administra les memòries de la secció</string>
     <string name="department_role_content_manager">Administrador de Continguts</string>
     <string name="department_role_content_manager_description">Crea i edita els posts i esdeveniments de la secció</string>
+    <string name="login_existing_account_title">Ja tens un compte desat</string>
+    <string name="login_existing_account_message">La tens un compte desat en aquest dispositiu (%1$s). Vols tancar la sessió abans d'afegir-ne un de nou?</string>
+    <string name="login_existing_account_logout">Sortir</string>
+    <string name="date_time_picker_date_tab">Data</string>
+    <string name="date_time_picker_time_tab">Hora</string>
 </resources>
