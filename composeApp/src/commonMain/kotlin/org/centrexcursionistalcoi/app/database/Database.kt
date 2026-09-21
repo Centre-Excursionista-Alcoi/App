@@ -23,7 +23,7 @@ import org.centrexcursionistalcoi.app.database.entity.QualificationGrantEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
-const val DATABASE_VERSION = 4
+const val DATABASE_VERSION = 3
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(

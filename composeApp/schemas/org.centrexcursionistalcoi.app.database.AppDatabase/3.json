@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "788d17e65588b781ffa8a32dbb818ab2",
+    "identityHash": "01a94ffb030eaf5963ba0c69980628f4",
     "entities": [
       {
         "tableName": "Departments",
@@ -745,6 +745,81 @@
         ]
       },
       {
+        "tableName": "Qualifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `departmentId` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "departmentId",
+            "columnName": "departmentId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "QualificationGrants",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`qualificationId` TEXT NOT NULL, `userSub` TEXT NOT NULL, `grantedBy` TEXT, `grantedAt` INTEGER NOT NULL, `expiresAt` INTEGER, PRIMARY KEY(`qualificationId`))",
+        "fields": [
+          {
+            "fieldPath": "qualificationId",
+            "columnName": "qualificationId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userSub",
+            "columnName": "userSub",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "grantedBy",
+            "columnName": "grantedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "grantedAt",
+            "columnName": "grantedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expiresAt",
+            "columnName": "expiresAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "qualificationId"
+          ]
+        }
+      },
+      {
         "tableName": "ReceivedItems",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `lending` TEXT NOT NULL, `item` TEXT NOT NULL, `notes` TEXT, `receivedBy` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`lending`) REFERENCES `Lendings`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`item`) REFERENCES `InventoryItems`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`receivedBy`) REFERENCES `Users`(`sub`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
@@ -934,7 +1009,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '788d17e65588b781ffa8a32dbb818ab2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '01a94ffb030eaf5963ba0c69980628f4')"
     ]
   }
 }
