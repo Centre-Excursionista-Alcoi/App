@@ -556,4 +556,9 @@
     <string name="department_role_memory_manager_description">Administra las memorias de la sección</string>
     <string name="department_role_content_manager">Administrador de Contenidos</string>
     <string name="department_role_content_manager_description">Crea y edita los anuncios y eventos de la sección</string>
+    <string name="login_existing_account_title">Ya tienes una cuenta guardada</string>
+    <string name="login_existing_account_message">Ya tienes una cuenta guardada en este dispositivo (%1$s). Cerrar la sesión antes de añadir una diferente?</string>
+    <string name="login_existing_account_logout">Salir</string>
+    <string name="date_time_picker_date_tab">Fecha</string>
+    <string name="date_time_picker_time_tab">Hora</string>
 </resources>
