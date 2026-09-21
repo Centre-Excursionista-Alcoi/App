@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
@@ -26,7 +28,9 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
@@ -40,6 +44,20 @@ import org.slf4j.LoggerFactory
 class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UUIDEntityClass<EventEntity>(Events) {
         private val logger = LoggerFactory.getLogger("EventEntity")
+
+        /**
+         * How long an event without an end date is taken to last, when deciding whether it's over. A whole day
+         * always covers the rest of the day it starts on, in whatever time zone, so a client can trim the list to
+         * the exact end of that day in its own zone without the server having to know it.
+         */
+        private val WITHOUT_END_LASTS: Duration = Duration.ofDays(1)
+
+        /**
+         * The events that aren't over yet at [now] -- still to come or in progress -- as a query condition. Must
+         * agree with [isNotOverAt].
+         */
+        private fun notOverAt(now: Instant): Op<Boolean> =
+            (Events.end greaterEq now) or (Events.end.isNull() and (Events.start greaterEq now.minus(WITHOUT_END_LASTS)))
 
         context(_: JdbcTransaction)
         fun forSession(session: UserSession?) = when {
@@ -66,7 +84,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
                 logger.debug("User {} is in departments {}. Fetching events...", session.sub, userDepartments)
                 val now = now()
                 find {
-                    (Events.start greaterEq now) and ((Events.department eq null) or (Events.department inList userDepartments))
+                    notOverAt(now) and ((Events.department eq null) or (Events.department inList userDepartments))
                 }
             }
         }
@@ -83,9 +101,15 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         session.isAdmin() -> true
         else -> {
             val eventDepartmentId = department?.id?.value
-            start >= now() && (eventDepartmentId == null || DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).any { it.department.id.value == eventDepartmentId })
+            isNotOverAt(now()) && (eventDepartmentId == null || DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true).any { it.department.id.value == eventDepartmentId })
         }
     }
+
+    /**
+     * Whether this event is still to come or in progress at [now]: it hasn't reached its end date or, without one,
+     * a day after it started. Must agree with the query condition [notOverAt] used by [forSession].
+     */
+    private fun isNotOverAt(now: Instant): Boolean = (end ?: start.plus(WITHOUT_END_LASTS)) >= now
 
     val created by Events.created
     override var lastUpdate by Events.lastUpdate
