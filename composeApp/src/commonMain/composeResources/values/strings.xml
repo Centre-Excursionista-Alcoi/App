@@ -621,4 +621,22 @@
     <string name="event_end">End</string>
     <string name="event_add_to_calendar">Add to Calendar</string>
 
+    <string name="management_qualifications">Qualifications</string>
+    <string name="management_qualification_none">No qualifications yet</string>
+    <string name="management_qualification_create">New qualification</string>
+    <string name="management_qualification_edit">Edit qualification</string>
+    <string name="management_qualification_name">Name</string>
+    <string name="management_qualification_grant">Grant</string>
+    <string name="management_qualification_grant_title">Grant %1$s</string>
+    <string name="management_qualification_grant_search">Search members</string>
+    <string name="management_qualification_grant_no_members">No members found</string>
+    <string name="management_qualification_expires">Expires</string>
+    <string name="management_qualification_expires_on">Valid until</string>
+    <string name="management_qualification_holders">Holders</string>
+    <string name="management_qualification_hide_holders">Hide holders</string>
+    <string name="management_qualification_no_holders">Nobody holds this qualification yet</string>
+    <string name="management_qualification_no_expiry">Never expires</string>
+    <string name="management_qualification_valid_until">Valid until %1$s</string>
+    <string name="management_qualification_expired_on">Expired on %1$s</string>
+    <string name="management_qualification_revoke">Revoke</string>
 </resources>

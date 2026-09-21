@@ -61,3 +61,21 @@ class TestQualificationRequirements {
         assertFalse(listOf(emptyList<Uuid>()).isSatisfiedBy(setOf(a, b, c)))
     }
 }
+
+class TestQualificationGrant {
+    private fun grant(expiresAt: kotlin.time.Instant?) = QualificationGrant(Uuid.random(), "sub", null, kotlin.time.Instant.fromEpochMilliseconds(0), expiresAt)
+
+    @Test
+    fun grantWithoutExpiry_isAlwaysActive() {
+        assertTrue(grant(null).isActiveAt(kotlin.time.Instant.fromEpochMilliseconds(Long.MAX_VALUE / 1_000_000)))
+    }
+
+    @Test
+    fun grant_isActiveUntilItsExpiry() {
+        val expiry = kotlin.time.Instant.fromEpochMilliseconds(10_000)
+        assertTrue(grant(expiry).isActiveAt(kotlin.time.Instant.fromEpochMilliseconds(9_999)))
+        // Expired exactly at the expiry, matching the server (which only counts expiresAt > now)
+        assertFalse(grant(expiry).isActiveAt(expiry))
+        assertFalse(grant(expiry).isActiveAt(kotlin.time.Instant.fromEpochMilliseconds(10_001)))
+    }
+}
