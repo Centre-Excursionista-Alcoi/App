@@ -20,3 +20,9 @@ fun ReferencedEvent.isUpcoming(now: Instant, timeZone: TimeZone = TimeZone.curre
 /** The start of the day after the one this event starts on, in [timeZone]: the first moment it's certainly over. */
 private fun ReferencedEvent.endOfStartDay(timeZone: TimeZone): Instant =
     start.toLocalDateTime(timeZone).date.plus(1, DateTimeUnit.DAY).atStartOfDayIn(timeZone)
+
+/**
+ * Whether a member can still confirm or withdraw their assistance at [now]: only until the event starts. The server
+ * refuses both once it has (`EventInThePast`), so the app doesn't offer them then.
+ */
+fun ReferencedEvent.canChangeAssistance(now: Instant): Boolean = start >= now

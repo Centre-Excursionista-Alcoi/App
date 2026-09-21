@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.event_add_to_calendar
+import cea_app.composeapp.generated.resources.event_assistance_closed
 import cea_app.composeapp.generated.resources.event_by
 import cea_app.composeapp.generated.resources.event_confirm_assistance
 import cea_app.composeapp.generated.resources.event_department_generic
@@ -47,6 +48,7 @@ import org.centrexcursionistalcoi.app.data.EventRequirement
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.canChangeAssistance
 import org.centrexcursionistalcoi.app.data.requirements
 import org.centrexcursionistalcoi.app.data.addCalendarEvent
 import org.centrexcursionistalcoi.app.data.localizedDateRange
@@ -151,6 +153,8 @@ fun EventItem(
                 EventQualificationRequirements(requirements)
             }
             val meetsRequirements = requirements.all { it.isMet }
+            // The server refuses to confirm or withdraw once the event has started, so the buttons aren't offered then
+            val canChangeAssistance = remember(event) { event.canChangeAssistance(Clock.System.now()) }
 
             if (event.requiresConfirmation) {
                 val assistanceConfirmed = event.userSubList.find { it.sub == profile.sub } != null
@@ -167,7 +171,7 @@ fun EventItem(
                 var isLoading by remember { mutableStateOf(false) }
                 if (assistanceConfirmed) {
                     OutlinedButton(
-                        enabled = !isLoading,
+                        enabled = canChangeAssistance && !isLoading,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -182,7 +186,7 @@ fun EventItem(
                     ) { Text(stringResource(Res.string.event_reject_assistance)) }
                 } else {
                     Button(
-                        enabled = isUserInDepartment && !isLoading && meetsRequirements && (!event.requiresInsurance || activeInsurancesForEvent.isNotEmpty()),
+                        enabled = canChangeAssistance && isUserInDepartment && !isLoading && meetsRequirements && (!event.requiresInsurance || activeInsurancesForEvent.isNotEmpty()),
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             isLoading = true
@@ -199,9 +203,16 @@ fun EventItem(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
+                if (!canChangeAssistance) {
+                    Text(
+                        text = stringResource(Res.string.event_assistance_closed),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
                 // Someone already signed up (before the requirements changed, say) can still withdraw, so this only
-                // matters while they can't confirm
-                if (!meetsRequirements && !assistanceConfirmed) {
+                // matters while they can't confirm. Once the event has started nothing can change, which is said above.
+                if (!meetsRequirements && !assistanceConfirmed && canChangeAssistance) {
                     Text(
                         text = stringResource(Res.string.event_qualifications_missing),
                         color = MaterialTheme.colorScheme.error,
