@@ -33,9 +33,17 @@ dependencyResolutionManagement {
         // compose-webview-multiplatform: Desktop target has to add this repo
         maven("https://jogamp.org/deployment/maven")
     }
+
+    versionCatalogs {
+        create("kotlinWrappers") {
+            val wrappersVersion = "2026.9.1"
+            from("org.jetbrains.kotlin-wrappers:kotlin-wrappers-catalog:$wrappersVersion")
+        }
+    }
 }
 
 include(":composeApp")
 include(":server")
 include(":shared")
 include(":android")
+include(":admin")

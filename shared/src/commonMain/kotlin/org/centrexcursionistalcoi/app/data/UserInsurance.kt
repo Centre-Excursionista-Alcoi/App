@@ -19,7 +19,7 @@ data class UserInsurance(
     val policyNumber: String,
     val validFrom: LocalDate,
     val validTo: LocalDate,
-    val documentId: Uuid?,
+    val documentId: Uuid? = null,
     val femecvLicense: LicenseData? = null,
     val cardImage: String? = null,
 ): Entity<Uuid>, FileContainer {
