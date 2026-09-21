@@ -5,11 +5,15 @@ import io.ktor.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.unmetRequirements
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
@@ -17,19 +21,26 @@ import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.Telegram
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
+import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -41,8 +52,24 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.time.Clock.System.now
 import kotlin.time.toJavaInstant
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 private val eventAssistanceMutex = Mutex()
+
+/**
+ * Parses the `qualificationRequirements` form field: a JSON array of groups, each a JSON array of qualification
+ * ids (e.g. `[["<id>"],["<id>","<id>"]]`).
+ * @throws IllegalArgumentException if it isn't that.
+ */
+private fun parseQualificationRequirements(value: String): List<List<UUID>> {
+    val groups = try {
+        json.decodeFromString(ListSerializer(ListSerializer(String.serializer())), value)
+    } catch (e: SerializationException) {
+        throw IllegalArgumentException("Malformed qualificationRequirements", e)
+    }
+    return groups.map { group -> group.map { it.toUUIDOrNull() ?: throw IllegalArgumentException("Malformed qualification id: $it") } }
+}
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
@@ -60,6 +87,7 @@ fun Route.eventsRoutes() {
             var maxPeople: Long? = null
             var requiresConfirmation = false
             var departmentId: UUID? = null
+            var qualificationRequirements: List<List<UUID>> = emptyList()
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
@@ -74,6 +102,7 @@ fun Route.eventsRoutes() {
                             "maxPeople" -> maxPeople = partData.value.toLongOrNull()
                             "requiresConfirmation" -> requiresConfirmation = partData.value.toBoolean()
                             "department" -> departmentId = partData.value.toUUIDOrNull()
+                            "qualificationRequirements" -> qualificationRequirements = parseQualificationRequirements(partData.value)
                             "image" -> {
                                 image.populate(partData)
                             }
@@ -94,6 +123,11 @@ fun Route.eventsRoutes() {
             val department = departmentId?.let {
                 Database { DepartmentEntity.findById(it) }  ?: throw NoSuchElementException("Department with id $it does not exist")
             }
+
+            // Checked before anything is created, so an invalid requirement can't leave a half-created event (or
+            // an orphaned image) behind. Throws an IllegalArgumentException, which is reported as a 400.
+            val requirements = Database { validatedQualificationRequirements(department?.id?.value, qualificationRequirements) }
+
             val imageEntity = if (image.isNotEmpty()) image.newEntity() else null
 
             Database {
@@ -107,7 +141,7 @@ fun Route.eventsRoutes() {
                     this.requiresConfirmation = requiresConfirmation
                     this.department = department
                     this.image = imageEntity
-                }
+                }.also { it.setQualificationRequirements(requirements) }
             }
         },
         afterCreate = { eventEntity ->
@@ -205,6 +239,27 @@ fun Route.eventsRoutes() {
             }
             if (validInsurances <= 0) {
                 call.respondError(Error.UserDoesNotHaveInsurance())
+                return@postWithLock
+            }
+        }
+
+        // If the event requires qualifications, check that the user holds them (and that they haven't expired)
+        val requirements = Database { event.qualificationRequirements() }.map { group -> group.map { it.toKotlinUuid() } }
+        if (requirements.isNotEmpty()) {
+            val required = requirements.flatten().map { it.toJavaUuid() }
+            val held = Database {
+                UserQualifications.selectAll()
+                    .where {
+                        (UserQualifications.userSub eq session.sub) and
+                            (UserQualifications.qualification inList required) and
+                            (UserQualifications.expiresAt.isNull() or (UserQualifications.expiresAt greater now().toJavaInstant()))
+                    }
+                    .map { it[UserQualifications.qualification].value.toKotlinUuid() }
+                    .toSet()
+            }
+            val unmet = requirements.unmetRequirements(held)
+            if (unmet.isNotEmpty()) {
+                call.respondError(Error.MissingQualifications(unmet))
                 return@postWithLock
             }
         }

@@ -11,12 +11,17 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
+import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
+import org.centrexcursionistalcoi.app.routes.PatchRejectedException
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
+import org.centrexcursionistalcoi.app.security.InvalidQualificationRequirementsException
+import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -26,6 +31,9 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
@@ -99,6 +107,37 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
 
     val userReferences by UserReferenceEntity via EventMembers
 
+    /**
+     * The qualifications required to confirm assistance, as groups of alternatives that must all be satisfied
+     * (see [Event.qualificationRequirements]).
+     */
+    context(_: JdbcTransaction)
+    fun qualificationRequirements(): List<List<UUID>> =
+        EventQualificationRequirements.selectAll()
+            .where { EventQualificationRequirements.event eq id }
+            .groupBy({ it[EventQualificationRequirements.groupIndex] }, { it[EventQualificationRequirements.qualification].value })
+            .toSortedMap()
+            .values
+            .map { it.sortedBy(UUID::toString) }
+
+    /**
+     * Replaces this event's qualification requirements with [groups], which must have already been checked with
+     * [validatedQualificationRequirements].
+     */
+    context(_: JdbcTransaction)
+    fun setQualificationRequirements(groups: List<List<UUID>>) {
+        EventQualificationRequirements.deleteWhere { EventQualificationRequirements.event eq this@EventEntity.id }
+        groups.forEachIndexed { index, group ->
+            for (qualificationId in group) {
+                EventQualificationRequirements.insert {
+                    it[event] = this@EventEntity.id
+                    it[groupIndex] = index
+                    it[qualification] = qualificationId
+                }
+            }
+        }
+    }
+
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value.toKotlinUuid(),
@@ -113,6 +152,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         department = department?.id?.value?.toKotlinUuid(),
         image = image?.id?.value?.toKotlinUuid(),
         userSubList = userReferences.map { it.sub.value },
+        qualificationRequirements = qualificationRequirements().map { group -> group.map { it.toKotlinUuid() } },
     )
 
     context(_: JdbcTransaction)
@@ -127,6 +167,19 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         request.requiresInsurance?.let { requiresInsurance = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         request.image?.let { image = FileEntity.updateOrCreate(it) }
+
+        // Requirements can only be on the event's own department's qualifications, so they have to be checked
+        // against the department the event ends up in -- which also catches moving an event that already has
+        // requirements to another department without replacing them.
+        if (request.qualificationRequirements != null || request.department != null) {
+            val requested = request.qualificationRequirements?.map { group -> group.map { it.toJavaUuid() } }
+            val requirements = try {
+                validatedQualificationRequirements(department?.id?.value, requested ?: qualificationRequirements())
+            } catch (e: InvalidQualificationRequirementsException) {
+                throw PatchRejectedException(Error.InvalidArgument("qualificationRequirements", e.message))
+            }
+            if (requested != null) setQualificationRequirements(requirements)
+        }
     }
 
     override suspend fun updated() {

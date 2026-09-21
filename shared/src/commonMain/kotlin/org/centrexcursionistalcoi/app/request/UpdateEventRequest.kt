@@ -19,6 +19,10 @@ data class UpdateEventRequest(
     val requiresInsurance: Boolean? = null,
     val department: Uuid? = null,
     val image: FileWithContext? = null,
+    /**
+     * Replaces the event's [Event.qualificationRequirements]. `null` leaves them unchanged, an empty list clears them.
+     */
+    val qualificationRequirements: List<List<Uuid>>? = null,
 ): UpdateEntityRequest<Uuid, Event> {
     override fun isEmpty(): Boolean {
         return start == null &&
@@ -30,6 +34,7 @@ data class UpdateEventRequest(
             requiresConfirmation == null &&
             requiresInsurance == null &&
             department == null &&
+            qualificationRequirements == null &&
             (image == null || image.isEmpty())
     }
 }
