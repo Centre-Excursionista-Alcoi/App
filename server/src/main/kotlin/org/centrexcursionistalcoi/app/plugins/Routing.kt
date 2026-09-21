@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.routes.lendingsRoutes
 import org.centrexcursionistalcoi.app.routes.memoriesRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
+import org.centrexcursionistalcoi.app.routes.qualificationsRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
@@ -78,6 +79,7 @@ fun Application.configureRouting() {
         profileRoutes()
         departmentsRoutes()
         eventsRoutes()
+        qualificationsRoutes()
         postsRoutes()
         usersRoutes()
         inventoryRoutes()
