@@ -65,7 +65,6 @@ import cea_app.composeapp.generated.resources.login_forgot_password_dialog_title
 import cea_app.composeapp.generated.resources.login_forgot_password_success_title
 import cea_app.composeapp.generated.resources.login_password_changed_message
 import cea_app.composeapp.generated.resources.login_password_changed_title
-import cea_app.composeapp.generated.resources.login_title
 import cea_app.composeapp.generated.resources.password
 import cea_app.composeapp.generated.resources.people
 import cea_app.composeapp.generated.resources.register_action
@@ -77,6 +76,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.resources.GenderedStringResource
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
@@ -356,7 +356,7 @@ private fun AuthScreen_Login(
         isLoading = isLoading,
         error = error,
         isValid = valid,
-        title = stringResource(Res.string.login_title),
+        title = GenderedStringResource.LoginTitle.stringResource(),
         switchText = stringResource(Res.string.register_action),
         onSwitch = onRegisterRequest,
         submitText = stringResource(Res.string.login_action),
