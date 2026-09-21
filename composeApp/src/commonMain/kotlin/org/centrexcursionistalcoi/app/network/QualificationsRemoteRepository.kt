@@ -10,6 +10,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlin.time.Instant
@@ -50,6 +51,25 @@ class QualificationsRemoteRepository {
     }
 
     private suspend fun <T> HttpResponse.decode(serializer: KSerializer<T>): T = json.decodeFromString(serializer, bodyAsText())
+
+    /** What the server has for the local copy: every qualification definition, and the logged-in user's own grants. */
+    class Snapshot(val qualifications: List<Qualification>, val myGrants: List<QualificationGrant>)
+
+    /**
+     * Fetches everything the local copy needs, or `null` if the server predates qualifications (its routes answer 404),
+     * which just means there's nothing to show. Any other failure is thrown like the other calls do, so that it's
+     * handled centrally (session expiry included) instead of being mistaken for "no qualifications".
+     */
+    suspend fun snapshot(): Snapshot? {
+        val qualifications = httpClient.get("/qualifications")
+        if (qualifications.status == HttpStatusCode.NotFound) return null
+        val grants = httpClient.get("/profile/qualifications")
+        if (grants.status == HttpStatusCode.NotFound) return null
+        return Snapshot(
+            qualifications = qualifications.orThrow("list qualifications").decode(ListSerializer(Qualification.serializer())),
+            myGrants = grants.orThrow("list own qualifications").decode(ListSerializer(QualificationGrant.serializer())),
+        )
+    }
 
     /** Every qualification definition. Readable by any logged-in user. */
     suspend fun list(): List<Qualification> =

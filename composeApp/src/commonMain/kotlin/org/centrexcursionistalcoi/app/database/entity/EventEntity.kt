@@ -20,6 +20,8 @@ data class EventEntity(
     val requiresInsurance: Boolean,
     val department: Uuid?,
     val image: Uuid?,
+    /** See [Event.qualificationRequirements]. */
+    val qualificationRequirements: List<List<Uuid>>,
 ) {
     companion object {
         /** [Event.userSubList] is persisted separately, as [EventUserCrossRef] rows. */
@@ -35,6 +37,7 @@ data class EventEntity(
             requiresInsurance = requiresInsurance,
             department = department,
             image = image,
+            qualificationRequirements = qualificationRequirements,
         )
     }
 }

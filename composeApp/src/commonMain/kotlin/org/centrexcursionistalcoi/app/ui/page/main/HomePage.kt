@@ -31,6 +31,8 @@ import cea_app.composeapp.generated.resources.permission_settings
 import cea_app.composeapp.generated.resources.posts
 import cea_app.composeapp.generated.resources.upcoming_events
 import kotlinx.coroutines.Job
+import org.centrexcursionistalcoi.app.data.Qualification
+import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.permission.HelperHolder
@@ -63,6 +65,8 @@ fun HomePage(
     val profile = model.profile.collectAsState()
     val posts by model.posts.collectAsState()
     val events by model.events.collectAsState()
+    val qualifications by model.qualifications.collectAsState()
+    val myQualificationGrants by model.myQualificationGrants.collectAsState()
 
     LifecycleResumeEffect(model) {
         model.refreshPermissions()
@@ -87,6 +91,8 @@ fun HomePage(
         posts = posts,
 
         events = events,
+        qualifications = qualifications.orEmpty(),
+        myQualificationGrants = myQualificationGrants.orEmpty(),
         onConfirmAssistanceRequest = { event -> model.confirmEventAssistance(event) },
         onRejectAssistanceRequest = { event -> model.rejectEventAssistance(event) },
     )
@@ -105,6 +111,8 @@ fun HomePage(
     posts: List<ReferencedPost>?,
 
     events: List<ReferencedEvent>?,
+    qualifications: List<Qualification> = emptyList(),
+    myQualificationGrants: List<QualificationGrant> = emptyList(),
     onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
     onRejectAssistanceRequest: (ReferencedEvent) -> Job,
 ) {
@@ -186,6 +194,8 @@ fun HomePage(
                 EventItem(
                     profile,
                     event,
+                    qualifications,
+                    myQualificationGrants,
                     { onConfirmAssistanceRequest(event) },
                     { onRejectAssistanceRequest(event) },
                 )

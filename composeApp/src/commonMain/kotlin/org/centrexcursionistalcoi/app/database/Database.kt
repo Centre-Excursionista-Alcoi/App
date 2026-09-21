@@ -18,10 +18,12 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
+import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
+import org.centrexcursionistalcoi.app.database.entity.QualificationGrantEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
-const val DATABASE_VERSION = 2
+const val DATABASE_VERSION = 3
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(
@@ -37,6 +39,8 @@ const val DATABASE_FILE_NAME = "cea_app.db"
         MemoryEntity::class,
         MemoryMemberCrossRef::class,
         PostEntity::class,
+        QualificationEntity::class,
+        QualificationGrantEntity::class,
         ReceivedItemEntity::class,
         UserEntity::class,
     ],
@@ -56,6 +60,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryDao(): org.centrexcursionistalcoi.app.database.dao.MemoryDao
     abstract fun memoryMemberCrossRefDao(): org.centrexcursionistalcoi.app.database.dao.MemoryMemberCrossRefDao
     abstract fun postDao(): org.centrexcursionistalcoi.app.database.dao.PostDao
+    abstract fun qualificationDao(): org.centrexcursionistalcoi.app.database.dao.QualificationDao
+    abstract fun qualificationGrantDao(): org.centrexcursionistalcoi.app.database.dao.QualificationGrantDao
     abstract fun receivedItemDao(): org.centrexcursionistalcoi.app.database.dao.ReceivedItemDao
     abstract fun userDao(): org.centrexcursionistalcoi.app.database.dao.UserDao
 }

@@ -40,6 +40,7 @@ class EventsRemoteRepository(
         requiresConfirmation: Boolean,
         requiresInsurance: Boolean,
         departmentId: Uuid?,
+        qualificationRequirements: List<List<Uuid>>,
         image: PlatformFile?,
         progressNotifier: ProgressNotifier
     ) {
@@ -59,6 +60,7 @@ class EventsRemoteRepository(
                 department = departmentId,
                 image = inMemoryImage?.id,
                 userSubList = emptyList(),
+                qualificationRequirements = qualificationRequirements,
             ),
             progressNotifier,
         )
@@ -75,6 +77,8 @@ class EventsRemoteRepository(
         requiresConfirmation: Boolean?,
         requiresInsurance: Boolean?,
         departmentId: Uuid?,
+        /** `null` leaves the event's requirements as they are, an empty list clears them. */
+        qualificationRequirements: List<List<Uuid>>?,
         image: PlatformFile?,
         progressNotifier: ProgressNotifier
     ) {
@@ -93,6 +97,7 @@ class EventsRemoteRepository(
                 requiresInsurance = requiresInsurance,
                 department = departmentId,
                 image = inMemoryImage?.toFileWithContext(),
+                qualificationRequirements = qualificationRequirements,
             ),
             serializer = UpdateEventRequest.serializer(),
             progressNotifier = progressNotifier,
