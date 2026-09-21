@@ -17,6 +17,7 @@ import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -265,7 +266,7 @@ fun Route.lendingsRoutes() {
                     .map { MailerSendEmail(it.email, it.fullName) }
             }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
-            val url = "cea://admin/lendings#${lendingEntity.id.value}"
+            val url = AppLinks.adminLending(lendingEntity.id.value)
             Email.sendEmail(
                 to = emails,
                 subject = "New lending request (#${lendingEntity.id.value})",

@@ -58,6 +58,50 @@ class TestDestinationFromUrl {
         assertEquals(Destination.Admin.LendingManagement(id), open("cea://ADMIN/Lendings#$id"))
     }
 
+    // ---- The web links: https://centrexcursionistalcoi.app/... ----
+
+    @Test
+    fun webLink_toALending_opensThatLending() = runTest {
+        assertEquals(Destination.Admin.LendingManagement(id), open("https://centrexcursionistalcoi.app/admin/lendings/$id"))
+    }
+
+    @Test
+    fun webLink_toTheLendings_opensTheList() = runTest {
+        assertEquals(Destination.Main(showingAdminLendingsScreen = true), open("https://centrexcursionistalcoi.app/admin/lendings"))
+    }
+
+    @Test
+    fun webLink_toAnItemType_opensItInTheAdminItems() = runTest {
+        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("https://centrexcursionistalcoi.app/admin/items/$id"))
+    }
+
+    @Test
+    fun webLink_matchesIgnoringCase() = runTest {
+        assertEquals(Destination.Admin.LendingManagement(id), open("https://centrexcursionistalcoi.app/Admin/LENDINGS/$id"))
+    }
+
+    @Test
+    fun theSameLinkWithTheAppsOwnScheme_opensTheSameScreen() = runTest {
+        // the fallback for when a browser doesn't hand the web link to the app: same path, other scheme
+        assertEquals(Destination.Admin.LendingManagement(id), open("cea://admin/lendings/$id"))
+        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("cea://admin/items/$id"))
+    }
+
+    @Test
+    fun anIdInThePath_orAfterAHash_meansTheSame() = runTest {
+        // links written before ids moved into the path are still in people's inboxes
+        assertEquals(open("cea://admin/lendings#$id"), open("https://centrexcursionistalcoi.app/admin/lendings/$id"))
+    }
+
+    @Test
+    fun webLinks_thatPointNowhere_openNothing() = runTest {
+        assertNull(open("https://centrexcursionistalcoi.app/"))
+        assertNull(open("https://centrexcursionistalcoi.app/about"))
+        // not an id, or more than an id
+        assertNull(open("https://centrexcursionistalcoi.app/admin/lendings/not-a-uuid"))
+        assertNull(open("https://centrexcursionistalcoi.app/admin/lendings/$id/extra"))
+    }
+
     // ---- Item types (needs the local repository) ----
 
     @Test
@@ -67,6 +111,7 @@ class TestDestinationFromUrl {
         startKoin { modules(module { single { repository } }) }
 
         assertNull(open("cea://itemType#$id"))
+        assertNull(open("https://centrexcursionistalcoi.app/itemType/$id"))
     }
 
     @Test

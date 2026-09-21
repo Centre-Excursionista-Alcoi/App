@@ -115,14 +115,26 @@ class MainActivity : NfcIntentHandlerActivity() {
         }
     }
 
+    /**
+     * The link the app was opened with, if it's one that points somewhere in the app: a web link on
+     * [APP_LINKS_HOST], or the same with the app's own `cea://` scheme. Links on the server's own host aren't:
+     * see [openWebOnlyLinkIfNeeded].
+     */
     private fun getUrlFromIntent(): Url? {
         val uri = intent.data ?: return null
-        if (uri.scheme != "cea" || uri.host == "server.centrexcursionistalcoi.app") return null
+        val isAppLink = uri.scheme == "https" && uri.host == APP_LINKS_HOST
+        if (uri.scheme != "cea" && !isAppLink) return null
         return Url(uri.toString())
     }
 
     companion object {
         private val log = logging()
+
+        /**
+         * The address the links people share are on. It opens the app when it's installed and shows a page to get
+         * the app when it isn't. Must match the host of the App Link intent-filter in the manifest.
+         */
+        private const val APP_LINKS_HOST = "centrexcursionistalcoi.app"
 
         /** Paths on `server.centrexcursionistalcoi.app` that must always open as a web page. See [openWebOnlyLinkIfNeeded]. */
         private val WEB_ONLY_PATHS = setOf("/reset_password")

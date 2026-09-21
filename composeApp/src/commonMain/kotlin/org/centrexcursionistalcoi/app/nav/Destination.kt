@@ -29,6 +29,11 @@ sealed interface Destination : NavKey {
         /**
          * Resolves the leaf destination a deep link [url] points to, or `null` if it doesn't match any destination.
          *
+         * A link is either `https://centrexcursionistalcoi.app/admin/lendings/<id>`, the way links are shared, or the
+         * same with the app's own `cea://` scheme, which is the fallback for when a browser doesn't hand the web
+         * link to the app: `cea://admin/lendings/<id>`. An id can also come after a `#`, as `cea://` links used to
+         * be written (`cea://admin/lendings#<id>`), so those already in someone's inbox still work.
+         *
          * This only returns the destination the link ultimately points to -- use [backStackFor] to build the full
          * back stack (with the appropriate ancestor screens) that should be pushed for it.
          *
@@ -38,17 +43,17 @@ sealed interface Destination : NavKey {
         suspend fun fromUrl(url: Url?): Destination? {
             if (url == null) return null
             val route = url.route()
-            if (route.equals(ITEM_TYPE, ignoreCase = true)) {
-                val typeId = url.fragment.toUuidOrNull() ?: return null
+            if (route.isRoute(ITEM_TYPE)) {
+                val typeId = url.idFor(route, ITEM_TYPE) ?: return null
                 val type = get<InventoryItemTypesRepository>().get(typeId) ?: return null
                 return ItemTypeDetails(type)
             }
-            if (route.equals(ADMIN_ITEMS, ignoreCase = true)) {
-                val typeId = url.fragment.toUuidOrNull() ?: return null
+            if (route.isRoute(ADMIN_ITEMS)) {
+                val typeId = url.idFor(route, ADMIN_ITEMS) ?: return null
                 return Main(showingAdminItemTypeId = typeId)
             }
-            if (route.equals(ADMIN_LENDINGS_MANAGEMENT, ignoreCase = true)) {
-                val showingLendingId = url.fragment.toUuidOrNull()
+            if (route.isRoute(ADMIN_LENDINGS_MANAGEMENT)) {
+                val showingLendingId = url.idFor(route, ADMIN_LENDINGS_MANAGEMENT)
                 return if (showingLendingId != null) {
                     Admin.LendingManagement(showingLendingId)
                 } else {
@@ -148,3 +153,12 @@ internal fun Url.route(): String {
     val parts = if (protocol.name.equals("cea", ignoreCase = true)) listOf(host) + segments else segments
     return parts.filter { it.isNotEmpty() }.joinToString("/")
 }
+
+/** Whether this route is [base] itself, or [base] followed by an id (`admin/lendings/<id>`). */
+private fun String.isRoute(base: String): Boolean =
+    equals(base, ignoreCase = true) ||
+        (startsWith("$base/", ignoreCase = true) && drop(base.length + 1).toUuidOrNull() != null)
+
+/** The id a link to [base] carries: after its path (`admin/lendings/<id>`) or after a `#` (`admin/lendings#<id>`). */
+private fun Url.idFor(route: String, base: String): Uuid? =
+    route.drop(base.length).trimStart('/').toUuidOrNull() ?: fragment.toUuidOrNull()
