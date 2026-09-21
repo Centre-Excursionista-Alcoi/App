@@ -108,6 +108,10 @@
     <string name="department_role_memory_manager_description">Manage the department's memories</string>
     <string name="department_role_content_manager">Content Manager</string>
     <string name="department_role_content_manager_description">Create and edit the department's posts and events</string>
+    <string name="department_role_qualifications_manager">Qualifications Manager</string>
+    <string name="department_role_qualifications_manager_description">Create, edit and delete the department's qualifications, and grant them to members</string>
+    <string name="department_role_examiner">Examiner</string>
+    <string name="department_role_examiner_description">Grant and revoke the department's qualifications to its members</string>
 
     <string name="management_inventory_item_type_create">Create Item Type</string>
     <string name="management_inventory_item_type_display_name">Display Name</string>

@@ -31,8 +31,8 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         get() = rolesRaw.mapNotNull { DepartmentRole.fromStorageName(it) }
         set(value) { rolesRaw = value.map { it.storageName } }
 
-    /** `true` if this member holds [role], or holds [DepartmentRole.ADMIN] (which implies every role). */
-    fun hasRole(role: DepartmentRole): Boolean = role in roles || DepartmentRole.ADMIN in roles
+    /** `true` if this member holds [role], or holds a role that [DepartmentRole.implies] it (e.g. [DepartmentRole.ADMIN]). */
+    fun hasRole(role: DepartmentRole): Boolean = roles.any { it.implies(role) }
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(

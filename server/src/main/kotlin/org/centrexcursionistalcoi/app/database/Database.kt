@@ -26,9 +26,11 @@ import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.MemoriesMembers
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
+import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
@@ -70,6 +72,8 @@ object Database {
         Events,
         EventMembers,
         AuthEvents,
+        Qualifications,
+        UserQualifications,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 

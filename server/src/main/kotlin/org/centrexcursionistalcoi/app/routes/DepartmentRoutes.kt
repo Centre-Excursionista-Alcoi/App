@@ -49,7 +49,7 @@ import org.jetbrains.exposed.v1.core.eq
  *
  * If any error occurs, a response is sent to the user, and the function returns `null`.
  */
-private suspend fun RoutingContext.departmentRequest(requiredRole: DepartmentRole? = null): Pair<UserSession, DepartmentEntity>? {
+internal suspend fun RoutingContext.departmentRequest(requiredRole: DepartmentRole? = null): Pair<UserSession, DepartmentEntity>? {
     val session = getUserSessionOrFail() ?: return null
 
     return if (requiredRole != null) {

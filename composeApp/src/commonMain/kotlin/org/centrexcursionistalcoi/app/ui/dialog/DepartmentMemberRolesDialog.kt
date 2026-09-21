@@ -27,6 +27,10 @@ import cea_app.composeapp.generated.resources.department_role_memory_manager
 import cea_app.composeapp.generated.resources.department_role_memory_manager_description
 import cea_app.composeapp.generated.resources.department_role_people_manager
 import cea_app.composeapp.generated.resources.department_role_people_manager_description
+import cea_app.composeapp.generated.resources.department_role_examiner
+import cea_app.composeapp.generated.resources.department_role_examiner_description
+import cea_app.composeapp.generated.resources.department_role_qualifications_manager
+import cea_app.composeapp.generated.resources.department_role_qualifications_manager_description
 import cea_app.composeapp.generated.resources.management_department_member_roles_title
 import cea_app.composeapp.generated.resources.save
 import kotlinx.coroutines.Job
@@ -42,6 +46,8 @@ fun DepartmentRole.displayName(): String = when (this) {
     DepartmentRole.LENDING_MANAGER -> stringResource(Res.string.department_role_lending_manager)
     DepartmentRole.MEMORY_MANAGER -> stringResource(Res.string.department_role_memory_manager)
     DepartmentRole.CONTENT_MANAGER -> stringResource(Res.string.department_role_content_manager)
+    DepartmentRole.QUALIFICATIONS_MANAGER -> stringResource(Res.string.department_role_qualifications_manager)
+    DepartmentRole.EXAMINER -> stringResource(Res.string.department_role_examiner)
 }
 
 /** A short explanation of what [DepartmentRole] lets a member do, shown under its [displayName] in the role editor. */
@@ -53,6 +59,8 @@ fun DepartmentRole.description(): String = when (this) {
     DepartmentRole.LENDING_MANAGER -> stringResource(Res.string.department_role_lending_manager_description)
     DepartmentRole.MEMORY_MANAGER -> stringResource(Res.string.department_role_memory_manager_description)
     DepartmentRole.CONTENT_MANAGER -> stringResource(Res.string.department_role_content_manager_description)
+    DepartmentRole.QUALIFICATIONS_MANAGER -> stringResource(Res.string.department_role_qualifications_manager_description)
+    DepartmentRole.EXAMINER -> stringResource(Res.string.department_role_examiner_description)
 }
 
 /**

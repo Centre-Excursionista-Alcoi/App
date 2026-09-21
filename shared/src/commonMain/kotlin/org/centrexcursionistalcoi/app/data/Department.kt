@@ -31,15 +31,15 @@ data class Department(
         }
 
         /**
-         * Filters this list down to the departments where the profile holds [role] (or [DepartmentRole.ADMIN],
-         * which implies every role) as a confirmed member. Mirrors the server's per-department authorization: use
+         * Filters this list down to the departments where the profile holds [role] (or a role that
+         * [DepartmentRole.implies] it, such as [DepartmentRole.ADMIN]) as a confirmed member. Mirrors the server's per-department authorization: use
          * this to decide which departments to offer as a destination, or which items a management UI should let
          * the profile edit/delete.
          */
         fun List<Department>.departmentsWithRole(profile: ProfileResponse, role: DepartmentRole): List<Department> {
             return filter { department ->
-                department.members.orEmpty().find { it.userSub == profile.sub && it.confirmed }?.roles?.let {
-                    role in it || DepartmentRole.ADMIN in it
+                department.members.orEmpty().find { it.userSub == profile.sub && it.confirmed }?.roles?.any {
+                    it.implies(role)
                 } == true
             }
         }
