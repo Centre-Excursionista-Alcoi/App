@@ -90,3 +90,24 @@ class TestEventRequirementsDisplay {
         assertTrue(requirements.single().isMet)
     }
 }
+
+class TestEventRequirementsEditing {
+    private val a = Uuid.random()
+    private val b = Uuid.random()
+    private val c = Uuid.random()
+
+    @Test
+    fun normalized_dropsEmptyGroups_andRepeatedAlternatives() {
+        assertEquals(listOf(listOf(a), listOf(b, c)), listOf(listOf(a, a), emptyList(), listOf(b, c, b)).normalizedRequirements())
+        assertEquals(emptyList(), listOf(emptyList<Uuid>()).normalizedRequirements())
+    }
+
+    @Test
+    fun sameRequirements_ignoresOrder_butNotContent() {
+        assertTrue(listOf(listOf(a), listOf(b, c)) sameRequirementsAs listOf(listOf(c, b), listOf(a)))
+        // an unfinished, empty group makes no difference to what would be saved
+        assertTrue(listOf(listOf(a), emptyList()) sameRequirementsAs listOf(listOf(a)))
+        assertFalse(listOf(listOf(a), listOf(b)) sameRequirementsAs listOf(listOf(a, b)))
+        assertFalse(listOf(listOf(a)) sameRequirementsAs emptyList())
+    }
+}

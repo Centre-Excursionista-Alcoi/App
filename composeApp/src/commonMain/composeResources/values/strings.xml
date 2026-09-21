@@ -643,4 +643,11 @@
     <string name="event_qualifications_or">or</string>
     <string name="event_qualification_unknown">Unknown qualification</string>
     <string name="event_qualifications_missing">You don't have the qualifications required to attend this event</string>
+    <string name="event_qualifications_add_group">Add a requirement</string>
+    <string name="event_qualifications_remove_group">Remove requirement</string>
+    <string name="event_qualifications_and">and</string>
+    <string name="event_qualifications_group_title">Needs any of these</string>
+    <string name="event_qualifications_needs_department">Choose a department first: an event can only require its own department's qualifications</string>
+    <string name="event_qualifications_none_in_department">This department has no qualifications yet</string>
+    <string name="event_requires_confirmation_forced">Always on while the event requires qualifications</string>
 </resources>

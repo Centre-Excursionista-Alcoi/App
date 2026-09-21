@@ -40,3 +40,16 @@ fun ReferencedEvent.requirements(
         )
     }
 }
+
+/**
+ * These requirement groups as they'd be stored: repeated qualifications within a group and empty groups dropped
+ * (the server rejects an empty group, which is only a placeholder while a form is being edited).
+ */
+fun List<List<Uuid>>.normalizedRequirements(): List<List<Uuid>> = map { it.distinct() }.filter { it.isNotEmpty() }
+
+/**
+ * Whether [other] asks for the same as this: the same set of groups, each with the same alternatives, regardless
+ * of their order. (The server returns alternatives sorted by id, not in the order they were picked.)
+ */
+infix fun List<List<Uuid>>.sameRequirementsAs(other: List<List<Uuid>>): Boolean =
+    normalizedRequirements().map { it.toSet() }.toSet() == other.normalizedRequirements().map { it.toSet() }.toSet()

@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.QualificationsRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -23,11 +24,15 @@ class EventsManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
     eventsRepository: EventsRepository,
     departmentsRepository: DepartmentsRepository,
+    qualificationsRepository: QualificationsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository
 ) : ViewModel() {
     val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
+
+    /** What an event can require: its own department's qualifications. */
+    val qualifications = qualificationsRepository.qualificationsAsFlow().stateInViewModel()
 
     fun createEvent(
         start: LocalDateTime,
@@ -39,6 +44,7 @@ class EventsManagementViewModel(
         requiresConfirmation: Boolean,
         requiresInsurance: Boolean,
         department: Department?,
+        qualificationRequirements: List<List<Uuid>>,
         image: PlatformFile?,
         progressNotifier: ProgressNotifier
     ) = launch {
@@ -55,6 +61,7 @@ class EventsManagementViewModel(
                 requiresConfirmation,
                 requiresInsurance,
                 department?.id,
+                qualificationRequirements,
                 image,
                 progressNotifier
             )
@@ -72,6 +79,7 @@ class EventsManagementViewModel(
         requiresConfirmation: Boolean?,
         requiresInsurance: Boolean?,
         department: Department?,
+        qualificationRequirements: List<List<Uuid>>?,
         image: PlatformFile?,
         progressNotifier: ProgressNotifier
     ) = launch {
@@ -89,6 +97,7 @@ class EventsManagementViewModel(
                 requiresConfirmation,
                 requiresInsurance,
                 department?.id,
+                qualificationRequirements,
                 image,
                 progressNotifier
             )

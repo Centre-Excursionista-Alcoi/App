@@ -41,7 +41,9 @@ import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
+import org.centrexcursionistalcoi.app.viewmodel.HomePageModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
+import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.QualificationsManagementViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -143,6 +145,9 @@ class TestKoinModules {
         // @KoinViewModel with no runtime params
         assertNotNull(koin.get<LoginViewModel>())
         assertNotNull(koin.get<QualificationsManagementViewModel>())
+        // Both gained a QualificationsRepository dependency for showing/editing event requirements
+        assertNotNull(koin.get<EventsManagementViewModel>())
+        assertNotNull(koin.get<HomePageModel>())
 
         // @KoinViewModel with an @InjectedParam runtime param
         assertNotNull(koin.get<LendingDetailsModel> { parametersOf(Uuid.random()) })

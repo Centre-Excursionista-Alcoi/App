@@ -32,6 +32,10 @@ import cea_app.composeapp.generated.resources.event_by
 import cea_app.composeapp.generated.resources.event_department
 import cea_app.composeapp.generated.resources.event_department_generic
 import cea_app.composeapp.generated.resources.event_end
+import cea_app.composeapp.generated.resources.event_qualification_unknown
+import cea_app.composeapp.generated.resources.event_qualifications_or
+import cea_app.composeapp.generated.resources.event_qualifications_required
+import cea_app.composeapp.generated.resources.event_requires_confirmation_forced
 import cea_app.composeapp.generated.resources.event_max_people
 import cea_app.composeapp.generated.resources.event_max_people_value
 import cea_app.composeapp.generated.resources.event_place
@@ -57,7 +61,11 @@ import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.departmentsWithRole
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.localizedDateRange
+import org.centrexcursionistalcoi.app.data.normalizedRequirements
+import org.centrexcursionistalcoi.app.data.requirements
+import org.centrexcursionistalcoi.app.data.sameRequirementsAs
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -75,12 +83,14 @@ import org.centrexcursionistalcoi.app.ui.reusable.editor.RichTextStyleRow
 import org.centrexcursionistalcoi.app.ui.reusable.form.DateTimePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormImagePicker
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormSwitchRow
+import org.centrexcursionistalcoi.app.ui.reusable.form.QualificationRequirementsField
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Composable
@@ -88,6 +98,7 @@ fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
     val profile by model.profile.collectAsState()
     val events by model.events.collectAsState()
     val departments by model.departments.collectAsState()
+    val qualifications by model.qualifications.collectAsState()
 
     val profileValue = profile
     if (profileValue == null) {
@@ -99,6 +110,7 @@ fun EventsListView(model: EventsManagementViewModel = koinViewModel()) {
         profile = profileValue,
         events = events,
         departments = departments,
+        qualifications = qualifications.orEmpty(),
         onCreate = model::createEvent,
         onUpdate = model::updateEvent,
         onDelete = model::deleteEvent,
@@ -111,8 +123,9 @@ private fun EventsListView(
     profile: ProfileResponse,
     events: List<ReferencedEvent>?,
     departments: List<Department>?,
-    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
-    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
+    qualifications: List<Qualification>,
+    onCreate: (start: LocalDateTime, end: LocalDateTime?, place: String, title: String, description: RichTextState, maxPeople: String, requiresConfirmation: Boolean, requiresInsurance: Boolean, department: Department?, qualificationRequirements: List<List<Uuid>>, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
+    onUpdate: (eventId: Uuid, start: LocalDateTime?, end: LocalDateTime?, place: String?, title: String?, description: RichTextState?, maxPeople: String?, requiresConfirmation: Boolean?, requiresInsurance: Boolean?, department: Department?, qualificationRequirements: List<List<Uuid>>?, image: PlatformFile?, progressNotifier: ProgressNotifier) -> Job,
     onDelete: (ReferencedEvent) -> Job,
 ) {
     // Mirrors the server's CONTENT_MANAGER check for events: creating/editing an event scoped to a department
@@ -151,6 +164,12 @@ private fun EventsListView(
             // leaving it at "no department" -- global/public events require admin.
             var department by remember { mutableStateOf(event?.department ?: managedDepartments.firstOrNull().takeIf { !profile.isAdmin }) }
             var image by remember { mutableStateOf<PlatformFile?>(null) }
+            // Groups of alternatives that must all be met to attend, see Event.qualificationRequirements. A group
+            // with nothing picked yet is kept while editing, and dropped when saving.
+            var requirements by remember { mutableStateOf(event?.qualificationRequirements.orEmpty()) }
+            val savedRequirements = requirements.normalizedRequirements()
+            // The requirements can only be enforced through the sign-up, so an event with any needs one
+            val effectiveRequiresConfirmation = requiresConfirmation || savedRequirements.isNotEmpty()
 
             LaunchedEffect(event) {
                 if (event != null) {
@@ -167,7 +186,8 @@ private fun EventsListView(
                         start != event.start.toLocalDateTime(TimeZone.currentSystemDefault()) ||
                         end != event.end?.toLocalDateTime(TimeZone.currentSystemDefault()) ||
                         maxPeople != event.maxPeople?.toString() ||
-                        requiresConfirmation != event.requiresConfirmation ||
+                        effectiveRequiresConfirmation != event.requiresConfirmation ||
+                        !(savedRequirements sameRequirementsAs event.qualificationRequirements) ||
                         requiresInsurance != event.requiresInsurance ||
                         image != null
 
@@ -231,11 +251,12 @@ private fun EventsListView(
             )
 
             FormSwitchRow(
-                checked = requiresConfirmation,
+                checked = effectiveRequiresConfirmation,
                 onCheckedChange = { requiresConfirmation = it },
                 label = stringResource(Res.string.event_requires_confirmation),
+                description = if (savedRequirements.isNotEmpty()) stringResource(Res.string.event_requires_confirmation_forced) else null,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                enabled = !isLoading,
+                enabled = !isLoading && savedRequirements.isEmpty(),
             )
             FormSwitchRow(
                 checked = requiresInsurance,
@@ -247,13 +268,25 @@ private fun EventsListView(
 
             DropdownField(
                 value = department,
-                onValueChange = { department = it },
+                onValueChange = {
+                    // An event can only require its own department's qualifications
+                    if (it?.id != department?.id) requirements = emptyList()
+                    department = it
+                },
                 options = departmentOptions,
                 label = stringResource(Res.string.event_department).optional(),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 itemToString = { it?.displayName ?: stringResource(Res.string.event_department_generic) },
                 // Only a global admin may leave an event without a department (public/global content).
                 allowNull = profile.isAdmin,
+            )
+
+            QualificationRequirementsField(
+                groups = requirements,
+                onGroupsChange = { requirements = it },
+                qualifications = department?.let { d -> qualifications.filter { it.departmentId == d.id } },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                enabled = !isLoading,
             )
 
             RichTextStyleRow(
@@ -284,9 +317,10 @@ private fun EventsListView(
                             title,
                             description,
                             maxPeople,
-                            requiresConfirmation,
+                            effectiveRequiresConfirmation,
                             requiresInsurance,
                             department,
+                            savedRequirements,
                             image,
                             ProgressNotifier { progress = it }
                         )
@@ -299,9 +333,11 @@ private fun EventsListView(
                             title.takeIf { it != event.title },
                             description.takeIf { it.toMarkdown() != event.description },
                             maxPeople.takeIf { it != event.maxPeople?.toString() },
-                            requiresConfirmation.takeIf { it != event.requiresConfirmation },
+                            effectiveRequiresConfirmation.takeIf { it != event.requiresConfirmation },
                             requiresInsurance.takeIf { it != event.requiresInsurance },
                             department.takeIf { it?.id != event.department?.id },
+                            // Also sent (as an empty list) when a department change dropped them all
+                            savedRequirements.takeIf { !(it sameRequirementsAs event.qualificationRequirements) },
                             image,
                             ProgressNotifier { progress = it }
                         )
@@ -385,6 +421,24 @@ private fun EventsListView(
                 Text(
                     text = stringResource(Res.string.event_requires_insurance),
                     style = MaterialTheme.typography.titleMedium,
+                )
+            }
+        }
+
+        val requirements = remember(event, qualifications) { event.requirements(qualifications, emptyList(), Clock.System.now()) }
+        if (requirements.isNotEmpty()) {
+            Text(
+                text = stringResource(Res.string.event_qualifications_required),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+            val orSeparator = " ${stringResource(Res.string.event_qualifications_or)} "
+            val unknown = stringResource(Res.string.event_qualification_unknown)
+            for (requirement in requirements) {
+                Text(
+                    text = "- " + requirement.alternatives.joinToString(orSeparator) { it ?: unknown },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
