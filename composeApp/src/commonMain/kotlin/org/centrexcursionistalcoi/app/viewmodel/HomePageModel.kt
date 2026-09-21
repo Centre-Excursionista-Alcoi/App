@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
+import org.centrexcursionistalcoi.app.database.QualificationsRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -18,12 +19,17 @@ import org.koin.core.annotation.KoinViewModel
 class HomePageModel(
     postsRepository: PostsRepository,
     eventsRepository: EventsRepository,
+    qualificationsRepository: QualificationsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository,
 ) : ViewModel() {
     val profile = ProfileRepository.profile.stateInViewModel()
 
     val posts = postsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
+
+    /** What events can require, and which of those the user holds, to tell whether they can confirm assistance. */
+    val qualifications = qualificationsRepository.qualificationsAsFlow().stateInViewModel()
+    val myQualificationGrants = qualificationsRepository.myGrantsAsFlow().stateInViewModel()
 
     private val permissionHelper = HelperHolder.getPermissionHelperInstance()
     private val _notificationPermissionResult = MutableStateFlow<NotificationPermissionResult?>(null)

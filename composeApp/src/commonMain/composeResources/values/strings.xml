@@ -639,4 +639,8 @@
     <string name="management_qualification_valid_until">Valid until %1$s</string>
     <string name="management_qualification_expired_on">Expired on %1$s</string>
     <string name="management_qualification_revoke">Revoke</string>
+    <string name="event_qualifications_required">Required qualifications</string>
+    <string name="event_qualifications_or">or</string>
+    <string name="event_qualification_unknown">Unknown qualification</string>
+    <string name="event_qualifications_missing">You don't have the qualifications required to attend this event</string>
 </resources>
