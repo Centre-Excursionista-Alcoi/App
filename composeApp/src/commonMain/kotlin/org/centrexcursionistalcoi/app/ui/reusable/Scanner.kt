@@ -5,12 +5,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.permission_camera_message
+import cea_app.composeapp.generated.resources.permission_camera_title
+import cea_app.composeapp.generated.resources.permission_grant
+import cea_app.composeapp.generated.resources.permission_settings
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
@@ -55,8 +64,6 @@ fun Scanner(
                     }
 
                     is BarcodeResult.OnFailed -> onError(result.exception)
-
-                    BarcodeResult.OnCanceled -> onDismissRequest()
                 }
             }
         } else {
