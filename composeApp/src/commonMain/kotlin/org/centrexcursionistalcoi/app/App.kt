@@ -157,7 +157,7 @@ private fun App(
     LaunchedEffect(incomingLink) {
         val url = incomingLink ?: return@LaunchedEffect
         val destination = try {
-            Destination.fromUrl(url)
+            DeepLinks.fromUrl(url)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
