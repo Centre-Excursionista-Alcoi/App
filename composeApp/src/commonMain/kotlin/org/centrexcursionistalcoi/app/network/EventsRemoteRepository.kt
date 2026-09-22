@@ -8,13 +8,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.ReferencedEvent
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateEventRequest
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_EVENTS_SYNC
-import org.centrexcursionistalcoi.app.utils.Zero
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -44,11 +45,8 @@ class EventsRemoteRepository(
         image: PlatformFile?,
         progressNotifier: ProgressNotifier
     ) {
-        val inMemoryImage = image?.let { InMemoryFileAllocator.put(it) }
-
-        create(
-            item = Event(
-                id = Uuid.Zero,
+        createJson(
+            CreateEventRequest(
                 start = start.toInstant(TimeZone.currentSystemDefault()),
                 end = end?.toInstant(TimeZone.currentSystemDefault()),
                 place = place,
@@ -58,10 +56,10 @@ class EventsRemoteRepository(
                 requiresConfirmation = requiresConfirmation,
                 requiresInsurance = requiresInsurance,
                 department = departmentId,
-                image = inMemoryImage?.id,
-                userSubList = emptyList(),
+                image = image?.fileWithContext(),
                 qualificationRequirements = qualificationRequirements,
             ),
+            CreateEventRequest.serializer(),
             progressNotifier,
         )
     }

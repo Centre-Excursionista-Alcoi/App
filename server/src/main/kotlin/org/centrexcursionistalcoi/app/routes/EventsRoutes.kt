@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.data.unmetRequirements
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.Events
@@ -29,6 +30,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.request.CreateEventRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
@@ -78,6 +80,10 @@ fun Route.eventsRoutes() {
         idTypeConverter = { it.toUUIDOrNull() },
         listProvider = { session -> EventEntity.forSession(session) },
         visibleTo = { event, session -> event.isVisibleTo(session) },
+        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
+        //   always sends JSON for events now. Delete this whole `creator` lambda once the app version requiring
+        //   it is unsupported. Note it never read requiresInsurance (see jsonCreator's comment) -- don't port
+        //   that gap forward if this ever needs touching before removal.
         creator = { formParameters ->
             var start: Instant? = null
             var end: Instant? = null
@@ -162,6 +168,40 @@ fun Route.eventsRoutes() {
             EventEntity.find { Events.department eq department.id }.empty()
         },
         updater = UpdateEventRequest.serializer(),
+        createRequestSerializer = CreateEventRequest.serializer(),
+        jsonCreator = { request ->
+            // Mirrors the multipart creator above -- same department lookup, same requirement validation, same
+            // image creation (#659) -- except requiresInsurance is actually wired up here: the multipart creator
+            // never read it at all, even though the client already sent it (Event.toMap()) and PATCH already
+            // supports it (UpdateEventRequest.requiresInsurance), so it silently had no effect at creation time.
+            val department = request.department?.let {
+                Database { DepartmentEntity.findById(it.toJavaUuid()) } ?: throw NoSuchElementException("Department with id $it does not exist")
+            }
+
+            val requirements = Database {
+                validatedQualificationRequirements(
+                    department?.id?.value,
+                    request.qualificationRequirements.map { group -> group.map { id -> id.toJavaUuid() } },
+                )
+            }
+
+            val imageEntity = request.image?.let { Database { FileEntity.newFrom(it) } }
+
+            Database {
+                EventEntity.new {
+                    this.start = request.start.toJavaInstant()
+                    this.end = request.end?.toJavaInstant()
+                    this.place = request.place
+                    this.title = request.title
+                    this.description = request.description
+                    this.maxPeople = request.maxPeople
+                    this.requiresConfirmation = request.requiresConfirmation
+                    this.requiresInsurance = request.requiresInsurance
+                    this.department = department
+                    this.image = imageEntity
+                }.also { it.setQualificationRequirements(requirements) }
+            }
+        },
         writePermission = EntityWritePermission(
             role = DepartmentRole.CONTENT_MANAGER,
             departmentOfEntity = { it.department?.id?.value },
