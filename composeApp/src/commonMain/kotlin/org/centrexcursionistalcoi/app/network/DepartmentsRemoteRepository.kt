@@ -11,15 +11,15 @@ import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateDepartmentRequest
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
-import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
-import org.centrexcursionistalcoi.app.utils.Zero
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -36,11 +36,13 @@ class DepartmentsRemoteRepository(
     private val log = logging()
 
     suspend fun create(displayName: String, image: ByteArray?, progressNotifier: ProgressNotifier? = null) {
-        val imageUuid = image?.let { InMemoryFileAllocator.put(it) }
+        log.i { "Creating a new department: displayName=\"${displayName}\"" }
 
-        log.i { "Creating a new department: displayName=\"${displayName}\", imageUuid=${imageUuid}" }
-
-        create(Department(Uuid.Zero, displayName, imageUuid?.id, emptyList()), progressNotifier)
+        createJson(
+            CreateDepartmentRequest(displayName, image?.let { FileWithContext(bytes = it) }),
+            CreateDepartmentRequest.serializer(),
+            progressNotifier,
+        )
     }
 
     suspend fun confirmJoinRequest(request: DepartmentMemberInfo) {
