@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
  */
 object AppLinks : ConfigProvider() {
     private const val DEFAULT_BASE_URL = "https://centrexcursionistalcoi.app"
+    private const val DEFAULT_APP_STORE_URL = "https://apps.apple.com/us/app/cea-app/id6754717471"
 
     /** The Android package id, shared by every build flavor (see `applicationId` in `android/build.gradle.kts`). */
     const val ANDROID_PACKAGE_NAME = "org.centrexcursionistalcoi.app"
@@ -19,14 +20,11 @@ object AppLinks : ConfigProvider() {
     /** The address app links are on, with no trailing slash. */
     val baseUrl: String get() = (getenv("APP_LINKS_BASE_URL") ?: DEFAULT_BASE_URL).trimEnd('/')
 
-    /** Where the landing page sends an Android visitor who doesn't already have the app. */
+    /** Where an Android visitor without the app ends up (see `respondAppLinkFallback`). */
     val playStoreUrl: String get() = "https://play.google.com/store/apps/details?id=$ANDROID_PACKAGE_NAME"
 
-    /**
-     * Where the landing page sends an iOS visitor who doesn't already have the app, from `APP_LINKS_APP_STORE_URL`.
-     * `null` until it's set, in which case the landing page just omits that button rather than link to nowhere.
-     */
-    val appStoreUrl: String? get() = getenv("APP_LINKS_APP_STORE_URL")
+    /** Where an iOS visitor without the app ends up. Overridable (`APP_LINKS_APP_STORE_URL`) in case it ever moves. */
+    val appStoreUrl: String get() = getenv("APP_LINKS_APP_STORE_URL") ?: DEFAULT_APP_STORE_URL
 
     /** Opens a lending in the admin panel of the app. */
     fun adminLending(lendingId: UUID): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"
