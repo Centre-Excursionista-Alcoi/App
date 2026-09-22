@@ -116,13 +116,22 @@ suspend fun ImageFileListContainer.imageFile(uuid: Uuid, progressNotifier: Progr
 
 
 /**
+ * Every current [FileContainer] (not [DocumentFileContainer] or [ImageFileContainer]) is a PDF document -- see
+ * [Memory.files]/[org.centrexcursionistalcoi.app.data.ReferencedMemory.files]/[UserInsurance.files]. Stored with
+ * this extension so the cached file can be handed to another app (share/open, see
+ * `storage/fs/FilePermissionsUtil.kt`) as-is, with no rename or copy needed just to give it a name a receiver can
+ * recognize (#673).
+ */
+private const val FILE_EXTENSION = "pdf"
+
+/**
  * Returns the paths for all document files associated with this FileContainer.
  */
 fun FileContainer.filePaths(): Map<Uuid, String> {
     val clName = this::class.simpleName ?: "generic"
     return files.filter { it.value != null }.map { (_, uuid) ->
         uuid!!
-        uuid to joinPaths(FILES_PATH, clName, uuid.toString())
+        uuid to joinPaths(FILES_PATH, clName, "$uuid.$FILE_EXTENSION")
     }.toMap()
 }
 
@@ -131,15 +140,12 @@ fun FileContainer.filePaths(): Map<Uuid, String> {
  * If the file does not exist locally, it will be downloaded from the remote repository.
  * @param progressNotifier Optional ProgressNotifier to track download progress.
  * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
- * @throws IllegalArgumentException if the file is not found and uuid cannot be inferred.
  */
 suspend fun FileContainer.fetchFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
     require(files.values.contains(uuid)) { "UUID must be in the container." }
 
-    val path = joinPaths(FILES_PATH, this::class.simpleName ?: "generic", uuid.toString())
+    val path = joinPaths(FILES_PATH, this::class.simpleName ?: "generic", "$uuid.$FILE_EXTENSION")
     if (!FileSystem.exists(path) && downloadIfNotExists) {
-        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
-            ?: throw IllegalStateException("Generic file not found at path ($path). UUID could not be inferred.")
         log.d { "Tried to read non-existing file. Downloading..." }
         RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
     }

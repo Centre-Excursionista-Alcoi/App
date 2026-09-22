@@ -112,4 +112,23 @@ class FilePermissionsUtilInstrumentedTest {
     fun uriForFile_aFileThatDoesNotExist_throws() {
         FilePermissionsUtil.uriForFile(context, File(originalFile.parentFile, "does-not-exist"), ContentType.Application.Pdf)
     }
+
+    // Every file cached through FileContainer (FileContainerExtensions.kt) is stored with its extension already,
+    // exactly so this case is the common one: no copy, no second file, the original is used directly.
+    @Test
+    fun uriForFile_aFileAlreadyNamedWithTheExtension_isUsedDirectly_noCopyMade() {
+        val alreadyNamed = File(originalFile.parentFile, "${UUID.randomUUID()}.pdf")
+        alreadyNamed.writeText("already correctly named")
+
+        val uri = FilePermissionsUtil.uriForFile(context, alreadyNamed, ContentType.Application.Pdf)
+
+        // Not "<name>.pdf.pdf": the extension check has to be a suffix match, not a blind append.
+        assertTrue(!File(alreadyNamed.parentFile, "${alreadyNamed.name}.pdf").exists())
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)!!.use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(alreadyNamed.name, cursor.getString(0))
+        }
+        val bytes = context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+        assertEquals("already correctly named", String(bytes))
+    }
 }

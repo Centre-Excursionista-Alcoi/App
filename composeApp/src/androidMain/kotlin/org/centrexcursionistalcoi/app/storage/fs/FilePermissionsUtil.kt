@@ -13,13 +13,18 @@ object FilePermissionsUtil {
     private val log = logging()
 
     fun uriForFile(context: Context, file: File, contentType: ContentType): Uri {
-        var sharingFile = file
         if (!file.exists()) {
             log.e { "File to share does not exist: $file" }
             throw FileNotFoundException("File does not exist: $file")
         }
         val extension = contentType.fileExtensions().firstOrNull()
-        if (extension != null) {
+        // If the file is already named with the right extension -- as every file cached through FileContainer is,
+        // see FileContainerExtensions.kt -- there's nothing to fix and the original is used as-is: no copy, no
+        // second file living alongside it. This is only a fallback now, for anything not yet extension-aware on
+        // disk (e.g. drag-and-drop of an image).
+        val sharingFile = if (extension == null || file.name.endsWith(".$extension", ignoreCase = true)) {
+            file
+        } else {
             val parent: File? = file.parentFile
             if (parent?.exists() != true) parent?.mkdirs()
             val namedFilePath = File(parent, file.name + "." + extension)
@@ -32,7 +37,7 @@ object FilePermissionsUtil {
             // simply outdated content, can't stick around.
             log.d { "Copying $file to $namedFilePath so it can be shared under the right extension" }
             file.copyTo(namedFilePath, overwrite = true)
-            sharingFile = namedFilePath
+            namedFilePath
         }
         return FileProvider.getUriForFile(context, "${context.packageName}.provider", sharingFile)
     }
