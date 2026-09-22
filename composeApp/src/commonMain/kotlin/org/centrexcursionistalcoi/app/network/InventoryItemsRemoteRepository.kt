@@ -6,9 +6,9 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
-import org.centrexcursionistalcoi.app.utils.Zero
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -25,13 +25,17 @@ class InventoryItemsRemoteRepository(
     private val log = logging()
 
     suspend fun create(variation: String?, type: Uuid, nfcId: ByteArray?, manufacturerTraceabilityCode: String?, progressNotifier: ProgressNotifier? = null) {
-        create(InventoryItem(Uuid.Zero, variation, type, nfcId, manufacturerTraceabilityCode), progressNotifier)
+        createJson(
+            CreateInventoryItemRequest(type, variation, nfcId, manufacturerTraceabilityCode),
+            CreateInventoryItemRequest.serializer(),
+            progressNotifier,
+        )
     }
 
     suspend fun create(variation: String?, type: Uuid, amount: Int, progressNotifier: ProgressNotifier? = null) {
         val requests = (0 until amount).map {
             try {
-                create(InventoryItem(Uuid.Zero, variation, type, null, null), progressNotifier)
+                createJson(CreateInventoryItemRequest(type, variation), CreateInventoryItemRequest.serializer(), progressNotifier)
                 true
             } catch (e: Exception) {
                 log.e(e) { "Failed to create inventory item of type $type with variation '$variation'" }
