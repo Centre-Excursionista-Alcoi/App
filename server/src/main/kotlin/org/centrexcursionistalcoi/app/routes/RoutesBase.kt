@@ -5,7 +5,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.MultiPartData
 import io.ktor.server.request.contentType
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
@@ -366,8 +365,8 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     }
 
     /**
-     * Runs [block] (either creator, multipart or JSON), mapping the exceptions both are documented to throw to
-     * the matching [Error] -- shared so the two creation paths respond identically to the same kind of mistake.
+     * Runs the JSON [creator] call, mapping the exceptions it's documented to throw to the matching [Error]. The
+     * multipart path's identical exception mapping lives separately, in `LegacyMultipartCreate.kt`.
      */
     suspend fun RoutingContext.tryCreate(block: suspend () -> EE): EE? = try {
         block()
@@ -411,11 +410,10 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             }
             tryCreate { requireNotNull(jsonCreator)(request) } ?: return@post
         } else {
-            // TODO(#659): the multipart path. Server-only backward compat for app installs predating the JSON
-            //   create endpoint -- delete this branch (and go back to requiring isJsonCreate unconditionally)
-            //   once every entity has a JSON creator and the oldest app version still served sends JSON.
-            val multipart = call.receiveMultipart()
-            tryCreate { creator(multipart) } ?: return@post
+            // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch (and
+            //   go back to requiring isJsonCreate unconditionally) once every entity has a JSON creator and the
+            //   oldest app version still served sends JSON.
+            createFromMultipart(creator, entityKClass) ?: return@post
         }
 
         // The fine-grained check can only run once the entity (and thus its department) exists -- multipart
