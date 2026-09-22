@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 
 /** A link handed over by the platform waits until the app opens it, and can't be lost or opened twice. */
 class TestDeepLinks {
-    private val link = "cea://admin/lendings#1f0e5c2a-0000-4000-8000-000000000001"
+    private val link = "https://centrexcursionistalcoi.app/admin/lendings/1f0e5c2a-0000-4000-8000-000000000001"
 
     @AfterTest
     fun tearDown() {
@@ -31,7 +31,7 @@ class TestDeepLinks {
     @Test
     fun consumingALinkThatIsNotTheCurrentOne_keepsTheNewerLink() {
         DeepLinks.receive(link)
-        val newer = "cea://admin/lendings"
+        val newer = "https://centrexcursionistalcoi.app/admin/lendings"
 
         DeepLinks.receive(newer)
         DeepLinks.consume(Url(link)) // the older one finishes being handled

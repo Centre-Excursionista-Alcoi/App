@@ -18,8 +18,9 @@ struct ContentView: View {
         ComposeView()
             .ignoresSafeArea()
             .onOpenURL { url in
-                // A link like cea://admin/lendings#<id>, from an email or another app. The shared code opens it
-                // as soon as the app can, which for a launch from the link is once the user is in.
+                // A universal link like https://centrexcursionistalcoi.app/admin/lendings/<id>, from an email or
+                // another app. The shared code opens it as soon as the app can, which for a launch from the link
+                // is once the user is in.
                 DeepLinks.shared.receive(url: url.absoluteString)
             }
     }

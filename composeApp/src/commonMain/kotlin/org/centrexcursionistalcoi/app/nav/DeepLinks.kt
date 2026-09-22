@@ -5,9 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Links (like `cea://admin/lendings#<id>`, from the emails the server sends) that reach the app by a callback
- * rather than by starting it with the link, which is how iOS delivers them, whether the app is being launched or
- * is already running.
+ * Links (like `https://centrexcursionistalcoi.app/admin/lendings/<id>`, from the emails the server sends) that
+ * reach the app by a callback rather than by starting it with the link, which is how iOS delivers them, whether
+ * the app is being launched or is already running.
  *
  * The platform hands a link to [receive]; the app opens it once it can (see [canOpenLinks]) and then [consume]s
  * it. A link that arrives before the app is ready stays in [pending], so launching the app from a link works.

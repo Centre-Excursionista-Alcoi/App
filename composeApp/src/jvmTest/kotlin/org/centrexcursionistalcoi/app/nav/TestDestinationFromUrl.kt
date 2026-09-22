@@ -17,7 +17,8 @@ import org.koin.dsl.module
 
 /**
  * Which screen a link opens. The links that matter are the ones the server puts in its emails to admins, like
- * `cea://admin/lendings#<id>` ("Open in app").
+ * `https://centrexcursionistalcoi.app/admin/lendings/<id>` ("Open in app"). There is no custom URL scheme: a plain
+ * web link is the only way into the app, on every platform.
  */
 class TestDestinationFromUrl {
     private val id = Uuid.parse("1f0e5c2a-0000-4000-8000-000000000001")
@@ -34,70 +35,32 @@ class TestDestinationFromUrl {
 
     @Test
     fun adminLendingLink_opensThatLending() = runTest {
-        assertEquals(Destination.Admin.LendingManagement(id), open("cea://admin/lendings#$id"))
+        assertEquals(Destination.Admin.LendingManagement(id), open("https://centrexcursionistalcoi.app/admin/lendings/$id"))
     }
 
     @Test
     fun adminLendingsLink_withoutALending_opensTheLendingsList() = runTest {
-        assertEquals(Destination.Main(showingAdminLendingsScreen = true), open("cea://admin/lendings"))
+        assertEquals(Destination.Main(showingAdminLendingsScreen = true), open("https://centrexcursionistalcoi.app/admin/lendings"))
     }
 
     @Test
     fun adminItemsLink_opensThatItemType() = runTest {
-        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("cea://admin/items#$id"))
+        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("https://centrexcursionistalcoi.app/admin/items/$id"))
     }
 
     @Test
     fun adminItemsLink_withoutAnItemType_opensNothing() = runTest {
-        assertNull(open("cea://admin/items"))
+        assertNull(open("https://centrexcursionistalcoi.app/admin/items"))
     }
 
     @Test
     fun linksAreMatchedIgnoringCase() = runTest {
         // not every app that shows a link keeps the case of its host
-        assertEquals(Destination.Admin.LendingManagement(id), open("cea://ADMIN/Lendings#$id"))
-    }
-
-    // ---- The web links: https://centrexcursionistalcoi.app/... ----
-
-    @Test
-    fun webLink_toALending_opensThatLending() = runTest {
-        assertEquals(Destination.Admin.LendingManagement(id), open("https://centrexcursionistalcoi.app/admin/lendings/$id"))
-    }
-
-    @Test
-    fun webLink_toTheLendings_opensTheList() = runTest {
-        assertEquals(Destination.Main(showingAdminLendingsScreen = true), open("https://centrexcursionistalcoi.app/admin/lendings"))
-    }
-
-    @Test
-    fun webLink_toAnItemType_opensItInTheAdminItems() = runTest {
-        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("https://centrexcursionistalcoi.app/admin/items/$id"))
-    }
-
-    @Test
-    fun webLink_matchesIgnoringCase() = runTest {
         assertEquals(Destination.Admin.LendingManagement(id), open("https://centrexcursionistalcoi.app/Admin/LENDINGS/$id"))
     }
 
     @Test
-    fun theSameLinkWithTheAppsOwnScheme_opensTheSameScreen() = runTest {
-        // the fallback for when a browser doesn't hand the web link to the app: same path, other scheme
-        assertEquals(Destination.Admin.LendingManagement(id), open("cea://admin/lendings/$id"))
-        assertEquals(Destination.Main(showingAdminItemTypeId = id), open("cea://admin/items/$id"))
-    }
-
-    @Test
-    fun anIdInThePath_orAfterAHash_meansTheSame() = runTest {
-        // links written before ids moved into the path are still in people's inboxes
-        assertEquals(open("cea://admin/lendings#$id"), open("https://centrexcursionistalcoi.app/admin/lendings/$id"))
-    }
-
-    @Test
-    fun webLinks_thatPointNowhere_openNothing() = runTest {
-        assertNull(open("https://centrexcursionistalcoi.app/"))
-        assertNull(open("https://centrexcursionistalcoi.app/about"))
-        // not an id, or more than an id
+    fun aBadOrMissingId_opensNothing() = runTest {
         assertNull(open("https://centrexcursionistalcoi.app/admin/lendings/not-a-uuid"))
         assertNull(open("https://centrexcursionistalcoi.app/admin/lendings/$id/extra"))
     }
@@ -110,33 +73,32 @@ class TestDestinationFromUrl {
         coEvery { repository.get(id) } returns null
         startKoin { modules(module { single { repository } }) }
 
-        assertNull(open("cea://itemType#$id"))
         assertNull(open("https://centrexcursionistalcoi.app/itemType/$id"))
     }
 
     @Test
     fun itemTypeLink_withoutAValidId_opensNothing() = runTest {
-        assertNull(open("cea://itemType#not-a-uuid"))
-        assertNull(open("cea://itemType"))
+        assertNull(open("https://centrexcursionistalcoi.app/itemType/not-a-uuid"))
+        assertNull(open("https://centrexcursionistalcoi.app/itemType"))
     }
 
     // ---- Reset password ----
 
     @Test
     fun resetPasswordLink_succeeded_opensLogin() = runTest {
-        assertEquals(Destination.Login(changedPassword = true), open("cea://reset_password?success=true"))
+        assertEquals(Destination.Login(changedPassword = true), open("https://centrexcursionistalcoi.app/reset_password?success=true"))
     }
 
     @Test
     fun resetPasswordLink_withARequest_opensTheResetScreen() = runTest {
-        assertEquals(Destination.External.ResetPassword("abc"), open("cea://reset_password?request_id=abc"))
-        // the same page reached as a web link
+        assertEquals(Destination.External.ResetPassword("abc"), open("https://centrexcursionistalcoi.app/reset_password?request_id=abc"))
+        // the same page, reached on the server's own host
         assertEquals(Destination.External.ResetPassword("abc"), open("https://server.centrexcursionistalcoi.app/reset_password?request_id=abc"))
     }
 
     @Test
     fun resetPasswordLink_withoutARequest_opensNothing() = runTest {
-        assertNull(open("cea://reset_password"))
+        assertNull(open("https://centrexcursionistalcoi.app/reset_password"))
     }
 
     // ---- Anything else ----
@@ -144,9 +106,9 @@ class TestDestinationFromUrl {
     @Test
     fun aLinkThatPointsNowhere_opensNothing_insteadOfCrashing() = runTest {
         // these used to throw, reaching for the first path segment of a link that has none
-        assertNull(open("cea://foo"))
-        assertNull(open("cea://"))
-        assertNull(open("cea://foo/bar/baz"))
+        assertNull(open("https://centrexcursionistalcoi.app/"))
+        assertNull(open("https://centrexcursionistalcoi.app/foo"))
+        assertNull(open("https://centrexcursionistalcoi.app/foo/bar/baz"))
         assertNull(open("https://server.centrexcursionistalcoi.app/"))
         assertNull(open("https://server.centrexcursionistalcoi.app/download/abc"))
     }

@@ -117,13 +117,11 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     /**
      * The link the app was opened with, if it's one that points somewhere in the app: a web link on
-     * [APP_LINKS_HOST], or the same with the app's own `cea://` scheme. Links on the server's own host aren't:
-     * see [openWebOnlyLinkIfNeeded].
+     * [APP_LINKS_HOST]. Links on the server's own host aren't: see [openWebOnlyLinkIfNeeded].
      */
     private fun getUrlFromIntent(): Url? {
         val uri = intent.data ?: return null
-        val isAppLink = uri.scheme == "https" && uri.host == APP_LINKS_HOST
-        if (uri.scheme != "cea" && !isAppLink) return null
+        if (uri.scheme != "https" || uri.host != APP_LINKS_HOST) return null
         return Url(uri.toString())
     }
 

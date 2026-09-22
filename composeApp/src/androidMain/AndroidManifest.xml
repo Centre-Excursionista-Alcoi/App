@@ -29,13 +29,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- The app's own scheme: the fallback for when a browser doesn't hand a web link to the app. -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="cea" />
-            </intent-filter>
             <!-- The links people share (https://centrexcursionistalcoi.app/...): the app opens them directly when
                  it's installed, and that address shows a page to get the app when it isn't. -->
             <intent-filter android:autoVerify="true">
