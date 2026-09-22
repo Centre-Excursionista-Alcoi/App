@@ -21,7 +21,7 @@ actual class PlatformShareLogic(
     actual override val isSupported: Boolean = true
 
     actual fun share(path: String, contentType: ContentType) {
-        // Hard-link the data under a name with the proper extension and get a content URI using FileProvider
+        // Copy the data under a name with the proper extension and get a content URI using FileProvider
         val filePath = pathsProvider.systemDataPath / path
         val file = File(filePath.toString())
         val uri = FilePermissionsUtil.uriForFile(context, file, contentType)

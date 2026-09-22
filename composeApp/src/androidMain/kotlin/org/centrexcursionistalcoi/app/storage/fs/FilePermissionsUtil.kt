@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.storage.fs
 
 import android.content.Context
 import android.net.Uri
-import android.system.Os
 import androidx.core.content.FileProvider
 import com.diamondedge.logging.logging
 import io.ktor.http.ContentType
@@ -27,14 +26,14 @@ object FilePermissionsUtil {
             // A symlink here would still point at this extensionless file underneath, and an app that resolves
             // the real/canonical path instead of asking FileProvider for the display name -- as some ACTION_SEND
             // receivers do, e.g. WhatsApp/Gmail via /proc/self/fd -- would still see no extension and fall back to
-            // a generic binary (#673). A hard link is a second name for the very same data, so its own canonical
-            // path already carries the extension; recreated every time so a stale symlink from before this fix
-            // can't keep reintroducing the bug for an already-cached file.
-            if (namedFilePath.exists()) namedFilePath.delete()
-            log.d { "Creating hard link for $file at $namedFilePath" }
-            Os.link(file.path, namedFilePath.path)
+            // a generic binary (#673). A hard link would avoid the copy, but SELinux denies link() for app-private
+            // storage on-device (EACCES, confirmed by FilePermissionsUtilInstrumentedTest) -- a real copy is the
+            // only thing that actually works here. Recreated every time so a stale file from before this fix, or
+            // simply outdated content, can't stick around.
+            log.d { "Copying $file to $namedFilePath so it can be shared under the right extension" }
+            file.copyTo(namedFilePath, overwrite = true)
             sharingFile = namedFilePath
         }
-        return FileProvider.getUriForFile(context, "org.centrexcursionistalcoi.app.provider", sharingFile)
+        return FileProvider.getUriForFile(context, "${context.packageName}.provider", sharingFile)
     }
 }
