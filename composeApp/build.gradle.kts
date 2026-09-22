@@ -54,6 +54,14 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
+
+        withDeviceTestBuilder {
+            // A tree of its own: sharing "test" (jvmTest/commonTest's tree) would pull the whole commonTest suite
+            // onto the emulator too -- slow, and commonTest assumes a plain JVM, not Android/JUnit4.
+            sourceSetTreeName = "instrumentedTest"
+        }.configure {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
     }
     
     listOf(
@@ -245,6 +253,16 @@ kotlin {
                 // Koin Extensions for Android
                 implementation(libs.koin.android)
                 implementation(libs.koin.androidx.workmanager)
+            }
+        }
+
+        getByName("androidDeviceTest") {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.androidx.test.runner)
+                implementation(libs.androidx.test.rules)
+                implementation(libs.androidx.test.core)
+                implementation(libs.androidx.test.ext.junit)
             }
         }
 
