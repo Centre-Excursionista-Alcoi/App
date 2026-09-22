@@ -12,7 +12,6 @@ import java.util.UUID
  */
 object AppLinks : ConfigProvider() {
     private const val DEFAULT_BASE_URL = "https://centrexcursionistalcoi.app"
-    private const val DEFAULT_APP_STORE_URL = "https://apps.apple.com/us/app/cea-app/id6754717471"
 
     /** The Android package id, shared by every build flavor (see `applicationId` in `android/build.gradle.kts`). */
     const val ANDROID_PACKAGE_NAME = "org.centrexcursionistalcoi.app"
@@ -23,8 +22,8 @@ object AppLinks : ConfigProvider() {
     /** Where an Android visitor without the app ends up (see `respondAppLinkFallback`). */
     val playStoreUrl: String get() = "https://play.google.com/store/apps/details?id=$ANDROID_PACKAGE_NAME"
 
-    /** Where an iOS visitor without the app ends up. Overridable (`APP_LINKS_APP_STORE_URL`) in case it ever moves. */
-    val appStoreUrl: String get() = getenv("APP_LINKS_APP_STORE_URL") ?: DEFAULT_APP_STORE_URL
+    /** Where an iOS visitor without the app ends up. */
+    const val appStoreUrl: String = "https://apps.apple.com/us/app/cea-app/id6754717471"
 
     /** Opens a lending in the admin panel of the app. */
     fun adminLending(lendingId: UUID): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"

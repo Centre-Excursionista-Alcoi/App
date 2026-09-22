@@ -10,7 +10,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import java.util.UUID
-import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -36,11 +35,6 @@ private const val DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.
  */
 class TestAppLinkFallbackRoutes : ApplicationTestBase() {
     private val lendingId = UUID.fromString("1f0e5c2a-0000-4000-8000-000000000001")
-
-    @AfterTest
-    fun tearDown() {
-        AppLinks.override("APP_LINKS_APP_STORE_URL", null)
-    }
 
     private suspend fun HttpClient.onAppLinksHost(path: String, userAgent: String? = null): HttpResponse = get(path) {
         header(HttpHeaders.Host, "centrexcursionistalcoi.app")
@@ -75,16 +69,6 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_ios_usesTheConfiguredAppStoreUrl() = runApplicationTest {
-        AppLinks.override("APP_LINKS_APP_STORE_URL", "https://apps.apple.com/us/app/cea-app/id999")
-        val client = createClient { followRedirects = false }
-
-        val response = client.onAppLinksHost("/", IOS_UA)
-
-        assertEquals("https://apps.apple.com/us/app/cea-app/id999", response.headers[HttpHeaders.Location])
-    }
-
-    @Test
     fun test_desktopOrUnknown_getsTheLandingPage_onEveryPath() = runApplicationTest {
         for ((path, userAgent) in listOf("/" to DESKTOP_UA, "/admin/lendings/$lendingId" to null)) {
             val response = client.onAppLinksHost(path, userAgent)
@@ -97,6 +81,72 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
             assertContains(body, "/static/app-icon.png")
             assertContains(body, "/static/app-links.css")
         }
+    }
+
+    // ---- Link previews: what WhatsApp/Telegram/Slack/... show before anyone opens the link. They identify with
+    // their own User-Agent (never "Android" or "iPhone"), so they land in the same branch a desktop browser does,
+    // and only ever read the <head>. Deliberately generic -- see AppLinkFallbackRoutes.previewFor. ----
+
+    private suspend fun HttpResponse.metaTag(property: String): String {
+        val body = bodyAsText()
+        return Regex("""(?:property|name)="$property" content="([^"]*)"""").find(body)?.groupValues?.get(1)
+            ?: error("No meta tag for $property in: $body")
+    }
+
+    @Test
+    fun test_preview_ofALending_isGeneric_namesNoOneAndNothingBorrowed() = runApplicationTest {
+        val response = client.onAppLinksHost("/admin/lendings/$lendingId", "WhatsApp/2.24.1.78 A")
+        response.assertStatusCode(HttpStatusCode.OK)
+        val body = response.bodyAsText()
+
+        assertEquals("Lending", response.metaTag("og:title"))
+        assertTrue(response.metaTag("og:description").isNotBlank())
+        // the only place the id may appear is the URL -- never as, or next to, a person's or an item's name
+        assertTrue(lendingId.toString() !in response.metaTag("og:title"))
+        assertTrue(lendingId.toString() !in response.metaTag("og:description"))
+        assertContains(body, """<title>Lending</title>""")
+    }
+
+    @Test
+    fun test_preview_ofAnAdminItem_isGeneric() = runApplicationTest {
+        val response = client.onAppLinksHost("/admin/items/$lendingId")
+        assertEquals("Inventory item", response.metaTag("og:title"))
+    }
+
+    @Test
+    fun test_preview_ofAnItemType_isGeneric() = runApplicationTest {
+        val response = client.onAppLinksHost("/itemType/$lendingId")
+        assertEquals("Item", response.metaTag("og:title"))
+    }
+
+    @Test
+    fun test_preview_ofAnUnrecognizedPath_fallsBackToTheAppItself() = runApplicationTest {
+        for (path in listOf("/", "/some/made/up/path")) {
+            assertEquals("CEA App", client.onAppLinksHost(path).metaTag("og:title"), path)
+        }
+    }
+
+    @Test
+    fun test_preview_image_isTheAppIconAsAnAbsoluteUrl() = runApplicationTest {
+        val response = client.onAppLinksHost("/admin/lendings/$lendingId")
+        assertEquals("https://centrexcursionistalcoi.app/static/app-icon.png", response.metaTag("og:image"))
+        assertEquals(response.metaTag("og:image"), response.metaTag("twitter:image"))
+    }
+
+    @Test
+    fun test_preview_url_isTheRequestsOwnPath_withNoQueryString() = runApplicationTest {
+        val response = client.get("/admin/lendings/$lendingId?utm_source=email") {
+            header(HttpHeaders.Host, "centrexcursionistalcoi.app")
+        }
+        assertEquals("https://centrexcursionistalcoi.app/admin/lendings/$lendingId", response.metaTag("og:url"))
+    }
+
+    @Test
+    fun test_preview_andTwitterCardAgree() = runApplicationTest {
+        val response = client.onAppLinksHost("/admin/lendings/$lendingId")
+        assertEquals("summary", response.metaTag("twitter:card"))
+        assertEquals(response.metaTag("og:title"), response.metaTag("twitter:title"))
+        assertEquals(response.metaTag("og:description"), response.metaTag("twitter:description"))
     }
 
     @Test

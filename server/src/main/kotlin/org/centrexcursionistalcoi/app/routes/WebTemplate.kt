@@ -22,12 +22,14 @@ abstract class WebTemplate(name: String): Template("web", name) {
             val resourceStream = javaClass.classLoader.getResourceAsStream(resourceName)
                 ?: throw IllegalStateException("Resource not found: $resourceName")
             val htmlDocument = resourceStream.bufferedReader().use { it.readText() }
-            // Translations are specified in static HTML files as `{{key}}` placeholders, which are replaced with the translated text for the current locale.
+            // Translations are specified in static HTML files as `{{key}}` placeholders, which are replaced with
+            // the translated text for the current locale -- or, if the caller passed a value under that same key
+            // in [args] (for whatever a translation file can't hold, like a per-request URL), that instead.
             return htmlDocument.replace(Regex("\\{\\{(.*?)\\}\\}")) { matchResult ->
                 val key = matchResult.groupValues[1].trim()
-                val translation = translationsBook[locale].getOrNull(key)
-                // If no translation is found, keep the original placeholder.
-                translation ?: matchResult.value
+                val value = args[key] ?: translationsBook[locale].getOrNull(key)
+                // If neither has it, keep the original placeholder.
+                value ?: matchResult.value
             }
         }
     }

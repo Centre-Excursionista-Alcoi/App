@@ -4,4 +4,8 @@
     <item name="subtitle">Open this link on your phone to launch or install the app.</item>
     <item name="android_button">Get it on Google Play</item>
     <item name="ios_button">Download on the App Store</item>
+
+    <!-- Fallbacks for the link-preview values, only ever used if a caller renders this page without them. -->
+    <item name="preview_title">CEA App</item>
+    <item name="preview_description">Open this in the CEA App.</item>
 </translations>

@@ -11,7 +11,6 @@ class TestAppLinks {
     @AfterTest
     fun tearDown() {
         AppLinks.override("APP_LINKS_BASE_URL", null)
-        AppLinks.override("APP_LINKS_APP_STORE_URL", null)
     }
 
     @Test
@@ -34,10 +33,7 @@ class TestAppLinks {
     }
 
     @Test
-    fun appStoreUrl_hasARealDefault_overridableInCaseItEverMoves() {
+    fun appStoreUrl_isTheAppStoreLink() {
         assertEquals("https://apps.apple.com/us/app/cea-app/id6754717471", AppLinks.appStoreUrl)
-
-        AppLinks.override("APP_LINKS_APP_STORE_URL", "https://apps.apple.com/us/app/cea-app/id999")
-        assertEquals("https://apps.apple.com/us/app/cea-app/id999", AppLinks.appStoreUrl)
     }
 }

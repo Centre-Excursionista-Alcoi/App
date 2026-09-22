@@ -4,6 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.request.host
+import io.ktor.server.request.path
 import io.ktor.server.request.uri
 import io.ktor.server.request.userAgent
 import io.ktor.server.response.respond
@@ -12,6 +13,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import java.net.URLEncoder
 import org.centrexcursionistalcoi.app.AppLinks
+import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 
 /** [AppLinks.baseUrl]'s own host, with no scheme -- the only host the app claims links on. */
@@ -49,7 +51,39 @@ private suspend fun ApplicationCall.respondAppLinkFallback() {
             // happen, so there's nothing left to try except sending them to the store directly.
             respondRedirect(AppLinks.appStoreUrl, permanent = false)
         }
-        else -> respondTemplate(WebTemplate.GetApp, emptyMap())
+        else -> {
+            // Both the app's own crawlers (WhatsApp, Telegram, Slack, ...) generating a link preview and a plain
+            // desktop visitor land here, and get the exact same response: crawlers only ever read the <head>.
+            val path = request.path()
+            val (title, description) = previewFor(path)
+            respondTemplate(
+                WebTemplate.GetApp,
+                mapOf(
+                    "preview_title" to title,
+                    "preview_description" to description,
+                    "preview_image" to "${AppLinks.baseUrl}/static/app-icon.png",
+                    "preview_url" to "${AppLinks.baseUrl}$path",
+                ),
+            )
+        }
+    }
+}
+
+/**
+ * A short, public-safe title/description for the link preview messaging apps (WhatsApp, Telegram, Slack, ...)
+ * show before anyone opens the link -- deliberately generic, e.g. "Lending" and not who borrowed what or when:
+ * a link may end up forwarded to someone who has no business seeing that. [path] is the request's own path, e.g.
+ * `/admin/lendings/<id>`.
+ *
+ * Falls back to a generic app-wide preview for a path this doesn't recognize (including the bare domain).
+ */
+private fun previewFor(path: String): Pair<String, String> {
+    val route = path.trim('/')
+    return when {
+        route.startsWith(AppLinkRoutes.ADMIN_LENDINGS) -> "Lending" to "Open this lending in the CEA App."
+        route.startsWith(AppLinkRoutes.ADMIN_ITEMS) -> "Inventory item" to "Open this item in the CEA App."
+        route.startsWith(AppLinkRoutes.ITEM_TYPE) -> "Item" to "Open this item in the CEA App."
+        else -> "CEA App" to "Open this in the CEA App."
     }
 }
 
