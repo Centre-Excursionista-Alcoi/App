@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
-import org.centrexcursionistalcoi.app.data.FileContainer
+import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformSaveFileLogic
@@ -47,13 +47,12 @@ class FileProviderModel(
     }
 
     fun saveFile(
-        container: FileContainer,
+        container: DocumentFileContainer,
         suggestedName: String,
         contentType: ContentType = ContentType.Application.Pdf
     ) = launchWithLock(lock) {
         saveFileLogic.pickAndSave(
             container,
-            fileUuid = container.files.firstNotNullOf { it.value },
             suggestedName = suggestedName,
             allowedExtensions = contentType.fileExtensions().toSet(),
             progressNotifier = progressNotifier,

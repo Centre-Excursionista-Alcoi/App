@@ -18,7 +18,7 @@ data class ReferencedMemory(
     val from: ZonedDateTime,
     val to: ZonedDateTime,
     val lending: Uuid? = null,
-): ReferencedEntity<Uuid, Memory>, FileContainer, ImageFileListContainer {
+): ReferencedEntity<Uuid, Memory>, DocumentFileContainer, ImageFileListContainer {
     override fun dereference() = Memory(
         id = id,
         place = place,
@@ -35,9 +35,7 @@ data class ReferencedMemory(
         lending = lending,
     )
 
-    override val files: Map<String, Uuid?> = mapOf(
-        "pdf" to pdf
-    )
+    override val documentFile: Uuid? = pdf
 
     override val images: List<Uuid>
         get() = attachments

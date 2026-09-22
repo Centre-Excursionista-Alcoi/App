@@ -25,9 +25,9 @@ data class Memory(
     val to: ZonedDateTime,
     val pdf: Uuid?,
     val lending: Uuid?,
-): JsonSerializable, Entity<Uuid>, FileContainer, ImageFileListContainer {
-    /** The generated summary PDF, exposed as a [FileContainer] so it's downloaded like any other single document. */
-    override val files: Map<String, Uuid?> = mapOf("pdf" to pdf)
+): JsonSerializable, Entity<Uuid>, DocumentFileContainer, ImageFileListContainer {
+    /** The generated summary PDF, exposed as a [DocumentFileContainer] so it's downloaded like any other document. */
+    override val documentFile: Uuid? = pdf
 
     /** The user-attached photos, exposed as an [ImageFileListContainer] (fetched on demand, like [Post.images]). */
     override val images: List<Uuid> = attachments

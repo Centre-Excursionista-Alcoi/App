@@ -274,12 +274,6 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
             }
-            is FileContainer -> {
-                val filePaths = item.filePaths()
-                for ((fileUuid, path) in filePaths) {
-                    downloadFile(fileUuid, path, progressNotifier)
-                }
-            }
             else -> { /* nothing */ }
         }
     }
