@@ -21,7 +21,7 @@ actual class PlatformOpenFileLogic(
     actual override val isSupported: Boolean = true
 
     actual fun open(path: String, contentType: ContentType) {
-        // Store the data into a symbolic link with proper extension and get a content URI using FileProvider
+        // Hard-link the data under a name with the proper extension and get a content URI using FileProvider
         val filePath = pathsProvider.systemDataPath / path
         val file = File(filePath.toString())
         val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
