@@ -116,36 +116,6 @@ suspend fun ImageFileListContainer.imageFile(uuid: Uuid, progressNotifier: Progr
 
 
 /**
- * Returns the paths for the file associated with the provided UUID in this SubReferencedFileContainer.
- * If the file does not exist locally, it will be downloaded from the remote repository.
- * @param progressNotifier Optional ProgressNotifier to track download progress.
- * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
- * @throws IllegalArgumentException if the file is not found and uuid cannot be inferred.
- */
-suspend fun SubReferencedFileContainer.fetchSubReferencedFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): String {
-    val ref = referencedFiles.find { it.second == uuid }
-    require(ref != null) { "UUID must be in the container." }
-
-    val path = joinPaths(FILES_PATH, ref.third, uuid.toString())
-    if (!FileSystem.exists(path) && downloadIfNotExists) {
-        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
-            ?: throw IllegalStateException("Sub-referenced file not found at path ($path). UUID could not be inferred.")
-        log.d { "Tried to read non-existing file. Downloading..." }
-        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
-    }
-    return path
-}
-
-/**
- * Writes the provided ByteReadChannel to the document file associated with this FileContainer.
- * @throws IllegalArgumentException if the UUID is not in the container.
- */
-suspend fun SubReferencedFileContainer.writeSubReferencedFile(channel: ByteReadChannel, uuid: Uuid, progressNotifier: ProgressNotifier? = null) {
-    val path = fetchSubReferencedFilePath(uuid, progressNotifier, downloadIfNotExists = false)
-    FileSystem.write(path, channel, progressNotifier)
-}
-
-/**
  * A Composable function that loads the image file associated with this ImageFileContainer.
  *
  * It returns a State<ByteArray?> that will be updated once the image file is loaded.
