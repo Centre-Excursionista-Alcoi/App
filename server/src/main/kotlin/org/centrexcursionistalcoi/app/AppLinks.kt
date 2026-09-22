@@ -27,4 +27,11 @@ object AppLinks : ConfigProvider() {
 
     /** Opens a lending in the admin panel of the app. */
     fun adminLending(lendingId: UUID): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"
+
+    /**
+     * The link the "lost password" email sends. On this same host so it never exposes the server's own domain to a
+     * user (issue #668) -- it's excluded from the app's own link-claiming (see `WEB_ONLY_PATHS` in
+     * `WellKnownRoutes.kt`/`MainActivity`) since it's a real, server-rendered page with no native screen to route to.
+     */
+    fun resetPassword(requestId: String): String = "$baseUrl/${AppLinkRoutes.RESET_PASSWORD}?request_id=$requestId"
 }
