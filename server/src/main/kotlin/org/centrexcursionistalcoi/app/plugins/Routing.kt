@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.routes.memoriesRoutes
 import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.qualificationsRoutes
+import org.centrexcursionistalcoi.app.routes.respondAppLinkFallbackOr
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
@@ -33,7 +35,11 @@ import org.centrexcursionistalcoi.app.versionCode
 fun Application.configureRouting() {
     routing {
         get("/") {
-            call.respondText("Hello! The Centre Excursionista d'Alcoi API is running.")
+            // On the app-links host (centrexcursionistalcoi.app by default), the bare domain behaves the same as
+            // any other unmatched path there -- see appLinkFallbackRoutes -- rather than announcing the API.
+            call.respondAppLinkFallbackOr {
+                call.respondText("Hello! The Centre Excursionista d'Alcoi API is running.")
+            }
         }
 
         get("/download/{uuid}") {
@@ -93,6 +99,8 @@ fun Application.configureRouting() {
         route(".well-known") {
             wellKnownRoutes()
         }
+
+        appLinkFallbackRoutes()
 
         get("/logout") {
             call.sessions.clear<UserSession>()

@@ -16,6 +16,24 @@ abstract class WebTemplate(name: String): Template("web", name) {
         return list["title"]
     }
 
+    abstract class ResourceWebTemplate(private val name: String): WebTemplate(name) {
+        override fun DocumentRedactor.render(args: Map<String, String?>): String {
+            val resourceName = "web/$name.html"
+            val resourceStream = javaClass.classLoader.getResourceAsStream(resourceName)
+                ?: throw IllegalStateException("Resource not found: $resourceName")
+            val htmlDocument = resourceStream.bufferedReader().use { it.readText() }
+            // Translations are specified in static HTML files as `{{key}}` placeholders, which are replaced with
+            // the translated text for the current locale -- or, if the caller passed a value under that same key
+            // in [args] (for whatever a translation file can't hold, like a per-request URL), that instead.
+            return htmlDocument.replace(Regex("\\{\\{(.*?)\\}\\}")) { matchResult ->
+                val key = matchResult.groupValues[1].trim()
+                val value = args[key] ?: translationsBook[locale].getOrNull(key)
+                // If neither has it, keep the original placeholder.
+                value ?: matchResult.value
+            }
+        }
+    }
+
     /**
      * Renders the template with the given arguments. Required arguments:
      * - `requestId`: The ID of the password reset request.
@@ -52,6 +70,14 @@ abstract class WebTemplate(name: String): Template("web", name) {
         </html>
         """.trimIndent()
     }
+
+    /**
+     * The "get the app" page: whoever lands here is on a desktop or another platform where there's nothing to
+     * auto-redirect to (see `respondAppLinkFallback`, which handles Android/iOS by redirecting before this ever
+     * renders). Static markup (`web/get_app.html`) plus its own stylesheet (`web/app-links.css`) -- nothing here
+     * is per-request, so a plain [ResourceWebTemplate] is all it needs.
+     */
+    object GetApp : ResourceWebTemplate("get_app")
 
     companion object {
         suspend fun ApplicationCall.respondTemplate(template: Template, args: Map<String, String?>) {

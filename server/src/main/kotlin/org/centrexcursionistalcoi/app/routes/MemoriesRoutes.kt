@@ -21,6 +21,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
@@ -339,7 +340,7 @@ fun Route.memoriesRoutes() {
                     fileAttachments.add(MailerSendAttachment(fileBytes, file.originalFileName ?: "memory_attachment_$i"))
                 }
 
-                val url = "cea://admin/lendings#${lending.id.value}"
+                val url = AppLinks.adminLending(lending.id.value)
                 Email.sendEmail(
                     to = emails,
                     subject = "New lending memory submitted (#${lending.id.value})",

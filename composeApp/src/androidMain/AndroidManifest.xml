@@ -29,11 +29,13 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
+            <!-- The links people share (https://centrexcursionistalcoi.app/...): the app opens them directly when
+                 it's installed, and that address shows a page to get the app when it isn't. -->
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="cea" />
+                <data android:scheme="https" android:host="centrexcursionistalcoi.app" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />

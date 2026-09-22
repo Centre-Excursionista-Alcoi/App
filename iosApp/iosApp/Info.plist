@@ -6,10 +6,6 @@
 	<true/>
 	<key>CFBundleShortVersionString</key>
 	<string>2.0.31</string>
-	<key>CFBundleURLSchemes</key>
-	<array>
-		<string>cea</string>
-	</array>
 	<key>CFBundleVersion</key>
 	<string>670</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

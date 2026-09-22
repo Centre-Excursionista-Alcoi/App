@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.nav.DeepLinks
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.platform.PlatformLoadLogic
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
@@ -35,7 +36,7 @@ class PlatformInitializerViewModel(
 
             if (url != null) {
                 log.d { "Processing destination for url: $url" }
-                _startDestination.value = Destination.fromUrl(url)
+                _startDestination.value = DeepLinks.fromUrl(url)
             }
 
             log.d { "Listening for SSE notifications..." }

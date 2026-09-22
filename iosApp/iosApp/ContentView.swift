@@ -17,5 +17,11 @@ struct ContentView: View {
     var body: some View {
         ComposeView()
             .ignoresSafeArea()
+            .onOpenURL { url in
+                // A universal link like https://centrexcursionistalcoi.app/admin/lendings/<id>, from an email or
+                // another app. The shared code opens it as soon as the app can, which for a launch from the link
+                // is once the user is in.
+                DeepLinks.shared.receive(url: url.absoluteString)
+            }
     }
 }

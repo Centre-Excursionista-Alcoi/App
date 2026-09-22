@@ -10,7 +10,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -25,8 +27,11 @@ import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.ktor.http.Url
+import kotlinx.coroutines.CancellationException
+import org.centrexcursionistalcoi.app.nav.DeepLinks
 import org.centrexcursionistalcoi.app.nav.Destination
 import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
+import org.centrexcursionistalcoi.app.nav.canOpenLinks
 import org.centrexcursionistalcoi.app.nav.rememberNavigator
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.LocalNotifications.checkIsSelf
@@ -145,6 +150,32 @@ private fun App(
 ) {
     val navigator = rememberNavigator(Destination.Loading)
 
+    // Links that reach the app by a callback instead of starting it (iOS, see DeepLinks). While the app is loading
+    // or the user is logging in there's nowhere to open one yet, so it waits here until the user is in.
+    var waitingLink by remember { mutableStateOf<Destination?>(null) }
+    val incomingLink by DeepLinks.pending.collectAsState()
+    LaunchedEffect(incomingLink) {
+        val url = incomingLink ?: return@LaunchedEffect
+        val destination = try {
+            DeepLinks.fromUrl(url)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.e(e) { "Could not resolve the link: $url" }
+            null
+        }
+        DeepLinks.consume(url)
+        if (destination == null) {
+            log.w { "Ignoring a link that doesn't point anywhere in the app: $url" }
+        } else if (navigator.current.canOpenLinks()) {
+            log.i { "Opening link: $destination" }
+            if (navigator.current != destination) navigator.navigate(Destination.backStackFor(destination))
+        } else {
+            log.i { "Not ready to open the link yet, will open it once the user is in: $destination" }
+            waitingLink = destination
+        }
+    }
+
     val errorState by GlobalAsyncErrorHandler.error.collectAsState()
     errorState?.let { error ->
         ErrorDialog(exception = error) { GlobalAsyncErrorHandler.clearError() }
@@ -179,9 +210,12 @@ private fun App(
                 destination<Destination.Loading> {
                     LoadingScreen(
                         onLoggedIn = {
-                            log.i { "User is logged in. Navigating to: $afterLoad" }
+                            // A link the user opened wins over what a notification would open
+                            val opening = waitingLink ?: afterLoad
+                            waitingLink = null
+                            log.i { "User is logged in. Navigating to: $opening" }
                             navigator.navigateClearingStack(Destination.Main())
-                            afterLoad?.let { navigator.navigate(Destination.backStackFor(it)) }
+                            opening?.let { navigator.navigate(Destination.backStackFor(it)) }
                         },
                         onNotLoggedIn = {
                             log.i { "User is not logged in. Navigating to login screen..." }

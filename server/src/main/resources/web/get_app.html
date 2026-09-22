@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{preview_title}}</title>
+
+    <!-- What messaging/social apps (WhatsApp, Telegram, Slack, ...) show as a preview when this link is shared,
+         before anyone opens it -- see AppLinkFallbackRoutes.previewFor. Deliberately generic, never anything
+         private about what the link actually points to. -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CEA App">
+    <meta property="og:title" content="{{preview_title}}">
+    <meta property="og:description" content="{{preview_description}}">
+    <meta property="og:image" content="{{preview_image}}">
+    <meta property="og:image:width" content="480">
+    <meta property="og:image:height" content="480">
+    <meta property="og:url" content="{{preview_url}}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{preview_title}}">
+    <meta name="twitter:description" content="{{preview_description}}">
+    <meta name="twitter:image" content="{{preview_image}}">
+
+    <link rel="stylesheet" href="/static/app-links.css">
+</head>
+<body>
+    <div class="card">
+        <img class="icon" src="/static/app-icon.png" alt="">
+        <h1>{{title}}</h1>
+        <p>{{subtitle}}</p>
+        <div class="buttons">
+            <a class="cta" href="https://play.google.com/store/apps/details?id=org.centrexcursionistalcoi.app">{{android_button}}</a>
+            <a class="cta" href="https://apps.apple.com/us/app/cea-app/id6754717471">{{ios_button}}</a>
+        </div>
+    </div>
+</body>
+</html>
