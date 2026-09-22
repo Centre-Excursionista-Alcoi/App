@@ -526,9 +526,6 @@ fun MemoryViewButtons(
         IconButton(
             onClick = {
                 scope.launch {
-                    // false: the user dismissed the save dialog without picking a destination -- nothing was
-                    // actually written, so there's nothing to tell them about (#672). null: an error, already
-                    // surfaced by GlobalAsyncErrorHandler via FileProviderModel's ViewModel.async.
                     val saved = fpm.saveFile(memory, suggestedName = memory.id.toString()).await()
                     if (saved != true) return@launch
 
