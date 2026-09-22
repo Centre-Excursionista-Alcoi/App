@@ -7,11 +7,13 @@ import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
@@ -19,6 +21,7 @@ import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.util.*
+import kotlin.uuid.toJavaUuid
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
@@ -27,6 +30,10 @@ fun Route.postsRoutes() {
         idTypeConverter = { it.toUUIDOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },
         visibleTo = { post, session -> post.isVisibleTo(session) },
+        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the current
+        //   app always sends JSON for posts now (PostsRemoteRepository.create -> createJson). Delete this whole
+        //   `creator` lambda (and its `updater`-adjacent `createRequestSerializer`/`jsonCreator` pair collapses
+        //   into a plain, always-JSON provideEntityRoutes call) once the app version requiring it is unsupported.
         creator = { formParameters ->
             var title: String? = null
             var content: String? = null
@@ -111,6 +118,33 @@ fun Route.postsRoutes() {
             PostEntity.find { Posts.department eq department.id }.empty()
         },
         updater = UpdatePostRequest.serializer(),
+        createRequestSerializer = CreatePostRequest.serializer(),
+        jsonCreator = { request ->
+            // Mirrors the multipart creator above -- same department lookup, same file creation, same
+            // PostFiles wiring -- just reading a decoded CreatePostRequest instead of MultiPartData (#659).
+            val department = request.department?.let {
+                Database { DepartmentEntity.findById(it.toJavaUuid()) }
+                    ?: throw IllegalArgumentException("Department with id $it does not exist")
+            }
+
+            val fileEntities = Database { request.files.map { FileEntity.newFrom(it) } }
+
+            Database {
+                PostEntity.new {
+                    this.title = request.title
+                    this.content = request.content
+                    this.department = department
+                    this.link = request.link
+                }.also { postEntity ->
+                    for (fileEntity in fileEntities) {
+                        PostFiles.insert {
+                            it[file] = fileEntity.id
+                            it[post] = postEntity.id
+                        }
+                    }
+                }
+            }
+        },
         writePermission = EntityWritePermission(
             role = DepartmentRole.CONTENT_MANAGER,
             departmentOfEntity = { it.department?.id?.value },

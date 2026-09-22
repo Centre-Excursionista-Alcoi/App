@@ -278,17 +278,11 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         }
     }
 
-    suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
-        check(isCreationSupported) { "Creation of this entity is not supported" }
-        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
-
-        val formData = item.toFormData()
-        val response = httpClient.submitFormWithBinaryData(
-            url = endpoint,
-            formData = formData
-        ) {
-            progressNotifier?.let { monitorUploadProgress(it) }
-        }
+    /**
+     * Handles the response to a `POST $endpoint` that just created a new entity -- shared between [create]
+     * (multipart) and [createJson], which only differ in how the request itself is built.
+     */
+    private suspend fun handleCreateResponse(response: HttpResponse, progressNotifier: ProgressNotifier?) {
         if (response.status.isSuccess()) {
             try {
                 val location = response.headers[HttpHeaders.Location]
@@ -310,6 +304,40 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             log.e { "Failed to create $name: $error" }
             throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
+    }
+
+    // TODO(#659): multipart create, on the way out. The app itself no longer needs this once every
+    //   RemoteRepository has its own JSON create() the way PostsRemoteRepository does (see createJson below) --
+    //   remove this function and Entity<Id>.toFormData() (EntityExtensions.kt) together at that point. The
+    //   server keeps accepting multipart regardless, for app installs that predate this migration.
+    suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
+        check(isCreationSupported) { "Creation of this entity is not supported" }
+        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
+
+        val formData = item.toFormData()
+        val response = httpClient.submitFormWithBinaryData(
+            url = endpoint,
+            formData = formData
+        ) {
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
+        handleCreateResponse(response, progressNotifier)
+    }
+
+    /**
+     * Creates a new entity from a JSON [request] instead of a multipart form -- the JSON counterpart of [create]
+     * (#659). The server accepts both on the same endpoint, so this is opt-in per repository, not a replacement.
+     */
+    suspend fun <CR : Any> createJson(request: CR, serializer: KSerializer<CR>, progressNotifier: ProgressNotifier? = null) {
+        check(isCreationSupported) { "Creation of this entity is not supported" }
+        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
+
+        val response = httpClient.post(endpoint) {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(serializer, request))
+            progressNotifier?.let { monitorUploadProgress(it) }
+        }
+        handleCreateResponse(response, progressNotifier)
     }
 
     suspend fun <UER : UpdateEntityRequest<RemoteIdType, RemoteEntity>> update(
