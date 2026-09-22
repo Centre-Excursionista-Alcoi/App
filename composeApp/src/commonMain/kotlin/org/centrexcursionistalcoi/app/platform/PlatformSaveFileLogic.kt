@@ -26,18 +26,23 @@ class PlatformSaveFileLogic {
     }
 }
 
+/**
+ * @return `true` if the user picked a destination and the file was written there, `false` if they dismissed the
+ * save dialog without picking one -- distinguishing the two lets a caller avoid telling the user something was
+ * saved when nothing was (#672).
+ */
 suspend fun PlatformSaveFileLogic.pickAndSave(
     container: DocumentFileContainer,
     suggestedName: String = container.documentFile.toString(),
     allowedExtensions: Set<String> = setOf(),
     defaultExtension: String? = allowedExtensions.firstOrNull(),
     progressNotifier: ProgressNotifier? = null
-) {
+): Boolean {
     val result = FileKit.openFileSaver(
         suggestedName = suggestedName,
         defaultExtension = defaultExtension,
         allowedExtensions = allowedExtensions.takeIf { it.isNotEmpty() }
-    ) ?: return
+    ) ?: return false
 
     val bytes = container.readFile(progressNotifier)
     val buffer = Buffer()
@@ -45,4 +50,5 @@ suspend fun PlatformSaveFileLogic.pickAndSave(
     buffer.use { data ->
         save(result, data)
     }
+    return true
 }

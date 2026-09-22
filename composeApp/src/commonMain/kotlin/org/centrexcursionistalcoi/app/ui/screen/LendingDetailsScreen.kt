@@ -525,15 +525,16 @@ fun MemoryViewButtons(
         }
         IconButton(
             onClick = {
-                fpm.saveFile(memory, suggestedName = memory.id.toString()).invokeOnCompletion {
-                    scope.launch {
-                        val result = snackbarHostState?.showSnackbar(
-                            message = getString(Res.string.memory_saved),
-                            actionLabel = if (fpm.isOpeningFileSupported) getString(Res.string.memory_open_file) else null
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            fpm.openFile { memory.fetchDocumentFilePath() }
-                        }
+                scope.launch {
+                    val saved = fpm.saveFile(memory, suggestedName = memory.id.toString()).await()
+                    if (saved != true) return@launch
+
+                    val result = snackbarHostState?.showSnackbar(
+                        message = getString(Res.string.memory_saved),
+                        actionLabel = if (fpm.isOpeningFileSupported) getString(Res.string.memory_open_file) else null
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        fpm.openFile { memory.fetchDocumentFilePath() }
                     }
                 }
             },
