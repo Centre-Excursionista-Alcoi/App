@@ -8,11 +8,10 @@ import io.github.vinceglb.filekit.sink
 import io.ktor.utils.io.core.writeFully
 import kotlinx.io.Buffer
 import kotlinx.io.Source
-import org.centrexcursionistalcoi.app.data.FileContainer
+import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.readFile
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.core.annotation.Singleton
-import kotlin.uuid.Uuid
 
 @Singleton
 class PlatformSaveFileLogic {
@@ -28,9 +27,8 @@ class PlatformSaveFileLogic {
 }
 
 suspend fun PlatformSaveFileLogic.pickAndSave(
-    container: FileContainer,
-    fileUuid: Uuid = container.files.firstNotNullOf { it.value },
-    suggestedName: String = fileUuid.toString(),
+    container: DocumentFileContainer,
+    suggestedName: String = container.documentFile.toString(),
     allowedExtensions: Set<String> = setOf(),
     defaultExtension: String? = allowedExtensions.firstOrNull(),
     progressNotifier: ProgressNotifier? = null
@@ -41,7 +39,7 @@ suspend fun PlatformSaveFileLogic.pickAndSave(
         allowedExtensions = allowedExtensions.takeIf { it.isNotEmpty() }
     ) ?: return
 
-    val bytes = container.readFile(fileUuid, progressNotifier)
+    val bytes = container.readFile(progressNotifier)
     val buffer = Buffer()
     buffer.writeFully(bytes)
     buffer.use { data ->

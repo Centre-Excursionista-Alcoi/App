@@ -22,8 +22,8 @@ data class UserInsurance(
     val documentId: Uuid?,
     val femecvLicense: LicenseData? = null,
     val cardImage: String? = null,
-): Entity<Uuid>, FileContainer {
-    override val files: Map<String, Uuid?> = mapOf("documentId" to documentId)
+): Entity<Uuid>, DocumentFileContainer {
+    override val documentFile: Uuid? = documentId
 
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,

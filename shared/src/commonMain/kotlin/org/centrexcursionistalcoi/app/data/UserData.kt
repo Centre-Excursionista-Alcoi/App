@@ -43,10 +43,5 @@ data class UserData(
     }
 
     override val referencedFiles: List<Triple<String, Uuid?, String>>
-        get() {
-            val insurancesFiles = insurances.flatMap { it.files.entries }
-                .map { Triple(it.key, it.value, UserInsurance::class.simpleName!!) }
-                .toTypedArray()
-            return listOf(*insurancesFiles)
-        }
+        get() = insurances.map { Triple("documentId", it.documentFile, UserInsurance::class.simpleName!!) }
 }

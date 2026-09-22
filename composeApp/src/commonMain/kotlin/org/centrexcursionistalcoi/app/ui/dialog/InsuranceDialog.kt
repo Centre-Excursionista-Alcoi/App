@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import org.centrexcursionistalcoi.app.data.UserInsurance
-import org.centrexcursionistalcoi.app.data.fetchFilePath
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.process.Progress
@@ -120,14 +120,12 @@ private fun InsuranceDialog(
                 InsuranceInfoText(Res.string.insurance_start_date, insurance.validFrom.toString())
                 InsuranceInfoText(Res.string.insurance_end_date, insurance.validTo.toString())
 
-                val documentId = insurance.files["documentId"]
-                val hasDocument = insurance.documentId != null && documentId != null
-                if (hasDocument) {
+                if (insurance.documentFile != null) {
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
                         if (share.isSupported) {
                             IconButton(
                                 onClick = {
-                                    onShareFile { insurance.fetchFilePath(documentId) }
+                                    onShareFile { insurance.fetchDocumentFilePath() }
                                 },
                             ) {
                                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
@@ -136,7 +134,7 @@ private fun InsuranceDialog(
                         if (openFile.isSupported) {
                             OutlinedButton(
                                 onClick = {
-                                    onOpenFile { insurance.fetchFilePath(documentId) }
+                                    onOpenFile { insurance.fetchDocumentFilePath() }
                                 },
                                 modifier = Modifier.weight(1f).padding(start = 8.dp)
                             ) {

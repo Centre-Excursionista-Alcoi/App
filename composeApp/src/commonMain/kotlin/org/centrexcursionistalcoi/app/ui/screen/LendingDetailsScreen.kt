@@ -86,7 +86,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.data.fetchFilePath
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
@@ -511,13 +511,13 @@ fun MemoryViewButtons(
     fpm: FileProviderModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val memoryPdf = memory.pdf ?: return
+    if (memory.pdf == null) return
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         if (fpm.isSharingFileSupported) {
             IconButton(
                 onClick = {
-                    fpm.shareFile { memory.fetchFilePath(memoryPdf) }
+                    fpm.shareFile { memory.fetchDocumentFilePath() }
                 },
             ) {
                 Icon(MaterialSymbols.Share, stringResource(Res.string.share))
@@ -532,7 +532,7 @@ fun MemoryViewButtons(
                             actionLabel = if (fpm.isOpeningFileSupported) getString(Res.string.memory_open_file) else null
                         )
                         if (result == SnackbarResult.ActionPerformed) {
-                            fpm.openFile { memory.fetchFilePath(memoryPdf) }
+                            fpm.openFile { memory.fetchDocumentFilePath() }
                         }
                     }
                 }
@@ -543,7 +543,7 @@ fun MemoryViewButtons(
         if (fpm.isOpeningFileSupported) {
             OutlinedButton(
                 onClick = {
-                    fpm.openFile { memory.fetchFilePath(memoryPdf) }
+                    fpm.openFile { memory.fetchDocumentFilePath() }
                 },
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
