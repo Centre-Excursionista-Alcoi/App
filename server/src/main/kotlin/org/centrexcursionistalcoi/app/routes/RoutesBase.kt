@@ -5,7 +5,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.MultiPartData
 import io.ktor.server.request.contentType
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
@@ -135,7 +134,7 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>, Any>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
@@ -182,10 +181,34 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes<EID, EE, ID, E, UER, Any>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+
+/**
+ * Like the [provideEntityRoutes] overload above, but also lets `POST /$base` accept an `application/json` body
+ * (decoded with [createRequestSerializer], built into an entity by [jsonCreator]) alongside the existing
+ * multipart path -- see [RoutingContext]'s `post("/$base")` handler in the base implementation. Transitional
+ * (#659): a client old enough to only know multipart keeps working unchanged either way.
+ */
+@Suppress("USELESS_CAST")
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any> Route.provideEntityRoutes(
+    base: String,
+    entityClass: EntityClass<EID, EE>,
+    noinline idTypeConverter: (String) -> EID?,
+    noinline creator: suspend (MultiPartData) -> EE,
+    updater: KSerializer<UER>,
+    createRequestSerializer: KSerializer<CR>,
+    /** @see [provideEntityRoutes]'s [creator] -- throws the same exceptions, for the same reasons. */
+    noinline jsonCreator: suspend (CR) -> EE,
+    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
+    noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
+    noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
+    writePermission: EntityWritePermission<EE>? = null,
+    noinline afterCreate: suspend (EE) -> Unit = {},
+    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, createRequestSerializer, jsonCreator, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
-fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
+fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any> Route.provideEntityRoutes(
     base: String,
     entityClass: EntityClass<EID, EE>,
     entityKClass: KClass<EE>,
@@ -196,6 +219,12 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * @throws IllegalArgumentException if an argument is malformed.
      * @throws NoSuchElementException if a referenced entity is not found.
      * @throws NumberFormatException if a numeric argument is malformed.
+     *
+     * TODO(#659): server-only backward compat for app installs older than the JSON create endpoint -- the current
+     *   app never sends multipart for an entity once it has [createRequestSerializer]/[jsonCreator] (see Posts).
+     *   Remove [creator]/[MultiPartData] entirely, along with every entity's multipart lambda and the `else`
+     *   branch in `post("/$base")` below, once every entity has a JSON creator and the oldest app version the
+     *   backend still needs to serve sends JSON for all of them.
      */
     creator: suspend (MultiPartData) -> EE,
     /**
@@ -204,6 +233,17 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * Otherwise, [entityKClass] must implement [EntityPatcher].
      */
     updater: KSerializer<UER>? = null,
+    /**
+     * If non-null (together with [jsonCreator]), `POST /$base` also accepts an `application/json` body decoded
+     * with this serializer, alongside the existing multipart path -- see [jsonCreator]. Transitional (#659): a
+     * client old enough to only know multipart keeps working unchanged either way.
+     */
+    createRequestSerializer: KSerializer<CR>? = null,
+    /**
+     * Creates a new entity from a JSON body already decoded with [createRequestSerializer]. Only used when both
+     * are non-null; throws the same exceptions [creator] does, for the same reasons, mapped to the same errors.
+     */
+    jsonCreator: (suspend (CR) -> EE)? = null,
     listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
     /**
      * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
@@ -234,6 +274,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     require(!base.startsWith("/")) { "Base path must not start with '/'" }
     require(!base.endsWith("/")) { "Base path must not end with '/'" }
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
+    require((createRequestSerializer == null) == (jsonCreator == null)) { "createRequestSerializer and jsonCreator must be given together" }
 
     /**
      * Coarse pre-check, before the entity is looked up (PATCH/DELETE) or created (POST): requires global admin,
@@ -323,29 +364,56 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
     }
 
+    /**
+     * Runs the JSON [creator] call, mapping the exceptions it's documented to throw to the matching [Error]. The
+     * multipart path's identical exception mapping lives separately, in `LegacyMultipartCreate.kt`.
+     */
+    suspend fun RoutingContext.tryCreate(block: suspend () -> EE): EE? = try {
+        block()
+    } catch (e: NullPointerException) {
+        logger.error("Missing argument during entity creation", e)
+        respondError(Error.MissingArgument())
+        null
+    } catch (e: IllegalArgumentException) {
+        logger.error("Illegal argument during entity creation", e)
+        respondError(Error.MalformedRequest())
+        null
+    } catch (e: NoSuchElementException) {
+        logger.error("Referenced entity not found during entity creation", e)
+        respondError(Error.EntityNotFound(entityKClass, "N/A"))
+        null
+    } catch (e: NumberFormatException) {
+        logger.error("Number format exception during entity creation", e)
+        respondError(Error.MalformedRequest())
+        null
+    }
+
     post("/$base") {
-        assertContentType() ?: return@post
+        val requestContentType = call.request.contentType()
+        val isJsonCreate = createRequestSerializer != null && jsonCreator != null && requestContentType.match(ContentType.Application.Json)
+        val isMultipartCreate = requestContentType.match(ContentType.MultiPart.FormData)
+        if (!isJsonCreate && !isMultipartCreate) {
+            respondError(Error.InvalidContentType(ContentType.MultiPart.FormData, requestContentType))
+            return@post
+        }
+
         val session = assertMayWriteAtAll() ?: return@post
 
-        val multipart = call.receiveMultipart()
-        val item = try {
-            creator(multipart)
-        } catch (e: NullPointerException) {
-            logger.error("Missing argument during entity creation", e)
-            respondError(Error.MissingArgument())
-            return@post
-        } catch (e: IllegalArgumentException) {
-            logger.error("Illegal argument during entity creation", e)
-            respondError(Error.MalformedRequest())
-            return@post
-        } catch (e: NoSuchElementException) {
-            logger.error("Referenced entity not found during entity creation", e)
-            respondError(Error.EntityNotFound(entityKClass, "N/A"))
-            return@post
-        } catch (e: NumberFormatException) {
-            logger.error("Number format exception during entity creation", e)
-            respondError(Error.MalformedRequest())
-            return@post
+        val item = if (isJsonCreate) {
+            val body = call.receiveText()
+            val request = try {
+                json.decodeFromString(requireNotNull(createRequestSerializer), body)
+            } catch (e: Exception) {
+                logger.error("Failed to decode create request. Body: $body", e)
+                respondError(Error.MalformedRequest())
+                return@post
+            }
+            tryCreate { requireNotNull(jsonCreator)(request) } ?: return@post
+        } else {
+            // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch (and
+            //   go back to requiring isJsonCreate unconditionally) once every entity has a JSON creator and the
+            //   oldest app version still served sends JSON.
+            createFromMultipart(creator, entityKClass) ?: return@post
         }
 
         // The fine-grained check can only run once the entity (and thus its department) exists -- multipart

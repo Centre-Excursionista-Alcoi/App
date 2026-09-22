@@ -8,12 +8,10 @@ import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.entity.PostEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
-import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_POSTS_SYNC
-import org.centrexcursionistalcoi.app.utils.Zero
 import org.koin.core.annotation.Singleton
-import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Singleton
@@ -34,18 +32,15 @@ class PostsRemoteRepository(
         files: List<PlatformFile>,
         progressNotifier: ProgressNotifier
     ) {
-        val inMemoryFiles = files.map { InMemoryFileAllocator.put(it) }
-
-        create(
-            Post(
-                Uuid.Zero,
-                Clock.System.now(),
+        createJson(
+            CreatePostRequest(
                 title,
                 content,
                 departmentId,
                 link,
-                inMemoryFiles.map { it.toFileWithContext() },
+                files.map { it.fileWithContext() },
             ),
+            CreatePostRequest.serializer(),
             progressNotifier,
         )
     }

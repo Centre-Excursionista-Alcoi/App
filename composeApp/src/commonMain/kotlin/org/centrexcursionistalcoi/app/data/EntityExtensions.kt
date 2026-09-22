@@ -18,6 +18,13 @@ import kotlin.time.Instant
 
 private val log = logging()
 
+// TODO(#659): multipart entity creation on the client is being retired in favor of JSON (see
+//   RemoteRepository.createJson, and PostsRemoteRepository.create for the first entity moved over). This
+//   function and Entity<Id>.toFormData() below stay only as long as something still calls
+//   RemoteRepository.create(item, ...) for its own entity -- currently Inventory/Events/Department -- plus
+//   ProfileRemoteRepository's own unrelated multipart use for /profile/insurances (not an entity-creation
+//   route, out of #659's scope, but also depends on this same helper). Once every RemoteRepository.create(item)
+//   caller has its own createJson the way Posts does, delete both functions here.
 fun Map<String, Any?>.toFormData(): List<PartData> {
     return formData {
         forEach { (key, value) ->
