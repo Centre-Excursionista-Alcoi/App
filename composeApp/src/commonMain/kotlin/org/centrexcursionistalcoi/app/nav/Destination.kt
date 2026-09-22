@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import io.ktor.http.Url
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
@@ -19,12 +20,12 @@ import kotlin.uuid.Uuid
 @Serializable
 sealed interface Destination : NavKey {
     companion object : KoinComponent {
-        const val ITEM_TYPE = "itemType"
+        const val ITEM_TYPE = AppLinkRoutes.ITEM_TYPE
 
-        const val ADMIN_ITEMS = "admin/items"
-        const val ADMIN_LENDINGS_MANAGEMENT = "admin/lendings"
+        const val ADMIN_ITEMS = AppLinkRoutes.ADMIN_ITEMS
+        const val ADMIN_LENDINGS_MANAGEMENT = AppLinkRoutes.ADMIN_LENDINGS
 
-        const val RESET_PASSWORD = "reset_password"
+        const val RESET_PASSWORD = AppLinkRoutes.RESET_PASSWORD
 
         /**
          * Resolves the leaf destination a deep link [url] points to, or `null` if it doesn't match any destination.

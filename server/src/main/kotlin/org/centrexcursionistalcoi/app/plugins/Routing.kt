@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.routes.appLinkLandingRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
@@ -93,6 +94,8 @@ fun Application.configureRouting() {
         route(".well-known") {
             wellKnownRoutes()
         }
+
+        appLinkLandingRoutes()
 
         get("/logout") {
             call.sessions.clear<UserSession>()
