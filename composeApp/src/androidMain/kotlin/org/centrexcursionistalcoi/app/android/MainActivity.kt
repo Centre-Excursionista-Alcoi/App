@@ -62,11 +62,10 @@ class MainActivity : NfcIntentHandlerActivity() {
     }
 
     /**
-     * The App Link intent-filter in the manifest claims the whole `server.centrexcursionistalcoi.app` host, but some
-     * paths on it (currently just the password reset flow) are self-contained server-rendered web pages with no
-     * native screen to route to -- if the App Link hijacks them into the bare app shell instead of a browser, the
-     * user gets stranded with no way to finish e.g. resetting their password (see #617). Open those specific paths
-     * in a Custom Tab instead.
+     * The App Link intent-filter in the manifest claims the whole [APP_LINKS_HOST], but some paths on it (currently
+     * just the password reset flow) are self-contained server-rendered web pages with no native screen to route to
+     * -- if the App Link hijacks them into the bare app shell instead of a browser, the user gets stranded with no
+     * way to finish e.g. resetting their password (see #617). Open those specific paths in a Custom Tab instead.
      *
      * Explicitly targeting a browser package is required, not optional: this device/App Link combination can be in
      * a domain-verification state where a plain (package-less) `ACTION_VIEW`/`CustomTabsIntent.launchUrl()` on the
@@ -79,7 +78,7 @@ class MainActivity : NfcIntentHandlerActivity() {
      */
     private fun openWebOnlyLinkIfNeeded(intent: Intent) {
         val uri = intent.data ?: return
-        if (uri.scheme != "https" || uri.host != "server.centrexcursionistalcoi.app") return
+        if (uri.scheme != "https" || uri.host != APP_LINKS_HOST) return
         if (uri.path !in WEB_ONLY_PATHS) return
 
         val customTabsIntent = CustomTabsIntent.Builder().build()
@@ -117,11 +116,13 @@ class MainActivity : NfcIntentHandlerActivity() {
 
     /**
      * The link the app was opened with, if it's one that points somewhere in the app: a web link on
-     * [APP_LINKS_HOST]. Links on the server's own host aren't: see [openWebOnlyLinkIfNeeded].
+     * [APP_LINKS_HOST] whose path isn't one of [WEB_ONLY_PATHS] -- those are handled by [openWebOnlyLinkIfNeeded]
+     * instead, and must not also be resolved as an in-app destination (there is none for them).
      */
     private fun getUrlFromIntent(): Url? {
         val uri = intent.data ?: return null
         if (uri.scheme != "https" || uri.host != APP_LINKS_HOST) return null
+        if (uri.path in WEB_ONLY_PATHS) return null
         return Url(uri.toString())
     }
 
@@ -134,7 +135,7 @@ class MainActivity : NfcIntentHandlerActivity() {
          */
         private const val APP_LINKS_HOST = "centrexcursionistalcoi.app"
 
-        /** Paths on `server.centrexcursionistalcoi.app` that must always open as a web page. See [openWebOnlyLinkIfNeeded]. */
+        /** Paths on [APP_LINKS_HOST] that must always open as a web page. See [openWebOnlyLinkIfNeeded]. */
         private val WEB_ONLY_PATHS = setOf("/reset_password")
     }
 }

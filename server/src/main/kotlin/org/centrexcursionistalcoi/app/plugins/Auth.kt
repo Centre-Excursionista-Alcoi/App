@@ -6,8 +6,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.contentType
-import io.ktor.server.request.host
-import io.ktor.server.request.port
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -20,6 +18,7 @@ import io.ktor.server.sessions.set
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
@@ -244,7 +243,7 @@ fun Route.configureAuthRoutes() {
             locale = locale,
             args = mapOf(
                 "userName" to userReference.fullName,
-                "resetLink" to "${call.request.origin.scheme}://${call.request.host()}:${call.request.port()}/reset_password?request_id=${request[RecoverPasswordRequests.id]}",
+                "resetLink" to AppLinks.resetPassword(request[RecoverPasswordRequests.id].value),
             ),
         )
 

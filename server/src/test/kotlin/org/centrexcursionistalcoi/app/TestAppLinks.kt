@@ -19,6 +19,12 @@ class TestAppLinks {
     }
 
     @Test
+    fun aResetPasswordLink_isOnTheAppsAddress_neverTheServersOwnHost() {
+        // issue #668: a user must never see server.centrexcursionistalcoi.app
+        assertEquals("https://centrexcursionistalcoi.app/reset_password?request_id=abc123", AppLinks.resetPassword("abc123"))
+    }
+
+    @Test
     fun theAddress_canBeConfigured_withOrWithoutATrailingSlash() {
         AppLinks.override("APP_LINKS_BASE_URL", "https://links.example.org/")
         assertEquals("https://links.example.org/admin/lendings/$lendingId", AppLinks.adminLending(lendingId))
