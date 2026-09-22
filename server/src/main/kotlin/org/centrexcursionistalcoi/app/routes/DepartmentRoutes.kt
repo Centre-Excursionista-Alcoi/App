@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.error.Error
@@ -29,6 +30,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.request.CreateDepartmentRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
@@ -86,6 +88,9 @@ fun Route.departmentsRoutes() {
         // listProvider-scanning visibleTo, which would otherwise scan every department to confirm what's already
         // known to always be true.
         visibleTo = { _, _ -> true },
+        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
+        //   always sends JSON for departments now. Delete this whole `creator` lambda once the app version
+        //   requiring it is unsupported.
         creator = { formParameters ->
             var displayName: String? = null
             val image = FileRequestData()
@@ -123,6 +128,17 @@ fun Route.departmentsRoutes() {
             }
         },
         updater = UpdateDepartmentRequest.serializer(),
+        createRequestSerializer = CreateDepartmentRequest.serializer(),
+        jsonCreator = { request ->
+            // Mirrors the multipart creator above (#659).
+            val imageFile = request.image?.let { Database { FileEntity.newFrom(it) } }
+            Database {
+                DepartmentEntity.new {
+                    this.displayName = request.displayName
+                    this.image = imageFile
+                }
+            }
+        },
         writePermission = EntityWritePermission(
             role = DepartmentRole.ADMIN,
             // Editing/deleting an existing department is scoped to that department's own admin role. Creating a
