@@ -819,7 +819,24 @@ jobs:
             exit 1
           fi
           echo "Running :composeApp:$NOTARIZE_TASK"
-          ./gradlew ":composeApp:$NOTARIZE_TASK"
+
+          # This task's last step, `xcrun stapler staple`, can fail with exit 65 right after a *successful*
+          # notarization submission -- notarytool can report "Accepted" before Apple has actually propagated
+          # the ticket to their CDN, so an immediate staple attempt finds nothing to staple yet. Re-running the
+          # whole task re-submits (near-instant against an already-approved binary hash) and retries the
+          # staple, which succeeds once the ticket has caught up.
+          MAX_ATTEMPTS=4
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            if ./gradlew ":composeApp:$NOTARIZE_TASK"; then
+              exit 0
+            fi
+            if [ "$attempt" -eq "$MAX_ATTEMPTS" ]; then
+              echo "::error::$NOTARIZE_TASK failed after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            echo "$NOTARIZE_TASK failed (attempt $attempt/$MAX_ATTEMPTS) -- likely the notarization ticket hasn't propagated to Apple's CDN yet. Waiting 90s before retrying..."
+            sleep 90
+          done
 
       - name: Rename deb
         if: startsWith(matrix.os, 'ubuntu')
