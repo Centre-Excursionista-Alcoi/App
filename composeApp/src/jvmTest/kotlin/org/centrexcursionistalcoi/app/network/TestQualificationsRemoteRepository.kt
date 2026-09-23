@@ -16,9 +16,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.database.AppDatabase
@@ -199,21 +197,6 @@ class TestQualificationsRemoteRepository {
         repository.revoke(qualificationId, "sub-1")
 
         assertEquals(emptyList(), departmentsRepository.get(departmentId)?.qualificationGrants)
-    }
-
-    @Test
-    fun roster_sendsTheSearchOnlyWhenThereIsOne() = runTest {
-        val member = DepartmentRosterMember("sub-1", "Ada Lovelace")
-        val repository = repository { json(encode(ListSerializer(DepartmentRosterMember.serializer()), listOf(member))) }
-
-        assertEquals(listOf(member), repository.roster(departmentId, query = "ada", limit = 20))
-        repository.roster(departmentId, query = "  ")
-
-        assertEquals("/departments/$departmentId/roster", requests[0].path)
-        assertEquals("ada", requests[0].url.parameters["q"])
-        assertEquals("20", requests[0].url.parameters["limit"])
-        assertNull(requests[1].url.parameters["q"])
-        assertNull(requests[1].url.parameters["limit"])
     }
 
     @Test

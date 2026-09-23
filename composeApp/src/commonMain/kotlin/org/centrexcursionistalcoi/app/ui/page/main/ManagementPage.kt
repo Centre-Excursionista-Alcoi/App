@@ -22,7 +22,6 @@ import cea_app.composeapp.generated.resources.management_inventory
 import cea_app.composeapp.generated.resources.management_lendings
 import cea_app.composeapp.generated.resources.management_memories
 import cea_app.composeapp.generated.resources.management_posts
-import cea_app.composeapp.generated.resources.management_qualifications
 import cea_app.composeapp.generated.resources.management_users
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -39,7 +38,6 @@ import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArticleFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
@@ -61,8 +59,6 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypes
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.MemoriesManagementListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.QualificationsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.qualificationDepartments
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
@@ -129,7 +125,11 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     ) {
         override fun shouldShow(profile: ProfileResponse, items: List<Department>?, departments: List<Department>?): Boolean {
-            return profile.isAdmin || items.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER)
+            // PEOPLE_MANAGER for member management, or EXAMINER (QUALIFICATIONS_MANAGER/ADMIN imply it) to reach
+            // this tab's qualifications section -- see DepartmentsListView's own, matching per-department filter.
+            return profile.isAdmin ||
+                items.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.PEOPLE_MANAGER) ||
+                items.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.EXAMINER)
         }
     }
 
@@ -182,23 +182,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     }
 
-    /** Listed by the departments the viewer can grant qualifications in, see [qualificationDepartments]. */
-    object Qualifications : ManagementPage<Uuid, Department>(
-        key = "qualifications",
-        tabData = {
-            TabData.fromResources(
-                Res.string.management_qualifications,
-                MaterialSymbols.Badge,
-                MaterialSymbols.Badge,
-                it
-            )
-        }
-    ) {
-        override fun shouldShow(profile: ProfileResponse, items: List<Department>?, departments: List<Department>?): Boolean {
-            return profile.isAdmin || items.qualificationDepartments(profile).orEmpty().isNotEmpty()
-        }
-    }
-
     object Inventory : ManagementPage<Uuid, ReferencedInventoryItemType>(
         key = "inventory",
         tabData = {
@@ -244,7 +227,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 Posts.takeIf { Posts.shouldShow(profile, null, departments) },
                 Events.takeIf { Events.shouldShow(profile, null, departments) },
                 Inventory.takeIf { Inventory.shouldShow(profile, null, departments) },
-                Qualifications.takeIf { Qualifications.shouldShow(profile, departments, departments) },
             )
         }
 
@@ -358,8 +340,6 @@ private fun ManagementPageContent(
             ManagementPage.Events -> EventsListView()
 
             ManagementPage.Inventory -> InventoryItemTypesListView(selectedItemId)
-
-            ManagementPage.Qualifications -> QualificationsListView()
         }
     }
 }

@@ -2,8 +2,6 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -13,10 +11,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -30,18 +26,19 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
- * Talks to the server's qualification mutation routes (create/update/delete a definition, grant/revoke a
- * qualification) and the department roster search used to pick who to grant one to.
+ * Talks to the server's qualification mutation routes: create/update/delete a definition, grant/revoke it to a
+ * member (see `DepartmentsManagementViewModel`, which surfaces all of this inside the Departments management
+ * screen, right alongside member role assignment).
  *
  * Reading qualifications and their grants doesn't go through here: they're embedded on
  * [org.centrexcursionistalcoi.app.data.Department] and synced along with it (see `Departments.extraColumns`
  * server-side), like any other referenced data. Each mutation below patches the affected department's embedded
  * copy in [departmentsRepository] locally from the response, the same way [SymmetricRemoteRepository]-backed
- * repositories keep their own local table in sync with a create/update/delete -- so callers (see
- * `QualificationsManagementViewModel`) never need to force a re-fetch of the department afterwards. Every
- * mutation here requires at least `EXAMINER` (`create`/`update`/`delete` require `QUALIFICATIONS_MANAGER`, which
- * implies it), so the caller always already holds the department's full, unfiltered local qualifications/grants
- * -- patching in place never narrows what they'd otherwise see from a fresh fetch.
+ * repositories keep their own local table in sync with a create/update/delete -- so callers never need to force
+ * a re-fetch of the department afterwards. Every mutation here requires at least `EXAMINER`
+ * (`create`/`update`/`delete` require `QUALIFICATIONS_MANAGER`, which implies it), so the caller always already
+ * holds the department's full, unfiltered local qualifications/grants -- patching in place never narrows what
+ * they'd otherwise see from a fresh fetch.
  */
 @Singleton
 class QualificationsRemoteRepository(private val departmentsRepository: DepartmentsRepository) {
@@ -132,11 +129,4 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
             department.copy(qualificationGrants = department.qualificationGrants.orEmpty().filterNot { it.qualificationId == qualificationId && it.userSub == userSub })
         }
     }
-
-    /** The confirmed members of [departmentId] an examiner can grant to, optionally narrowed to names containing [query]. */
-    suspend fun roster(departmentId: Uuid, query: String? = null, limit: Int? = null): List<DepartmentRosterMember> =
-        httpClient.get("/departments/$departmentId/roster") {
-            query?.takeIf { it.isNotBlank() }?.let { parameter("q", it) }
-            limit?.let { parameter("limit", it) }
-        }.orThrow("list department roster").decode(ListSerializer(DepartmentRosterMember.serializer()))
 }

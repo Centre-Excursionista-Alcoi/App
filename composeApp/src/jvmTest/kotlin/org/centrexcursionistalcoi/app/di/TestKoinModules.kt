@@ -42,8 +42,8 @@ import org.centrexcursionistalcoi.app.sync.SyncPostBackgroundJob
 import org.centrexcursionistalcoi.app.viewmodel.HomePageModel
 import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
+import org.centrexcursionistalcoi.app.viewmodel.management.DepartmentsManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
-import org.centrexcursionistalcoi.app.viewmodel.management.QualificationsManagementViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.parameter.parametersOf
@@ -141,7 +141,7 @@ class TestKoinModules {
 
         // @KoinViewModel with no runtime params
         assertNotNull(koin.get<LoginViewModel>())
-        assertNotNull(koin.get<QualificationsManagementViewModel>())
+        assertNotNull(koin.get<DepartmentsManagementViewModel>())
         assertNotNull(koin.get<EventsManagementViewModel>())
         assertNotNull(koin.get<HomePageModel>())
 
