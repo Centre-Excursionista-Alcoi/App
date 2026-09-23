@@ -20,15 +20,17 @@ import cea_app.composeapp.generated.resources.error_dialog_stacktrace
 import cea_app.composeapp.generated.resources.error_dialog_title
 import cea_app.composeapp.generated.resources.error_dialog_type
 import cea_app.composeapp.generated.resources.share
+import com.mohamedrejeb.calf.core.ExperimentalCalfApi
+import com.mohamedrejeb.calf.share.ShareContent
+import com.mohamedrejeb.calf.share.rememberShareLauncher
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.ui.utils.orUnknown
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
 
 @Composable
+@OptIn(ExperimentalCalfApi::class)
 fun ErrorDialog(exception: Throwable? = null, message: String? = exception?.message, onDismissRequest: () -> Unit) {
-    val share = koinInject<PlatformShareLogic>()
+    val shareLauncher = rememberShareLauncher { /* ignore result */ }
 
     if (exception == null && message == null) {
         onDismissRequest()
@@ -62,31 +64,22 @@ fun ErrorDialog(exception: Throwable? = null, message: String? = exception?.mess
             }
         },
         confirmButton = {
-            if (share.isSupported) {
-                TextButton(
-                    onClick = {
-                        val msg = message ?: exception.toString()
-                        share.share(msg)
-                    }
-                ) {
-                    Text(stringResource(Res.string.share))
+            TextButton(
+                onClick = {
+                    val msg = message ?: exception.toString()
+                    shareLauncher.launch(
+                        ShareContent.Text(msg)
+                    )
                 }
-            } else {
-                TextButton(
-                    onClick = onDismissRequest,
-                ) {
-                    Text(stringResource(Res.string.close))
-                }
+            ) {
+                Text(stringResource(Res.string.share))
             }
         },
         dismissButton = {
-            if (share.isSupported) {
-                // Only show the dismiss button if sharing is available, because otherwise there would be two identical buttons
-                TextButton(
-                    onClick = onDismissRequest,
-                ) {
-                    Text(stringResource(Res.string.close))
-                }
+            TextButton(
+                onClick = onDismissRequest,
+            ) {
+                Text(stringResource(Res.string.close))
             }
         },
     )

@@ -30,6 +30,8 @@ import cea_app.composeapp.generated.resources.insurance_policy_number
 import cea_app.composeapp.generated.resources.insurance_start_date
 import cea_app.composeapp.generated.resources.insurance_view_document
 import cea_app.composeapp.generated.resources.share
+import com.mohamedrejeb.calf.core.ExperimentalCalfApi
+import com.mohamedrejeb.calf.share.rememberShareLauncher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
@@ -37,7 +39,6 @@ import kotlinx.datetime.Month
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -66,15 +67,18 @@ private fun InsuranceInfoText(labelRes: StringResource, value: String) {
 }
 
 @Composable
+@OptIn(ExperimentalCalfApi::class)
 fun InsuranceDialog(
     insurance: UserInsurance,
     fpm: FileProviderModel = koinViewModel(),
     onDismissRequest: () -> Unit
 ) {
+    val shareLauncher = rememberShareLauncher { /* ignore result */ }
+
     InsuranceDialog(
         insurance = insurance,
         loadingProgress = fpm.progress,
-        onShareFile = { fpm.shareFile(pathProvider = it) },
+        onShareFile = { fpm.shareFile(shareLauncher, pathProvider = it) },
         onOpenFile = { fpm.openFile(pathProvider = it) },
         onDismissRequest = onDismissRequest
     )
@@ -85,6 +89,7 @@ private val femecvLicenseCardDrawable = mapOf(
 )
 
 @Composable
+@OptIn(ExperimentalCalfApi::class)
 private fun InsuranceDialog(
     insurance: UserInsurance,
     loadingProgress: StateFlow<Progress?>,
@@ -92,7 +97,6 @@ private fun InsuranceDialog(
     onOpenFile: (pathProvider: suspend (ProgressNotifier) -> String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val share = koinInject<PlatformShareLogic>()
     val openFile = koinInject<PlatformOpenFileLogic>()
 
     AlertDialog(
@@ -122,14 +126,12 @@ private fun InsuranceDialog(
 
                 if (insurance.documentFile != null) {
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                        if (share.isSupported) {
-                            IconButton(
-                                onClick = {
-                                    onShareFile { insurance.fetchDocumentFilePath() }
-                                },
-                            ) {
-                                Icon(MaterialSymbols.Share, stringResource(Res.string.share))
-                            }
+                        IconButton(
+                            onClick = {
+                                onShareFile { insurance.fetchDocumentFilePath() }
+                            },
+                        ) {
+                            Icon(MaterialSymbols.Share, stringResource(Res.string.share))
                         }
                         if (openFile.isSupported) {
                             OutlinedButton(

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <files-path name="documents" path="document/"/>
-    <files-path name="images" path="image/"/>
+    <files-path name="documents" path="documents/"/>
+    <files-path name="images" path="images/"/>
     <files-path name="other-files" path="files/"/>
     <files-path name="qr-codes" path="qr/"/>
 </paths>
