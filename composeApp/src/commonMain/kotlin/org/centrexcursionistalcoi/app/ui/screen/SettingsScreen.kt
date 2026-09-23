@@ -42,6 +42,7 @@ import cea_app.composeapp.generated.resources.settings_dev_credit_email
 import cea_app.composeapp.generated.resources.settings_dev_credit_message
 import cea_app.composeapp.generated.resources.settings_dev_credit_title
 import cea_app.composeapp.generated.resources.settings_dev_credit_website
+import cea_app.composeapp.generated.resources.settings_gender_title
 import cea_app.composeapp.generated.resources.settings_language
 import cea_app.composeapp.generated.resources.settings_push_connection_message_connected
 import cea_app.composeapp.generated.resources.settings_push_connection_message_disconnected
@@ -65,11 +66,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.di.GenderInflection
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.RemoveAccountDialog
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Agender
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CloudSync
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Language
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
@@ -104,6 +107,8 @@ fun SettingsScreen(
     onDeleteAccount: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(onDeleteAccount) },
 ) {
+    val gender by viewModel.gender?.collectAsState() ?: mutableStateOf(null)
+
     val fcmToken by viewModel.fcmToken.collectAsState()
 
     val sseConnected by viewModel.sseConnected.collectAsState()
@@ -114,6 +119,8 @@ fun SettingsScreen(
     val privacySessionReplay by viewModel.privacySessionReplay.collectAsState()
 
     SettingsScreen(
+        gender = gender,
+        onGenderChange = viewModel::onGenderChange,
         fcmToken = fcmToken,
         sseConnected = sseConnected,
         sseError = sseError,
@@ -131,6 +138,9 @@ fun SettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
 @Composable
 private fun SettingsScreen(
+    gender: GenderInflection?,
+    onGenderChange: (GenderInflection) -> Unit,
+
     fcmToken: String?,
 
     enableSSE: Boolean = PlatformSSEConfiguration.enableSSE,
@@ -183,6 +193,20 @@ private fun SettingsScreen(
                     },
                     key = { it.code },
                     toString = { it.displayName },
+                )
+            }
+            item(key = "gender_option", contentType = "option") {
+                SettingsOptionsRow(
+                    title = stringResource(Res.string.settings_gender_title),
+                    selection = gender,
+                    options = GenderInflection.entries,
+                    icon = gender?.icon ?: MaterialSymbols.Agender,
+                    onOptionSelected = onGenderChange,
+                    optionLeadingContent = {
+                        Icon(it.icon, stringResource(it.labelRes))
+                    },
+                    key = { it.name },
+                    toString = { stringResource(it.labelRes) },
                 )
             }
 
@@ -316,6 +340,8 @@ private fun SettingsScreen(
 @Composable
 fun SettingsScreen_NoFcmToken_Preview() {
     SettingsScreen(
+        gender = null,
+        onGenderChange = {},
         fcmToken = null,
         enableSSE = true,
         sseConnected = false,
@@ -335,6 +361,8 @@ fun SettingsScreen_NoFcmToken_Preview() {
 @Composable
 fun SettingsScreen_WithFcmToken_Preview() {
     SettingsScreen(
+        gender = null,
+        onGenderChange = {},
         fcmToken = "123456789",
         enableSSE = true,
         sseConnected = true,

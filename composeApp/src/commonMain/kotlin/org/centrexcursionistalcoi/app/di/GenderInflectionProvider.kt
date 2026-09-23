@@ -1,6 +1,16 @@
 package org.centrexcursionistalcoi.app.di
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.settings_gender_feminine
+import cea_app.composeapp.generated.resources.settings_gender_masculine
+import cea_app.composeapp.generated.resources.settings_gender_neutral
 import kotlinx.coroutines.flow.StateFlow
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Agender
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Female
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Male
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.jetbrains.compose.resources.StringResource
 import org.koin.core.component.KoinComponent
 
 /**
@@ -19,10 +29,10 @@ interface GenderInflectionProvider {
     fun setGenderInflection(genderInflection: GenderInflection)
 }
 
-enum class GenderInflection {
-    Masculine,
-    Feminine,
-    Neutral
+enum class GenderInflection(val icon: ImageVector, val labelRes: StringResource) {
+    Masculine(MaterialSymbols.Male, Res.string.settings_gender_masculine),
+    Feminine(MaterialSymbols.Female, Res.string.settings_gender_feminine),
+    Neutral(MaterialSymbols.Agender, Res.string.settings_gender_neutral),
 }
 
 private object GenderInflectionProviderHolder : KoinComponent {

@@ -6,6 +6,9 @@ import com.russhwolf.settings.coroutines.getBooleanStateFlow
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.di.GenderInflection
+import org.centrexcursionistalcoi.app.di.GenderInflectionProvider
+import org.centrexcursionistalcoi.app.di.globalGenderInflectionProvider
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
@@ -21,8 +24,11 @@ class SettingsViewModel(
     private val authBackend: AuthBackend,
     private val dispatcherProvider: DispatcherProvider,
     sseNotificationsListener: SSENotificationsListener,
+    genderInflectionProvider: GenderInflectionProvider?,
     @InjectedParam private val onDeleteAccount: () -> Unit,
 ) : ErrorViewModel() {
+    val gender = genderInflectionProvider?.observableGender?.stateInViewModel()
+
     val fcmToken = FCMTokenManager.tokenFlow.stateInViewModel()
 
     val sseConnected = sseNotificationsListener.isConnected.stateInViewModel(initialValue = false)
@@ -31,6 +37,10 @@ class SettingsViewModel(
     val privacyErrors = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_ERRORS, true)
     val privacyAnalytics = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_ANALYTICS, true)
     val privacySessionReplay = settings.getBooleanStateFlow(viewModelScope, SETTINGS_PRIVACY_SESSION_REPLAY, true)
+
+    fun onGenderChange(gender: GenderInflection) = launch {
+        globalGenderInflectionProvider?.setGenderInflection(gender)
+    }
 
     fun deleteAccount() = launch {
         authBackend.deleteAccount()
