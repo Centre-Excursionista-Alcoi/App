@@ -520,6 +520,11 @@
     <string name="settings_adjust">Adjust</string>
     <string name="settings_category_general">General</string>
     <string name="settings_language">Language</string>
+    <string name="settings_gender_title">Grammatical Gender</string>
+    <string name="settings_gender_summary">Select the grammatical gender you want to be addressed with while inside the app.</string>
+    <string name="settings_gender_masculine">Masculine</string>
+    <string name="settings_gender_feminine">Feminine</string>
+    <string name="settings_gender_neutral">Neutral</string>
     <string name="settings_category_push">Push Notifications</string>
     <string name="settings_push_connection_title">Connection Status</string>
     <string name="settings_push_connection_message_connected">Receiving push notifications. Data will be updated instantly.</string>

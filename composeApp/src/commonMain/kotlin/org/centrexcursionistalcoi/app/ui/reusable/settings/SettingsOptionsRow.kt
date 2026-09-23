@@ -27,7 +27,7 @@ fun <T: Any> SettingsOptionsRow(
     summary: String? = null,
     icon: ImageVector? = null,
     contentDescription: String? = title,
-    toString: (T) -> String = { it.toString() },
+    toString: @Composable (T) -> String = { it.toString() },
     optionLeadingContent: (@Composable (T) -> Unit)? = null,
     key: ((T) -> Any)? = null,
     onOptionSelected: (T) -> Unit,
