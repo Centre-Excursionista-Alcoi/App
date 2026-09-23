@@ -18,12 +18,14 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
-import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
-import org.centrexcursionistalcoi.app.database.entity.QualificationGrantEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
-const val DATABASE_VERSION = 3
+// v4: qualifications/grants moved from their own tables (Qualifications/QualificationGrants) to being embedded
+// on DepartmentEntity, synced along with everything else about a department (see Departments.extraColumns
+// server-side). See DatabaseMigrations.kt's MIGRATION_3_4 -- bumping this again must come with its own
+// Migration(4, 5) there too, not rely on the destructive fallback.
+const val DATABASE_VERSION = 4
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(
@@ -39,8 +41,6 @@ const val DATABASE_FILE_NAME = "cea_app.db"
         MemoryEntity::class,
         MemoryMemberCrossRef::class,
         PostEntity::class,
-        QualificationEntity::class,
-        QualificationGrantEntity::class,
         ReceivedItemEntity::class,
         UserEntity::class,
     ],
@@ -60,8 +60,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryDao(): org.centrexcursionistalcoi.app.database.dao.MemoryDao
     abstract fun memoryMemberCrossRefDao(): org.centrexcursionistalcoi.app.database.dao.MemoryMemberCrossRefDao
     abstract fun postDao(): org.centrexcursionistalcoi.app.database.dao.PostDao
-    abstract fun qualificationDao(): org.centrexcursionistalcoi.app.database.dao.QualificationDao
-    abstract fun qualificationGrantDao(): org.centrexcursionistalcoi.app.database.dao.QualificationGrantDao
     abstract fun receivedItemDao(): org.centrexcursionistalcoi.app.database.dao.ReceivedItemDao
     abstract fun userDao(): org.centrexcursionistalcoi.app.database.dao.UserDao
 }
@@ -79,8 +77,12 @@ fun getRoomDatabase(
     return builder
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(dispatcher)
-        // The local database is a disposable cache resynced from the server (see SyncAllDataBackgroundJob), so a
-        // schema version bump can just wipe and let the next sync repopulate it, rather than needing a real migration.
+        // Real, data-preserving migrations for the version jumps we can trust the on-disk schema for -- see
+        // DatabaseMigrations.kt's file-level KDoc for why v1 -> v2 is deliberately not among them.
+        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+        // Catch-all for any other transition (from v1, or anything unforeseen): the local database is a
+        // disposable cache resynced from the server (see SyncAllDataBackgroundJob), so as a last resort it's
+        // safe to just wipe and let the next sync repopulate it, rather than risk a migration we can't trust.
         .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
 }

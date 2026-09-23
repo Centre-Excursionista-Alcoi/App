@@ -1,10 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
-import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -13,10 +11,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
-import java.util.UUID
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
@@ -50,6 +44,10 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import java.util.UUID
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
+import kotlin.uuid.toKotlinUuid
 
 private const val NAME_MAX_LENGTH = 255
 private const val ROSTER_DEFAULT_LIMIT = 50
@@ -119,28 +117,9 @@ private fun nameTaken(departmentId: UUID, name: String, exceptId: UUID? = null):
 }
 
 fun Route.qualificationsRoutes() {
-    // Qualification definitions are visible to every logged-in user: events list the ones they require.
-    get("/qualifications") {
-        getUserSessionOrFail() ?: return@get
-
-        val qualifications = Database {
-            QualificationEntity.all().map { it.toData() }.sortedBy { it.name.lowercase() }
-        }
-        call.respondText(
-            json.encodeToString(Qualification.serializer().list(), qualifications),
-            ContentType.Application.Json,
-        )
-    }
-
-    get("/qualifications/{id}") {
-        val request = qualificationRequest() ?: return@get
-
-        val qualification = Database { request.qualification.toData() }
-        call.respondText(
-            json.encodeToString(Qualification.serializer(), qualification),
-            ContentType.Application.Json,
-        )
-    }
+    // Qualification definitions and their grants aren't listed here (bulk or single): they're embedded on
+    // GET /departments/{id} (see Departments.extraColumns), synced along with the rest of a department like any
+    // other referenced data, rather than fetched separately.
 
     post("/departments/{id}/qualifications") {
         val (_, department) = departmentRequest(DepartmentRole.QUALIFICATIONS_MANAGER) ?: return@post
@@ -164,7 +143,7 @@ fun Route.qualificationsRoutes() {
                 this.description = request.description?.trim()?.takeIf { it.isNotEmpty() }
             }.toData()
         }
-        call.response.header(HttpHeaders.Location, "/qualifications/${created.id}")
+        // No Location header: there's no single-item GET route for a qualification (see the top-of-file note) to point it at.
         call.respondText(
             json.encodeToString(Qualification.serializer(), created),
             ContentType.Application.Json,
@@ -221,21 +200,8 @@ fun Route.qualificationsRoutes() {
     }
 
     // Grants are private: only the department's examiners/qualifications managers/people managers (and global
-    // admins) may see who holds a qualification. Everybody else reads their own via /profile/qualifications.
-    get("/qualifications/{id}/grants") {
-        val request = qualificationRequest(DepartmentRole.EXAMINER, DepartmentRole.PEOPLE_MANAGER) ?: return@get
-
-        val grants = Database {
-            UserQualifications.selectAll()
-                .where { UserQualifications.qualification eq request.qualification.id.value }
-                .map { it.toQualificationGrant() }
-        }
-        call.respondText(
-            json.encodeToString(QualificationGrant.serializer().list(), grants),
-            ContentType.Application.Json,
-        )
-    }
-
+    // admins) may see who holds a qualification, mirrored by DepartmentEntity.visibleQualificationGrantsFor for
+    // the embedded GET /departments/{id} view. Everybody else sees just their own there.
     post("/qualifications/{id}/grants") {
         val request = qualificationRequest(DepartmentRole.EXAMINER) ?: return@post
         val body = receiveJson(GrantQualificationRequest.serializer()) ?: return@post
@@ -302,20 +268,6 @@ fun Route.qualificationsRoutes() {
             UserQualifications.deleteWhere { (UserQualifications.qualification eq qualificationId) and (UserQualifications.userSub eq sub) }
         }
         call.respond(HttpStatusCode.NoContent)
-    }
-
-    // The caller's own qualifications, including expired ones (see QualificationGrant.expiresAt).
-    get("/profile/qualifications") {
-        val session = getUserSessionOrFail() ?: return@get
-        val grants = Database {
-            UserQualifications.selectAll()
-                .where { UserQualifications.userSub eq session.sub }
-                .map { it.toQualificationGrant() }
-        }
-        call.respondText(
-            json.encodeToString(QualificationGrant.serializer().list(), grants),
-            ContentType.Application.Json,
-        )
     }
 
     // The confirmed members of a department, for an examiner to pick who to grant a qualification to. Deliberately

@@ -8,6 +8,8 @@ import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.Member
+import org.centrexcursionistalcoi.app.data.Qualification
+import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
@@ -107,6 +109,22 @@ class RoomConverters {
     @ColumnTypeConverter
     fun stringToLendingUser(value: String?): LendingUser? =
         value?.let { json.decodeFromString(LendingUser.serializer(), it) }
+
+    @ColumnTypeConverter
+    fun qualificationListToString(value: List<Qualification>?): String? =
+        value?.let { json.encodeToString(ListSerializer(Qualification.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToQualificationList(value: String?): List<Qualification>? =
+        value?.let { json.decodeFromString(ListSerializer(Qualification.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun qualificationGrantListToString(value: List<QualificationGrant>?): String? =
+        value?.let { json.encodeToString(ListSerializer(QualificationGrant.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToQualificationGrantList(value: String?): List<QualificationGrant>? =
+        value?.let { json.decodeFromString(ListSerializer(QualificationGrant.serializer()), it) }
 
     @ColumnTypeConverter
     fun fileWithContextListToString(value: List<FileWithContext>?): String? =

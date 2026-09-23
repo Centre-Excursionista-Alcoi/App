@@ -1,11 +1,5 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
@@ -17,9 +11,17 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.util.UUID
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.uuid.toKotlinUuid
 
 class TestDepartment {
     @Test
@@ -80,7 +82,12 @@ class TestDepartment {
                     confirmed = false,
                     roles = emptyList(),
                 )
-            )
+            ),
+            // Neither is seeded for this department, but the wire encoder (Departments.extraColumns) always
+            // emits both as a real (possibly empty) list, never omits them -- unlike this hand-built Department,
+            // whose declared `= null` default would otherwise get silently dropped by Json's encodeDefaults=false.
+            qualifications = emptyList(),
+            qualificationGrants = emptyList(),
         )
 
         val adminSession = UserSession(FakeAdminUser.SUB, FakeAdminUser.FULL_NAME, FakeAdminUser.EMAIL, FakeAdminUser.groups)

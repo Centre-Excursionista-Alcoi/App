@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.network
 
+import androidx.room3.Room
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -12,27 +13,37 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
+import org.centrexcursionistalcoi.app.database.AppDatabase
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
+import org.centrexcursionistalcoi.app.database.getRoomDatabase
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
 import org.centrexcursionistalcoi.app.request.UpdateQualificationRequest
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
-/** The client's calls must match the server's qualification routes: paths, verbs, bodies and error handling. */
+/**
+ * The client's calls must match the server's qualification routes: paths, verbs, bodies and error handling --
+ * and each mutation must patch the affected department's locally synced copy from the response, without a
+ * separate re-fetch (see the class KDoc on [QualificationsRemoteRepository] itself).
+ */
 class TestQualificationsRemoteRepository {
     private val departmentId = Uuid.random()
     private val qualificationId = Uuid.random()
@@ -42,21 +53,37 @@ class TestQualificationsRemoteRepository {
 
     private val requests = mutableListOf<HttpRequestData>()
     private val original = _httpClient
+    private var db: AppDatabase? = null
+    private lateinit var departmentsRepository: DepartmentsRepository
 
     @AfterTest
     fun tearDown() {
         _httpClient = original
+        db?.close()
     }
 
     private fun MockRequestHandleScope.json(body: String, status: HttpStatusCode = HttpStatusCode.OK): HttpResponseData =
         respond(body, status, headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()))
 
-    private fun repository(handler: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): QualificationsRemoteRepository {
+    /**
+     * [seed] is the department to have locally cached before the call under test, or `null` to test the
+     * not-synced-locally case. Its default already includes [qualification] and no grants, matching what a
+     * synced department normally looks like for [update]/[delete]/[grant]/[revoke] tests; [create] tests pass
+     * a seed without it, since that's the one being created.
+     */
+    private suspend fun repository(
+        seed: Department? = Department(departmentId, "Test Department", members = null, qualifications = listOf(qualification), qualificationGrants = emptyList()),
+        handler: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
+    ): QualificationsRemoteRepository {
         _httpClient = HttpClient(MockEngine { request ->
             requests += request
             handler(request)
         })
-        return QualificationsRemoteRepository()
+        val database = getRoomDatabase(Room.inMemoryDatabaseBuilder<AppDatabase>(), Dispatchers.IO)
+        db = database
+        departmentsRepository = DepartmentsRepository(database)
+        if (seed != null) departmentsRepository.insert(seed)
+        return QualificationsRemoteRepository(departmentsRepository)
     }
 
     private fun <T> encode(serializer: KSerializer<T>, value: T) = json.encodeToString(serializer, value)
@@ -66,18 +93,10 @@ class TestQualificationsRemoteRepository {
     private val HttpRequestData.path get() = url.encodedPath
 
     @Test
-    fun list_getsEveryDefinition() = runTest {
-        val repository = repository { json(encode(ListSerializer(Qualification.serializer()), listOf(qualification))) }
-
-        assertEquals(listOf(qualification), repository.list())
-
-        assertEquals(HttpMethod.Get, requests.single().method)
-        assertEquals("/qualifications", requests.single().path)
-    }
-
-    @Test
-    fun create_postsJsonToTheDepartment() = runTest {
-        val repository = repository { json(encode(Qualification.serializer(), qualification), HttpStatusCode.Created) }
+    fun create_postsJsonToTheDepartment_andAddsItLocally() = runTest {
+        val repository = repository(seed = Department(departmentId, "Test Department", members = null)) {
+            json(encode(Qualification.serializer(), qualification), HttpStatusCode.Created)
+        }
 
         assertEquals(qualification, repository.create(departmentId, "Lead climbing", "Leads sport routes"))
 
@@ -86,11 +105,22 @@ class TestQualificationsRemoteRepository {
         assertEquals("/departments/$departmentId/qualifications", request.path)
         assertEquals(ContentType.Application.Json, request.body.contentType?.withoutParameters())
         assertEquals(CreateQualificationRequest("Lead climbing", "Leads sport routes"), json.decodeFromString(CreateQualificationRequest.serializer(), request.bodyText()))
+
+        assertEquals(listOf(qualification), departmentsRepository.get(departmentId)?.qualifications)
     }
 
     @Test
-    fun update_patchesOnlyTheGivenFields() = runTest {
-        val repository = repository { json(encode(Qualification.serializer(), qualification)) }
+    fun create_whenDepartmentNotSyncedLocally_stillReturnsIt_justSkipsThePatch() = runTest {
+        val repository = repository(seed = null) { json(encode(Qualification.serializer(), qualification), HttpStatusCode.Created) }
+
+        assertEquals(qualification, repository.create(departmentId, "Lead climbing", "Leads sport routes"))
+        assertNull(departmentsRepository.get(departmentId))
+    }
+
+    @Test
+    fun update_patchesOnlyTheGivenFields_andReplacesItLocally() = runTest {
+        val renamed = qualification.copy(name = "Renamed")
+        val repository = repository { json(encode(Qualification.serializer(), renamed)) }
 
         repository.update(qualificationId, name = "Renamed")
 
@@ -98,11 +128,31 @@ class TestQualificationsRemoteRepository {
         assertEquals(HttpMethod.Patch, request.method)
         assertEquals("/qualifications/$qualificationId", request.path)
         assertEquals(UpdateQualificationRequest(name = "Renamed"), json.decodeFromString(UpdateQualificationRequest.serializer(), request.bodyText()))
+
+        assertEquals(listOf(renamed), departmentsRepository.get(departmentId)?.qualifications)
+    }
+
+    @Test
+    fun delete_removesItLocally_alongWithItsGrants() = runTest {
+        val repository = repository(
+            seed = Department(departmentId, "Test Department", members = null, qualifications = listOf(qualification), qualificationGrants = listOf(grant)),
+        ) { respond("", HttpStatusCode.NoContent) }
+
+        repository.delete(qualificationId)
+
+        assertEquals(HttpMethod.Delete, requests.single().method)
+        assertEquals("/qualifications/$qualificationId", requests.single().path)
+
+        val department = departmentsRepository.get(departmentId)
+        assertEquals(emptyList(), department?.qualifications)
+        assertEquals(emptyList(), department?.qualificationGrants)
     }
 
     @Test
     fun delete_and_revoke_useTheRightPaths() = runTest {
-        val repository = repository { respond("", HttpStatusCode.NoContent) }
+        val repository = repository(
+            seed = Department(departmentId, "Test Department", members = null, qualifications = listOf(qualification), qualificationGrants = listOf(grant)),
+        ) { respond("", HttpStatusCode.NoContent) }
 
         repository.delete(qualificationId)
         repository.revoke(qualificationId, "sub-1")
@@ -113,29 +163,42 @@ class TestQualificationsRemoteRepository {
     }
 
     @Test
-    fun grants_and_myGrants() = runTest {
-        val repository = repository { json(encode(ListSerializer(QualificationGrant.serializer()), listOf(grant))) }
-
-        assertEquals(listOf(grant), repository.grants(qualificationId))
-        assertEquals(listOf(grant), repository.myGrants())
-
-        assertEquals("/qualifications/$qualificationId/grants", requests[0].path)
-        assertEquals("/profile/qualifications", requests[1].path)
-    }
-
-    @Test
-    fun grant_sendsTheUserAndExpiry() = runTest {
+    fun grant_sendsTheUserAndExpiry_andUpsertsItLocally() = runTest {
         val repository = repository { json(encode(QualificationGrant.serializer(), grant)) }
         val expiresAt = Instant.fromEpochMilliseconds(9_000_000)
 
         assertEquals(grant, repository.grant(qualificationId, "sub-1", expiresAt))
-        repository.grant(qualificationId, "sub-2")
 
-        val request = requests[0]
+        val request = requests.single()
         assertEquals(HttpMethod.Post, request.method)
         assertEquals("/qualifications/$qualificationId/grants", request.path)
         assertEquals(GrantQualificationRequest("sub-1", expiresAt), json.decodeFromString(GrantQualificationRequest.serializer(), request.bodyText()))
-        assertNull(json.decodeFromString(GrantQualificationRequest.serializer(), requests[1].bodyText()).expiresAt)
+
+        assertEquals(listOf(grant), departmentsRepository.get(departmentId)?.qualificationGrants)
+    }
+
+    @Test
+    fun grant_again_replacesTheExistingGrantLocally_notDuplicatesIt() = runTest {
+        val existing = grant.copy(expiresAt = Instant.fromEpochMilliseconds(1))
+        val renewed = grant.copy(expiresAt = Instant.fromEpochMilliseconds(9_000_000))
+        val repository = repository(
+            seed = Department(departmentId, "Test Department", members = null, qualifications = listOf(qualification), qualificationGrants = listOf(existing)),
+        ) { json(encode(QualificationGrant.serializer(), renewed)) }
+
+        repository.grant(qualificationId, "sub-1", renewed.expiresAt)
+
+        assertEquals(listOf(renewed), departmentsRepository.get(departmentId)?.qualificationGrants)
+    }
+
+    @Test
+    fun revoke_removesTheGrantLocally() = runTest {
+        val repository = repository(
+            seed = Department(departmentId, "Test Department", members = null, qualifications = listOf(qualification), qualificationGrants = listOf(grant)),
+        ) { respond("", HttpStatusCode.NoContent) }
+
+        repository.revoke(qualificationId, "sub-1")
+
+        assertEquals(emptyList(), departmentsRepository.get(departmentId)?.qualificationGrants)
     }
 
     @Test
@@ -154,45 +217,14 @@ class TestQualificationsRemoteRepository {
     }
 
     @Test
-    fun serverErrors_areThrown_notSwallowed() = runTest {
+    fun serverErrors_areThrown_notSwallowed_andNothingIsPatchedLocally() = runTest {
         val error = Error.QualificationAlreadyExists()
-        val repository = repository { json(encode(Error.serializer(), error), error.statusCode) }
+        val repository = repository(seed = Department(departmentId, "Test Department", members = null)) {
+            json(encode(Error.serializer(), error), error.statusCode)
+        }
 
         val thrown = assertFailsWith<ServerException> { repository.create(departmentId, "Lead climbing", null) }
         assertEquals(HttpStatusCode.Conflict.value, thrown.responseStatusCode)
-    }
-
-    // ---- snapshot(): what the local copy is synced from ----
-
-    private fun MockRequestHandleScope.snapshotResponses(request: HttpRequestData): HttpResponseData = when (request.path) {
-        "/qualifications" -> json(encode(ListSerializer(Qualification.serializer()), listOf(qualification)))
-        "/profile/qualifications" -> json(encode(ListSerializer(QualificationGrant.serializer()), listOf(grant)))
-        else -> respond("", HttpStatusCode.NotFound)
-    }
-
-    @Test
-    fun snapshot_fetchesDefinitionsAndOwnGrants() = runTest {
-        val snapshot = repository { snapshotResponses(it) }.snapshot()
-
-        assertEquals(listOf(qualification), snapshot?.qualifications)
-        assertEquals(listOf(grant), snapshot?.myGrants)
-    }
-
-    @Test
-    fun snapshot_isNull_forAServerWithoutQualifications() = runTest {
-        // An older server has neither route: nothing to show, and not an error to report
-        assertNull(repository { respond("", HttpStatusCode.NotFound) }.snapshot())
-        // ... nor if only the second one is missing
-        assertNull(repository { if (it.path == "/qualifications") snapshotResponses(it) else respond("", HttpStatusCode.NotFound) }.snapshot())
-    }
-
-    @Test
-    fun snapshot_doesNotMistakeOtherFailuresForNoQualifications() = runTest {
-        val error = Error.NotLoggedIn()
-        val repository = repository { json(encode(Error.serializer(), error), error.statusCode) }
-
-        // A session that expired must surface (and be handled centrally), not silently wipe the local copy
-        assertFailsWith<ServerException> { repository.snapshot() }
+        assertTrue(departmentsRepository.get(departmentId)?.qualifications.orEmpty().isEmpty())
     }
 }
-

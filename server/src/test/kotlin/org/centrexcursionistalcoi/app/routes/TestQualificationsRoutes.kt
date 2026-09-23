@@ -11,14 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.uuid.toKotlinUuid
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
@@ -50,6 +42,14 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.uuid.toKotlinUuid
 
 class TestQualificationsRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
@@ -102,60 +102,8 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             .firstOrNull()
     }
 
-    // ---- Definitions: listing ----
-
-    @Test
-    fun test_list_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/qualifications")
-
-    @Test
-    fun test_list_anyLoggedInUser_seesAllDefinitions() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = { seed(callerRoles = null) },
-    ) {
-        client.get("/qualifications").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(Qualification.serializer().list()) { list ->
-                // Sorted by name, from every department
-                assertEquals(listOf("Ice climbing", "Lead climbing"), list.map { it.name })
-            }
-        }
-    }
-
-    // ---- Definitions: single ----
-
-    @Test
-    fun test_get_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/qualifications/$qualificationId")
-
-    @Test
-    fun test_get_anyLoggedInUser_canReadAnyDefinition() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        // not a member of either department: definitions are public
-        databaseInitBlock = { seed(callerRoles = null) },
-    ) {
-        client.get("/qualifications/$qualificationId").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(Qualification.serializer()) {
-                assertEquals(qualificationId.toKotlinUuid(), it.id)
-                assertEquals("Lead climbing", it.name)
-                assertEquals(departmentId.toKotlinUuid(), it.departmentId)
-            }
-        }
-        // ... including one from another department
-        client.get("/qualifications/$otherQualificationId").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(Qualification.serializer()) { assertEquals("Ice climbing", it.name) }
-        }
-    }
-
-    @Test
-    fun test_get_notFound() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.get("/qualifications/$qualificationId").assertError(Error.EntityNotFound(QualificationEntity::class, qualificationId))
-    }
-
-    @Test
-    fun test_get_malformedId() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.get("/qualifications/nope").assertError(Error.MalformedId())
-    }
+    // Definitions and grants no longer have their own listing/single-item GET routes: they're embedded on
+    // GET /departments/{id} instead (see TestDepartmentQualifications.kt), synced with the rest of a department.
 
     // ---- Definitions: create ----
 
@@ -517,92 +465,6 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         assertNotNull(grantRow(FakeUser2.SUB)!![UserQualifications.expiresAt])
         assertEquals(1, Database { UserQualifications.selectAll().count() })
     }
-
-    // ---- Grants: reading ----
-
-    @Test
-    fun test_grants_list_asExaminer_includesExpired() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = {
-            seed(callerRoles = listOf(DepartmentRole.EXAMINER))
-            UserQualifications.insert {
-                it[qualification] = qualificationId
-                it[userSub] = FakeUser2.SUB
-                it[expiresAt] = java.time.Instant.now().minusSeconds(3600)
-            }
-        },
-    ) {
-        client.get("/qualifications/$qualificationId/grants").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(QualificationGrant.serializer().list()) {
-                assertEquals(listOf(FakeUser2.SUB), it.map { grant -> grant.userSub })
-                assertNotNull(it[0].expiresAt)
-            }
-        }
-    }
-
-    @Test
-    fun test_grants_list_asPeopleManager() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.PEOPLE_MANAGER)) },
-    ) {
-        client.get("/qualifications/$qualificationId/grants").assertStatusCode(HttpStatusCode.OK)
-    }
-
-    @Test
-    fun test_grants_list_plainMember_forbidden() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = {
-            seed(callerRoles = emptyList())
-            UserQualifications.insert {
-                it[qualification] = qualificationId
-                it[userSub] = FakeUser2.SUB
-            }
-        },
-    ) {
-        client.get("/qualifications/$qualificationId/grants").assertError(Error.PermissionRejected())
-    }
-
-    @Test
-    fun test_grants_list_nonMember_forbidden() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = { seed(callerRoles = null) },
-    ) {
-        client.get("/qualifications/$qualificationId/grants").assertError(Error.PermissionRejected())
-    }
-
-    @Test
-    fun test_profile_qualifications_onlyOwn_includingExpired() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = {
-            seed(callerRoles = emptyList())
-            UserQualifications.insert {
-                it[qualification] = qualificationId
-                it[userSub] = FakeUser.SUB
-                it[expiresAt] = java.time.Instant.now().minusSeconds(3600)
-            }
-            UserQualifications.insert {
-                it[qualification] = otherQualificationId
-                it[userSub] = FakeUser.SUB
-            }
-            // somebody else's, must not show up
-            UserQualifications.insert {
-                it[qualification] = qualificationId
-                it[userSub] = FakeUser2.SUB
-            }
-        },
-    ) {
-        client.get("/profile/qualifications").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertBody(QualificationGrant.serializer().list()) { grants ->
-                assertEquals(setOf(FakeUser.SUB), grants.map { it.userSub }.toSet())
-                assertEquals(2, grants.size)
-            }
-        }
-    }
-
-    @Test
-    fun test_profile_qualifications_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/qualifications")
 
     // ---- Grants: revoking ----
 

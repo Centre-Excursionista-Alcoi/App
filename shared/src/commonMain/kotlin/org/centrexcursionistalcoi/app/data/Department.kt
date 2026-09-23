@@ -1,11 +1,11 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.centrexcursionistalcoi.app.exception.DepartmentNotFoundException
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serializer.NullableUUIDSerializer
+import kotlin.uuid.Uuid
 
 @Serializable
 data class Department(
@@ -13,6 +13,14 @@ data class Department(
     val displayName: String,
     @Serializable(NullableUUIDSerializer::class) override val image: Uuid? = null,
     val members: List<DepartmentMemberInfo>?,
+    /** This department's qualification definitions. Public, like [members] is not -- always included once synced. */
+    val qualifications: List<Qualification>? = null,
+    /**
+     * The grants of this department's [qualifications] visible to the viewer: every grant for an admin or a
+     * confirmed `EXAMINER`/`PEOPLE_MANAGER`, otherwise just the viewer's own (see
+     * `DepartmentEntity.visibleQualificationGrantsFor` server-side).
+     */
+    val qualificationGrants: List<QualificationGrant>? = null,
 ) : Entity<Uuid>, ImageFileContainer {
     companion object {
         /**
@@ -61,6 +69,8 @@ data class Department(
         "displayName" to displayName,
         "image" to image?.let { FileReference(it) },
         "members" to members?.map { it.toMap() },
+        "qualifications" to qualifications,
+        "qualificationGrants" to qualificationGrants,
     )
 
     override fun toString(): String {
