@@ -4,6 +4,8 @@ This is the repository for the Centre Excursionista d'Alcoi application.
 
 This app is only intended to be used by members of the club.
 
+[Documentation](https://centre-excursionista-alcoi.github.io/App/)
+
 ## Building
 
 ### Server
