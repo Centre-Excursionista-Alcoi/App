@@ -63,6 +63,12 @@ kotlin {
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
+
+        // Left at the default "test" source set tree (unlike withDeviceTestBuilder above), so this joins
+        // commonTest/jvmTest/iosTest instead of getting its own -- commonTest was otherwise never compiled or
+        // run against Android's actual implementations at all, neither here nor via jvmTest (which links the
+        // JVM actuals instead).
+        withHostTestBuilder {}.configure {}
     }
     
     listOf(
