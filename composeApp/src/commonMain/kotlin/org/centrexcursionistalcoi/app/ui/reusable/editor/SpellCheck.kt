@@ -21,7 +21,7 @@ object SpellCheck : RichSpanStyle {
     override fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
-        richTextConfig: RichTextConfig,
+        config: RichTextConfig,
         topPadding: Float,
         startPadding: Float,
     ) {
