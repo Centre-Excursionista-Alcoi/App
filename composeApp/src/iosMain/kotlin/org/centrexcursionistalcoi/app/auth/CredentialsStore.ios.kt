@@ -90,14 +90,21 @@ private inline fun <T> withKeychainQuery(block: KeychainQuery.() -> T): T {
 private fun CFDictionaryRef.objectForKey(key: COpaquePointer?): Any? =
     CFDictionaryGetValue(this, key)?.let { CFBridgingRelease(CFRetain(it)) }
 
-/** Stores the last successful login as one generic-password item in the app's Keychain service. */
+/**
+ * Stores the last successful login as one generic-password item in the app's Keychain service.
+ */
 @Singleton
-actual class CredentialsStore internal constructor(private val service: String) {
-    constructor() : this(KEYCHAIN_SERVICE)
+actual class CredentialsStore internal constructor() {
+    private var service: String = KEYCHAIN_SERVICE
+
+    internal constructor(service: String) : this() {
+        this.service = service
+    }
+
     private val log = logging()
 
-    actual val current: StateFlow<SavedCredentials?>
-        field = MutableStateFlow(readCurrent())
+    private val mutableCurrent: MutableStateFlow<SavedCredentials?> by lazy { MutableStateFlow(readCurrent()) }
+    actual val current: StateFlow<SavedCredentials?> get() = mutableCurrent
 
     actual fun save(email: String, password: String) {
         val passwordData = (password as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
@@ -116,7 +123,7 @@ actual class CredentialsStore internal constructor(private val service: String) 
                 if (status != errSecSuccess) log.w { "Keychain save failed (status=$status)." }
             }
         }
-        current.value = readCurrent()
+        mutableCurrent.value = readCurrent()
     }
 
     actual fun get(): SavedCredentials? = readCurrent()
@@ -128,7 +135,7 @@ actual class CredentialsStore internal constructor(private val service: String) 
                 log.w { "Keychain clear failed (status=$status)." }
             }
         }
-        current.value = readCurrent()
+        mutableCurrent.value = readCurrent()
     }
 
     private fun readCurrent(): SavedCredentials? = withServiceQuery {
