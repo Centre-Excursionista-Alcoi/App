@@ -259,8 +259,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             is DocumentFileContainer -> {
                 val fileUuid = item.documentFile
                 if (fileUuid != null) {
-                    val path = item.fetchDocumentFilePath(downloadIfNotExists = false)
-                    downloadFile(fileUuid, path, progressNotifier)
+                    val file = item.fetchDocumentFilePath(downloadIfNotExists = false)
+                    downloadFile(fileUuid, file.relativePath, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
@@ -268,8 +268,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             is ImageFileContainer -> {
                 val fileUuid = item.image
                 if (fileUuid != null) {
-                    val path = item.fetchImageFilePath(downloadIfNotExists = false)
-                    downloadFile(fileUuid, path, progressNotifier)
+                    val file = item.fetchImageFilePath(downloadIfNotExists = false)
+                    downloadFile(fileUuid, file.relativePath, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }

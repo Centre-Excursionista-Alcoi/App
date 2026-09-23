@@ -25,7 +25,6 @@ import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
-import org.centrexcursionistalcoi.app.platform.PlatformKmpFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformNFC
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.push.PushNotifierListener
@@ -113,7 +112,6 @@ class TestKoinModules {
         assertNull(koin.getOrNull<GenderInflectionProvider>())
         assertNull(globalGenderInflectionProvider)
         assertNotNull(koin.get<PlatformNFC>())
-        assertNotNull(koin.get<PlatformKmpFileLogic>())
         assertNotNull(koin.get<PlatformOpenFileLogic>())
         assertNotNull(koin.get<PlatformCalendarSync>())
         assertNotNull(koin.get<PlatformDragAndDrop>())

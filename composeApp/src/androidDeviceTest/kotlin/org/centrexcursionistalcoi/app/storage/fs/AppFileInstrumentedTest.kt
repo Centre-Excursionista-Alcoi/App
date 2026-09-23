@@ -1,38 +1,39 @@
-package org.centrexcursionistalcoi.app.platform
+package org.centrexcursionistalcoi.app.storage.fs
 
 import android.content.Context
 import android.provider.OpenableColumns
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.ktor.http.ContentType
+import java.io.File
+import java.io.FileNotFoundException
+import java.util.UUID
+import kotlinx.io.files.Path
 import org.centrexcursionistalcoi.app.data.DOCUMENTS_PATH
-import org.centrexcursionistalcoi.app.di.AndroidPathsProvider
+import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
-import java.io.FileNotFoundException
-import java.util.UUID
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 /**
- * Runs on a real device/emulator, like [org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtilInstrumentedTest]
- * (whose [org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil] this class's Android actual is a thin
- * wrapper around): a host-JVM test can't exercise the real `FileProvider` ContentProvider this depends on.
+ * Runs on a real device/emulator, like [FilePermissionsUtilInstrumentedTest]/[ProviderPathsInstrumentedTest]
+ * (whose [FilePermissionsUtil] [AppFile.contentUri]/[AppFile.toKmpFile] are thin wrappers around): a host-JVM
+ * test can't exercise the real `FileProvider` ContentProvider this depends on.
  *
- * The whole reason [PlatformKmpFileLogic] exists on Android -- rather than Calf's own `File.toKmpFile()`, which
- * builds a plain `file://` URI via `Uri.fromFile()` -- is that the URI it returns must actually grant a real,
- * working read permission through the app's `FileProvider`, not just be *some* URI. These tests verify that
- * directly: the returned [com.mohamedrejeb.calf.io.KmpFile] must wrap a `content://` URI whose bytes and display
- * name are genuinely readable back out through the [android.content.ContentResolver], exactly as a receiving app
- * (the whole point of sharing) would read them.
+ * The whole reason [AppFile.toKmpFile] goes through the app's own `FileProvider` on Android -- rather than
+ * Calf's own `File.toKmpFile()`, which builds a plain `file://` URI via `Uri.fromFile()` -- is that the URI it
+ * returns must actually grant a real, working read permission through the app's `FileProvider`, not just be
+ * *some* URI. These tests verify that directly.
  */
 @RunWith(AndroidJUnit4::class)
-class PlatformKmpFileLogicInstrumentedTest {
+class AppFileInstrumentedTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val logic = PlatformKmpFileLogic(context, AndroidPathsProvider(context))
 
     // Mirrors how a real ReferencedMemory/UserInsurance/... document is laid out (see FileContainerExtensions.kt's
     // fetchDocumentFilePath) -- this is the exact directory whose provider_paths.xml entry was mismatched
@@ -43,6 +44,19 @@ class PlatformKmpFileLogicInstrumentedTest {
 
     @Before
     fun setUp() {
+        startKoin {
+            modules(
+                module {
+                    single<Context> { context }
+                    single<PathsProvider> {
+                        object : PathsProvider {
+                            override val systemDataPath: Path get() = Path(context.filesDir.absolutePath)
+                        }
+                    }
+                }
+            )
+        }
+
         val dir = File(context.filesDir, relativeDir)
         dir.mkdirs()
         file = File(dir, UUID.randomUUID().toString())
@@ -52,12 +66,13 @@ class PlatformKmpFileLogicInstrumentedTest {
 
     @After
     fun tearDown() {
+        stopKoin()
         file.parentFile?.listFiles()?.forEach { it.delete() }
     }
 
     @Test
-    fun kmpFile_wrapsAContentUri_notAFileUri() {
-        val kmpFile = logic.kmpFile(relativePath, ContentType.Application.Pdf)
+    fun toKmpFile_wrapsAContentUri_notAFileUri() {
+        val kmpFile = AppFile(relativePath).toKmpFile(ContentType.Application.Pdf)
 
         // A file:// URI would "resolve" here too -- right up until ShareLauncher puts it in a real share Intent
         // and Android throws FileUriExposedException. content:// is the only scheme that's actually shareable.
@@ -65,16 +80,16 @@ class PlatformKmpFileLogicInstrumentedTest {
     }
 
     @Test
-    fun kmpFile_uriGrantsRealReadAccess_throughTheContentResolver() {
-        val kmpFile = logic.kmpFile(relativePath, ContentType.Application.Pdf)
+    fun toKmpFile_uriGrantsRealReadAccess_throughTheContentResolver() {
+        val kmpFile = AppFile(relativePath).toKmpFile(ContentType.Application.Pdf)
 
         val bytes = context.contentResolver.openInputStream(kmpFile.uri)!!.use { it.readBytes() }
         assertEquals("fake pdf content", String(bytes))
     }
 
     @Test
-    fun kmpFile_displayName_hasTheContentTypesExtension() {
-        val kmpFile = logic.kmpFile(relativePath, ContentType.Application.Pdf)
+    fun toKmpFile_displayName_hasTheContentTypesExtension() {
+        val kmpFile = AppFile(relativePath).toKmpFile(ContentType.Application.Pdf)
 
         context.contentResolver.query(kmpFile.uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)!!.use { cursor ->
             assertTrue(cursor.moveToFirst())
@@ -84,7 +99,7 @@ class PlatformKmpFileLogicInstrumentedTest {
     }
 
     @Test(expected = FileNotFoundException::class)
-    fun kmpFile_aPathThatDoesNotExist_throws() {
-        logic.kmpFile("$relativeDir/does-not-exist", ContentType.Application.Pdf)
+    fun toKmpFile_aPathThatDoesNotExist_throws() {
+        AppFile("$relativeDir/does-not-exist").toKmpFile(ContentType.Application.Pdf)
     }
 }
