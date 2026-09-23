@@ -8,18 +8,13 @@ import io.ktor.http.ContentType
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.UUID
-import kotlinx.io.files.Path
 import org.centrexcursionistalcoi.app.data.DOCUMENTS_PATH
-import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
 
 /**
  * Runs on a real device/emulator, like [FilePermissionsUtilInstrumentedTest]/[ProviderPathsInstrumentedTest]
@@ -30,6 +25,13 @@ import org.koin.dsl.module
  * Calf's own `File.toKmpFile()`, which builds a plain `file://` URI via `Uri.fromFile()` -- is that the URI it
  * returns must actually grant a real, working read permission through the app's `FileProvider`, not just be
  * *some* URI. These tests verify that directly.
+ *
+ * Deliberately does NOT start its own Koin instance: `composeApp/src/androidMain/AndroidManifest.xml` declares
+ * `AppBase` as the application class, and `AppBase.onCreate()` already calls `initKoin { androidContext(...) }`
+ * by the time any instrumented test runs -- a second `startKoin { ... }` here collides with it
+ * (`KoinAppAlreadyStartedException`) on whichever test happens to run first. The already-running Koin instance's
+ * real `AndroidPathsProvider` resolves to `context.filesDir` anyway, exactly what a fake one here would have
+ * provided, so there's nothing to override.
  */
 @RunWith(AndroidJUnit4::class)
 class AppFileInstrumentedTest {
@@ -44,19 +46,6 @@ class AppFileInstrumentedTest {
 
     @Before
     fun setUp() {
-        startKoin {
-            modules(
-                module {
-                    single<Context> { context }
-                    single<PathsProvider> {
-                        object : PathsProvider {
-                            override val systemDataPath: Path get() = Path(context.filesDir.absolutePath)
-                        }
-                    }
-                }
-            )
-        }
-
         val dir = File(context.filesDir, relativeDir)
         dir.mkdirs()
         file = File(dir, UUID.randomUUID().toString())
@@ -66,7 +55,6 @@ class AppFileInstrumentedTest {
 
     @After
     fun tearDown() {
-        stopKoin()
         file.parentFile?.listFiles()?.forEach { it.delete() }
     }
 

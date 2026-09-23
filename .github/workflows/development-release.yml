@@ -101,7 +101,7 @@ jobs:
         run: ./gradlew :shared:check
 
       - name: Upload test results (on failure)
-        if: ${{ steps.shared_tests.outcome == 'failure' }}
+        if: ${{ failure() && steps.shared_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         with:
           name: shared-test-results
@@ -143,7 +143,7 @@ jobs:
         run: ./gradlew :composeApp:check
 
       - name: Upload test results (on failure)
-        if: ${{ steps.app_tests.outcome == 'failure' }}
+        if: ${{ failure() && steps.app_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         with:
           name: app-test-results
@@ -222,7 +222,7 @@ jobs:
           script: ./gradlew :composeApp:connectedAndroidDeviceTest
 
       - name: Upload test results (on failure)
-        if: ${{ steps.app_instrumented_tests.outcome == 'failure' }}
+        if: ${{ failure() && steps.app_instrumented_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         with:
           name: app-instrumented-test-results
