@@ -629,6 +629,7 @@ jobs:
 
       # --- Upload to App Store Connect ---
       - name: Upload to App Store Connect
+        id: upload_to_app_store
         env:
           API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -677,6 +678,56 @@ jobs:
             --bundle-short-version-string "$BUNDLE_SHORT_VERSION" \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$ISSUER_ID"
+
+          echo "bundle_version=$BUNDLE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "bundle_short_version=$BUNDLE_SHORT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Extract App Store release notes
+        id: release_notes
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          # Convention: the GitHub release body is <short, user-facing description> followed by a bare `---`
+          # divider line, followed by the verbose auto-generated "What's Changed" list -- the App Store's
+          # "What's New" text should only ever be the short part, not the full technical changelog. Falls back
+          # to a generic message if a release was published without following this convention (no `---` line).
+          NOTES=$(python3 - <<'PY'
+          import os
+          import re
+
+          body = os.environ.get("RELEASE_BODY") or ""
+          match = re.search(r"^---\s*$", body, re.MULTILINE)
+          notes = body[:match.start()].strip() if match else ""
+          print(notes if notes else "Solució d'errors i millores internes")
+          PY
+          )
+          echo "Extracted release notes:"
+          echo "$NOTES"
+          DELIMITER="NOTES_EOF_$(openssl rand -hex 8)"
+          {
+            echo "notes<<$DELIMITER"
+            echo "$NOTES"
+            echo "$DELIMITER"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Submit to App Store for review
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_ID: ${{ secrets.APP_STORE_CONNECT_APP_APPLE_ID }}
+          BUNDLE_VERSION: ${{ steps.upload_to_app_store.outputs.bundle_version }}
+          BUNDLE_SHORT_VERSION: ${{ steps.upload_to_app_store.outputs.bundle_short_version }}
+          WHATS_NEW: ${{ steps.release_notes.outputs.notes }}
+        run: |
+          pip3 install --quiet --user "pyjwt[crypto]"
+          python3 scripts/submit_app_store_review.py \
+            --api-key-id "$API_KEY_ID" \
+            --issuer-id "$ISSUER_ID" \
+            --app-id "$APPLE_ID" \
+            --bundle-version "$BUNDLE_VERSION" \
+            --bundle-short-version "$BUNDLE_SHORT_VERSION" \
+            --whats-new "$WHATS_NEW" \
+            --locale ca
 
       # sentry-cli is installed globally on the self-hosted runner (not per-run like the Android job's
       # ubuntu-latest one below): the installer's default sudo-to-/usr/local/bin install fails in a
