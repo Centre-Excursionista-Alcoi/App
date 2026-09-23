@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.di
 
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.KoinComponent
 
 /**
@@ -11,6 +12,8 @@ import org.koin.core.component.KoinComponent
  * `null` when there's none.
  */
 interface GenderInflectionProvider {
+    val observableGender: StateFlow<GenderInflection?>
+
     fun getGenderInflection(): GenderInflection?
 
     fun setGenderInflection(genderInflection: GenderInflection)

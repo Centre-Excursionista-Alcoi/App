@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.ui.resources
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.login_title_fem
 import cea_app.composeapp.generated.resources.login_title_masc
@@ -21,11 +24,15 @@ data class GenderedStringResource(
     @Composable
     fun stringResource(vararg formatArgs: Any): String {
         val gip = globalGenderInflectionProvider
-        return when (gip?.getGenderInflection()) {
+
+        // Observe the flow. If gip is null, fallback to null state.
+        val currentGender by gip?.observableGender?.collectAsState() ?: mutableStateOf(null)
+
+        return when (currentGender) {
             GenderInflection.Masculine -> cmpStringResource(masculine, *formatArgs)
             GenderInflection.Feminine -> cmpStringResource(feminine, *formatArgs)
             GenderInflection.Neutral -> cmpStringResource(neutral, *formatArgs)
-            null -> cmpStringResource(neutral)
+            null -> cmpStringResource(neutral, *formatArgs) // fallback
         }
     }
 
