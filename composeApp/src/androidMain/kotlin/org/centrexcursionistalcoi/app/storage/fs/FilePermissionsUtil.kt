@@ -18,10 +18,9 @@ object FilePermissionsUtil {
             throw FileNotFoundException("File does not exist: $file")
         }
         val extension = contentType.fileExtensions().firstOrNull()
-        // If the file is already named with the right extension -- as every file cached through FileContainer is,
-        // see FileContainerExtensions.kt -- there's nothing to fix and the original is used as-is: no copy, no
-        // second file living alongside it. This is only a fallback now, for anything not yet extension-aware on
-        // disk (e.g. drag-and-drop of an image).
+        // Files cached through FileContainerExtensions.kt are named with a bare UUID, no extension -- this copy
+        // is not just a fallback, it's the path every real document/image goes through today. Checking rather
+        // than assuming lets an already-correctly-named file skip the copy if that ever changes.
         val sharingFile = if (extension == null || file.name.endsWith(".$extension", ignoreCase = true)) {
             file
         } else {

@@ -19,10 +19,9 @@ import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.RemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.storage.fs.AppFile
-import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.fs.exists
 import org.centrexcursionistalcoi.app.storage.fs.read
 import org.centrexcursionistalcoi.app.storage.fs.write
-import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.koin.compose.koinInject
 import kotlin.uuid.Uuid
 
@@ -39,21 +38,17 @@ const val FILES_PATH = "files"
  * If the file does not exist locally, it will be downloaded from the remote repository.
  * @param progressNotifier Optional ProgressNotifier to track download progress.
  * @param downloadIfNotExists Whether to download the file if it does not exist locally. If false, path will be returned regardless of existence.
- * @throws IllegalStateException if the document file is not found and uuid cannot be inferred.
+ * @throws IllegalStateException if there is no document file associated with the container.
  */
 suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): AppFile {
-    val path = joinPaths(
-        DOCUMENTS_PATH,
-        this::class.simpleName ?: "generic",
-        documentFile?.toString() ?: error("No document file for container")
-    )
-    if (!FileSystem.exists(path) && downloadIfNotExists) {
-        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
-            ?: throw IllegalStateException("Document file not found at path ($path). UUID could not be inferred.")
+    val uuid = documentFile ?: error("No document file for container")
+    val path = joinPaths(DOCUMENTS_PATH, this::class.simpleName ?: "generic", uuid.toString())
+    val file = AppFile(path)
+    if (!file.exists() && downloadIfNotExists) {
         log.d { "Tried to read non-existing file. Downloading..." }
-        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
+        RemoteRepository.downloadFile(uuid, file, progressNotifier = progressNotifier)
     }
-    return AppFile(path)
+    return file
 }
 
 /**
@@ -85,13 +80,12 @@ private suspend fun fetchImageFilePath(
     downloadIfNotExists: Boolean = true
 ): AppFile {
     val path = joinPaths(IMAGES_PATH, className ?: "generic", uuid.toString())
-    if (!FileSystem.exists(path) && downloadIfNotExists) {
-        val uuid = path.substringAfterLast(SystemPathSeparator).toUuidOrNull()
-            ?: throw IllegalStateException("Image file not found at path ($path). UUID could not be inferred.")
+    val file = AppFile(path)
+    if (!file.exists() && downloadIfNotExists) {
         log.d { "Tried to read non-existing file. Downloading..." }
-        RemoteRepository.downloadFile(uuid, path, progressNotifier = progressNotifier)
+        RemoteRepository.downloadFile(uuid, file, progressNotifier = progressNotifier)
     }
-    return AppFile(path)
+    return file
 }
 
 /**

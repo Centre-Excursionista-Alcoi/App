@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.storage.fs
 
 import io.ktor.http.ContentType
+import io.ktor.utils.io.ByteReadChannel
 import java.io.File
 import java.util.UUID
 import kotlin.test.AfterTest
@@ -8,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.junit.AfterClass
@@ -17,11 +19,9 @@ import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 
 /**
- * [org.centrexcursionistalcoi.app.di.globalPathsProvider]'s `by inject()` delegate is a [Lazy] cached forever on
- * the process-wide [org.centrexcursionistalcoi.app.di.PathsProviderHolder] object, resolved on its *first* access
- * -- restarting Koin with a *different* fake [PathsProvider] between test methods (as `@BeforeTest`/`@AfterTest`
- * would do) has no effect after that first resolution, silently pointing every later test at the first test's
- * temp directory. Starting Koin once for the whole class, against one shared temp directory, sidesteps that.
+ * Starts Koin once for the whole class (rather than per test method) purely to avoid the overhead of repeated
+ * start/stop cycles -- [org.centrexcursionistalcoi.app.di.globalPathsProvider] re-resolves against whichever
+ * Koin instance is currently active, so this is a performance choice, not a correctness requirement.
  */
 class AppFileTest {
     companion object {
@@ -82,5 +82,24 @@ class AppFileTest {
 
         assertEquals(file.absolutePath.toString(), kmpFile.file.absolutePath)
         assertEquals("content", kmpFile.file.readText())
+    }
+
+    @Test
+    fun read_readsTheResolvedFilesContents() = runTest {
+        val file = AppFile("document.pdf")
+        File(tempDir, "document.pdf").writeText("content")
+
+        val bytes = file.read()
+
+        assertEquals("content", bytes.decodeToString())
+    }
+
+    @Test
+    fun write_writesTheChannelContentsToTheResolvedFile() = runTest {
+        val file = AppFile("ReferencedMemory/document.pdf")
+
+        file.write(ByteReadChannel("content"))
+
+        assertEquals("content", File(tempDir, "ReferencedMemory/document.pdf").readText())
     }
 }

@@ -20,8 +20,8 @@ object FileSystem {
     private val fs = SystemFileSystem
     private val systemDataPath get() = globalPathsProvider.systemDataPath
 
-    suspend fun write(path: String, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
-        val path = systemDataPath / path
+    suspend fun write(file: AppFile, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
+        val path = file.absolutePath
         path.parent?.let { fs.createDirectories(it) }
         fs.sink(path).use { sink ->
             sink.asByteWriteChannel().use {
@@ -31,14 +31,14 @@ object FileSystem {
         }
     }
 
-    fun read(path: String, progress: (ProgressNotifier)? = null): ByteArray {
-        return fs.source(systemDataPath / path).use { source ->
+    fun read(file: AppFile, progress: (ProgressNotifier)? = null): ByteArray {
+        return fs.source(file.absolutePath).use { source ->
             source.buffered().readByteArray()
         }
     }
 
-    fun exists(path: String, progress: (ProgressNotifier)? = null): Boolean {
-        return fs.exists(systemDataPath / path)
+    fun exists(file: AppFile, progress: (ProgressNotifier)? = null): Boolean {
+        return fs.exists(file.absolutePath)
     }
 
     /**

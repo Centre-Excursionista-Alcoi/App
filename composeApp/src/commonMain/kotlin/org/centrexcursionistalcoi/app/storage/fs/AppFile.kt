@@ -32,11 +32,11 @@ value class AppFile(val relativePath: String)
 /** The one place `systemDataPath / relativePath` resolution happens -- every platform actual builds on this. */
 val AppFile.absolutePath: Path get() = globalPathsProvider.systemDataPath / relativePath
 
-suspend fun AppFile.read(progress: ProgressNotifier? = null): ByteArray = FileSystem.read(relativePath, progress)
+suspend fun AppFile.read(progress: ProgressNotifier? = null): ByteArray = FileSystem.read(this, progress)
 
-suspend fun AppFile.write(channel: ByteReadChannel, progress: ProgressNotifier? = null) = FileSystem.write(relativePath, channel, progress)
+suspend fun AppFile.write(channel: ByteReadChannel, progress: ProgressNotifier? = null) = FileSystem.write(this, channel, progress)
 
-fun AppFile.exists(): Boolean = FileSystem.exists(relativePath)
+fun AppFile.exists(): Boolean = FileSystem.exists(this)
 
 /**
  * Resolves this file into a [KmpFile], for Calf's `ShareLauncher`/`ShareContent.File` -- the one piece of

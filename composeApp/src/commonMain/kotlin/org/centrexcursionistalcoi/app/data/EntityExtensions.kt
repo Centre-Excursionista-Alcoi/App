@@ -13,6 +13,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import kotlin.time.Instant
 
@@ -67,7 +68,7 @@ fun Map<String, Any?>.toFormData(): List<PartData> {
                         }?.bytes
                     } else {
                         // Existing item, read file from filesystem
-                        FileSystem.read(value.uuid.toString())
+                        FileSystem.read(AppFile(value.uuid.toString()))
                     }
                     if (data == null) {
                         log.e { "FileReference data is null for key: $key, uuid: ${value.uuid}" }
