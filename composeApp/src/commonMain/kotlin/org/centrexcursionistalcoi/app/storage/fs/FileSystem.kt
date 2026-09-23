@@ -1,45 +1,23 @@
 package org.centrexcursionistalcoi.app.storage.fs
 
 import io.github.vinceglb.filekit.utils.div
-import io.ktor.util.cio.*
-import io.ktor.utils.io.*
 import kotlinx.io.IOException
-import kotlinx.io.buffered
 import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.io.readByteArray
 import org.centrexcursionistalcoi.app.data.DOCUMENTS_PATH
 import org.centrexcursionistalcoi.app.data.FILES_PATH
 import org.centrexcursionistalcoi.app.data.IMAGES_PATH
 import org.centrexcursionistalcoi.app.di.globalPathsProvider
-import org.centrexcursionistalcoi.app.process.ProgressNotifier
-import org.centrexcursionistalcoi.app.utils.copyTo
 
+/**
+ * Bulk, directory-wide operations that aren't scoped to a single cached file -- wiping a whole
+ * `documents/`/`images/`/`files/` category (e.g. on logout). Single-file I/O ([AppFile.read]/[AppFile.write]/
+ * [AppFile.exists]) lives on [AppFile] itself instead.
+ */
 object FileSystem {
     private val fs = SystemFileSystem
     private val systemDataPath get() = globalPathsProvider.systemDataPath
-
-    suspend fun write(path: String, channel: ByteReadChannel, progress: (ProgressNotifier)?) {
-        val path = systemDataPath / path
-        path.parent?.let { fs.createDirectories(it) }
-        fs.sink(path).use { sink ->
-            sink.asByteWriteChannel().use {
-                if (progress != null) channel.copyTo(this, progress)
-                else channel.copyTo(this)
-            }
-        }
-    }
-
-    fun read(path: String, progress: (ProgressNotifier)? = null): ByteArray {
-        return fs.source(systemDataPath / path).use { source ->
-            source.buffered().readByteArray()
-        }
-    }
-
-    fun exists(path: String, progress: (ProgressNotifier)? = null): Boolean {
-        return fs.exists(systemDataPath / path)
-    }
 
     /**
      * Deletes all the files in [path] recursively.
@@ -68,8 +46,9 @@ object FileSystem {
     /**
      * Deletes [path], swallowing a plain deletion failure (but not "didn't exist" when [mustExist] is true).
      * A directory can go from empty back to non-empty between [deleteRecursively] listing/deleting its children
-     * and deleting the directory itself -- e.g. [write] racing [deleteAll] while local data is wiped on logout --
-     * which SystemFileSystem surfaces as a bare `IOException("Deletion failed")` rather than something narrower.
+     * and deleting the directory itself -- e.g. [AppFile.write] racing [deleteAll] while local data is wiped on
+     * logout -- which SystemFileSystem surfaces as a bare `IOException("Deletion failed")` rather than something
+     * narrower.
      * Losing that one entry isn't worth failing the whole recursive delete over.
      */
     private fun tryDelete(path: Path, mustExist: Boolean): Boolean = try {

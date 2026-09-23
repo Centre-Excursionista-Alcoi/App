@@ -6,25 +6,21 @@ import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.QrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
-import io.github.vinceglb.filekit.utils.div
 import io.ktor.http.*
-import org.centrexcursionistalcoi.app.di.PathsProvider
-import org.centrexcursionistalcoi.app.storage.fs.FilePermissionsUtil
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
+import org.centrexcursionistalcoi.app.storage.fs.contentUri
+import org.centrexcursionistalcoi.app.storage.fs.toJavaFile
 import org.koin.core.annotation.Singleton
-import java.io.File
 
 @Singleton
 actual class PlatformDragAndDrop(
     private val context: Context,
-    private val pathsProvider: PathsProvider,
 ) : PlatformProvider {
     actual override val isSupported: Boolean = true
 
-    actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
+    actual fun imageTransferData(file: AppFile, contentType: ContentType): DragAndDropTransferData {
         // Get a content URI using FileProvider, copying under a name with the proper extension only if needed
-        val filePath = pathsProvider.systemDataPath / path
-        val file = File(filePath.toString())
-        val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
+        val uri = file.contentUri(context, contentType)
 
         return DragAndDropTransferData(
             ClipData.newUri(context.contentResolver, "", uri)
@@ -38,8 +34,8 @@ actual class PlatformDragAndDrop(
     ): DragAndDropTransferData {
         val extension = contentType.fileExtensions().first()
         val name = value.hashCode()
-        val filePath = pathsProvider.systemDataPath / "qr" / "$name.$extension"
-        val file = File(filePath.toString()).apply {
+        val appFile = AppFile("qr/$name.$extension")
+        val file = appFile.toJavaFile().apply {
             parentFile?.mkdirs()
             if (!exists()) {
                 outputStream().use { output ->
@@ -56,7 +52,7 @@ actual class PlatformDragAndDrop(
                 }
             }
         }
-        val uri = FilePermissionsUtil.uriForFile(context, file, contentType)
+        val uri = appFile.contentUri(context, contentType)
 
         return DragAndDropTransferData(
             ClipData.newUri(context.contentResolver, value, uri)

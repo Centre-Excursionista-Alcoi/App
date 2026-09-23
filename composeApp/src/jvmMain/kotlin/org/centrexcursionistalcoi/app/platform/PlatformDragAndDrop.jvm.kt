@@ -8,20 +8,21 @@ import io.github.alexzhirkevich.qrose.ImageFormat
 import io.github.alexzhirkevich.qrose.QrCodePainter
 import io.github.alexzhirkevich.qrose.toByteArray
 import io.ktor.http.ContentType
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
+import org.centrexcursionistalcoi.app.storage.fs.toJavaFile
 import org.centrexcursionistalcoi.app.transfer.ByteArrayTransferable
 import org.centrexcursionistalcoi.app.transfer.FileTransferable
 import org.koin.core.annotation.Singleton
-import java.io.File
 
 @Singleton
 @OptIn(ExperimentalComposeUiApi::class)
 actual class PlatformDragAndDrop : PlatformProvider {
     actual override val isSupported: Boolean = false // not working: throws unknown error
 
-    actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
+    actual fun imageTransferData(file: AppFile, contentType: ContentType): DragAndDropTransferData {
         return DragAndDropTransferData(
             DragAndDropTransferable(
-                FileTransferable(File(path)),
+                FileTransferable(file.toJavaFile()),
             ),
             supportedActions = listOf(DragAndDropTransferAction.Move)
         )

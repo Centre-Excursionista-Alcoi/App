@@ -8,12 +8,14 @@ import io.ktor.http.content.PartData
 import io.ktor.http.headers
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
-import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
+import org.centrexcursionistalcoi.app.storage.fs.read
 import kotlin.time.Instant
 
 private val log = logging()
@@ -66,8 +68,11 @@ fun Map<String, Any?>.toFormData(): List<PartData> {
                             contentType = it?.contentType
                         }?.bytes
                     } else {
-                        // Existing item, read file from filesystem
-                        FileSystem.read(value.uuid.toString())
+                        // Existing item, read file from filesystem. Unreachable in every real caller today (both
+                        // create(item) and createInsurance() always populate FileReference via
+                        // InMemoryFileAllocator first, see TODO(#659) above) -- runBlocking here rather than
+                        // threading suspend through this whole legacy formData{} builder for a dead branch.
+                        runBlocking { AppFile(value.uuid.toString()).read() }
                     }
                     if (data == null) {
                         log.e { "FileReference data is null for key: $key, uuid: ${value.uuid}" }

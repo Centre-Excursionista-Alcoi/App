@@ -3,13 +3,14 @@ package org.centrexcursionistalcoi.app.platform
 import androidx.compose.ui.draganddrop.DragAndDropTransferData
 import io.github.alexzhirkevich.qrose.QrCodePainter
 import io.ktor.http.ContentType
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
 import org.koin.core.annotation.Singleton
 
 @Singleton
 actual class PlatformDragAndDrop : PlatformProvider {
     actual override val isSupported: Boolean = false
 
-    actual fun imageTransferData(path: String, contentType: ContentType): DragAndDropTransferData {
+    actual fun imageTransferData(file: AppFile, contentType: ContentType): DragAndDropTransferData {
         throw UnsupportedOperationException("Drag and Drop is not supported on iOS")
     }
 

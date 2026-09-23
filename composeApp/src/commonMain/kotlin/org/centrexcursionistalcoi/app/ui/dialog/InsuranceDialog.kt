@@ -41,6 +41,7 @@ import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Share
 import org.centrexcursionistalcoi.app.ui.reusable.LinearLoadingIndicator
@@ -78,8 +79,8 @@ fun InsuranceDialog(
     InsuranceDialog(
         insurance = insurance,
         loadingProgress = fpm.progress,
-        onShareFile = { fpm.shareFile(shareLauncher, pathProvider = it) },
-        onOpenFile = { fpm.openFile(pathProvider = it) },
+        onShareFile = { fpm.shareFile(shareLauncher, fileProvider = it) },
+        onOpenFile = { fpm.openFile(fileProvider = it) },
         onDismissRequest = onDismissRequest
     )
 }
@@ -93,8 +94,8 @@ private val femecvLicenseCardDrawable = mapOf(
 private fun InsuranceDialog(
     insurance: UserInsurance,
     loadingProgress: StateFlow<Progress?>,
-    onShareFile: (pathProvider: suspend (ProgressNotifier) -> String) -> Unit,
-    onOpenFile: (pathProvider: suspend (ProgressNotifier) -> String) -> Unit,
+    onShareFile: (fileProvider: suspend (ProgressNotifier) -> AppFile) -> Unit,
+    onOpenFile: (fileProvider: suspend (ProgressNotifier) -> AppFile) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val openFile = koinInject<PlatformOpenFileLogic>()

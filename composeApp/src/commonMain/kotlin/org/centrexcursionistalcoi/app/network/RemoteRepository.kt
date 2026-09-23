@@ -23,7 +23,8 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
-import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
+import org.centrexcursionistalcoi.app.storage.fs.write
 import org.centrexcursionistalcoi.app.storage.settings
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
@@ -241,17 +242,17 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     /**
-     * Downloads a file with the given UUID from the remote server and saves it to the specified path.
+     * Downloads a file with the given UUID from the remote server and saves it to the specified file.
      * @param uuid The UUID of the file to download.
-     * @param path The local file path where the downloaded file will be saved.
+     * @param file The local file where the downloaded file will be saved.
      * @param progressNotifier An optional progress notifier to report download progress.
      */
     suspend fun downloadFile(
         uuid: Uuid,
-        path: String,
+        file: AppFile,
         progressNotifier: ProgressNotifier? = null
     ) {
-        downloadFile(uuid, path, httpClient, progressNotifier)
+        downloadFile(uuid, file, httpClient, progressNotifier)
     }
 
     private suspend fun downloadFileForEntity(item: LocalEntity, progressNotifier: ProgressNotifier? = null) {
@@ -259,8 +260,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             is DocumentFileContainer -> {
                 val fileUuid = item.documentFile
                 if (fileUuid != null) {
-                    val path = item.fetchDocumentFilePath(downloadIfNotExists = false)
-                    downloadFile(fileUuid, path, progressNotifier)
+                    val file = item.fetchDocumentFilePath(downloadIfNotExists = false)
+                    downloadFile(fileUuid, file, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
@@ -268,8 +269,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             is ImageFileContainer -> {
                 val fileUuid = item.image
                 if (fileUuid != null) {
-                    val path = item.fetchImageFilePath(downloadIfNotExists = false)
-                    downloadFile(fileUuid, path, progressNotifier)
+                    val file = item.fetchImageFilePath(downloadIfNotExists = false)
+                    downloadFile(fileUuid, file, progressNotifier)
                 } else {
                     log.w { "No document file UUID found for created ${item::class.simpleName}#${item.id}" }
                 }
@@ -438,15 +439,15 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
     companion object {
         /**
-         * Downloads a file with the given UUID from the remote server and saves it to the specified path.
+         * Downloads a file with the given UUID from the remote server and saves it to the specified file.
          * @param uuid The UUID of the file to download.
-         * @param path The local file path where the downloaded file will be saved.
+         * @param file The local file where the downloaded file will be saved.
          * @param httpClient The HTTP client to use for the download. Defaults to the shared client.
          * @param progressNotifier An optional progress notifier to report download progress.
          */
         suspend fun downloadFile(
             uuid: Uuid,
-            path: String,
+            file: AppFile,
             httpClient: HttpClient = getHttpClient(),
             progressNotifier: ProgressNotifier? = null
         ) {
@@ -462,7 +463,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 it.bodyAsChannel()
             }
             log.v { "Writing file..." }
-            FileSystem.write(path, channel, progressNotifier)
+            file.write(channel, progressNotifier)
             log.d { "File $uuid stored." }
         }
     }

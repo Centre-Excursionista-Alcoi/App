@@ -21,9 +21,9 @@ import java.util.UUID
  * instead of `path="documents/"` -- doesn't fail until a real file under that directory is actually shared, as
  * `IllegalArgumentException("Failed to find configured root that contains ...")`.
  *
- * This exercises [FilePermissionsUtil.uriForFile] (the same call [org.centrexcursionistalcoi.app.platform.PlatformKmpFileLogic]
- * makes) for a real file under every one of those directories, so a mismatch on any of them fails immediately
- * instead of waiting for whichever one happens to be hit first in the field.
+ * This exercises [FilePermissionsUtil.uriForFile] (the same call [AppFile.contentUri]/[AppFile.toKmpFile] make)
+ * for a real file under every one of those directories, so a mismatch on any of them fails immediately instead
+ * of waiting for whichever one happens to be hit first in the field.
  */
 @RunWith(AndroidJUnit4::class)
 class ProviderPathsInstrumentedTest {

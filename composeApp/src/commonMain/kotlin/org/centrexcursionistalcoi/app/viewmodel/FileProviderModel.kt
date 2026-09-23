@@ -13,13 +13,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
-import org.centrexcursionistalcoi.app.platform.PlatformKmpFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformSaveFileLogic
 import org.centrexcursionistalcoi.app.platform.pickAndSave
-import org.centrexcursionistalcoi.app.platform.toShareContent
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.storage.fs.AppFile
+import org.centrexcursionistalcoi.app.storage.fs.toKmpFile
+import org.centrexcursionistalcoi.app.storage.fs.toShareContent
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -27,7 +28,6 @@ class FileProviderModel(
     private val dispatcherProvider: DispatcherProvider,
     private val openFileLogic: PlatformOpenFileLogic,
     private val saveFileLogic: PlatformSaveFileLogic,
-    private val kmpFileLogic: PlatformKmpFileLogic,
 ) : ViewModel() {
     private val lock = Mutex()
 
@@ -40,12 +40,12 @@ class FileProviderModel(
 
     fun openFile(
         contentType: ContentType = ContentType.Application.Pdf,
-        pathProvider: suspend (ProgressNotifier) -> String
+        fileProvider: suspend (ProgressNotifier) -> AppFile
     ) {
         if (!openFileLogic.isSupported) return
         launchWithLock(lock) {
-            val path = withContext(dispatcherProvider.io) { pathProvider(progressNotifier) }
-            openFileLogic.open(path, contentType)
+            val file = withContext(dispatcherProvider.io) { fileProvider(progressNotifier) }
+            openFileLogic.open(file, contentType)
             progress.value = null
         }
     }
@@ -72,11 +72,11 @@ class FileProviderModel(
     fun shareFile(
         shareLauncher: ShareLauncher,
         contentType: ContentType = ContentType.Application.Pdf,
-        pathProvider: suspend (ProgressNotifier) -> String
+        fileProvider: suspend (ProgressNotifier) -> AppFile
     ) {
         launchWithLock(lock) {
-            val path = withContext(dispatcherProvider.io) { pathProvider(progressNotifier) }
-            val file = withContext(dispatcherProvider.io) { kmpFileLogic.kmpFile(path, contentType) }
+            val appFile = withContext(dispatcherProvider.io) { fileProvider(progressNotifier) }
+            val file = withContext(dispatcherProvider.io) { appFile.toKmpFile(contentType) }
             shareLauncher.launch(file.toShareContent(contentType))
             progress.value = null
         }
