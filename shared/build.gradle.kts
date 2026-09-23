@@ -20,8 +20,13 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
+
+        // Joins the default "test" source set tree, alongside jvmTest/iosTest -- otherwise commonTest is never
+        // compiled or run against Android's actual implementations at all (this module has no Android-specific
+        // actuals today, but jvmTest alone wouldn't catch it if that changed).
+        withHostTestBuilder {}.configure {}
     }
-    
+
     iosArm64()
     iosSimulatorArm64()
 
