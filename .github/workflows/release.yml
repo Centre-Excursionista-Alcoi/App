@@ -119,6 +119,84 @@ jobs:
             composeApp/build/test-results
             composeApp/build/reports/tests
 
+  android-instrumented-tests:
+    name: Run Android instrumented tests
+    runs-on: ubuntu-latest
+    needs: [ update-version-name ]
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          java-package: jdk
+
+      - name: Copy dummy google-services.json
+        run: |
+          cp android/google-services.test.json android/google-services.json
+
+      # Keyed on the AVD snapshot alone (not the app/test code) -- the emulator image and its boot snapshot
+      # don't change when composeApp changes, so this cache stays a hit across runs and only busts on API level.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-30
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run Android instrumented tests
+        id: app_instrumented_tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./gradlew :composeApp:connectedAndroidDeviceTest
+
+      - name: Upload test results (on failure)
+        if: ${{ steps.app_instrumented_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-instrumented-test-results
+          retention-days: 3
+          path: |
+            composeApp/build/outputs/androidTest-results
+            composeApp/build/reports/androidTests
+
   ios-tests:
     name: Run iOS app tests
     runs-on: [self-hosted, macOS, ARM64]
@@ -145,7 +223,7 @@ jobs:
     name: Build for Android
     runs-on: ubuntu-latest
 
-    needs: [shared-tests, app-tests]
+    needs: [shared-tests, app-tests, android-instrumented-tests]
 
     steps:
       - name: Checkout code
