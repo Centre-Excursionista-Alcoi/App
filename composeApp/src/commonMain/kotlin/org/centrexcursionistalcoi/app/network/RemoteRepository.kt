@@ -24,7 +24,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.storage.fs.AppFile
-import org.centrexcursionistalcoi.app.storage.fs.FileSystem
+import org.centrexcursionistalcoi.app.storage.fs.write
 import org.centrexcursionistalcoi.app.storage.settings
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
@@ -463,7 +463,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 it.bodyAsChannel()
             }
             log.v { "Writing file..." }
-            FileSystem.write(file, channel, progressNotifier)
+            file.write(channel, progressNotifier)
             log.d { "File $uuid stored." }
         }
     }

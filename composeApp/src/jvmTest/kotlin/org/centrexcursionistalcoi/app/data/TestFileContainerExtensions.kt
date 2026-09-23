@@ -15,6 +15,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.io.files.Path
+import org.centrexcursionistalcoi.app.di.DefaultDispatcherProvider
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.centrexcursionistalcoi.app.network._httpClient
 import org.centrexcursionistalcoi.app.storage.fs.exists
@@ -50,6 +52,7 @@ class TestFileContainerExtensions {
                                 override val systemDataPath: Path get() = Path(tempDir.absolutePath)
                             }
                         }
+                        single<DispatcherProvider> { DefaultDispatcherProvider() }
                     }
                 )
             }

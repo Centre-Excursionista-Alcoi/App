@@ -11,6 +11,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
+import org.centrexcursionistalcoi.app.di.DefaultDispatcherProvider
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.di.PathsProvider
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -38,6 +40,7 @@ class AppFileTest {
                                 override val systemDataPath: Path get() = Path(tempDir.absolutePath)
                             }
                         }
+                        single<DispatcherProvider> { DefaultDispatcherProvider() }
                     }
                 )
             }
