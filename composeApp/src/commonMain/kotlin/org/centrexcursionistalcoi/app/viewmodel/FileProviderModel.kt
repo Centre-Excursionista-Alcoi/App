@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.mohamedrejeb.calf.core.ExperimentalCalfApi
+import com.mohamedrejeb.calf.share.ShareLauncher
 import io.ktor.http.ContentType
 import io.ktor.http.fileExtensions
 import kotlinx.coroutines.Deferred
@@ -11,10 +13,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.platform.PlatformKmpFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformOpenFileLogic
 import org.centrexcursionistalcoi.app.platform.PlatformSaveFileLogic
-import org.centrexcursionistalcoi.app.platform.PlatformShareLogic
 import org.centrexcursionistalcoi.app.platform.pickAndSave
+import org.centrexcursionistalcoi.app.platform.toShareContent
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.koin.core.annotation.KoinViewModel
@@ -24,12 +27,11 @@ class FileProviderModel(
     private val dispatcherProvider: DispatcherProvider,
     private val openFileLogic: PlatformOpenFileLogic,
     private val saveFileLogic: PlatformSaveFileLogic,
-    private val shareLogic: PlatformShareLogic
+    private val kmpFileLogic: PlatformKmpFileLogic,
 ) : ViewModel() {
     private val lock = Mutex()
 
     val isOpeningFileSupported = openFileLogic.isSupported
-    val isSharingFileSupported = shareLogic.isSupported
 
     val progress: StateFlow<Progress?>
         field = MutableStateFlow<Progress?>(null)
@@ -66,14 +68,16 @@ class FileProviderModel(
         }
     }
 
+    @ExperimentalCalfApi
     fun shareFile(
+        shareLauncher: ShareLauncher,
         contentType: ContentType = ContentType.Application.Pdf,
         pathProvider: suspend (ProgressNotifier) -> String
     ) {
-        if (!shareLogic.isSupported) return
         launchWithLock(lock) {
             val path = withContext(dispatcherProvider.io) { pathProvider(progressNotifier) }
-            shareLogic.share(path, contentType)
+            val file = withContext(dispatcherProvider.io) { kmpFileLogic.kmpFile(path, contentType) }
+            shareLauncher.launch(file.toShareContent(contentType))
             progress.value = null
         }
     }

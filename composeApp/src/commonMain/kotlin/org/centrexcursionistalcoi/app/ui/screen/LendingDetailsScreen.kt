@@ -73,6 +73,8 @@ import cea_app.composeapp.generated.resources.memory_open_file
 import cea_app.composeapp.generated.resources.memory_saved
 import cea_app.composeapp.generated.resources.save
 import cea_app.composeapp.generated.resources.share
+import com.mohamedrejeb.calf.core.ExperimentalCalfApi
+import com.mohamedrejeb.calf.share.rememberShareLauncher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -505,23 +507,23 @@ fun MemoryVisualization(
 }
 
 @Composable
+@OptIn(ExperimentalCalfApi::class)
 fun MemoryViewButtons(
     memory: ReferencedMemory,
     snackbarHostState: SnackbarHostState? = null,
     fpm: FileProviderModel = koinViewModel(),
 ) {
+    val shareLauncher = rememberShareLauncher { /* ignore result */ }
     val scope = rememberCoroutineScope()
     if (memory.pdf == null) return
 
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        if (fpm.isSharingFileSupported) {
-            IconButton(
-                onClick = {
-                    fpm.shareFile { memory.fetchDocumentFilePath() }
-                },
-            ) {
-                Icon(MaterialSymbols.Share, stringResource(Res.string.share))
-            }
+        IconButton(
+            onClick = {
+                fpm.shareFile(shareLauncher) { memory.fetchDocumentFilePath() }
+            },
+        ) {
+            Icon(MaterialSymbols.Share, stringResource(Res.string.share))
         }
         IconButton(
             onClick = {

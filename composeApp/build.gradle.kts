@@ -74,6 +74,7 @@ kotlin {
             isStatic = true
             // Required when using NativeSQLiteDriver
             linkerOpts.add("-lsqlite3")
+            export(libs.calf.ui)
             export(libs.sentry.kotlinMultiplatform)
             export(libs.kmm.notifier.core)
             export(libs.kmm.notifier.firebase)
@@ -121,6 +122,11 @@ kotlin {
 
             // Calendar Viewer
             implementation(libs.calendar)
+
+            // Native UI Components
+            api(libs.calf.ui)
+            implementation(libs.calf.cupertinoIcons)
+            implementation(libs.calf.share)
 
             // Ktor serialization
             implementation(libs.ktor.serialization.kotlinxJson)
