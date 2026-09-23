@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,16 +32,14 @@ import cea_app.composeapp.generated.resources.management_qualification_create
 import cea_app.composeapp.generated.resources.management_qualification_edit
 import cea_app.composeapp.generated.resources.management_qualification_expired_on
 import cea_app.composeapp.generated.resources.management_qualification_grant
-import cea_app.composeapp.generated.resources.management_qualification_holders
 import cea_app.composeapp.generated.resources.management_qualification_hide_holders
+import cea_app.composeapp.generated.resources.management_qualification_holders
 import cea_app.composeapp.generated.resources.management_qualification_no_expiry
 import cea_app.composeapp.generated.resources.management_qualification_no_holders
 import cea_app.composeapp.generated.resources.management_qualification_none
 import cea_app.composeapp.generated.resources.management_qualification_revoke
 import cea_app.composeapp.generated.resources.management_qualification_valid_until
 import cea_app.composeapp.generated.resources.management_qualifications
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Department
@@ -67,6 +64,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.viewmodel.management.QualificationsManagementViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 /**
  * The departments the viewer can grant qualifications in (holds [DepartmentRole.EXAMINER] in, which
@@ -83,8 +82,6 @@ fun QualificationsListView(model: QualificationsManagementViewModel = koinViewMo
     val grants by model.grants.collectAsState()
     val roster by model.roster.collectAsState()
 
-    LaunchedEffect(Unit) { model.refresh() }
-
     val profileValue = profile
     if (profileValue == null) {
         LoadingBox()
@@ -100,7 +97,6 @@ fun QualificationsListView(model: QualificationsManagementViewModel = koinViewMo
         onCreate = model::create,
         onUpdate = model::update,
         onDelete = model::delete,
-        onLoadGrants = model::loadGrants,
         onLoadRoster = model::loadRoster,
         onSearchRoster = model::searchRoster,
         onGrant = model::grant,
@@ -114,12 +110,11 @@ private fun QualificationsListView(
     profile: ProfileResponse,
     departments: List<Department>?,
     qualifications: List<Qualification>?,
-    grants: Map<Uuid, List<QualificationGrant>>,
+    grants: Map<Uuid, List<QualificationGrant>>?,
     roster: Map<Uuid, List<DepartmentRosterMember>>,
     onCreate: (departmentId: Uuid, name: String, description: String?) -> Job,
     onUpdate: (Qualification, name: String, description: String?) -> Job,
     onDelete: (Qualification) -> Job,
-    onLoadGrants: (Qualification) -> Job,
     onLoadRoster: (departmentId: Uuid) -> Job,
     onSearchRoster: suspend (departmentId: Uuid, query: String) -> List<DepartmentRosterMember>,
     onGrant: (Qualification, userSub: String, expiresAt: kotlin.time.Instant?) -> Job,
@@ -149,7 +144,6 @@ private fun QualificationsListView(
             onCreate = { name, description -> onCreate(department.id, name, description) },
             onUpdate = onUpdate,
             onDelete = onDelete,
-            onLoadGrants = onLoadGrants,
             onLoadRoster = { onLoadRoster(department.id) },
             onSearchRoster = { query -> onSearchRoster(department.id, query) },
             onGrant = onGrant,
@@ -162,15 +156,13 @@ private fun QualificationsListView(
 @Composable
 private fun ColumnScope.DepartmentQualifications(
     department: Department,
-    /** `null` while still loading. */
     qualifications: List<Qualification>?,
     canManage: Boolean,
-    grants: Map<Uuid, List<QualificationGrant>>,
+    grants: Map<Uuid, List<QualificationGrant>>?,
     roster: List<DepartmentRosterMember>,
     onCreate: (name: String, description: String?) -> Job,
     onUpdate: (Qualification, name: String, description: String?) -> Job,
     onDelete: (Qualification) -> Job,
-    onLoadGrants: (Qualification) -> Job,
     onLoadRoster: () -> Job,
     onSearchRoster: suspend (query: String) -> List<DepartmentRosterMember>,
     onGrant: (Qualification, userSub: String, expiresAt: kotlin.time.Instant?) -> Job,
@@ -214,11 +206,11 @@ private fun ColumnScope.DepartmentQualifications(
                 QualificationCard(
                     qualification = qualification,
                     canManage = canManage,
-                    grants = grants[qualification.id],
+                    grants = grants?.get(qualification.id).orEmpty(),
                     roster = roster,
                     onUpdate = onUpdate,
                     onDelete = onDelete,
-                    onLoadGrants = { onLoadGrants(qualification); onLoadRoster() },
+                    onShowHolders = onLoadRoster,
                     onSearchRoster = onSearchRoster,
                     onGrant = onGrant,
                     onRevoke = onRevoke,
@@ -233,12 +225,12 @@ private fun ColumnScope.DepartmentQualifications(
 private fun QualificationCard(
     qualification: Qualification,
     canManage: Boolean,
-    /** `null` until the holders have been loaded. */
-    grants: List<QualificationGrant>?,
+    grants: List<QualificationGrant>,
     roster: List<DepartmentRosterMember>,
     onUpdate: (Qualification, name: String, description: String?) -> Job,
     onDelete: (Qualification) -> Job,
-    onLoadGrants: () -> Job,
+    /** Loads the department's roster, to show holders' names instead of raw subs. */
+    onShowHolders: () -> Job,
     onSearchRoster: suspend (query: String) -> List<DepartmentRosterMember>,
     onGrant: (Qualification, userSub: String, expiresAt: kotlin.time.Instant?) -> Job,
     onRevoke: (Qualification, userSub: String) -> Job,
@@ -307,7 +299,7 @@ private fun QualificationCard(
                 TextButton(
                     onClick = {
                         showingHolders = !showingHolders
-                        if (showingHolders) onLoadGrants()
+                        if (showingHolders) onShowHolders()
                     }
                 ) {
                     Text(
@@ -321,7 +313,6 @@ private fun QualificationCard(
 
             if (showingHolders) {
                 when {
-                    grants == null -> InlineLoading()
                     grants.isEmpty() -> Text(
                         text = stringResource(Res.string.management_qualification_no_holders),
                         style = MaterialTheme.typography.bodySmall,

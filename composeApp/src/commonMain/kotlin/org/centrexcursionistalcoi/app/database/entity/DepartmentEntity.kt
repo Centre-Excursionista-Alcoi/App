@@ -5,6 +5,8 @@ import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
+import org.centrexcursionistalcoi.app.data.Qualification
+import org.centrexcursionistalcoi.app.data.QualificationGrant
 import kotlin.uuid.Uuid
 
 @Entity(
@@ -17,12 +19,16 @@ data class DepartmentEntity(
     val displayName: String,
     val imageFile: Uuid? = null,
     val members: List<DepartmentMemberInfo>?,
+    val qualifications: List<Qualification>? = null,
+    val qualificationGrants: List<QualificationGrant>? = null,
 ) {
     fun toDepartment() = Department(
         id = id,
         displayName = displayName,
         image = imageFile,
         members = members,
+        qualifications = qualifications,
+        qualificationGrants = qualificationGrants,
     )
 
     companion object {
@@ -31,6 +37,8 @@ data class DepartmentEntity(
             displayName = displayName,
             imageFile = image,
             members = members,
+            qualifications = qualifications,
+            qualificationGrants = qualificationGrants,
         )
     }
 }

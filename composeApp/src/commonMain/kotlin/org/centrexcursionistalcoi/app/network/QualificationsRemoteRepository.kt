@@ -10,31 +10,41 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
+import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
+import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
 import org.centrexcursionistalcoi.app.request.UpdateQualificationRequest
 import org.koin.core.annotation.Singleton
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 /**
- * Talks to the server's qualification routes. Qualifications aren't synced into the local database (yet): the
- * server's routes for them are plain request/response ones, without the `lastUpdate` bookkeeping the synced
- * entities have, so every call here hits the network.
+ * Talks to the server's qualification mutation routes (create/update/delete a definition, grant/revoke a
+ * qualification) and the department roster search used to pick who to grant one to.
+ *
+ * Reading qualifications and their grants doesn't go through here: they're embedded on
+ * [org.centrexcursionistalcoi.app.data.Department] and synced along with it (see `Departments.extraColumns`
+ * server-side), like any other referenced data. Each mutation below patches the affected department's embedded
+ * copy in [departmentsRepository] locally from the response, the same way [SymmetricRemoteRepository]-backed
+ * repositories keep their own local table in sync with a create/update/delete -- so callers (see
+ * `QualificationsManagementViewModel`) never need to force a re-fetch of the department afterwards. Every
+ * mutation here requires at least `EXAMINER` (`create`/`update`/`delete` require `QUALIFICATIONS_MANAGER`, which
+ * implies it), so the caller always already holds the department's full, unfiltered local qualifications/grants
+ * -- patching in place never narrows what they'd otherwise see from a fresh fetch.
  */
 @Singleton
-class QualificationsRemoteRepository {
+class QualificationsRemoteRepository(private val departmentsRepository: DepartmentsRepository) {
     private val log = logging()
 
     // Not cached in a field: tests swap the shared client (see `_httpClient`)
@@ -52,71 +62,76 @@ class QualificationsRemoteRepository {
 
     private suspend fun <T> HttpResponse.decode(serializer: KSerializer<T>): T = json.decodeFromString(serializer, bodyAsText())
 
-    /** What the server has for the local copy: every qualification definition, and the logged-in user's own grants. */
-    class Snapshot(val qualifications: List<Qualification>, val myGrants: List<QualificationGrant>)
-
-    /**
-     * Fetches everything the local copy needs, or `null` if the server predates qualifications (its routes answer 404),
-     * which just means there's nothing to show. Any other failure is thrown like the other calls do, so that it's
-     * handled centrally (session expiry included) instead of being mistaken for "no qualifications".
-     */
-    suspend fun snapshot(): Snapshot? {
-        val qualifications = httpClient.get("/qualifications")
-        if (qualifications.status == HttpStatusCode.NotFound) return null
-        val grants = httpClient.get("/profile/qualifications")
-        if (grants.status == HttpStatusCode.NotFound) return null
-        return Snapshot(
-            qualifications = qualifications.orThrow("list qualifications").decode(ListSerializer(Qualification.serializer())),
-            myGrants = grants.orThrow("list own qualifications").decode(ListSerializer(QualificationGrant.serializer())),
-        )
+    /** Applies [transform] to the locally cached [departmentId], if it's synced at all. */
+    private suspend fun patchDepartment(departmentId: Uuid, transform: (Department) -> Department) {
+        val department = departmentsRepository.get(departmentId) ?: return
+        departmentsRepository.update(transform(department))
     }
 
-    /** Every qualification definition. Readable by any logged-in user. */
-    suspend fun list(): List<Qualification> =
-        httpClient.get("/qualifications")
-            .orThrow("list qualifications")
-            .decode(ListSerializer(Qualification.serializer()))
+    /** Applies [transform] to whichever locally cached department owns [qualificationId], if any is synced. */
+    private suspend fun patchDepartmentOwning(qualificationId: Uuid, transform: (Department) -> Department) {
+        val department = departmentsRepository.selectAll().find { department ->
+            department.qualifications.orEmpty().any { it.id == qualificationId }
+        } ?: return
+        departmentsRepository.update(transform(department))
+    }
 
-    suspend fun create(departmentId: Uuid, name: String, description: String?): Qualification =
-        httpClient.post("/departments/$departmentId/qualifications") {
+    suspend fun create(departmentId: Uuid, name: String, description: String?): Qualification {
+        val created = httpClient.post("/departments/$departmentId/qualifications") {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(CreateQualificationRequest.serializer(), CreateQualificationRequest(name, description)))
         }.orThrow("create qualification").decode(Qualification.serializer())
 
+        patchDepartment(departmentId) { it.copy(qualifications = it.qualifications.orEmpty() + created) }
+        return created
+    }
+
     /** Only the given fields change: a `null` [name] or [description] is left as it is, and a blank [description] clears it. */
-    suspend fun update(id: Uuid, name: String? = null, description: String? = null): Qualification =
-        httpClient.patch("/qualifications/$id") {
+    suspend fun update(id: Uuid, name: String? = null, description: String? = null): Qualification {
+        val updated = httpClient.patch("/qualifications/$id") {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name, description)))
         }.orThrow("update qualification").decode(Qualification.serializer())
 
+        patchDepartment(updated.departmentId) { department ->
+            department.copy(qualifications = department.qualifications.orEmpty().map { if (it.id == id) updated else it })
+        }
+        return updated
+    }
+
     /** Also deletes every grant of it. The server refuses while an event still requires it. */
     suspend fun delete(id: Uuid) {
         httpClient.delete("/qualifications/$id").orThrow("delete qualification")
+
+        patchDepartmentOwning(id) { department ->
+            department.copy(
+                qualifications = department.qualifications.orEmpty().filterNot { it.id == id },
+                qualificationGrants = department.qualificationGrants.orEmpty().filterNot { it.qualificationId == id },
+            )
+        }
     }
 
-    /** Who holds [qualificationId], expired grants included. Only for the department's examiners, managers and people managers. */
-    suspend fun grants(qualificationId: Uuid): List<QualificationGrant> =
-        httpClient.get("/qualifications/$qualificationId/grants")
-            .orThrow("list qualification grants")
-            .decode(ListSerializer(QualificationGrant.serializer()))
-
     /** Grants [qualificationId] to [userSub], replacing their existing grant if they already hold it. */
-    suspend fun grant(qualificationId: Uuid, userSub: String, expiresAt: Instant? = null): QualificationGrant =
-        httpClient.post("/qualifications/$qualificationId/grants") {
+    suspend fun grant(qualificationId: Uuid, userSub: String, expiresAt: Instant? = null): QualificationGrant {
+        val grant = httpClient.post("/qualifications/$qualificationId/grants") {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(GrantQualificationRequest.serializer(), GrantQualificationRequest(userSub, expiresAt)))
         }.orThrow("grant qualification").decode(QualificationGrant.serializer())
 
-    suspend fun revoke(qualificationId: Uuid, userSub: String) {
-        httpClient.delete("/qualifications/$qualificationId/grants/$userSub").orThrow("revoke qualification")
+        patchDepartmentOwning(qualificationId) { department ->
+            val withoutExisting = department.qualificationGrants.orEmpty().filterNot { it.qualificationId == qualificationId && it.userSub == userSub }
+            department.copy(qualificationGrants = withoutExisting + grant)
+        }
+        return grant
     }
 
-    /** The logged-in user's own grants, expired ones included. */
-    suspend fun myGrants(): List<QualificationGrant> =
-        httpClient.get("/profile/qualifications")
-            .orThrow("list own qualifications")
-            .decode(ListSerializer(QualificationGrant.serializer()))
+    suspend fun revoke(qualificationId: Uuid, userSub: String) {
+        httpClient.delete("/qualifications/$qualificationId/grants/$userSub").orThrow("revoke qualification")
+
+        patchDepartmentOwning(qualificationId) { department ->
+            department.copy(qualificationGrants = department.qualificationGrants.orEmpty().filterNot { it.qualificationId == qualificationId && it.userSub == userSub })
+        }
+    }
 
     /** The confirmed members of [departmentId] an examiner can grant to, optionally narrowed to names containing [query]. */
     suspend fun roster(departmentId: Uuid, query: String? = null, limit: Int? = null): List<DepartmentRosterMember> =

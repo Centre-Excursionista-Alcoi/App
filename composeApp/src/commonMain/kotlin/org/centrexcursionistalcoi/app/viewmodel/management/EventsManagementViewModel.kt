@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.viewmodel.management
 import androidx.lifecycle.ViewModel
 import com.mohamedrejeb.richeditor.model.RichTextState
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import org.centrexcursionistalcoi.app.data.Department
@@ -10,7 +11,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.database.QualificationsRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -24,15 +24,16 @@ class EventsManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
     eventsRepository: EventsRepository,
     departmentsRepository: DepartmentsRepository,
-    qualificationsRepository: QualificationsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository
 ) : ViewModel() {
     val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
 
-    /** What an event can require: its own department's qualifications. */
-    val qualifications = qualificationsRepository.qualificationsAsFlow().stateInViewModel()
+    /** What an event can require: its own department's qualifications, embedded on each synced [Department]. */
+    val qualifications = departmentsRepository.selectAllAsFlow()
+        .map { departments -> departments.flatMap { it.qualifications.orEmpty() } }
+        .stateInViewModel()
 
     fun createEvent(
         start: LocalDateTime,
