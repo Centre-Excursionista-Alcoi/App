@@ -1,6 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractNotarizationTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 import java.util.Calendar
@@ -393,6 +394,19 @@ compose.desktop {
             }
         }
     }
+}
+
+// The Compose Desktop plugin's MacOSNotarizationSettings.ascProvider throws
+// "This option is not supported by notary tool and was replaced by teamID" the moment anything reads it -- and
+// the configuration cache reads every task input to snapshot it when storing the cache, even properties this
+// project never sets (only appleID/password/teamID are configured above). That turns a config-cache *store*
+// into a hard build failure for :composeApp:notarizeDmg on every release, macOS-only, regardless of whether
+// notarization itself would have succeeded. Opting the task out of the cache avoids tripping over the bug at all.
+tasks.withType<AbstractNotarizationTask>().configureEach {
+    notCompatibleWithConfigurationCache(
+        "JetBrains Compose plugin bug: reading MacOSNotarizationSettings.ascProvider throws, and the " +
+            "configuration cache reads every task input (even unset ones) when storing its cache"
+    )
 }
 
 afterEvaluate {
