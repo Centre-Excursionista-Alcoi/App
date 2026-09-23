@@ -577,4 +577,10 @@
     <string name="login_existing_account_logout">Sortir</string>
     <string name="date_time_picker_date_tab">Data</string>
     <string name="date_time_picker_time_tab">Hora</string>
+    <string name="welcome_masc">Benvingut %1$s</string>
+    <string name="welcome_fem">Benvinguda %1$s</string>
+    <string name="welcome_neut">Benvingut %1$s</string>
+    <string name="login_title_masc">Benvingut a l'App del CEA</string>
+    <string name="login_title_fem">Benvinguda a l'App del CEA</string>
+    <string name="login_title_neut">Benvingut a l'App del CEA</string>
 </resources>
