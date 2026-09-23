@@ -81,6 +81,7 @@ kotlin {
             // Required when using NativeSQLiteDriver
             linkerOpts.add("-lsqlite3")
             export(libs.calf.ui)
+            export(libs.logging)
             export(libs.sentry.kotlinMultiplatform)
             export(libs.kmm.notifier.core)
             export(libs.kmm.notifier.firebase)
@@ -151,7 +152,7 @@ kotlin {
             implementation(libs.kmm.settings.serialization)
 
             // Logging
-            implementation(libs.logging)
+            api(libs.logging)
 
             implementation(libs.kotlinx.serializationJson)
 
