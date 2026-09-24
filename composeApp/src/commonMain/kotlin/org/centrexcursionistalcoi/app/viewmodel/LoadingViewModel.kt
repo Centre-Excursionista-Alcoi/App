@@ -81,6 +81,21 @@ class LoadingViewModel(
 
                 progress.value = null
                 withContext(dispatcherProvider.main) { onLoggedIn() }
+            } else if (authBackend.tryAutoRelogin()) {
+                // No local profile, but a saved account was still recovered (e.g. Android "clear app data"
+                // wipes Room/settings/the session cookie, but not the OS-level AccountManager entry -- see
+                // CredentialsStore). Re-authenticating alone doesn't repopulate Room, so force a full resync
+                // (which syncs the profile first, see SyncAllDataBackgroundJob) before re-checking, instead of
+                // treating this as a real logout and showing the "you already have an account saved" warning
+                // on the Login screen for what is, from the user's perspective, still the same logged-in account.
+                log.d { "No local profile, but automatic re-login succeeded -- forcing a full resync..." }
+                backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
+                    name = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                    input = mapOf(SyncAllDataBackgroundJob.EXTRA_FORCE_SYNC to "true"),
+                    requiresInternet = true,
+                    uniqueName = SyncAllDataBackgroundJob.UNIQUE_NAME,
+                ).copyToProgress(progressNotifier, dispatcherProvider.io).await()
+                load(onLoggedIn, onNotLoggedIn)
             } else {
                 handleNotLoggedIn(onNotLoggedIn)
             }
