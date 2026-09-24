@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
@@ -24,14 +25,17 @@ actual class CredentialsStore(
     private val log = logging()
 
     actual val current: StateFlow<SavedCredentials?>
-        field = MutableStateFlow(readCurrent())
+        field = MutableStateFlow(null)
 
     init {
+        // TODO: At some point we should not rely on AccountManager for storing whether the user is not logged in or not
+        // The ideal thing would be to store the account somehow internally in our database (+CredentialManager), and then use that to determine if the user is logged in or not
+
         // minSdk 24 doesn't have the account-type-filtered overload (API 26+), so this fires for any account
         // type change; readCurrent() re-checking ACCOUNT_TYPE specifically on every call is cheap enough that
         // filtering here isn't worth the version-gated code.
         accountManager.addOnAccountsUpdatedListener(
-            { current.value = readCurrent() },
+            { current.value = runBlocking { readCurrent() } },
             null,
             false,
         )
@@ -58,7 +62,7 @@ actual class CredentialsStore(
             } catch (e: IllegalStateException) {
                 // E2EE is not available and the credential cannot be created without cloud backup
                 // This is not a fatal error, this feature will just be missing for this user. Log it and continue.
-                log.error("Failed to create credential in Credential Manager", e)
+                log.error(e) { "Failed to create credential in Credential Manager" }
             } finally {
                 credentialFetchLock.unlock()
             }
