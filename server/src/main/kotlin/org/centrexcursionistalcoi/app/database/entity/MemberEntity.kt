@@ -30,7 +30,7 @@ class MemberEntity(id: EntityID<UInt>) : UIntEntity(id) {
     fun insertUser(hashedPassword: ByteArray) = Database {
         val sub = generateRandomString(16)
         UserReferenceEntity.new(sub) {
-            this.memberNumber = this@MemberEntity.memberNumber.toUInt()
+            this.memberNumber = this@MemberEntity.memberNumber
 
             this.nif = this@MemberEntity.nif!!
             this.fullName = this@MemberEntity.fullName

@@ -25,11 +25,15 @@ import org.centrexcursionistalcoi.app.notifications.Push.disable
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.annotations.VisibleForTesting
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.select
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 
 object Push {
     private val logger = LoggerFactory.getLogger(Push::class.java)

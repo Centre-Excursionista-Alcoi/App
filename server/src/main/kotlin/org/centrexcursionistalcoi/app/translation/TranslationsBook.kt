@@ -1,18 +1,18 @@
 package org.centrexcursionistalcoi.app.translation
 
-import java.util.Locale
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import nl.adaptivity.xmlutil.core.KtXmlReader
 import nl.adaptivity.xmlutil.serialization.XML
 import nl.adaptivity.xmlutil.serialization.XmlValue
+import java.util.Locale
 
 @ExperimentalXmlUtilApi
 class TranslationsBook(
     private val namespace: String,
     private val name: String,
-    private val format: XML.Companion = XML
+    private val format: XML.XmlCompanion<*> = XML.v1
 ) {
     @Serializable
     class Translation(val name: String, @XmlValue val value: String) {

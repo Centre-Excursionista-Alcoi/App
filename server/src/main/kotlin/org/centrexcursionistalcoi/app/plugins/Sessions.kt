@@ -10,7 +10,6 @@ import io.ktor.server.sessions.Sessions
 import io.ktor.server.sessions.cookie
 import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
-import io.ktor.util.hex
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.ConfigProvider
@@ -21,8 +20,8 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-private val secretEncryptKey by lazy { hex(SessionsKeys.secretEncryptKey ?: "00112233445566778899aabbccddeeff") }
-private val secretSignKey by lazy { hex(SessionsKeys.secretSignKey ?: "6819b57a326945c1968f45236589") }
+private val secretEncryptKey by lazy { (SessionsKeys.secretEncryptKey ?: "00112233445566778899aabbccddeeff").hexToByteArray() }
+private val secretSignKey by lazy { (SessionsKeys.secretSignKey ?: "6819b57a326945c1968f45236589").hexToByteArray() }
 
 object SessionsKeys : ConfigProvider() {
     val secretEncryptKey get() = getenv("SECRET_ENCRYPT_KEY")

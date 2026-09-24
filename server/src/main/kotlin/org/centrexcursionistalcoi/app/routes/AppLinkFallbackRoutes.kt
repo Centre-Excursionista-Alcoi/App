@@ -11,10 +11,13 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import java.net.URLEncoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
+import java.net.URLEncoder
 
 /** [AppLinks.baseUrl]'s own host, with no scheme -- the only host the app claims links on. */
 private val appLinksHost: String by lazy { AppLinks.baseUrl.substringAfter("://") }
@@ -34,13 +37,14 @@ private fun ApplicationCall.isAppLinksHost() = request.host() == appLinksHost
  * On mobile, sent straight into opening the app (Android) or the store, with no intermediate page. Anything else
  * gets a brief page linking to both stores (see [WebTemplate.GetApp]).
  */
+@OptIn(ExperimentalXmlUtilApi::class)
 private suspend fun ApplicationCall.respondAppLinkFallback() {
     val userAgent = request.userAgent().orEmpty()
     when {
         userAgent.contains("Android", ignoreCase = true) -> {
             // Relaunches this same request through Chrome's "intent://" scheme: it opens the app directly if
             // it's installed, or follows the fallback straight to the Play Store if not -- one redirect, no page.
-            val fallback = URLEncoder.encode(AppLinks.playStoreUrl, "UTF-8")
+            val fallback = withContext(Dispatchers.IO) { URLEncoder.encode(AppLinks.playStoreUrl, "UTF-8") }
             val launchUrl = "intent://$appLinksHost${request.uri}#Intent;scheme=https;" +
                 "package=${AppLinks.ANDROID_PACKAGE_NAME};S.browser_fallback_url=$fallback;end"
             respondRedirect(launchUrl, permanent = false)
