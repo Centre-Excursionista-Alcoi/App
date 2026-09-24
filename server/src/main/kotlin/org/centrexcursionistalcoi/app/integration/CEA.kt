@@ -163,7 +163,7 @@ object CEA : PeriodicWorker(period = 1.days) {
 
         logger.debug("Disabling all already existing members not in the current members list...")
         val disabledMemberIds = Database {
-            MemberEntity.find { Members.status neq SharedMember.Status.ACTIVE }.map { it.id.value.toUInt() }
+            MemberEntity.find { Members.status neq SharedMember.Status.ACTIVE }.map { it.id.value }
         }
         Database {
             UserReferenceEntity.find { UserReferences.memberNumber inList disabledMemberIds }.forEach { ref ->
@@ -181,11 +181,6 @@ object CEA : PeriodicWorker(period = 1.days) {
         }
 
         logger.info("Synchronization complete.")
-    }
-
-    private fun generateNonce(length: Int = 10): String {
-        val charset = ('a'..'f') + ('0'..'9')
-        return List(length) { charset.random() }.joinToString("")
     }
 
     /**
