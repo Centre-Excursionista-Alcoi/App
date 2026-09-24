@@ -107,7 +107,7 @@ object Push {
 
         val message = MulticastMessage.builder()
             .putAllData(data)
-            .addAllFids(tokens)
+            .addAllTokens(tokens)
             // The app has no "notification" payload, only "data" -- iOS needs content-available=1 to
             // wake the app while backgrounded and let PushNotifierListener build the local notification.
             // Note: iOS never delivers this to an app the user has force-quit.
