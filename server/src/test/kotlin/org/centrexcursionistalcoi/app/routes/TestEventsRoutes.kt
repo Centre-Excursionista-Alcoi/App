@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
@@ -21,6 +22,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
@@ -260,5 +262,56 @@ class TestEventsRoutes : ApplicationTestBase() {
         client.get("/events/${event.id.value}") {
             headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Instant.now().atZone(ZoneOffset.UTC)))
         }.assertStatusCode(HttpStatusCode.NotFound)
+    }
+
+    // deleteReferencesCheck previously compared Events.department against the event's own id (copy-pasted from a
+    // department-scoped check and never adapted -- see PostsRoutes.kt's identical pattern), which could never
+    // match, so it always let the delete through regardless of real attendees, hitting a raw ExposedSQLException
+    // (fk_event_members_event_id__id) instead of a clean EntityDeleteReferencesExist response.
+    @Test
+    fun test_delete_event_withConfirmedAttendee_respondsWithReferencesExist() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            FakeUser.provideEntity()
+            val event = EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Event with an attendee"
+                place = "Somewhere"
+            }
+            EventMembers.insert {
+                it[this.event] = event.id
+                it[this.userReference] = FakeUser.SUB
+            }
+            event
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.delete("/events/${event.id.value}").apply {
+            assertError(Error.EntityDeleteReferencesExist())
+        }
+
+        // The event must survive the rejected deletion.
+        val remaining = Database { EventEntity.findById(event.id) }
+        assertNotNull(remaining, "Event should not have been deleted while an attendee reference exists")
+    }
+
+    @Test
+    fun test_delete_event_withoutAttendees_succeeds() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            EventEntity.new {
+                start = Instant.now().plusSeconds(3600)
+                title = "Event with no attendees"
+                place = "Somewhere"
+            }
+        },
+    ) { context ->
+        val event = context.dibResult!!
+
+        client.delete("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NoContent)
+
+        val remaining = Database { EventEntity.findById(event.id) }
+        assertEquals(null, remaining, "Event should have been deleted")
     }
 }

@@ -163,9 +163,12 @@ fun Route.eventsRoutes() {
             event.delete()
             image?.delete()
         },
-        deleteReferencesCheck = { department ->
-            // departments are referenced in events, make sure no events reference the department before deleting
-            EventEntity.find { Events.department eq department.id }.empty()
+        deleteReferencesCheck = { event ->
+            // Confirmed attendees (event_members) have a FK to this event -- deleting it with any left would hit a
+            // raw ExposedSQLException from Postgres (fk_event_members_event_id__id) instead of a clean error. This
+            // previously compared Events.department against event.id (copy-pasted from a department-scoped check
+            // and never adapted), which could never match, so it always passed regardless of real attendees.
+            EventMembers.selectAll().where { EventMembers.event eq event.id.value }.empty()
         },
         updater = UpdateEventRequest.serializer(),
         createRequestSerializer = CreateEventRequest.serializer(),
@@ -315,20 +318,23 @@ fun Route.eventsRoutes() {
             }
         }
 
-        Database {
+        // event.department is a lazy Exposed reference -- read it here, inside the transaction, and capture just
+        // the id. Push.launch runs on its own detached CoroutineScope(Dispatchers.IO), with no active transaction,
+        // so reading event.department directly inside that block throws "Can't init value outside the transaction".
+        val departmentId = Database {
             EventMembers.insert {
                 it[this.event] = eventId
                 it[this.userReference] = session.sub
             }
+            event.department?.id?.value
         }
         event.updated()
 
         Push.launch {
-            val department = event.department
-            if (department != null) {
+            if (departmentId != null) {
                 Push.sendPushNotificationToDepartment(
                     event.assistanceConfirmedNotification(session),
-                    department.id.value,
+                    departmentId,
                 )
             } else {
                 Push.sendPushNotificationToAll(
@@ -358,17 +364,20 @@ fun Route.eventsRoutes() {
         session.getReference() ?: return@postWithLock call.respondError(Error.UserReferenceNotFound())
 
         // Remove the user from the event members if they were confirmed
-        Database {
+        // event.department is a lazy Exposed reference -- read it here, inside the transaction, and capture just
+        // the id. Push.launch runs on its own detached CoroutineScope(Dispatchers.IO), with no active transaction,
+        // so reading event.department directly inside that block throws "Can't init value outside the transaction".
+        val departmentId = Database {
             EventMembers.deleteWhere { (EventMembers.event eq eventId) and (EventMembers.userReference eq session.sub) }
+            event.department?.id?.value
         }
         event.updated()
 
         Push.launch {
-            val department = event.department
-            if (department != null) {
+            if (departmentId != null) {
                 Push.sendPushNotificationToDepartment(
                     event.assistanceRejectedNotification(session),
-                    department.id.value,
+                    departmentId,
                 )
             } else {
                 Push.sendPushNotificationToAll(
