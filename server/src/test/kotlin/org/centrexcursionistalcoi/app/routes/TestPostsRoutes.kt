@@ -1,16 +1,26 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
+import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 
 /**
  * Regression coverage for GET /posts/{id}: it previously fetched the entity directly with no check at all,
@@ -89,5 +99,44 @@ class TestPostsRoutes : ApplicationTestBase() {
         val post = context.dibResult!!
 
         client.get("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.OK)
+    }
+
+    // deleteReferencesCheck previously compared Posts.department against the post's own id (copy-pasted from a
+    // department-scoped check and never adapted -- see EventsRoutes.kt's identical pattern, where it was
+    // actually load-bearing), which could never match. It's been removed entirely: PostFiles.post has
+    // onDelete = ReferenceOption.CASCADE, so the DB already drops the join row cleanly with no check needed.
+    // This test guards that a post with an attached file still deletes cleanly (no raw FK exception) and its
+    // PostFiles join row is gone afterward.
+    @Test
+    fun test_delete_post_withAttachedFile_succeedsAndCascadesJoinRow() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = {
+            val file = FileEntity.new {
+                name = "square.png"
+                contentType = ContentType.Image.PNG
+                bytes = ResourcesUtils.bytesFromResource("/square.png")
+            }
+            val post = PostEntity.new {
+                title = "Post with a file"
+                content = "Has an attached file"
+            }
+            PostFiles.insert {
+                it[this.post] = post.id
+                it[this.file] = file.id
+            }
+            post
+        },
+    ) { context ->
+        val post = context.dibResult!!
+
+        client.delete("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.NoContent)
+
+        val remainingPost = Database { PostEntity.findById(post.id) }
+        assertNull(remainingPost, "Post should have been deleted")
+
+        val remainingJoinRows = Database {
+            PostFiles.selectAll().where { PostFiles.post eq post.id.value }.count()
+        }
+        assertEquals(0, remainingJoinRows, "PostFiles join row should have cascaded away with the post")
     }
 }

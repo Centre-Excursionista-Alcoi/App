@@ -10,7 +10,6 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.PostFiles
-import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreatePostRequest
@@ -18,7 +17,6 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.util.*
 import kotlin.uuid.toJavaUuid
@@ -113,10 +111,14 @@ fun Route.postsRoutes() {
             post.delete()
             files.forEach { it.delete() }
         },
-        deleteReferencesCheck = { department ->
-            // departments are referenced in posts, make sure no posts reference the department before deleting
-            PostEntity.find { Posts.department eq department.id }.empty()
-        },
+        // No deleteReferencesCheck needed: PostFiles is the only table referencing Posts, and
+        // PostFiles.post has onDelete = ReferenceOption.CASCADE (see PostFiles.kt), so the DB already
+        // drops those join rows cleanly on delete -- there's no FK that could throw a raw
+        // ExposedSQLException here. This previously compared Posts.department against the post's own id
+        // (copy-pasted from a department-scoped check and never adapted -- see EventsRoutes.kt's
+        // identical, but actually load-bearing, pattern), which could never match, so it always evaluated
+        // to "no references exist" anyway -- removing it changes nothing observable, just the dead/wrong
+        // logic behind it.
         updater = UpdatePostRequest.serializer(),
         createRequestSerializer = CreatePostRequest.serializer(),
         jsonCreator = { request ->
