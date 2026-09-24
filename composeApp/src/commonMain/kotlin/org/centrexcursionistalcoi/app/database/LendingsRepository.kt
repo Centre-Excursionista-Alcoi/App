@@ -12,7 +12,9 @@ import org.centrexcursionistalcoi.app.database.dao.ReceivedItemDao
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingItemEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity.Companion.toEntity
+import org.centrexcursionistalcoi.app.database.relation.LendingWithRelations
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
+import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
 
@@ -23,6 +25,23 @@ class LendingsRepository(
 ) : Repository<ReferencedLending, Uuid> {
     private val dao = db.lendingDao()
     private val log = logging()
+
+    /**
+     * [LendingWithRelations.toReferenced] throws [MissingCrossReferenceException] when the borrower (or its
+     * embedded memory's submitter) isn't resolvable locally yet -- expected for
+     * [DatabaseIntegrityVerifier][org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier], which relies
+     * on the throw to detect and repair it, but fatal (crashes the whole collecting Flow -- confirmed via an
+     * iOS crash report, uncaught inside a live Room Flow's `.map`) for every read below, which observe rows the
+     * moment a background sync inserts them, before the integrity verifier's next pass gets a chance to
+     * backfill a placeholder user for them. Skipping the row here is safe: it reappears once the reference
+     * resolves, either through that repair or a later sync.
+     */
+    private fun LendingWithRelations.toReferencedOrNull(): ReferencedLending? = try {
+        toReferenced()
+    } catch (e: MissingCrossReferenceException) {
+        log.w(e) { "Skipping lending ${lending.id}: missing cross-reference." }
+        null
+    }
 
     /**
      * Inserts [receivedItem], tolerating a foreign key violation (e.g. `item`/`receivedBy` not present locally --
@@ -42,15 +61,15 @@ class LendingsRepository(
         }
     }
 
-    override suspend fun get(id: Uuid): ReferencedLending? = dao.get(id)?.toReferenced()
+    override suspend fun get(id: Uuid): ReferencedLending? = dao.get(id)?.toReferencedOrNull()
 
-    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedLending> = dao.getByIdList(ids).map { it.toReferenced() }
+    override suspend fun getByIdList(ids: List<Uuid>): List<ReferencedLending> = dao.getByIdList(ids).mapNotNull { it.toReferencedOrNull() }
 
-    override fun getAsFlow(id: Uuid): Flow<ReferencedLending?> = dao.getAsFlow(id).map { it?.toReferenced() }
+    override fun getAsFlow(id: Uuid): Flow<ReferencedLending?> = dao.getAsFlow(id).map { it?.toReferencedOrNull() }
 
-    override fun selectAllAsFlow(): Flow<List<ReferencedLending>> = dao.selectAllAsFlow().map { list -> list.map { it.toReferenced() } }
+    override fun selectAllAsFlow(): Flow<List<ReferencedLending>> = dao.selectAllAsFlow().map { list -> list.mapNotNull { it.toReferencedOrNull() } }
 
-    override suspend fun selectAll(): List<ReferencedLending> = dao.selectAll().map { it.toReferenced() }
+    override suspend fun selectAll(): List<ReferencedLending> = dao.selectAll().mapNotNull { it.toReferencedOrNull() }
 
     override suspend fun insert(item: ReferencedLending) {
         dao.insert(item.dereference().toEntity())
