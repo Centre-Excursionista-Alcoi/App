@@ -591,4 +591,9 @@
     <string name="event_qualifications_none_in_department">Esta sección aún no tiene calificaciones</string>
     <string name="event_requires_confirmation_forced">Siempre activo cuando el evento requiere calificaciones</string>
     <string name="event_assistance_closed">Este evento ya ha empezado, así que tu asistencia no puede ser modificada</string>
+    <string name="settings_gender_title">Género Gramatical</string>
+    <string name="settings_gender_summary">Selecciona el género gramatical con el cual quieres que nos dirijamos a ti dentro de la app.</string>
+    <string name="settings_gender_masculine">Masculino</string>
+    <string name="settings_gender_feminine">Femenino</string>
+    <string name="settings_gender_neutral">Neutro</string>
 </resources>
