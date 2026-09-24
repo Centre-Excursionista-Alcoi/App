@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.security
 
 import kotlinx.serialization.Serializable
-import org.centrexcursionistalcoi.app.plugins.UserSession
 
 @Serializable
 data class FileReadWriteRules(

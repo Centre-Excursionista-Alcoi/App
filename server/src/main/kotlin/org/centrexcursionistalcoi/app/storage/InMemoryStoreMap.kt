@@ -1,5 +1,9 @@
 package org.centrexcursionistalcoi.app.storage
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryStoreMap : StoreMap {
@@ -8,6 +12,16 @@ class InMemoryStoreMap : StoreMap {
 
     override suspend fun put(key: String, value: String) {
         map[key] = value
+    }
+
+    override suspend fun put(key: String, value: String, expirationSeconds: Long) {
+        map[key] = value
+        // Best-effort expiration to mirror RedisStoreMap's TTL -- no expiration if the process dies first, which
+        // is fine here: this backend only exists as a fallback for local/dev use without Redis configured.
+        CoroutineScope(Dispatchers.Default).launch {
+            delay(expirationSeconds * 1000)
+            map.remove(key, value)
+        }
     }
 
     override suspend fun get(key: String): String? {

@@ -12,9 +12,9 @@ import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq

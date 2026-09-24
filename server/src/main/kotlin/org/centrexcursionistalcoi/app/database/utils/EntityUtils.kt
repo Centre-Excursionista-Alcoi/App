@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.centrexcursionistalcoi.app.data.JsonSerializable
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
 import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer

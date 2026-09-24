@@ -28,11 +28,11 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.plugins.UserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
 import org.centrexcursionistalcoi.app.request.UpdateQualificationRequest
+import org.centrexcursionistalcoi.app.security.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
 import org.jetbrains.exposed.v1.core.ResultRow

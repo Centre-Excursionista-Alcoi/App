@@ -22,8 +22,8 @@ import org.centrexcursionistalcoi.app.database.op.ValueInStringArrayOp
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.notifications.Push.disable
-import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.push.PushNotification
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and

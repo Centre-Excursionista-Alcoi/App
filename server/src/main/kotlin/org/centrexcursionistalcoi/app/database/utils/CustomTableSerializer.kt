@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.utils
 
 import kotlinx.serialization.SerializationStrategy
-import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 

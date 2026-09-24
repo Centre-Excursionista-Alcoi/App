@@ -15,8 +15,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.toJavaDuration
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.Member
@@ -49,13 +47,15 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.routes.WebTemplate
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.security.webAuthnRoutes
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.utils.generateRandomString
 import org.jetbrains.exposed.v1.core.eq
@@ -65,6 +65,8 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaDuration
 
 /**
  * The duration after which a password recovery request expires.
@@ -128,6 +130,8 @@ private suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: 
 
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
+    webAuthnRoutes()
+
     post("/login") {
         getUserSession()?.let {
             return@post call.respond(HttpStatusCode.OK)

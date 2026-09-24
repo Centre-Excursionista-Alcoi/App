@@ -1,13 +1,14 @@
 package org.centrexcursionistalcoi.app.storage
 
 import io.ktor.client.plugins.cookies.CookiesStorage
-import java.io.Closeable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import java.io.Closeable
 
 interface StoreMap: Closeable {
     suspend fun keys(): Set<String>
     suspend fun put(key: String, value: String)
+    suspend fun put(key: String, value: String, expirationSeconds: Long)
     suspend fun get(key: String): String?
     suspend fun remove(key: String): String?
 

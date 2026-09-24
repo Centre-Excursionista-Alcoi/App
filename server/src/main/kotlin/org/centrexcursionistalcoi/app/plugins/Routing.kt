@@ -14,7 +14,6 @@ import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
@@ -29,6 +28,8 @@ import org.centrexcursionistalcoi.app.routes.robotsRoute
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
+import org.centrexcursionistalcoi.app.security.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.version
 import org.centrexcursionistalcoi.app.versionCode

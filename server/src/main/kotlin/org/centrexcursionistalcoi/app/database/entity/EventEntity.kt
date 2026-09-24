@@ -1,34 +1,28 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.Duration
-import java.time.Instant
-import java.util.UUID
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
+import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.forSession
+import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.notOverAt
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.Events
-import org.centrexcursionistalcoi.app.now
-import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.routes.PatchRejectedException
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.centrexcursionistalcoi.app.security.InvalidQualificationRequirementsException
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
-import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.or
@@ -40,6 +34,14 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 
 class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UUIDEntityClass<EventEntity>(Events) {

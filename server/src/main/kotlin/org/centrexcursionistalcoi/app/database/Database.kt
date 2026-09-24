@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.database.table.UserReferences
@@ -55,6 +56,7 @@ object Database {
         Departments,
         Members,
         UserReferences,
+        UserCredentialRecords,
         Posts,
         PostFiles,
         LendingUsers,
