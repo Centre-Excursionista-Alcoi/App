@@ -14,9 +14,13 @@ import androidx.credentials.exceptions.restorecredential.E2eeUnavailableExceptio
 import com.diamondedge.logging.logging
 import io.ktor.client.call.body
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
+import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.webauthn.AuthenticationOptionsResponse
 import org.centrexcursionistalcoi.app.data.webauthn.CreationOptionsResponse
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.koin.core.annotation.Singleton
 
@@ -97,9 +101,17 @@ class CredentialManagerRepository(private val context: Context) {
         val getResponse = credentialManager.getCredential(context, getRequest)
 
         val credential = getResponse.credential as RestoreCredential
-        // TODO: send the credential to the server for verification and login
+
+        // send the credential to the server for verification and login
         // then the cookie will be set and the user will be logged in.
         // The only counter-side to this approach is that AccountManager will no longer have the password for re-authentication.
+        val authRequest = RestoreKeyVerificationRequest(credential.authenticationResponseJson)
+        val authResponse = httpClient.post("/verify-restore-key") {
+            setBody(authRequest)
+        }
+        if (!authResponse.status.isSuccess()) {
+            throw ServerException.fromResponse(authResponse)
+        }
     }
 
     suspend fun clear() {

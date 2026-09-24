@@ -90,6 +90,7 @@ actual class CredentialsStore(
                 credentialManagerRepository.recover()
             }
             // if there are no errors, it means re-authentication was successful
+            // note that Android no longer has a password for the account, so we can't return a SavedCredentials object here
             throw AuthenticationAlreadyHandledByCredentialManagerException()
         }
         val password = accountManager.getPassword(account) ?: return null
