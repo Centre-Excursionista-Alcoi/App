@@ -80,15 +80,6 @@ class DatabaseIntegrityVerifier(
      * Tries to recover from a missing "User" cross-reference by fetching [sub] from the server and inserting it
      * locally.
      *
-     * `GET /users/{sub}` returning `null` here is a confirmed 404 (RemoteRepository.getUrl throws instead of
-     * returning null for any other failure), never a transient error. For a non-admin, that 404 usually means
-     * [sub] is simply outside their `/users` visibility (see AGENTS.md's `/users` RBAC rule) -- e.g. a Memory
-     * submitted by, or a Lending borrowed by, someone in a department they don't manage. That's permanent, not a
-     * data inconsistency: a full wipe-and-resync would resync the exact same Memory/Lending referencing the exact
-     * same invisible user and hit this again, looping forever (previously surfacing as "Failed to sync data after
-     * clearing database: FAILED" -- see DatabaseIntegrityVerifier's crash reports). Insert a local placeholder row
-     * instead, so the cross-reference resolves from now on. For an admin (who can see every user), a 404 here
-     * really is a data inconsistency -- keep resyncing in that case.
      * @return `true` if the database was wiped and fully resynced -- the caller should stop iterating its now-stale
      * list -- or `false` if the missing user was found (or stubbed) and inserted, so it's safe to keep going.
      */
