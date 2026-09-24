@@ -8,6 +8,7 @@ import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
+import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
@@ -69,9 +70,17 @@ class AuthBackend(
             login(saved.email, saved.password.concatToString())
             log.d { "Automatic re-login succeeded." }
             true
-        } catch (e: Exception) {
-            log.w(e) { "Automatic re-login failed." }
+        } catch (e: ServerException) {
+            // The server was reached and rejected these credentials (wrong password, account deleted, ...) --
+            // they're genuinely stale, safe to forget.
+            log.w(e) { "Automatic re-login rejected by the server; forgetting the saved account." }
             credentialsStore.clear()
+            false
+        } catch (e: Exception) {
+            // Anything else (no connectivity, a timeout, ...) says nothing about whether the saved credentials
+            // are still valid -- keep them so the next attempt (or a manual login) can still use them, instead
+            // of silently discarding a perfectly recoverable account over a transient network hiccup.
+            log.w(e) { "Automatic re-login failed (not a credentials rejection); keeping the saved account." }
             false
         }
     }
