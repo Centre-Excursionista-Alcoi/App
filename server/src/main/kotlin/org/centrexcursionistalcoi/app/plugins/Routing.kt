@@ -25,6 +25,7 @@ import org.centrexcursionistalcoi.app.routes.postsRoutes
 import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.qualificationsRoutes
 import org.centrexcursionistalcoi.app.routes.respondAppLinkFallbackOr
+import org.centrexcursionistalcoi.app.routes.robotsRoute
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
@@ -96,6 +97,7 @@ fun Application.configureRouting() {
             webDavRoutes()
         }
 
+        robotsRoute()
         route(".well-known") {
             wellKnownRoutes()
         }
