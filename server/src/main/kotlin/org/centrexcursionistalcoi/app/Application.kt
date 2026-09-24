@@ -5,8 +5,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.sentry.ProfileLifecycle
 import io.sentry.Sentry
-import java.time.Instant
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
@@ -14,17 +12,19 @@ import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.SessionsKeys
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureForwardedHeaders
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
-import org.centrexcursionistalcoi.app.plugins.configureSessions
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.SessionsKeys
+import org.centrexcursionistalcoi.app.security.configureAuthentication
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
 
 private val logger = LoggerFactory.getLogger("Application")
 
@@ -127,5 +127,5 @@ fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = fals
     configureSSE()
     configureRouting()
     configureStatusPages()
-    configureSessions(isTesting, isDevelopment)
+    configureAuthentication(isTesting, isDevelopment)
 }

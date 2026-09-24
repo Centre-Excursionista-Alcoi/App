@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app
 
+import org.centrexcursionistalcoi.app.AppLinks.baseUrl
 import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
 import java.util.UUID
 
@@ -18,6 +19,13 @@ object AppLinks : ConfigProvider() {
 
     /** The address app links are on, with no trailing slash. */
     val baseUrl: String get() = (getenv("APP_LINKS_BASE_URL") ?: DEFAULT_BASE_URL).trimEnd('/')
+
+    /**
+     * [baseUrl]'s own host, with no scheme -- the domain this app is associated with (see `.well-known/assetlinks.json`
+     * in `WellKnownRoutes.kt`), used wherever a bare domain is needed rather than a full URL: app-link fallback
+     * routing, and as the WebAuthn relying party ID (which must be a real domain, never the Android package name).
+     */
+    val host: String get() = baseUrl.substringAfter("://")
 
     /** Where an Android visitor without the app ends up (see `respondAppLinkFallback`). */
     val playStoreUrl: String get() = "https://play.google.com/store/apps/details?id=$ANDROID_PACKAGE_NAME"

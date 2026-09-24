@@ -111,8 +111,11 @@ dependencies {
     // Encryption
     implementation(libs.bcrypt)
 
+    // WebAuthn
+    implementation(libs.webauthn4j.core)
+
     // Redis
-    implementation(libs.kreds)
+    implementation(libs.jedis)
 
     // XML Parsing
     implementation(libs.ksoup.core)

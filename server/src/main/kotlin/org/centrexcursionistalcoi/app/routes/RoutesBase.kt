@@ -14,9 +14,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
-import java.util.UUID
-import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -30,13 +27,13 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.plugins.UserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
+import org.centrexcursionistalcoi.app.security.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.assertDepartmentRole
 import org.centrexcursionistalcoi.app.security.hasAnyDepartmentRole
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
@@ -45,6 +42,9 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.slf4j.LoggerFactory
+import java.util.UUID
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 private val logger = LoggerFactory.getLogger("RoutesBase")

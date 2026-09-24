@@ -7,9 +7,10 @@ import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
-import java.util.UUID
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 private val logger = LoggerFactory.getLogger("SSE")
 

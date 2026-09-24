@@ -21,7 +21,7 @@ import org.centrexcursionistalcoi.app.utils.escapeHtml
 import java.net.URLEncoder
 
 /** [AppLinks.baseUrl]'s own host, with no scheme -- the only host the app claims links on. */
-private val appLinksHost: String by lazy { AppLinks.baseUrl.substringAfter("://") }
+private val appLinksHost: String get() = AppLinks.host
 
 /**
  * Whether this request is for the domain app links are on. The fallback below only applies there; any other

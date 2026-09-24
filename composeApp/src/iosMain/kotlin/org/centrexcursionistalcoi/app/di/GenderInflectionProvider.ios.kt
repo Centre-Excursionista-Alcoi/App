@@ -5,9 +5,14 @@ import kotlinx.cinterop.useContents
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.annotation.Singleton
+import platform.Foundation.NSGrammaticalGenderFeminine
+import platform.Foundation.NSGrammaticalGenderMasculine
+import platform.Foundation.NSGrammaticalGenderNeuter
+import platform.Foundation.NSMorphology
 import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSTermOfAddress
 import platform.Foundation.NSUserDefaults
+import platform.Foundation.userMorphology
 
 @Singleton
 class IosGenderInflectionProvider : GenderInflectionProvider {
@@ -32,7 +37,7 @@ class IosGenderInflectionProvider : GenderInflectionProvider {
 
     @OptIn(ExperimentalForeignApi::class)
     override fun getGenderInflection(): GenderInflection? {
-        // 1. Check if the user set an app-specific override
+        // Check if the user set an app-specific override
         val override = defaults.stringForKey(prefKey)
         when (override) {
             "masculine" -> return GenderInflection.Masculine
@@ -40,10 +45,11 @@ class IosGenderInflectionProvider : GenderInflectionProvider {
             "neutral" -> return GenderInflection.Neutral
         }
 
-        // 2. Fall back to the iOS 17+ system-wide Term of Address
+        // Otherwise, use the system-level grammatical gender if available
         val majorVersion = NSProcessInfo.processInfo.operatingSystemVersion.useContents { majorVersion }
 
-        if (majorVersion >= 17L) {
+        // iOS 18+: Use the newer NSTermOfAddress API
+        if (majorVersion >= 18L) {
             val systemTerm = NSTermOfAddress.currentUser()
 
             // Objective-C equality translates cleanly to Kotlin `when` checks
@@ -51,6 +57,18 @@ class IosGenderInflectionProvider : GenderInflectionProvider {
                 NSTermOfAddress.masculine() -> GenderInflection.Masculine
                 NSTermOfAddress.feminine() -> GenderInflection.Feminine
                 NSTermOfAddress.neutral() -> GenderInflection.Neutral
+                else -> null
+            }
+        }
+
+        // iOS 15–17: Fall back to the older NSMorphology API
+        if (majorVersion >= 15L) {
+            val morphology = NSMorphology.userMorphology
+
+            return when (morphology.grammaticalGender) {
+                NSGrammaticalGenderMasculine -> GenderInflection.Masculine
+                NSGrammaticalGenderFeminine -> GenderInflection.Feminine
+                NSGrammaticalGenderNeuter -> GenderInflection.Neutral
                 else -> null
             }
         }
