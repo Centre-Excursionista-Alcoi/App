@@ -607,4 +607,9 @@
     <string name="event_qualifications_none_in_department">Aquesta secció encara no té qualificacions</string>
     <string name="event_requires_confirmation_forced">Sempre activat quan l'esdeveniment requereix qualificacions</string>
     <string name="event_assistance_closed">Aquest esdeveniment ja ha començat, així que no pots canviar la teva assistència</string>
+    <string name="settings_gender_title">Gènere Gramatical</string>
+    <string name="settings_gender_summary">Selecciona el gènere gramatical amb el qual vols que ens adrecem a tu dins de l'app.</string>
+    <string name="settings_gender_masculine">Masculí</string>
+    <string name="settings_gender_feminine">Femení</string>
+    <string name="settings_gender_neutral">Neutre</string>
 </resources>
