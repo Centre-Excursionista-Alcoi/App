@@ -10,7 +10,7 @@ import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.ViaLink
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
-import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.lessEq

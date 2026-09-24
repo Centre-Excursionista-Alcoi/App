@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.security
 
 import io.ktor.server.routing.RoutingContext
-import java.util.UUID
 import org.centrexcursionistalcoi.app.MEMBERS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.USERS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -10,9 +9,10 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
-import org.centrexcursionistalcoi.app.plugins.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import java.util.UUID
 
 /**
  * `true` if this session is a global admin, or holds a confirmed [DepartmentMembers] row for [departmentId] whose
