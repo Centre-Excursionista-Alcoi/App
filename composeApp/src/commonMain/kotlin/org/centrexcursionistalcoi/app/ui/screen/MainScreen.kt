@@ -576,7 +576,8 @@ private fun MainScreenContent(
                     ) {
                         HorizontalPager(
                             state = pager,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            userScrollEnabled = false
                         ) { pageIdx -> Content(pageIdx) }
                     }
                 }
