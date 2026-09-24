@@ -33,7 +33,7 @@ class SavedCredentials(val email: String, val password: CharArray) {
 @Singleton
 expect class CredentialsStore {
     val current: StateFlow<SavedCredentials?>
-    fun save(email: String, password: String)
-    fun get(): SavedCredentials?
-    fun clear()
+    suspend fun save(email: String, password: String)
+    suspend fun get(): SavedCredentials?
+    suspend fun clear()
 }

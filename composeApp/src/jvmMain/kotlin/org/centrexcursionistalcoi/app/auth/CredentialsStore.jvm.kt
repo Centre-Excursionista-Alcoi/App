@@ -10,7 +10,7 @@ actual class CredentialsStore {
     actual val current: StateFlow<SavedCredentials?>
         field = MutableStateFlow(null)
 
-    actual fun save(email: String, password: String) {}
-    actual fun get(): SavedCredentials? = null
-    actual fun clear() {}
+    actual suspend fun save(email: String, password: String) {}
+    actual suspend fun get(): SavedCredentials? = null
+    actual suspend fun clear() {}
 }

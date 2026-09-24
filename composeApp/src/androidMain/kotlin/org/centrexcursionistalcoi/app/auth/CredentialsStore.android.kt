@@ -3,13 +3,25 @@ package org.centrexcursionistalcoi.app.auth
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.Context
+import com.diamondedge.logging.logging
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.koin.core.annotation.Singleton
 
 @Singleton
-actual class CredentialsStore(context: Context) {
+actual class CredentialsStore(
+    context: Context,
+    private val credentialManagerRepository: CredentialManagerRepository,
+    private val dispatcherProvider: DispatcherProvider,
+) {
     private val accountManager = AccountManager.get(context)
+    private val credentialFetchLock = Mutex()
+    private val log = logging()
 
     actual val current: StateFlow<SavedCredentials?>
         field = MutableStateFlow(readCurrent())
@@ -25,7 +37,7 @@ actual class CredentialsStore(context: Context) {
         )
     }
 
-    actual fun save(email: String, password: String) {
+    actual suspend fun save(email: String, password: String) {
         val account = Account(email, ACCOUNT_TYPE)
         // Only one saved account at a time: this app only ever has a single logged-in user locally.
         accountManager.getAccountsByType(ACCOUNT_TYPE)
@@ -37,17 +49,49 @@ actual class CredentialsStore(context: Context) {
             accountManager.setPassword(account, password)
         }
         current.value = readCurrent()
+
+        // asynchronously store the credential in the Credential Manager, if available
+        CoroutineScope(dispatcherProvider.io).launch {
+            try {
+                credentialFetchLock.lock()
+                credentialManagerRepository.create()
+            } catch (e: IllegalStateException) {
+                // E2EE is not available and the credential cannot be created without cloud backup
+                // This is not a fatal error, this feature will just be missing for this user. Log it and continue.
+                log.error("Failed to create credential in Credential Manager", e)
+            } finally {
+                credentialFetchLock.unlock()
+            }
+        }
     }
 
-    actual fun get(): SavedCredentials? = readCurrent()
+    actual suspend fun get(): SavedCredentials? = readCurrent()
 
-    actual fun clear() {
+    actual suspend fun clear() {
         accountManager.getAccountsByType(ACCOUNT_TYPE).forEach { accountManager.removeAccountExplicitly(it) }
         current.value = readCurrent()
+
+        // asynchronously clear the credential in the Credential Manager, if available
+        CoroutineScope(dispatcherProvider.io).launch {
+            try {
+                credentialFetchLock.lock()
+                credentialManagerRepository.clear()
+            } finally {
+                credentialFetchLock.unlock()
+            }
+        }
     }
 
-    private fun readCurrent(): SavedCredentials? {
-        val account = accountManager.getAccountsByType(ACCOUNT_TYPE).firstOrNull() ?: return null
+    private suspend fun readCurrent(): SavedCredentials? {
+        val account = accountManager.getAccountsByType(ACCOUNT_TYPE).firstOrNull()
+        if (account == null) {
+            // No account found locally, let's try to recover it from the Credential Manager if available
+            credentialFetchLock.withLock {
+                credentialManagerRepository.recover()
+            }
+            // if there are no errors, it means re-authentication was successful
+            throw AuthenticationAlreadyHandledByCredentialManagerException()
+        }
         val password = accountManager.getPassword(account) ?: return null
         return SavedCredentials(account.name, password.toCharArray())
     }

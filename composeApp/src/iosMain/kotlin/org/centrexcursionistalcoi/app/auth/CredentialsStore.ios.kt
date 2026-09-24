@@ -106,7 +106,7 @@ actual class CredentialsStore internal constructor() {
     private val mutableCurrent: MutableStateFlow<SavedCredentials?> by lazy { MutableStateFlow(readCurrent()) }
     actual val current: StateFlow<SavedCredentials?> get() = mutableCurrent
 
-    actual fun save(email: String, password: String) {
+    actual suspend fun save(email: String, password: String) {
         val passwordData = (password as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
         withServiceQuery {
             val query = dictionary
@@ -126,9 +126,9 @@ actual class CredentialsStore internal constructor() {
         mutableCurrent.value = readCurrent()
     }
 
-    actual fun get(): SavedCredentials? = readCurrent()
+    actual suspend fun get(): SavedCredentials? = readCurrent()
 
-    actual fun clear() {
+    actual suspend fun clear() {
         withServiceQuery {
             val status = SecItemDelete(dictionary)
             if (status != errSecSuccess && status != errSecItemNotFound) {
