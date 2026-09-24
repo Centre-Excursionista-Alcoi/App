@@ -13,12 +13,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.database.dao.InventoryItemDao
 import org.centrexcursionistalcoi.app.database.dao.LendingDao
@@ -38,6 +40,7 @@ import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.response.ProfileResponse
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -80,6 +83,11 @@ class TestDatabaseIntegrityVerifier {
     @AfterTest
     fun tearDown() {
         unmockkAll()
+        // Tests of the non-admin placeholder path write real profile state via ProfileRepository.update()
+        // (mockkObject(ProfileRepository) doesn't reliably intercept this object's calls -- unclear why, but
+        // exercising the real, already-tested read/write path is arguably more honest anyway) -- reset it so
+        // it doesn't leak into unrelated tests.
+        ProfileRepository.clear()
     }
 
     private fun typeEntity(id: Uuid = Uuid.random()) = InventoryItemTypeEntity(
@@ -123,6 +131,19 @@ class TestDatabaseIntegrityVerifier {
     )
 
     private fun remoteUser(sub: String) = userEntity(sub).toUser()
+
+    private fun profile(isAdmin: Boolean) = ProfileResponse(
+        sub = Uuid.random().toString(),
+        fullName = "Profile Owner",
+        memberNumber = 1u,
+        email = "owner@example.com",
+        groups = if (isAdmin) listOf(ADMIN_GROUP_NAME) else emptyList(),
+        departments = emptyList(),
+        lendingUser = null,
+        insurances = emptyList(),
+        femecvSyncEnabled = false,
+        femecvLastSync = null,
+    )
 
     private fun memoryEntity(id: Uuid = Uuid.random(), submittedBy: String) = MemoryEntity(
         id = id,
@@ -442,6 +463,46 @@ class TestDatabaseIntegrityVerifier {
     }
 
     @Test
+    fun `memory with missing submitter inserts a placeholder for a non-admin instead of wiping the database`() {
+        // GET /users/{sub} returning null is a confirmed 404, not a transient error (see RemoteRepository.getUrl)
+        // -- for a non-admin, that means sub is genuinely outside their /users visibility (a Memory submitted by
+        // someone in a department they don't manage), which a wipe-and-resync can never fix: it would just
+        // resync the exact same memory referencing the exact same invisible user and hit this again.
+        ProfileRepository.update(profile(isAdmin = false))
+        val sub = Uuid.random().toString()
+        coEvery { memoryDao.selectAll() } returns listOf(memoryWithRelations(memoryEntity(submittedBy = sub), submittedBy = null))
+        coEvery { usersRemoteRepository.get(sub) } returns null
+        coEvery { usersRepository.insert(any<UserData>()) } just Runs
+
+        runTest {
+            verifier.verifyAndFixMemoriesCrossReferences()
+        }
+
+        coVerify(exactly = 1) { usersRepository.insert(match<UserData> { it.sub == sub }) }
+        coVerify(exactly = 0) { db.clearAllTables() }
+    }
+
+    @Test
+    fun `memory with missing submitter still wipes database for an admin`() {
+        // Admins can see every user, so a confirmed 404 for an admin really is a data inconsistency, not a
+        // permission gap -- the original wipe-and-resync recovery is still correct here.
+        ProfileRepository.update(profile(isAdmin = true))
+        val sub = Uuid.random().toString()
+        val brokenMemory = memoryWithRelations(memoryEntity(submittedBy = sub), submittedBy = null)
+        coEvery { memoryDao.selectAll() } returnsMany listOf(listOf(brokenMemory), emptyList())
+        coEvery { usersRemoteRepository.get(sub) } returns null
+        coEvery { db.clearAllTables() } just Runs
+        stubSync(BackgroundJobState.SUCCEEDED)
+
+        runTest {
+            verifier.verifyAndFixMemoriesCrossReferences()
+        }
+
+        coVerify(exactly = 1) { db.clearAllTables() }
+        coVerify(exactly = 0) { usersRepository.insert(any<UserData>()) }
+    }
+
+    @Test
     fun `memory with missing submitter throws when the resync job fails`() = runTest {
         val sub = Uuid.random().toString()
         coEvery { memoryDao.selectAll() } returns listOf(memoryWithRelations(memoryEntity(submittedBy = sub), submittedBy = null))
@@ -501,6 +562,22 @@ class TestDatabaseIntegrityVerifier {
 
         coVerify(exactly = 1) { db.clearAllTables() }
         coVerify(exactly = 2) { lendingDao.selectAll() }
+    }
+
+    @Test
+    fun `lending with missing borrower inserts a placeholder for a non-admin instead of wiping the database`() {
+        ProfileRepository.update(profile(isAdmin = false))
+        val sub = Uuid.random().toString()
+        coEvery { lendingDao.selectAll() } returns listOf(lendingWithRelations(lendingEntity(userSub = sub), user = null))
+        coEvery { usersRemoteRepository.get(sub) } returns null
+        coEvery { usersRepository.insert(any<UserData>()) } just Runs
+
+        runTest {
+            verifier.verifyAndFixLendingsCrossReferences()
+        }
+
+        coVerify(exactly = 1) { usersRepository.insert(match<UserData> { it.sub == sub }) }
+        coVerify(exactly = 0) { db.clearAllTables() }
     }
 
     @Test

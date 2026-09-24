@@ -3,8 +3,10 @@ package org.centrexcursionistalcoi.app.sync
 import androidx.annotation.VisibleForTesting
 import com.diamondedge.logging.logging
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
+import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.database.relation.toReferenced
@@ -76,20 +78,55 @@ class DatabaseIntegrityVerifier(
 
     /**
      * Tries to recover from a missing "User" cross-reference by fetching [sub] from the server and inserting it
-     * locally. Falls back to [clearDatabaseAndResync] if the server doesn't have it either.
+     * locally.
+     *
+     * `GET /users/{sub}` returning `null` here is a confirmed 404 (RemoteRepository.getUrl throws instead of
+     * returning null for any other failure), never a transient error. For a non-admin, that 404 usually means
+     * [sub] is simply outside their `/users` visibility (see AGENTS.md's `/users` RBAC rule) -- e.g. a Memory
+     * submitted by, or a Lending borrowed by, someone in a department they don't manage. That's permanent, not a
+     * data inconsistency: a full wipe-and-resync would resync the exact same Memory/Lending referencing the exact
+     * same invisible user and hit this again, looping forever (previously surfacing as "Failed to sync data after
+     * clearing database: FAILED" -- see DatabaseIntegrityVerifier's crash reports). Insert a local placeholder row
+     * instead, so the cross-reference resolves from now on. For an admin (who can see every user), a 404 here
+     * really is a data inconsistency -- keep resyncing in that case.
      * @return `true` if the database was wiped and fully resynced -- the caller should stop iterating its now-stale
-     * list -- or `false` if the missing user was found and inserted, so it's safe to keep going.
+     * list -- or `false` if the missing user was found (or stubbed) and inserted, so it's safe to keep going.
      */
     private suspend fun recoverMissingUser(sub: String): Boolean {
         val user = usersRemoteRepository.get(sub)
-        return if (user != null) {
+        if (user != null) {
             usersRepository.insert(user)
-            false
-        } else {
-            clearDatabaseAndResync()
-            true
+            return false
         }
+
+        if (ProfileRepository.getProfile()?.isAdmin == false) {
+            log.w { "User $sub is not visible to this non-admin session -- inserting a placeholder instead of resyncing." }
+            usersRepository.insert(placeholderUser(sub))
+            return false
+        }
+
+        clearDatabaseAndResync()
+        return true
     }
+
+    /**
+     * A placeholder [UserData] for [sub], used when the server confirms (a real 404, not an error) that the
+     * current non-admin session isn't allowed to see this user's real record. Mirrors
+     * [org.centrexcursionistalcoi.app.data.StubUser]'s placeholder field values, but keyed by the real [sub] --
+     * unlike that UI-layer stub (fixed at `sub = "unknown"`, meant for a single ad-hoc display fallback), this one
+     * is persisted as a real `Users` table row so [sub] resolves as a normal foreign key from now on.
+     */
+    private fun placeholderUser(sub: String) = UserData(
+        sub = sub,
+        memberNumber = 0u,
+        fullName = "Unknown User",
+        email = "unknown@example.com",
+        groups = emptyList(),
+        departments = emptyList(),
+        lendingUser = null,
+        insurances = emptyList(),
+        isDisabled = false,
+    )
 
     /**
      * Verifies the integrity of the inventory item types cross-references and fixes them if possible.
