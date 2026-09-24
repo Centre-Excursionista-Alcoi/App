@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.auth
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,18 +18,18 @@ class CredentialsStoreTest {
 
     @AfterTest
     fun tearDown() {
-        store.clear()
+        runBlocking { store.clear() }
     }
 
     @Test
-    fun `get returns null when nothing is saved`() {
+    fun `get returns null when nothing is saved`() = runTest {
         store.clear()
         assertNull(store.get())
         assertNull(store.current.value)
     }
 
     @Test
-    fun `save persists credentials retrievable via both get and current`() {
+    fun `save persists credentials retrievable via both get and current`() = runTest {
         store.save("credentials-test@example.com", "s3cr3t-P@ss")
 
         val saved = store.get()
@@ -39,7 +41,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `saving again for the same email updates the password`() {
+    fun `saving again for the same email updates the password`() = runTest {
         store.save("credentials-test@example.com", "first-password")
         store.save("credentials-test@example.com", "second-password")
 
@@ -47,7 +49,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `only one account is kept -- saving a different email replaces the previous one`() {
+    fun `only one account is kept -- saving a different email replaces the previous one`() = runTest {
         store.save("first@example.com", "first-password")
         store.save("second@example.com", "second-password")
 
@@ -57,7 +59,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `clear removes the saved account`() {
+    fun `clear removes the saved account`() = runTest {
         store.save("credentials-test@example.com", "s3cr3t-P@ss")
         store.clear()
 
@@ -66,7 +68,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `new instance reads persisted credentials and initializes current`() {
+    fun `new instance reads persisted credentials and initializes current`() = runTest {
         store.save("persisted@example.com", "persisted-password")
         val reopened = CredentialsStore(service)
         assertEquals("persisted@example.com", reopened.get()?.email)
@@ -76,7 +78,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `unicode and embedded null characters round trip`() {
+    fun `unicode and embedded null characters round trip`() = runTest {
         val email = "excursió@example.com"
         val password = "密碼🔑é\u0000final"
         store.save(email, password)
@@ -85,13 +87,13 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `empty password round trips`() {
+    fun `empty password round trips`() = runTest {
         store.save("empty@example.com", "")
         assertEquals("", store.get()?.password?.concatToString())
     }
 
     @Test
-    fun `save and clear do not affect another service`() {
+    fun `save and clear do not affect another service`() = runTest {
         val other = CredentialsStore("$service.other")
         try {
             other.save("other@example.com", "other-password")
