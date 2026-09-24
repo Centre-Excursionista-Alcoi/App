@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
 import org.centrexcursionistalcoi.app.plugins.UserSession
 import org.centrexcursionistalcoi.app.plugins.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.plugins.login
+import org.centrexcursionistalcoi.app.utils.escapeHtml
 import org.slf4j.LoggerFactory
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -239,18 +240,18 @@ private fun buildHtmlIndex(requestPath: String, dirPath: String, list: List<Virt
     val base = requestPath.trimEnd('/')
     val sb = StringBuilder()
     sb.append("<!doctype html><html><head><meta charset=\"utf-8\"><title>Index of ")
-    sb.append(escapeHtml(base))
+    sb.append(base.escapeHtml())
     sb.append("</title></head><body><h1>Index of ")
-    sb.append(escapeHtml(base))
+    sb.append(base.escapeHtml())
     sb.append("</h1><ul>")
     if (dirPath.isNotEmpty()) {
         val parentHref = requestPath.trimEnd('/').substringBeforeLast('/', "")
-        sb.append("<li><a href=\"${escapeHtml(parentHref)}\">..</a></li>")
+        sb.append("<li><a href=\"${parentHref.escapeHtml()}\">..</a></li>")
     }
     for (it in list) {
         val href = it.path
         val display = if (it.isDirectory) "${it.name}/" else it.name
-        sb.append("<li><a href=\"${escapeHtml(href)}\">${escapeHtml(display)}</a></li>")
+        sb.append("<li><a href=\"${href.escapeHtml()}\">${display.escapeHtml()}</a></li>")
     }
     sb.append("</ul></body></html>")
     return sb.toString()
@@ -259,9 +260,6 @@ private fun buildHtmlIndex(requestPath: String, dirPath: String, list: List<Virt
 private fun encodePath(path: String): String {
     return path.split('/').joinToString("/") { java.net.URLEncoder.encode(it, "UTF-8") }
 }
-
-private fun escapeHtml(text: String): String =
-    text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
 private fun buildMultiStatusXml(requestPath: String, basePath: String, items: List<VirtualFileSystem.Item>): String {
     val sb = StringBuilder()

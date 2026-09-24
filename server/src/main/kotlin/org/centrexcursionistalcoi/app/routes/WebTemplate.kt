@@ -8,6 +8,7 @@ import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.translation.DocumentRedactor
 import org.centrexcursionistalcoi.app.translation.Template
 import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.utils.escapeHtml
 
 @ExperimentalXmlUtilApi
 abstract class WebTemplate(name: String): Template("web", name) {
@@ -25,11 +26,20 @@ abstract class WebTemplate(name: String): Template("web", name) {
             // Translations are specified in static HTML files as `{{key}}` placeholders, which are replaced with
             // the translated text for the current locale -- or, if the caller passed a value under that same key
             // in [args] (for whatever a translation file can't hold, like a per-request URL), that instead.
-            return htmlDocument.replace(Regex("\\{\\{(.*?)\\}\\}")) { matchResult ->
-                val key = matchResult.groupValues[1].trim()
+            // `{{{key}}}` (triple braces, Mustache-style) is the same lookup but inserted verbatim, unescaped --
+            // only for a value the caller built itself as real markup (see AppLinkFallbackRoutes' auto_open_meta);
+            // every plain `{{key}}` is HTML-escaped, since some of these values (e.g. preview_url) embed the raw
+            // request path, which is attacker-controlled.
+            return htmlDocument.replace(Regex("\\{\\{\\{(.*?)\\}\\}\\}|\\{\\{(.*?)\\}\\}")) { matchResult ->
+                val rawKey = matchResult.groups[1]?.value
+                val key = (rawKey ?: matchResult.groups[2]!!.value).trim()
                 val value = args[key] ?: translationsBook[locale].getOrNull(key)
                 // If neither has it, keep the original placeholder.
-                value ?: matchResult.value
+                when {
+                    value == null -> matchResult.value
+                    rawKey != null -> value
+                    else -> value.escapeHtml()
+                }
             }
         }
     }

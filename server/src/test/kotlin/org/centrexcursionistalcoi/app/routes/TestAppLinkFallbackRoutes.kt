@@ -26,12 +26,15 @@ private const val DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.
  * What happens on [AppLinks.baseUrl]'s host (`centrexcursionistalcoi.app` by default): whoever reaches the server
  * there at all has no app installed, or is in a context (an in-app browser, say) that skipped the OS's own App
  * Link/Universal Link interception -- a device that has the app never makes this request. Every path behaves the
- * same, the bare domain included: no page is shown on mobile, just a redirect straight into opening the app
- * (Android) or the store; anything else gets a brief page linking to both stores.
+ * same, the bare domain included: iOS is sent straight to the store (a plain HTTPS redirect always works); every
+ * other visitor -- Android included -- lands on the same landing page (see [WebTemplate.GetApp]), which links to
+ * both stores and the regular website, and additionally carries a meta-refresh for Android that attempts to open
+ * the app itself first. Android used to get a raw HTTP redirect straight into that attempt with no page behind
+ * it, which left a blank page whenever the browser couldn't or wouldn't act on it (#689).
  *
  * Redirect tests use a client with `followRedirects = false`: `testApplication`'s default client follows a
  * `Location` by resubmitting it into the very same in-process test app, which fails outright for one that points
- * outside it -- exactly every case here (Apple, Google Play, or a fake `intent://`).
+ * outside it -- exactly every case here (Apple, or a fake `intent://` embedded in the Android page).
  */
 class TestAppLinkFallbackRoutes : ApplicationTestBase() {
     private val lendingId = UUID.fromString("1f0e5c2a-0000-4000-8000-000000000001")
@@ -43,19 +46,58 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
 
     private val everyAppLinksPath = listOf("/", "/admin/lendings", "/admin/lendings/$lendingId", "/admin/items/$lendingId", "/itemType/$lendingId", "/some/made/up/path")
 
+    /** Pulls the URL out of `<meta http-equiv="refresh" content="0;url=...">`, unescaping the HTML entities it was escaped as. */
+    private fun metaRefreshUrl(body: String): String {
+        val match = Regex("""<meta http-equiv="refresh" content="0;url=([^"]*)">""").find(body)
+            ?: error("No meta-refresh tag found in: $body")
+        return match.groupValues[1]
+            .replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+            .replace("&quot;", "\"").replace("&#39;", "'")
+    }
+
     @Test
-    fun test_android_isRedirectedToTheIntentLaunchUrl_onEveryPath() = runApplicationTest {
+    fun test_android_getsTheLandingPage_withAMetaRefreshToTheIntentLaunchUrl_onEveryPath() = runApplicationTest {
         val client = createClient { followRedirects = false }
         for (path in everyAppLinksPath) {
             val response = client.onAppLinksHost(path, ANDROID_UA)
-            response.assertStatusCode(HttpStatusCode.Found)
-            val location = response.headers[HttpHeaders.Location]!!
+            // Unlike the old raw-redirect behavior, this is always a real page -- so a browser that can't act on
+            // the meta-refresh below still has something to show instead of a blank page (#689).
+            response.assertStatusCode(HttpStatusCode.OK)
+            assertTrue(response.contentType()?.match(ContentType.Text.Html) == true, "$path: ${response.contentType()}")
+
+            val body = response.bodyAsText()
+            val location = metaRefreshUrl(body)
 
             assertTrue(location.startsWith("intent://centrexcursionistalcoi.app$path"), "$path -> $location")
             assertContains(location, "scheme=https;")
             assertContains(location, "package=org.centrexcursionistalcoi.app;")
             assertContains(location, "S.browser_fallback_url=")
+
+            // Same landing page as everyone else, including the website link (#689).
+            assertContains(body, "https://play.google.com/store/apps/details?id=org.centrexcursionistalcoi.app")
+            assertContains(body, AppLinks.appStoreUrl)
+            assertContains(body, "https://centrexcursionistalcoi.org")
         }
+    }
+
+    // request.uri (attacker-controlled) flows straight into the meta-refresh's `content` attribute. `"`/`<`/`>`
+    // can't reach here unencoded -- they're not valid raw in a URI path, and Ktor's path()/uri never decode
+    // percent-encoding -- but `&` (a URI sub-delim) legitimately can, and a raw `&` inside an HTML attribute is
+    // the start of a malformed/ambiguous entity reference, so ResourceWebTemplate now escapes every plain
+    // `{{key}}` substitution by default (see WebTemplate.kt) rather than relying on what happens to be
+    // unreachable today. This checks that escaping actually applies end to end, not just that it's unexploitable.
+    @Test
+    fun test_android_anAmpersandInThePath_isEscapedInTheMetaTag() = runApplicationTest {
+        val client = createClient { followRedirects = false }
+        val response = client.get("/foo&bar") {
+            header(HttpHeaders.Host, "centrexcursionistalcoi.app")
+            header(HttpHeaders.UserAgent, ANDROID_UA)
+        }
+        response.assertStatusCode(HttpStatusCode.OK)
+        val body = response.bodyAsText()
+
+        assertContains(body, "/foo&amp;bar")
+        assertTrue("content=\"0;url=intent://centrexcursionistalcoi.app/foo&bar#" !in body, body)
     }
 
     @Test
@@ -80,6 +122,18 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
             assertContains(body, AppLinks.appStoreUrl)
             assertContains(body, "/static/app-icon.png")
             assertContains(body, "/static/app-links.css")
+            // Neither desktop nor a crawler should carry Android's app-open attempt (#689).
+            assertTrue("http-equiv=\"refresh\"" !in body, body)
+        }
+    }
+
+    // #689: the "get the app" popup should also let a visitor continue to the regular public website, on every
+    // path and regardless of platform -- not just desktop's.
+    @Test
+    fun test_everyLandingPage_linksToTheRegularWebsite() = runApplicationTest {
+        for (userAgent in listOf(DESKTOP_UA, ANDROID_UA, null)) {
+            val body = client.onAppLinksHost("/", userAgent).bodyAsText()
+            assertContains(body, "https://centrexcursionistalcoi.org", message = "userAgent=$userAgent")
         }
     }
 
@@ -139,6 +193,17 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
             header(HttpHeaders.Host, "centrexcursionistalcoi.app")
         }
         assertEquals("https://centrexcursionistalcoi.app/admin/lendings/$lendingId", response.metaTag("og:url"))
+    }
+
+    // preview_url embeds the raw request path, which is attacker-controlled -- ResourceWebTemplate now escapes
+    // every plain `{{key}}` substitution by default (see WebTemplate.kt) rather than trusting each call site to
+    // remember to. metaTag() doesn't decode entities, so an escaped `&` shows up here as the literal `&amp;`.
+    @Test
+    fun test_preview_url_withAnAmpersandInThePath_isEscaped() = runApplicationTest {
+        val response = client.get("/foo&bar") {
+            header(HttpHeaders.Host, "centrexcursionistalcoi.app")
+        }
+        assertEquals("https://centrexcursionistalcoi.app/foo&amp;bar", response.metaTag("og:url"))
     }
 
     @Test
