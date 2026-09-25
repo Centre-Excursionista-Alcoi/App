@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.auth.LegacyAuthMigration
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.error.Error
@@ -32,6 +33,7 @@ class LoadingViewModel(
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
     private val databaseIntegrityVerifier: DatabaseIntegrityVerifier,
     private val authBackend: AuthBackend,
+    private val legacyAuthMigration: LegacyAuthMigration,
 ) : ViewModel() {
 
     private val log = logging()
@@ -54,6 +56,10 @@ class LoadingViewModel(
         Server.loadInfo()
 
         try {
+            // Before anything else: an account logged in before token authentication either gets a session now,
+            // or is logged out.
+            legacyAuthMigration.run()
+
             // Try to fetch the profile to see if the session is still valid
             if (isUserProfileValid()) {
                 if (SyncAllDataBackgroundJob.databaseVersionUpgrade()) {
@@ -83,7 +89,7 @@ class LoadingViewModel(
                 withContext(dispatcherProvider.main) { onLoggedIn() }
             } else if (authBackend.tryAutoRelogin()) {
                 // No local profile, but a saved account was still recovered (e.g. Android "clear app data"
-                // wipes Room/settings/the session cookie, but not the OS-level AccountManager entry -- see
+                // wipes Room and settings, but not the OS-level AccountManager entry holding the session -- see
                 // CredentialsStore). Re-authenticating alone doesn't repopulate Room, so force a full resync
                 // (which syncs the profile first, see SyncAllDataBackgroundJob) before re-checking, instead of
                 // treating this as a real logout and showing the "you already have an account saved" warning

@@ -84,8 +84,10 @@ and it picks up code changes on restart without reinstalling.)
   `$KEYS_PATH/aes.key` on first run if the directory exists (it creates the directory too) — you'll only see
   `FileNotFoundException: /keys/aes.key` if `KEYS_PATH` itself points somewhere unwritable, or is unset (then
   it defaults to the literal `/keys`, which won't exist outside a container).
-- Session cookies need `SECRET_ENCRYPT_KEY`/`SECRET_SIGN_KEY` set to *something* (see `compose.yml` for
-  example values) or `plugins/Sessions.kt` will blow up.
+- `SECRET_ENCRYPT_KEY`/`SECRET_SIGN_KEY` (the WebDAV cookie) fall back to public
+  defaults in development and tests, but the server **refuses to start with `ENV=production`** unless both are
+  set to non-default values. The access token signing key (`$KEYS_PATH/jwt-es256.key`/`.pub`) is generated on
+  first run like `aes.key`; replacing it only forces every client to refresh, it doesn't log anyone out.
 
 ### Android client on an emulator
 
@@ -220,7 +222,7 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   (`KEYCODE_MOVE_END` + repeated `KEYCODE_DEL`) rather than trusting a single field to hold exactly what you
   typed.
 - **Session/local-storage state persists across app restarts but not across `pm clear`.** If a change made
-  server-side (e.g. via direct DB edit — see §6) doesn't show up after restarting the app, don't assume
+  server-side (e.g. via direct DB edit — see §7) doesn't show up after restarting the app, don't assume
   caching is broken — first try `pm clear` + fresh login, since some state (like group/role membership) is
   only refreshed on login, not on every app launch.
 
@@ -294,7 +296,31 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
     Don't reach for `.strip()`-style field masking on `UserData` as a substitute for the visibility check
     above; `UserData` has no `.strip()` and isn't meant to.
 
-## 6. Other gotchas worth knowing upfront
+## 6. Authentication: tokens
+
+- **Clients authenticate with tokens** (`server/.../security/AuthTokens.kt`, routes in `plugins/AuthTokenRoutes.kt`):
+  a 10-minute ES256 JWT access token sent as `Authorization: Bearer`, and a rotating refresh token (90 days max,
+  30 days idle) exchanged at `POST /auth/refresh`. Sessions live in `auth_sessions`, refresh tokens (hashed) in
+  `auth_refresh_tokens`.
+- **Nothing in the access token is trusted beyond who and which session**: `getUserSession()` re-reads the session
+  and the user on every request, so revocation, `isDisabled` and group changes apply immediately. Don't add
+  claims to the JWT to skip that lookup.
+- **Each refresh token works once.** Presenting a used one again revokes its whole session (reuse = theft),
+  except within a 30-second grace window while its successor is still unused (a lost response). On the client,
+  `SessionTokens` serializes refreshes for exactly this reason -- never refresh from anywhere else.
+- **There are no session cookies for the app anymore.** Versions before tokens are forced to update;
+  `LegacyAuthMigration` (client) runs once on the first launch after it, logging in with the password those
+  versions saved in `CredentialsStore` and deleting it and the old cookies -- or logging the user out if that
+  fails. Delete it once no installed version can predate tokens.
+- **WebDAV has its own cookie** (`WEBDAV_SESSION`, path `/webdav`, 1 hour), started with HTTP Basic: it grants
+  nothing in the rest of the API.
+- A password reset revokes every session and deletes the user's WebAuthn credentials.
+- Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
+- In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
+  and make the test client send its access token with every request; `logout()` stops that. To test the token
+  routes themselves, log in through `/auth/login` (see `TestAuthTokens`).
+
+## 7. Other gotchas worth knowing upfront
 
 - **Apostrophes/quotes in `strings.xml` do NOT need Android-resource-style backslash escaping** in this
   Compose Multiplatform resources file — a bare `'` is correct. If you see a literal `\'` rendered on screen
@@ -328,7 +354,7 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   list endpoint, re-derive and re-apply that same restriction explicitly; don't assume "it's just a GET,
   the list endpoint already locked this down" carries over.
 
-## 7. Testing cheat sheet
+## 8. Testing cheat sheet
 
 ```shell
 # Whole-graph Koin resolution test (see §3) — run this after any DI change

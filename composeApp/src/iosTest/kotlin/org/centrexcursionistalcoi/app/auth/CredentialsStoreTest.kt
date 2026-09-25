@@ -20,87 +20,84 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `get returns null when nothing is saved`() {
+    fun `nothing is returned when nothing is saved`() {
         store.clear()
-        assertNull(store.get())
+        assertNull(store.getSession())
+        assertNull(store.getLegacyCredentials())
         assertNull(store.current.value)
     }
 
     @Test
-    fun `save persists credentials retrievable via both get and current`() {
-        store.save("credentials-test@example.com", "s3cr3t-P@ss")
+    fun `saveSession persists the session retrievable via both getSession and current`() {
+        store.saveSession("credentials-test@example.com", "refresh-token")
 
-        val saved = store.get()
+        val saved = store.getSession()
         assertEquals("credentials-test@example.com", saved?.email)
-        assertEquals("s3cr3t-P@ss", saved?.password?.concatToString())
-
-        assertEquals(saved?.email, store.current.value?.email)
-        assertEquals(saved?.password?.concatToString(), store.current.value?.password?.concatToString())
+        assertEquals("refresh-token", saved?.refreshToken)
+        assertEquals("credentials-test@example.com", store.current.value?.email)
     }
 
     @Test
-    fun `saving again for the same email updates the password`() {
-        store.save("credentials-test@example.com", "first-password")
-        store.save("credentials-test@example.com", "second-password")
+    fun `saving again replaces the refresh token and the account`() {
+        store.saveSession("first@example.com", "first-token")
+        store.saveSession("second@example.com", "second-token")
 
-        assertEquals("second-password", store.get()?.password?.concatToString())
+        assertEquals("second@example.com", store.getSession()?.email)
+        assertEquals("second-token", store.getSession()?.refreshToken)
+        assertEquals("second@example.com", store.current.value?.email)
     }
 
     @Test
-    fun `only one account is kept -- saving a different email replaces the previous one`() {
-        store.save("first@example.com", "first-password")
-        store.save("second@example.com", "second-password")
+    fun `legacy credentials are readable until a session is saved`() {
+        store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
+        assertEquals("legacy@example.com", store.getLegacyCredentials()?.email)
+        assertEquals("s3cr3t-P@ss", store.getLegacyCredentials()?.password?.concatToString())
+        assertEquals("legacy@example.com", store.current.value?.email)
+        assertNull(store.getSession())
 
-        assertEquals("second@example.com", store.get()?.email)
-        assertEquals("second-password", store.get()?.password?.concatToString())
-        assertEquals(store.get(), store.current.value)
+        store.saveSession("legacy@example.com", "refresh-token")
+        assertNull(store.getLegacyCredentials())
+        assertEquals("refresh-token", store.getSession()?.refreshToken)
     }
 
     @Test
-    fun `clear removes the saved account`() {
-        store.save("credentials-test@example.com", "s3cr3t-P@ss")
+    fun `clear removes both the session and legacy credentials`() {
+        store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
         store.clear()
+        assertNull(store.getLegacyCredentials())
 
-        assertNull(store.get())
+        store.saveSession("credentials-test@example.com", "refresh-token")
+        store.clear()
+        assertNull(store.getSession())
         assertNull(store.current.value)
     }
 
     @Test
-    fun `new instance reads persisted credentials and initializes current`() {
-        store.save("persisted@example.com", "persisted-password")
+    fun `new instance reads the persisted session and initializes current`() {
+        store.saveSession("persisted@example.com", "persisted-token")
         val reopened = CredentialsStore(service)
-        assertEquals("persisted@example.com", reopened.get()?.email)
-        assertEquals("persisted-password", reopened.get()?.password?.concatToString())
-        assertEquals(store.get(), reopened.get())
-        assertEquals(store.get(), reopened.current.value)
+        assertEquals("persisted@example.com", reopened.getSession()?.email)
+        assertEquals("persisted-token", reopened.getSession()?.refreshToken)
+        assertEquals("persisted@example.com", reopened.current.value?.email)
     }
 
     @Test
-    fun `unicode and embedded null characters round trip`() {
+    fun `unicode round trips`() {
         val email = "excursió@example.com"
-        val password = "密碼🔑é\u0000final"
-        store.save(email, password)
-        assertEquals(email, store.get()?.email)
-        assertEquals(password, store.get()?.password?.concatToString())
-    }
-
-    @Test
-    fun `empty password round trips`() {
-        store.save("empty@example.com", "")
-        assertEquals("", store.get()?.password?.concatToString())
+        store.saveSession(email, "密碼🔑é-token")
+        assertEquals(email, store.getSession()?.email)
+        assertEquals("密碼🔑é-token", store.getSession()?.refreshToken)
     }
 
     @Test
     fun `save and clear do not affect another service`() {
         val other = CredentialsStore("$service.other")
         try {
-            other.save("other@example.com", "other-password")
-            store.save("first@example.com", "first-password")
-            store.save("second@example.com", "second-password")
+            other.saveSession("other@example.com", "other-token")
+            store.saveSession("first@example.com", "first-token")
             store.clear()
-            store.clear()
-            assertEquals("other@example.com", other.get()?.email)
-            assertEquals("other-password", other.get()?.password?.concatToString())
+            assertEquals("other@example.com", other.getSession()?.email)
+            assertEquals("other-token", other.getSession()?.refreshToken)
         } finally {
             other.clear()
         }
