@@ -11,8 +11,15 @@ import org.centrexcursionistalcoi.app.ConfigProvider
 import org.centrexcursionistalcoi.app.json
 
 internal object WellKnownConfigProvider : ConfigProvider() {
-    val packageNames = getenv("WELL_KNOWN_ASSETLINKS_PACKAGE_NAMES")?.split(",") ?: listOf()
-    val sha256CertFingerprints = getenv("WELL_KNOWN_ASSETLINKS_SHA256_CERT_FINGERPRINTS")?.split(",") ?: listOf()
+    const val PACKAGE_NAMES_VARIABLE = "WELL_KNOWN_ASSETLINKS_PACKAGE_NAMES"
+    val packageNames: List<String> get() = getList(PACKAGE_NAMES_VARIABLE)
+
+    /**
+     * Also the Android origins accepted for WebAuthn (see `webAuthnAndroidOrigins`), where a single malformed
+     * entry makes every registration and redemption fail -- hence the trimming.
+     */
+    const val SHA256_CERT_FINGERPRINTS_VARIABLE = "WELL_KNOWN_ASSETLINKS_SHA256_CERT_FINGERPRINTS"
+    val sha256CertFingerprints: List<String> get() = getList(SHA256_CERT_FINGERPRINTS_VARIABLE)
 
     /**
      * The iOS apps allowed to open this server's links, from `WELL_KNOWN_APPLE_APP_SITE_ASSOCIATION_APP_IDS`:
@@ -21,7 +28,11 @@ internal object WellKnownConfigProvider : ConfigProvider() {
      */
     const val APPLE_APP_IDS_VARIABLE = "WELL_KNOWN_APPLE_APP_SITE_ASSOCIATION_APP_IDS"
     val appleAppIds: List<String>
-        get() = getenv(APPLE_APP_IDS_VARIABLE)?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: listOf()
+        get() = getList(APPLE_APP_IDS_VARIABLE)
+
+    /** A comma-separated list, tolerating whitespace around entries and empty ones (e.g. a trailing comma). */
+    private fun getList(name: String): List<String> =
+        getenv(name)?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: listOf()
 }
 
 /**
