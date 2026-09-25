@@ -3,12 +3,14 @@ package org.centrexcursionistalcoi.app.auth
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.Context
+import androidx.credentials.exceptions.NoCredentialException
 import com.diamondedge.logging.logging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
@@ -18,14 +20,25 @@ import org.koin.core.annotation.Singleton
 actual class CredentialsStore(
     context: Context,
     private val credentialManagerRepository: CredentialManagerRepository,
-    private val dispatcherProvider: DispatcherProvider,
+    dispatcherProvider: DispatcherProvider,
 ) {
     private val accountManager = AccountManager.get(context)
-    private val credentialFetchLock = Mutex()
     private val log = logging()
 
+    /**
+     * Serializes every Credential Manager operation, so e.g. a restore key being cleared on logout can't race a
+     * restore key still being created from the previous login.
+     */
+    private val credentialManagerLock = Mutex()
+
+    /**
+     * Credential Manager work that shouldn't block [save]/[clear]'s callers. [SupervisorJob]: one failed job must
+     * not cancel the scope for every later one.
+     */
+    private val credentialManagerScope = CoroutineScope(SupervisorJob() + dispatcherProvider.io)
+
     actual val current: StateFlow<SavedCredentials?>
-        field = MutableStateFlow(null)
+        field = MutableStateFlow(readCurrent())
 
     init {
         // TODO: At some point we should not rely on AccountManager for storing whether the user is not logged in or not
@@ -35,7 +48,7 @@ actual class CredentialsStore(
         // type change; readCurrent() re-checking ACCOUNT_TYPE specifically on every call is cheap enough that
         // filtering here isn't worth the version-gated code.
         accountManager.addOnAccountsUpdatedListener(
-            { current.value = runBlocking { readCurrent() } },
+            { current.value = readCurrent() },
             null,
             false,
         )
@@ -54,19 +67,9 @@ actual class CredentialsStore(
         }
         current.value = readCurrent()
 
-        // asynchronously store the credential in the Credential Manager, if available
-        CoroutineScope(dispatcherProvider.io).launch {
-            try {
-                credentialFetchLock.lock()
-                credentialManagerRepository.create()
-            } catch (e: IllegalStateException) {
-                // E2EE is not available and the credential cannot be created without cloud backup
-                // This is not a fatal error, this feature will just be missing for this user. Log it and continue.
-                log.error(e) { "Failed to create credential in Credential Manager" }
-            } finally {
-                credentialFetchLock.unlock()
-            }
-        }
+        // Also store a restore key, so the session can be recovered on a new device (see restoreSession()).
+        // Not fatal if it fails: this feature will just be missing for this user.
+        launchCredentialManagerOperation("create a restore key") { credentialManagerRepository.create() }
     }
 
     actual suspend fun get(): SavedCredentials? = readCurrent()
@@ -75,28 +78,41 @@ actual class CredentialsStore(
         accountManager.getAccountsByType(ACCOUNT_TYPE).forEach { accountManager.removeAccountExplicitly(it) }
         current.value = readCurrent()
 
-        // asynchronously clear the credential in the Credential Manager, if available
-        CoroutineScope(dispatcherProvider.io).launch {
-            try {
-                credentialFetchLock.lock()
-                credentialManagerRepository.clear()
-            } finally {
-                credentialFetchLock.unlock()
+        launchCredentialManagerOperation("clear the restore key") { credentialManagerRepository.clear() }
+    }
+
+    actual suspend fun restoreSession(): Boolean = credentialManagerLock.withLock {
+        try {
+            credentialManagerRepository.recover()
+            log.d { "Session restored with the Credential Manager's restore key." }
+            true
+        } catch (_: NoCredentialException) {
+            log.d { "No restore key available in the Credential Manager." }
+            false
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.w(e) { "Failed to restore the session with the Credential Manager's restore key." }
+            false
+        }
+    }
+
+    private fun launchCredentialManagerOperation(description: String, block: suspend () -> Unit) {
+        credentialManagerScope.launch {
+            credentialManagerLock.withLock {
+                try {
+                    block()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    log.e(e) { "Failed to $description in the Credential Manager." }
+                }
             }
         }
     }
 
-    private suspend fun readCurrent(): SavedCredentials? {
-        val account = accountManager.getAccountsByType(ACCOUNT_TYPE).firstOrNull()
-        if (account == null) {
-            // No account found locally, let's try to recover it from the Credential Manager if available
-            credentialFetchLock.withLock {
-                credentialManagerRepository.recover()
-            }
-            // if there are no errors, it means re-authentication was successful
-            // note that Android no longer has a password for the account, so we can't return a SavedCredentials object here
-            throw AuthenticationAlreadyHandledByCredentialManagerException()
-        }
+    private fun readCurrent(): SavedCredentials? {
+        val account = accountManager.getAccountsByType(ACCOUNT_TYPE).firstOrNull() ?: return null
         val password = accountManager.getPassword(account) ?: return null
         return SavedCredentials(account.name, password.toCharArray())
     }

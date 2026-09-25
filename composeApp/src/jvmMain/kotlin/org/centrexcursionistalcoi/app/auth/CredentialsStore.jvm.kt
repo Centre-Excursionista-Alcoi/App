@@ -13,4 +13,5 @@ actual class CredentialsStore {
     actual suspend fun save(email: String, password: String) {}
     actual suspend fun get(): SavedCredentials? = null
     actual suspend fun clear() {}
+    actual suspend fun restoreSession(): Boolean = false
 }

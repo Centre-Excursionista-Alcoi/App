@@ -138,6 +138,9 @@ actual class CredentialsStore internal constructor() {
         mutableCurrent.value = readCurrent()
     }
 
+    // Restore Credentials are Android-only.
+    actual suspend fun restoreSession(): Boolean = false
+
     private fun readCurrent(): SavedCredentials? = withServiceQuery {
         set(kSecReturnAttributes, kCFBooleanTrue)
         set(kSecReturnData, kCFBooleanTrue)

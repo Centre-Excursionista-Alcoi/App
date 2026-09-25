@@ -36,4 +36,11 @@ expect class CredentialsStore {
     suspend fun save(email: String, password: String)
     suspend fun get(): SavedCredentials?
     suspend fun clear()
+
+    /**
+     * Tries to get a server session back without any saved credentials (Android's Restore Credentials, e.g. on a
+     * new device after a backup restore). Always `false` on platforms that don't support it.
+     * @return `true` if a fresh session is now active.
+     */
+    suspend fun restoreSession(): Boolean
 }

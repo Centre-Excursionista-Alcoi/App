@@ -1,22 +1,29 @@
 package org.centrexcursionistalcoi.app.auth
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.ClearCredentialStateRequest.Companion.TYPE_CLEAR_RESTORE_CREDENTIAL
-import androidx.credentials.CreateCredentialResponse
 import androidx.credentials.CreateRestoreCredentialRequest
+import androidx.credentials.CreateRestoreCredentialResponse
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetRestoreCredentialOption
 import androidx.credentials.RestoreCredential
-import androidx.credentials.exceptions.restorecredential.CreateRestoreCredentialDomException
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.diamondedge.logging.logging
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.centrexcursionistalcoi.app.data.RegisterRestoreKeyRequest
 import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.webauthn.AuthenticationOptionsResponse
 import org.centrexcursionistalcoi.app.data.webauthn.CreationOptionsResponse
@@ -24,6 +31,11 @@ import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.koin.core.annotation.Singleton
 
+/**
+ * Client side of the server's WebAuthn routes (see `webAuthnRoutes()` on the server), used for Android's Restore
+ * Credentials: a restore key is registered after every successful login, and redeemed on a new device to get a
+ * session back without the user typing their password again.
+ */
 @Singleton
 class CredentialManagerRepository(private val context: Context) {
     private val credentialManager = CredentialManager.create(context)
@@ -31,91 +43,120 @@ class CredentialManagerRepository(private val context: Context) {
     private val log = logging()
 
     /**
-     * Creates a new credential in the Credential Manager using a challenge from the server.
-     * If E2EE is not available, it will try again without cloud backup.
-     * @throws IllegalStateException If
-     * - the requestJson is invalid or does not follow the WebAuthn format
-     * - if the createRestoreRequest is empty or not valid JSON
-     * - if it doesn't have a valid user.id that conforms to the WebAuthn specifications
-     * - if E2EE is not available and the credential cannot be created without cloud backup
+     * Not the shared `settings`: those are wiped on every login, and the id stored here must survive until the
+     * next restore key is registered from this device (including after a logout).
+     */
+    private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * Creates a new restore key in the Credential Manager and registers it on the server.
+     * Requires an active session: the server only hands out registration challenges to logged-in users.
+     *
+     * If E2EE is not available, the key is created without cloud backup (so it only survives device-to-device
+     * transfers, not cloud restores).
+     *
+     * The new key overwrites this device's previous one (Android keeps a single restore key per app), so the
+     * previous key's id is sent along for the server to delete its now-unusable record.
+     * @throws ServerException if the server rejects the challenge request or the registration.
+     * @throws androidx.credentials.exceptions.CreateCredentialException if the Credential Manager fails to create
+     * the key (e.g. unsupported device, or no provider available).
      */
     suspend fun create() {
-        val challengeRequest = httpClient.post("/generate-restore-challenge")
-        val challengeResponse = challengeRequest.body<CreationOptionsResponse>()
-        createCredential(challengeResponse)
-    }
+        val challengeResponse = httpClient.post("/generate-restore-challenge")
+            .successOrThrow()
+            .body<CreationOptionsResponse>()
+        val requestJson = webAuthnJson.encodeToString(CreationOptionsResponse.serializer(), challengeResponse)
 
-    /**
-     * Tries to create a credential with the given challenge response.
-     * If E2EE is not available, it will try again without cloud backup.
-     * @param challengeResponse The challenge response to use for creating the credential.
-     * @param isCloudBackupEnabled Whether to enable cloud backup for the credential. Defaults to true.
-     * @throws IllegalStateException If
-     * - the requestJson is invalid or does not follow the WebAuthn format
-     * - if the createRestoreRequest is empty or not valid JSON
-     * - if it doesn't have a valid user.id that conforms to the WebAuthn specifications.
-     */
-    private suspend fun createCredential(
-        challengeResponse: CreationOptionsResponse,
-        isCloudBackupEnabled: Boolean = true
-    ): CreateCredentialResponse {
-        try {
-            return credentialManager.createCredential(
-                context,
-                CreateRestoreCredentialRequest(
-                    requestJson = Json.encodeToString(
-                        CreationOptionsResponse.serializer(),
-                        challengeResponse
-                    ),
-                    isCloudBackupEnabled = isCloudBackupEnabled
-                )
-            )
-        } catch (e: CreateRestoreCredentialDomException) {
-            // requestJson is invalid and does not follow the WebAuthn format
-            throw IllegalStateException("Invalid requestJson for CreateRestoreCredentialRequest", e)
+        val response = try {
+            createCredential(requestJson, isCloudBackupEnabled = true)
         } catch (e: E2eeUnavailableException) {
             log.w(e) { "E2EE is not available. Creating credential without cloud backup" }
-            return createCredential(challengeResponse, isCloudBackupEnabled = false)
-        } catch (e: IllegalArgumentException) {
-            // createRestoreRequest is empty or not valid JSON, or if it doesn't have a valid user.id that conforms to the WebAuthn specifications.
-            throw IllegalStateException("Invalid requestJson for CreateRestoreCredentialRequest", e)
+            createCredential(requestJson, isCloudBackupEnabled = false)
         }
+
+        httpClient.post("/register-restore-key") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                RegisterRestoreKeyRequest(
+                    registrationResponseJson = response.responseJson,
+                    replacesCredentialId = preferences.getString(KEY_RESTORE_CREDENTIAL_ID, null),
+                )
+            )
+        }.successOrThrow()
+
+        val credentialId = webAuthnJson.parseToJsonElement(response.responseJson)
+            .jsonObject["id"]?.jsonPrimitive?.contentOrNull
+            // The server stores ids as Base64Url without padding.
+            ?.trimEnd('=')
+        preferences.edit { putString(KEY_RESTORE_CREDENTIAL_ID, credentialId) }
+    }
+
+    private suspend fun createCredential(
+        requestJson: String,
+        isCloudBackupEnabled: Boolean,
+    ): CreateRestoreCredentialResponse {
+        val response = credentialManager.createCredential(
+            context,
+            CreateRestoreCredentialRequest(requestJson, isCloudBackupEnabled),
+        )
+        return response as? CreateRestoreCredentialResponse
+            ?: error("Unexpected credential response type: ${response::class.simpleName}")
     }
 
     /**
-     * Recovers the WebAuthn credentials from the Credential Manager, and tries to log in the user with them.
-     * If the recovery fails, the user will have to log in manually.
-     * If this function doesn't throw an exception, it means the user has been logged in successfully.
+     * Redeems the restore key stored in the Credential Manager (if any) to log the user in.
+     * If this function doesn't throw, the server has set a new session cookie and the user is logged in.
+     * @throws androidx.credentials.exceptions.GetCredentialException if there's no restore key to redeem
+     * (`NoCredentialException`), or the Credential Manager fails to retrieve it.
+     * @throws ServerException if the server rejects the challenge request or the credential.
      */
     suspend fun recover() {
-        val challengeRequest = httpClient.post("/generate-auth-challenge")
-        val challengeResponse = challengeRequest.body<AuthenticationOptionsResponse>()
+        val challengeResponse = httpClient.post("/generate-auth-challenge")
+            .successOrThrow()
+            .body<AuthenticationOptionsResponse>()
 
-        val options = GetRestoreCredentialOption(
-            requestJson = Json.encodeToString(
-                AuthenticationOptionsResponse.serializer(),
-                challengeResponse
-            ),
+        val option = GetRestoreCredentialOption(
+            requestJson = webAuthnJson.encodeToString(AuthenticationOptionsResponse.serializer(), challengeResponse),
         )
-        val getRequest = GetCredentialRequest(listOf(options))
-        val getResponse = credentialManager.getCredential(context, getRequest)
+        val getResponse = credentialManager.getCredential(context, GetCredentialRequest(listOf(option)))
+        val credential = getResponse.credential as? RestoreCredential
+            ?: error("Unexpected credential type: ${getResponse.credential.type}")
 
-        val credential = getResponse.credential as RestoreCredential
-
-        // send the credential to the server for verification and login
-        // then the cookie will be set and the user will be logged in.
-        // The only counter-side to this approach is that AccountManager will no longer have the password for re-authentication.
-        val authRequest = RestoreKeyVerificationRequest(credential.authenticationResponseJson)
-        val authResponse = httpClient.post("/verify-restore-key") {
-            setBody(authRequest)
-        }
-        if (!authResponse.status.isSuccess()) {
-            throw ServerException.fromResponse(authResponse)
-        }
+        // The server sets the session cookie on success, which HttpCookies persists like a normal login's.
+        httpClient.post("/verify-restore-key") {
+            contentType(ContentType.Application.Json)
+            setBody(RestoreKeyVerificationRequest(credential.authenticationResponseJson))
+        }.successOrThrow()
     }
 
+    /**
+     * Removes the restore key from the Credential Manager, so it can't be used to log back in.
+     */
     suspend fun clear() {
-        val clearRequest = ClearCredentialStateRequest(TYPE_CLEAR_RESTORE_CREDENTIAL)
-        credentialManager.clearCredentialState(clearRequest)
+        credentialManager.clearCredentialState(ClearCredentialStateRequest(TYPE_CLEAR_RESTORE_CREDENTIAL))
+    }
+
+    private suspend fun HttpResponse.successOrThrow(): HttpResponse {
+        if (!status.isSuccess()) throw ServerException.fromResponse(this)
+        return this
+    }
+
+    private companion object {
+        const val PREFERENCES_NAME = "credential_manager"
+        const val KEY_RESTORE_CREDENTIAL_ID = "restore_credential_id"
+
+        /**
+         * Encodes the server's options into the `requestJson` the Credential Manager expects.
+         *
+         * [Json]'s defaults would drop every property left at its default value (`pubKeyCredParams`,
+         * `authenticatorSelection`, `timeout`, ...), some of which WebAuthn requires, so they're always encoded
+         * here; `null`s are omitted instead, since WebAuthn treats a missing member and an explicit `null`
+         * differently.
+         */
+        val webAuthnJson = Json {
+            encodeDefaults = true
+            explicitNulls = false
+            ignoreUnknownKeys = true
+        }
     }
 }

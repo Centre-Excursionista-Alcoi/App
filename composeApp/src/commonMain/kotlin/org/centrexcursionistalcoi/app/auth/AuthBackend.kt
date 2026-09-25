@@ -61,11 +61,14 @@ class AuthBackend(
      * [CredentialsStore] -- Android only for now). Used when a session expires unexpectedly, so the user isn't
      * bounced back to the login screen for what's often just an expired cookie.
      * @return `true` if re-authentication succeeded (a fresh session is now active); `false` if there were no
-     * saved credentials, or they were rejected -- in which case they're cleared, and the caller should fall
+     * saved credentials (and no session could be restored), or they were rejected -- in which case they're cleared, and the caller should fall
      * back to a normal [logout].
+     *
+     * With no saved credentials at all (e.g. a fresh install restored from a backup), falls back to
+     * [CredentialsStore.restoreSession] instead.
      */
     suspend fun tryAutoRelogin(): Boolean {
-        val saved = credentialsStore.get() ?: return false
+        val saved = credentialsStore.get() ?: return credentialsStore.restoreSession()
         return try {
             login(saved.email, saved.password.concatToString())
             log.d { "Automatic re-login succeeded." }
