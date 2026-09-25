@@ -14,15 +14,19 @@ import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureForwardedHeaders
+import org.centrexcursionistalcoi.app.plugins.configureRateLimits
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.AuthSessionsCleanup
+import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.SessionsKeys
 import org.centrexcursionistalcoi.app.security.configureAuthentication
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 
@@ -76,6 +80,9 @@ fun main() {
     // Initialize AES encryption
     AES.init()
 
+    // Load (or generate) the access token signing key
+    AuthTokens.init(File(System.getenv("KEYS_PATH") ?: "/keys"))
+
     // Validate Session encryption keys
     if (SessionsKeys.secretEncryptKey == null || SessionsKeys.secretSignKey == null) {
         logger.warn("No Session encryption keys found. Using default keys. This is a security issue.")
@@ -111,6 +118,9 @@ fun main() {
         waitUntilFirstSync = dbInitResult and Database.INIT_RESULT_MIGRATION_EXECUTED == Database.INIT_RESULT_MIGRATION_EXECUTED
     )
 
+    // Periodically delete expired and revoked sessions
+    AuthSessionsCleanup.start()
+
     // Start Ktor server
     embeddedServer(
         Netty,
@@ -125,6 +135,8 @@ fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = fals
     configureSentryTracing()
     configureContentNegotiation()
     configureSSE()
+    // Before routing: rate-limited routes need the plugin already installed.
+    configureRateLimits(isTesting)
     configureRouting()
     configureStatusPages()
     configureAuthentication(isTesting, isDevelopment)

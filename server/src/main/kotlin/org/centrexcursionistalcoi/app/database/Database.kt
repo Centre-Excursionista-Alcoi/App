@@ -8,6 +8,8 @@ import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration
 import org.centrexcursionistalcoi.app.database.migrations.DatabaseMigration.Companion.VERSION
 import org.centrexcursionistalcoi.app.database.table.AuthEvents
+import org.centrexcursionistalcoi.app.database.table.AuthRefreshTokens
+import org.centrexcursionistalcoi.app.database.table.AuthSessions
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
@@ -57,6 +59,8 @@ object Database {
         Members,
         UserReferences,
         UserCredentialRecords,
+        AuthSessions,
+        AuthRefreshTokens,
         Posts,
         PostFiles,
         LendingUsers,

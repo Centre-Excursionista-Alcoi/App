@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.forwardedHeader)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.rateLimit)
     implementation(libs.ktor.server.sessions)
     implementation(libs.ktor.server.sse)
     implementation(libs.ktor.server.statusPages)

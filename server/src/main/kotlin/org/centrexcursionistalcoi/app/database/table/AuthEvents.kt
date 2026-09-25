@@ -8,7 +8,16 @@ import org.jetbrains.exposed.v1.javatime.timestamp
  * The kind of authentication-related request an [AuthEvents] row records.
  */
 enum class AuthEventType {
-    LOGIN, REGISTER, LOST_PASSWORD, RESET_PASSWORD
+    LOGIN, REGISTER, LOST_PASSWORD, RESET_PASSWORD,
+
+    /** A restore key (WebAuthn) redeemed for tokens. */
+    WEBAUTHN_LOGIN,
+
+    /** Only failed refreshes are recorded: successful ones happen every few minutes per active user. */
+    TOKEN_REFRESH,
+
+    /** An already-used refresh token was presented again, and its session revoked. */
+    REFRESH_TOKEN_REUSE,
 }
 
 /**

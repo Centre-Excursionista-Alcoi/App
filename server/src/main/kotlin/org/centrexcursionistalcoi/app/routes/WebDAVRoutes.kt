@@ -20,15 +20,18 @@ import io.ktor.server.routing.head
 import io.ktor.server.routing.method
 import io.ktor.server.routing.options
 import io.ktor.server.routing.route
+import io.ktor.server.sessions.get
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import org.centrexcursionistalcoi.app.CEAWebDAVMessage
 import org.centrexcursionistalcoi.app.CEAWebDAVNormalizedPath
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
 import org.centrexcursionistalcoi.app.plugins.login
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
+import org.centrexcursionistalcoi.app.security.WebDavSession
 import org.slf4j.LoggerFactory
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -49,7 +52,14 @@ fun Route.propfind(body: RoutingHandler): Route {
  * @return true if the user is authenticated and authorized, false otherwise (response is sent)
  */
 private suspend fun RoutingContext.handleSession(): Boolean {
-    val session = getUserSession()
+    val session = getUserSession() ?: call.sessions.get<WebDavSession>()?.let { webDavSession ->
+        // Re-read, so that a disabled user or a revoked admin role applies immediately.
+        Database {
+            UserReferenceEntity.findById(webDavSession.sub)
+                ?.takeUnless { it.isDisabled }
+                ?.let(UserSession::fromReference)
+        }
+    }
     if (session != null) {
         if (session.isAdmin()) {
             return true
@@ -85,7 +95,7 @@ private suspend fun RoutingContext.handleSession(): Boolean {
         }
 
         logger.info("WebDAV login successful for admin user with basic auth (${session.sub}). Sending session cookie...")
-        call.sessions.set(session)
+        call.sessions.set(WebDavSession(session.sub))
     }
     return true
 }

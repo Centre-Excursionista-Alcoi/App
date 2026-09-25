@@ -20,9 +20,10 @@ services:
       EMAIL_FROM_NAME: No Reply
       EMAIL_REPLY_TO_ADDR: info@example.com
       EMAIL_REPLY_TO_NAME: Support
-      # Session encryption keys
-      SECRET_ENCRYPT_KEY: 00112233445566778899aabbccddeeff
-      SECRET_SIGN_KEY: 6819b57a326945c1968f45236589
+      # Session encryption keys. The defaults are public, so the server refuses to start with them when
+      # ENV=production: set real ones (e.g. `openssl rand -hex 32`) in the environment or an .env file.
+      SECRET_ENCRYPT_KEY: ${SECRET_ENCRYPT_KEY:-00112233445566778899aabbccddeeff}
+      SECRET_SIGN_KEY: ${SECRET_SIGN_KEY:-6819b57a326945c1968f45236589}
       # -- MailerSend Configuration --
       MAILER_SEND_TOKEN: abc
       # -- SMTP Configuration --

@@ -1,33 +1,28 @@
 package org.centrexcursionistalcoi.app
 
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.setCookie
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.AuthSessionMethod
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.security.AES
-import org.centrexcursionistalcoi.app.security.UserSession
-import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
+import org.centrexcursionistalcoi.app.security.AuthTokens
+import org.centrexcursionistalcoi.app.security.ClientInfo
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.StubUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.time.Instant
@@ -85,74 +80,31 @@ abstract class ApplicationTestBase {
             testApplication {
                 application {
                     module(isTesting = true)
-
-                    routing {
-                        get("/test-login") {
-                            // Simulate a user
-                            val fakeUser = UserSession(
-                                sub = FakeUser.SUB,
-                                fullName = FakeUser.FULL_NAME,
-                                email = FakeUser.EMAIL,
-                                groups = FakeUser.GROUPS
-                            )
-
-                            call.sessions.set(fakeUser)
-                            getUserSessionOrFail()
-
-                            call.respondText("Logged in as ${fakeUser.fullName}")
-                        }
-                        get("/test-login-admin") {
-                            // Simulate a user
-                            val fakeUser = UserSession(
-                                sub = FakeAdminUser.SUB,
-                                fullName = FakeAdminUser.FULL_NAME,
-                                email = FakeAdminUser.EMAIL,
-                                groups = FakeAdminUser.GROUPS
-                            )
-
-                            call.sessions.set(fakeUser)
-                            getUserSessionOrFail()
-
-                            call.respondText("Logged in as ${fakeUser.fullName}")
-                        }
-                        get("/test-login-2") {
-                            // Simulate a second, distinct user -- for tests that need to switch sessions
-                            // mid-test to check cross-user access (e.g. that one user can't read another's data).
-                            val fakeUser = UserSession(
-                                sub = FakeUser2.SUB,
-                                fullName = FakeUser2.FULL_NAME,
-                                email = FakeUser2.EMAIL,
-                                groups = FakeUser2.groups
-                            )
-
-                            call.sessions.set(fakeUser)
-                            getUserSessionOrFail()
-
-                            call.respondText("Logged in as ${fakeUser.fullName}")
-                        }
-                    }
                 }
-                val cookiesStorage = AcceptAllCookiesStorage()
                 client = createClient {
                     install(ContentNegotiation) {
                         json(json)
-                    }
-                    install(HttpCookies) {
-                        storage = cookiesStorage
                     }
                     install(Logging) {
                         level = LogLevel.ALL
                     }
                     install(SSE)
+                    defaultRequest {
+                        // Evaluated for every request: follows whoever the test is logged in as. A request that
+                        // sets its own Authorization header keeps it.
+                        accessToken?.let { headers.append(HttpHeaders.Authorization, "Bearer $it") }
+                    }
                 }
 
                 if (shouldLogIn == LoginType.USER) loginAsFakeUser()
                 else if (shouldLogIn == LoginType.ADMIN) loginAsFakeAdminUser()
 
-                val context = ApplicationTestContext(dib, cookiesStorage)
+                val context = ApplicationTestContext(dib)
                 block(context)
             }
         } finally {
+            accessToken = null
+
             // Re-enable push for tests that require it
             Push.disable = false
 
@@ -167,36 +119,34 @@ abstract class ApplicationTestBase {
         }
     }
 
-    suspend fun ApplicationTestBuilder.loginAsFakeUser() {
-        val response = client.get("/test-login")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("true", response.headers["CEA-LoggedIn"])
-        assertNotNull(
-            response.setCookie().find { it.name == UserSession.COOKIE_NAME },
-            "Session cookie not found in response"
-        )
-        System.err.println("Logged in successfully!")
+    /**
+     * The access token the test client sends with every request, see [loginAs].
+     */
+    private var accessToken: String? = null
+
+    /**
+     * Logs the test client in as [user], creating it if it doesn't exist, with a real session (see [AuthTokens]).
+     * Replaces whoever it was logged in as before.
+     */
+    fun loginAs(user: StubUser) {
+        val tokens = Database {
+            AuthTokens.startSession(user.provideEntity(), AuthSessionMethod.PASSWORD, ClientInfo(null, "test"))
+        }
+        accessToken = tokens.accessToken
+        System.err.println("Logged in as ${user.sub}")
     }
 
-    suspend fun ApplicationTestBuilder.loginAsFakeAdminUser() {
-        val response = client.get("/test-login-admin")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("true", response.headers["CEA-LoggedIn"])
-        assertNotNull(
-            response.setCookie().find { it.name == UserSession.COOKIE_NAME },
-            "Session cookie not found in response"
-        )
-        System.err.println("Logged in successfully!")
+    /** Makes the test client send no access token anymore. */
+    fun logout() {
+        accessToken = null
     }
 
-    suspend fun ApplicationTestBuilder.loginAsFakeUser2() {
-        val response = client.get("/test-login-2")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("true", response.headers["CEA-LoggedIn"])
-        assertNotNull(
-            response.setCookie().find { it.name == UserSession.COOKIE_NAME },
-            "Session cookie not found in response"
-        )
-        System.err.println("Logged in successfully!")
-    }
+    @Suppress("UnusedReceiverParameter")
+    fun ApplicationTestBuilder.loginAsFakeUser() = loginAs(FakeUser)
+
+    @Suppress("UnusedReceiverParameter")
+    fun ApplicationTestBuilder.loginAsFakeAdminUser() = loginAs(FakeAdminUser)
+
+    @Suppress("UnusedReceiverParameter")
+    fun ApplicationTestBuilder.loginAsFakeUser2() = loginAs(FakeUser2)
 }
