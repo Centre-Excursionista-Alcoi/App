@@ -8,8 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.sessions.clear
-import io.ktor.server.sessions.sessions
+import io.ktor.server.plugins.ratelimit.rateLimit
 import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
@@ -28,7 +27,6 @@ import org.centrexcursionistalcoi.app.routes.robotsRoute
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
-import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.version
@@ -80,7 +78,10 @@ fun Application.configureRouting() {
             ) { file.bytes }
         }
 
-        configureAuthRoutes()
+        authTokenRoutes()
+        rateLimit(RateLimits.AUTHENTICATION) {
+            configureAuthRoutes()
+        }
 
         configureSSERoutes()
 
@@ -104,11 +105,6 @@ fun Application.configureRouting() {
         }
 
         appLinkFallbackRoutes()
-
-        get("/logout") {
-            call.sessions.clear<UserSession>()
-            call.respondText("OK")
-        }
 
         get("/info") {
             val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0

@@ -5,6 +5,7 @@ import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.push.firebase.firebasePushNotifier
 import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.coroutines.getStringOrNullFlow
+import kotlinx.coroutines.CancellationException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.storage.settings
 
@@ -61,7 +62,11 @@ object FCMTokenManager {
             FCMTokenRemote.revokeToken(token)
             settings.remove(SETTINGS_FCM_TOKEN)
             true
-        } catch (e: ServerException) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Best-effort, e.g. no connectivity while logging out: the token stops being used anyway once the
+            // user is logged out.
             log.e(e) { "Could not revoke FCM token." }
             false
         }

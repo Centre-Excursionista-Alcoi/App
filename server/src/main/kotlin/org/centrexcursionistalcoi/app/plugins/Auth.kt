@@ -3,18 +3,13 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.basicAuthenticationCredentials
 import io.ktor.server.plugins.origin
-import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveParameters
-import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.Member
@@ -29,6 +24,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.AuthEventType
 import org.centrexcursionistalcoi.app.database.table.AuthEvents
+import org.centrexcursionistalcoi.app.database.table.AuthSessionRevocationReason
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.FCMRegistrationTokens
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
@@ -36,6 +32,7 @@ import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.Error.Companion.ERROR_INVALID_ARGUMENT
@@ -50,10 +47,9 @@ import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.routes.WebTemplate
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
 import org.centrexcursionistalcoi.app.routes.assertContentType
+import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.Passwords
-import org.centrexcursionistalcoi.app.security.UserSession
-import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.webAuthnRoutes
 import org.centrexcursionistalcoi.app.translation.locale
@@ -106,7 +102,7 @@ fun login(email: String, password: CharArray): Error? {
  * directly (there's no API endpoint exposing it).
  * @param error The failure, or `null` if the request succeeded.
  */
-private fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, error: Error?) {
+internal fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, error: Error?) {
     val remoteHost = call.request.origin.remoteHost
     val userAgent = call.request.headers[HttpHeaders.UserAgent]
     Database {
@@ -123,7 +119,7 @@ private fun RoutingContext.recordAuthEvent(type: AuthEventType, email: String?, 
 }
 
 /** Records [error] as an [AuthEvents] row for [type], then responds it. */
-private suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: String?, error: Error) {
+internal suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: String?, error: Error) {
     recordAuthEvent(type, email, error)
     respondError(error)
 }
@@ -131,46 +127,6 @@ private suspend fun RoutingContext.respondAuthError(type: AuthEventType, email: 
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     webAuthnRoutes()
-
-    post("/login") {
-        getUserSession()?.let {
-            return@post call.respond(HttpStatusCode.OK)
-        }
-
-        val contentType = call.request.contentType()
-        val (email, password) = when {
-            contentType.match(ContentType.Application.FormUrlEncoded) -> {
-                val parameters = call.receiveParameters()
-                val email = parameters["email"]?.trim()?.uppercase()
-                val password = parameters["password"]?.trim()?.toCharArray()
-                email to password
-            }
-            else -> {
-                val credentials = call.request.basicAuthenticationCredentials()
-                if (credentials == null) {
-                    call.response.header(HttpHeaders.WWWAuthenticate, "Basic realm=\"Introduce your credentials\"")
-                    return@post respondAuthError(AuthEventType.LOGIN, null, Error.IncorrectPasswordOrEmail())
-                }
-                val email = credentials.name.trim().uppercase()
-                val password = credentials.password.trim().toCharArray()
-                email to password
-            }
-        }
-
-        if (email == null) return@post respondAuthError(AuthEventType.LOGIN, null, Error.IncorrectPasswordOrEmail())
-        if (password == null) return@post respondAuthError(AuthEventType.LOGIN, email, Error.IncorrectPasswordOrEmail())
-
-        val error = login(email, password)
-        if (error != null) {
-            return@post respondAuthError(AuthEventType.LOGIN, email, error)
-        }
-
-        // Success, set session and respond accordingly
-        recordAuthEvent(AuthEventType.LOGIN, email, null)
-        val session = Database { UserSession.fromEmail(email) }
-        call.sessions.set(session)
-        call.respond(HttpStatusCode.OK)
-    }
 
     post("/register") {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
@@ -311,6 +267,10 @@ fun Route.configureAuthRoutes() {
         val hashedPassword = Passwords.hash(newPassword)
         Database {
             userReference.password = hashedPassword
+            // Whoever knew the old password may have logged in with it, or registered a restore key: none of that
+            // survives the reset.
+            AuthTokens.revokeAllSessions(userReference.sub.value, AuthSessionRevocationReason.PASSWORD_RESET)
+            UserCredentialRecords.deleteWhere { UserCredentialRecords.user eq userReference.sub }
         }
 
         // delete the request
@@ -418,6 +378,10 @@ fun Route.configureAuthRoutes() {
                 .count()
         }.also { logger.info("Removed $it references from LendingEntity.givenBy") }
 
+        Database {
+            UserCredentialRecords.deleteWhere { UserCredentialRecords.user eq userReference.sub }
+        }.also { logger.info("Deleted $it entries from UserCredentialRecords") }
+        // Sessions and refresh tokens are deleted along with the user reference (ON DELETE CASCADE).
         Database { userReference.delete() }
         logger.info("Deleted user reference.")
 

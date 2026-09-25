@@ -6,7 +6,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -15,8 +14,8 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.auth.installSessionAuth
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 import org.centrexcursionistalcoi.app.storage.settings
 
 private val log = logging()
@@ -24,9 +23,6 @@ private val log = logging()
 private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()) {
     defaultRequest {
         url(BuildKonfig.SERVER_URL)
-    }
-    install(HttpCookies) {
-        storage = SettingsCookiesStorage.Default
     }
     install(ContentNegotiation) {
         json(json)
@@ -40,7 +36,7 @@ private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()
         checkHttpMethod = false
     }
     configureLogging()
-}
+}.installSessionAuth()
 
 @Suppress("ObjectPropertyName")
 @VisibleForTesting
@@ -55,6 +51,8 @@ fun HttpClientConfig<*>.configureLogging() {
             }
         }
         level = LogLevel.HEADERS
+        // Access tokens must never reach logs (or crash reports that include them).
+        sanitizeHeader { it == HttpHeaders.Authorization }
     }
 }
 

@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
-import org.centrexcursionistalcoi.app.auth.SavedCredentials
+import org.centrexcursionistalcoi.app.auth.SavedAccount
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import kotlin.test.AfterTest
@@ -52,15 +52,15 @@ class TestLoginViewModel {
 
     @Test
     fun `existingAccountEmail does not flip non-null from this screen's own successful login`() = runTest {
-        val current = MutableStateFlow<SavedCredentials?>(null)
+        val current = MutableStateFlow<SavedAccount?>(null)
         val credentialsStore = mockk<CredentialsStore> {
             every { this@mockk.current } returns current
         }
         val authBackend = mockk<AuthBackend>()
         coEvery { authBackend.login("user@example.com", "password") } coAnswers {
-            // Mirrors AuthBackend.login's real side effect: credentialsStore.save(...) updates `current` on
+            // Mirrors AuthBackend.login's real side effect: credentialsStore.saveSession(...) updates `current` on
             // success, before login() returns and its caller gets a chance to navigate away.
-            current.value = SavedCredentials("user@example.com", "password".toCharArray())
+            current.value = SavedAccount("user@example.com")
         }
 
         val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore)

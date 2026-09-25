@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.push
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
@@ -15,10 +14,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.auth.installSessionAuth
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.network.configureLogging
-import org.centrexcursionistalcoi.app.storage.SettingsCookiesStorage
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
@@ -44,15 +43,12 @@ class SSENotificationsListener(
         defaultRequest {
             url(BuildKonfig.SERVER_URL)
         }
-        install(HttpCookies) {
-            storage = SettingsCookiesStorage.Default
-        }
         install(ContentNegotiation) {
             json(json)
         }
         install(SSE)
         configureLogging()
-    }
+    }.installSessionAuth()
 
     fun startListening() {
         _sseException.value = null

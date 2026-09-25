@@ -3,12 +3,10 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.routing.Route
-import io.ktor.server.sessions.get
-import io.ktor.server.sessions.sessions
 import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.security.UserSession
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -30,7 +28,7 @@ fun Route.configureSSERoutes() {
     }
 
     sse("/sse") {
-        val session = call.sessions.get<UserSession>()
+        val session = call.getUserSession()
         if (session == null) {
             logger.debug("User tried to connect to SSE without a valid session.")
             close()
