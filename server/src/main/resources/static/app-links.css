@@ -70,3 +70,11 @@ p { color: var(--text-muted); font-size: 15px; line-height: 1.5; margin: 0 0 28p
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .cta:hover, .cta:active { transform: translateY(-2px); box-shadow: 0 14px 30px var(--shadow); }
+.secondary {
+    display: block;
+    margin-top: 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+    text-decoration: underline;
+}
+.secondary:hover, .secondary:active { color: var(--primary); }

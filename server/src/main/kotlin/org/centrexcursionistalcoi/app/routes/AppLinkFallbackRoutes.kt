@@ -17,6 +17,7 @@ import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
 import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTemplate
+import org.centrexcursionistalcoi.app.utils.escapeHtml
 import java.net.URLEncoder
 
 /** [AppLinks.baseUrl]'s own host, with no scheme -- the only host the app claims links on. */
@@ -34,43 +35,52 @@ private fun ApplicationCall.isAppLinksHost() = request.host() == appLinksHost
  * or matched it on purpose, see [appLinkFallbackRoutes]) -- an app-link path (`/admin/lendings/<id>`), a stray
  * link, or the bare domain.
  *
- * On mobile, sent straight into opening the app (Android) or the store, with no intermediate page. Anything else
- * gets a brief page linking to both stores (see [WebTemplate.GetApp]).
+ * iOS is sent straight to the store, with no intermediate page -- a plain HTTPS redirect always works, everywhere.
+ * Everyone else (Android included, see below) lands on [WebTemplate.GetApp].
  */
 @OptIn(ExperimentalXmlUtilApi::class)
 private suspend fun ApplicationCall.respondAppLinkFallback() {
     val userAgent = request.userAgent().orEmpty()
-    when {
+    val autoOpenMeta = when {
         userAgent.contains("Android", ignoreCase = true) -> {
-            // Relaunches this same request through Chrome's "intent://" scheme: it opens the app directly if
-            // it's installed, or follows the fallback straight to the Play Store if not -- one redirect, no page.
+            // A meta-refresh (rendered into the page below) relaunches this same request through Chrome's
+            // "intent://" scheme: it opens the app directly if it's installed, or follows the fallback straight
+            // to the Play Store if not. This used to be a raw HTTP redirect straight to that intent:// URL, with
+            // no page at all -- but a browser that can't or won't act on it (an in-app browser that blocks
+            // custom schemes, or a user who dismisses an "open app?" prompt) then has nothing to fall back to
+            // and shows a blank page (#689). Rendering the same landing page as everyone else, with the redirect
+            // attempted from inside it, means there's always something real to land on.
             val fallback = withContext(Dispatchers.IO) { URLEncoder.encode(AppLinks.playStoreUrl, "UTF-8") }
             val launchUrl = "intent://$appLinksHost${request.uri}#Intent;scheme=https;" +
                 "package=${AppLinks.ANDROID_PACKAGE_NAME};S.browser_fallback_url=$fallback;end"
-            respondRedirect(launchUrl, permanent = false)
+            // request.uri (via launchUrl) is attacker-controlled -- escape it before it goes into an HTML
+            // attribute, or a crafted link could break out of `content="..."` and inject markup.
+            """<meta http-equiv="refresh" content="0;url=${launchUrl.escapeHtml()}">"""
         }
         Regex("iPhone|iPad|iPod", RegexOption.IGNORE_CASE).containsMatchIn(userAgent) -> {
             // iOS has no equivalent to intent:// (there's no custom URL scheme declared, on purpose): if this
             // request is even reaching the server, the OS's own Universal Link interception already didn't
             // happen, so there's nothing left to try except sending them to the store directly.
             respondRedirect(AppLinks.appStoreUrl, permanent = false)
+            return
         }
-        else -> {
-            // Both the app's own crawlers (WhatsApp, Telegram, Slack, ...) generating a link preview and a plain
-            // desktop visitor land here, and get the exact same response: crawlers only ever read the <head>.
-            val path = request.path()
-            val (title, description) = previewFor(path)
-            respondTemplate(
-                WebTemplate.GetApp,
-                mapOf(
-                    "preview_title" to title,
-                    "preview_description" to description,
-                    "preview_image" to "${AppLinks.baseUrl}/static/app-icon.png",
-                    "preview_url" to "${AppLinks.baseUrl}$path",
-                ),
-            )
-        }
+        // Everyone else: a plain desktop visitor, or one of the app's own crawlers (WhatsApp, Telegram, Slack,
+        // ...) generating a link preview -- they identify with their own User-Agent, never "Android" or "iPhone".
+        else -> ""
     }
+
+    val path = request.path()
+    val (title, description) = previewFor(path)
+    respondTemplate(
+        WebTemplate.GetApp,
+        mapOf(
+            "preview_title" to title,
+            "preview_description" to description,
+            "preview_image" to "${AppLinks.baseUrl}/static/app-icon.png",
+            "preview_url" to "${AppLinks.baseUrl}$path",
+            "auto_open_meta" to autoOpenMeta,
+        ),
+    )
 }
 
 /**

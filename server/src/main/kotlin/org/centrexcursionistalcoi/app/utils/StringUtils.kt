@@ -31,6 +31,16 @@ fun generateRandomString(length: Int = 12): String {
 }
 
 /**
+ * Escapes the characters that are special to HTML (`&`, `<`, `>`, `"`, `'`), so this string is safe to interpolate
+ * into HTML markup -- an attribute value included, since `'`/`"` could otherwise break out of one.
+ */
+fun String.escapeHtml(): String = replace("&", "&amp;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
+    .replace("\"", "&quot;")
+    .replace("'", "&#39;")
+
+/**
  * Generates a random alphanumeric string of the given length.
  * @param length The length of the generated string. Defaults to 12 characters.
  */
