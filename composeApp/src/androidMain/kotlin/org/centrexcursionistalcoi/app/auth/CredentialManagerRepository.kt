@@ -46,6 +46,9 @@ class CredentialManagerRepository(private val context: Context) {
     /**
      * Not the shared `settings`: those are wiped on every login, and the id stored here must survive until the
      * next restore key is registered from this device (including after a logout).
+     *
+     * Excluded from backups (`res/xml/backup_rules.xml`, `res/xml/data_extraction_rules.xml`): it names *this*
+     * device's key, so a device set up from this one's backup must not inherit it.
      */
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
