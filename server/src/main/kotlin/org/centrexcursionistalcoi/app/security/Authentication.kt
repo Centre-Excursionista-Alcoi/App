@@ -303,6 +303,11 @@ fun Route.webAuthnRoutes() {
                     this.user = reference
                     this.attestedCredentialData = attestedCredentialDataBytes
                     this.signCount = authenticatorData.signCount
+                }.also {
+                    // Only the key this device replaced: the user's other devices keep their own restore keys.
+                    request.replacesCredentialId
+                        ?.takeIf { it != credentialIdBase64Url }
+                        ?.let { UserCredentialRecordEntity.deleteIfOwnedBy(it, user.sub) }
                 }
             }
             if (stored == null) return@post respondError(Error.EntityNotFound(UserReferenceEntity::class, user.sub))

@@ -24,6 +24,7 @@ class AuthBackend(
     private val db: AppDatabase,
     private val credentialsStore: CredentialsStore,
     private val sessionTokens: SessionTokens,
+    private val restoreKeys: RestoreKeys,
 ) {
 
     private val log = logging()
@@ -62,29 +63,39 @@ class AuthBackend(
         if (response.status.isSuccess()) {
             log.d { "Login successful." }
             sessionTokens.onLoggedIn(response.body<TokenResponse>())
+            // So that this account can be logged in on a new device without the password.
+            restoreKeys.create()
         } else {
             throw response.bodyAsError().toThrowable()
         }
     }
 
     /**
-     * Tries to silently get a fresh session from the one saved on this device (see [CredentialsStore]). Used when
-     * the server rejects the session, so the user isn't bounced back to the login screen when the session can still be recovered.
-     * @return `true` if there's a valid session now; `false` if there was no saved session, or it's no longer
-     * valid -- in which case it's already been forgotten, and the caller should fall back to a normal [logout].
+     * Tries to silently get a fresh session: from the one saved on this device (see [CredentialsStore]), or else
+     * with the device's restore key (see [RestoreKeys]), e.g. on a new device restored from a backup. Used when the
+     * server rejects the session, so the user isn't bounced back to the login screen when the session can still be
+     * recovered.
+     * @return `true` if there's a valid session now; `false` otherwise -- in which case the saved session has
+     * already been forgotten if it's no longer valid, and the caller should fall back to a normal [logout].
      */
     suspend fun tryAutoRelogin(): Boolean {
-        if (credentialsStore.getSession() == null) return false
-        return try {
-            sessionTokens.refresh(getHttpClient()).also { refreshed ->
-                if (refreshed) log.d { "Session refreshed." } else log.d { "The saved session is no longer valid." }
+        if (credentialsStore.getSession() != null) {
+            try {
+                if (sessionTokens.refresh(getHttpClient())) {
+                    log.d { "Session refreshed." }
+                    return true
+                }
+                log.d { "The saved session is no longer valid." }
+            } catch (e: Exception) {
+                // No connectivity, a timeout, a server error... say nothing about whether the session is still
+                // valid: keep it, so the next attempt can still use it.
+                log.w(e) { "Could not refresh the session; keeping it for the next attempt." }
+                return false
             }
-        } catch (e: Exception) {
-            // No connectivity, a timeout, a server error... say nothing about whether the session is still valid:
-            // keep it, so the next attempt can still use it.
-            log.w(e) { "Could not refresh the session; keeping it for the next attempt." }
-            false
         }
+        val tokens = restoreKeys.redeem() ?: return false
+        sessionTokens.onLoggedIn(tokens)
+        return true
     }
 
     suspend fun logout() {
@@ -151,6 +162,7 @@ class AuthBackend(
         settings.clear()
         credentialsStore.clear()
         sessionTokens.onLoggedOut()
+        restoreKeys.clear()
     }
 
     suspend fun forgotPassword(email: String) {

@@ -267,6 +267,10 @@ kotlin {
                 // Koin Extensions for Android
                 implementation(libs.koin.android)
                 implementation(libs.koin.androidx.workmanager)
+
+                // Credentials Manager
+                implementation(libs.androidx.credentials)
+                implementation(libs.androidx.credentials.playServicesAuth)
             }
         }
 

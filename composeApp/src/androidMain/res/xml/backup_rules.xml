@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backups up to Android 11. Keep in sync with data_extraction_rules.xml. -->
+<full-backup-content>
+    <!-- The id of this device's restore key (see CredentialManagerRepository): restored onto another device, that
+         device would make the server delete a restore key this one may still hold. -->
+    <exclude domain="sharedpref" path="credential_manager.xml" />
+</full-backup-content>
