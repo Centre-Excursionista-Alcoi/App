@@ -152,29 +152,9 @@ jobs:
         run: |
           cp android/google-services.test.json android/google-services.json
 
-      # Keyed on the AVD snapshot alone (not the app/test code) -- the emulator image and its boot snapshot
-      # don't change when composeApp changes, so this cache stays a hit across runs and only busts on API level.
-      - name: AVD cache
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-30
-
-      - name: Create AVD and generate snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
-
+      # Cold boot, no snapshots: an emulator restored from a cached snapshot reports having booted before its
+      # system services are up, and the emulator runner's own unlock (`input keyevent 82`) then fails with "No
+      # service published for: input" before any test runs.
       - name: Run Android instrumented tests
         id: app_instrumented_tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -182,8 +162,7 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: ./gradlew :composeApp:connectedAndroidDeviceTest
 
