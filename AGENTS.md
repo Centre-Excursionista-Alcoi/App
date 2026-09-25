@@ -74,6 +74,24 @@ Then:
 (`:server:run` is the plain Gradle application task — simpler than `installDist` + running the jar by hand,
 and it picks up code changes on restart without reinstalling.)
 
+### Local test accounts
+
+The local dev database (`cea-db`) has these accounts, all with password **`DevPassword123`**:
+
+| Email | Name | Groups | Use it to test |
+|---|---|---|---|
+| `admin@example.com` | Admin Testing | `admin`, `cea_member` | global admin features |
+| `user1@example.com` | Regular User One | `cea_member` | a regular member |
+| `user2@example.com` | Regular User Two | `cea_member` | a second member (cross-user access) |
+
+None of them belongs to a department yet. They exist only in this machine's database (it's not seeded), and the
+passwords only work with **`KEYS_PATH` pointing at `server/keys`** (git-ignored), which holds the `aes.key` they
+were encrypted with. Run the server with `KEYS_PATH=$PWD/server/keys` from the repo root: a `KEYS_PATH` anywhere
+else generates a new `aes.key`, and every login then fails with `BadPaddingException` (500). If that key is ever
+lost, the stored passwords can't be recovered: re-encrypt a new bcrypt hash with the current key (stored as the
+base64 text of IV + AES-CBC) directly in `user_references.password` -- `/reset_password` can't help, since it
+loads (and fails to decrypt) the old value first.
+
 **Gotchas:**
 
 - **Don't rely on `Database.URL`'s default.** If `DB_URL` is unset, the server falls back to
