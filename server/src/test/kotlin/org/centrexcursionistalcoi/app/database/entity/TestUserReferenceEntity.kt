@@ -1,10 +1,17 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.security.AES
 
 class TestUserReferenceEntity {
+    // The in-memory database outlives each test: the user created here shares FakeUser's NIF.
+    @AfterTest
+    fun tearDown() {
+        Database.clear()
+    }
+
     @Test
     fun test_femecv() {
         Database.initForTests()

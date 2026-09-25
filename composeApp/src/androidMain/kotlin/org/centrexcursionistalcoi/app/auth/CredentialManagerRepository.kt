@@ -25,6 +25,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.data.RegisterRestoreKeyRequest
 import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
+import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.data.webauthn.AuthenticationOptionsResponse
 import org.centrexcursionistalcoi.app.data.webauthn.CreationOptionsResponse
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -104,14 +105,14 @@ class CredentialManagerRepository(private val context: Context) {
     }
 
     /**
-     * Redeems the restore key stored in the Credential Manager (if any) to log the user in.
-     * If this function doesn't throw, the server has set a new session cookie and the user is logged in.
+     * Redeems the restore key stored in the Credential Manager (if any) for a new session.
+     * @return the new session's tokens.
      * @throws androidx.credentials.exceptions.GetCredentialException if there's no restore key to redeem
      * (`NoCredentialException`), or the Credential Manager fails to retrieve it.
      * @throws ServerException if the server rejects the challenge request or the credential.
      */
-    suspend fun recover() {
-        val challengeResponse = httpClient.post("/generate-auth-challenge")
+    suspend fun recover(): TokenResponse {
+        val challengeResponse = httpClient.post("/generate-auth-challenge") { skipSessionAuth() }
             .successOrThrow()
             .body<AuthenticationOptionsResponse>()
 
@@ -122,11 +123,11 @@ class CredentialManagerRepository(private val context: Context) {
         val credential = getResponse.credential as? RestoreCredential
             ?: error("Unexpected credential type: ${getResponse.credential.type}")
 
-        // The server sets the session cookie on success, which HttpCookies persists like a normal login's.
-        httpClient.post("/verify-restore-key") {
+        return httpClient.post("/auth/webauthn/verify") {
+            skipSessionAuth()
             contentType(ContentType.Application.Json)
             setBody(RestoreKeyVerificationRequest(credential.authenticationResponseJson))
-        }.successOrThrow()
+        }.successOrThrow().body()
     }
 
     /**

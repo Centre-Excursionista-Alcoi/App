@@ -29,7 +29,7 @@ class TestAuthEvents : ApplicationTestBase() {
     @Test
     fun test_login_failure_isRecorded() = runApplicationTest {
         client.submitForm(
-            "/login",
+            "/auth/login",
             parameters { parameters.forEach { (key, value) -> append(key, value) } },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())

@@ -90,15 +90,15 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_login_empty() = runApplicationTest {
-        val response = client.post("/login")
-        response.assertError(Error.IncorrectPasswordOrEmail())
+        val response = client.post("/auth/login")
+        response.assertStatusCode(HttpStatusCode.BadRequest)
     }
 
     @Test
     fun test_login_missingFields() = runApplicationTest {
         for ((key) in parameters) {
             client.submitForm(
-                "/login",
+                "/auth/login",
                 parameters { appendAll(parameters.filterKeys { it != key }) },
             ).apply {
                 assertError(Error.IncorrectPasswordOrEmail())
@@ -109,7 +109,7 @@ class TestAuth: ApplicationTestBase() {
     @Test
     fun test_login_wrongEmail() = runApplicationTest {
         client.submitForm(
-            "/login",
+            "/auth/login",
             parameters { appendAll(parameters + ("email" to "invalid")) },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())
@@ -119,7 +119,7 @@ class TestAuth: ApplicationTestBase() {
     @Test
     fun test_login_wrongPassword() = runApplicationTest {
         client.submitForm(
-            "/login",
+            "/auth/login",
             parameters { appendAll(parameters + ("password" to "invalid")) },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())
@@ -134,7 +134,7 @@ class TestAuth: ApplicationTestBase() {
         }
     ) {
         client.submitForm(
-            "/login",
+            "/auth/login",
             parameters { appendAll(parameters) },
         ).apply {
             assertSuccess()

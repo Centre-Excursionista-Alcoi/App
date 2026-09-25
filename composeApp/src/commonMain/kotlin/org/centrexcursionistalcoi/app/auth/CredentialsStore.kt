@@ -17,30 +17,41 @@ class SavedCredentials(val email: String, val password: CharArray) {
     override fun hashCode(): Int = 31 * email.hashCode() + password.contentHashCode()
 }
 
+/** The account saved on this device. */
+class SavedAccount(val email: String)
+
+/** A logged-in session saved on this device, see [CredentialsStore]. */
+class SavedSession(val email: String, val refreshToken: String) {
+    override fun toString(): String = "SavedSession(email=$email, refreshToken=<redacted>)"
+}
+
 /**
- * Persists the credentials used for the last successful login, so [AuthBackend.tryAutoRelogin] can silently
- * re-authenticate after the session expires instead of forcing the user back to the login screen.
+ * Persists the session of the logged-in account: its refresh token (see `SessionTokens`), which is what keeps the
+ * user logged in across app restarts. The access token is only ever kept in memory.
  *
  * Backed by Android's `AccountManager` (the OS-blessed place for this exact purpose -- encrypted at rest,
- * scoped to this app's own account type) and iOS's Keychain (`kSecClassGenericPassword`); a no-op stub on
- * desktop/JVM, where [save] does nothing and [get] always returns `null`, so [AuthBackend.tryAutoRelogin]
- * always falls through to a normal logout there.
+ * scoped to this app's own account type) and iOS's Keychain (`kSecClassGenericPassword`, only readable on this
+ * device); in the app's settings on desktop/JVM.
  *
- * [current] mirrors [get] as a hot, live [StateFlow] instead of a one-shot call, for UI code (e.g. the Login
- * screen's "you already have an account saved" warning) that wants to react to it changing over time rather
- * than polling.
+ * Versions before token authentication saved the account's password instead, to log in again silently once the
+ * session expired: [getLegacyCredentials] reads it only to migrate to a session (see
+ * [LegacyAuthMigration]), and [saveSession] deletes it.
+ *
+ * [current] is the saved account as a hot, live [StateFlow], for UI code (e.g. the Login screen's "you already have
+ * an account saved" warning) that wants to react to it changing over time rather than polling.
  */
 @Singleton
 expect class CredentialsStore {
-    val current: StateFlow<SavedCredentials?>
-    suspend fun save(email: String, password: String)
-    suspend fun get(): SavedCredentials?
-    suspend fun clear()
+    val current: StateFlow<SavedAccount?>
 
-    /**
-     * Tries to get a server session back without any saved credentials (Android's Restore Credentials, e.g. on a
-     * new device after a backup restore). Always `false` on platforms that don't support it.
-     * @return `true` if a fresh session is now active.
-     */
-    suspend fun restoreSession(): Boolean
+    /** Saves the session of [email], replacing any other saved account and any legacy password. */
+    fun saveSession(email: String, refreshToken: String)
+
+    fun getSession(): SavedSession?
+
+    /** The password saved by versions before token authentication, if it hasn't been migrated yet. */
+    fun getLegacyCredentials(): SavedCredentials?
+
+    /** Forgets the saved account: its session, and its legacy password if any. */
+    fun clear()
 }

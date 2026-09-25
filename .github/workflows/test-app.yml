@@ -92,8 +92,15 @@ jobs:
         run: |
           cp android/google-services.test.json android/google-services.json
 
+      # $ImageVersion is set on GitHub-hosted runners, but isn't available to expressions.
+      - name: Get runner image version
+        id: runner-image
+        run: echo "version=$ImageVersion" >> "$GITHUB_OUTPUT"
+
       # Keyed on the AVD snapshot alone (not the app/test code) -- the emulator image and its boot snapshot
-      # don't change when composeApp changes, so this cache stays a hit across PRs and only busts on API level.
+      # don't change when composeApp changes, so this cache stays a hit across PRs. It busts on API level and on
+      # the runner image: a snapshot made with a previous image's emulator restores into a system that reports
+      # having booted before its services are up.
       - name: AVD cache
         uses: actions/cache@v4
         id: avd-cache
@@ -101,7 +108,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-30
+          key: avd-30-${{ steps.runner-image.outputs.version }}
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'

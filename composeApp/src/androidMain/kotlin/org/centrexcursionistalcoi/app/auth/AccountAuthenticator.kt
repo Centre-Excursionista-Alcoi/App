@@ -94,10 +94,10 @@ class AccountAuthenticator(private val context: Context) : AbstractAccountAuthen
         options: Bundle?,
     ): Bundle? {
         if (account == null) return unsupported()
-        // This app's sessions are cookie-based (see SettingsCookiesStorage), not bearer tokens, so there's no
-        // real "auth token" to hand back -- but a fresh session is obtained the same way as any other silent
-        // relogin (see AuthBackend.tryAutoRelogin, used internally on session expiry), reusing the credentials
-        // saved from the last successful login. A successful refresh is itself the meaningful result here.
+        // The session's tokens are deliberately never handed out through AccountManager, where other apps could
+        // ask for them -- but a fresh session is obtained the same way as any other silent relogin (see
+        // AuthBackend.tryAutoRelogin, used internally on session expiry), refreshing the session saved from the
+        // last successful login. A successful refresh is itself the meaningful result here.
         scope.launch {
             val refreshed = try {
                 authBackend.tryAutoRelogin()

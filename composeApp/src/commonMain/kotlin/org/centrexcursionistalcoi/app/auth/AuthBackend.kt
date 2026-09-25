@@ -1,14 +1,18 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
+import io.ktor.client.call.body
 import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
+import org.centrexcursionistalcoi.app.data.RefreshTokenRequest
+import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
-import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
@@ -19,7 +23,10 @@ import org.koin.core.annotation.Singleton
 class AuthBackend(
     private val db: AppDatabase,
     private val credentialsStore: CredentialsStore,
+    private val sessionTokens: SessionTokens,
+    private val restoreKeys: RestoreKeys,
 ) {
+
     private val log = logging()
     
     suspend fun register(email: String, password: String) {
@@ -38,63 +45,80 @@ class AuthBackend(
     }
 
     suspend fun login(email: String, password: String) {
-        // Clear storage before logging in. This clears the cookies
+        // Clear storage before logging in, so nothing from a previous account is left behind
         settings.clear()
 
+        authenticate(email, password)
+    }
+
+    /** Starts a session with [email] and [password], saving its tokens. */
+    internal suspend fun authenticate(email: String, password: String) {
         val response = getHttpClient().submitForm(
-            url = "/login",
+            url = "/auth/login",
             formParameters = parameters {
                 append("email", email)
                 append("password", password)
             }
-        )
+        ) { skipSessionAuth() }
         if (response.status.isSuccess()) {
             log.d { "Login successful." }
-            credentialsStore.save(email, password)
+            sessionTokens.onLoggedIn(response.body<TokenResponse>())
+            // So that this account can be logged in on a new device without the password.
+            restoreKeys.create()
         } else {
             throw response.bodyAsError().toThrowable()
         }
     }
 
     /**
-     * Tries to silently re-authenticate using the credentials saved from the last successful [login] (see
-     * [CredentialsStore] -- Android only for now). Used when a session expires unexpectedly, so the user isn't
-     * bounced back to the login screen for what's often just an expired cookie.
-     * @return `true` if re-authentication succeeded (a fresh session is now active); `false` if there were no
-     * saved credentials (and no session could be restored), or they were rejected -- in which case they're cleared, and the caller should fall
-     * back to a normal [logout].
-     *
-     * With no saved credentials at all (e.g. a fresh install restored from a backup), falls back to
-     * [CredentialsStore.restoreSession] instead.
+     * Tries to silently get a fresh session: from the one saved on this device (see [CredentialsStore]), or else
+     * with the device's restore key (see [RestoreKeys]), e.g. on a new device restored from a backup. Used when the
+     * server rejects the session, so the user isn't bounced back to the login screen when the session can still be
+     * recovered.
+     * @return `true` if there's a valid session now; `false` otherwise -- in which case the saved session has
+     * already been forgotten if it's no longer valid, and the caller should fall back to a normal [logout].
      */
     suspend fun tryAutoRelogin(): Boolean {
-        val saved = credentialsStore.get() ?: return credentialsStore.restoreSession()
-        return try {
-            login(saved.email, saved.password.concatToString())
-            log.d { "Automatic re-login succeeded." }
-            true
-        } catch (e: ServerException) {
-            // The server was reached and rejected these credentials (wrong password, account deleted, ...) --
-            // they're genuinely stale, safe to forget.
-            log.w(e) { "Automatic re-login rejected by the server; forgetting the saved account." }
-            credentialsStore.clear()
-            false
-        } catch (e: Exception) {
-            // Anything else (no connectivity, a timeout, ...) says nothing about whether the saved credentials
-            // are still valid -- keep them so the next attempt (or a manual login) can still use them, instead
-            // of silently discarding a perfectly recoverable account over a transient network hiccup.
-            log.w(e) { "Automatic re-login failed (not a credentials rejection); keeping the saved account." }
-            false
+        if (credentialsStore.getSession() != null) {
+            try {
+                if (sessionTokens.refresh(getHttpClient())) {
+                    log.d { "Session refreshed." }
+                    return true
+                }
+                log.d { "The saved session is no longer valid." }
+            } catch (e: Exception) {
+                // No connectivity, a timeout, a server error... say nothing about whether the session is still
+                // valid: keep it, so the next attempt can still use it.
+                log.w(e) { "Could not refresh the session; keeping it for the next attempt." }
+                return false
+            }
         }
+        val tokens = restoreKeys.redeem() ?: return false
+        sessionTokens.onLoggedIn(tokens)
+        return true
     }
 
-    @Suppress("KNOWN_EXCEPTION") // suppress because order is correct, and there won't be missing references
     suspend fun logout() {
-        val response = getHttpClient().get("/logout")
-        if (response.status.isSuccess()) {
-            log.d { "Logged out. Removing all data..." }
-            clearLocalData()
-        } else {
+        endSession()
+        log.d { "Logged out. Removing all data..." }
+        clearLocalData()
+    }
+
+    /**
+     * Revokes the session on the server.
+     * @throws Exception if the server couldn't be reached, so that the session isn't forgotten locally while it's
+     * still valid.
+     */
+    private suspend fun endSession() {
+        val session = credentialsStore.getSession()
+        val response = getHttpClient().post("/auth/logout") {
+            skipSessionAuth()
+            if (session != null) {
+                contentType(ContentType.Application.Json)
+                setBody(RefreshTokenRequest(session.refreshToken))
+            }
+        }
+        if (!response.status.isSuccess()) {
             val error = response.bodyAsError()
             log.d { "Logout failed (${response.status}): $error" }
             throw error.toThrowable()
@@ -103,23 +127,23 @@ class AuthBackend(
 
     /**
      * Wipes the account saved for [AuthBackend.tryAutoRelogin] (see [CredentialsStore]) and all local data, the
-     * same as [logout], but without requiring an active server session -- used when the user chooses to forget
+     * same as [logout], but without requiring the server to be reachable -- used when the user chooses to forget
      * a previously-saved account straight from the Login screen (e.g. after reaching it with one still saved,
      * see [LoginViewModel]) rather than through a normal in-app logout.
      */
     suspend fun forgetLocalAccount() {
         log.d { "Forgetting locally saved account..." }
-        // Best-effort: there may be no active server session to invalidate at all (that's exactly how the
-        // user could end up back on the Login screen with a saved account in the first place).
+        // Best-effort: the session may already be over (that's exactly how the user could end up back on the
+        // Login screen with a saved account in the first place).
         try {
-            getHttpClient().get("/logout")
+            endSession()
         } catch (e: Exception) {
-            log.d { "No active server session to log out of (or the request failed); ignoring: $e" }
+            log.d { "Could not end the session on the server; ignoring: $e" }
         }
         clearLocalData()
     }
 
-    private suspend fun clearLocalData() {
+    internal suspend fun clearLocalData() {
         // Room handles the foreign-key-safe order itself, unlike deleting through each repository one by one
         // (see DatabaseIntegrityVerifier.clearDatabaseAndResync for the same approach).
         db.clearAllTables()
@@ -137,6 +161,8 @@ class AuthBackend(
         log.d { "Removing all settings..." }
         settings.clear()
         credentialsStore.clear()
+        sessionTokens.onLoggedOut()
+        restoreKeys.clear()
     }
 
     suspend fun forgotPassword(email: String) {

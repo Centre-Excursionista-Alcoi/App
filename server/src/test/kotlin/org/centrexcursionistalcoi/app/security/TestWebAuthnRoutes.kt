@@ -104,7 +104,7 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
 
     @Test
     fun test_verifyRestoreKey_withAMalformedCredentialResponse_respondsWithAStructuredErrorNotARawString() = runApplicationTest {
-        val response = client.post("/verify-restore-key") {
+        val response = client.post("/auth/webauthn/verify") {
             contentType(ContentType.Application.Json)
             setBody(RestoreKeyVerificationRequest("not a real WebAuthn response"))
         }

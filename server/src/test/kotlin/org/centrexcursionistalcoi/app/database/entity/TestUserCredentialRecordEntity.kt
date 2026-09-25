@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -11,6 +12,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TestUserCredentialRecordEntity {
+    // The in-memory database outlives each test: leftover users would clash with other tests' (same NIF...).
+    @AfterTest
+    fun tearDown() {
+        Database.clear()
+    }
+
     private fun newRecord(credentialId: String, owner: UserReferenceEntity) = Database {
         UserCredentialRecordEntity.new(credentialId) {
             user = owner

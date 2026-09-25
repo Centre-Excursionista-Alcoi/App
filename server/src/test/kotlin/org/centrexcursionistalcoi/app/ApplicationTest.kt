@@ -19,7 +19,7 @@ class ApplicationTest: ApplicationTestBase() {
     @Test
     fun testRoot() = testApplication {
         application {
-            module()
+            module(isTesting = true)
         }
         val response = client.get("/")
         response.assertStatusCode(HttpStatusCode.OK)
