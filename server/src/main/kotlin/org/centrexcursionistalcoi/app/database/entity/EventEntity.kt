@@ -164,6 +164,16 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         }
     }
 
+    /**
+     * Deletes the event together with its attendee list: [EventMembers] has no `ON DELETE CASCADE` on its event
+     * reference, so deleting an event with confirmed attendees would otherwise violate its foreign key. Qualification
+     * requirements are removed by their own cascading reference.
+     */
+    override fun delete() {
+        EventMembers.deleteWhere { EventMembers.event eq this@EventEntity.id }
+        super.delete()
+    }
+
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value.toKotlinUuid(),
