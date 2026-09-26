@@ -164,13 +164,6 @@ fun Route.eventsRoutes() {
             event.delete()
             image?.delete()
         },
-        deleteReferencesCheck = { event ->
-            // Confirmed attendees (event_members) have a FK to this event -- deleting it with any left would hit a
-            // raw ExposedSQLException from Postgres (fk_event_members_event_id__id) instead of a clean error. This
-            // previously compared Events.department against event.id (copy-pasted from a department-scoped check
-            // and never adapted), which could never match, so it always passed regardless of real attendees.
-            EventMembers.selectAll().where { EventMembers.event eq event.id.value }.empty()
-        },
         updater = UpdateEventRequest.serializer(),
         createRequestSerializer = CreateEventRequest.serializer(),
         jsonCreator = { request ->

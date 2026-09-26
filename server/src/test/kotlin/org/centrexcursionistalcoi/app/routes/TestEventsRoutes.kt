@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.error.Error
@@ -29,12 +30,16 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toJsonElement
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Regression coverage for the CONTENT_MANAGER department-scoped write permission on `provideEntityRoutes`
@@ -264,12 +269,8 @@ class TestEventsRoutes : ApplicationTestBase() {
         }.assertStatusCode(HttpStatusCode.NotFound)
     }
 
-    // deleteReferencesCheck previously compared Events.department against the event's own id (copy-pasted from a
-    // department-scoped check and never adapted -- see PostsRoutes.kt's identical pattern), which could never
-    // match, so it always let the delete through regardless of real attendees, hitting a raw ExposedSQLException
-    // (fk_event_members_event_id__id) instead of a clean EntityDeleteReferencesExist response.
     @Test
-    fun test_delete_event_withConfirmedAttendee_respondsWithReferencesExist() = runApplicationTest(
+    fun test_delete_event_withConfirmedAttendee_deletesEventAndAttendees() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
             FakeUser.provideEntity()
@@ -287,13 +288,16 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val event = context.dibResult!!
 
-        client.delete("/events/${event.id.value}").apply {
-            assertError(Error.EntityDeleteReferencesExist())
-        }
+        client.delete("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NoContent)
 
-        // The event must survive the rejected deletion.
-        val remaining = Database { EventEntity.findById(event.id) }
-        assertNotNull(remaining, "Event should not have been deleted while an attendee reference exists")
+        Database {
+            assertNull(EventEntity.findById(event.id), "Event should have been deleted")
+            assertTrue(
+                EventMembers.selectAll().where { EventMembers.event eq event.id }.empty(),
+                "The event's attendees should have been deleted with it",
+            )
+            assertNotNull(UserReferenceEntity.findById(FakeUser.SUB), "The attendee's user must not be deleted")
+        }
     }
 
     @Test
