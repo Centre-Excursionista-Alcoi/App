@@ -20,9 +20,23 @@ class ProfilePageModel(
     val profile = ProfileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
-    fun createInsurance(company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) = launch {
+    /**
+     * Creates the insurance, then refreshes the profile in the background.
+     *
+     * Completes with `true` once the server has stored the insurance, or `null` if that failed (the error is reported
+     * through [async]'s global handler). The refresh isn't awaited: failing it doesn't undo the insurance, and treating
+     * it as a failure would invite submitting the same insurance again.
+     */
+    fun createInsurance(
+        company: String,
+        policyNumber: String,
+        validFrom: LocalDate,
+        validTo: LocalDate,
+        document: PlatformFile?,
+    ): Deferred<Boolean?> = async {
         ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, document)
-        ProfileRemoteRepository.synchronize()
+        this@ProfilePageModel.launch { ProfileRemoteRepository.synchronize() }
+        true
     }
 
     fun connectFEMECV(username: String, password: CharArray): Deferred<Throwable?> = async {

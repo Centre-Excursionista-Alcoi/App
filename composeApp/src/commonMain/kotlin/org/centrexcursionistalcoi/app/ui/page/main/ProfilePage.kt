@@ -154,9 +154,10 @@ private fun ColumnScope.ProfilePage(
             NoInsurancesCard(
                 onAddInsuranceRequested = { addingInsurance = true }
             )
-        } else item("insurances_list") {
+        }
+        if (profile.insurances.isNotEmpty()) item("insurances_list") {
             InsurancesListCard(
-                activeInsurances = activeInsurances,
+                insurances = profile.insurances,
                 onAddInsuranceRequested = { addingInsurance = true },
             )
         }

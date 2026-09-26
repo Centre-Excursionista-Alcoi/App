@@ -121,7 +121,6 @@
     <string name="insurance_start_date" translatable="false">Data d'Inici</string>
     <string name="insurance_end_date" translatable="false">Data de fi</string>
     <string name="insurance_view_document" translatable="false">Veure Document</string>
-    <string name="active_insurances_title" translatable="false">Segurs Actius</string>
     <string name="management_no_departments" translatable="false">Cap secció</string>
     <string name="insurance" translatable="false">Segur</string>
     <string name="management_no_users" translatable="false">Cap usuari</string>

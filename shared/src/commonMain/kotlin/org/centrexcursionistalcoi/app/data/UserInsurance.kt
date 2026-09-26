@@ -56,4 +56,28 @@ data class UserInsurance(
         val now = clock.now()
         return isActive(now, timeZone)
     }
+
+    /** Whether this insurance covers [today], hasn't started yet, or has already ended. */
+    fun status(today: LocalDate): Status = when {
+        today < validFrom -> Status.UPCOMING
+        today > validTo -> Status.EXPIRED
+        else -> Status.ACTIVE
+    }
+
+    /** Declared in display order: active insurances first, then upcoming, then expired. */
+    enum class Status { ACTIVE, UPCOMING, EXPIRED }
 }
+
+/**
+ * Sorts insurances for display relative to [today]: active ones first (the soonest to expire on top), then upcoming
+ * ones (the soonest to start on top), then expired ones (the most recently expired on top).
+ */
+fun List<UserInsurance>.sortedForDisplay(today: LocalDate): List<UserInsurance> = sortedWith(
+    compareBy<UserInsurance> { it.status(today) }.thenBy { insurance ->
+        when (insurance.status(today)) {
+            UserInsurance.Status.ACTIVE -> insurance.validTo.toEpochDays()
+            UserInsurance.Status.UPCOMING -> insurance.validFrom.toEpochDays()
+            UserInsurance.Status.EXPIRED -> -insurance.validTo.toEpochDays()
+        }
+    }
+)
