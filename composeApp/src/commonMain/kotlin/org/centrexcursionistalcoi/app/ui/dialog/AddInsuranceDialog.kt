@@ -22,16 +22,18 @@ import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilePicker
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
-typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) -> Job
+/** Completes with `true` once the insurance has been stored, or with `false`/`null` if that failed. */
+typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) -> Deferred<Boolean?>
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun AddInsuranceDialog(
     onCreate: CreateInsuranceRequest,
@@ -128,15 +130,17 @@ fun AddInsuranceDialog(
             TextButton(
                 onClick = {
                     isLoading = true
-                    onCreate(
+                    val request = onCreate(
                         insuranceCompany,
                         policyNumber,
                         validFrom!!,
                         validTo!!,
                         document,
-                    ).invokeOnCompletion {
+                    )
+                    request.invokeOnCompletion { cause ->
                         isLoading = false
-                        if (it == null) onDismissRequest()
+                        // On failure, keep the dialog (and everything typed into it) open so it can be retried
+                        if (cause == null && request.getCompleted() == true) onDismissRequest()
                     }
                 },
                 enabled = !isLoading && isValid

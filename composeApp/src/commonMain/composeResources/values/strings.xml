@@ -238,7 +238,10 @@
     <string name="insurance_view_document">View Document</string>
     <string name="insurance_add_info">When adding an insurance here, you guarantee that the information provided is true and complete. You will be held responsible for any inaccuracies.</string>
 
-    <string name="active_insurances_title">Active Insurances</string>
+    <string name="insurances_title">Insurances</string>
+    <string name="insurance_status_active">Valid until %1$s</string>
+    <string name="insurance_status_upcoming">Starts on %1$s</string>
+    <string name="insurance_status_expired">Expired on %1$s</string>
 
     <string name="departments_title">Departments</string>
     <string name="departments_join_choose">Choose a department</string>

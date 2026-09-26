@@ -126,7 +126,6 @@
     <string name="insurance_start_date">Fecha de Inicio</string>
     <string name="insurance_end_date">Fecha de Fin</string>
     <string name="insurance_view_document">Ver Documento</string>
-    <string name="active_insurances_title">Seguros Activos</string>
     <string name="management_no_departments">Ninguna sección</string>
     <string name="management_no_users">Sin usuarios</string>
     <string name="management_no_item_types">Ningun tipo de material</string>

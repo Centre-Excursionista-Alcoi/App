@@ -165,7 +165,6 @@
     <string name="insurance_document">ஆவணம்</string>
     <string name="insurance_view_document">ஆவணத்தைக் காண்க</string>
     <string name="insurance_add_info">இங்கே காப்பீட்டைச் சேர்க்கும் போது, வழங்கப்பட்ட செய்தி உண்மை மற்றும் முழுமையானது என்று பொறுப்பு அளிக்கிறீர்கள். ஏதேனும் தவறுகளுக்கு நீங்கள் பொறுப்பாவீர்கள்.</string>
-    <string name="active_insurances_title">செயலில் காப்பீடு</string>
     <string name="departments_title">துறைகள்</string>
     <string name="departments_join_choose">ஒரு துறையைத் தேர்ந்தெடுக்கவும்</string>
     <string name="departments_member_none">எந்த துறையிலும் உறுப்பினராக இல்லை.</string>
