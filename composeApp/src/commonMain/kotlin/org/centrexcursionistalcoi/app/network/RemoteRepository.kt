@@ -292,9 +292,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val item = getUrl(location, progressNotifier, ignoreIfModifiedSince = true)
                 checkNotNull(item) { "Could not retrieve the created item from the server." }
                 progressNotifier?.invoke(Progress.LocalDBWrite)
-                val localItem = insertRemoteEntity(item)
-
-                downloadFileForEntity(localItem, progressNotifier)
+                insertRemoteEntity(item)?.let { downloadFileForEntity(it, progressNotifier) }
             } catch (e: IllegalStateException) {
                 log.e { "${e.message} Synchronizing completely with server..." }
                 synchronizeWithDatabase(progressNotifier)
@@ -371,9 +369,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
             progressNotifier?.invoke(Progress.LocalDBWrite)
-            val localItem = updateRemoteEntity(item)
-
-            downloadFileForEntity(localItem, progressNotifier)
+            updateRemoteEntity(item)?.let { downloadFileForEntity(it, progressNotifier) }
         } else {
             val error = response.bodyAsError()
             log.e { "Failed to update $name#$id: $error" }
@@ -415,26 +411,25 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     /**
      * Updates the given remote entity in the local database.
      * @param entity The remote entity to update.
-     * @return The updated local entity.
-     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     * @return The updated local entity, or `null` if it was stored but can't be read back yet (see [insertRemoteEntity]).
      */
-    protected abstract suspend fun updateRemoteEntity(entity: RemoteEntity): LocalEntity
+    protected abstract suspend fun updateRemoteEntity(entity: RemoteEntity): LocalEntity?
 
     /**
      * Inserts the given remote entity into the local database.
      * @param entity The remote entity to insert.
-     * @return The inserted local entity.
-     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     * @return The inserted local entity, or `null` if it was stored but can't be read back yet: a reference it
+     * needs (e.g. a memory's submitter, not visible to non-admins) isn't stored locally, which the
+     * [DatabaseIntegrityVerifier][org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier] repairs later.
      */
-    protected abstract suspend fun insertRemoteEntity(entity: RemoteEntity): LocalEntity
+    protected abstract suspend fun insertRemoteEntity(entity: RemoteEntity): LocalEntity?
 
     /**
      * Updates or inserts the given remote entity into the local database.
      * @param entity The remote entity to upsert.
-     * @return The upserted local entity.
-     * @throws MissingCrossReferenceException if a reference of the entity is not found.
+     * @return The upserted local entity, or `null` if it was stored but can't be read back yet (see [insertRemoteEntity]).
      */
-    protected abstract suspend fun upsertRemoteEntity(entity: RemoteEntity): LocalEntity
+    protected abstract suspend fun upsertRemoteEntity(entity: RemoteEntity): LocalEntity?
 
 
     companion object {

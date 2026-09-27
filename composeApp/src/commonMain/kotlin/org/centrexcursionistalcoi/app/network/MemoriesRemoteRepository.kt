@@ -134,18 +134,18 @@ class MemoriesRemoteRepository(
         progressNotifier,
     )
 
-    override suspend fun insertRemoteEntity(entity: Memory): ReferencedMemory {
+    override suspend fun insertRemoteEntity(entity: Memory): ReferencedMemory? {
         memoriesRepository.insertRaw(entity)
-        return memoriesRepository.get(entity.id)!!
+        return memoriesRepository.get(entity.id)
     }
 
-    override suspend fun updateRemoteEntity(entity: Memory): ReferencedMemory {
+    override suspend fun updateRemoteEntity(entity: Memory): ReferencedMemory? {
         memoriesRepository.updateRaw(entity)
-        return memoriesRepository.get(entity.id)!!
+        return memoriesRepository.get(entity.id)
     }
 
-    override suspend fun upsertRemoteEntity(entity: Memory): ReferencedMemory {
+    override suspend fun upsertRemoteEntity(entity: Memory): ReferencedMemory? {
         memoriesRepository.insertOrUpdate(entity)
-        return memoriesRepository.get(entity.id)!!
+        return memoriesRepository.get(entity.id)
     }
 }
