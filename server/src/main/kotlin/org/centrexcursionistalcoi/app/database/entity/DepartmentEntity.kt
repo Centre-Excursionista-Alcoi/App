@@ -111,4 +111,10 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, E
         notifyUpdateForEntity(Companion, id)
         Database { lastUpdate = now() }
     }
+
+    override fun delete() {
+        val image = image
+        super.delete()
+        FileEntity.deleteOwnedFiles(listOfNotNull(image))
+    }
 }

@@ -118,6 +118,13 @@ dependencies {
     // Redis
     implementation(libs.jedis)
 
+    // Object storage (Cloudflare R2, or any S3-compatible API)
+    implementation(libs.aws.s3) {
+        exclude(group = "software.amazon.awssdk", module = "apache-client")
+        exclude(group = "software.amazon.awssdk", module = "netty-nio-client")
+    }
+    implementation(libs.aws.urlConnectionClient)
+
     // XML Parsing
     implementation(libs.ksoup.core)
     implementation(libs.ksoup.network)

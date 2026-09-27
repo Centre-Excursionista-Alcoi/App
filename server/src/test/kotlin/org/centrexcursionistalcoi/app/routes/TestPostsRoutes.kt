@@ -111,11 +111,11 @@ class TestPostsRoutes : ApplicationTestBase() {
     fun test_delete_post_withAttachedFile_succeedsAndCascadesJoinRow() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            val file = FileEntity.new {
-                name = "square.png"
-                contentType = ContentType.Image.PNG
-                bytes = ResourcesUtils.bytesFromResource("/square.png")
-            }
+            val file = FileEntity.create(
+                bytes = ResourcesUtils.bytesFromResource("/square.png"),
+                name = "square.png",
+                contentType = ContentType.Image.PNG,
+            )
             val post = PostEntity.new {
                 title = "Post with a file"
                 content = "Has an attached file"

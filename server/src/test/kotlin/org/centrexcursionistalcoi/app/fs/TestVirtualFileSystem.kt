@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem.resetRootDirs
 import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.storage.testStorage
 import org.jetbrains.exposed.v1.dao.Entity
 
 class TestVirtualFileSystem {
@@ -23,12 +24,12 @@ class TestVirtualFileSystem {
         Database.initForTests()
 
         val file = Database {
-            FileEntity.new("6489d244-cd88-4441-9526-1a4627b67453".toUUID()) {
-                name = "example.txt"
-                type = "text/plain"
-                bytes = byteArrayOf(10, 20, 30)
-                lastModified = Instant.ofEpochSecond(1763383432)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(10, 20, 30),
+                name = "example.txt",
+                contentType = ContentType.Text.Plain,
+                id = "6489d244-cd88-4441-9526-1a4627b67453".toUUID(),
+            ).apply { lastModified = Instant.ofEpochSecond(1763383432) }
         }
 
         val mockEntity = mockk<Entity<Any>>()
@@ -93,6 +94,6 @@ class TestVirtualFileSystem {
         assertNotNull(itemData)
         assertEquals(ContentType.Text.Plain, itemData.contentType)
         assertEquals(3, itemData.size)
-        assertContentEquals(byteArrayOf(10, 20, 30), itemData.data)
+        assertContentEquals(byteArrayOf(10, 20, 30), testStorage.readBytes(itemData.objectKey))
     }
 }

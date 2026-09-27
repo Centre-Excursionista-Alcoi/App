@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.security.AuthSessionsCleanup
 import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.SessionsKeys
 import org.centrexcursionistalcoi.app.security.configureAuthentication
+import org.centrexcursionistalcoi.app.storage.FileStorageProvider
+import org.centrexcursionistalcoi.app.storage.FilesCleanup
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -101,6 +103,11 @@ fun main() {
         logger.debug("Emails will be sent from ${NotificationsConfig.emailFromAddr} with name ${NotificationsConfig.emailFromName}")
     }
 
+    val isDevelopment = System.getenv("ENV") == "development"
+
+    // Initialize the storage of file contents. Before the database: migrations may move files to it.
+    FileStorageProvider.init(isDevelopment)
+
     // Initialize Database connection
     val dbInitResult = Database.init(
         url = System.getenv("DB_URL") ?: Database.URL,
@@ -108,7 +115,6 @@ fun main() {
         username = System.getenv("DB_USER") ?: "",
         password = System.getenv("DB_PASS") ?: "",
     )
-    val isDevelopment = System.getenv("ENV") == "development"
 
     // Initialize Push Notification service - Firebase Cloud Messaging
     Push.initFCM()
@@ -120,6 +126,9 @@ fun main() {
 
     // Periodically delete expired and revoked sessions
     AuthSessionsCleanup.start()
+
+    // Periodically delete files nothing references
+    FilesCleanup.start()
 
     // Start Ktor server
     embeddedServer(

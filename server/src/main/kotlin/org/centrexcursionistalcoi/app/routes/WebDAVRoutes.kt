@@ -10,7 +10,6 @@ import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
@@ -29,6 +28,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.fs.VirtualFileSystem
 import org.centrexcursionistalcoi.app.plugins.login
+import org.centrexcursionistalcoi.app.plugins.respondStoredFile
 import org.centrexcursionistalcoi.app.utils.escapeHtml
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
@@ -130,7 +130,7 @@ fun Route.webDavRoutes() {
 
             if (itemData != null) {
                 logger.debug("Serving file at path: {}, size={}, contentType={}", path, itemData.size, itemData.contentType)
-                call.respondBytes(itemData.contentType) { itemData.data }
+                call.respondStoredFile(itemData.objectKey, itemData.size, itemData.contentType, itemData.lastModified)
             } else {
                 // If not a file, check if a directory exists
                 val list = try {
@@ -222,7 +222,7 @@ fun Route.webDavRoutes() {
 
             if (fileData != null) {
                 // path is a file: return info only about the file itself
-                val size = fileData.size.toLong()
+                val size = fileData.size
                 val contentType = fileData.contentType
                 responses.add(VirtualFileSystem.Item(path, path.substringAfterLast('/'), false, contentType, size, null))
             } else {

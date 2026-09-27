@@ -68,12 +68,12 @@ class FileRequestData : Closeable {
      */
     fun newEntity(close: Boolean = true, rules: FileReadWriteRules? = null): FileEntity {
         return Database {
-            FileEntity.new {
-                this.name = originalFileName ?: "unknown"
-                this.contentType = this@FileRequestData.contentType ?: ContentType.Application.OctetStream
-                this.bytes = baos.toByteArray()
-                this.rules = rules
-            }
+            FileEntity.create(
+                bytes = baos.toByteArray(),
+                name = originalFileName ?: "unknown",
+                contentType = contentType,
+                rules = rules,
+            )
         }.also { if (close) close() }
     }
 

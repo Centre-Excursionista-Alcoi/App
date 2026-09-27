@@ -102,15 +102,6 @@ fun Route.postsRoutes() {
                 Telegram.sendPost(post)
             }
         },
-        onWriteRejected = { post ->
-            // The attached files were uploaded and persisted before the department could be authorized. `post`
-            // has ON DELETE CASCADE on PostFiles, so deleting it drops the join rows, but the file rows themselves
-            // (RESTRICT on delete while referenced) must be captured first and deleted afterwards, or they'd be
-            // left orphaned in the files table.
-            val files = post.files.toList()
-            post.delete()
-            files.forEach { it.delete() }
-        },
         // No deleteReferencesCheck needed: PostFiles is the only table referencing Posts, and
         // PostFiles.post has onDelete = ReferenceOption.CASCADE (see PostFiles.kt), so the DB already
         // drops those join rows cleanly on delete -- there's no FK that could throw a raw

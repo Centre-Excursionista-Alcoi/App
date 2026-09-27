@@ -29,7 +29,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
 
     /**
      * The ids of this insurance's documents, in upload order. Read straight from [UserInsuranceDocuments], without
-     * loading each [FileEntity] (and its bytes).
+     * loading each [FileEntity].
      */
     context(_: JdbcTransaction)
     fun documentIds(): List<UUID> = UserInsuranceDocuments
@@ -72,5 +72,11 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
             documents = documents,
             femecvLicense = femecvLicense,
         )
+    }
+
+    override fun delete() {
+        val documents = UserInsuranceDocumentEntity.find { UserInsuranceDocuments.insurance eq id }.map { it.file }
+        super.delete() // user_insurance_documents cascades
+        FileEntity.deleteOwnedFiles(documents)
     }
 }

@@ -40,6 +40,8 @@ import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.storage.testStorage
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -454,6 +456,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // The old PDF file is no longer referenced by anything, so it should have been deleted
         client.get("/download/$originalPdfId").assertStatusCode(HttpStatusCode.NotFound)
+        // With its contents
+        assertEquals(Database { FileEntity.all().map { it.objectKey } }.toSet(), testStorage.keys().toSet())
     }
 
     @Test

@@ -25,6 +25,8 @@ keystore.jks
 google-services.json
 credentials.properties
 keys/
+# Local file storage of development servers (FILES_PATH)
+server/files/
 .venv
 bundle/
 sentry-debug-meta.properties

@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import io.ktor.http.ContentType
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItemType
@@ -32,11 +33,12 @@ class TestInventoryItemType {
                 categories = listOf("Category1", "Category2")
                 department = departmentEntity
                 image = transaction {
-                    FileEntity.new(imageFileId) {
-                        name = "test_image.png"
-                        type = "image/png"
-                        bytes = byteArrayOf(1, 2, 3)
-                    }
+                    FileEntity.create(
+                        bytes = byteArrayOf(1, 2, 3),
+                        name = "test_image.png",
+                        contentType = ContentType.parse("image/png"),
+                        id = imageFileId,
+                    )
                 }
             }
         }

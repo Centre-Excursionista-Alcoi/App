@@ -114,12 +114,12 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                 // License already exists, ignore
             } else {
                 val certificateEntity = Database {
-                    FileEntity.new {
-                        bytes = certificate
-                        contentType = ContentType.Application.Pdf
-                        name = "certificado.pdf"
-                        rules = FileReadWriteRules(readUsers = listOf(sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
-                    }
+                    FileEntity.create(
+                        bytes = certificate,
+                        name = "certificado.pdf",
+                        contentType = ContentType.Application.Pdf,
+                        rules = FileReadWriteRules(readUsers = listOf(sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
+                    )
                 }
 
                 Database {

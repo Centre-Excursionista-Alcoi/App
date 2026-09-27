@@ -10,7 +10,8 @@ import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
 data class FileWithContext(
-    @Serializable(Base64Serializer::class) val bytes: ByteArray,
+    // Files sent by the server (e.g. post files) have no contents, they are downloaded from /download/{id}
+    @Serializable(Base64Serializer::class) val bytes: ByteArray = byteArrayOf(),
     val name: String? = null,
     @Serializable(ContentTypeSerializer::class) val contentType: ContentType? = null,
     @Serializable(InstantSerializer::class) val lastModified: Instant? = null,

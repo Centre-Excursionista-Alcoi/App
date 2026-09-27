@@ -133,23 +133,23 @@ private fun regenerateMemoryPdf(memory: MemoryEntity) {
             referencedMemory,
             itemsUsed = itemsUsed,
             submittedBy = submittedByName,
-            photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
+            photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
             outputStream = output,
         )
     }
 
     Database {
         val oldPdf = memory.pdf
-        memory.pdf = FileEntity.new {
-            name = "memory_${memory.id.value}.pdf"
-            contentType = ContentType.Application.Pdf
-            bytes = baos.toByteArray()
+        memory.pdf = FileEntity.create(
+            bytes = baos.toByteArray(),
+            name = "memory_${memory.id.value}.pdf",
+            contentType = ContentType.Application.Pdf,
             // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
             // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
             // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
             // department-role checks that read access to the memory itself is based on.
-            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
-        }
+            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
+        )
         oldPdf?.delete()
     }
 }

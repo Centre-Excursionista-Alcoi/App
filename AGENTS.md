@@ -106,6 +106,13 @@ loads (and fails to decrypt) the old value first.
   defaults in development and tests, but the server **refuses to start with `ENV=production`** unless both are
   set to non-default values. The access token signing key (`$KEYS_PATH/jwt-es256.key`/`.pub`) is generated on
   first run like `aes.key`; replacing it only forces every client to refresh, it doesn't log anyone out.
+- **File contents live in object storage, not the database** (`storage/`). With `S3_ENDPOINT`, `S3_BUCKET`,
+  `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set (Cloudflare R2 in production; `S3_REGION` defaults to `auto`)
+  they go to that bucket; without them, a development server stores them in `FILES_PATH` (default `./files`,
+  relative to where the server runs: use `FILES_PATH=$PWD/server/files`, git-ignored). The server **refuses to
+  start without S3 unless `ENV=development`**, and with only some of the `S3_*` variables set. A dev database's
+  files only exist in the `FILES_PATH` it ran with: point it somewhere else and downloads answer 500 ("contents
+  missing"). Tests use an in-memory storage (`TestFileStorageExtension`, registered for every test).
 
 ### Android client on an emulator
 
@@ -285,12 +292,20 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   rules" as public and a good chunk of files (department/event/post/inventory images) are fine being visible
   to any logged-in user. For anything sensitive to a specific user (an insurance document, a memory's PDF or
   attachments), set `rules = FileReadWriteRules(readUsers = listOf(ownerSub), readGroups =
-  listOf(ADMIN_GROUP_NAME))` explicitly at the `FileEntity.new { }` call site (see `ProfileRoutes.kt`'s
+  listOf(ADMIN_GROUP_NAME))` explicitly at the `FileEntity.create(...)` call site (see `ProfileRoutes.kt`'s
   insurance upload, `UserReferenceEntity.refreshFEMECVData()`, and `MemoriesRoutes.kt`'s PDF/attachments for
   the pattern) — nothing infers this from the parent entity's own permissions for you. Known limitation:
   `FileReadWriteRules` only supports flat user/group lists, not department-role checks, so a department
   `MEMORY_MANAGER`/`LENDING_MANAGER` who can see a memory/lending's *data* still can't download its files —
   acceptable (under-granting, not over-granting) but worth knowing if this ever needs closing properly.
+- **Create files only with `FileEntity.create`/`newFrom` (or `FileRequestData.newEntity`), never
+  `FileEntity.new { }`**: they store the contents (deleted again if the transaction rolls back) and record
+  `objectKey`/`size`. `FileEntity.delete()` deletes the contents once the transaction commits. Entities that own
+  files (departments, inventory types, events, posts, memories, insurances) delete them in their own `delete()`,
+  and `FilesCleanup` deletes whatever nothing references after a day. **Any new reference to `Files` must be added
+  to `database/FileReferences.kt`** (`TestFileReferences` fails otherwise), or cleanup would delete files still in
+  use. Posts still send `"bytes": ""` for each file (old clients require the field): contents are always
+  downloaded from `/download/{uuid}`, which streams them from the storage.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the
   server to reject; (2) per-item actions (edit/delete on a specific row) must check the viewer's role in

@@ -28,6 +28,7 @@ import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
+import org.jetbrains.exposed.v1.jdbc.insert
 
 class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
     companion object : UUIDEntityClass<PostEntity>(Posts) {
@@ -99,9 +100,17 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
             department = DepartmentEntity.findById(it.toJavaUuid())
         }
         request.link?.let { link = it.takeUnless { value -> value.isBlank() } }
+        val ownedFileIds = files.map { it.id.value }
         request.files?.forEach { fileWithContext ->
-            FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
+            val fileEntity = FileEntity.updateOrCreate(fileWithContext, ownedFileIds) { fileEntity ->
                 PostFiles.deleteWhere { (PostFiles.post eq this@PostEntity.id) and (PostFiles.file eq fileEntity.id) }
+            }
+            if (fileEntity != null) {
+                // A new file was created (fileWithContext had bytes) -- link it to this post.
+                PostFiles.insert {
+                    it[post] = this@PostEntity.id
+                    it[file] = fileEntity.id
+                }
             }
         }
     }
@@ -109,5 +118,11 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
     override suspend fun updated() {
         notifyUpdateForEntity(Companion, id)
         Database { lastUpdate = now() }
+    }
+
+    override fun delete() {
+        val files = files.toList()
+        super.delete() // post_files cascades
+        FileEntity.deleteOwnedFiles(files)
     }
 }

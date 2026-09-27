@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import io.ktor.http.ContentType
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
@@ -112,11 +113,12 @@ class TestLendings {
             }
         }
         val memoryPdfFileEntity = Database {
-            FileEntity.new(memoryPdfFileId) {
-                name = "memory.pdf"
-                type = "application/pdf"
-                bytes = byteArrayOf(1, 2, 3, 4)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(1, 2, 3, 4),
+                name = "memory.pdf",
+                contentType = ContentType.parse("application/pdf"),
+                id = memoryPdfFileId,
+            )
         }
         val entity = Database {
             LendingEntity.new(id) {
@@ -167,11 +169,12 @@ class TestLendings {
         }
         // Upload memory attachment
         val memoryAttachmentFileEntity = Database {
-            FileEntity.new(memoryAttachmentFileId) {
-                name = "attachment.pdf"
-                type = "application/pdf"
-                bytes = byteArrayOf(1, 2, 3, 4)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(1, 2, 3, 4),
+                name = "attachment.pdf",
+                contentType = ContentType.parse("application/pdf"),
+                id = memoryAttachmentFileId,
+            )
         }
         // Create the memory, linked to the lending. Memories are stored in their own tables and only optionally
         // reference a lending.

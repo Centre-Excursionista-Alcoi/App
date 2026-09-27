@@ -49,6 +49,10 @@ jobs:
       - name: Pre-pull PostgreSQL image
         run: docker pull postgres:17
 
+      # S3 API used to test the file storage (see TestS3FileStorage.S3_MOCK_IMAGE)
+      - name: Pre-pull S3Mock image
+        run: docker pull adobe/s3mock:5.2.3
+
       # See: https://github.com/testcontainers/testcontainers-java/issues/11212
       - name: Set Docker API version
         run: echo api.version=1.44 >> ~/.docker-java.properties

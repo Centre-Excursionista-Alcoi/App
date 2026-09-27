@@ -63,6 +63,8 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.table.Memories
 
 /**
  * The duration after which a password recovery request expires.
@@ -358,6 +360,14 @@ fun Route.configureAuthRoutes() {
                 .onEach { it.delete() }
                 .count()
         }.also { logger.info("Deleted $it entries from LendingUserEntity") }
+        // Before the lendings, which their memories reference. Deleting them explicitly (rather than letting the user
+        // reference cascade) also deletes their files.
+        Database {
+            MemoryEntity
+                .find { Memories.submittedBy eq userReference.sub }
+                .onEach { it.delete() }
+                .count()
+        }.also { logger.info("Deleted $it entries from MemoryEntity") }
         Database {
             LendingEntity
                 .find { Lendings.userSub eq userReference.sub }

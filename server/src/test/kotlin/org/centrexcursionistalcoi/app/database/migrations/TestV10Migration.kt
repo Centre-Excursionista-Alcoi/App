@@ -30,11 +30,11 @@ class TestV10Migration : PostgresTestBase() {
 
         val user = Database { transaction { FakeUser.provideEntity() } }
         val document = Database {
-            FileEntity.new {
-                name = "policy.pdf"
-                contentType = ContentType.Application.Pdf
-                bytes = byteArrayOf(1, 2, 3)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(1, 2, 3),
+                name = "policy.pdf",
+                contentType = ContentType.Application.Pdf,
+            )
         }
         val withDocument = Database {
             UserInsuranceEntity.new {

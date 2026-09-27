@@ -38,6 +38,15 @@ clean up their own entries, leaving app credentials untouched.
 - `DB_URL`: `jdbc:postgresql://127.0.0.1:5432/postgres`
 - `DB_USER`: `postgres`
 - `DB_PASS`: `1234567890abcdef`
+- `ENV`: `development`
+
+Files are stored in Cloudflare R2 (or any S3-compatible storage) when these are set, and in the local directory
+`FILES_PATH` (default `./files`) otherwise. Only development servers (`ENV=development`) may store files locally:
+the server refuses to start otherwise.
+- `S3_ENDPOINT`: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
+- `S3_BUCKET`: the bucket's name
+- `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`: an R2 API token with *Object Read & Write* on the bucket
+- `S3_REGION`: `auto` (the default)
 
 **Start the Postgres database:**
 

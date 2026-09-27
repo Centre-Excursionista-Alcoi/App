@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity.base
 
 import io.ktor.http.ContentType
-import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -25,13 +24,9 @@ interface ImageContainerEntity {
     fun updateOrSetImage(bytes: ByteArray?, name: String? = null, contentType: ContentType = ContentType.Application.OctetStream) {
         if (bytes == null) return
 
-        if (image != null) image?.delete()
-
-        image = FileEntity.new {
-            this.name = name ?: "${id.value}_file"
-            this.contentType = contentType
-            this.bytes = bytes
-        }
+        val oldImage = image
+        image = FileEntity.create(bytes, name, contentType)
+        oldImage?.delete()
     }
 
     /**
@@ -42,40 +37,14 @@ interface ImageContainerEntity {
     fun updateOrSetImage(file: FileWithContext?) {
         file ?: return
 
-        val id = file.id
-        if (id != null) {
-            val image = image
-            if (image != null) {
-                if (image.id.value.toKotlinUuid() != file.id) {
-                    // Different image, delete the old one and create a new one
-                    image.delete()
-                    this.image = FileEntity.new {
-                        this.name = file.name ?: "${id}_file"
-                        this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                        this.bytes = file.bytes
-                    }
-                } else {
-                    // Same image, just update the data
-                    image.name = file.name ?: image.name
-                    image.contentType = file.contentType ?: ContentType.Application.OctetStream
-                    image.bytes = file.bytes
-                }
-            } else {
-                // No existing image, create a new one
-                this.image = FileEntity.new(id.toJavaUuid()) {
-                    this.name = file.name ?: "${id}_file"
-                    this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                    this.bytes = file.bytes
-                }
-            }
+        val image = image
+        if (image != null && file.id != null && image.id.value.toKotlinUuid() == file.id) {
+            // Same image, just update the data
+            image.replaceContents(file.bytes, file.name, file.contentType)
         } else {
-            if (image != null) image?.delete()
-
-            image = FileEntity.new {
-                this.name = file.name ?: "${this.id}_file"
-                this.contentType = file.contentType ?: ContentType.Application.OctetStream
-                this.bytes = file.bytes
-            }
+            // New image (keeping the requested id if it's free), then delete the old one
+            this.image = FileEntity.newFrom(file)
+            image?.delete()
         }
     }
 }
