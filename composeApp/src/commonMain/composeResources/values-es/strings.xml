@@ -596,4 +596,8 @@
     <string name="settings_gender_masculine">Masculino</string>
     <string name="settings_gender_feminine">Femenino</string>
     <string name="settings_gender_neutral">Neutro</string>
+    <string name="insurances_title">Seguros</string>
+    <string name="insurance_status_active">Válido hasta %1$s</string>
+    <string name="insurance_status_upcoming">Se inicia el %1$s</string>
+    <string name="insurance_status_expired">Expiró el %1$s</string>
 </resources>
