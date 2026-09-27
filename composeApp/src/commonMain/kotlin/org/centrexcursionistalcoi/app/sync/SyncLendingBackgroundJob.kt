@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.sync
 
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
@@ -31,5 +32,12 @@ class SyncLendingBackgroundJob(
         const val NAME = "SyncLendingBackgroundJob"
         const val EXTRA_LENDING_ID = "lending_id"
         const val EXTRA_IS_REMOVAL = "is_removal"
+
+        /**
+         * Whether [notification] means the lending no longer exists on the server, so it must be removed locally
+         * instead of fetched again.
+         */
+        fun isRemoval(notification: PushNotification.LendingUpdated): Boolean =
+            notification is PushNotification.LendingCancelled || notification is PushNotification.LendingDeleted
     }
 }

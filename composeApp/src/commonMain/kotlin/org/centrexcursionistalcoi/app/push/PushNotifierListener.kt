@@ -45,7 +45,7 @@ class PushNotifierListener(
                         name = SyncLendingBackgroundJob.NAME,
                         input = mapOf(
                             EXTRA_LENDING_ID to notification.lendingId.toString(),
-                            EXTRA_IS_REMOVAL to false.toString(),
+                            EXTRA_IS_REMOVAL to SyncLendingBackgroundJob.isRemoval(notification).toString(),
                         ),
                     )
                 }
