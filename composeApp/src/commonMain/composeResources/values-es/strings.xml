@@ -395,7 +395,6 @@
     <string name="lending_category_without_department">Club</string>
     <string name="lending_creation_error_insurance_title">No tienes un seguro válido</string>
     <string name="lending_creation_error_insurance">No tienes un seguro válido para el periodo especificado.</string>
-    <string name="insurance_document">Documento</string>
     <string name="insurance_add_info">Cuando añades un seguro aquí, garantizas que la información proporcionada es cierta y completa. Serás responsable de cualquier inexactitud.</string>
     <string name="departments_title">Secciones</string>
     <string name="departments_join_choose">Escoje una sección</string>

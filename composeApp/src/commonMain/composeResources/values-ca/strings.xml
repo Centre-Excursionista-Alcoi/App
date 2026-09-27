@@ -425,7 +425,6 @@
     <string name="update_restart_required_action">Reinicia</string>
     <string name="personal_info_disabled_reason_invalid_nif">L'usuari té un NIF invàlid.</string>
     <string name="management_events">Esdeveniments</string>
-    <string name="insurance_document">Document</string>
     <string name="management_no_events">Cap esdeveniment</string>
     <string name="time_picker_title">Tria una hora</string>
     <string name="file_picker_pick">Tria un arxiu</string>

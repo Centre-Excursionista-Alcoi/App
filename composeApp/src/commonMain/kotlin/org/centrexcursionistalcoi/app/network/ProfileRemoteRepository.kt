@@ -83,10 +83,10 @@ object ProfileRemoteRepository {
         policyNumber: String,
         validFrom: LocalDate,
         validTo: LocalDate,
-        document: PlatformFile?,
+        documents: List<PlatformFile>,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val documentFile = document?.let { InMemoryFileAllocator.put(it).toFileReference() }
+        val documentFiles = documents.map { InMemoryFileAllocator.put(it).toFileReference() }
 
         val response = httpClient.submitFormWithBinaryData(
             "/profile/insurances",
@@ -95,8 +95,10 @@ object ProfileRemoteRepository {
                 "policyNumber" to policyNumber,
                 "validFrom" to validFrom.toString(),
                 "validTo" to validTo.toString(),
-                "document" to documentFile,
-            ).toFormData()
+            ).toFormData() + documentFiles.flatMap { documentFile ->
+                // One "document" part per document, in order.
+                mapOf("document" to documentFile).toFormData()
+            }
         ) {
             monitorUploadProgress(progressNotifier)
         }

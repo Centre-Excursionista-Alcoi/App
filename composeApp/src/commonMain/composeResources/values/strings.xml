@@ -234,8 +234,9 @@
     <string name="insurance_policy_number">Policy Number</string>
     <string name="insurance_start_date">Start Date</string>
     <string name="insurance_end_date">End Date</string>
-    <string name="insurance_document">Document</string>
+    <string name="insurance_documents">Documents</string>
     <string name="insurance_view_document">View Document</string>
+    <string name="insurance_view_document_number">View Document %1$d</string>
     <string name="insurance_add_info">When adding an insurance here, you guarantee that the information provided is true and complete. You will be held responsible for any inaccuracies.</string>
 
     <string name="insurances_title">Insurances</string>

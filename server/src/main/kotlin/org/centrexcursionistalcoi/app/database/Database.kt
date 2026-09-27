@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
 import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
+import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.database.table.UserReferences
@@ -66,6 +67,7 @@ object Database {
         LendingUsers,
         DepartmentMembers,
         UserInsurances,
+        UserInsuranceDocuments,
         InventoryItemTypes,
         InventoryItems,
         Lendings,

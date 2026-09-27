@@ -13,6 +13,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,6 +30,7 @@ import cea_app.composeapp.generated.resources.insurance_end_date
 import cea_app.composeapp.generated.resources.insurance_policy_number
 import cea_app.composeapp.generated.resources.insurance_start_date
 import cea_app.composeapp.generated.resources.insurance_view_document
+import cea_app.composeapp.generated.resources.insurance_view_document_number
 import cea_app.composeapp.generated.resources.share
 import com.mohamedrejeb.calf.core.ExperimentalCalfApi
 import com.mohamedrejeb.calf.share.rememberShareLauncher
@@ -125,11 +127,21 @@ private fun InsuranceDialog(
                 InsuranceInfoText(Res.string.insurance_start_date, insurance.validFrom.toString())
                 InsuranceInfoText(Res.string.insurance_end_date, insurance.validTo.toString())
 
-                if (insurance.documentFile != null) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+                val documents = insurance.documents
+                documents.forEachIndexed { index, document ->
+                    // Numbered only when there's more than one, to tell them apart.
+                    val label = if (documents.size == 1) {
+                        stringResource(Res.string.insurance_view_document)
+                    } else {
+                        stringResource(Res.string.insurance_view_document_number, index + 1)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         IconButton(
                             onClick = {
-                                onShareFile { insurance.fetchDocumentFilePath() }
+                                onShareFile { insurance.fetchDocumentFilePath(document) }
                             },
                         ) {
                             Icon(MaterialSymbols.Share, stringResource(Res.string.share))
@@ -137,12 +149,15 @@ private fun InsuranceDialog(
                         if (openFile.isSupported) {
                             OutlinedButton(
                                 onClick = {
-                                    onOpenFile { insurance.fetchDocumentFilePath() }
+                                    onOpenFile { insurance.fetchDocumentFilePath(document) }
                                 },
                                 modifier = Modifier.weight(1f).padding(start = 8.dp)
                             ) {
-                                Text(stringResource(Res.string.insurance_view_document))
+                                Text(label)
                             }
+                        } else if (documents.size > 1) {
+                            // Without an open button, the share buttons still need telling apart.
+                            Text(label, modifier = Modifier.weight(1f).padding(start = 8.dp))
                         }
                     }
                 }
@@ -163,6 +178,7 @@ private fun InsuranceDialog(
 @Preview
 @Composable
 fun InsuranceDialog_Generic_Preview() {
+    val documents = listOf(Uuid.random(), Uuid.random())
     InsuranceDialog(
         insurance = UserInsurance(
             id = Uuid.random(),
@@ -171,7 +187,8 @@ fun InsuranceDialog_Generic_Preview() {
             policyNumber = "POL123456789",
             validFrom = LocalDate(2023, 1, 1),
             validTo = LocalDate(2024, 1, 1),
-            documentId = Uuid.random(),
+            documentId = documents.first(),
+            documents = documents,
         ),
         loadingProgress = MutableStateFlow(null),
         onShareFile = {},

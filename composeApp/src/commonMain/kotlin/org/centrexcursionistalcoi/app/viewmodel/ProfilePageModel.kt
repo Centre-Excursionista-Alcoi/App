@@ -32,9 +32,9 @@ class ProfilePageModel(
         policyNumber: String,
         validFrom: LocalDate,
         validTo: LocalDate,
-        document: PlatformFile?,
+        documents: List<PlatformFile>,
     ): Deferred<Boolean?> = async {
-        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, document)
+        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, documents)
         this@ProfilePageModel.launch { ProfileRemoteRepository.synchronize() }
         true
     }

@@ -19,11 +19,19 @@ data class UserInsurance(
     val policyNumber: String,
     val validFrom: LocalDate,
     val validTo: LocalDate,
+    /** The first of [documents]. Kept for app versions from before an insurance could have several. */
     val documentId: Uuid?,
     val femecvLicense: LicenseData? = null,
     val cardImage: String? = null,
-): Entity<Uuid>, DocumentFileContainer {
+    /**
+     * Every document of this insurance, in upload order. Defaults to [documentId] for data stored before an
+     * insurance could have several.
+     */
+    val documents: List<Uuid> = listOfNotNull(documentId),
+): Entity<Uuid>, DocumentFileContainer, DocumentFileListContainer {
     override val documentFile: Uuid? = documentId
+
+    override val documentFiles: List<Uuid> get() = documents
 
     override fun toMap(): Map<String, Any?> = mapOf(
         "id" to id,
@@ -33,6 +41,7 @@ data class UserInsurance(
         "validFrom" to validFrom.toString(),
         "validTo" to validTo.toString(),
         "documentId" to documentId?.let { FileReference(it) },
+        "documents" to documents,
         "femecvLicense" to femecvLicense,
         "cardImage" to cardImage,
     )

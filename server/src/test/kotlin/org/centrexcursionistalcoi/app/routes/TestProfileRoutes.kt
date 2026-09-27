@@ -5,6 +5,7 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -365,7 +366,7 @@ class TestProfileRoutes : ApplicationTestBase() {
         ).assertStatusCode(HttpStatusCode.NoContent)
 
         val documentId = Database {
-            UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.first().document!!.id.value
+            UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.first().documentIds().single()
         }
 
         // The owner can download it.
@@ -375,5 +376,76 @@ class TestProfileRoutes : ApplicationTestBase() {
         Database { FakeUser2.provideEntity() }
         loginAsFakeUser2()
         client.get("/download/$documentId").assertStatusCode(HttpStatusCode.Forbidden)
+    }
+
+    @Test
+    fun test_insurances_post_multipleDocuments() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        val pdf = ResourcesUtils.bytesFromResource("/document.pdf")
+        val image = ResourcesUtils.bytesFromResource("/image.png")
+        client.submitFormWithBinaryData(
+            "/profile/insurances",
+            formData {
+                append("insuranceCompany", "Rocalsub")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(pdf),
+                    headers { append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString()) },
+                )
+                append(
+                    key = "document",
+                    value = Base64.UrlSafe.encode(image),
+                    headers { append(HttpHeaders.ContentType, ContentType.Image.PNG.toString()) },
+                )
+            }
+        ).assertStatusCode(HttpStatusCode.NoContent)
+
+        val insurance = client.get("/profile/insurances").apply {
+            assertStatusCode(HttpStatusCode.OK)
+        }.bodyAsJson(ListSerializer(UserInsurance.serializer())).single()
+
+        // Both documents, in the order they were sent; the first one is still exposed as documentId.
+        assertEquals(2, insurance.documents.size)
+        assertEquals(insurance.documents.first(), insurance.documentId)
+        client.get("/download/${insurance.documents[0]}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertContentEquals(pdf, bodyAsBytes())
+        }
+        client.get("/download/${insurance.documents[1]}").apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertContentEquals(image, bodyAsBytes())
+        }
+
+        // Every document is restricted to its owner, not just the first one.
+        Database { FakeUser2.provideEntity() }
+        loginAsFakeUser2()
+        for (document in insurance.documents) {
+            client.get("/download/$document").assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    @Test
+    fun test_insurances_post_withoutDocuments() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        client.submitFormWithBinaryData(
+            "/profile/insurances",
+            formData {
+                append("insuranceCompany", "Rocalsub")
+                append("policyNumber", "POL123")
+                append("validFrom", "2025-01-01")
+                append("validTo", "2025-12-31")
+            }
+        ).assertStatusCode(HttpStatusCode.NoContent)
+
+        val insurance = client.get("/profile/insurances")
+            .bodyAsJson(ListSerializer(UserInsurance.serializer()))
+            .single()
+        assertTrue(insurance.documents.isEmpty())
+        assertNull(insurance.documentId)
     }
 }
