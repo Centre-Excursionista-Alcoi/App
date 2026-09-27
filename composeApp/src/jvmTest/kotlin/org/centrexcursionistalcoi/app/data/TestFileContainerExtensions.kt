@@ -10,6 +10,7 @@ import java.util.UUID
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
@@ -91,6 +92,29 @@ class TestFileContainerExtensions {
         validTo = LocalDate(2025, 1, 1),
         documentId = documentId,
     )
+
+    @Test
+    fun fetchDocumentFilePath_ofOneOfSeveralDocuments_downloadsThatDocumentToTheSameCachePath() = runTest {
+        val first = Uuid.random()
+        val second = Uuid.random()
+        mockDownload()
+        val insurance = insurance(first).copy(documents = listOf(first, second))
+
+        val file = insurance.fetchDocumentFilePath(second)
+
+        assertEquals("/download/$second", requests.single().url.encodedPath)
+        // The same path as a single-document insurance's, so documents cached before keep being used.
+        assertEquals("documents/UserInsurance/$second", file.relativePath)
+        assertTrue(file.exists())
+    }
+
+    @Test
+    fun fetchDocumentFilePath_ofADocumentNotInTheContainer_fails() = runTest {
+        mockDownload()
+
+        assertFailsWith<IllegalArgumentException> { insurance(Uuid.random()).fetchDocumentFilePath(Uuid.random()) }
+        assertTrue(requests.isEmpty())
+    }
 
     @Test
     fun fetchDocumentFilePath_whenMissing_downloadsUsingTheContainersRealUuid() = runTest {

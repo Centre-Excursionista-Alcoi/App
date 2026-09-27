@@ -42,7 +42,26 @@ const val FILES_PATH = "files"
  */
 suspend fun DocumentFileContainer.fetchDocumentFilePath(progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): AppFile {
     val uuid = documentFile ?: error("No document file for container")
-    val path = joinPaths(DOCUMENTS_PATH, this::class.simpleName ?: "generic", uuid.toString())
+    return fetchDocumentFilePath(uuid, this::class.simpleName, progressNotifier, downloadIfNotExists)
+}
+
+/**
+ * Returns the file path for the document with the given [uuid] of this DocumentFileListContainer, downloading it
+ * if it doesn't exist locally, like [DocumentFileContainer.fetchDocumentFilePath].
+ * @throws IllegalArgumentException if [uuid] isn't one of this container's documents.
+ */
+suspend fun DocumentFileListContainer.fetchDocumentFilePath(uuid: Uuid, progressNotifier: ProgressNotifier? = null, downloadIfNotExists: Boolean = true): AppFile {
+    require(uuid in documentFiles) { "Could not find document $uuid in container" }
+    return fetchDocumentFilePath(uuid, this::class.simpleName, progressNotifier, downloadIfNotExists)
+}
+
+private suspend fun fetchDocumentFilePath(
+    uuid: Uuid,
+    className: String?,
+    progressNotifier: ProgressNotifier?,
+    downloadIfNotExists: Boolean,
+): AppFile {
+    val path = joinPaths(DOCUMENTS_PATH, className ?: "generic", uuid.toString())
     val file = AppFile(path)
     if (!file.exists() && downloadIfNotExists) {
         log.d { "Tried to read non-existing file. Downloading..." }

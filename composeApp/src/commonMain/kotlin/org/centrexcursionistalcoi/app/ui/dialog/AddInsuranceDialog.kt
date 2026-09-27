@@ -26,12 +26,12 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.ui.reusable.form.DatePickerFormField
-import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilePicker
+import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilesPicker
 import org.centrexcursionistalcoi.app.ui.utils.optional
 import org.jetbrains.compose.resources.stringResource
 
 /** Completes with `true` once the insurance has been stored, or with `false`/`null` if that failed. */
-typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, document: PlatformFile?) -> Deferred<Boolean?>
+typealias CreateInsuranceRequest = (company: String, policyNumber: String, validFrom: LocalDate, validTo: LocalDate, documents: List<PlatformFile>) -> Deferred<Boolean?>
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
 @Composable
@@ -43,7 +43,7 @@ fun AddInsuranceDialog(
     var policyNumber by remember { mutableStateOf("") }
     var validFrom by remember { mutableStateOf<LocalDate?>(null) }
     var validTo by remember { mutableStateOf<LocalDate?>(null) }
-    var document by remember { mutableStateOf<PlatformFile?>(null) }
+    var documents by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
     val isValid = insuranceCompany.isNotBlank() && policyNumber.isNotBlank() && validFrom != null && validTo != null
     var isLoading by remember { mutableStateOf(false) }
@@ -110,10 +110,10 @@ fun AddInsuranceDialog(
                     enabled = !isLoading,
                 )
 
-                FormFilePicker(
-                    label = stringResource(Res.string.insurance_document).optional(),
-                    file = document,
-                    onFilePicked = { document = it },
+                FormFilesPicker(
+                    label = stringResource(Res.string.insurance_documents).optional(),
+                    files = documents,
+                    onFilesChange = { documents = it },
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     pickerType = FileKitType.File("pdf"),
@@ -135,7 +135,7 @@ fun AddInsuranceDialog(
                         policyNumber,
                         validFrom!!,
                         validTo!!,
-                        document,
+                        documents,
                     )
                     request.invokeOnCompletion { cause ->
                         isLoading = false

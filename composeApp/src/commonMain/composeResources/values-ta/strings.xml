@@ -162,7 +162,6 @@
     <string name="insurance_policy_number">கொள்கை எண்</string>
     <string name="insurance_start_date">தொடக்க தேதி</string>
     <string name="insurance_end_date">முடிவு தேதி</string>
-    <string name="insurance_document">ஆவணம்</string>
     <string name="insurance_view_document">ஆவணத்தைக் காண்க</string>
     <string name="insurance_add_info">இங்கே காப்பீட்டைச் சேர்க்கும் போது, வழங்கப்பட்ட செய்தி உண்மை மற்றும் முழுமையானது என்று பொறுப்பு அளிக்கிறீர்கள். ஏதேனும் தவறுகளுக்கு நீங்கள் பொறுப்பாவீர்கள்.</string>
     <string name="departments_title">துறைகள்</string>
