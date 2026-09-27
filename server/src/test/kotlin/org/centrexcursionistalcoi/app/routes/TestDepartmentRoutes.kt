@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import app.cash.turbine.test
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -15,6 +16,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.assertBody
@@ -29,15 +31,85 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.test.*
 import org.centrexcursionistalcoi.app.utils.isZero
 import org.centrexcursionistalcoi.app.utils.toUUID
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 class TestDepartmentRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
     private val joinRequestId = "a82b9bc2-e357-4cfb-abe0-4c5444680757".toUUID()
+
+    /**
+     * Runs [action] and returns the push notification [FakeUser] receives because of it. Push notifications are
+     * sent from a detached coroutine, where an exception (e.g. reading an entity outside a transaction) never
+     * reaches the route's response -- the notification just never arrives.
+     */
+    private suspend fun awaitPushToFakeUser(action: suspend () -> Unit): PushNotification {
+        val session = UserSession(FakeUser.SUB, FakeUser.FULL_NAME, FakeUser.EMAIL, emptyList())
+        var notification: PushNotification? = null
+        Push.flow(session).test(timeout = 10.seconds) {
+            action()
+            notification = awaitItem()
+        }
+        return notification!!
+    }
+
+    private fun JdbcTransaction.departmentWithFakeUser(confirmed: Boolean) =
+        DepartmentMemberEntity.new(joinRequestId) {
+            userReference = FakeUser.provideEntity()
+            department = DepartmentEntity.new(departmentId) { displayName = "Test Department" }
+            this.confirmed = confirmed
+        }
+
+    @Test
+    fun test_confirm_notifiesTheMember() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        disablePush = false,
+        databaseInitBlock = { departmentWithFakeUser(confirmed = false) },
+    ) {
+        val notification = awaitPushToFakeUser {
+            client.post("/departments/$departmentId/confirm/$joinRequestId").assertStatusCode(HttpStatusCode.OK)
+        }
+
+        assertTrue(notification is PushNotification.DepartmentJoinRequestUpdated)
+        assertEquals(FakeUser.SUB, notification.userSub)
+        assertTrue(notification.isConfirmed)
+    }
+
+    @Test
+    fun test_deny_notifiesTheMember() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        disablePush = false,
+        databaseInitBlock = { departmentWithFakeUser(confirmed = false) },
+    ) {
+        val notification = awaitPushToFakeUser {
+            client.post("/departments/$departmentId/deny/$joinRequestId").assertStatusCode(HttpStatusCode.OK)
+        }
+
+        assertTrue(notification is PushNotification.DepartmentJoinRequestUpdated)
+        assertEquals(FakeUser.SUB, notification.userSub)
+        assertFalse(notification.isConfirmed)
+    }
+
+    @Test
+    fun test_kick_notifiesTheMember() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        disablePush = false,
+        databaseInitBlock = { departmentWithFakeUser(confirmed = true) },
+    ) {
+        val notification = awaitPushToFakeUser {
+            client.post("/departments/$departmentId/leave/${FakeUser.SUB}").assertSuccess()
+        }
+
+        assertTrue(notification is PushNotification.DepartmentKicked)
+        assertEquals(FakeUser.SUB, notification.userSub)
+    }
 
     @Test
     fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/join", HttpMethod.Post)

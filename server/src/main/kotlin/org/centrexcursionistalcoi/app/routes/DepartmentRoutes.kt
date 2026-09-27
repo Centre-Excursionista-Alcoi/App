@@ -231,6 +231,9 @@ fun Route.departmentsRoutes() {
         if (member == null) {
             call.respondError(Error.EntityNotFound(DepartmentMemberEntity::class, sub))
         } else {
+            // Built here, not inside Push.launch: it runs without a transaction, so reading the member's references
+            // there throws "Can't init value outside the transaction". And before the delete, while the row exists.
+            val notification = member.kickedNotification()
             Database {
                 member.delete()
             }
@@ -238,8 +241,8 @@ fun Route.departmentsRoutes() {
 
             Push.launch {
                 Push.sendPushNotification(
-                    userSub = member.userReference.id.value,
-                    notification = member.kickedNotification(),
+                    userSub = notification.userSub,
+                    notification = notification,
                     includeAdmins = false,
                 )
             }
@@ -298,10 +301,12 @@ fun Route.departmentsRoutes() {
             member.confirmed = true
         }
 
+        // Built here, not inside Push.launch: it runs without a transaction (see the kick route above).
+        val notification = member.confirmedNotification()
         Push.launch {
             Push.sendPushNotification(
-                userSub = member.userReference.id.value,
-                notification = member.confirmedNotification(),
+                userSub = notification.userSub,
+                notification = notification,
                 includeAdmins = true,
             )
         }
@@ -327,6 +332,8 @@ fun Route.departmentsRoutes() {
             return@post
         }
 
+        // Built here, not inside Push.launch: it runs without a transaction (see the kick route above).
+        val notification = member.deniedNotification()
         Database {
             // Denied request, delete the member entry
             member.delete()
@@ -334,8 +341,8 @@ fun Route.departmentsRoutes() {
 
         Push.launch {
             Push.sendPushNotification(
-                userSub = member.userReference.id.value,
-                notification = member.deniedNotification(),
+                userSub = notification.userSub,
+                notification = notification,
                 includeAdmins = true,
             )
         }
