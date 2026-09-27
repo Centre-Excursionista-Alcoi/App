@@ -351,21 +351,21 @@ class LendingsRemoteRepository(
         updateRemoteEntity(updatedLending)
     }
 
-    override suspend fun insertRemoteEntity(entity: Lending): ReferencedLending {
+    override suspend fun insertRemoteEntity(entity: Lending): ReferencedLending? {
         ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.insertRaw(entity)
-        return lendingsRepository.get(entity.id)!!
+        return lendingsRepository.get(entity.id)
     }
 
-    override suspend fun updateRemoteEntity(entity: Lending): ReferencedLending {
+    override suspend fun updateRemoteEntity(entity: Lending): ReferencedLending? {
         ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.updateRaw(entity)
-        return lendingsRepository.get(entity.id)!!
+        return lendingsRepository.get(entity.id)
     }
 
-    override suspend fun upsertRemoteEntity(entity: Lending): ReferencedLending {
+    override suspend fun upsertRemoteEntity(entity: Lending): ReferencedLending? {
         ensureReceivedItemDependencies(entity.receivedItems)
         lendingsRepository.insertOrUpdate(entity)
-        return lendingsRepository.get(entity.id)!!
+        return lendingsRepository.get(entity.id)
     }
 }
