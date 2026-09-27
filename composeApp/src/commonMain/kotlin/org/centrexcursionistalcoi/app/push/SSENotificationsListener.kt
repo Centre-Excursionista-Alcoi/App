@@ -93,7 +93,7 @@ class SSENotificationsListener(
                                         name = SyncLendingBackgroundJob.NAME,
                                         input = mapOf(
                                             SyncLendingBackgroundJob.EXTRA_LENDING_ID to notification.lendingId.toString(),
-                                            SyncLendingBackgroundJob.EXTRA_IS_REMOVAL to (notification is PushNotification.LendingCancelled).toString(),
+                                            SyncLendingBackgroundJob.EXTRA_IS_REMOVAL to SyncLendingBackgroundJob.isRemoval(notification).toString(),
                                         ),
                                     )
                                 } else if (notification is PushNotification.DepartmentJoinRequestUpdated) {
