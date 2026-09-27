@@ -511,9 +511,9 @@
     <string name="management_lending_returned">El préstec ha sigut retornat.</string>
     <string name="management_department_members">Membres</string>
     <string name="home_lending_department">Secció: %1$s</string>
-    <string name="delete_dialog_no_name_title">Confirmar Eliminación</string>
-    <string name="delete_dialog_no_name_message">Seguro que quieres eliminar este elemento? Esta acción no se puede deshacer.</string>
-    <string name="delete_dialog_reason">Razón para eliminar</string>
+    <string name="delete_dialog_no_name_title">Confirmar Eliminació</string>
+    <string name="delete_dialog_no_name_message">Segur que vols eliminar aquest element? L'acció no es pot desfer.</string>
+    <string name="delete_dialog_reason">Raó per a eliminar</string>
     <string name="notification_lending_deleted_title">Préstamo eliminado</string>
     <string name="notification_lending_deleted_message">Tu préstamo ha sido eliminado por un administrador.</string>
     <string name="notification_lending_deleted_reason_message">Tu préstamo ha sido eliminado por un administrador. Razón: %1$s</string>
@@ -616,4 +616,6 @@
     <string name="insurance_status_active">Vàlida fins al %1$s</string>
     <string name="insurance_status_upcoming">S'inicia el %1$s</string>
     <string name="insurance_status_expired">Va expirar el %1$s</string>
+    <string name="insurance_documents">Documents</string>
+    <string name="insurance_view_document_number">Veure Document %1$d</string>
 </resources>
