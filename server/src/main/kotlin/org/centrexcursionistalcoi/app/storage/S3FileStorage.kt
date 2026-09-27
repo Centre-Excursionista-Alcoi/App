@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.storage
 
 import java.io.InputStream
 import java.net.URI
+import java.nio.file.Path
+import kotlin.io.path.fileSize
 import java.time.Duration
 import org.jetbrains.annotations.VisibleForTesting
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -73,6 +75,14 @@ class S3FileStorage(
         client.putObject(
             { it.bucket(bucket).key(key).contentType(contentType).contentLength(size) },
             RequestBody.fromInputStream(input, size),
+        )
+    }
+
+    override fun put(key: String, file: Path, contentType: String) {
+        // Unlike a stream, a file can be read again if the request has to be retried
+        client.putObject(
+            { it.bucket(bucket).key(key).contentType(contentType).contentLength(file.fileSize()) },
+            RequestBody.fromFile(file),
         )
     }
 

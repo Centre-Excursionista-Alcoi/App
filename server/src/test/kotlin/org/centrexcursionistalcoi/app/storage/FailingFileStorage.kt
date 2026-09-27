@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.storage
 
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.Path
 
 /**
  * Wraps [delegate], failing the way a broken storage would.
@@ -32,6 +33,11 @@ class FailingFileStorage(
     override fun put(key: String, input: InputStream, size: Long, contentType: String) {
         countPut()
         delegate.put(key, input, size, contentType)
+    }
+
+    override fun put(key: String, file: Path, contentType: String) {
+        countPut()
+        delegate.put(key, file, contentType)
     }
 
     override fun head(key: String): StoredObjectInfo? =

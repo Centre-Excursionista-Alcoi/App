@@ -58,6 +58,7 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -108,6 +109,8 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOw
 
     return memory
 }
+
+private class StoredAttachment(val objectKey: String, val size: Long, val name: String)
 
 /**
  * (Re)generates the memory's summary PDF from its current data and stores it as [MemoryEntity.pdf], deleting the
@@ -283,7 +286,13 @@ fun Route.memoriesRoutes() {
         // Store all attachments. Best-effort restriction: see the comment on the memory PDF's rules below --
         // department MEMORY_MANAGERs and tagged members can see the memory's data but not download these files.
         val attachmentRules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME))
-        val documentEntities = attachedFiles.map { file -> Database { file.newEntity(rules = attachmentRules) } }
+        val documentEntities = attachedFiles.map { file -> file.newEntity(rules = attachmentRules) }
+        // Read now: the entities' values can't be read outside a transaction later
+        val attachments = Database {
+            documentEntities.mapIndexed { i, file ->
+                StoredAttachment(file.objectKey, file.size, attachedFiles[i].originalFileName ?: "memory_attachment_$i")
+            }
+        }
 
         val memoryId = UUID.randomUUID()
         val memoryEntity = Database {
@@ -331,13 +340,14 @@ fun Route.memoriesRoutes() {
                 val fileAttachments = mutableListOf<MailerSendAttachment>()
                 var bytesCounter = 0L
                 val maxTotalSizeBytes = 20 * 1024 * 1024 // 20 MB
-                for ((i, file) in attachedFiles.withIndex()) {
-                    val fileBytes = file.baos.toByteArray()
-                    bytesCounter += fileBytes.size
+                for (attachment in attachments) {
+                    // Checked before reading them from the storage
+                    bytesCounter += attachment.size
                     if (bytesCounter > maxTotalSizeBytes) {
                         break
                     }
-                    fileAttachments.add(MailerSendAttachment(fileBytes, file.originalFileName ?: "memory_attachment_$i"))
+                    val fileBytes = FileStorageProvider.current.readBytes(attachment.objectKey)
+                    fileAttachments.add(MailerSendAttachment(fileBytes, attachment.name))
                 }
 
                 val url = AppLinks.adminLending(lending.id.value)

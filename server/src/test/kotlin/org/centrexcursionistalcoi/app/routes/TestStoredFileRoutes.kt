@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.http.Headers
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.basicAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -60,6 +63,10 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.centrexcursionistalcoi.app.security.AuthTokens
+import org.centrexcursionistalcoi.app.database.table.AuthSessionMethod
+import org.centrexcursionistalcoi.app.security.ClientInfo
+import io.ktor.client.request.header
 
 /**
  * Tests that routes serve, create and delete the contents of files in the file storage.
@@ -263,6 +270,55 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         }.let { response ->
             assertTrue(response.bodyAsText().contains("<D:getcontentlength>${png.size}</D:getcontentlength>"), response.bodyAsText())
         }
+    }
+
+    private fun uploadTempFiles(): List<String> =
+        java.nio.file.Files.list(java.nio.file.Path.of(System.getProperty("java.io.tmpdir"))).use { files ->
+            files.map { it.fileName.toString() }.filter { it.startsWith("cea-upload-") }.toList()
+        }
+
+    private fun insuranceForm(document: ByteArray, policyNumber: String?) = formData {
+        append("insuranceCompany", "Company")
+        policyNumber?.let { append("policyNumber", it) }
+        append("validFrom", "2025-01-01")
+        append("validTo", "2025-12-31")
+        append("document", document, Headers.build {
+            append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
+            append(HttpHeaders.ContentDisposition, "filename=\"policy.pdf\"")
+        })
+    }
+
+    @Test
+    fun test_upload_largeFile_isStoredIntact() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val before = uploadTempFiles()
+        val document = ResourcesUtils.bytesFromResource("/document.pdf") + kotlin.random.Random.nextBytes(24 * 1024 * 1024)
+
+        // The test client logs whole bodies: send this one without logging
+        val token = Database {
+            AuthTokens.startSession(FakeUser.provideEntity(), AuthSessionMethod.PASSWORD, ClientInfo(null, "test"))
+        }.accessToken
+        createClient { }.submitFormWithBinaryData("/profile/insurances", insuranceForm(document, "1234")) {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }.assertStatusCode(HttpStatusCode.NoContent)
+
+        val file = Database { UserInsuranceEntity.all().single().documentIds().single().let { FileEntity[it] } }
+        assertEquals(document.size.toLong(), file.size)
+        assertEquals(ContentType.Application.Pdf, file.contentType)
+        assertEquals("policy.pdf", file.name)
+        assertContentEquals(document, testStorage.readBytes(file.objectKey))
+        assertEquals(before, uploadTempFiles(), "The temporary file of the upload must be deleted")
+    }
+
+    @Test
+    fun test_upload_rejected_deletesTemporaryFiles() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val before = uploadTempFiles()
+
+        // Rejected after receiving the document, before storing it
+        client.submitFormWithBinaryData("/profile/insurances", insuranceForm(byteArrayOf(1, 2, 3), policyNumber = null))
+            .assertStatusCode(HttpStatusCode.BadRequest)
+
+        assertEquals(before, uploadTempFiles(), "The temporary file of the upload must be deleted")
+        assertTrue(storedKeys().isEmpty())
     }
 
     companion object {

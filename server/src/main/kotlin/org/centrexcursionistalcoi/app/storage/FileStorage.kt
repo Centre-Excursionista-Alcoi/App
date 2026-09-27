@@ -2,6 +2,9 @@ package org.centrexcursionistalcoi.app.storage
 
 import java.io.Closeable
 import java.io.InputStream
+import java.nio.file.Path
+import kotlin.io.path.fileSize
+import kotlin.io.path.inputStream
 
 /**
  * Where the contents of files ([org.centrexcursionistalcoi.app.database.entity.FileEntity]) are stored. The database
@@ -24,6 +27,13 @@ interface FileStorage : Closeable {
      * Stores [size] bytes read from [input] at [key], replacing any existing object. [input] is not closed.
      */
     fun put(key: String, input: InputStream, size: Long, contentType: String)
+
+    /**
+     * Stores the contents of [file] at [key], replacing any existing object. Streamed, never loaded into memory.
+     */
+    fun put(key: String, file: Path, contentType: String) {
+        file.inputStream().use { put(key, it, file.fileSize(), contentType) }
+    }
 
     /**
      * Opens the object at [key] for reading. The caller must close the stream.

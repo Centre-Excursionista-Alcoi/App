@@ -56,6 +56,10 @@ class LocalFileStorage(root: Path) : FileStorage {
         }
     }
 
+    override fun put(key: String, file: Path, contentType: String) {
+        write(key) { Files.copy(file, it, StandardCopyOption.REPLACE_EXISTING) }
+    }
+
     override fun open(key: String): InputStream = try {
         resolve(key).inputStream()
     } catch (e: NoSuchFileException) {

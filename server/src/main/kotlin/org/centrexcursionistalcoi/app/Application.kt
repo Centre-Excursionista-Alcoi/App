@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
+import org.centrexcursionistalcoi.app.plugins.configureUploadsCleanup
 import org.centrexcursionistalcoi.app.security.AES
 import org.centrexcursionistalcoi.app.security.AuthSessionsCleanup
 import org.centrexcursionistalcoi.app.security.AuthTokens
@@ -143,6 +144,7 @@ fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = fals
     configureForwardedHeaders()
     configureSentryTracing()
     configureContentNegotiation()
+    configureUploadsCleanup()
     configureSSE()
     // Before routing: rate-limited routes need the plugin already installed.
     configureRateLimits(isTesting)

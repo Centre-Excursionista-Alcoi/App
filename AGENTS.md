@@ -306,6 +306,12 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   to `database/FileReferences.kt`** (`TestFileReferences` fails otherwise), or cleanup would delete files still in
   use. Posts still send `"bytes": ""` for each file (old clients require the field): contents are always
   downloaded from `/download/{uuid}`, which streams them from the storage.
+- **Multipart uploads are streamed, never held in memory**: `FileRequestData` writes each part to a temporary
+  file (`cea-upload-*` in the system temp directory), which `newEntity()` streams to the storage. The temporary
+  file is deleted by `close()`, and in any case once the call has been handled (`plugins/UploadsCleanup.kt`), so an
+  early `return` after receiving an upload doesn't leave it behind -- but don't read an upload after its call ends
+  (read the stored file instead, like the memory notification email does). Files sent as Base64 inside JSON
+  bodies (`FileWithContext`) are decoded in memory: send large files as multipart parts.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the
   server to reject; (2) per-item actions (edit/delete on a specific row) must check the viewer's role in

@@ -2,7 +2,10 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import io.ktor.http.ContentType
 import java.io.InputStream
+import java.nio.file.Path
 import java.util.UUID
+import kotlin.io.path.fileSize
+import kotlin.io.path.inputStream
 import kotlin.time.toKotlinInstant
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -55,14 +58,44 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             id: UUID? = null,
         ): FileEntity {
             val type = resolveContentType(contentType, bytes)
+            return create(bytes.size.toLong(), name, type, rules, id) { key -> FileStorageProvider.current.put(key, bytes, type.toString()) }
+        }
+
+        /**
+         * Stores the contents of [file] (streamed, never loaded into memory) and creates a file for them. Like the
+         * other [create], the stored contents are deleted if the transaction rolls back.
+         */
+        context(tr: JdbcTransaction)
+        fun create(
+            file: Path,
+            name: String?,
+            contentType: ContentType? = null,
+            rules: FileReadWriteRules? = null,
+            id: UUID? = null,
+        ): FileEntity {
+            // Only the first bytes are needed to detect the type
+            val head = file.inputStream().use { it.readNBytes(16) }
+            val type = resolveContentType(contentType, head)
+            return create(file.fileSize(), name, type, rules, id) { key -> FileStorageProvider.current.put(key, file, type.toString()) }
+        }
+
+        context(tr: JdbcTransaction)
+        private fun create(
+            size: Long,
+            name: String?,
+            type: ContentType,
+            rules: FileReadWriteRules?,
+            id: UUID?,
+            store: (key: String) -> Unit,
+        ): FileEntity {
             val key = newObjectKey()
-            FileStorageProvider.current.put(key, bytes, type.toString())
+            store(key)
             FileObjectsTransactionHook.of(tr).deleteOnRollback(key)
 
             val fileId = id?.takeIf { findById(it) == null } ?: UUID.randomUUID()
             return new(fileId) {
                 this.objectKey = key
-                this.size = bytes.size.toLong()
+                this.size = size
                 this.type = type.toString()
                 this.name = name
                 this.rules = rules

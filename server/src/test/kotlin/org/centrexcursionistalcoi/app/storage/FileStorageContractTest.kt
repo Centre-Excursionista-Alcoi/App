@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.storage
 
 import java.io.ByteArrayInputStream
+import java.nio.file.Path
+import kotlin.io.path.writeBytes
+import org.junit.jupiter.api.io.TempDir
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -45,6 +48,16 @@ abstract class FileStorageContractTest {
 
         assertContentEquals(bytes, storage.readBytes("files/b"))
         assertEquals(StoredObjectInfo(4096), storage.head("files/b"))
+    }
+
+    @Test
+    fun test_putFile_readBack(@TempDir directory: Path) {
+        val bytes = Random.nextBytes(3 * 1024 * 1024)
+        val file = directory.resolve("upload").also { it.writeBytes(bytes) }
+        storage.put("files/from-file", file, "application/pdf")
+
+        assertContentEquals(bytes, storage.readBytes("files/from-file"))
+        assertEquals(StoredObjectInfo(bytes.size.toLong()), storage.head("files/from-file"))
     }
 
     @Test
