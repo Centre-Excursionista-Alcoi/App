@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.data
 
 import kotlin.test.Test
+import org.centrexcursionistalcoi.app.json
 import kotlin.test.assertEquals
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
@@ -41,5 +42,33 @@ class TestUserInsurance {
             listOf("active-short", "active-long", "upcoming-sooner", "upcoming-later", "expired-recently", "expired-long-ago"),
             sorted.map { it.policyNumber },
         )
+    }
+
+    @Test
+    fun documents_defaultToDocumentId_forDataFromBeforeSeveralDocuments() {
+        val documentId = Uuid.random()
+        // As cached by, or sent to, app versions from before an insurance could have several documents.
+        val decoded = json.decodeFromString(
+            UserInsurance.serializer(),
+            """{"id":"${Uuid.random()}","userSub":"sub","insuranceCompany":"Company","policyNumber":"a","validFrom":"2026-01-01","validTo":"2026-12-31","documentId":"$documentId"}""",
+        )
+        assertEquals(listOf(documentId), decoded.documents)
+
+        val withoutDocuments = json.decodeFromString(
+            UserInsurance.serializer(),
+            """{"id":"${Uuid.random()}","userSub":"sub","insuranceCompany":"Company","policyNumber":"a","validFrom":"2026-01-01","validTo":"2026-12-31"}""",
+        )
+        assertEquals(emptyList(), withoutDocuments.documents)
+    }
+
+    @Test
+    fun documents_roundTrip() {
+        val documents = listOf(Uuid.random(), Uuid.random())
+        val insurance = insurance("a", today, today).copy(documentId = documents.first(), documents = documents)
+
+        val decoded = json.decodeFromString(UserInsurance.serializer(), json.encodeToString(UserInsurance.serializer(), insurance))
+
+        assertEquals(documents, decoded.documents)
+        assertEquals(documents.first(), decoded.documentId)
     }
 }

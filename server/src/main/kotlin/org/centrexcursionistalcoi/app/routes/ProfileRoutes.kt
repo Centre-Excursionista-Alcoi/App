@@ -135,7 +135,8 @@ fun Route.profileRoutes() {
         var policyNumber: String? = null
         var validFrom: String? = null
         var validTo: String? = null
-        val document = FileRequestData()
+        // Any number of "document" parts, one per document, in the order they're sent.
+        val documents = mutableListOf<FileRequestData>()
 
         call.receiveMultipart().forEachPart { partData ->
             if (partData is PartData.FormItem) {
@@ -144,11 +145,11 @@ fun Route.profileRoutes() {
                     "policyNumber" -> policyNumber = partData.value
                     "validFrom" -> validFrom = partData.value
                     "validTo" -> validTo = partData.value
-                    "document" -> document.populate(partData)
+                    "document" -> documents += FileRequestData().apply { populate(partData) }
                 }
             } else if (partData is PartData.FileItem) {
                 when (partData.name) {
-                    "document" -> document.populate(partData)
+                    "document" -> documents += FileRequestData().apply { populate(partData) }
                 }
             }
         }
@@ -171,9 +172,11 @@ fun Route.profileRoutes() {
 
         val userReference = Database { UserReferenceEntity[session.sub] }
 
-        val documentFile = document.takeIf { it.isNotEmpty() }?.newEntity(
-            rules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME)),
-        )
+        val documentFiles = documents.filter { it.isNotEmpty() }.map { document ->
+            document.newEntity(
+                rules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME)),
+            )
+        }
         Database {
             UserInsuranceEntity.new {
                 userSub = userReference
@@ -181,8 +184,7 @@ fun Route.profileRoutes() {
                 this.policyNumber = policyNumber
                 this.validFrom = validFromDate
                 this.validTo = validToDate
-                this.document = documentFile
-            }
+            }.addDocuments(documentFiles)
         }
         userReference.updated()
 

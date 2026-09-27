@@ -14,7 +14,6 @@ object UserInsurances : UUIDTable("UserInsurances") {
     val policyNumber = varchar("policyNumber", 255)
     val validFrom = date("validFrom")
     val validTo = date("validTo")
-    val document = optReference("document", Files)
 
     val femecvLicense = json("femecv_license", json, LicenseData.serializer()).nullable()
 }

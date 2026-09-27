@@ -129,9 +129,8 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                         policyNumber = license.code
                         validFrom = license.validFrom.toJavaLocalDate()
                         validTo = license.validTo.toJavaLocalDate()
-                        document = certificateEntity
                         femecvLicense = license
-                    }
+                    }.addDocuments(listOf(certificateEntity))
                 }
             }
         }

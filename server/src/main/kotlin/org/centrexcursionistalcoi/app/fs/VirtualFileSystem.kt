@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
-import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
+import org.centrexcursionistalcoi.app.database.entity.UserInsuranceDocumentEntity
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
@@ -160,12 +160,18 @@ object VirtualFileSystem {
             idConverter = { it.toUUIDOrNull() },
             customFileDisplayName = { it.userSub.fullName + " :: " + it.from + " - " + it.to },
         ) { lending -> lending.memory?.pdf },
+        // One entry per document: an insurance can have several.
         RootDir(
             name = "Insurances",
-            entityClass = UserInsuranceEntity,
+            entityClass = UserInsuranceDocumentEntity,
             idConverter = { it.toUUIDOrNull() },
-            customFileDisplayName = { it.userSub.fullName + " :: " + it.insuranceCompany + " - " + it.policyNumber },
-        ) { it.document },
+            customFileDisplayName = { document ->
+                val insurance = document.insurance
+                val name = insurance.userSub.fullName + " :: " + insurance.insuranceCompany + " - " + insurance.policyNumber
+                // The first document keeps the name insurances had when they only had one.
+                if (document.position == 0) name else "$name (${document.position + 1})"
+            },
+        ) { it.file },
     )
 
     @VisibleForTesting
