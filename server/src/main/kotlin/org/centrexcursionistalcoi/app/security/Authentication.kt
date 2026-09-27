@@ -287,7 +287,9 @@ fun Route.webAuthnRoutes() {
         try {
             val parsed = webAuthnManager.parseRegistrationResponseJSON(request.registrationResponseJson)
             // pubKeyCredParams = null: accept any algorithm, matching the non-strict manager's own leniency.
-            val registrationParameters = RegistrationParameters(serverProperty, null, true)
+            // Restore Credentials are created silently, without verifying the user, so some authenticators don't
+            // set the UV flag -- userVerificationRequired = false, like when redeeming one (see verifyRestoreKey).
+            val registrationParameters = RegistrationParameters(serverProperty, null, false)
             val registrationData = webAuthnManager.verify(parsed, registrationParameters)
 
             val authenticatorData = registrationData.attestationObject!!.authenticatorData

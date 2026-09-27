@@ -1,5 +1,20 @@
 package org.centrexcursionistalcoi.app.security
 
+import com.webauthn4j.converter.AttestationObjectConverter
+import com.webauthn4j.converter.CollectedClientDataConverter
+import com.webauthn4j.converter.util.ObjectConverter
+import com.webauthn4j.data.attestation.AttestationObject
+import com.webauthn4j.data.attestation.authenticator.AAGUID
+import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData
+import com.webauthn4j.data.attestation.authenticator.AuthenticatorData
+import com.webauthn4j.data.attestation.authenticator.EC2COSEKey
+import com.webauthn4j.data.attestation.statement.COSEAlgorithmIdentifier
+import com.webauthn4j.data.attestation.statement.NoneAttestationStatement
+import com.webauthn4j.data.client.ClientDataType
+import com.webauthn4j.data.client.CollectedClientData
+import com.webauthn4j.data.client.Origin
+import com.webauthn4j.data.client.challenge.DefaultChallenge
+import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -15,11 +30,22 @@ import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.RegisterRestoreKeyRequest
 import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.UserCredentialRecordEntity
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.routes.WellKnownConfigProvider
 import org.centrexcursionistalcoi.app.test.LoginType
+import java.security.KeyPairGenerator
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECGenParameterSpec
+import java.util.Base64
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -32,13 +58,72 @@ import kotlin.test.assertTrue
  *   `challenge`/`rpId`), not the "create" (registration) shape with a placeholder dummy user -- Android's
  *   `GetRestoreCredentialOption` expects a `PublicKeyCredentialRequestOptionsJSON`, not a creation-options JSON.
  *
- * A full register -> verify round trip (a real software WebAuthn authenticator producing a valid signed
- * response) is *not* covered here -- constructing one needs `webauthn4j-test`'s `ClientPlatform`/authenticator
- * fixtures wired up to this exact request/response shape, which is a substantial addition of its own. The
- * "malformed credential response" tests below at least confirm the verify/register endpoints fail cleanly
- * (a structured [Error], not a raw string or a crash) rather than actually verifying the crypto succeeds.
+ * Registration is covered with a hand-built `none` attestation (see [restoreKeyRegistrationResponseJson]), but
+ * redeeming a key is not: that needs a response signed by the registered key, which is a substantial addition of
+ * its own. The "malformed credential response" test below at least confirms the verify endpoint fails cleanly
+ * (a structured [Error], not a raw string or a crash).
  */
 class TestWebAuthnRoutes : ApplicationTestBase() {
+    @AfterTest
+    fun tearDown() {
+        WellKnownConfigProvider.override(WellKnownConfigProvider.SHA256_CERT_FINGERPRINTS_VARIABLE, null)
+    }
+
+    private val base64Url = Base64.getUrlEncoder().withoutPadding()
+
+    /**
+     * A registration response as an authenticator creating a Restore Credential produces it: `none` attestation,
+     * and only the user present flag set -- no user verification, since restore keys are created silently.
+     */
+    private fun restoreKeyRegistrationResponseJson(challenge: String, origin: String): String {
+        val objectConverter = ObjectConverter()
+        val keyPair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+        val credentialId = ByteArray(16).also { SecureRandom().nextBytes(it) }
+
+        val authenticatorData = AuthenticatorData<RegistrationExtensionAuthenticatorOutput>(
+            MessageDigest.getInstance("SHA-256").digest(AppLinks.host.toByteArray()),
+            (AuthenticatorData.BIT_UP.toInt() or AuthenticatorData.BIT_AT.toInt()).toByte(),
+            0,
+            AttestedCredentialData(
+                AAGUID.ZERO,
+                credentialId,
+                EC2COSEKey.create(keyPair.public as ECPublicKey, COSEAlgorithmIdentifier.ES256),
+            ),
+        )
+        val attestationObject = AttestationObjectConverter(objectConverter)
+            .convertToBytes(AttestationObject(authenticatorData, NoneAttestationStatement()))
+        val clientData = CollectedClientDataConverter(objectConverter).convertToBytes(
+            CollectedClientData(
+                ClientDataType.WEBAUTHN_CREATE,
+                DefaultChallenge(Base64.getUrlDecoder().decode(challenge)),
+                Origin.create(origin),
+                null,
+            )
+        )
+
+        val id = base64Url.encodeToString(credentialId)
+        return """{"id":"$id","rawId":"$id","type":"public-key","response":{"clientDataJSON":"${base64Url.encodeToString(clientData)}","attestationObject":"${base64Url.encodeToString(attestationObject)}"},"clientExtensionResults":{}}"""
+    }
+
+    @Test
+    fun test_registerRestoreKey_withoutUserVerification_isAccepted() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+    ) {
+        WellKnownConfigProvider.override(WellKnownConfigProvider.SHA256_CERT_FINGERPRINTS_VARIABLE, "AA:BB")
+
+        val challengeResponse = client.post("/generate-restore-challenge")
+        challengeResponse.assertStatusCode(HttpStatusCode.OK)
+        val challenge = Json.parseToJsonElement(challengeResponse.bodyAsText()).jsonObject["challenge"]!!.jsonPrimitive.content
+
+        val registrationResponseJson = restoreKeyRegistrationResponseJson(challenge, origin = "android:apk-key-hash:qrs")
+        client.post("/register-restore-key") {
+            contentType(ContentType.Application.Json)
+            setBody(RegisterRestoreKeyRequest(registrationResponseJson))
+        }.assertStatusCode(HttpStatusCode.OK)
+
+        val credentialId = Json.parseToJsonElement(registrationResponseJson).jsonObject["id"]!!.jsonPrimitive.content
+        assertNotNull(Database { UserCredentialRecordEntity.findById(credentialId) })
+    }
 
     @Test
     fun test_generateRestoreChallenge_requiresLogin() = runApplicationTest {
