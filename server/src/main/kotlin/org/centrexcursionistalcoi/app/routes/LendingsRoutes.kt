@@ -45,7 +45,7 @@ import org.centrexcursionistalcoi.app.request.CreateLendingRequest
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.PickupLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
-import org.centrexcursionistalcoi.app.request.receiveJsonOrForm
+import org.centrexcursionistalcoi.app.request.receiveJson
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -70,7 +70,6 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import java.time.format.DateTimeParseException
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -145,20 +144,7 @@ fun Route.lendingsRoutes() {
     postWithLock("inventory/lendings", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
 
-        val request = receiveJsonOrForm(CreateLendingRequest.serializer()) { parameters ->
-            val from = parameters["from"]?.let { runCatching { LocalDate.parse(it).toKotlinLocalDate() }.getOrNull() }
-                ?: return@receiveJsonOrForm null.also { respondError(Error.MissingArgument("from")) }
-            val to = parameters["to"]?.let { runCatching { LocalDate.parse(it).toKotlinLocalDate() }.getOrNull() }
-                ?: return@receiveJsonOrForm null.also { respondError(Error.MissingArgument("to")) }
-            val items = parameters["items"]
-                ?: return@receiveJsonOrForm null.also { respondError(Error.MissingArgument("items")) }
-            CreateLendingRequest(
-                from = from,
-                to = to,
-                items = items.split(',').mapNotNull { it.toUUIDOrNull()?.toKotlinUuid() },
-                notes = parameters["notes"],
-            )
-        } ?: return@postWithLock
+        val request = receiveJson(CreateLendingRequest.serializer()) ?: return@postWithLock
         val from = request.from.toJavaLocalDate()
         val to = request.to.toJavaLocalDate()
         val notes = request.notes
@@ -431,11 +417,7 @@ fun Route.lendingsRoutes() {
 
         val contentLength = call.request.contentLength()
         if (contentLength != null && contentLength > 0) {
-            val request = receiveJsonOrForm(PickupLendingRequest.serializer()) { parameters ->
-                PickupLendingRequest(
-                    dismissItems = parameters["dismiss_items"]?.split(',')?.mapNotNull { it.toUUIDOrNull()?.toKotlinUuid() }.orEmpty()
-                )
-            } ?: return@post
+            val request = receiveJson(PickupLendingRequest.serializer()) ?: return@post
             val dismissItems = request.dismissItems.map { it.toJavaUuid() }
             Database {
                 for (itemId in dismissItems) {

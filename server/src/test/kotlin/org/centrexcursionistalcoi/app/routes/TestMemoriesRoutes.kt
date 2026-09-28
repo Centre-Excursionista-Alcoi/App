@@ -1,8 +1,17 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.post
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.Headers
+import io.ktor.http.HttpMethod
+import org.centrexcursionistalcoi.app.ResourcesUtils
+import org.centrexcursionistalcoi.app.data.FileWithContext
+import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
@@ -64,19 +73,24 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     private val exampleItemTypeId = "8e5b8c53-df8c-4e0a-9f9d-2a0f5c1a6a3a".toUUID()
     private val exampleItemId = "1a9f6bda-53f0-4f38-9c9e-3f4e4f9c8b1c".toUUID()
 
+    private suspend fun HttpClient.postMemory(request: CreateMemoryRequest): HttpResponse = post("/memories") {
+        contentType(ContentType.Application.Json)
+        setBody(json.encodeToString(CreateMemoryRequest.serializer(), request))
+    }
+
     @Test
-    fun test_create_memory_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn_form("/memories")
+    fun test_create_memory_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/memories", HttpMethod.Post)
 
     @Test
     fun test_create_memory_missingText() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.submitFormWithBinaryData("/memories", formData { append("place", "Somewhere") }).apply {
+        client.postMemory(CreateMemoryRequest(text = "", place = "Somewhere")).apply {
             assertError(Error.MemoryNotGiven())
         }
     }
 
     @Test
     fun test_create_memory_standalone_missingDateRange() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.submitFormWithBinaryData("/memories", formData { append("text", "No date range given") }).apply {
+        client.postMemory(CreateMemoryRequest(text = "No date range given")).apply {
             assertError(Error.MissingArgument("from"))
         }
     }
@@ -87,15 +101,14 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
         val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
 
-        val location = client.submitFormWithBinaryData(
-            "/memories",
-            formData {
-                append("text", "A memory with no lending attached")
-                append("place", "Alcoi")
-                append("sport", Sports.HIKING.name)
-                append("from", from.toString())
-                append("to", to.toString())
-            }
+        val location = client.postMemory(
+            CreateMemoryRequest(
+                text = "A memory with no lending attached",
+                place = "Alcoi",
+                sport = Sports.HIKING,
+                from = from,
+                to = to,
+            )
         ).run {
             assertStatusCode(HttpStatusCode.Created)
             val location = headers[HttpHeaders.Location]
@@ -126,13 +139,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
         val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
 
-        val location = client.submitFormWithBinaryData(
-            "/memories",
-            formData {
-                append("text", "A memory with no lending attached")
-                append("from", from.toString())
-                append("to", to.toString())
-            }
+        val location = client.postMemory(
+            CreateMemoryRequest(
+                text = "A memory with no lending attached",
+                from = from,
+                to = to,
+            )
         ).run {
             assertStatusCode(HttpStatusCode.Created)
             headers[HttpHeaders.Location]!!
@@ -155,6 +167,66 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_create_memory_invalid() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val zone = TimeZone.currentSystemDefault()
+        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+
+        client.postMemory(CreateMemoryRequest(text = "A memory", from = to, to = from))
+            .assertError(Error.EndDateCannotBeBeforeStart())
+        // An attachment in a part the request doesn't have
+        client.postMemory(CreateMemoryRequest(text = "A memory", from = from, to = to, attachments = listOf(FileWithContext(part = "file_0"))))
+            .assertError(Error.MalformedRequest())
+
+        Database { assertTrue(MemoryEntity.all().empty()) }
+    }
+
+    @Test
+    fun test_create_memory_withAttachments() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val pdf = ResourcesUtils.bytesFromResource("/document.pdf")
+        val png = ResourcesUtils.bytesFromResource("/image.png")
+        val zone = TimeZone.currentSystemDefault()
+        val request = CreateMemoryRequest(
+            text = "A memory",
+            from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
+            to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
+            // One in a part of its own, the other one in the JSON
+            attachments = listOf(FileWithContext(part = "file_0"), FileWithContext(png, "photo.png", ContentType.Image.PNG)),
+        )
+        val location = client.post("/memories") {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append(
+                            RequestWithFiles.REQUEST_PART,
+                            json.encodeToString(CreateMemoryRequest.serializer(), request),
+                            Headers.build { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) },
+                        )
+                        append("file_0", pdf, Headers.build { append(HttpHeaders.ContentDisposition, "filename=report.pdf") })
+                    }
+                )
+            )
+        }.run {
+            assertStatusCode(HttpStatusCode.Created)
+            headers[HttpHeaders.Location]!!
+        }
+
+        var attachments: List<kotlin.uuid.Uuid> = emptyList()
+        client.get(location).assertBody(Memory.serializer()) { attachments = it.attachments }
+        assertEquals(
+            setOf(pdf.toList(), png.toList()),
+            attachments.map { client.get("/download/$it").bodyAsBytes().toList() }.toSet(),
+        )
+
+        // Only the submitter can download them
+        Database { FakeUser2.provideEntity() }
+        loginAsFakeUser2()
+        for (attachment in attachments) {
+            client.get("/download/$attachment").assertStatusCode(HttpStatusCode.Forbidden)
+        }
+    }
+
+    @Test
     fun test_create_memory_forLending() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
@@ -172,12 +244,11 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     ) { context ->
         val (_, lending) = context.dibResult!!
 
-        client.submitFormWithBinaryData(
-            "/memories",
-            formData {
-                append("text", "Everything went great")
-                append("lending", lending.id.value.toString())
-            }
+        client.postMemory(
+            CreateMemoryRequest(
+                text = "Everything went great",
+                lending = lending.id.value.toKotlinUuid(),
+            )
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
         }
@@ -215,12 +286,11 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // Submitting a second memory for the same lending must be rejected
-        client.submitFormWithBinaryData(
-            "/memories",
-            formData {
-                append("text", "A second memory")
-                append("lending", lending.id.value.toString())
-            }
+        client.postMemory(
+            CreateMemoryRequest(
+                text = "A second memory",
+                lending = lending.id.value.toKotlinUuid(),
+            )
         ).apply {
             assertError(Error.MemoryAlreadySubmitted())
         }
@@ -400,13 +470,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
     @Test
     fun test_patch_memory() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        val location = client.submitFormWithBinaryData(
-            "/memories",
-            formData {
-                append("text", "Original text")
-                append("from", ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)).toString())
-                append("to", ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)).toString())
-            }
+        val location = client.postMemory(
+            CreateMemoryRequest(
+                text = "Original text",
+                from = ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
+                to = ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
+            )
         ).run {
             assertStatusCode(HttpStatusCode.Created)
             headers[HttpHeaders.Location]!!

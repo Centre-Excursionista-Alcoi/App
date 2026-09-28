@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.receiveJson
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
@@ -94,17 +95,6 @@ private suspend fun RoutingContext.qualificationRequest(vararg anyOfRoles: Depar
         return null
     }
     return QualificationRequest(session, qualification, departmentId)
-}
-
-private suspend fun <T> RoutingContext.receiveJson(serializer: KSerializer<T>): T? {
-    assertContentType(ContentType.Application.Json) ?: return null
-    val body = call.receiveText()
-    return try {
-        json.decodeFromString(serializer, body)
-    } catch (_: Exception) {
-        call.respondError(Error.MalformedRequest())
-        null
-    }
 }
 
 /** `true` if [departmentId] already has a qualification named [name] (case-insensitively), other than [exceptId]. */

@@ -3,9 +3,6 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.MultiPartData
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -23,10 +20,8 @@ import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
-import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
-import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -53,8 +48,6 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendE
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
-import org.centrexcursionistalcoi.app.request.ReceivedRequest
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -64,7 +57,6 @@ import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.centrexcursionistalcoi.app.request.MissingPartException
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
-import org.centrexcursionistalcoi.app.request.receiveRequestWithFilesOrMultipart
 import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -79,7 +71,6 @@ import java.io.ByteArrayOutputStream
 import java.util.UUID
 import org.slf4j.LoggerFactory
 import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
 /**
  * Fetches the memory with the id given in the call parameters (`id`), making sure the requesting session is allowed
@@ -173,9 +164,7 @@ fun Route.memoriesRoutes() {
     post("memories") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val received = receiveRequestWithFilesOrMultipart(CreateMemoryRequest.serializer()) { multipart ->
-            receiveLegacyMemoryRequest(multipart)
-        } ?: return@post
+        val received = receiveRequestWithFiles(CreateMemoryRequest.serializer()) ?: return@post
         val request = received.request
         val place = request.place?.takeIf { it.isNotBlank() }
         val externalUsers = request.externalUsers?.takeIf { it.isNotBlank() }
@@ -489,41 +478,4 @@ fun Route.memoriesRoutes() {
 
         call.respondText("memory deleted", status = HttpStatusCode.NoContent)
     }
-}
-
-/**
- * Receives the memory form sent by app versions that predate [CreateMemoryRequest]: one field per property, and
- * any number of `file_*` parts with the attachments. Attachments are passed on as uploaded parts.
- */
-private suspend fun receiveLegacyMemoryRequest(multipart: MultiPartData): ReceivedRequest<CreateMemoryRequest> {
-    val fields = mutableMapOf<String, String>()
-    val uploads = mutableMapOf<String, FileRequestData>()
-    multipart.forEachPart { part ->
-        val name = part.name ?: return@forEachPart
-        if (name.startsWith("file_")) {
-            val data = FileRequestData()
-            when (part) {
-                is PartData.FileItem -> data.populate(part)
-                is PartData.FormItem -> data.populate(part)
-                else -> return@forEachPart
-            }
-            uploads["file_${uploads.size}"] = data
-        } else if (part is PartData.FormItem) {
-            fields[name] = part.value
-        }
-    }
-
-    val request = CreateMemoryRequest(
-        text = fields["text"].orEmpty(),
-        place = fields["place"],
-        members = fields["members"]?.split(',')?.mapNotNull { it.toUIntOrNull() }.orEmpty(),
-        externalUsers = fields["external_users"],
-        sport = fields["sport"]?.let { sport -> Sports.entries.find { it.name == sport } },
-        department = fields["department"]?.toUUIDOrNull()?.toKotlinUuid(),
-        lending = fields["lending"]?.toUUIDOrNull()?.toKotlinUuid(),
-        from = fields["from"]?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() },
-        to = fields["to"]?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() },
-        attachments = uploads.keys.map { FileWithContext(part = it) },
-    )
-    return ReceivedRequest(request, uploads)
 }

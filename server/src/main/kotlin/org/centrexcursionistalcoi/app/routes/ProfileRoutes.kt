@@ -2,25 +2,18 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.MultiPartData
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
-import org.centrexcursionistalcoi.app.data.FileWithContext
-import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
@@ -38,15 +31,13 @@ import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
 import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
 import org.centrexcursionistalcoi.app.request.MissingPartException
-import org.centrexcursionistalcoi.app.request.ReceivedRequest
-import org.centrexcursionistalcoi.app.request.receiveJsonOrForm
-import org.centrexcursionistalcoi.app.request.receiveRequestWithFilesOrMultipart
 import org.centrexcursionistalcoi.app.request.RegisterFCMTokenRequest
 import org.centrexcursionistalcoi.app.request.RevokeFCMTokenRequest
+import org.centrexcursionistalcoi.app.request.receiveJson
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
@@ -114,18 +105,7 @@ fun Route.profileRoutes() {
             return@post
         }
 
-        val request = receiveJsonOrForm(LendingSignUpRequest.serializer()) { parameters ->
-            val sports = try {
-                parameters["sports"]?.split(',')?.map(String::trim)?.filter(String::isNotEmpty)?.map(Sports::valueOf)
-            } catch (_: IllegalArgumentException) {
-                respondError(Error.InvalidArgument("sports", "Must be a comma-separated list of sports"))
-                return@receiveJsonOrForm null
-            }
-            LendingSignUpRequest(
-                phoneNumber = parameters["phoneNumber"].orEmpty(),
-                sports = sports.orEmpty(),
-            )
-        } ?: return@post
+        val request = receiveJson(LendingSignUpRequest.serializer()) ?: return@post
 
         if (request.phoneNumber.isBlank()) return@post call.respondError(Error.MissingArgument("phoneNumber"))
         if (request.sports.isEmpty()) return@post call.respondError(Error.MissingArgument("sports"))
@@ -151,9 +131,7 @@ fun Route.profileRoutes() {
     post("/profile/insurances") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val received = receiveRequestWithFilesOrMultipart(CreateInsuranceRequest.serializer()) { multipart ->
-            receiveLegacyInsuranceRequest(multipart)
-        } ?: return@post
+        val received = receiveRequestWithFiles(CreateInsuranceRequest.serializer()) ?: return@post
         val request = received.request
 
         if (request.insuranceCompany.isBlank()) return@post call.respondError(Error.MissingArgument("insuranceCompany"))
@@ -189,12 +167,7 @@ fun Route.profileRoutes() {
     post("/profile/femecvSync") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val request = receiveJsonOrForm(LinkFEMECVRequest.serializer()) { parameters ->
-            LinkFEMECVRequest(
-                username = parameters["username"].orEmpty(),
-                password = parameters["password"].orEmpty(),
-            )
-        } ?: return@post
+        val request = receiveJson(LinkFEMECVRequest.serializer()) ?: return@post
         val username = request.username
         val password = request.password
 
@@ -256,12 +229,7 @@ fun Route.profileRoutes() {
     post("/profile/fcmToken") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val request = receiveJsonOrForm(RegisterFCMTokenRequest.serializer()) { parameters ->
-            RegisterFCMTokenRequest(
-                token = parameters["token"].orEmpty(),
-                deviceId = parameters["deviceId"],
-            )
-        } ?: return@post
+        val request = receiveJson(RegisterFCMTokenRequest.serializer()) ?: return@post
         val token = request.token
         val deviceId = request.deviceId
 
@@ -281,9 +249,7 @@ fun Route.profileRoutes() {
     delete("/profile/fcmToken") {
         val session = getUserSessionOrFail() ?: return@delete
 
-        val request = receiveJsonOrForm(RevokeFCMTokenRequest.serializer()) { parameters ->
-            RevokeFCMTokenRequest(deviceId = parameters["deviceId"].orEmpty())
-        } ?: return@delete
+        val request = receiveJson(RevokeFCMTokenRequest.serializer()) ?: return@delete
         val deviceId = request.deviceId
 
         if (deviceId.isBlank()) return@delete respondError(Error.DeviceIdIsRequired())
@@ -313,53 +279,4 @@ fun Route.profileRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-}
-
-/**
- * Receives the insurance form sent by app versions that predate [CreateInsuranceRequest]: one field per property,
- * and any number of `document` parts, one per document, in order. Documents are passed on as uploaded parts.
- */
-private suspend fun RoutingContext.receiveLegacyInsuranceRequest(
-    multipart: MultiPartData,
-): ReceivedRequest<CreateInsuranceRequest>? {
-    val fields = mutableMapOf<String, String>()
-    val uploads = mutableMapOf<String, FileRequestData>()
-    multipart.forEachPart { partData ->
-        val name = partData.name ?: return@forEachPart
-        if (name == "document") {
-            val document = FileRequestData()
-            when (partData) {
-                is PartData.FileItem -> document.populate(partData)
-                is PartData.FormItem -> document.populate(partData)
-                else -> return@forEachPart
-            }
-            if (document.isNotEmpty()) uploads["document_${uploads.size}"] = document
-        } else if (partData is PartData.FormItem) {
-            fields[name] = partData.value
-        }
-    }
-
-    val validFrom = fields["validFrom"]
-    val validTo = fields["validTo"]
-    if (validFrom.isNullOrBlank()) return null.also { respondError(Error.MissingArgument("validFrom")) }
-    if (validTo.isNullOrBlank()) return null.also { respondError(Error.MissingArgument("validTo")) }
-    val validFromDate = try {
-        LocalDate.parse(validFrom)
-    } catch (_: IllegalArgumentException) {
-        return null.also { respondError(Error.InvalidArgument("validFrom", "Must be a valid date")) }
-    }
-    val validToDate = try {
-        LocalDate.parse(validTo)
-    } catch (_: IllegalArgumentException) {
-        return null.also { respondError(Error.InvalidArgument("validTo", "Must be a valid date")) }
-    }
-
-    val request = CreateInsuranceRequest(
-        insuranceCompany = fields["insuranceCompany"].orEmpty(),
-        policyNumber = fields["policyNumber"].orEmpty(),
-        validFrom = validFromDate,
-        validTo = validToDate,
-        documents = uploads.keys.map { FileWithContext(part = it) },
-    )
-    return ReceivedRequest(request, uploads)
 }
