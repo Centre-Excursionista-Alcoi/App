@@ -3,12 +3,11 @@ package org.centrexcursionistalcoi.app.network
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
-import org.centrexcursionistalcoi.app.data.toFormData
+import org.centrexcursionistalcoi.app.data.fileWithContext
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
@@ -17,8 +16,10 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
+import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
 import org.centrexcursionistalcoi.app.response.ProfileResponse
-import org.centrexcursionistalcoi.app.storage.InMemoryFileAllocator
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.centrexcursionistalcoi.app.storage.settings
 import kotlin.time.Clock
@@ -59,13 +60,8 @@ object ProfileRemoteRepository {
         sports: List<Sports>,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val response = httpClient.submitForm(
-            "/profile/lendingSignUp",
-            formParameters = parameters {
-                append("phoneNumber", phoneNumber)
-                append("sports", sports.joinToString(",") { it.name })
-            }
-        ) {
+        val response = httpClient.post("/profile/lendingSignUp") {
+            setBody(requestBody(LendingSignUpRequest(phoneNumber, sports), LendingSignUpRequest.serializer()))
             progressNotifier?.let { monitorUploadProgress(it) }
         }
         if (!response.status.isSuccess()) {
@@ -86,20 +82,15 @@ object ProfileRemoteRepository {
         documents: List<PlatformFile>,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val documentFiles = documents.map { InMemoryFileAllocator.put(it).toFileReference() }
-
-        val response = httpClient.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData = mapOf(
-                "insuranceCompany" to company,
-                "policyNumber" to policyNumber,
-                "validFrom" to validFrom.toString(),
-                "validTo" to validTo.toString(),
-            ).toFormData() + documentFiles.flatMap { documentFile ->
-                // One "document" part per document, in order.
-                mapOf("document" to documentFile).toFormData()
-            }
-        ) {
+        val request = CreateInsuranceRequest(
+            insuranceCompany = company,
+            policyNumber = policyNumber,
+            validFrom = validFrom,
+            validTo = validTo,
+            documents = documents.map { it.fileWithContext() },
+        )
+        val response = httpClient.post("/profile/insurances") {
+            setBody(requestBody(request, CreateInsuranceRequest.serializer()))
             monitorUploadProgress(progressNotifier)
         }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)
@@ -148,13 +139,8 @@ object ProfileRemoteRepository {
     }
 
     suspend fun connectFEMECV(username: String, password: CharArray, progressNotifier: ProgressNotifier? = null) {
-        val response = httpClient.submitForm(
-            "/profile/femecvSync",
-            formParameters = parameters {
-                append("username", username)
-                append("password", password.concatToString())
-            }
-        ) {
+        val response = httpClient.post("/profile/femecvSync") {
+            setBody(requestBody(LinkFEMECVRequest(username, password.concatToString()), LinkFEMECVRequest.serializer()))
             progressNotifier?.let { monitorUploadProgress(it) }
         }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)

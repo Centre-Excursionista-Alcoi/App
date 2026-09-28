@@ -1,44 +1,87 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
+import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.request
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.headers
-import io.ktor.http.parametersOf
 import java.time.Instant
-import java.time.LocalDate
-import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.LocalDate
+import java.time.LocalDate as JavaLocalDate
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
-import org.centrexcursionistalcoi.app.assertBadRequest
+import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.FCMRegistrationTokenEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
-import org.centrexcursionistalcoi.app.database.table.UserInsurances
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
+import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
+import org.centrexcursionistalcoi.app.request.RegisterFCMTokenRequest
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
+import org.centrexcursionistalcoi.app.request.RevokeFCMTokenRequest
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.test.*
-import org.jetbrains.exposed.v1.core.eq
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.LoginType
 
 class TestProfileRoutes : ApplicationTestBase() {
+    private val pdf = ResourcesUtils.bytesFromResource("/document.pdf")
+
+    private val png = ResourcesUtils.bytesFromResource("/image.png")
+
+    private suspend fun <T> HttpClient.sendJson(
+        url: String,
+        serializer: KSerializer<T>,
+        request: T,
+        method: HttpMethod = HttpMethod.Post,
+    ): HttpResponse = request(url) {
+        this.method = method
+        contentType(ContentType.Application.Json)
+        setBody(json.encodeToString(serializer, request))
+    }
+
+    private fun insurance(documents: List<FileWithContext> = emptyList()) = CreateInsuranceRequest(
+        insuranceCompany = "Rocalsub",
+        policyNumber = "POL123",
+        validFrom = LocalDate(2025, 1, 1),
+        validTo = LocalDate(2025, 12, 31),
+        documents = documents,
+    )
+
+    private suspend fun HttpClient.insurances(): List<UserInsurance> =
+        get("/profile/insurances").bodyAsJson(ListSerializer(UserInsurance.serializer()))
+
     @Test
     fun test_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile")
 
@@ -69,18 +112,6 @@ class TestProfileRoutes : ApplicationTestBase() {
         }
     }
 
-    private val lendingAllParameters = mapOf(
-        Pair("fullName", listOf("John Doe")),
-        Pair("nif", listOf("12345678A")),
-        Pair("phoneNumber", listOf("123456789")),
-        Pair("sports", listOf("CLIMBING,HIKING")),
-        Pair("address", listOf("123 Main St")),
-        Pair("postalCode", listOf("12345")),
-        Pair("city", listOf("Anytown")),
-        Pair("province", listOf("Anyprovince")),
-        Pair("country", listOf("Anycountry")),
-    )
-
     @Test
     fun test_lendingSignUp_notLoggedIn() = runApplicationTest {
         client.post("/profile/lendingSignUp").apply {
@@ -98,26 +129,6 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_lendingSignUp_missingFields() = runApplicationTest(
-        shouldLogIn = LoginType.USER
-    ) {
-        // Missing all fields
-        client.submitForm("/profile/lendingSignUp").assertBadRequest()
-
-        // Missing Phone
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("phoneNumber")),
-        ).assertBadRequest()
-
-        // Missing Sports
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters.minus("sports")),
-        ).assertBadRequest()
-    }
-
-    @Test
     fun test_lendingSignUp_alreadySignedUp() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {
@@ -127,44 +138,13 @@ class TestProfileRoutes : ApplicationTestBase() {
                 sports = listOf(Sports.CLIMBING, Sports.HIKING)
             }
         }
-    )  {
-        client.submitForm(
-            "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters),
-        ).apply {
-            assertStatusCode(HttpStatusCode.Conflict)
-        }
-    }
-
-    @Test
-    fun test_lendingSignUp_success() = runApplicationTest(
-        shouldLogIn = LoginType.USER
     ) {
-        client.submitForm(
+        client.sendJson(
             "/profile/lendingSignUp",
-            parametersOf(lendingAllParameters),
-        ).apply {
-            assertStatusCode(HttpStatusCode.Created)
-        }
-
-        Database {
-            val lendingUser = LendingUserEntity.all().firstOrNull()
-            assertNotNull(lendingUser)
-            assertEquals(FakeUser.SUB, lendingUser.userSub.id.value)
-            assertEquals("123456789", lendingUser.phoneNumber)
-            assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
-        }
-
-        client.get("/profile").apply {
-            val response = bodyAsJson(ProfileResponse.serializer())
-            response.lendingUser?.let { lendingUser ->
-                assertEquals(FakeUser.SUB, lendingUser.sub)
-                assertEquals("123456789", lendingUser.phoneNumber)
-                assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
-            }
-        }
+            LendingSignUpRequest.serializer(),
+            LendingSignUpRequest("123456789", listOf(Sports.CLIMBING)),
+        ).assertStatusCode(HttpStatusCode.Conflict)
     }
-
 
     @Test
     fun test_insurances_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances")
@@ -179,15 +159,15 @@ class TestProfileRoutes : ApplicationTestBase() {
                     userSub = FakeUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL123"
-                    validFrom = LocalDate.of(2025, 1, 1)
-                    validTo = LocalDate.of(2025, 12, 31)
+                    validFrom = JavaLocalDate.of(2025, 1, 1)
+                    validTo = JavaLocalDate.of(2025, 12, 31)
                 }
                 UserInsuranceEntity.new {
                     userSub = FakeAdminUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL456"
-                    validFrom = LocalDate.of(2025, 1, 1)
-                    validTo = LocalDate.of(2025, 12, 31)
+                    validFrom = JavaLocalDate.of(2025, 1, 1)
+                    validTo = JavaLocalDate.of(2025, 12, 31)
                 }
             }
         }
@@ -199,228 +179,135 @@ class TestProfileRoutes : ApplicationTestBase() {
             val insurance = response[0]
             assertEquals("FEMECV", insurance.insuranceCompany)
             assertEquals("POL123", insurance.policyNumber)
-            assertEquals(LocalDate.of(2025, 1, 1).toKotlinLocalDate(), insurance.validFrom)
-            assertEquals(LocalDate.of(2025, 12, 31).toKotlinLocalDate(), insurance.validTo)
+            assertEquals(LocalDate(2025, 1, 1), insurance.validFrom)
+            assertEquals(LocalDate(2025, 12, 31), insurance.validTo)
         }
     }
-
 
     @Test
     fun test_insurances_post_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances", HttpMethod.Post)
 
-    @Test
-    fun test_insurances_post_missingFields() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        // Missing all fields
-        client.submitFormWithBinaryData("/profile/insurances", formData()).assertBadRequest()
-
-        // Missing insuranceCompany
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-            }
-        ).assertBadRequest()
-
-        // Missing policyNumber
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-            }
-        ).assertBadRequest()
-
-        // Missing validFrom
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validTo", "2025-12-31")
-            }
-        ).assertBadRequest()
-
-        // Missing validTo
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-            }
-        ).assertBadRequest()
-    }
+    // ---- /profile/lendingSignUp ----
 
     @Test
-    fun test_insurances_post_invalidDates() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        // Invalid validFrom
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "invalid-date")
-                append("validTo", "2025-12-31")
+    fun test_lendingSignUp_success() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson(
+            "/profile/lendingSignUp",
+            LendingSignUpRequest.serializer(),
+            LendingSignUpRequest("123456789", listOf(Sports.CLIMBING, Sports.HIKING)),
+        ).assertStatusCode(HttpStatusCode.Created)
 
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
-            }
-        ).assertBadRequest()
-
-        // Invalid validTo
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "invalid-date")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
-            }
-        ).assertBadRequest()
-    }
-
-
-    @Test
-    fun test_insurances_post_correct() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
-            }
-        ).apply {
-            assertStatusCode(HttpStatusCode.NoContent)
-        }
-
-        // Check it is in the database
         Database {
-            val insurances = UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.toList()
-            assertEquals(1, insurances.size)
-            val insurance = insurances[0]
-            assertEquals(FakeUser.SUB, insurance.userSub.id.value)
-            assertEquals("FEMECV", insurance.insuranceCompany)
-            assertEquals("POL123", insurance.policyNumber)
-            assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom)
-            assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo)
-        }
-    }
-
-    // The uploaded document is only downloadable by its owner or an admin (see FileReadWriteRules wiring in this
-    // route) -- it previously had no rules at all, making it downloadable by anyone, logged in or not.
-    @Test
-    fun test_insurances_post_documentDownloadRestricted() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        client.submitFormWithBinaryData(
-            "/profile/insurances",
-            formData {
-                append("insuranceCompany", "FEMECV")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-
-                val data = ResourcesUtils.bytesFromResource("/document.pdf")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(data),
-                    headers {
-                        append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
-                    },
-                )
-            }
-        ).assertStatusCode(HttpStatusCode.NoContent)
-
-        val documentId = Database {
-            UserInsuranceEntity.find { UserInsurances.userSub eq FakeUser.SUB }.first().documentIds().single()
+            val lendingUser = LendingUserEntity.all().single()
+            assertEquals(FakeUser.SUB, lendingUser.userSub.id.value)
+            assertEquals("123456789", lendingUser.phoneNumber)
+            assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
         }
 
-        // The owner can download it.
-        client.get("/download/$documentId").assertStatusCode(HttpStatusCode.OK)
-
-        // A different, unrelated logged-in user cannot.
-        Database { FakeUser2.provideEntity() }
-        loginAsFakeUser2()
-        client.get("/download/$documentId").assertStatusCode(HttpStatusCode.Forbidden)
+        val lendingUser = client.get("/profile").bodyAsJson(ProfileResponse.serializer()).lendingUser
+        assertNotNull(lendingUser)
+        assertEquals(FakeUser.SUB, lendingUser.sub)
+        assertEquals("123456789", lendingUser.phoneNumber)
     }
 
     @Test
-    fun test_insurances_post_multipleDocuments() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        val pdf = ResourcesUtils.bytesFromResource("/document.pdf")
-        val image = ResourcesUtils.bytesFromResource("/image.png")
-        client.submitFormWithBinaryData(
+    fun test_lendingSignUp_missingFields() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson(
+            "/profile/lendingSignUp",
+            LendingSignUpRequest.serializer(),
+            LendingSignUpRequest(" ", listOf(Sports.CLIMBING)),
+        ).assertError(Error.MissingArgument("phoneNumber"))
+        client.sendJson(
+            "/profile/lendingSignUp",
+            LendingSignUpRequest.serializer(),
+            LendingSignUpRequest("123456789", emptyList()),
+        ).assertError(Error.MissingArgument("sports"))
+        client.post("/profile/lendingSignUp") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"phoneNumber":"123456789"}""")
+        }.assertError(Error.MalformedRequest())
+        client.post("/profile/lendingSignUp") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"phoneNumber":"123456789","sports":["NOT_A_SPORT"]}""")
+        }.assertError(Error.MalformedRequest())
+
+        Database { assertTrue(LendingUserEntity.all().empty()) }
+    }
+
+    // ---- /profile/insurances ----
+
+    @Test
+    fun test_insurances_post_withoutDocuments() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson("/profile/insurances", CreateInsuranceRequest.serializer(), insurance())
+            .assertStatusCode(HttpStatusCode.NoContent)
+
+        val insurance = client.insurances().single()
+        assertEquals("Rocalsub", insurance.insuranceCompany)
+        assertEquals("POL123", insurance.policyNumber)
+        assertEquals(LocalDate(2025, 1, 1), insurance.validFrom)
+        assertEquals(LocalDate(2025, 12, 31), insurance.validTo)
+        assertTrue(insurance.documents.isEmpty())
+    }
+
+    @Test
+    fun test_insurances_post_missingFields() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson("/profile/insurances", CreateInsuranceRequest.serializer(), insurance().copy(insuranceCompany = ""))
+            .assertError(Error.MissingArgument("insuranceCompany"))
+        client.sendJson("/profile/insurances", CreateInsuranceRequest.serializer(), insurance().copy(policyNumber = " "))
+            .assertError(Error.MissingArgument("policyNumber"))
+        client.post("/profile/insurances") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"insuranceCompany":"Rocalsub","policyNumber":"POL123","validFrom":"invalid-date","validTo":"2025-12-31"}""")
+        }.assertError(Error.MalformedRequest())
+
+        assertTrue(client.insurances().isEmpty())
+    }
+
+    @Test
+    fun test_insurances_post_base64Documents() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson(
             "/profile/insurances",
-            formData {
-                append("insuranceCompany", "Rocalsub")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(pdf),
-                    headers { append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString()) },
+            CreateInsuranceRequest.serializer(),
+            insurance(
+                listOf(
+                    FileWithContext(pdf, "policy.pdf", ContentType.Application.Pdf),
+                    FileWithContext(png, "card.png", ContentType.Image.PNG),
                 )
-                append(
-                    key = "document",
-                    value = Base64.UrlSafe.encode(image),
-                    headers { append(HttpHeaders.ContentType, ContentType.Image.PNG.toString()) },
-                )
-            }
+            ),
         ).assertStatusCode(HttpStatusCode.NoContent)
 
-        val insurance = client.get("/profile/insurances").apply {
-            assertStatusCode(HttpStatusCode.OK)
-        }.bodyAsJson(ListSerializer(UserInsurance.serializer())).single()
-
-        // Both documents, in the order they were sent; the first one is still exposed as documentId.
+        val insurance = client.insurances().single()
         assertEquals(2, insurance.documents.size)
-        assertEquals(insurance.documents.first(), insurance.documentId)
-        client.get("/download/${insurance.documents[0]}").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertContentEquals(pdf, bodyAsBytes())
-        }
-        client.get("/download/${insurance.documents[1]}").apply {
-            assertStatusCode(HttpStatusCode.OK)
-            assertContentEquals(image, bodyAsBytes())
-        }
+        assertContentEquals(pdf, client.get("/download/${insurance.documents[0]}").bodyAsBytes())
+        assertContentEquals(png, client.get("/download/${insurance.documents[1]}").bodyAsBytes())
+    }
 
-        // Every document is restricted to its owner, not just the first one.
+    @Test
+    fun test_insurances_post_multipartDocuments_restricted() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        val request = insurance(listOf(FileWithContext(part = "file_0"), FileWithContext(part = "file_1")))
+        client.post("/profile/insurances") {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append(
+                            RequestWithFiles.REQUEST_PART,
+                            json.encodeToString(CreateInsuranceRequest.serializer(), request),
+                            Headers.build { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) },
+                        )
+                        append("file_0", pdf, Headers.build { append(HttpHeaders.ContentDisposition, "filename=policy.pdf") })
+                        append("file_1", png, Headers.build { append(HttpHeaders.ContentDisposition, "filename=card.png") })
+                    }
+                )
+            )
+        }.assertStatusCode(HttpStatusCode.NoContent)
+
+        // Both documents, in order
+        val insurance = client.insurances().single()
+        assertEquals(2, insurance.documents.size)
+        assertContentEquals(pdf, client.get("/download/${insurance.documents[0]}").bodyAsBytes())
+        assertContentEquals(png, client.get("/download/${insurance.documents[1]}").bodyAsBytes())
+
+        // Only the owner can download them
         Database { FakeUser2.provideEntity() }
         loginAsFakeUser2()
         for (document in insurance.documents) {
@@ -429,23 +316,65 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_insurances_post_withoutDocuments() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-    ) {
-        client.submitFormWithBinaryData(
+    fun test_insurances_post_missingPart() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson(
             "/profile/insurances",
-            formData {
-                append("insuranceCompany", "Rocalsub")
-                append("policyNumber", "POL123")
-                append("validFrom", "2025-01-01")
-                append("validTo", "2025-12-31")
-            }
-        ).assertStatusCode(HttpStatusCode.NoContent)
+            CreateInsuranceRequest.serializer(),
+            insurance(listOf(FileWithContext(part = "file_0"))),
+        ).assertError(Error.MalformedRequest())
 
-        val insurance = client.get("/profile/insurances")
-            .bodyAsJson(ListSerializer(UserInsurance.serializer()))
-            .single()
-        assertTrue(insurance.documents.isEmpty())
-        assertNull(insurance.documentId)
+        assertTrue(client.insurances().isEmpty())
+    }
+
+    // ---- /profile/femecvSync ----
+
+    @Test
+    fun test_femecvSync_missingCredentials() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson("/profile/femecvSync", LinkFEMECVRequest.serializer(), LinkFEMECVRequest("user", ""))
+            .assertError(Error.FEMECVMissingCredentials())
+    }
+
+    @Test
+    fun test_femecvSync_delete_withoutBody() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            FakeUser.provideEntity().apply {
+                femecvUsername = "user"
+                femecvPassword = "password"
+            }
+        },
+    ) {
+        client.delete("/profile/femecvSync").assertStatusCode(HttpStatusCode.NoContent)
+
+        Database {
+            val reference = UserReferenceEntity[FakeUser.SUB]
+            assertEquals(null, reference.femecvUsername)
+            assertEquals(null, reference.femecvPassword)
+        }
+    }
+
+    // ---- /profile/fcmToken ----
+
+    @Test
+    fun test_fcmToken_registerAndRevokeByDevice() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson("/profile/fcmToken", RegisterFCMTokenRequest.serializer(), RegisterFCMTokenRequest("json-token", "device"))
+            .assertStatusCode(HttpStatusCode.Created)
+        Database {
+            val token = assertNotNull(FCMRegistrationTokenEntity.findById("json-token"))
+            assertEquals(FakeUser.SUB, token.user.sub.value)
+            assertEquals("device", token.deviceId)
+        }
+
+        client.sendJson("/profile/fcmToken", RevokeFCMTokenRequest.serializer(), RevokeFCMTokenRequest("device"), HttpMethod.Delete)
+            .assertStatusCode(HttpStatusCode.NoContent)
+        Database { assertEquals(null, FCMRegistrationTokenEntity.findById("json-token")) }
+    }
+
+    @Test
+    fun test_fcmToken_missingFields() = runApplicationTest(shouldLogIn = LoginType.USER) {
+        client.sendJson("/profile/fcmToken", RegisterFCMTokenRequest.serializer(), RegisterFCMTokenRequest(""))
+            .assertError(Error.FCMTokenIsRequired())
+        client.sendJson("/profile/fcmToken", RevokeFCMTokenRequest.serializer(), RevokeFCMTokenRequest(""), HttpMethod.Delete)
+            .assertError(Error.DeviceIdIsRequired())
     }
 }

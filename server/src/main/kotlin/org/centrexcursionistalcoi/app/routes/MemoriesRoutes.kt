@@ -3,9 +3,6 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -25,7 +22,6 @@ import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
-import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -51,7 +47,7 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendA
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
-import org.centrexcursionistalcoi.app.request.FileRequestData
+import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -73,6 +69,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.io.ByteArrayOutputStream
 import java.util.UUID
+import org.slf4j.LoggerFactory
+import kotlin.uuid.toJavaUuid
 
 /**
  * Fetches the memory with the id given in the call parameters (`id`), making sure the requesting session is allowed
@@ -160,58 +158,21 @@ private fun regenerateMemoryPdf(memory: MemoryEntity) {
     }
 }
 
+private val logger = LoggerFactory.getLogger("MemoriesRoutes")
+
 fun Route.memoriesRoutes() {
     post("memories") {
-        assertContentType(ContentType.MultiPart.FormData) ?: return@post
         val session = getUserSessionOrFail() ?: return@post
 
-        var place: String? = null
-        var members: List<UInt>? = null
-        var externalUsers: String? = null
-        var plainText: String? = null
-        var sport: Sports? = null
-        var departmentId: UUID? = null
-        var lendingId: UUID? = null
-        var fromRaw: ZonedDateTime? = null
-        var toRaw: ZonedDateTime? = null
-        var attachedFiles: List<FileRequestData> = emptyList()
-
-        val multiPartData = call.receiveMultipart()
-        multiPartData.forEachPart { part ->
-            if (part is PartData.FormItem) {
-                when (part.name) {
-                    "place" -> place = part.value.takeIf { it.isNotBlank() }
-                    "members" -> {
-                        val membersList = part.value.split(',').mapNotNull { it.toUIntOrNull() }
-                        members = membersList.ifEmpty { null }
-                    }
-                    "external_users" -> externalUsers = part.value.takeIf { it.isNotBlank() }
-                    "text" -> plainText = part.value.takeIf { it.isNotBlank() }
-                    "department" -> departmentId = part.value.toUUIDOrNull()
-                    "lending" -> lendingId = part.value.toUUIDOrNull()
-                    "from" -> fromRaw = runCatching { ZonedDateTime.parse(part.value) }.getOrNull()
-                    "to" -> toRaw = runCatching { ZonedDateTime.parse(part.value) }.getOrNull()
-                    "sport" -> {
-                        sport = try {
-                            Sports.valueOf(part.value)
-                        } catch (_: IllegalArgumentException) {
-                            null
-                        }
-                    }
-                    else -> if (part.name?.startsWith("file_") == true) {
-                        val data = FileRequestData()
-                        data.populate(part)
-                        attachedFiles = attachedFiles + data
-                    }
-                }
-            } else if (part is PartData.FileItem) {
-                if (part.name?.startsWith("file_") == true) {
-                    val data = FileRequestData()
-                    data.populate(part)
-                    attachedFiles = attachedFiles + data
-                }
-            }
-        }
+        val received = receiveRequestWithFiles(CreateMemoryRequest.serializer()) ?: return@post
+        val request = received.request
+        val place = request.place?.takeIf { it.isNotBlank() }
+        val externalUsers = request.externalUsers?.takeIf { it.isNotBlank() }
+        val plainText = request.text.takeIf { it.isNotBlank() }
+        val departmentId = request.department?.toJavaUuid()
+        val lendingId = request.lending?.toJavaUuid()
+        val fromRaw = request.from
+        val toRaw = request.to
 
         if (plainText == null) {
             respondError(Error.MemoryNotGiven())
@@ -269,11 +230,11 @@ fun Route.memoriesRoutes() {
                 respondError(Error.MissingArgument("to"))
                 return@post
             }
-            if (toRaw!!.toInstant() < fromRaw!!.toInstant()) {
+            if (toRaw.toInstant() < fromRaw.toInstant()) {
                 respondError(Error.EndDateCannotBeBeforeStart())
                 return@post
             }
-            fromRaw!! to toRaw!!
+            fromRaw to toRaw
         }
 
         // If given, make sure the department exists
@@ -286,38 +247,43 @@ fun Route.memoriesRoutes() {
             departmentEntity
         }
 
-        // Store all attachments. Best-effort restriction: see the comment on the memory PDF's rules below --
-        // department MEMORY_MANAGERs and tagged members can see the memory's data but not download these files.
+        // Best-effort restriction: see the comment on the memory PDF's rules below -- department MEMORY_MANAGERs and
+        // tagged members can see the memory's data but not download these files.
         val attachmentRules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME))
-        val documentEntities = attachedFiles.map { file -> file.newEntity(rules = attachmentRules) }
-        // Read now: the entities' values can't be read outside a transaction later
-        val attachments = Database {
-            documentEntities.mapIndexed { i, file ->
-                StoredAttachment(file.objectKey, file.size, attachedFiles[i].originalFileName ?: "memory_attachment_$i")
-            }
-        }
-
-        val memoryId = UUID.randomUUID()
-        val memoryEntity = Database {
-            MemoryEntity.new(memoryId) {
-                this.place = place
-                this.externalPeople = externalUsers
-                this.text = plainText!!
-                this.sport = sport
-                this.department = department
-                this.submittedBy = userReference
-                this.from = from
-                this.to = to
-                this.lending = lending
-            }.also { entity ->
-                entity.members = SizedCollection(MemberEntity.find { Members.id inList members.orEmpty() }.toList())
-                for (fileEntity in documentEntities) {
-                    MemoriesFiles.insert {
-                        it[memory] = entity.id
-                        it[file] = fileEntity.id
+        val (memoryEntity, attachments) = try {
+            received.withUploads {
+                Database {
+                    val files = request.attachments.filterNot { it.isEmpty() }.map { file ->
+                        FileEntity.newFrom(file, attachmentRules)
+                    }
+                    val entity = MemoryEntity.new(UUID.randomUUID()) {
+                        this.place = place
+                        this.externalPeople = externalUsers
+                        this.text = plainText
+                        this.sport = request.sport
+                        this.department = department
+                        this.submittedBy = userReference
+                        this.from = from
+                        this.to = to
+                        this.lending = lending
+                    }
+                    entity.members = SizedCollection(MemberEntity.find { Members.id inList request.members }.toList())
+                    for (fileEntity in files) {
+                        MemoriesFiles.insert {
+                            it[memory] = entity.id
+                            it[file] = fileEntity.id
+                        }
+                    }
+                    // Read now: the files' values can't be read outside a transaction later
+                    entity to files.mapIndexed { i, file ->
+                        StoredAttachment(file.objectKey, file.size, file.name ?: "memory_attachment_$i")
                     }
                 }
             }
+        } catch (e: MissingPartException) {
+            logger.error("Memory request refers to a missing part", e)
+            respondError(Error.MalformedRequest())
+            return@post
         }
 
         // Generate the summary PDF for the memory

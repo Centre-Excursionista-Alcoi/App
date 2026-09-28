@@ -51,6 +51,9 @@ import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
+import kotlinx.datetime.LocalDate as KotlinLocalDate
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.storage.createTestFile
@@ -277,12 +280,20 @@ class TestStoredFileRoutes : ApplicationTestBase() {
             files.map { it.fileName.toString() }.filter { it.startsWith("cea-upload-") }.toList()
         }
 
-    private fun insuranceForm(document: ByteArray, policyNumber: String?) = formData {
-        append("insuranceCompany", "Company")
-        policyNumber?.let { append("policyNumber", it) }
-        append("validFrom", "2025-01-01")
-        append("validTo", "2025-12-31")
-        append("document", document, Headers.build {
+    private fun insuranceForm(document: ByteArray, policyNumber: String) = formData {
+        val request = CreateInsuranceRequest(
+            insuranceCompany = "Company",
+            policyNumber = policyNumber,
+            validFrom = KotlinLocalDate(2025, 1, 1),
+            validTo = KotlinLocalDate(2025, 12, 31),
+            documents = listOf(FileWithContext(part = "file_0")),
+        )
+        append(
+            RequestWithFiles.REQUEST_PART,
+            json.encodeToString(CreateInsuranceRequest.serializer(), request),
+            Headers.build { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) },
+        )
+        append("file_0", document, Headers.build {
             append(HttpHeaders.ContentType, ContentType.Application.Pdf.toString())
             append(HttpHeaders.ContentDisposition, "filename=\"policy.pdf\"")
         })
@@ -314,7 +325,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val before = uploadTempFiles()
 
         // Rejected after receiving the document, before storing it
-        client.submitFormWithBinaryData("/profile/insurances", insuranceForm(byteArrayOf(1, 2, 3), policyNumber = null))
+        client.submitFormWithBinaryData("/profile/insurances", insuranceForm(byteArrayOf(1, 2, 3), policyNumber = ""))
             .assertStatusCode(HttpStatusCode.BadRequest)
 
         assertEquals(before, uploadTempFiles(), "The temporary file of the upload must be deleted")

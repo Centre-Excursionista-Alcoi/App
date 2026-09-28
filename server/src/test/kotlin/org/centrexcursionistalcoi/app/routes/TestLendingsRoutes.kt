@@ -1,7 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.HttpClient
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -101,6 +105,21 @@ class TestLendingsRoutes : ApplicationTestBase() {
         this.department = department
     }
 
+    /** Sends a JSON object with [fields] (strings, or lists of strings) to [url], so they can be missing or invalid. */
+    private suspend fun HttpClient.postJsonFields(url: String, vararg fields: Pair<String, Any>): HttpResponse = post(url) {
+        contentType(ContentType.Application.Json)
+        setBody(
+            buildJsonObject {
+                for ((key, value) in fields) {
+                    if (value is List<*>) putJsonArray(key) { value.forEach { add(it.toString()) } } else put(key, value.toString())
+                }
+            }.toString()
+        )
+    }
+
+    private suspend fun HttpClient.postLending(vararg fields: Pair<String, Any>): HttpResponse =
+        postJsonFields("/inventory/lendings", *fields)
+
     @Test
     fun test_create_lending_invalidContentType() = runApplicationTest(
         shouldLogIn = LoginType.USER,
@@ -117,86 +136,83 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = { getOrCreateItem() },
     ) {
         // No parameters
-        client.submitForm("/inventory/lendings").apply {
+        client.postLending().apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Missing 'from' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                // append("from", "2024-01-01")
-                append("to", "2024-01-10")
-                append("items", "$exampleItemId")
-            }
+        client.postLending(
+            // "from" to "2024-01-01",
+            "to" to "2024-01-10",
+            "items" to listOf("$exampleItemId"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Malformed 'from' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "abc")
-                append("to", "2024-01-10")
-                append("items", "$exampleItemId")
-            }
+        client.postLending(
+            "from" to "abc",
+            "to" to "2024-01-10",
+            "items" to listOf("$exampleItemId"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Missing 'to' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2024-01-01")
-                // append("to", "2024-01-10")
-                append("items", "$exampleItemId")
-            }
+        client.postLending(
+            "from" to "2024-01-01",
+            // "to" to "2024-01-10",
+            "items" to listOf("$exampleItemId"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Malformed 'to' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2024-01-10")
-                append("to", "abc")
-                append("items", "$exampleItemId")
-            }
+        client.postLending(
+            "from" to "2024-01-10",
+            "to" to "abc",
+            "items" to listOf("$exampleItemId"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Missing 'items' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2024-01-01")
-                append("to", "2024-01-10")
-                // append("items", "$exampleItemId")
-            }
+        client.postLending(
+            "from" to "2024-01-01",
+            "to" to "2024-01-10",
+            // "items" to listOf("$exampleItemId"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Malformed 'items' parameter
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2024-01-01")
-                append("to", "2024-01-10")
-                append("items", "abc")
-            }
+        client.postLending(
+            "from" to "2024-01-01",
+            "to" to "2024-01-10",
+            "items" to listOf("abc"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // Non-existing single item id
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2024-01-01")
-                append("to", "2024-01-10")
-                append("items", "c2de5abe-a290-4847-adee-14a81d5349ae")
-            }
+        client.postLending(
+            "from" to "2024-01-01",
+            "to" to "2024-01-10",
+            "items" to listOf("c2de5abe-a290-4847-adee-14a81d5349ae"),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
+    }
+
+    @Test
+    fun test_create_lending_invalidRange() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        mockDate = LocalDate.of(2025, 10, 8),
+        databaseInitBlock = { getOrCreateItem() },
+    ) {
+        client.postLending(
+            "from" to "2025-10-11",
+            "to" to "2025-10-10",
+            "items" to listOf(exampleItemId.toString()),
+        ).assertError(Error.EndDateCannotBeBeforeStart())
+        client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-11",
+            "items" to emptyList<String>(),
+        ).assertError(Error.ListCannotBeEmpty("items"))
     }
 
     @Test
@@ -206,24 +222,18 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = { getOrCreateItem() },
     ) {
         // Both dates in past
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-04")
-                append("to", "2025-10-05")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-04",
+            "to" to "2025-10-05",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
         // 'from' date in past
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-04")
-                append("to", "2025-10-10")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-04",
+            "to" to "2025-10-10",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
@@ -249,13 +259,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
         mockDate = LocalDate.of(2025, 10, 8),
     ) {
         // New lending starting on the day existing one starts
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-10")
-                append("to", "2025-10-12")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-12",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertError(Error.UserDoesNotHaveInsurance())
         }
@@ -272,13 +279,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
         mockDate = LocalDate.of(2025, 10, 8),
     ) {
         // New lending starting on the day existing one starts
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-10")
-                append("to", "2025-10-12")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-12",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertError(Error.UserNotSignedUpForLending())
         }
@@ -335,58 +339,43 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
 
         // New lending completely before existing one
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-05")
-                append("to", "2025-10-09")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-05",
+            "to" to "2025-10-09",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
             delete()
         }
         // New lending starting on the day existing one starts
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-10")
-                append("to", "2025-10-12")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-12",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.Conflict)
         }
         // New lending starting during existing one
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-12")
-                append("to", "2025-10-18")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-12",
+            "to" to "2025-10-18",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.Conflict)
         }
         // New lending ending on the day existing one ends
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-14")
-                append("to", "2025-10-15")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-14",
+            "to" to "2025-10-15",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.Conflict)
         }
         // New lending completely after existing one
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-16")
-                append("to", "2025-10-20")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-16",
+            "to" to "2025-10-20",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
         }
@@ -447,13 +436,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
         mockDate = LocalDate.of(2025, 10, 8),
     ) {
         // New lending without having submitted memory for previous lending
-        client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-10")
-                append("to", "2025-10-12")
-                append("items", exampleItemId.toString())
-            }
+        client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-12",
+            "items" to listOf(exampleItemId.toString()),
         ).apply {
             assertError(Error.MemoryNotSubmitted())
         }
@@ -492,14 +478,11 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
 
         // Single item
-        val location = client.submitForm(
-            "/inventory/lendings",
-            parameters {
-                append("from", "2025-10-10")
-                append("to", "2025-10-11")
-                append("items", exampleItemId.toString())
-                append("notes", "These are some notes")
-            }
+        val location = client.postLending(
+            "from" to "2025-10-10",
+            "to" to "2025-10-11",
+            "items" to listOf(exampleItemId.toString()),
+            "notes" to "These are some notes",
         ).run {
             assertStatusCode(HttpStatusCode.Created)
             val location = headers[HttpHeaders.Location]
@@ -877,11 +860,9 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
     ) { context ->
         val entity = context.dibResult!!
-        client.submitForm(
+        client.postJsonFields(
             "inventory/lendings/${entity.id.value}/pickup",
-            parameters {
-                append("dismiss_items", exampleItemId.toString())
-            }
+            "dismissItems" to listOf(exampleItemId.toString()),
         ).apply {
             assertStatusCode(HttpStatusCode.NoContent)
             val dismissedItems = headers["CEA-Dismissed-Items"]

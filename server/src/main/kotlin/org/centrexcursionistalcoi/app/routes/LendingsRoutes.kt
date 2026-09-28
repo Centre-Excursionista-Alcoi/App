@@ -4,7 +4,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.contentLength
-import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -42,8 +41,11 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.request.CreateLendingRequest
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
+import org.centrexcursionistalcoi.app.request.PickupLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
+import org.centrexcursionistalcoi.app.request.receiveJson
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -67,6 +69,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeParseException
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -141,32 +144,11 @@ fun Route.lendingsRoutes() {
     postWithLock("inventory/lendings", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
 
-        assertContentType(ContentType.Application.FormUrlEncoded) ?: return@postWithLock
+        val request = receiveJson(CreateLendingRequest.serializer()) ?: return@postWithLock
+        val from = request.from.toJavaLocalDate()
+        val to = request.to.toJavaLocalDate()
+        val notes = request.notes
 
-        val parameters = call.receiveParameters()
-        val fromText = parameters["from"]
-        val toText = parameters["to"]
-        val notes = parameters["notes"]
-        val items = parameters["items"]
-
-        val from = try {
-            fromText?.let { LocalDate.parse(it) }
-        } catch (_: DateTimeParseException) {
-            null
-        }
-        if (from == null) {
-            call.respondError(Error.MissingArgument("from"))
-            return@postWithLock
-        }
-        val to = try {
-            toText?.let { LocalDate.parse(it) }
-        } catch (_: DateTimeParseException) {
-            null
-        }
-        if (to == null) {
-            call.respondError(Error.MissingArgument("to"))
-            return@postWithLock
-        }
         if (to.isBefore(from)) {
             call.respondError(Error.EndDateCannotBeBeforeStart())
             return@postWithLock
@@ -179,11 +161,7 @@ fun Route.lendingsRoutes() {
             return@postWithLock
         }
 
-        if (items == null) {
-            call.respondError(Error.MissingArgument("items"))
-            return@postWithLock
-        }
-        val itemsIdList = items.split(',').mapNotNull { it.toUUIDOrNull() }
+        val itemsIdList = request.items.map { it.toJavaUuid() }
         if (itemsIdList.isEmpty()) {
             call.respondError(Error.ListCannotBeEmpty("items"))
             return@postWithLock
@@ -439,10 +417,8 @@ fun Route.lendingsRoutes() {
 
         val contentLength = call.request.contentLength()
         if (contentLength != null && contentLength > 0) {
-            assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
-            val parameters = call.receiveParameters()
-            val dismissItemsParam = parameters["dismiss_items"]
-            val dismissItems = dismissItemsParam?.split(',')?.mapNotNull { it.toUUIDOrNull() } ?: emptyList()
+            val request = receiveJson(PickupLendingRequest.serializer()) ?: return@post
+            val dismissItems = request.dismissItems.map { it.toJavaUuid() }
             Database {
                 for (itemId in dismissItems) {
                     LendingItems.deleteWhere { (LendingItems.lending eq lending.id) and (LendingItems.item eq itemId) }
