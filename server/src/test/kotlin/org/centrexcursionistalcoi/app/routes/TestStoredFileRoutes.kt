@@ -20,7 +20,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -163,7 +163,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         // An empty file means "remove it from the post": only the post's own files can be removed
         client.patch("/posts/$postId") {
             contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(id = kotlin.uuid.Uuid.parse(otherFile.toString()))))))
+            setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(id = otherFile)))))
         }
 
         assertNotNull(Database { FileEntity.findById(otherFile) })
@@ -211,7 +211,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         assertTrue(storedKeys().isEmpty())
     }
 
-    private fun JdbcTransaction.newMemory(submittedBy: String): UUID {
+    private fun JdbcTransaction.newMemory(submittedBy: String): Uuid {
         val memory = Memories.insertAndGetId {
             it[text] = "Memory"
             it[Memories.submittedBy] = submittedBy

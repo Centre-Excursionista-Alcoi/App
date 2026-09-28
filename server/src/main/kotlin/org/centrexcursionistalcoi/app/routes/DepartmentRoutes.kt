@@ -38,7 +38,6 @@ import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import kotlin.uuid.toKotlinUuid
 
 /**
  * Fetches the department with the id given in the call parameters (`id`).
@@ -253,8 +252,8 @@ fun Route.departmentsRoutes() {
             department.visibleMembersFor(session).map { entity ->
                 DepartmentJoinRequest(
                     entity.userReference.id.value,
-                    entity.department.id.value.toKotlinUuid(),
-                    entity.id.value.toKotlinUuid()
+                    entity.department.id.value,
+                    entity.id.value
                 )
             }
         }

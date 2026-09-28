@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal
 import java.util.Random
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
 import kotlin.reflect.KMutableProperty
@@ -35,8 +35,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.toJavaInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.DeserializationStrategy
@@ -62,8 +60,8 @@ import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
@@ -206,10 +204,10 @@ object ProvidedRouteTests {
                     }
                     member.call(this, fileEntity)
                 }
-                is UUID -> @Suppress("UNCHECKED_CAST") if (this is ExposedEntity<*>) {
-                    this as ExposedEntity<UUID>
+                is Uuid -> @Suppress("UNCHECKED_CAST") if (this is ExposedEntity<*>) {
+                    this as ExposedEntity<Uuid>
 
-                    val foreignEntityClass = foreignTypesAssociations[name] as EntityClass<UUID, ExposedEntity<UUID>>?
+                    val foreignEntityClass = foreignTypesAssociations[name] as EntityClass<Uuid, ExposedEntity<Uuid>>?
                     checkNotNull(foreignEntityClass) { "Could not find a foreign type association for key \"$name\"" }
 
                     val entity = foreignEntityClass.findById(value)
@@ -234,7 +232,7 @@ object ProvidedRouteTests {
 
     @OptIn(InternalSerializationApi::class)
     context(_: ApplicationTestBase)
-    fun <EE: UUIDEntity, ET: Entity<Uuid>> runTestsOnRoute(
+    fun <EE: UuidEntity, ET: Entity<Uuid>> runTestsOnRoute(
         title: String,
         baseUrl: String,
         now: Instant? = null,
@@ -259,7 +257,7 @@ object ProvidedRouteTests {
         defaultCreationValuesProvider: Map<String, DefaultValue> = emptyMap(),
 
         locationRegex: Regex,
-        entityClass: UUIDEntityClass<EE>,
+        entityClass: UuidEntityClass<EE>,
 
         /**
          * A provider that creates an example entity to be used in some endpoints that require an entity instance.
@@ -300,9 +298,9 @@ object ProvidedRouteTests {
         locationRegex = locationRegex,
         entityClass = entityClass,
         idTypeConverter = { it.toUUID() },
-        exposedIdTypeConverter = { it.toJavaUuid() },
+        exposedIdTypeConverter = { it },
         stubEntityProvider = stubEntityProvider,
-        invalidEntityId = Uuid.Zero.toJavaUuid(),
+        invalidEntityId = Uuid.Zero,
         auxiliaryEntitiesProvider = auxiliaryEntitiesProvider,
         foreignTypesAssociations = foreignTypesAssociations,
         seed = seed,
@@ -340,10 +338,8 @@ object ProvidedRouteTests {
         idTypeConverter: (String) -> EID,
 
         /**
-         * Converts the internal ID type [TID] to the exposed ID type [EID].
-         *
-         * For example, if the internal ID is [java.util.UUID] and the exposed ID is [kotlin.uuid.Uuid],
-         * this function should convert [java.util.UUID] to [kotlin.uuid.Uuid].
+         * Converts the internal ID type [TID] to the exposed ID type [EID], for entities whose ids have a different
+         * type in the database than in the API.
          */
         exposedIdTypeConverter: (TID) -> EID,
 
@@ -409,7 +405,7 @@ object ProvidedRouteTests {
 
                         is ExposedEntity<*> -> {
                             // If the actual value is an ExposedEntity, the expected value is a UUID matching its ID.
-                            assertIs<UUID>(expected, "Expected value for $name should be a UUID")
+                            assertIs<Uuid>(expected, "Expected value for $name should be a UUID")
                             val actualId = this.id.value
                             assertEquals(expected, actualId, "Field $name ID does not match")
                         }
@@ -470,13 +466,13 @@ object ProvidedRouteTests {
                             // If expected is a FileBytesWrapper, actual is a UUID matching a FileEntity.
                             // Fetch the FileEntity from the database and compare its data.
                             assertIs<Uuid>(actual, "Expected value for $name should be a Uuid")
-                            val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
+                            val fileEntity = Database { FileEntity.findById(actual) }
                             assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
                             val actualBytes = fileEntity.readBytes()
                             assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
-                        } else if (expected is UUID && actual is Uuid) {
+                        } else if (expected is Uuid && actual is Uuid) {
                             // If expected is a UUID and actual is a Uuid, compare their values
-                            assertEquals(expected, actual.toJavaUuid(), "Field $name ID does not match")
+                            assertEquals(expected, actual, "Field $name ID does not match")
                         } else if (expected is ByteArray) {
                             assertIs<ByteArray>(actual, "Expected value for $name should be a ByteArray")
                             assertContentEquals(expected, actual, "Field $name contents does not match")

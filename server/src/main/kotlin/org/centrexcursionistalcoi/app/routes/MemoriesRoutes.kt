@@ -68,9 +68,8 @@ import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.io.ByteArrayOutputStream
-import java.util.UUID
+import kotlin.uuid.Uuid
 import org.slf4j.LoggerFactory
-import kotlin.uuid.toJavaUuid
 
 /**
  * Fetches the memory with the id given in the call parameters (`id`), making sure the requesting session is allowed
@@ -169,8 +168,8 @@ fun Route.memoriesRoutes() {
         val place = request.place?.takeIf { it.isNotBlank() }
         val externalUsers = request.externalUsers?.takeIf { it.isNotBlank() }
         val plainText = request.text.takeIf { it.isNotBlank() }
-        val departmentId = request.department?.toJavaUuid()
-        val lendingId = request.lending?.toJavaUuid()
+        val departmentId = request.department
+        val lendingId = request.lending
         val fromRaw = request.from
         val toRaw = request.to
 
@@ -256,7 +255,7 @@ fun Route.memoriesRoutes() {
                     val files = request.attachments.filterNot { it.isEmpty() }.map { file ->
                         FileEntity.newFrom(file, attachmentRules)
                     }
-                    val entity = MemoryEntity.new(UUID.randomUUID()) {
+                    val entity = MemoryEntity.new(Uuid.random()) {
                         this.place = place
                         this.externalPeople = externalUsers
                         this.text = plainText

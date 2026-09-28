@@ -26,8 +26,8 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -36,15 +36,12 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
-class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
-    companion object : UUIDEntityClass<EventEntity>(Events) {
+class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
+    companion object : UuidEntityClass<EventEntity>(Events) {
         private val logger = LoggerFactory.getLogger("EventEntity")
 
         /**
@@ -138,20 +135,20 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
      * (see [Event.qualificationRequirements]).
      */
     context(_: JdbcTransaction)
-    fun qualificationRequirements(): List<List<UUID>> =
+    fun qualificationRequirements(): List<List<Uuid>> =
         EventQualificationRequirements.selectAll()
             .where { EventQualificationRequirements.event eq id }
             .groupBy({ it[EventQualificationRequirements.groupIndex] }, { it[EventQualificationRequirements.qualification].value })
             .toSortedMap()
             .values
-            .map { it.sortedBy(UUID::toString) }
+            .map { it.sortedBy(Uuid::toString) }
 
     /**
      * Replaces this event's qualification requirements with [groups], which must have already been checked with
      * [validatedQualificationRequirements].
      */
     context(_: JdbcTransaction)
-    fun setQualificationRequirements(groups: List<List<UUID>>) {
+    fun setQualificationRequirements(groups: List<List<Uuid>>) {
         EventQualificationRequirements.deleteWhere { EventQualificationRequirements.event eq this@EventEntity.id }
         groups.forEachIndexed { index, group ->
             for (qualificationId in group) {
@@ -166,7 +163,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
 
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         start = start.toKotlinInstant(),
         end = end?.toKotlinInstant(),
         place = place,
@@ -175,10 +172,10 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         maxPeople = maxPeople,
         requiresConfirmation = requiresConfirmation,
         requiresInsurance = requiresInsurance,
-        department = department?.id?.value?.toKotlinUuid(),
-        image = image?.id?.value?.toKotlinUuid(),
+        department = department?.id?.value,
+        image = image?.id?.value,
         userSubList = userReferences.map { it.sub.value },
-        qualificationRequirements = qualificationRequirements().map { group -> group.map { it.toKotlinUuid() } },
+        qualificationRequirements = qualificationRequirements().map { group -> group },
     )
 
     context(_: JdbcTransaction)
@@ -191,7 +188,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         request.maxPeople?.let { maxPeople = it }
         request.requiresConfirmation?.let { requiresConfirmation = it }
         request.requiresInsurance?.let { requiresInsurance = it }
-        request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
+        request.department?.let { department = DepartmentEntity.findById(it) }
         request.image?.let { request ->
             val oldImage = image
             val ownedFileIds = listOfNotNull(oldImage?.id?.value)
@@ -211,7 +208,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         // against the department the event ends up in -- which also catches moving an event that already has
         // requirements to another department without replacing them.
         if (request.qualificationRequirements != null || request.department != null) {
-            val requested = request.qualificationRequirements?.map { group -> group.map { it.toJavaUuid() } }
+            val requested = request.qualificationRequirements?.map { group -> group }
             val requirements = try {
                 validatedQualificationRequirements(department?.id?.value, requested ?: qualificationRequirements())
             } catch (e: InvalidQualificationRequirementsException) {
@@ -228,7 +225,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
 
     fun assistanceConfirmedNotification(session: UserSession): PushNotification.EventAssistanceUpdated = Database {
         PushNotification.EventAssistanceUpdated(
-            eventId = this@EventEntity.id.value.toKotlinUuid(),
+            eventId = this@EventEntity.id.value,
             userSub = session.sub,
             isConfirmed = true,
         )
@@ -236,7 +233,7 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
 
     fun assistanceRejectedNotification(session: UserSession): PushNotification.EventAssistanceUpdated = Database {
         PushNotification.EventAssistanceUpdated(
-            eventId = this@EventEntity.id.value.toKotlinUuid(),
+            eventId = this@EventEntity.id.value,
             userSub = session.sub,
             isConfirmed = false,
         )

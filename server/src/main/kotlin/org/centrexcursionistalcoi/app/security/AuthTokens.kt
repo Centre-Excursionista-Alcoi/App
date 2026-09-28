@@ -43,7 +43,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.Base64
 import java.util.Date
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
@@ -257,7 +257,7 @@ object AuthTokens {
     }
 
     context(_: JdbcTransaction)
-    fun revokeSession(sessionId: UUID, reason: AuthSessionRevocationReason) {
+    fun revokeSession(sessionId: Uuid, reason: AuthSessionRevocationReason) {
         AuthSessions.update({ (AuthSessions.id eq sessionId) and AuthSessions.revokedAt.isNull() }) {
             it[revokedAt] = now()
             it[revocationReason] = reason
@@ -285,7 +285,7 @@ object AuthTokens {
         }
         val sub = jwt.subject ?: return null
         val sessionId = jwt.getClaim(CLAIM_SESSION_ID).asString()
-            ?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: return null
+            ?.let { runCatching { Uuid.parse(it) }.getOrNull() } ?: return null
         return Database {
             val session = AuthSessions.selectAll().where { AuthSessions.id eq sessionId }.singleOrNull()
                 ?: return@Database null
@@ -295,7 +295,7 @@ object AuthTokens {
         }
     }
 
-    data class AccessTokenSession(val sessionId: UUID, val userSession: UserSession)
+    data class AccessTokenSession(val sessionId: Uuid, val userSession: UserSession)
 
     private fun ResultRow.isActive(now: Instant): Boolean =
         this[AuthSessions.revokedAt] == null &&
@@ -303,7 +303,7 @@ object AuthTokens {
             this[AuthSessions.absoluteExpiresAt] > now
 
     context(_: JdbcTransaction)
-    private fun insertRefreshToken(sessionId: UUID, now: Instant): String {
+    private fun insertRefreshToken(sessionId: Uuid, now: Instant): String {
         val bytes = ByteArray(32).also(secureRandom::nextBytes)
         val token = REFRESH_TOKEN_PREFIX + base64Url(bytes)
         AuthRefreshTokens.insert {
@@ -317,7 +317,7 @@ object AuthTokens {
     private fun tokenResponse(
         userSub: String,
         email: String,
-        sessionId: UUID,
+        sessionId: Uuid,
         refreshToken: String,
         refreshTokenExpiresAt: Instant,
         now: Instant,
@@ -328,7 +328,7 @@ object AuthTokens {
             .withAudience(AUDIENCE)
             .withSubject(userSub)
             .withClaim(CLAIM_SESSION_ID, sessionId.toString())
-            .withJWTId(UUID.randomUUID().toString())
+            .withJWTId(Uuid.random().toString())
             .withIssuedAt(Date.from(now))
             .withExpiresAt(Date.from(now + accessTokenLifetime.toJavaDuration()))
             .sign(algorithm),

@@ -12,17 +12,15 @@ import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
-import java.util.UUID
 import kotlin.uuid.Uuid
-import kotlin.uuid.toKotlinUuid
 
-object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, InventoryItemEntity>, CustomTableSerializer<UUID, LendingEntity> {
+object Lendings : UuidTable("Lendings"), ViaLink<Uuid, LendingEntity, Uuid, InventoryItemEntity>, CustomTableSerializer<Uuid, LendingEntity> {
     val userSub = reference("userSub", UserReferences, onDelete = ReferenceOption.CASCADE)
     val timestamp = timestamp("timestamp").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
@@ -66,6 +64,6 @@ object Lendings : UUIDTable("Lendings"), ViaLink<UUID, LendingEntity, UUID, Inve
         put("receivedItems", entity.receivedItems.map { it.toReceivedItem() })
         // "memory" only holds the linked memory's id (memories are their own resource, fetched separately), so
         // it's only included when present to avoid encoding a null value.
-        entity.memory?.id?.value?.toKotlinUuid()?.let { put("memory", it) }
+        entity.memory?.id?.value?.let { put("memory", it) }
     }
 }

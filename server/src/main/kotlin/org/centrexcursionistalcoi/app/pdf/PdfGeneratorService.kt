@@ -13,8 +13,7 @@ import org.centrexcursionistalcoi.app.data.Sports
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.io.OutputStream
-import java.util.UUID
-import kotlin.uuid.toJavaUuid
+import kotlin.uuid.Uuid
 
 object PdfGeneratorService {
     private const val FONT_SIZE_TITLE = 18f
@@ -46,7 +45,7 @@ object PdfGeneratorService {
         memory: ReferencedMemory,
         itemsUsed: List<ReferencedInventoryItem>,
         submittedBy: String,
-        photoProvider: (UUID) -> ByteArray, // Callback to fetch actual image data
+        photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream
     ) {
         PDDocument().use { document ->
@@ -129,7 +128,7 @@ object PdfGeneratorService {
                 // If a department is given, and it has an image, draw it on the right hand side
                 val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
                 if (department?.image != null) {
-                    val deptImageBytes = photoProvider(department.image!!.toJavaUuid())
+                    val deptImageBytes = photoProvider(department.image!!)
                     val deptImage = PDImageXObject.createFromByteArray(document, deptImageBytes, department.displayName)
                     val deptScale = 50f / deptImage.height
                     val deptWidth = deptImage.width * deptScale
@@ -222,7 +221,7 @@ object PdfGeneratorService {
 
                 memory.attachments.forEach { uuid ->
                     try {
-                        val photo = photoProvider(uuid.toJavaUuid())
+                        val photo = photoProvider(uuid)
                         val pdImage = PDImageXObject.createFromByteArray(document, photo, uuid.toString())
 
                         // Logic to fit image within page width

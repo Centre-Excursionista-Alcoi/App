@@ -1,10 +1,10 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 
 /** A qualification defined by a department, see [org.centrexcursionistalcoi.app.data.Qualification]. */
-object Qualifications : UUIDTable("qualifications") {
+object Qualifications : UuidTable("qualifications") {
     val department = reference("department_id", Departments, ReferenceOption.CASCADE, ReferenceOption.RESTRICT)
 
     val name = varchar("name", 255)

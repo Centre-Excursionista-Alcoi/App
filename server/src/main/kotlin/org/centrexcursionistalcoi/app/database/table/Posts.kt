@@ -1,18 +1,18 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.utils.ViaLink
 import org.centrexcursionistalcoi.app.database.utils.serializer
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
-object Posts : UUIDTable("posts"), ViaLink<UUID, PostEntity, UUID, FileEntity> {
+object Posts : UuidTable("posts"), ViaLink<Uuid, PostEntity, Uuid, FileEntity> {
     val date = timestamp("date").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(CurrentTimestamp)
 

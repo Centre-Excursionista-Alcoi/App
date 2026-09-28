@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -9,7 +9,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.json.json
@@ -18,7 +18,7 @@ import org.jetbrains.exposed.v1.json.json
  * The metadata of stored files. Their contents are in [org.centrexcursionistalcoi.app.storage.FileStorage], at
  * [objectKey].
  */
-object Files : UUIDTable("files"), CustomTableSerializer<UUID, FileEntity> {
+object Files : UuidTable("files"), CustomTableSerializer<Uuid, FileEntity> {
     /** The key of the file's contents in the storage. Never sent to clients. */
     val objectKey = varchar("objectKey", 255).uniqueIndex()
     /** The size of the file's contents, in bytes. */

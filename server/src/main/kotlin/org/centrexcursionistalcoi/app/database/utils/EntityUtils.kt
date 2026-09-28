@@ -4,6 +4,7 @@ import io.ktor.util.reflect.instanceOf
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
@@ -20,7 +21,6 @@ import org.centrexcursionistalcoi.app.data.JsonSerializable
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.serialization.InstantSerializer
-import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
@@ -34,7 +34,7 @@ import org.jetbrains.exposed.v1.core.StringColumnType
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.UIntegerColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
-import org.jetbrains.exposed.v1.core.java.UUIDColumnType
+import org.jetbrains.exposed.v1.core.UuidColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedBinaryColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
 import org.jetbrains.exposed.v1.dao.DaoEntityID
@@ -44,7 +44,7 @@ import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.ULongEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UuidEntity
 import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
 import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
@@ -52,7 +52,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.reflect.full.companionObjectInstance
 
 // "fromInstant"/"fromZone"/"toInstant"/"toZone" back Memories' `from`/`to` (ZonedDateTime), which are re-exposed as
@@ -125,7 +125,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
                     is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
                     is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
-                    is UUIDColumnType -> element(column.name, UUIDSerializer.descriptor, isOptional = type.nullable)
+                    is UuidColumnType -> element(column.name, Uuid.serializer().descriptor, isOptional = type.nullable)
                     is EnumerationNameColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // Enums are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
                     is ArrayColumnType<*, *> -> element(column.name, JsonArray.serializer().descriptor, isOptional = type.nullable)
@@ -189,7 +189,7 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                                 is LongEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 is UIntEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 is ULongEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
-                                is UUIDEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
+                                is UuidEntity -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 is Entity<*> -> encodeStringElement(descriptor, idx, typeValue.id.value.toString())
                                 else -> error("Unsupported entity ID column type: ${typeValue::class.simpleName}")
                             }
@@ -225,8 +225,8 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                         is JavaLocalTimeColumnType -> {
                             encodeStringElement(descriptor, idx, typeValue.toString())
                         }
-                        is UUIDColumnType -> {
-                            encodeSerializableElement(descriptor, idx, UUIDSerializer, typeValue as UUID)
+                        is UuidColumnType -> {
+                            encodeSerializableElement(descriptor, idx, Uuid.serializer(), typeValue as Uuid)
                         }
                         is EnumerationNameColumnType<*> -> {
                             encodeStringElement(descriptor, idx, typeValue.toString())

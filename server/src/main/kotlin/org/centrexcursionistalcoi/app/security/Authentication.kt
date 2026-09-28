@@ -40,7 +40,7 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.util.Base64
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 private val secretEncryptKey by lazy { (SessionsKeys.secretEncryptKey ?: SessionsKeys.DEFAULT_ENCRYPT_KEY).hexToByteArray() }
 private val secretSignKey by lazy { (SessionsKeys.secretSignKey ?: SessionsKeys.DEFAULT_SIGN_KEY).hexToByteArray() }
@@ -70,7 +70,7 @@ private val resolvedSessionKey = AttributeKey<ResolvedSession>("CEA-ResolvedSess
  */
 private class ResolvedSession(
     val session: UserSession?,
-    val accessTokenSessionId: UUID?,
+    val accessTokenSessionId: Uuid?,
     val bearerPresented: Boolean,
 )
 
@@ -87,7 +87,7 @@ private fun ApplicationCall.resolveSession(): ResolvedSession {
 }
 
 /** The session of the access token that authenticated this call, `null` if it isn't authenticated. */
-fun ApplicationCall.getAccessTokenSessionId(): UUID? {
+fun ApplicationCall.getAccessTokenSessionId(): Uuid? {
     getUserSession()
     return attributes[resolvedSessionKey].accessTokenSessionId
 }

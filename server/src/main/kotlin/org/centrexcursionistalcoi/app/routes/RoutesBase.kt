@@ -42,7 +42,7 @@ import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
@@ -84,7 +84,7 @@ class PatchRejectedException(val error: Error) : Exception(error.description)
  */
 class EntityWritePermission<EE>(
     val role: DepartmentRole,
-    val departmentOfEntity: (EE) -> UUID?,
+    val departmentOfEntity: (EE) -> Uuid?,
 )
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
@@ -101,7 +101,7 @@ suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentT
  * If not, responds with an [Error.MalformedId] error.
  * @return The UUID if valid, or null if invalid.
  */
-suspend fun RoutingContext.assertIdParameter(): UUID? {
+suspend fun RoutingContext.assertIdParameter(): Uuid? {
     val id = call.parameters["id"]?.toUUIDOrNull()
     if (id == null) {
         call.respondError(Error.MalformedId())

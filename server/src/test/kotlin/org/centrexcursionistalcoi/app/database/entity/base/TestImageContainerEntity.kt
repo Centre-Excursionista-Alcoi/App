@@ -12,8 +12,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
@@ -69,7 +67,7 @@ class TestImageContainerEntity {
 
         Database {
             department.updateOrSetImage(
-                FileWithContext(imageBytes, name = "square.png", id = oldImage.id.value.toKotlinUuid())
+                FileWithContext(imageBytes, name = "square.png", id = oldImage.id.value)
             )
         }
 
@@ -94,7 +92,7 @@ class TestImageContainerEntity {
 
         runCatching {
             Database {
-                department.updateOrSetImage(FileWithContext(imageBytes, id = oldImage.id.value.toKotlinUuid()))
+                department.updateOrSetImage(FileWithContext(imageBytes, id = oldImage.id.value))
                 error("Rolled back")
             }
         }
@@ -115,7 +113,7 @@ class TestImageContainerEntity {
 
         val image = Database { DepartmentEntity[department.id].image }
         assertNotNull(image)
-        assertEquals(newId.toJavaUuid(), image.id.value)
+        assertEquals(newId, image.id.value)
         assertContentEquals(imageBytes, image.readBytes())
         assertNull(Database { FileEntity.findById(oldImage.id) })
         assertEquals(listOf(image.objectKey), testStorage.keys())
@@ -138,7 +136,7 @@ class TestImageContainerEntity {
         val otherFile = createTestFile(byteArrayOf(9, 9, 9))
         val department = newDepartment()
 
-        Database { department.updateOrSetImage(FileWithContext(imageBytes, id = otherFile.id.value.toKotlinUuid())) }
+        Database { department.updateOrSetImage(FileWithContext(imageBytes, id = otherFile.id.value)) }
 
         val image = Database { DepartmentEntity[department.id].image }
         assertNotNull(image)

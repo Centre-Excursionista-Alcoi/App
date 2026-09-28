@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlinx.serialization.builtins.serializer
+import kotlin.uuid.Uuid
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -50,7 +52,6 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
-import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
@@ -71,8 +72,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeParseException
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -161,7 +160,7 @@ fun Route.lendingsRoutes() {
             return@postWithLock
         }
 
-        val itemsIdList = request.items.map { it.toJavaUuid() }
+        val itemsIdList = request.items
         if (itemsIdList.isEmpty()) {
             call.respondError(Error.ListCannotBeEmpty("items"))
             return@postWithLock
@@ -418,7 +417,7 @@ fun Route.lendingsRoutes() {
         val contentLength = call.request.contentLength()
         if (contentLength != null && contentLength > 0) {
             val request = receiveJson(PickupLendingRequest.serializer()) ?: return@post
-            val dismissItems = request.dismissItems.map { it.toJavaUuid() }
+            val dismissItems = request.dismissItems
             Database {
                 for (itemId in dismissItems) {
                     LendingItems.deleteWhere { (LendingItems.lending eq lending.id) and (LendingItems.item eq itemId) }
@@ -451,7 +450,7 @@ fun Route.lendingsRoutes() {
         val lendingId = lending.id.value
 
         if (!lending.taken) {
-            call.respondError(Error.LendingNotTaken(lendingId.toKotlinUuid()))
+            call.respondError(Error.LendingNotTaken(lendingId))
             return@post
         }
 
@@ -476,7 +475,7 @@ fun Route.lendingsRoutes() {
 
         // Make sure all the returned item ids are valid
         val returnedItems = Database {
-            request.returnedItems.map { item -> InventoryItemEntity.findById(item.itemId.toJavaUuid()) }
+            request.returnedItems.map { item -> InventoryItemEntity.findById(item.itemId) }
         }
         if (returnedItems.any { it == null }) {
             call.respondError(Error.InvalidItemInReturnedItems())
@@ -490,7 +489,7 @@ fun Route.lendingsRoutes() {
                 ReceivedItemEntity.new {
                     this.lending = lending
                     this.item = item
-                    this.notes = request.returnedItems.find { it.itemId == item.id.value.toKotlinUuid() }?.notes
+                    this.notes = request.returnedItems.find { it.itemId == item.id.value }?.notes
                     this.receivedBy = userReference
                     this.receivedAt = now()
                 }
@@ -500,7 +499,7 @@ fun Route.lendingsRoutes() {
         // Check that all items in the lending have been returned
         val missingItemsIds = Database {
             LendingEntity[lendingId].items.filter { itemEntity -> returnedItems.find { it.id == itemEntity.id } == null }
-                .map { it.id.value.toKotlinUuid() }
+                .map { it.id.value }
         }
 
         if (missingItemsIds.isEmpty()) {
@@ -670,7 +669,7 @@ fun Route.lendingsRoutes() {
 
         val allocatedItems = availableItems.take(amount).map { it.id.value }
         call.respondText(ContentType.Application.Json) {
-            json.encodeToString(UUIDSerializer.list(), allocatedItems)
+            json.encodeToString(Uuid.serializer().list(), allocatedItems)
         }
     }
 }

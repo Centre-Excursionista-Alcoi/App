@@ -3,11 +3,11 @@ package org.centrexcursionistalcoi.app.database.table
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
 import org.centrexcursionistalcoi.app.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.json.json
 
-object UserInsurances : UUIDTable("UserInsurances") {
+object UserInsurances : UuidTable("UserInsurances") {
     /** The Subject Identifier of the user */
     val userSub = reference("sub", UserReferences, ReferenceOption.CASCADE, ReferenceOption.RESTRICT)
     val insuranceCompany = varchar("insuranceCompany", 255)

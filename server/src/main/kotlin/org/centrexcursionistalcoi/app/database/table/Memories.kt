@@ -10,15 +10,13 @@ import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.UUID
 import kotlin.uuid.Uuid
-import kotlin.uuid.toKotlinUuid
 
-object Memories : UUIDTable("memories"), CustomTableSerializer<UUID, MemoryEntity> {
+object Memories : UuidTable("memories"), CustomTableSerializer<Uuid, MemoryEntity> {
     val createdAt = timestamp("createdAt").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
@@ -60,7 +58,7 @@ object Memories : UUIDTable("memories"), CustomTableSerializer<UUID, MemoryEntit
     context(_: JdbcTransaction)
     override fun extraColumns(entity: MemoryEntity, session: UserSession?): Map<String, Any?> = mapOf(
         "members" to entity.members.map { it.memberNumber },
-        "attachments" to entity.files.map { it.id.value.toKotlinUuid() },
+        "attachments" to entity.files.map { it.id.value },
         "from" to entity.from,
         "to" to entity.to,
     )

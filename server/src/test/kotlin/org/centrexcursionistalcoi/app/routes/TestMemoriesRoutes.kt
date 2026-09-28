@@ -64,8 +64,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 class TestMemoriesRoutes : ApplicationTestBase() {
@@ -247,7 +245,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         client.postMemory(
             CreateMemoryRequest(
                 text = "Everything went great",
-                lending = lending.id.value.toKotlinUuid(),
+                lending = lending.id.value,
             )
         ).apply {
             assertStatusCode(HttpStatusCode.Created)
@@ -289,7 +287,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         client.postMemory(
             CreateMemoryRequest(
                 text = "A second memory",
-                lending = lending.id.value.toKotlinUuid(),
+                lending = lending.id.value,
             )
         ).apply {
             assertError(Error.MemoryAlreadySubmitted())
@@ -345,7 +343,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         client.get("/memories").apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(ListSerializer(Memory.serializer())) { memories ->
-                assertTrue(memories.any { it.id.toJavaUuid() == memory.id.value }, "Tagged memory should be in the list")
+                assertTrue(memories.any { it.id == memory.id.value }, "Tagged memory should be in the list")
             }
         }
 
@@ -395,7 +393,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         client.get("/memories").apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(ListSerializer(Memory.serializer())) { memories ->
-                assertTrue(memories.any { it.id.toJavaUuid() == memory.id.value }, "Managed department's memory should be in the list")
+                assertTrue(memories.any { it.id == memory.id.value }, "Managed department's memory should be in the list")
             }
         }
 
@@ -456,7 +454,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             setBody(
                 json.encodeToString(
                     UpdateMemoryRequest.serializer(),
-                    UpdateMemoryRequest(department = otherDepartment.id.value.toKotlinUuid()),
+                    UpdateMemoryRequest(department = otherDepartment.id.value),
                 )
             )
         }.apply {
@@ -509,7 +507,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             var pdfId: kotlin.uuid.Uuid? = null
             assertBody(Memory.serializer()) { memory ->
                 assertEquals("Updated place", memory.place)
-                assertEquals(memoryId.toString(), memory.id.toJavaUuid().toString())
+                assertEquals(memoryId.toString(), memory.id.toString())
                 pdfId = memory.pdf
                 assertNotNull(pdfId, "The summary PDF should still be present after patching")
             }

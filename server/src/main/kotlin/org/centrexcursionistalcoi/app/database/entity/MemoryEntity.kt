@@ -17,24 +17,21 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import java.time.Instant
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 
-class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Memory, Uuid>, EntityPatcher<UpdateMemoryRequest> {
-    companion object : UUIDEntityClass<MemoryEntity>(Memories)
+class MemoryEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Memory, Uuid>, EntityPatcher<UpdateMemoryRequest> {
+    companion object : UuidEntityClass<MemoryEntity>(Memories)
 
     val createdAt by Memories.createdAt
     override var lastUpdate: Instant by Memories.lastUpdate
@@ -84,19 +81,19 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
 
     context(_: JdbcTransaction)
     override fun toData(): Memory = Memory(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         place = place,
         members = members.map { it.memberNumber },
         externalUsers = externalPeople,
         text = text,
         sport = sport,
-        department = department?.id?.value?.toKotlinUuid(),
-        attachments = files.map { it.id.value.toKotlinUuid() },
+        department = department?.id?.value,
+        attachments = files.map { it.id.value },
         submittedBy = submittedBy.id.value,
         from = from,
         to = to,
-        pdf = pdf?.id?.value?.toKotlinUuid(),
-        lending = lending?.id?.value?.toKotlinUuid(),
+        pdf = pdf?.id?.value,
+        lending = lending?.id?.value,
     )
 
     context(_: JdbcTransaction)
@@ -108,7 +105,7 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         request.externalUsers?.let { externalPeople = it }
         request.text?.let { text = it }
         request.sport?.let { sport = it }
-        request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
+        request.department?.let { department = DepartmentEntity.findById(it) }
         request.from?.let { from = it }
         request.to?.let { to = it }
         val ownedFileIds = files.map { it.id.value }

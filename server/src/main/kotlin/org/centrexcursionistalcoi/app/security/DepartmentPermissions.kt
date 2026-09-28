@@ -12,13 +12,13 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 /**
  * `true` if this session is a global admin, or holds a confirmed [DepartmentMembers] row for [departmentId] whose
  * roles contain [role] or [DepartmentRole.ADMIN] (department-admin implies every other department role).
  */
-fun UserSession.hasDepartmentRole(departmentId: UUID, role: DepartmentRole): Boolean {
+fun UserSession.hasDepartmentRole(departmentId: Uuid, role: DepartmentRole): Boolean {
     if (isAdmin()) return true
     return Database {
         DepartmentMemberEntity
@@ -48,7 +48,7 @@ fun UserSession.isMembersManager(): Boolean = isAdmin() || MEMBERS_MANAGER_GROUP
  * or is a global admin. Mirrors [UserSession.Companion.assertAdmin]'s early-return style: responds
  * [Error.PermissionRejected] and returns `null` on failure.
  */
-suspend fun RoutingContext.assertDepartmentRole(session: UserSession, departmentId: UUID, role: DepartmentRole): UserSession? {
+suspend fun RoutingContext.assertDepartmentRole(session: UserSession, departmentId: Uuid, role: DepartmentRole): UserSession? {
     if (!session.hasDepartmentRole(departmentId, role)) {
         respondError(Error.PermissionRejected())
         return null

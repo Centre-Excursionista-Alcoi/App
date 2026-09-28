@@ -7,13 +7,12 @@ import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
+import kotlin.uuid.Uuid
 
-class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
-    companion object : UUIDEntityClass<LendingEntity>(Lendings)
+class LendingEntity(id: EntityID<Uuid>): UuidEntity(id) {
+    companion object : UuidEntityClass<LendingEntity>(Lendings)
 
     var userSub by UserReferenceEntity referencedOn Lendings.userSub
     var timestamp by Lendings.timestamp
@@ -44,28 +43,28 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
      */
     fun newNotification(): PushNotification.NewLendingRequest = Database {
         PushNotification.NewLendingRequest(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun confirmedNotification(): PushNotification.LendingConfirmed = Database {
         PushNotification.LendingConfirmed(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun cancelledNotification(): PushNotification.LendingCancelled = Database {
         PushNotification.LendingCancelled(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun deletedNotification(message: String?): PushNotification.LendingDeleted = Database {
         PushNotification.LendingDeleted(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
             message = message,
         )
@@ -73,28 +72,28 @@ class LendingEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     fun takenNotification(): PushNotification.LendingTaken = Database {
         PushNotification.LendingTaken(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun returnedNotification(): PushNotification.LendingReturned = Database {
         PushNotification.LendingReturned(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun partialReturnNotification(): PushNotification.LendingPartiallyReturned = Database {
         PushNotification.LendingPartiallyReturned(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }
 
     fun memoryAddedNotification(): PushNotification.NewMemoryUpload = Database {
         PushNotification.NewMemoryUpload(
-            lendingId = this@LendingEntity.id.value.toKotlinUuid(),
+            lendingId = this@LendingEntity.id.value,
             userSub = this@LendingEntity.userSub.sub.value,
         )
     }

@@ -22,7 +22,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.CallUploads
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
-import java.util.UUID
+import kotlin.uuid.Uuid
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 /**
@@ -117,7 +117,7 @@ class FileRequestData : Closeable {
      * [FileEntity.create].
      */
     context(_: JdbcTransaction)
-    fun store(name: String?, contentType: ContentType?, rules: FileReadWriteRules? = null, id: UUID? = null): FileEntity {
+    fun store(name: String?, contentType: ContentType?, rules: FileReadWriteRules? = null, id: Uuid? = null): FileEntity {
         val file = file
         return if (file == null) {
             FileEntity.create(ByteArray(0), name, contentType, rules, id)

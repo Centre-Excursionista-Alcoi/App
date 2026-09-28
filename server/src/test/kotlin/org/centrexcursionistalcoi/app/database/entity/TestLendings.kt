@@ -29,7 +29,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 
 class TestLendings {
     @AfterTest
@@ -201,7 +200,7 @@ class TestLendings {
         }
 
         val instance = Lending(
-            id = id.toKotlinUuid(),
+            id = id,
             userSub = FakeUser.SUB,
             timestamp = instant.toKotlinInstant(),
             from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
@@ -213,9 +212,9 @@ class TestLendings {
             returned = true,
             receivedItems = listOf(
                 ReceivedItem(
-                    id = receivedItemId.toKotlinUuid(),
-                    lendingId = id.toKotlinUuid(),
-                    itemId = itemId.toKotlinUuid(),
+                    id = receivedItemId,
+                    lendingId = id,
+                    itemId = itemId,
                     notes = "Good",
                     receivedAt = instant.toKotlinInstant(),
                     receivedBy = FakeAdminUser.SUB
@@ -224,10 +223,10 @@ class TestLendings {
             notes = "notes",
             memorySubmitted = true,
             memorySubmittedAt = instant.toKotlinInstant(),
-            memory = memoryId.toKotlinUuid(),
+            memory = memoryId,
             memoryReviewed = true,
             items = listOf(
-                InventoryItem(itemId.toKotlinUuid(), "variation", itemTypeId.toKotlinUuid(), byteArrayOf(0, 1, 2, 3), "abc")
+                InventoryItem(itemId, "variation", itemTypeId, byteArrayOf(0, 1, 2, 3), "abc")
             ),
         )
 

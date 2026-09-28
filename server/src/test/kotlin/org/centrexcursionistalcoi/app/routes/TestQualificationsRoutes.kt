@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.uuid.Uuid
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -49,7 +50,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
-import kotlin.uuid.toKotlinUuid
 
 class TestQualificationsRoutes : ApplicationTestBase() {
     private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
@@ -96,7 +96,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
     private suspend fun <T> HttpClient.postJson(url: String, serializer: KSerializer<T>, body: T) =
         postJson(url, json.encodeToString(serializer, body))
 
-    private fun grantRow(sub: String, id: java.util.UUID = qualificationId) = Database {
+    private fun grantRow(sub: String, id: Uuid = qualificationId) = Database {
         UserQualifications.selectAll()
             .where { (UserQualifications.qualification eq id) and (UserQualifications.userSub eq sub) }
             .firstOrNull()
@@ -152,7 +152,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             assertBody(Qualification.serializer()) { created ->
                 assertEquals("Rappel", created.name)
                 assertEquals("Can set up a rappel", created.description)
-                assertEquals(departmentId.toKotlinUuid(), created.departmentId)
+                assertEquals(departmentId, created.departmentId)
             }
         }
         assertEquals(1, Database { QualificationEntity.all().count { it.name == "Rappel" } })

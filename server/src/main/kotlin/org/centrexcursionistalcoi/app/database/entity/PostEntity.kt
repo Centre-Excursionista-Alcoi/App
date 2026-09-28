@@ -16,22 +16,19 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import org.jetbrains.exposed.v1.jdbc.insert
 
-class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
-    companion object : UUIDEntityClass<PostEntity>(Posts) {
+class PostEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Post, Uuid>, EntityPatcher<UpdatePostRequest> {
+    companion object : UuidEntityClass<PostEntity>(Posts) {
         context(_: JdbcTransaction)
         fun forSession(session: UserSession?) = when {
             session == null -> {
@@ -83,11 +80,11 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
     @OptIn(ExperimentalTime::class)
     context(_: JdbcTransaction)
     override fun toData(): Post = Post(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         date = date.toKotlinInstant(),
         title = title,
         content = content,
-        department = department?.id?.value?.toKotlinUuid(),
+        department = department?.id?.value,
         link = link,
         files = files.map { it.toData() },
     )
@@ -97,7 +94,7 @@ class PostEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityD
         request.title?.let { title = it }
         request.content?.let { content = it }
         request.department?.let {
-            department = DepartmentEntity.findById(it.toJavaUuid())
+            department = DepartmentEntity.findById(it)
         }
         request.link?.let { link = it.takeUnless { value -> value.isBlank() } }
         val ownedFileIds = files.map { it.id.value }

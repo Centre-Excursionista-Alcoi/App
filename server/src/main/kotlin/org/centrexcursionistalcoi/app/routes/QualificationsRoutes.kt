@@ -45,17 +45,16 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 
 private const val NAME_MAX_LENGTH = 255
 private const val ROSTER_DEFAULT_LIMIT = 50
 private const val ROSTER_MAX_LIMIT = 200
 
 private fun ResultRow.toQualificationGrant() = QualificationGrant(
-    qualificationId = this[UserQualifications.qualification].value.toKotlinUuid(),
+    qualificationId = this[UserQualifications.qualification].value,
     userSub = this[UserQualifications.userSub].value,
     grantedBy = this[UserQualifications.grantedBy]?.value,
     grantedAt = this[UserQualifications.grantedAt].toKotlinInstant(),
@@ -66,7 +65,7 @@ private fun ResultRow.toQualificationGrant() = QualificationGrant(
 private class QualificationRequest(
     val session: UserSession,
     val qualification: QualificationEntity,
-    val departmentId: UUID,
+    val departmentId: Uuid,
 )
 
 /**
@@ -98,7 +97,7 @@ private suspend fun RoutingContext.qualificationRequest(vararg anyOfRoles: Depar
 }
 
 /** `true` if [departmentId] already has a qualification named [name] (case-insensitively), other than [exceptId]. */
-private fun nameTaken(departmentId: UUID, name: String, exceptId: UUID? = null): Boolean = Database {
+private fun nameTaken(departmentId: Uuid, name: String, exceptId: Uuid? = null): Boolean = Database {
     QualificationEntity.find {
         var condition = (Qualifications.department eq departmentId) and (Qualifications.name.upperCase() eq name.uppercase())
         if (exceptId != null) condition = condition and (Qualifications.id neq exceptId)

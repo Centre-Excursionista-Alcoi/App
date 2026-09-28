@@ -17,12 +17,11 @@ import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.uuid.toKotlinUuid
 
 class TestDepartment {
     @Test
@@ -32,7 +31,7 @@ class TestDepartment {
         val user = Database { FakeUser.provideEntity() }
         val user2 = Database { FakeUser2.provideEntity() }
 
-        val imageFileId: UUID = "ffac99cf-8f56-426b-aff6-691d0e1df8dc".toUUID()
+        val imageFileId: Uuid = "ffac99cf-8f56-426b-aff6-691d0e1df8dc".toUUID()
         val departmentId = "ee87b144-7b13-40ed-a465-ef00c5666ea0".toUUID()
         val departmentMember1Id = "9f91abd5-60b8-4092-99e9-ec59c4be09ab".toUUID()
         val departmentMember2Id = "29ddada8-2d21-433f-ab95-8bd5a5afc4b9".toUUID()
@@ -66,21 +65,21 @@ class TestDepartment {
         }
 
         val departmentClass = Department(
-            id = departmentId.toKotlinUuid(),
+            id = departmentId,
             displayName = "Test Department",
-            image = imageFileId.toKotlinUuid(),
+            image = imageFileId,
             members = listOf(
                 DepartmentMemberInfo(
-                    id = departmentMember1Id.toKotlinUuid(),
+                    id = departmentMember1Id,
                     userSub = FakeUser.SUB,
-                    departmentId = departmentId.toKotlinUuid(),
+                    departmentId = departmentId,
                     confirmed = true,
                     roles = listOf(DepartmentRole.ADMIN),
                 ),
                 DepartmentMemberInfo(
-                    id = departmentMember2Id.toKotlinUuid(),
+                    id = departmentMember2Id,
                     userSub = FakeUser2.SUB,
-                    departmentId = departmentId.toKotlinUuid(),
+                    departmentId = departmentId,
                     confirmed = false,
                     roles = emptyList(),
                 )

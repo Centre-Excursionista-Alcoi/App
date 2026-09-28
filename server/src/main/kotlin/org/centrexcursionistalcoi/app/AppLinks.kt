@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app
 
 import org.centrexcursionistalcoi.app.AppLinks.baseUrl
 import org.centrexcursionistalcoi.app.applink.AppLinkRoutes
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 /**
  * The links the server puts in its emails to open something in the app.
@@ -34,7 +34,7 @@ object AppLinks : ConfigProvider() {
     const val appStoreUrl: String = "https://apps.apple.com/us/app/cea-app/id6754717471"
 
     /** Opens a lending in the admin panel of the app. */
-    fun adminLending(lendingId: UUID): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"
+    fun adminLending(lendingId: Uuid): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"
 
     /**
      * The link the "lost password" email sends. On this same host so it never exposes the server's own domain to a

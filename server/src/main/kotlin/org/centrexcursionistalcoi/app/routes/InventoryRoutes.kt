@@ -4,7 +4,7 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import io.sentry.Sentry
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
@@ -34,7 +34,6 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import kotlin.uuid.toJavaUuid
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
@@ -63,7 +62,7 @@ fun Route.inventoryRoutes() {
             var description: String? = null
             var categories: List<String>? = null
             var weight: Double? = null
-            var department: UUID? = null
+            var department: Uuid? = null
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
@@ -128,7 +127,7 @@ fun Route.inventoryRoutes() {
         jsonCreator = { request ->
             // Mirrors the multipart creator above -- same department lookup, same image creation (#659).
             val deptEntity = request.department?.let { id ->
-                Database { DepartmentEntity.findById(id.toJavaUuid()) } ?: throw NoSuchElementException("Department with given id does not exist")
+                Database { DepartmentEntity.findById(id) } ?: throw NoSuchElementException("Department with given id does not exist")
             }
             val imageFile = request.image?.let { Database { FileEntity.newFrom(it) } }
 
@@ -176,7 +175,7 @@ fun Route.inventoryRoutes() {
         //   requiring it is unsupported.
         creator = { formParameters ->
             var variation: String? = null
-            var type: UUID? = null
+            var type: Uuid? = null
             var nfcId: ByteArray? = null
             var manufacturerTraceabilityCode: String? = null
 
@@ -186,7 +185,7 @@ fun Route.inventoryRoutes() {
                         when (partData.name) {
                             "variation" -> variation = partData.value
                             "type" -> type = try {
-                                UUID.fromString(partData.value)
+                                Uuid.parse(partData.value)
                             } catch (_: IllegalArgumentException) {
                                 null
                             }
@@ -229,7 +228,7 @@ fun Route.inventoryRoutes() {
         createRequestSerializer = CreateInventoryItemRequest.serializer(),
         jsonCreator = { request ->
             // Mirrors the multipart creator above (#659).
-            val itemType = Database { InventoryItemTypeEntity.findById(request.type.toJavaUuid()) }
+            val itemType = Database { InventoryItemTypeEntity.findById(request.type) }
                 ?: throw NoSuchElementException("Type with given id does not exist")
 
             Database {

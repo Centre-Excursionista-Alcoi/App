@@ -10,12 +10,12 @@ import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.UUID
+import kotlin.uuid.Uuid
 
-object Departments : UUIDTable("departments"), CustomTableSerializer<UUID, DepartmentEntity> {
+object Departments : UuidTable("departments"), CustomTableSerializer<Uuid, DepartmentEntity> {
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
     val displayName = varchar("displayName", 255)

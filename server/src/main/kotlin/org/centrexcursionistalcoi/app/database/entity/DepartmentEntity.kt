@@ -18,17 +18,15 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
-import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
-import kotlin.uuid.toKotlinUuid
+import kotlin.time.toKotlinInstant
 
-class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Department, Uuid>, EntityPatcher<UpdateDepartmentRequest>, ImageContainerEntity {
-    companion object : UUIDEntityClass<DepartmentEntity>(Departments)
+class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Department, Uuid>, EntityPatcher<UpdateDepartmentRequest>, ImageContainerEntity {
+    companion object : UuidEntityClass<DepartmentEntity>(Departments)
 
     override var lastUpdate by Departments.lastUpdate
 
@@ -84,7 +82,7 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, E
             .where { condition }
             .map {
                 QualificationGrant(
-                    qualificationId = it[UserQualifications.qualification].value.toKotlinUuid(),
+                    qualificationId = it[UserQualifications.qualification].value,
                     userSub = it[UserQualifications.userSub].value,
                     grantedBy = it[UserQualifications.grantedBy]?.value,
                     grantedAt = it[UserQualifications.grantedAt].toKotlinInstant(),
@@ -95,9 +93,9 @@ class DepartmentEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, E
 
     context(_: JdbcTransaction)
     override fun toData(): Department = Department(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         displayName = displayName,
-        image = image?.id?.value?.toKotlinUuid(),
+        image = image?.id?.value,
         members = members.map { it.toData() },
     )
 

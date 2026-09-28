@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
-import kotlin.uuid.toKotlinUuid
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
@@ -10,12 +9,12 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
-class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<DepartmentMemberEntity>(DepartmentMembers) {
+class DepartmentMemberEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<DepartmentMemberEntity>(DepartmentMembers) {
         context(_: JdbcTransaction)
         fun getUserDepartments(userSub: String, isConfirmed: Boolean = true) =
             find { (DepartmentMembers.userSub eq userSub) and (DepartmentMembers.confirmed eq isConfirmed) }
@@ -36,36 +35,36 @@ class DepartmentMemberEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         userSub = userReference.id.value,
-        departmentId = department.id.value.toKotlinUuid(),
+        departmentId = department.id.value,
         confirmed = confirmed,
         roles = roles,
     )
 
     fun confirmedNotification() = Database {
         PushNotification.DepartmentJoinRequestUpdated(
-            requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
+            requestId = this@DepartmentMemberEntity.id.value,
             userSub = this@DepartmentMemberEntity.userReference.id.value,
-            departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
+            departmentId = this@DepartmentMemberEntity.department.id.value,
             isConfirmed = true,
         )
     }
 
     fun deniedNotification() = Database {
         PushNotification.DepartmentJoinRequestUpdated(
-            requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
+            requestId = this@DepartmentMemberEntity.id.value,
             userSub = this@DepartmentMemberEntity.userReference.id.value,
-            departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
+            departmentId = this@DepartmentMemberEntity.department.id.value,
             isConfirmed = false,
         )
     }
 
     fun kickedNotification() = Database {
         PushNotification.DepartmentKicked(
-            requestId = this@DepartmentMemberEntity.id.value.toKotlinUuid(),
+            requestId = this@DepartmentMemberEntity.id.value,
             userSub = this@DepartmentMemberEntity.userReference.id.value,
-            departmentId = this@DepartmentMemberEntity.department.id.value.toKotlinUuid(),
+            departmentId = this@DepartmentMemberEntity.department.id.value,
         )
     }
 }

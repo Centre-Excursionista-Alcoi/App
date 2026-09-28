@@ -10,7 +10,6 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.utils.toUUID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.test.Test
-import kotlin.uuid.toKotlinUuid
 
 class TestInventoryItemType {
     @Test
@@ -43,12 +42,12 @@ class TestInventoryItemType {
             }
         }
         val typeClass = InventoryItemType(
-            id = id.toKotlinUuid(),
+            id = id,
             displayName = "Test Type",
             description = "Test description",
             categories = listOf("Category1", "Category2"),
-            department = departmentId.toKotlinUuid(),
-            image = imageFileId?.toKotlinUuid()
+            department = departmentId,
+            image = imageFileId
         )
 
         assertJsonEquals(

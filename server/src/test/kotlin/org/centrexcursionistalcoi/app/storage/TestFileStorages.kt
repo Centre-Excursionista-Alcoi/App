@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.storage
 
 import java.nio.file.Path
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.io.path.createDirectories
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.setPosixFilePermissions
@@ -65,7 +65,7 @@ class TestS3FileStorage : FileStorageContractTest() {
          * Creates a storage using a new, empty bucket.
          */
         fun newStorage(): S3FileStorage {
-            val bucket = "test-${UUID.randomUUID()}"
+            val bucket = "test-${Uuid.random()}"
             return S3FileStorage.create(endpoint(), bucket, accessKeyId = "test", secretAccessKey = "test").also {
                 it.createBucket()
             }

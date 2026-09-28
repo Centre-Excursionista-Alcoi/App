@@ -1,12 +1,12 @@
 package org.centrexcursionistalcoi.app
 
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TestAppLinks {
-    private val lendingId = UUID.fromString("1f0e5c2a-0000-4000-8000-000000000001")
+    private val lendingId = Uuid.parse("1f0e5c2a-0000-4000-8000-000000000001")
 
     @AfterTest
     fun tearDown() {

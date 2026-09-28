@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_MIGRATION_EXECUTED
 import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_OK
 import org.centrexcursionistalcoi.app.database.Database.INIT_RESULT_TABLE_CREATED
@@ -269,7 +271,7 @@ object Database {
                 is Float -> statement.setFloat(idx + 1, arg)
                 is Double -> statement.setDouble(idx + 1, arg)
                 is ByteArray -> statement.setBytes(idx + 1, arg)
-                is java.util.UUID -> statement.setObject(idx + 1, arg)
+                is Uuid -> statement.setObject(idx + 1, arg.toJavaUuid())
                 is Array<*> -> statement.setArray(
                     idx + 1,
                     conn.createArrayOf(

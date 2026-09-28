@@ -8,7 +8,6 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.utils.toUUID
 import kotlin.test.Test
-import kotlin.uuid.toKotlinUuid
 
 class TestInventoryItem {
     @Test
@@ -29,8 +28,8 @@ class TestInventoryItem {
             }
         }
         val inventoryItemClass = InventoryItem(
-            id = inventoryItemId.toKotlinUuid(),
-            type = inventoryItemTypeId.toKotlinUuid(),
+            id = inventoryItemId,
+            type = inventoryItemTypeId,
             variation = "abc",
             nfcId = byteArrayOf(0, 1, 2, 3),
             manufacturerTraceabilityCode = "abc"

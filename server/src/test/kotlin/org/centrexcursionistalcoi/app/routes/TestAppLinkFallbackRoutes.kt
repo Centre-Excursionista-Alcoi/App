@@ -9,7 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -37,7 +37,7 @@ private const val DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.
  * outside it -- exactly every case here (Apple, or a fake `intent://` embedded in the Android page).
  */
 class TestAppLinkFallbackRoutes : ApplicationTestBase() {
-    private val lendingId = UUID.fromString("1f0e5c2a-0000-4000-8000-000000000001")
+    private val lendingId = Uuid.parse("1f0e5c2a-0000-4000-8000-000000000001")
 
     private suspend fun HttpClient.onAppLinksHost(path: String, userAgent: String? = null): HttpResponse = get(path) {
         header(HttpHeaders.Host, "centrexcursionistalcoi.app")
@@ -233,7 +233,7 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
     @Test
     fun test_aRouteThatMatchesButAnswers404ForItsOwnReasons_isNotHijacked() = runApplicationTest {
         // /events/{id} is a real, matched route; a missing entity's 404 is its own business logic, not "unmatched"
-        client.get("/events/${UUID.randomUUID()}").apply {
+        client.get("/events/${Uuid.random()}").apply {
             assertStatusCode(HttpStatusCode.NotFound)
             assertContains(bodyAsText(), "EntityNotFound")
         }

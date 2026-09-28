@@ -8,7 +8,7 @@ import io.ktor.server.sse.sse
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 private val logger = LoggerFactory.getLogger("SSE")
 
@@ -47,7 +47,7 @@ fun Route.configureSSERoutes() {
             send(
                 data = data,
                 event = notification.type,
-                id = UUID.randomUUID().toString(),
+                id = Uuid.random().toString(),
             )
         }
     }

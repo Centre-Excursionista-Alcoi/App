@@ -18,14 +18,12 @@ import io.ktor.http.contentType
 import io.ktor.http.parameters
 import java.time.LocalDate
 import java.time.ZoneOffset
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
@@ -73,7 +71,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     private val exampleDepartment2Id = "23b7b771-5ed1-4e10-a729-58bdf95f85dd".toUUID()
 
     context(_: JdbcTransaction)
-    private fun getOrCreateDepartment(id: UUID = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
+    private fun getOrCreateDepartment(id: Uuid = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
         return DepartmentEntity.findById(id) ?: DepartmentEntity.new(id) {
             this.displayName = displayName
         }
@@ -81,7 +79,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     context(_: JdbcTransaction)
     private fun getOrCreateItem(
-        id: UUID = exampleItemId,
+        id: Uuid = exampleItemId,
         variation: String? = "Variant A",
         type: InventoryItemTypeEntity = getOrCreateItemType()
     ): InventoryItemEntity {
@@ -93,7 +91,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     context(_: JdbcTransaction)
     private fun getOrCreateItemType(
-        id: UUID = exampleItemTypeId,
+        id: Uuid = exampleItemTypeId,
         displayName: String = "Item Type 1",
         description: String? = "Description 1",
         image: FileEntity? = null,
@@ -502,13 +500,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
         client.get(location).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer()) { lending ->
-                assertEquals(lendingId, lending.id.toJavaUuid())
+                assertEquals(lendingId, lending.id)
                 assertEquals(FakeUser.SUB, lending.userSub)
                 assertEquals(LocalDate.of(2025, 10, 10), lending.from.toJavaLocalDate())
                 assertEquals(LocalDate.of(2025, 10, 11), lending.to.toJavaLocalDate())
                 assertEquals("These are some notes", lending.notes)
                 assertEquals(1, lending.items.size)
-                assertEquals(item.id.value, lending.items[0].id.toJavaUuid())
+                assertEquals(item.id.value, lending.items[0].id)
             }
         }
     }
@@ -600,7 +598,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(1, lendings.size)
                 val lending = lendings[0]
-                assertEquals(userLending.id.value, lending.id.toJavaUuid())
+                assertEquals(userLending.id.value, lending.id)
                 assertEquals(FakeUser.SUB, lending.userSub)
             }
         }
@@ -699,16 +697,16 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(3, lendings.size)
                 lendings[0].let { lending ->
-                    assertEquals(userLending.id.value, lending.id.toJavaUuid())
+                    assertEquals(userLending.id.value, lending.id)
                     assertEquals(FakeUser.SUB, lending.userSub)
                 }
                 lendings[1].let { lending ->
-                    assertEquals(adminLending1.id.value, lending.id.toJavaUuid())
+                    assertEquals(adminLending1.id.value, lending.id)
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
                 // this lending is included because even though it has lendings from mixed departments, one of the items doesn't have a department assigned
                 lendings[2].let { lending ->
-                    assertEquals(adminLending2.id.value, lending.id.toJavaUuid())
+                    assertEquals(adminLending2.id.value, lending.id)
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
             }
@@ -759,10 +757,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(2, lendings.size)
-                val lending1 = lendings.find { it.id.toJavaUuid() == userLending.id.value }
+                val lending1 = lendings.find { it.id == userLending.id.value }
                 assertNotNull(lending1)
                 assertEquals(FakeUser.SUB, lending1.userSub)
-                val lending2 = lendings.find { it.id.toJavaUuid() == adminLending.id.value }
+                val lending2 = lendings.find { it.id == adminLending.id.value }
                 assertNotNull(lending2)
                 assertEquals(FakeAdminUser.SUB, lending2.userSub)
             }
@@ -922,7 +920,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                             ReturnLendingRequest.ReturnedItem("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid())
                         )
                     )
@@ -996,7 +994,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                         )
                     )
                 )
@@ -1331,7 +1329,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                         )
                     )
                 )
