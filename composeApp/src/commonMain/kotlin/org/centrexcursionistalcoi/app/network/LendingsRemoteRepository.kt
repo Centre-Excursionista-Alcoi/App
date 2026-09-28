@@ -2,9 +2,6 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -15,7 +12,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
-import io.ktor.http.parameters
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
@@ -38,6 +34,9 @@ import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateLendingRequest
+import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
+import org.centrexcursionistalcoi.app.request.PickupLendingRequest
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
@@ -97,14 +96,9 @@ class LendingsRemoteRepository(
         }
     }
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
-        val response = httpClient.submitForm("inventory/lendings", parameters {
-            append("from", from.toString())
-            append("to", to.toString())
-            append("items", itemsIds.joinToString(","))
-            if (notes != null) {
-                append("notes", notes)
-            }
-        })
+        val response = httpClient.post("inventory/lendings") {
+            setBody(requestBody(CreateLendingRequest(from, to, itemsIds, notes), CreateLendingRequest.serializer()))
+        }
         if (response.status.isSuccess()) {
             val location = response.headers["Location"]
                 ?: throw IllegalArgumentException("Missing Location header in response")
@@ -213,14 +207,8 @@ class LendingsRemoteRepository(
         dismissItemsIds: List<Uuid>,
         progress: ProgressNotifier? = null
     ) {
-        val response = httpClient.submitForm(
-            "inventory/lendings/$lendingId/pickup",
-            formParameters = parameters {
-                if (dismissItemsIds.isNotEmpty()) {
-                    append("dismiss_items", dismissItemsIds.joinToString(","))
-                }
-            },
-        ) {
+        val response = httpClient.post("inventory/lendings/$lendingId/pickup") {
+            setBody(requestBody(PickupLendingRequest(dismissItemsIds), PickupLendingRequest.serializer()))
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
@@ -292,31 +280,18 @@ class LendingsRemoteRepository(
         files: List<PlatformFile>,
         progress: ProgressNotifier? = null
     ) {
-        val filesWithContext = files.map { it.fileWithContext() }
-
-        val response = httpClient.submitFormWithBinaryData(
-            "memories",
-            formData {
-                place.takeIf { it.isNotBlank() }?.let { append("place", it) }
-                append("members", members.joinToString(",") { it.memberNumber.toString() })
-                externalUsers.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
-                sport?.let { append("sport", it.name) }
-                department?.let { append("department", it.id.toString()) }
-                append("lending", lendingId.toString())
-                append("text",  text)
-
-                filesWithContext.mapIndexed { index, file ->
-                    append(
-                        key = "file_$index",
-                        value = file.bytes,
-                        headers = headers {
-                            append(HttpHeaders.ContentType, (file.contentType ?: ContentType.Application.OctetStream).toString())
-                            append(HttpHeaders.ContentDisposition, "filename=\"${file.name ?: "file_$index"}\"")
-                        }
-                    )
-                }
-            }
-        ) {
+        val request = CreateMemoryRequest(
+            text = text,
+            place = place.takeIf { it.isNotBlank() },
+            members = members.map { it.memberNumber },
+            externalUsers = externalUsers.takeIf { it.isNotBlank() },
+            sport = sport,
+            department = department?.id,
+            lending = lendingId,
+            attachments = files.map { it.fileWithContext() },
+        )
+        val response = httpClient.post("memories") {
+            setBody(requestBody(request, CreateMemoryRequest.serializer()))
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {

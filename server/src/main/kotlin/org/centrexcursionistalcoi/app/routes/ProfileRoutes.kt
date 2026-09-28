@@ -2,14 +2,9 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
-import io.ktor.server.request.contentType
-import io.ktor.server.request.receiveMultipart
-import io.ktor.server.request.receiveParameters
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
@@ -23,7 +18,6 @@ import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Sports
@@ -42,20 +36,17 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
-import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
 import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
 import org.centrexcursionistalcoi.app.request.MissingPartException
-import org.centrexcursionistalcoi.app.request.PushedBackMultiPartData
 import org.centrexcursionistalcoi.app.request.ReceivedRequest
+import org.centrexcursionistalcoi.app.request.receiveJsonOrForm
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFilesOrMultipart
 import org.centrexcursionistalcoi.app.request.RegisterFCMTokenRequest
-import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.RevokeFCMTokenRequest
-import org.centrexcursionistalcoi.app.request.readRequestWithFiles
-import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
@@ -160,7 +151,9 @@ fun Route.profileRoutes() {
     post("/profile/insurances") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val received = receiveCreateInsuranceRequest() ?: return@post
+        val received = receiveRequestWithFilesOrMultipart(CreateInsuranceRequest.serializer()) { multipart ->
+            receiveLegacyInsuranceRequest(multipart)
+        } ?: return@post
         val request = received.request
 
         if (request.insuranceCompany.isBlank()) return@post call.respondError(Error.MissingArgument("insuranceCompany"))
@@ -320,59 +313,6 @@ fun Route.profileRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-}
-
-/**
- * Receives a request sent as JSON or, by app versions that predate JSON, as a form, which [fromForm] converts.
- * @param fromForm Converts the form into the request, or responds with an error and returns `null`.
- * @return The request, or `null` if it couldn't be received. An error has been responded then.
- */
-private suspend fun <T> RoutingContext.receiveJsonOrForm(
-    serializer: KSerializer<T>,
-    fromForm: suspend RoutingContext.(Parameters) -> T?,
-): T? {
-    val contentType = call.request.contentType()
-    return when {
-        contentType.match(ContentType.Application.Json) -> {
-            try {
-                json.decodeFromString(serializer, call.receiveText())
-            } catch (e: IllegalArgumentException) {
-                // SerializationException is an IllegalArgumentException. The body isn't logged, it may hold passwords.
-                logger.error("Failed to decode ${serializer.descriptor.serialName}", e)
-                respondError(Error.MalformedRequest())
-                null
-            }
-        }
-        // TODO: Remove once the oldest app version still served sends JSON
-        contentType.match(ContentType.Application.FormUrlEncoded) -> fromForm(call.receiveParameters())
-        else -> {
-            respondError(Error.InvalidContentType(ContentType.Application.Json, contentType))
-            null
-        }
-    }
-}
-
-/**
- * Receives a [CreateInsuranceRequest] (see [receiveRequestWithFiles]), or the multipart form app versions that
- * predate it send.
- */
-private suspend fun RoutingContext.receiveCreateInsuranceRequest(): ReceivedRequest<CreateInsuranceRequest>? {
-    if (!call.request.contentType().match(ContentType.MultiPart.FormData)) {
-        return receiveRequestWithFiles(CreateInsuranceRequest.serializer())
-    }
-    val multipart = call.receiveMultipart()
-    val first = multipart.readPart()
-    if (first is PartData.FormItem && first.name == RequestWithFiles.REQUEST_PART) {
-        return try {
-            multipart.readRequestWithFiles(first, CreateInsuranceRequest.serializer())
-        } catch (e: Exception) {
-            logger.error("Failed to decode multipart insurance request", e)
-            respondError(Error.MalformedRequest())
-            null
-        }
-    }
-    // TODO: Remove once the oldest app version still served sends a CreateInsuranceRequest
-    return receiveLegacyInsuranceRequest(PushedBackMultiPartData(first, multipart))
 }
 
 /**

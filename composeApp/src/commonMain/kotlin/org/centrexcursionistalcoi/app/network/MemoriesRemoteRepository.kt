@@ -1,9 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.http.ContentType
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
@@ -19,6 +18,7 @@ import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
+import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_MEMORIES_SYNC
 import org.koin.core.annotation.Singleton
@@ -56,33 +56,19 @@ class MemoriesRemoteRepository(
         to: ZonedDateTime,
         progress: ProgressNotifier? = null,
     ) {
-        val filesWithContext = attachments.map { it.fileWithContext() }
-
-        val response = httpClient.submitFormWithBinaryData(
-            "memories",
-            formData {
-                append("from", from.toString())
-                append("to", to.toString())
-
-                place?.takeIf { it.isNotBlank() }?.let { append("place", it) }
-                append("members", members.joinToString(",") { it.memberNumber.toString() })
-                externalUsers?.takeIf { it.isNotBlank() }?.let { append("external_users", it) }
-                sport?.let { append("sport", it.name) }
-                department?.let { append("department", it.id.toString()) }
-                append("text",  text)
-
-                filesWithContext.mapIndexed { index, file ->
-                    append(
-                        key = "file_$index",
-                        value = file.bytes,
-                        headers = headers {
-                            append(HttpHeaders.ContentType, (file.contentType ?: ContentType.Application.OctetStream).toString())
-                            append(HttpHeaders.ContentDisposition, "filename=\"${file.name ?: "file_$index"}\"")
-                        }
-                    )
-                }
-            }
-        ) {
+        val request = CreateMemoryRequest(
+            text = text,
+            place = place?.takeIf { it.isNotBlank() },
+            members = members.map { it.memberNumber },
+            externalUsers = externalUsers?.takeIf { it.isNotBlank() },
+            sport = sport,
+            department = department?.id,
+            from = from,
+            to = to,
+            attachments = attachments.map { it.fileWithContext() },
+        )
+        val response = httpClient.post("memories") {
+            setBody(requestBody(request, CreateMemoryRequest.serializer()))
             monitorUploadProgress(progress)
         }
 
