@@ -59,6 +59,9 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
+import org.centrexcursionistalcoi.app.request.MissingPartException
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -418,16 +421,14 @@ fun Route.memoriesRoutes() {
     }
     patch("memories/{id}") {
         val session = getUserSessionOrFail() ?: return@patch
-        assertContentType(ContentType.Application.Json) ?: return@patch
+        assertRequestWithFilesContentType() ?: return@patch
         val memory = memoryRequest(session) ?: return@patch
 
-        val body = call.receiveText()
-        val request = try {
-            json.decodeFromString(UpdateMemoryRequest.serializer(), body)
-        } catch (e: SerializationException) {
-            respondError(Error.SerializationError(e.message, body))
-            return@patch
-        }
+        // As JSON, or as multipart with the attachments in parts of their own (see RequestWithFiles)
+        val received = receiveRequestWithFiles(UpdateMemoryRequest.serializer()) { e, body ->
+            Error.SerializationError(e.message, body)
+        } ?: return@patch
+        val request = received.request
         if (request.isEmpty()) {
             respondError(Error.NothingToUpdate())
             return@patch
@@ -438,14 +439,19 @@ fun Route.memoriesRoutes() {
         // manage. Applying the patch and re-checking inside the same transaction keeps the move atomic: on
         // rejection, the exception propagates out of the `Database { }` block and rolls the reassignment back.
         try {
-            Database {
-                memory.patch(request)
-                val newDepartment = memory.department
-                val isAllowed = session.isAdmin() ||
-                    Database { memory.submittedBy.sub.value } == session.sub ||
-                    (newDepartment != null && session.hasDepartmentRole(newDepartment.id.value, DepartmentRole.MEMORY_MANAGER))
-                if (!isAllowed) throw PermissionDeniedException()
+            received.withUploads {
+                Database {
+                    memory.patch(request)
+                    val newDepartment = memory.department
+                    val isAllowed = session.isAdmin() ||
+                        Database { memory.submittedBy.sub.value } == session.sub ||
+                        (newDepartment != null && session.hasDepartmentRole(newDepartment.id.value, DepartmentRole.MEMORY_MANAGER))
+                    if (!isAllowed) throw PermissionDeniedException()
+                }
             }
+        } catch (e: MissingPartException) {
+            respondError(Error.SerializationError(e.message, null))
+            return@patch
         } catch (_: PermissionDeniedException) {
             respondError(Error.PermissionRejected())
             return@patch

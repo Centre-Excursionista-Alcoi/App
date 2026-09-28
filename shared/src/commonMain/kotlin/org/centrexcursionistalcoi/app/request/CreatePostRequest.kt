@@ -15,4 +15,6 @@ data class CreatePostRequest(
     val department: Uuid? = null,
     val link: String? = null,
     val files: List<FileWithContext> = emptyList(),
-)
+) : RequestWithFiles<CreatePostRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): CreatePostRequest = copy(files = files.map(transform))
+}

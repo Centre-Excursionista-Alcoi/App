@@ -310,8 +310,16 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   file (`cea-upload-*` in the system temp directory), which `newEntity()` streams to the storage. The temporary
   file is deleted by `close()`, and in any case once the call has been handled (`plugins/UploadsCleanup.kt`), so an
   early `return` after receiving an upload doesn't leave it behind -- but don't read an upload after its call ends
-  (read the stored file instead, like the memory notification email does). Files sent as Base64 inside JSON
-  bodies (`FileWithContext`) are decoded in memory: send large files as multipart parts.
+  (read the stored file instead, like the memory notification email does).
+- **Requests carrying files (`RequestWithFiles`, in `:shared`) go as multipart, not Base64 in JSON.** The app's
+  `RemoteRepository.createJson`/`update` send any `RequestWithFiles` with file contents as a `request` part (the
+  JSON, each file with `part` naming its part instead of `bytes`) followed by one part per file, which the server
+  streams (`request/MultipartRequests.kt`; `FileEntity.newFrom`/`replaceContents` resolve `part` through
+  `UploadedParts`, set by `ReceivedRequest.withUploads`). The server still accepts plain JSON too, for installed
+  app versions. A new request with files must implement `RequestWithFiles.mapFiles`, and its route must receive it
+  with `receiveRequestWithFiles` (the generic POST/PATCH in `RoutesBase.kt` already do). On POST, a multipart body
+  whose first part isn't `request` is the legacy multipart creation (`LegacyMultipartCreate.kt`). Every error path
+  must read the rest of a multipart body before responding (`discardRemaining()`), or the connection stalls.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the
   server to reject; (2) per-item actions (edit/delete on a specific row) must check the viewer's role in

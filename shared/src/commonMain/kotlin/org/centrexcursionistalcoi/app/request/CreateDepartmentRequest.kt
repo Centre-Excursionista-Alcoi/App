@@ -11,4 +11,6 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 data class CreateDepartmentRequest(
     val displayName: String,
     val image: FileWithContext? = null,
-)
+) : RequestWithFiles<CreateDepartmentRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): CreateDepartmentRequest = copy(image = image?.let(transform))
+}

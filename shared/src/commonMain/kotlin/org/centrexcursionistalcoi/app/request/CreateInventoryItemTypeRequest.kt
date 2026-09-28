@@ -16,4 +16,6 @@ data class CreateInventoryItemTypeRequest(
     val weight: Double? = null,
     val department: Uuid? = null,
     val image: FileWithContext? = null,
-)
+) : RequestWithFiles<CreateInventoryItemTypeRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): CreateInventoryItemTypeRequest = copy(image = image?.let(transform))
+}

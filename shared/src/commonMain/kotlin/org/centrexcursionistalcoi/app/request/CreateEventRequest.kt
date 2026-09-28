@@ -24,4 +24,6 @@ data class CreateEventRequest(
     val image: FileWithContext? = null,
     /** See [org.centrexcursionistalcoi.app.data.Event.qualificationRequirements]. */
     val qualificationRequirements: List<List<Uuid>> = emptyList(),
-)
+) : RequestWithFiles<CreateEventRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): CreateEventRequest = copy(image = image?.let(transform))
+}

@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.content.MultiPartData
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.routing.RoutingContext
 import kotlin.reflect.KClass
 import org.centrexcursionistalcoi.app.error.Error
@@ -25,8 +24,8 @@ private val logger = LoggerFactory.getLogger("LegacyMultipartCreate")
 internal suspend fun <EE : Any> RoutingContext.createFromMultipart(
     creator: suspend (MultiPartData) -> EE,
     entityKClass: KClass<EE>,
+    multipart: MultiPartData,
 ): EE? {
-    val multipart = call.receiveMultipart()
     return try {
         creator(multipart)
     } catch (e: NullPointerException) {

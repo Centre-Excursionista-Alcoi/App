@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.storage.FileObjectsTransactionHook
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.centrexcursionistalcoi.app.utils.detectFileType
+import org.centrexcursionistalcoi.app.request.UploadedParts
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
@@ -102,14 +103,17 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             }
         }
 
+        /**
+         * Creates a file from [withContext]: from its contents, or from the upload named by its
+         * [part][FileWithContext.part] (see [UploadedParts]).
+         */
         context(_: JdbcTransaction)
-        fun newFrom(withContext: FileWithContext, rules: FileReadWriteRules? = null) = create(
-            bytes = withContext.bytes,
-            name = withContext.name,
-            contentType = withContext.contentType,
-            rules = rules,
-            id = withContext.id?.toJavaUuid(),
-        )
+        fun newFrom(withContext: FileWithContext, rules: FileReadWriteRules? = null): FileEntity {
+            val id = withContext.id?.toJavaUuid()
+            val part = withContext.part ?: return create(withContext.bytes, withContext.name, withContext.contentType, rules, id)
+            val upload = UploadedParts.get(part)
+            return upload.store(withContext.name ?: upload.originalFileName, withContext.contentType ?: upload.contentType, rules, id)
+        }
 
         /**
          * Creates a file from [from], or deletes the file with its id if it has no contents.
@@ -186,20 +190,46 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         get() = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
 
     /**
+     * Replaces the contents of this file with those of [from] (its bytes, or the upload named by its
+     * [part][FileWithContext.part]), keeping its id.
+     */
+    context(_: JdbcTransaction)
+    fun replaceContents(from: FileWithContext) {
+        val part = from.part ?: return replaceContents(from.bytes, from.name, from.contentType)
+        val upload = UploadedParts.get(part)
+        upload.replaceContentsOf(this, from.name ?: upload.originalFileName, from.contentType ?: upload.contentType)
+    }
+
+    /**
      * Replaces the contents of this file, keeping its id. The new contents are stored at a new key, so that the old
      * ones stay in place until the transaction commits (and are deleted then).
      */
-    context(tr: JdbcTransaction)
+    context(_: JdbcTransaction)
     fun replaceContents(bytes: ByteArray, name: String?, contentType: ContentType?) {
         val type = resolveContentType(contentType, bytes)
+        replaceContents(bytes.size.toLong(), name, type) { key -> FileStorageProvider.current.put(key, bytes, type.toString()) }
+    }
+
+    /**
+     * Replaces the contents of this file with those of [file] (streamed), like the other [replaceContents].
+     */
+    context(_: JdbcTransaction)
+    fun replaceContents(file: Path, name: String?, contentType: ContentType?) {
+        val head = file.inputStream().use { it.readNBytes(16) }
+        val type = resolveContentType(contentType, head)
+        replaceContents(file.fileSize(), name, type) { key -> FileStorageProvider.current.put(key, file, type.toString()) }
+    }
+
+    context(tr: JdbcTransaction)
+    private fun replaceContents(size: Long, name: String?, type: ContentType, store: (key: String) -> Unit) {
         val newKey = newObjectKey()
         val oldKey = objectKey
-        FileStorageProvider.current.put(newKey, bytes, type.toString())
+        store(newKey)
         val hook = FileObjectsTransactionHook.of(tr)
         hook.deleteOnRollback(newKey)
 
         this.objectKey = newKey
-        this.size = bytes.size.toLong()
+        this.size = size
         this.type = type.toString()
         if (name != null) this.name = name
         this.lastModified = now()

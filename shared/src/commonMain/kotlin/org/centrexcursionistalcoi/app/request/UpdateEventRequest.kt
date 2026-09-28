@@ -23,7 +23,9 @@ data class UpdateEventRequest(
      * Replaces the event's [Event.qualificationRequirements]. `null` leaves them unchanged, an empty list clears them.
      */
     val qualificationRequirements: List<List<Uuid>>? = null,
-): UpdateEntityRequest<Uuid, Event> {
+): UpdateEntityRequest<Uuid, Event>, RequestWithFiles<UpdateEventRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): UpdateEventRequest = copy(image = image?.let(transform))
+
     override fun isEmpty(): Boolean {
         return start == null &&
             end == null &&

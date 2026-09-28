@@ -22,6 +22,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.CallUploads
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
+import java.util.UUID
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 
 /**
  * A file received in a request. Its contents are written to a temporary file as they arrive, instead of being held
@@ -107,15 +109,34 @@ class FileRequestData : Closeable {
      * @return The created [FileEntity].
      */
     fun newEntity(close: Boolean = true, rules: FileReadWriteRules? = null): FileEntity {
+        return Database { store(originalFileName ?: "unknown", contentType, rules) }.also { if (close) close() }
+    }
+
+    /**
+     * Stores this file (streamed from its temporary file) and creates a [FileEntity] for it, like
+     * [FileEntity.create].
+     */
+    context(_: JdbcTransaction)
+    fun store(name: String?, contentType: ContentType?, rules: FileReadWriteRules? = null, id: UUID? = null): FileEntity {
         val file = file
-        return Database {
-            val name = originalFileName ?: "unknown"
-            if (file == null) {
-                FileEntity.create(ByteArray(0), name, contentType, rules)
-            } else {
-                FileEntity.create(file, name, contentType, rules)
-            }
-        }.also { if (close) close() }
+        return if (file == null) {
+            FileEntity.create(ByteArray(0), name, contentType, rules, id)
+        } else {
+            FileEntity.create(file, name, contentType, rules, id)
+        }
+    }
+
+    /**
+     * Replaces the contents of [entity] with this file, like [FileEntity.replaceContents].
+     */
+    context(_: JdbcTransaction)
+    fun replaceContentsOf(entity: FileEntity, name: String?, contentType: ContentType?) {
+        val file = file
+        if (file == null) {
+            entity.replaceContents(ByteArray(0), name, contentType)
+        } else {
+            entity.replaceContents(file, name, contentType)
+        }
     }
 
     /**

@@ -40,7 +40,7 @@ interface ImageContainerEntity {
         val image = image
         if (image != null && file.id != null && image.id.value.toKotlinUuid() == file.id) {
             // Same image, just update the data
-            image.replaceContents(file.bytes, file.name, file.contentType)
+            image.replaceContents(file)
         } else {
             // New image (keeping the requested id if it's free), then delete the old one
             this.image = FileEntity.newFrom(file)

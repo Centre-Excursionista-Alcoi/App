@@ -9,7 +9,9 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 data class UpdateDepartmentRequest(
     val displayName: String? = null,
     val image: FileWithContext? = null,
-): UpdateEntityRequest<Uuid, Department> {
+): UpdateEntityRequest<Uuid, Department>, RequestWithFiles<UpdateDepartmentRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): UpdateDepartmentRequest = copy(image = image?.let(transform))
+
     override fun isEmpty(): Boolean {
         return displayName.isNullOrEmpty() && (image == null || image.isEmpty())
     }
