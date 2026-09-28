@@ -36,9 +36,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import kotlin.uuid.Uuid
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
+import kotlin.uuid.Uuid
 
 class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UuidEntityClass<EventEntity>(Events) {
@@ -175,7 +175,7 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
         department = department?.id?.value,
         image = image?.id?.value,
         userSubList = userReferences.map { it.sub.value },
-        qualificationRequirements = qualificationRequirements().map { group -> group },
+        qualificationRequirements = qualificationRequirements(),
     )
 
     context(_: JdbcTransaction)
@@ -208,7 +208,7 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
         // against the department the event ends up in -- which also catches moving an event that already has
         // requirements to another department without replacing them.
         if (request.qualificationRequirements != null || request.department != null) {
-            val requested = request.qualificationRequirements?.map { group -> group }
+            val requested = request.qualificationRequirements
             val requirements = try {
                 validatedQualificationRequirements(department?.id?.value, requested ?: qualificationRequirements())
             } catch (e: InvalidQualificationRequirementsException) {
