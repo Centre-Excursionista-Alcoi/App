@@ -12,7 +12,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
@@ -115,7 +114,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
                 displayName = "JSON Type With Extras",
                 description = "A description",
                 weight = 3.5,
-                department = department.id.value.toKotlinUuid(),
+                department = department.id.value,
                 image = FileWithContext(bytes = imageBytes, name = "type.png", contentType = ContentType.Image.PNG),
             )
         ).run {
@@ -161,7 +160,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
         client.postTypeJson(
             CreateInventoryItemTypeRequest(
                 displayName = "Cross-department type",
-                department = otherDepartment.id.value.toKotlinUuid(),
+                department = otherDepartment.id.value,
                 image = FileWithContext(bytes = "img".encodeToByteArray(), name = "x.png"),
             )
         ).assertError(Error.PermissionRejected())
@@ -202,7 +201,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
     ) { context ->
         val type = context.dibResult!!
 
-        val location = client.postItemJson(CreateInventoryItemRequest(type = type.id.value.toKotlinUuid())).run {
+        val location = client.postItemJson(CreateInventoryItemRequest(type = type.id.value)).run {
             assertStatusCode(HttpStatusCode.Created)
             val location = headers[HttpHeaders.Location]
             assertNotNull(location)
@@ -229,7 +228,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
 
         val location = client.postItemJson(
             CreateInventoryItemRequest(
-                type = type.id.value.toKotlinUuid(),
+                type = type.id.value,
                 variation = "Large",
                 nfcId = nfc,
                 manufacturerTraceabilityCode = "TRC-123",
@@ -272,7 +271,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
     ) { context ->
         val otherType = context.dibResult!!
 
-        client.postItemJson(CreateInventoryItemRequest(type = otherType.id.value.toKotlinUuid()))
+        client.postItemJson(CreateInventoryItemRequest(type = otherType.id.value))
             .assertError(Error.PermissionRejected())
 
         val remainingItems = Database { InventoryItemEntity.all().toList() }

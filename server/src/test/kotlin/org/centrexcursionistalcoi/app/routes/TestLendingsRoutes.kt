@@ -1,10 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -15,18 +11,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.parameters
-import java.time.LocalDate
-import java.time.ZoneOffset
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.toJavaLocalDate
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
@@ -50,30 +39,40 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toUuid
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
+import java.time.LocalDate
+import java.time.ZoneOffset
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
 
 class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
 
-    private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUUID()
-    private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUUID()
-    private val exampleItemType3Id = "944d16f7-a399-4885-b7f1-5fdf4f201dbd".toUUID()
-    private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUUID()
-    private val exampleItem2Id = "e76c84a1-0d56-48d7-afa1-dbb51f585ed2".toUUID()
-    private val exampleItem3Id = "1bfe299a-c0bd-4983-b9a2-3f54d2aa301d".toUUID()
-    private val exampleDepartmentId = "0b8e5869-0a3c-4d29-8c3b-93cd52405bea".toUUID()
-    private val exampleDepartment2Id = "23b7b771-5ed1-4e10-a729-58bdf95f85dd".toUUID()
+    private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUuid()
+    private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUuid()
+    private val exampleItemType3Id = "944d16f7-a399-4885-b7f1-5fdf4f201dbd".toUuid()
+    private val exampleItemId = "6900c106-2f54-4c22-a3c4-6260a50961e6".toUuid()
+    private val exampleItem2Id = "e76c84a1-0d56-48d7-afa1-dbb51f585ed2".toUuid()
+    private val exampleItem3Id = "1bfe299a-c0bd-4983-b9a2-3f54d2aa301d".toUuid()
+    private val exampleDepartmentId = "0b8e5869-0a3c-4d29-8c3b-93cd52405bea".toUuid()
+    private val exampleDepartment2Id = "23b7b771-5ed1-4e10-a729-58bdf95f85dd".toUuid()
 
     context(_: JdbcTransaction)
-    private fun getOrCreateDepartment(id: UUID = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
+    private fun getOrCreateDepartment(id: Uuid = exampleDepartmentId, displayName: String = "Department"): DepartmentEntity {
         return DepartmentEntity.findById(id) ?: DepartmentEntity.new(id) {
             this.displayName = displayName
         }
@@ -81,7 +80,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     context(_: JdbcTransaction)
     private fun getOrCreateItem(
-        id: UUID = exampleItemId,
+        id: Uuid = exampleItemId,
         variation: String? = "Variant A",
         type: InventoryItemTypeEntity = getOrCreateItemType()
     ): InventoryItemEntity {
@@ -93,7 +92,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
     context(_: JdbcTransaction)
     private fun getOrCreateItemType(
-        id: UUID = exampleItemTypeId,
+        id: Uuid = exampleItemTypeId,
         displayName: String = "Item Type 1",
         description: String? = "Description 1",
         image: FileEntity? = null,
@@ -333,7 +332,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         fun HttpResponse.delete() {
             val location = headers[HttpHeaders.Location]
             assertNotNull(location, "Missing Location header in response")
-            val id = location.substringAfterLast('/').toUUIDOrNull()
+            val id = location.substringAfterLast('/').toUuidOrNull()
             assertNotNull(id, "Invalid UUID in Location header: $location")
             Database { LendingEntity[id].delete() }
         }
@@ -492,7 +491,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             location
         }
-        val lendingId = location.substringAfterLast('/').toUUID()
+        val lendingId = location.substringAfterLast('/').toUuid()
         Database { LendingEntity.findById(lendingId) }.let { lending ->
             assertNotNull(lending)
             val items = Database { lending.items.toList() }
@@ -502,13 +501,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
         client.get(location).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer()) { lending ->
-                assertEquals(lendingId, lending.id.toJavaUuid())
+                assertEquals(lendingId, lending.id)
                 assertEquals(FakeUser.SUB, lending.userSub)
                 assertEquals(LocalDate.of(2025, 10, 10), lending.from.toJavaLocalDate())
                 assertEquals(LocalDate.of(2025, 10, 11), lending.to.toJavaLocalDate())
                 assertEquals("These are some notes", lending.notes)
                 assertEquals(1, lending.items.size)
-                assertEquals(item.id.value, lending.items[0].id.toJavaUuid())
+                assertEquals(item.id.value, lending.items[0].id)
             }
         }
     }
@@ -600,7 +599,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(1, lendings.size)
                 val lending = lendings[0]
-                assertEquals(userLending.id.value, lending.id.toJavaUuid())
+                assertEquals(userLending.id.value, lending.id)
                 assertEquals(FakeUser.SUB, lending.userSub)
             }
         }
@@ -699,16 +698,16 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(3, lendings.size)
                 lendings[0].let { lending ->
-                    assertEquals(userLending.id.value, lending.id.toJavaUuid())
+                    assertEquals(userLending.id.value, lending.id)
                     assertEquals(FakeUser.SUB, lending.userSub)
                 }
                 lendings[1].let { lending ->
-                    assertEquals(adminLending1.id.value, lending.id.toJavaUuid())
+                    assertEquals(adminLending1.id.value, lending.id)
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
                 // this lending is included because even though it has lendings from mixed departments, one of the items doesn't have a department assigned
                 lendings[2].let { lending ->
-                    assertEquals(adminLending2.id.value, lending.id.toJavaUuid())
+                    assertEquals(adminLending2.id.value, lending.id)
                     assertEquals(FakeAdminUser.SUB, lending.userSub)
                 }
             }
@@ -759,10 +758,10 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(2, lendings.size)
-                val lending1 = lendings.find { it.id.toJavaUuid() == userLending.id.value }
+                val lending1 = lendings.find { it.id == userLending.id.value }
                 assertNotNull(lending1)
                 assertEquals(FakeUser.SUB, lending1.userSub)
-                val lending2 = lendings.find { it.id.toJavaUuid() == adminLending.id.value }
+                val lending2 = lendings.find { it.id == adminLending.id.value }
                 assertNotNull(lending2)
                 assertEquals(FakeAdminUser.SUB, lending2.userSub)
             }
@@ -803,7 +802,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             getOrCreateItem()
 
-            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid()
             getOrCreateItem(id = item2Id)
 
             val user = FakeUser.provideEntity()
@@ -837,7 +836,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             getOrCreateItem()
 
-            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid()
             getOrCreateItem(id = item2Id)
 
             val user = FakeUser.provideEntity()
@@ -867,7 +866,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.NoContent)
             val dismissedItems = headers["CEA-Dismissed-Items"]
             assertNotNull(dismissedItems)
-            val dismissedItemIds = dismissedItems.split(',').mapNotNull { it.toUUIDOrNull() }
+            val dismissedItemIds = dismissedItems.split(',').mapNotNull { it.toUuidOrNull() }
             assertEquals(1, dismissedItemIds.size)
             assertEquals(exampleItemId, dismissedItemIds[0])
         }
@@ -877,7 +876,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
             val lendingEntity = LendingEntity[entity.id.value]
             val items = lendingEntity.items.toList()
             assertEquals(1, items.size)
-            assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), items[0].id.value)
+            assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid(), items[0].id.value)
         }
     }
 
@@ -887,7 +886,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             getOrCreateItem()
 
-            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid()
             getOrCreateItem(id = item2Id)
 
             val user = FakeUser.provideEntity()
@@ -922,7 +921,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                             ReturnLendingRequest.ReturnedItem("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid())
                         )
                     )
@@ -948,7 +947,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 assertEquals("All good", receivedItem.notes)
             }
             receivedItems[1].let { receivedItem ->
-                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), receivedItem.item.id.value)
+                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid(), receivedItem.item.id.value)
                 assertEquals(FakeAdminUser.SUB, receivedItem.receivedBy.sub.value)
                 assertEquals(null, receivedItem.notes)
             }
@@ -961,7 +960,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             getOrCreateItem()
 
-            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID()
+            val item2Id = "b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid()
             getOrCreateItem(id = item2Id)
 
             val user = FakeUser.provideEntity()
@@ -996,7 +995,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                         )
                     )
                 )
@@ -1004,9 +1003,9 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }.apply {
             assertStatusCode(HttpStatusCode.Accepted)
             headers["CEA-Missing-Items"]?.let { remainingItemsHeader ->
-                val remainingItemIds = remainingItemsHeader.split(',').mapNotNull { it.toUUIDOrNull() }
+                val remainingItemIds = remainingItemsHeader.split(',').mapNotNull { it.toUuidOrNull() }
                 assertEquals(1, remainingItemIds.size)
-                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUUID(), remainingItemIds[0])
+                assertEquals("b27a6569-84fa-443f-9ce5-4b24279f0471".toUuid(), remainingItemIds[0])
             } ?: throw AssertionError("Missing CEA-Missing-Items header in response")
         }
 
@@ -1331,7 +1330,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     ReturnLendingRequest.serializer(),
                     ReturnLendingRequest(
                         returnedItems = listOf(
-                            ReturnLendingRequest.ReturnedItem(exampleItemId.toKotlinUuid(), "All good"),
+                            ReturnLendingRequest.ReturnedItem(exampleItemId, "All good"),
                         )
                     )
                 )

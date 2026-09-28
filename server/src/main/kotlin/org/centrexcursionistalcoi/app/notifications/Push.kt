@@ -33,7 +33,7 @@ import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.select
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 object Push {
     private val logger = LoggerFactory.getLogger(Push::class.java)
@@ -225,7 +225,7 @@ object Push {
 
     suspend fun sendPushNotificationToDepartment(
         notification: PushNotification,
-        departmentId: UUID,
+        departmentId: Uuid,
         includeAdmins: Boolean = true,
     ) {
         val references = Database {

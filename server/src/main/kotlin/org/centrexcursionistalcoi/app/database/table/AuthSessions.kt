@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /** How an [AuthSessions] row was started. */
@@ -34,7 +34,7 @@ enum class AuthSessionRevocationReason {
  * Access tokens name their session (the `sid` claim), and are only accepted while it's active (see
  * `security/AuthTokens.kt`), so revoking a session also cuts off its access tokens immediately.
  */
-object AuthSessions : UUIDTable("auth_sessions") {
+object AuthSessions : UuidTable("auth_sessions") {
     val user = reference("user", UserReferences, onDelete = ReferenceOption.CASCADE)
     val method = enumerationByName<AuthSessionMethod>("method", 32)
 

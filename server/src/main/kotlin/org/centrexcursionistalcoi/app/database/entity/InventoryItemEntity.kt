@@ -10,16 +10,13 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.UUID
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
-class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItem, Uuid>, EntityPatcher<UpdateInventoryItemRequest> {
-    companion object : UUIDEntityClass<InventoryItemEntity>(InventoryItems)
+class InventoryItemEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItem, Uuid>, EntityPatcher<UpdateInventoryItemRequest> {
+    companion object : UuidEntityClass<InventoryItemEntity>(InventoryItems)
 
     /**
      * Whether this single item is visible to [session] -- delegates entirely to its type's own
@@ -38,9 +35,9 @@ class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity
 
     context(_: JdbcTransaction)
     override fun toData(): InventoryItem = InventoryItem(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         variation = variation,
-        type = type.id.value.toKotlinUuid(),
+        type = type.id.value,
         nfcId = nfcId,
         manufacturerTraceabilityCode = manufacturerTraceabilityCode,
     )
@@ -48,7 +45,7 @@ class InventoryItemEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity
     context(_: JdbcTransaction)
     override fun patch(request: UpdateInventoryItemRequest) {
         request.variation?.let { variation = it.takeUnless { it.isEmpty() } }
-        request.type?.let { type = InventoryItemTypeEntity[it.toJavaUuid()] }
+        request.type?.let { type = InventoryItemTypeEntity[it] }
         request.nfcId?.let { nfcId = it.takeUnless { it.isEmpty() } }
         request.manufacturerTraceabilityCode?.let { manufacturerTraceabilityCode = it.takeUnless { it.isEmpty() } }
     }

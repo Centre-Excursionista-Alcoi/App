@@ -36,7 +36,7 @@ import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.StubUser
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -49,13 +49,13 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
-import kotlin.uuid.toKotlinUuid
+import kotlin.uuid.Uuid
 
 class TestQualificationsRoutes : ApplicationTestBase() {
-    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
-    private val qualificationId = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUUID()
-    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUUID()
-    private val otherQualificationId = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUUID()
+    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUuid()
+    private val qualificationId = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUuid()
+    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUuid()
+    private val otherQualificationId = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUuid()
 
     /**
      * Seeds "Test Department" with the qualification "Lead climbing", the [caller] holding [callerRoles] in it
@@ -96,7 +96,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
     private suspend fun <T> HttpClient.postJson(url: String, serializer: KSerializer<T>, body: T) =
         postJson(url, json.encodeToString(serializer, body))
 
-    private fun grantRow(sub: String, id: java.util.UUID = qualificationId) = Database {
+    private fun grantRow(sub: String, id: Uuid = qualificationId) = Database {
         UserQualifications.selectAll()
             .where { (UserQualifications.qualification eq id) and (UserQualifications.userSub eq sub) }
             .firstOrNull()
@@ -152,7 +152,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             assertBody(Qualification.serializer()) { created ->
                 assertEquals("Rappel", created.name)
                 assertEquals("Can set up a rappel", created.description)
-                assertEquals(departmentId.toKotlinUuid(), created.departmentId)
+                assertEquals(departmentId, created.departmentId)
             }
         }
         assertEquals(1, Database { QualificationEntity.all().count { it.name == "Rappel" } })

@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.security
 
-import java.util.UUID
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.jetbrains.exposed.v1.core.inList
@@ -20,7 +20,7 @@ class InvalidQualificationRequirementsException(message: String) : IllegalArgume
  * @throws InvalidQualificationRequirementsException if the requirements are not valid for the event.
  */
 context(_: JdbcTransaction)
-fun validatedQualificationRequirements(departmentId: UUID?, groups: List<List<UUID>>): List<List<UUID>> {
+fun validatedQualificationRequirements(departmentId: Uuid?, groups: List<List<Uuid>>): List<List<Uuid>> {
     if (groups.isEmpty()) return emptyList()
 
     if (departmentId == null) {

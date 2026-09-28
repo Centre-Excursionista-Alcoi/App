@@ -3,12 +3,10 @@ package org.centrexcursionistalcoi.app.database.entity
 import io.ktor.http.ContentType
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.io.path.fileSize
 import kotlin.io.path.inputStream
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.FileReferences
 import org.centrexcursionistalcoi.app.database.table.Files
@@ -19,8 +17,8 @@ import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.centrexcursionistalcoi.app.utils.detectFileType
 import org.centrexcursionistalcoi.app.request.UploadedParts
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.slf4j.LoggerFactory
@@ -31,11 +29,11 @@ import org.slf4j.LoggerFactory
  * Create files only with [create] (or [newFrom]), never with `new`: they upload the contents, and delete them again
  * if the transaction rolls back. [delete] deletes the contents once the transaction commits.
  */
-class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<FileEntity>(Files) {
+class FileEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<FileEntity>(Files) {
         private val logger = LoggerFactory.getLogger(FileEntity::class.java)
 
-        private fun newObjectKey() = "files/${UUID.randomUUID()}"
+        private fun newObjectKey() = "files/${Uuid.random()}"
 
         /**
          * The type of a file: [declared] unless missing or generic, else detected from the first bytes of [contents].
@@ -56,7 +54,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             name: String?,
             contentType: ContentType? = null,
             rules: FileReadWriteRules? = null,
-            id: UUID? = null,
+            id: Uuid? = null,
         ): FileEntity {
             val type = resolveContentType(contentType, bytes)
             return create(bytes.size.toLong(), name, type, rules, id) { key -> FileStorageProvider.current.put(key, bytes, type.toString()) }
@@ -72,7 +70,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             name: String?,
             contentType: ContentType? = null,
             rules: FileReadWriteRules? = null,
-            id: UUID? = null,
+            id: Uuid? = null,
         ): FileEntity {
             // Only the first bytes are needed to detect the type
             val head = file.inputStream().use { it.readNBytes(16) }
@@ -86,14 +84,14 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             name: String?,
             type: ContentType,
             rules: FileReadWriteRules?,
-            id: UUID?,
+            id: Uuid?,
             store: (key: String) -> Unit,
         ): FileEntity {
             val key = newObjectKey()
             store(key)
             FileObjectsTransactionHook.of(tr).deleteOnRollback(key)
 
-            val fileId = id?.takeIf { findById(it) == null } ?: UUID.randomUUID()
+            val fileId = id?.takeIf { findById(it) == null } ?: Uuid.random()
             return new(fileId) {
                 this.objectKey = key
                 this.size = size
@@ -109,7 +107,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
          */
         context(_: JdbcTransaction)
         fun newFrom(withContext: FileWithContext, rules: FileReadWriteRules? = null): FileEntity {
-            val id = withContext.id?.toJavaUuid()
+            val id = withContext.id
             val part = withContext.part ?: return create(withContext.bytes, withContext.name, withContext.contentType, rules, id)
             val upload = UploadedParts.get(part)
             return upload.store(withContext.name ?: upload.originalFileName, withContext.contentType ?: upload.contentType, rules, id)
@@ -125,14 +123,14 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
         context(tr: JdbcTransaction)
         fun updateOrCreate(
             from: FileWithContext,
-            ownedIds: Collection<UUID>,
+            ownedIds: Collection<Uuid>,
             rules: FileReadWriteRules? = null,
             onDelete: JdbcTransaction.(FileEntity) -> Unit = {},
         ): FileEntity? {
             if (!from.isEmpty()) return newFrom(from, rules)
 
             // No bytes given, remove existing file
-            val fileId = from.id?.toJavaUuid()
+            val fileId = from.id
             if (fileId == null) {
                 logger.warn("Asked to remove file from entity, but no id given, ignoring")
             } else if (fileId !in ownedIds) {
@@ -259,7 +257,7 @@ class FileEntity(id: EntityID<UUID>) : UUIDEntity(id) {
      * The metadata of the file. [FileWithContext.bytes] is always empty: use [readBytes] for the contents.
      */
     fun toData(): FileWithContext = FileWithContext(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         name = name,
         bytes = ByteArray(0),
         contentType = contentType,

@@ -16,15 +16,13 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.uuid.Uuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -101,8 +99,8 @@ class TestMultipartRequests : ApplicationTestBase() {
             files.map { it.fileName.toString() }.filter { it.startsWith("cea-upload-") }.toList()
         }
 
-    private fun createdId(response: HttpResponse): UUID =
-        UUID.fromString(response.headers[HttpHeaders.Location]!!.substringAfterLast('/'))
+    private fun createdId(response: HttpResponse): Uuid =
+        Uuid.parse(response.headers[HttpHeaders.Location]!!.substringAfterLast('/'))
 
     @Test
     fun test_create_department() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
@@ -208,7 +206,7 @@ class TestMultipartRequests : ApplicationTestBase() {
         patchMultipart(
             "/departments/$departmentId",
             multipart(
-                UpdateDepartmentRequest(image = partFile("file_0", id = imageId.toKotlinUuid())),
+                UpdateDepartmentRequest(image = partFile("file_0", id = imageId)),
                 UpdateDepartmentRequest.serializer(),
                 mapOf("file_0" to ("new.png" to png)),
             ),
@@ -252,7 +250,7 @@ class TestMultipartRequests : ApplicationTestBase() {
         patchMultipart(
             "/posts/$postId",
             multipart(
-                UpdatePostRequest(files = listOf(partFile("file_0"), FileWithContext(id = oldFile.toKotlinUuid()))),
+                UpdatePostRequest(files = listOf(partFile("file_0"), FileWithContext(id = oldFile))),
                 UpdatePostRequest.serializer(),
                 mapOf("file_0" to ("new.pdf" to pdf)),
             ),
@@ -360,7 +358,7 @@ class TestMultipartRequests : ApplicationTestBase() {
 
     @Test
     fun test_patch_unknownEntity() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.patch("/departments/${UUID.randomUUID()}") {
+        client.patch("/departments/${Uuid.random()}") {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertStatusCode(HttpStatusCode.NotFound)

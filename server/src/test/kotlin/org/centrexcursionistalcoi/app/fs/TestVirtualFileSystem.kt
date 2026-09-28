@@ -3,6 +3,12 @@ package org.centrexcursionistalcoi.app.fs
 import io.ktor.http.ContentType
 import io.mockk.every
 import io.mockk.mockk
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.fs.VirtualFileSystem.resetRootDirs
+import org.centrexcursionistalcoi.app.storage.testStorage
+import org.centrexcursionistalcoi.app.utils.toUuid
+import org.jetbrains.exposed.v1.dao.Entity
 import java.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -11,12 +17,6 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
-import org.centrexcursionistalcoi.app.fs.VirtualFileSystem.resetRootDirs
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.centrexcursionistalcoi.app.storage.testStorage
-import org.jetbrains.exposed.v1.dao.Entity
 
 class TestVirtualFileSystem {
     @BeforeTest
@@ -28,7 +28,7 @@ class TestVirtualFileSystem {
                 bytes = byteArrayOf(10, 20, 30),
                 name = "example.txt",
                 contentType = ContentType.Text.Plain,
-                id = "6489d244-cd88-4441-9526-1a4627b67453".toUUID(),
+                id = "6489d244-cd88-4441-9526-1a4627b67453".toUuid(),
             ).apply { lastModified = Instant.ofEpochSecond(1763383432) }
         }
 

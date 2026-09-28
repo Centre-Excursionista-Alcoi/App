@@ -7,13 +7,12 @@ import org.centrexcursionistalcoi.app.database.entity.EventEntity
 import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
 import org.centrexcursionistalcoi.app.database.utils.list
 import org.centrexcursionistalcoi.app.security.UserSession
-import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.UUID
+import kotlin.uuid.Uuid
 
-object Events : UUIDTable("events"), CustomTableSerializer<UUID, EventEntity> {
+object Events : UuidTable("events"), CustomTableSerializer<Uuid, EventEntity> {
     val created = timestamp("created").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
@@ -35,7 +34,7 @@ object Events : UUIDTable("events"), CustomTableSerializer<UUID, EventEntity> {
 
     override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
         "userSubList" to String.serializer().list(),
-        "qualificationRequirements" to UUIDSerializer.list().list(),
+        "qualificationRequirements" to Uuid.serializer().list().list(),
     )
 
     context(_: JdbcTransaction)

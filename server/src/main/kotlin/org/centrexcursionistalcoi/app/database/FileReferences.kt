@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database
 
 import java.time.Instant
-import java.util.UUID
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Events
 import org.centrexcursionistalcoi.app.database.table.Files
@@ -38,13 +38,13 @@ object FileReferences {
     )
 
     @Suppress("UNCHECKED_CAST")
-    private val Column<*>.asFileId get() = this as Column<EntityID<UUID>>
+    private val Column<*>.asFileId get() = this as Column<EntityID<Uuid>>
 
     /**
      * Whether any row references the file with the given [fileId].
      */
     context(_: JdbcTransaction)
-    fun isReferenced(fileId: UUID): Boolean = columns.any { column ->
+    fun isReferenced(fileId: Uuid): Boolean = columns.any { column ->
         column.table.select(column).where { column.asFileId eq fileId }.limit(1).any()
     }
 
@@ -53,7 +53,7 @@ object FileReferences {
      * @param modifiedBefore If not null, only files last modified before this instant are returned.
      */
     context(_: JdbcTransaction)
-    fun unreferencedFileIds(modifiedBefore: Instant? = null): List<UUID> {
+    fun unreferencedFileIds(modifiedBefore: Instant? = null): List<Uuid> {
         var condition: Op<Boolean> = columns
             .map<Column<*>, Op<Boolean>> { column -> notExists(column.table.select(column).where { column.asFileId eq Files.id }) }
             .reduce { acc, op -> acc and op }

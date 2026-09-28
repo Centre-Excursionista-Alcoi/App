@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.storage
 
+import kotlin.uuid.Uuid
 import io.ktor.http.ContentType
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -38,5 +39,5 @@ fun createTestFile(
     name: String? = "file",
     contentType: ContentType? = null,
     rules: FileReadWriteRules? = null,
-    id: java.util.UUID? = null,
+    id: Uuid? = null,
 ): FileEntity = Database { FileEntity.create(bytes, name, contentType, rules, id).apply { refresh(flush = true) } }

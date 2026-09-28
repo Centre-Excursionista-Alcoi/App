@@ -11,16 +11,13 @@ import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import java.util.UUID
 import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
 
-class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItemType, Uuid>, EntityPatcher<UpdateInventoryItemTypeRequest>, ImageContainerEntity {
-    companion object : UUIDEntityClass<InventoryItemTypeEntity>(InventoryItemTypes)
+class InventoryItemTypeEntity(id: EntityID<Uuid>): UuidEntity(id), LastUpdateEntity, EntityDataConverter<InventoryItemType, Uuid>, EntityPatcher<UpdateInventoryItemTypeRequest>, ImageContainerEntity {
+    companion object : UuidEntityClass<InventoryItemTypeEntity>(InventoryItemTypes)
 
     /**
      * Whether this single item type is visible to [session] -- must stay in sync with the `listProvider` used
@@ -50,13 +47,13 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
 
     context(_: JdbcTransaction)
     override fun toData(): InventoryItemType = InventoryItemType(
-        id = id.value.toKotlinUuid(),
+        id = id.value,
         displayName = displayName,
         description = description,
         categories = categories,
         weight = weight,
-        department = department?.id?.value?.toKotlinUuid(),
-        image = image?.id?.value?.toKotlinUuid()
+        department = department?.id?.value,
+        image = image?.id?.value
     )
 
     context(_: JdbcTransaction)
@@ -65,7 +62,7 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
         request.description?.let { description = it.takeUnless { value -> value.isBlank() } }
         request.categories?.let { categories = it }
         request.weight?.let { weight = it }
-        request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
+        request.department?.let { department = DepartmentEntity.findById(it) }
         updateOrSetImage(request.image)
     }
 

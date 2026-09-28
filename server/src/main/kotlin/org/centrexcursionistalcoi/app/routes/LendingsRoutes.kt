@@ -14,7 +14,9 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -50,11 +52,10 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
-import org.centrexcursionistalcoi.app.serialization.UUIDSerializer
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
@@ -69,10 +70,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
-import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeParseException
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
+import kotlin.uuid.Uuid
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -123,7 +122,7 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
  * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so it's safe to exit the upper function.
  */
 private suspend fun RoutingContext.lendingRequest(session: UserSession): LendingEntity? {
-    val lendingId = call.parameters["id"]?.toUUIDOrNull()
+    val lendingId = call.parameters["id"]?.toUuidOrNull()
 
     val lending = lendingId?.let { Database { LendingEntity.findById(it) } }
     if (lending == null) {
@@ -161,7 +160,7 @@ fun Route.lendingsRoutes() {
             return@postWithLock
         }
 
-        val itemsIdList = request.items.map { it.toJavaUuid() }
+        val itemsIdList = request.items
         if (itemsIdList.isEmpty()) {
             call.respondError(Error.ListCannotBeEmpty("items"))
             return@postWithLock
@@ -351,7 +350,7 @@ fun Route.lendingsRoutes() {
     post("inventory/lendings/{id}/cancel") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        val lendingId = call.parameters["id"]?.toUuidOrNull()
         if (lendingId == null) {
             call.respondError(Error.MalformedId())
             return@post
@@ -418,7 +417,7 @@ fun Route.lendingsRoutes() {
         val contentLength = call.request.contentLength()
         if (contentLength != null && contentLength > 0) {
             val request = receiveJson(PickupLendingRequest.serializer()) ?: return@post
-            val dismissItems = request.dismissItems.map { it.toJavaUuid() }
+            val dismissItems = request.dismissItems
             Database {
                 for (itemId in dismissItems) {
                     LendingItems.deleteWhere { (LendingItems.lending eq lending.id) and (LendingItems.item eq itemId) }
@@ -451,7 +450,7 @@ fun Route.lendingsRoutes() {
         val lendingId = lending.id.value
 
         if (!lending.taken) {
-            call.respondError(Error.LendingNotTaken(lendingId.toKotlinUuid()))
+            call.respondError(Error.LendingNotTaken(lendingId))
             return@post
         }
 
@@ -476,7 +475,7 @@ fun Route.lendingsRoutes() {
 
         // Make sure all the returned item ids are valid
         val returnedItems = Database {
-            request.returnedItems.map { item -> InventoryItemEntity.findById(item.itemId.toJavaUuid()) }
+            request.returnedItems.map { item -> InventoryItemEntity.findById(item.itemId) }
         }
         if (returnedItems.any { it == null }) {
             call.respondError(Error.InvalidItemInReturnedItems())
@@ -490,7 +489,7 @@ fun Route.lendingsRoutes() {
                 ReceivedItemEntity.new {
                     this.lending = lending
                     this.item = item
-                    this.notes = request.returnedItems.find { it.itemId == item.id.value.toKotlinUuid() }?.notes
+                    this.notes = request.returnedItems.find { it.itemId == item.id.value }?.notes
                     this.receivedBy = userReference
                     this.receivedAt = now()
                 }
@@ -500,7 +499,7 @@ fun Route.lendingsRoutes() {
         // Check that all items in the lending have been returned
         val missingItemsIds = Database {
             LendingEntity[lendingId].items.filter { itemEntity -> returnedItems.find { it.id == itemEntity.id } == null }
-                .map { it.id.value.toKotlinUuid() }
+                .map { it.id.value }
         }
 
         if (missingItemsIds.isEmpty()) {
@@ -533,7 +532,7 @@ fun Route.lendingsRoutes() {
     post("inventory/lendings/{id}/skip_memory") {
         assertAdmin() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        val lendingId = call.parameters["id"]?.toUuidOrNull()
         if (lendingId == null) {
             respondError(Error.MalformedId())
             return@post
@@ -564,7 +563,7 @@ fun Route.lendingsRoutes() {
     getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
 
-        val typeId = call.parameters["id"]?.toUUIDOrNull()
+        val typeId = call.parameters["id"]?.toUuidOrNull()
         if (typeId == null) {
             call.respondError(Error.MalformedId())
             return@getWithLock
@@ -670,7 +669,7 @@ fun Route.lendingsRoutes() {
 
         val allocatedItems = availableItems.take(amount).map { it.id.value }
         call.respondText(ContentType.Application.Json) {
-            json.encodeToString(UUIDSerializer.list(), allocatedItems)
+            json.encodeToString(Uuid.serializer().list(), allocatedItems)
         }
     }
 }

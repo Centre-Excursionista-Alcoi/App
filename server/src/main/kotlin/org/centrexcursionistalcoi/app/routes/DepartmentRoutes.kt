@@ -35,10 +35,9 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import kotlin.uuid.toKotlinUuid
 
 /**
  * Fetches the department with the id given in the call parameters (`id`).
@@ -55,7 +54,7 @@ internal suspend fun RoutingContext.departmentRequest(requiredRole: DepartmentRo
     val session = getUserSessionOrFail() ?: return null
 
     return if (requiredRole != null) {
-        val departmentId = call.parameters["id"]?.toUUIDOrNull()
+        val departmentId = call.parameters["id"]?.toUuidOrNull()
         val department = departmentId?.let { Database { DepartmentEntity.findById(it) } }
         if (department == null) {
             call.respondError(Error.PermissionRejected())
@@ -81,7 +80,7 @@ fun Route.departmentsRoutes() {
     provideEntityRoutes(
         base = "departments",
         entityClass = DepartmentEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         // The default listProvider (entityClass.all()) is unrestricted for every session, including anonymous --
         // a department's own displayName/image is public (its member roster is not, see Departments.extraColumns
         // / DepartmentEntity.visibleMembersFor). Stated explicitly rather than falling through to the default
@@ -253,8 +252,8 @@ fun Route.departmentsRoutes() {
             department.visibleMembersFor(session).map { entity ->
                 DepartmentJoinRequest(
                     entity.userReference.id.value,
-                    entity.department.id.value.toKotlinUuid(),
-                    entity.id.value.toKotlinUuid()
+                    entity.department.id.value,
+                    entity.id.value
                 )
             }
         }
@@ -268,7 +267,7 @@ fun Route.departmentsRoutes() {
     post("/departments/{id}/confirm/{requestId}") {
         val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
-        val requestId = call.parameters["requestId"]?.toUUIDOrNull()
+        val requestId = call.parameters["requestId"]?.toUuidOrNull()
         if (requestId == null) {
             call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
             return@post
@@ -309,7 +308,7 @@ fun Route.departmentsRoutes() {
     post("/departments/{id}/deny/{requestId}") {
         val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
-        val requestId = call.parameters["requestId"]?.toUUIDOrNull()
+        val requestId = call.parameters["requestId"]?.toUuidOrNull()
         if (requestId == null) {
             call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
             return@post
@@ -349,7 +348,7 @@ fun Route.departmentsRoutes() {
     patch("/departments/{id}/members/{memberId}/roles") {
         val (_, department) = departmentRequest(DepartmentRole.ADMIN) ?: return@patch
 
-        val memberId = call.parameters["memberId"]?.toUUIDOrNull()
+        val memberId = call.parameters["memberId"]?.toUuidOrNull()
         if (memberId == null) {
             call.respondError(Error.MalformedId())
             return@patch

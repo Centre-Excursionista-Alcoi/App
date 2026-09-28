@@ -15,7 +15,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
@@ -133,7 +132,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
                 title = "Event with extras",
                 description = "A description",
                 maxPeople = 20L,
-                department = department.id.value.toKotlinUuid(),
+                department = department.id.value,
                 image = FileWithContext(bytes = imageBytes, name = "event.png", contentType = ContentType.Image.PNG),
             )
         ).run {
@@ -188,8 +187,8 @@ class TestEventsJsonCreation : ApplicationTestBase() {
                 start = future,
                 place = "Crag",
                 title = "Climbing day",
-                department = department.id.value.toKotlinUuid(),
-                qualificationRequirements = listOf(listOf(qualification.id.value.toKotlinUuid())),
+                department = department.id.value,
+                qualificationRequirements = listOf(listOf(qualification.id.value)),
             )
         ).run {
             assertStatusCode(HttpStatusCode.Created)
@@ -201,7 +200,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
         client.get(location).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Event.serializer()) { event ->
-                assertEquals(listOf(listOf(qualification.id.value.toKotlinUuid())), event.qualificationRequirements)
+                assertEquals(listOf(listOf(qualification.id.value)), event.qualificationRequirements)
             }
         }
     }
@@ -229,7 +228,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
                 start = future,
                 place = "Somewhere",
                 title = "Cross-department event",
-                department = otherDepartment.id.value.toKotlinUuid(),
+                department = otherDepartment.id.value,
                 image = FileWithContext(bytes = "img".encodeToByteArray(), name = "x.png"),
             )
         ).assertError(Error.PermissionRejected())

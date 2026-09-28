@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.utils
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.io.encoding.Base64
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonPrimitive
@@ -17,7 +17,7 @@ fun Any?.toJsonElement() = when (this) {
     is Boolean -> JsonPrimitive(this)
     is Number -> JsonPrimitive(this)
     is ByteArray -> JsonPrimitive(Base64.UrlSafe.encode(this))
-    is UUID -> JsonPrimitive(this.toString())
+    is Uuid -> JsonPrimitive(this.toString())
     is LocalDate -> JsonPrimitive(this.toString())
     is LocalTime -> JsonPrimitive(this.toString())
     is Instant -> JsonPrimitive(this.toEpochMilli())

@@ -13,14 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import java.time.Instant
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
@@ -42,27 +34,33 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.jetbrains.exposed.v1.core.and
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import java.time.Instant
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
 
 /**
  * Events may require qualifications: creating/patching them, exposing them, and enforcing them when a user
  * confirms assistance. Requirements are `AND` of `OR`s (see `Event.qualificationRequirements`).
  */
 class TestEventQualificationRequirements : ApplicationTestBase() {
-    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
-    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUUID()
+    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUuid()
+    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUuid()
 
-    private val basic = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUUID()
-    private val lead = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d002".toUUID()
-    private val topRope = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d003".toUUID()
-    private val ice = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUUID()
+    private val basic = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUuid()
+    private val lead = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d002".toUuid()
+    private val topRope = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d003".toUuid()
+    private val ice = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUuid()
 
-    private val eventId = "9d0c1b2a-3e4f-4a5b-8c6d-7e8f9a0b1c01".toUUID()
+    private val eventId = "9d0c1b2a-3e4f-4a5b-8c6d-7e8f9a0b1c01".toUuid()
 
     /**
      * Seeds two departments: "Test Department", with the qualifications [basic], [lead] and [topRope], and
@@ -99,7 +97,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     }
 
     /** A future event of "Test Department" requiring [requirements]. */
-    private fun JdbcTransaction.seedEvent(vararg requirements: List<UUID>): EventEntity =
+    private fun JdbcTransaction.seedEvent(vararg requirements: List<Uuid>): EventEntity =
         EventEntity.new(eventId) {
             start = Instant.now().plusSeconds(7 * 24 * 3600)
             place = "Somewhere"
@@ -107,7 +105,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             department = DepartmentEntity[departmentId]
         }.also { it.setQualificationRequirements(requirements.toList()) }
 
-    private fun JdbcTransaction.grant(qualification: UUID, sub: String = FakeUser.SUB, expiresAt: Instant? = null) {
+    private fun JdbcTransaction.grant(qualification: Uuid, sub: String = FakeUser.SUB, expiresAt: Instant? = null) {
         UserQualifications.insert {
             it[UserQualifications.qualification] = qualification
             it[userSub] = sub
@@ -115,17 +113,17 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         }
     }
 
-    private fun requirements(id: UUID = eventId): List<List<UUID>> = Database { EventEntity[id].qualificationRequirements() }
+    private fun requirements(id: Uuid = eventId): List<List<Uuid>> = Database { EventEntity[id].qualificationRequirements() }
 
     private fun eventCount(): Long = Database { EventEntity.count() }
 
-    private suspend fun HttpResponse.missing(): List<List<UUID>> {
+    private suspend fun HttpResponse.missing(): List<List<Uuid>> {
         val error = json.decodeFromString(Error.serializer(), bodyAsText())
         assertIs<Error.MissingQualifications>(error)
-        return error.missing.map { group -> group.map { UUID.fromString(it.toString()) } }
+        return error.missing
     }
 
-    private fun sorted(groups: List<List<UUID>>) = groups.map { it.sortedBy(UUID::toString) }.sortedBy { it.first().toString() }
+    private fun sorted(groups: List<List<Uuid>>) = groups.map { it.sortedBy(Uuid::toString) }.sortedBy { it.first().toString() }
 
     // ---- Enforcement: POST /events/{id}/confirm ----
 
@@ -245,7 +243,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             val event = json.decodeFromString(Event.serializer(), bodyAsText())
             assertEquals(
                 sorted(listOf(listOf(basic), listOf(lead, topRope))),
-                sorted(event.qualificationRequirements.map { group -> group.map { UUID.fromString(it.toString()) } }),
+                sorted(event.qualificationRequirements),
             )
         }
     }
@@ -264,7 +262,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     // ---- Creating: POST /events ----
 
     private suspend fun io.ktor.client.HttpClient.createEvent(
-        department: UUID?,
+        department: Uuid?,
         qualificationRequirements: String?,
     ): HttpResponse = submitFormWithBinaryData(
         "/events",
@@ -285,7 +283,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         val response = client.createEvent(departmentId, """[["$basic"],["$lead","$topRope"]]""")
         assertEquals(HttpStatusCode.Created, response.status)
 
-        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUUID()
+        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUuid()
         assertEquals(sorted(listOf(listOf(basic), listOf(lead, topRope))), sorted(requirements(id)))
     }
 
@@ -312,7 +310,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     ) {
         val response = client.createEvent(departmentId, """[["$basic","$basic"],["$basic"]]""")
         assertEquals(HttpStatusCode.Created, response.status)
-        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUUID()
+        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUuid()
         assertEquals(listOf(listOf(basic)), requirements(id))
     }
 
@@ -340,7 +338,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.CONTENT_MANAGER)) },
     ) {
-        client.createEvent(departmentId, """[["${UUID.randomUUID()}"]]""").assertStatusCode(HttpStatusCode.BadRequest)
+        client.createEvent(departmentId, """[["${Uuid.random()}"]]""").assertStatusCode(HttpStatusCode.BadRequest)
         assertEquals(0, eventCount())
     }
 
@@ -383,14 +381,12 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             setBody(json.encodeToString(UpdateEventRequest.serializer(), request))
         }
 
-    private fun UUID.k() = toKotlinUuid()
-
     @Test
     fun test_patch_setsRequirements() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.CONTENT_MANAGER)); seedEvent() },
     ) {
-        client.patchEvent(UpdateEventRequest(qualificationRequirements = listOf(listOf(basic.k()), listOf(lead.k(), topRope.k())))).assertSuccess()
+        client.patchEvent(UpdateEventRequest(qualificationRequirements = listOf(listOf(basic), listOf(lead, topRope)))).assertSuccess()
         assertEquals(sorted(listOf(listOf(basic), listOf(lead, topRope))), sorted(requirements()))
     }
 
@@ -399,7 +395,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.CONTENT_MANAGER)); seedEvent(listOf(basic), listOf(lead)) },
     ) {
-        client.patchEvent(UpdateEventRequest(qualificationRequirements = listOf(listOf(topRope.k())))).assertSuccess()
+        client.patchEvent(UpdateEventRequest(qualificationRequirements = listOf(listOf(topRope)))).assertSuccess()
         assertEquals(listOf(listOf(topRope)), requirements())
     }
 
@@ -426,7 +422,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.CONTENT_MANAGER)); seedEvent(listOf(basic)) },
     ) {
-        client.patchEvent(UpdateEventRequest(title = "Renamed", qualificationRequirements = listOf(listOf(ice.k()))))
+        client.patchEvent(UpdateEventRequest(title = "Renamed", qualificationRequirements = listOf(listOf(ice))))
             .assertError(Error.InvalidArgument("qualificationRequirements"))
         // Nothing of the patch was applied: neither the requirements nor the other fields
         assertEquals(listOf(listOf(basic)), requirements())
@@ -444,7 +440,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent(listOf(basic))
         },
     ) {
-        client.patchEvent(UpdateEventRequest(department = otherDepartmentId.k()))
+        client.patchEvent(UpdateEventRequest(department = otherDepartmentId))
             .assertError(Error.InvalidArgument("qualificationRequirements"))
         assertEquals(departmentId, Database { EventEntity[eventId].department?.id?.value })
         assertEquals(listOf(listOf(basic)), requirements())
@@ -461,7 +457,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent(listOf(basic))
         },
     ) {
-        client.patchEvent(UpdateEventRequest(department = otherDepartmentId.k(), qualificationRequirements = listOf(listOf(ice.k())))).assertSuccess()
+        client.patchEvent(UpdateEventRequest(department = otherDepartmentId, qualificationRequirements = listOf(listOf(ice)))).assertSuccess()
         assertEquals(otherDepartmentId, Database { EventEntity[eventId].department?.id?.value })
         assertEquals(listOf(listOf(ice)), requirements())
     }
@@ -477,7 +473,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent(listOf(basic))
         },
     ) {
-        client.patchEvent(UpdateEventRequest(department = otherDepartmentId.k(), qualificationRequirements = emptyList())).assertSuccess()
+        client.patchEvent(UpdateEventRequest(department = otherDepartmentId, qualificationRequirements = emptyList())).assertSuccess()
         assertEquals(emptyList(), requirements())
     }
 
@@ -492,7 +488,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent()
         },
     ) {
-        client.patchEvent(UpdateEventRequest(department = otherDepartmentId.k())).assertSuccess()
+        client.patchEvent(UpdateEventRequest(department = otherDepartmentId)).assertSuccess()
         assertEquals(otherDepartmentId, Database { EventEntity[eventId].department?.id?.value })
     }
 
@@ -524,7 +520,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         client.delete("/qualifications/$basic").assertError(Error.EntityDeleteReferencesExist())
         assertTrue(Database { QualificationEntity.findById(basic) != null })
         // Requirements are untouched
-        assertEquals(listOf(listOf(basic, lead).sortedBy(UUID::toString)), requirements())
+        assertEquals(listOf(listOf(basic, lead).sortedBy(Uuid::toString)), requirements())
     }
 
     @Test

@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import io.ktor.http.ContentType
 import java.time.Instant
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -12,7 +12,6 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
@@ -100,7 +99,7 @@ class TestFileEntityStorage {
 
     @Test
     fun test_create_withFreeId_usesIt() {
-        val id = UUID.randomUUID()
+        val id = Uuid.random()
         assertEquals(id, createTestFile(byteArrayOf(1), id = id).id.value)
     }
 
@@ -151,13 +150,13 @@ class TestFileEntityStorage {
         val notOwned = createTestFile(byteArrayOf(2))
 
         Database {
-            FileEntity.updateOrCreate(FileWithContext(id = notOwned.id.value.toKotlinUuid()), ownedIds = listOf(owned.id.value))
+            FileEntity.updateOrCreate(FileWithContext(id = notOwned.id.value), ownedIds = listOf(owned.id.value))
         }
         assertNotNull(Database { FileEntity.findById(notOwned.id) }, "A file not owned by the entity must not be deleted")
 
         var deleted: FileEntity? = null
         Database {
-            FileEntity.updateOrCreate(FileWithContext(id = owned.id.value.toKotlinUuid()), ownedIds = listOf(owned.id.value)) {
+            FileEntity.updateOrCreate(FileWithContext(id = owned.id.value), ownedIds = listOf(owned.id.value)) {
                 deleted = it
             }
         }
@@ -196,7 +195,7 @@ class TestFileEntityStorage {
         val data = Database { file.toData() }
         assertEquals(0, data.bytes.size)
         assertEquals("a.bin", data.name)
-        assertEquals(file.id.value.toKotlinUuid(), data.id)
+        assertEquals(file.id.value, data.id)
     }
 
     @Test

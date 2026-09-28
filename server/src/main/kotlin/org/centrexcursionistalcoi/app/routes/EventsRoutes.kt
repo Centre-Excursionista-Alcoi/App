@@ -35,7 +35,7 @@ import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -52,11 +52,9 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import kotlin.time.Clock.System.now
 import kotlin.time.toJavaInstant
-import kotlin.uuid.toJavaUuid
-import kotlin.uuid.toKotlinUuid
+import kotlin.uuid.Uuid
 
 private val eventAssistanceMutex = Mutex()
 
@@ -65,20 +63,20 @@ private val eventAssistanceMutex = Mutex()
  * ids (e.g. `[["<id>"],["<id>","<id>"]]`).
  * @throws IllegalArgumentException if it isn't that.
  */
-private fun parseQualificationRequirements(value: String): List<List<UUID>> {
+private fun parseQualificationRequirements(value: String): List<List<Uuid>> {
     val groups = try {
         json.decodeFromString(ListSerializer(ListSerializer(String.serializer())), value)
     } catch (e: SerializationException) {
         throw IllegalArgumentException("Malformed qualificationRequirements", e)
     }
-    return groups.map { group -> group.map { it.toUUIDOrNull() ?: throw IllegalArgumentException("Malformed qualification id: $it") } }
+    return groups.map { group -> group.map { it.toUuidOrNull() ?: throw IllegalArgumentException("Malformed qualification id: $it") } }
 }
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
         base = "events",
         entityClass = EventEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> EventEntity.forSession(session) },
         visibleTo = { event, session -> event.isVisibleTo(session) },
         // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
@@ -93,8 +91,8 @@ fun Route.eventsRoutes() {
             var description: String? = null
             var maxPeople: Long? = null
             var requiresConfirmation = false
-            var departmentId: UUID? = null
-            var qualificationRequirements: List<List<UUID>> = emptyList()
+            var departmentId: Uuid? = null
+            var qualificationRequirements: List<List<Uuid>> = emptyList()
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
@@ -108,7 +106,7 @@ fun Route.eventsRoutes() {
                             "description" -> description = partData.value
                             "maxPeople" -> maxPeople = partData.value.toLongOrNull()
                             "requiresConfirmation" -> requiresConfirmation = partData.value.toBoolean()
-                            "department" -> departmentId = partData.value.toUUIDOrNull()
+                            "department" -> departmentId = partData.value.toUuidOrNull()
                             "qualificationRequirements" -> qualificationRequirements = parseQualificationRequirements(partData.value)
                             "image" -> {
                                 image.populate(partData)
@@ -165,13 +163,13 @@ fun Route.eventsRoutes() {
             // never read it at all, even though the client already sent it (Event.toMap()) and PATCH already
             // supports it (UpdateEventRequest.requiresInsurance), so it silently had no effect at creation time.
             val department = request.department?.let {
-                Database { DepartmentEntity.findById(it.toJavaUuid()) } ?: throw NoSuchElementException("Department with id $it does not exist")
+                Database { DepartmentEntity.findById(it) } ?: throw NoSuchElementException("Department with id $it does not exist")
             }
 
             val requirements = Database {
                 validatedQualificationRequirements(
                     department?.id?.value,
-                    request.qualificationRequirements.map { group -> group.map { id -> id.toJavaUuid() } },
+                    request.qualificationRequirements.map { group -> group.map { id -> id } },
                 )
             }
 
@@ -227,7 +225,7 @@ fun Route.eventsRoutes() {
 
     postWithLock("/events/{id}/confirm", eventAssistanceMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
-        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
+        val eventId = call.parameters["id"]?.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
 
         // Make sure the event exists
         val event = Database {
@@ -274,9 +272,9 @@ fun Route.eventsRoutes() {
         }
 
         // If the event requires qualifications, check that the user holds them (and that they haven't expired)
-        val requirements = Database { event.qualificationRequirements() }.map { group -> group.map { it.toKotlinUuid() } }
+        val requirements = Database { event.qualificationRequirements() }.map { group -> group }
         if (requirements.isNotEmpty()) {
-            val required = requirements.flatten().map { it.toJavaUuid() }
+            val required = requirements.flatten()
             val held = Database {
                 UserQualifications.selectAll()
                     .where {
@@ -284,7 +282,7 @@ fun Route.eventsRoutes() {
                             (UserQualifications.qualification inList required) and
                             (UserQualifications.expiresAt.isNull() or (UserQualifications.expiresAt greater now().toJavaInstant()))
                     }
-                    .map { it[UserQualifications.qualification].value.toKotlinUuid() }
+                    .map { it[UserQualifications.qualification].value }
                     .toSet()
             }
             val unmet = requirements.unmetRequirements(held)
@@ -334,7 +332,7 @@ fun Route.eventsRoutes() {
     }
     postWithLock("/events/{id}/reject", eventAssistanceMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
-        val eventId = call.parameters["id"]?.toUUIDOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
+        val eventId = call.parameters["id"]?.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
 
         // Make sure the event exists
         val event = Database {

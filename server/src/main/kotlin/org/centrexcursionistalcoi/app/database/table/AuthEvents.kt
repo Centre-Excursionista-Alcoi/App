@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /**
@@ -25,7 +25,7 @@ enum class AuthEventType {
  * so that a support report ("I'm not able to register") can be investigated after the fact by querying this
  * table directly -- there's no API endpoint exposing it.
  */
-object AuthEvents : UUIDTable("auth_events") {
+object AuthEvents : UuidTable("auth_events") {
     val timestamp = timestamp("timestamp").defaultExpression(DatabaseNowExpression)
 
     /** Name of an [AuthEventType] constant. */

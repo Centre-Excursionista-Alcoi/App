@@ -4,7 +4,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.MultiPartData
+import io.ktor.http.content.PartData
 import io.ktor.server.request.contentType
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
@@ -28,7 +30,13 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.push.PushNotification
+import org.centrexcursionistalcoi.app.request.MissingPartException
+import org.centrexcursionistalcoi.app.request.PushedBackMultiPartData
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
+import org.centrexcursionistalcoi.app.request.readRequestWithFiles
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -37,23 +45,15 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.security.assertDepartmentRole
 import org.centrexcursionistalcoi.app.security.hasAnyDepartmentRole
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 import org.slf4j.LoggerFactory
-import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+import kotlin.uuid.Uuid
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
-import io.ktor.http.content.PartData
-import io.ktor.server.request.receiveMultipart
-import org.centrexcursionistalcoi.app.request.MissingPartException
-import org.centrexcursionistalcoi.app.request.PushedBackMultiPartData
-import org.centrexcursionistalcoi.app.request.RequestWithFiles
-import org.centrexcursionistalcoi.app.request.readRequestWithFiles
-import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
-import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 
 private val logger = LoggerFactory.getLogger("RoutesBase")
 
@@ -84,7 +84,7 @@ class PatchRejectedException(val error: Error) : Exception(error.description)
  */
 class EntityWritePermission<EE>(
     val role: DepartmentRole,
-    val departmentOfEntity: (EE) -> UUID?,
+    val departmentOfEntity: (EE) -> Uuid?,
 )
 
 suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
@@ -101,8 +101,8 @@ suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentT
  * If not, responds with an [Error.MalformedId] error.
  * @return The UUID if valid, or null if invalid.
  */
-suspend fun RoutingContext.assertIdParameter(): UUID? {
-    val id = call.parameters["id"]?.toUUIDOrNull()
+suspend fun RoutingContext.assertIdParameter(): Uuid? {
+    val id = call.parameters["id"]?.toUuidOrNull()
     if (id == null) {
         call.respondError(Error.MalformedId())
         return null

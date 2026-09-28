@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity.base
 
 import io.ktor.http.ContentType
-import kotlin.uuid.toKotlinUuid
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -38,7 +37,7 @@ interface ImageContainerEntity {
         file ?: return
 
         val image = image
-        if (image != null && file.id != null && image.id.value.toKotlinUuid() == file.id) {
+        if (image != null && file.id != null && image.id.value == file.id) {
             // Same image, just update the data
             image.replaceContents(file)
         } else {

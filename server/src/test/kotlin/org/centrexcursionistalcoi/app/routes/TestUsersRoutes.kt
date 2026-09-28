@@ -25,7 +25,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.uuid.toJavaUuid
 
 class TestUsersRoutes: ApplicationTestBase() {
     @Test
@@ -91,12 +90,12 @@ class TestUsersRoutes: ApplicationTestBase() {
                 assertEquals(2, user.departments.size)
                 user.departments[0].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 1", departments[dept.departmentId.toJavaUuid()]?.displayName)
+                    assertEquals("example 1", departments[dept.departmentId]?.displayName)
                     assertTrue(dept.confirmed)
                 }
                 user.departments[1].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 2", departments[dept.departmentId.toJavaUuid()]?.displayName)
+                    assertEquals("example 2", departments[dept.departmentId]?.displayName)
                     assertFalse(dept.confirmed)
                 }
 
@@ -182,12 +181,12 @@ class TestUsersRoutes: ApplicationTestBase() {
                 assertEquals(2, user.departments.size)
                 user.departments[0].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 1", departments[dept.departmentId.toJavaUuid()]?.displayName)
+                    assertEquals("example 1", departments[dept.departmentId]?.displayName)
                     assertTrue(dept.confirmed)
                 }
                 user.departments[1].let { dept ->
                     assertEquals(FakeUser.SUB, dept.userSub)
-                    assertEquals("example 2", departments[dept.departmentId.toJavaUuid()]?.displayName)
+                    assertEquals("example 2", departments[dept.departmentId]?.displayName)
                     assertFalse(dept.confirmed)
                 }
 

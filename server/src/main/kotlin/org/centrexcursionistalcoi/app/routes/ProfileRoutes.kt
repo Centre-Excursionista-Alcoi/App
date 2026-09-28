@@ -48,7 +48,6 @@ import org.jetbrains.exposed.v1.core.neq
 import org.slf4j.LoggerFactory
 import java.time.temporal.ChronoUnit
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.toKotlinUuid
 
 private val logger = LoggerFactory.getLogger("ProfileRoutes")
 
@@ -73,7 +72,7 @@ fun Route.profileRoutes() {
         val departments = Database {
             DepartmentMemberEntity.find {
                 (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
-            }.map { it.department.id.value.toKotlinUuid() }
+            }.map { it.department.id.value }
         }
         val lendingUser = Database {
             LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()

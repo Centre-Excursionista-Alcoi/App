@@ -6,17 +6,16 @@ import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import kotlin.test.Test
-import kotlin.uuid.toKotlinUuid
 
 class TestInventoryItem {
     @Test
     fun `test entity serializes the same as data class`() = runTest {
         Database.initForTests()
 
-        val inventoryItemId = "f857f38b-a401-4328-b181-5bfa4fde4698".toUUID()
-        val inventoryItemTypeId = "a53092b1-b9cd-40c9-a3c5-88f595b6b001".toUUID()
+        val inventoryItemId = "f857f38b-a401-4328-b181-5bfa4fde4698".toUuid()
+        val inventoryItemTypeId = "a53092b1-b9cd-40c9-a3c5-88f595b6b001".toUuid()
 
         val inventoryItemEntity = Database {
             InventoryItemEntity.new(inventoryItemId) {
@@ -29,8 +28,8 @@ class TestInventoryItem {
             }
         }
         val inventoryItemClass = InventoryItem(
-            id = inventoryItemId.toKotlinUuid(),
-            type = inventoryItemTypeId.toKotlinUuid(),
+            id = inventoryItemId,
+            type = inventoryItemTypeId,
             variation = "abc",
             nfcId = byteArrayOf(0, 1, 2, 3),
             manufacturerTraceabilityCode = "abc"

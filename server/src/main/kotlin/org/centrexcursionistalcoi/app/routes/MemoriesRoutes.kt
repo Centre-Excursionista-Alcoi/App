@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -16,7 +15,6 @@ import io.ktor.server.routing.post
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.serialization.SerializationException
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -48,16 +46,16 @@ import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendE
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
+import org.centrexcursionistalcoi.app.request.MissingPartException
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
-import org.centrexcursionistalcoi.app.request.MissingPartException
-import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
-import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -67,10 +65,9 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.io.ByteArrayOutputStream
-import java.util.UUID
 import org.slf4j.LoggerFactory
-import kotlin.uuid.toJavaUuid
+import java.io.ByteArrayOutputStream
+import kotlin.uuid.Uuid
 
 /**
  * Fetches the memory with the id given in the call parameters (`id`), making sure the requesting session is allowed
@@ -83,7 +80,7 @@ import kotlin.uuid.toJavaUuid
  * If any error occurs, a response is sent to the user, and the function returns `null`.
  */
 private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOwnerOrAdmin: Boolean = true): MemoryEntity? {
-    val id = call.parameters["id"]?.toUUIDOrNull()
+    val id = call.parameters["id"]?.toUuidOrNull()
     if (id == null) {
         respondError(Error.MalformedId())
         return null
@@ -169,8 +166,8 @@ fun Route.memoriesRoutes() {
         val place = request.place?.takeIf { it.isNotBlank() }
         val externalUsers = request.externalUsers?.takeIf { it.isNotBlank() }
         val plainText = request.text.takeIf { it.isNotBlank() }
-        val departmentId = request.department?.toJavaUuid()
-        val lendingId = request.lending?.toJavaUuid()
+        val departmentId = request.department
+        val lendingId = request.lending
         val fromRaw = request.from
         val toRaw = request.to
 
@@ -256,7 +253,7 @@ fun Route.memoriesRoutes() {
                     val files = request.attachments.filterNot { it.isEmpty() }.map { file ->
                         FileEntity.newFrom(file, attachmentRules)
                     }
-                    val entity = MemoryEntity.new(UUID.randomUUID()) {
+                    val entity = MemoryEntity.new(Uuid.random()) {
                         this.place = place
                         this.externalPeople = externalUsers
                         this.text = plainText
@@ -430,7 +427,7 @@ fun Route.memoriesRoutes() {
     delete("memories/{id}") {
         val session = getUserSessionOrFail() ?: return@delete
 
-        val id = call.parameters["id"]?.toUUIDOrNull()
+        val id = call.parameters["id"]?.toUuidOrNull()
         if (id == null) {
             respondError(Error.MalformedId())
             return@delete

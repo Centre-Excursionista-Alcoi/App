@@ -1,13 +1,13 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
+import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 
-class UserInsuranceDocumentEntity(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UserInsuranceDocumentEntity>(UserInsuranceDocuments)
+class UserInsuranceDocumentEntity(id: EntityID<Uuid>) : UuidEntity(id) {
+    companion object : UuidEntityClass<UserInsuranceDocumentEntity>(UserInsuranceDocuments)
 
     var insurance by UserInsuranceEntity referencedOn UserInsuranceDocuments.insurance
     var file by FileEntity referencedOn UserInsuranceDocuments.file

@@ -30,7 +30,6 @@ import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.insert
-import kotlin.uuid.toKotlinUuid
 
 /**
  * `POST /posts` accepting a JSON body (#659), alongside the existing multipart path (still covered by
@@ -105,7 +104,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
             CreatePostRequest(
                 title = "JSON Post With Extras",
                 content = "Body",
-                department = department.id.value.toKotlinUuid(),
+                department = department.id.value,
                 link = "https://example.com",
                 files = listOf(FileWithContext(bytes = fileBytes, name = "doc.pdf", contentType = ContentType.Application.Pdf)),
             )
@@ -154,7 +153,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
             CreatePostRequest(
                 title = "Cross-department JSON post",
                 content = "Body",
-                department = otherDepartment.id.value.toKotlinUuid(),
+                department = otherDepartment.id.value,
                 files = listOf(FileWithContext(bytes = "data".encodeToByteArray(), name = "f.pdf")),
             )
         ).assertError(Error.PermissionRejected())

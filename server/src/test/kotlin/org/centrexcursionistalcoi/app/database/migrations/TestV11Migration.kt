@@ -1,9 +1,10 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
+import kotlin.uuid.toKotlinUuid
 import io.ktor.http.ContentType
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import kotlin.uuid.Uuid
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -46,23 +47,23 @@ class TestV11Migration : PostgresTestBase() {
     private val pdf = ResourcesUtils.bytesFromResource("/document.pdf")
 
     /** The contents of each file in the pre-V11 database. */
-    private val contents = mutableMapOf<UUID, ByteArray>()
+    private val contents = mutableMapOf<Uuid, ByteArray>()
 
     /** Files referenced by something, which must be moved. */
-    private val referenced = mutableListOf<UUID>()
+    private val referenced = mutableListOf<Uuid>()
 
     /** Files referenced by nothing, which must be deleted. */
-    private val orphans = mutableListOf<UUID>()
+    private val orphans = mutableListOf<Uuid>()
 
     /** A file without a type, whose type must be detected. */
-    private lateinit var untyped: UUID
+    private lateinit var untyped: Uuid
 
     @BeforeTest
     fun initAES() {
         AES.initForTests()
     }
 
-    private fun newFile(bytes: ByteArray): UUID = Database {
+    private fun newFile(bytes: ByteArray): Uuid = Database {
         FileEntity.create(bytes, "file", ContentType.Application.OctetStream).id.value
     }.also { contents[it] = bytes }
 
@@ -158,8 +159,8 @@ class TestV11Migration : PostgresTestBase() {
         "SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'files'"
     ).let { rs -> buildMap { while (rs.next()) put(rs.getString(1), rs.getString(2) == "YES") } }
 
-    private fun fileIds(): Set<UUID> = Database.execQuery("SELECT id FROM files").let { rs ->
-        buildSet { while (rs.next()) add(rs.getObject(1, UUID::class.java)) }
+    private fun fileIds(): Set<Uuid> = Database.execQuery("SELECT id FROM files").let { rs ->
+        buildSet { while (rs.next()) add(rs.getObject(1, java.util.UUID::class.java).toKotlinUuid()) }
     }
 
     private fun migrate(storage: FileStorage) = Database { V11.migrate(storage) }

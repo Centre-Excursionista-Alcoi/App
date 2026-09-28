@@ -4,8 +4,6 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import io.sentry.Sentry
-import java.util.UUID
-import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -26,7 +24,7 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -34,13 +32,14 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import kotlin.uuid.toJavaUuid
+import kotlin.io.encoding.Base64
+import kotlin.uuid.Uuid
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/types",
         entityClass = InventoryItemTypeEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemTypeEntity.all()
@@ -63,7 +62,7 @@ fun Route.inventoryRoutes() {
             var description: String? = null
             var categories: List<String>? = null
             var weight: Double? = null
-            var department: UUID? = null
+            var department: Uuid? = null
             val image = FileRequestData()
 
             formParameters.forEachPart { partData ->
@@ -84,7 +83,7 @@ fun Route.inventoryRoutes() {
                                 }
                             }
                             "weight" -> weight = partData.value.toDoubleOrNull()
-                            "department" -> department = partData.value.toUUIDOrNull()
+                            "department" -> department = partData.value.toUuidOrNull()
                             "image" -> {
                                 image.populate(partData)
                             }
@@ -128,7 +127,7 @@ fun Route.inventoryRoutes() {
         jsonCreator = { request ->
             // Mirrors the multipart creator above -- same department lookup, same image creation (#659).
             val deptEntity = request.department?.let { id ->
-                Database { DepartmentEntity.findById(id.toJavaUuid()) } ?: throw NoSuchElementException("Department with given id does not exist")
+                Database { DepartmentEntity.findById(id) } ?: throw NoSuchElementException("Department with given id does not exist")
             }
             val imageFile = request.image?.let { Database { FileEntity.newFrom(it) } }
 
@@ -151,7 +150,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/items",
         entityClass = InventoryItemEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemEntity.all()
@@ -176,7 +175,7 @@ fun Route.inventoryRoutes() {
         //   requiring it is unsupported.
         creator = { formParameters ->
             var variation: String? = null
-            var type: UUID? = null
+            var type: Uuid? = null
             var nfcId: ByteArray? = null
             var manufacturerTraceabilityCode: String? = null
 
@@ -186,7 +185,7 @@ fun Route.inventoryRoutes() {
                         when (partData.name) {
                             "variation" -> variation = partData.value
                             "type" -> type = try {
-                                UUID.fromString(partData.value)
+                                Uuid.parse(partData.value)
                             } catch (_: IllegalArgumentException) {
                                 null
                             }
@@ -229,7 +228,7 @@ fun Route.inventoryRoutes() {
         createRequestSerializer = CreateInventoryItemRequest.serializer(),
         jsonCreator = { request ->
             // Mirrors the multipart creator above (#659).
-            val itemType = Database { InventoryItemTypeEntity.findById(request.type.toJavaUuid()) }
+            val itemType = Database { InventoryItemTypeEntity.findById(request.type) }
                 ?: throw NoSuchElementException("Type with given id does not exist")
 
             Database {

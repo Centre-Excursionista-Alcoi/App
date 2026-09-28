@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.util.UUID
 import kotlin.uuid.Uuid
-import kotlin.uuid.toKotlinUuid
 import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
@@ -11,13 +9,13 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.java.UUIDEntity
-import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.select
 
-class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConverter<UserInsurance, Uuid> {
-    companion object : UUIDEntityClass<UserInsuranceEntity>(UserInsurances)
+class UserInsuranceEntity(id: EntityID<Uuid>): UuidEntity(id), EntityDataConverter<UserInsurance, Uuid> {
+    companion object : UuidEntityClass<UserInsuranceEntity>(UserInsurances)
 
     var userSub by UserReferenceEntity referencedOn UserInsurances.userSub
     var insuranceCompany by UserInsurances.insuranceCompany
@@ -32,7 +30,7 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
      * loading each [FileEntity].
      */
     context(_: JdbcTransaction)
-    fun documentIds(): List<UUID> = UserInsuranceDocuments
+    fun documentIds(): List<Uuid> = UserInsuranceDocuments
         .select(UserInsuranceDocuments.file)
         .where { UserInsuranceDocuments.insurance eq id }
         .orderBy(UserInsuranceDocuments.position to SortOrder.ASC)
@@ -60,9 +58,9 @@ class UserInsuranceEntity(id: EntityID<UUID>): UUIDEntity(id), EntityDataConvert
 
     context(_: JdbcTransaction)
     override fun toData(): UserInsurance {
-        val documents = documentIds().map { it.toKotlinUuid() }
+        val documents = documentIds()
         return UserInsurance(
-            id = id.value.toKotlinUuid(),
+            id = id.value,
             userSub = userSub.id.value,
             insuranceCompany = insuranceCompany,
             policyNumber = policyNumber,
