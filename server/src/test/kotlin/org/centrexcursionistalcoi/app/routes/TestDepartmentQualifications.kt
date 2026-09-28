@@ -14,7 +14,7 @@ import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import kotlin.test.Test
@@ -26,8 +26,8 @@ import kotlin.test.assertEquals
  * `TestQualificationsRoutes.kt` for the mutation routes (create/update/delete/grant/revoke), unaffected by this.
  */
 class TestDepartmentQualifications : ApplicationTestBase() {
-    private val departmentId = "d5f6a6d0-6b0d-4e2a-9f9a-2b7f6a5b0001".toUUID()
-    private val qualificationId = "6f4a2b5e-2d0c-4a7a-9b3e-1c8a6f2b0002".toUUID()
+    private val departmentId = "d5f6a6d0-6b0d-4e2a-9f9a-2b7f6a5b0001".toUuid()
+    private val qualificationId = "6f4a2b5e-2d0c-4a7a-9b3e-1c8a6f2b0002".toUuid()
 
     /** Seeds "Test Department" with the qualification "Lead climbing" and a grant of it to [FakeUser2]. */
     private fun JdbcTransaction.seed(callerRoles: List<DepartmentRole>?) {

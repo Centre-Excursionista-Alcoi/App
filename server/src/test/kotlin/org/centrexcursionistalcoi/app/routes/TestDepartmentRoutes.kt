@@ -10,13 +10,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.assertBody
@@ -36,14 +29,24 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.isZero
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class TestDepartmentRoutes : ApplicationTestBase() {
-    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
-    private val joinRequestId = "a82b9bc2-e357-4cfb-abe0-4c5444680757".toUUID()
+    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUuid()
+    private val joinRequestId = "a82b9bc2-e357-4cfb-abe0-4c5444680757".toUuid()
 
     /**
      * Runs [action] and returns the push notification [FakeUser] receives because of it. Push notifications are

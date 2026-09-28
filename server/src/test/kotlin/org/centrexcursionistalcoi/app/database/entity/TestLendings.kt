@@ -17,7 +17,7 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -96,13 +96,13 @@ class TestLendings {
     fun `test entity serializes the same as data class`() = runTest {
         Database.initForTests()
 
-        val id = "315cedda-a219-426d-8acc-ebeb7c70b9f7".toUUID()
-        val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUUID()
-        val itemTypeId = "2c3c5f3d-5c5e-4916-988c-225b57f91cfa".toUUID()
-        val receivedItemId = "786a1c86-6e7d-4cdc-bebf-d1540f67029b".toUUID()
-        val memoryId = "5b9f2b34-2a58-4b9d-9a2b-9f6a6e6f2a01".toUUID()
-        val memoryPdfFileId = "bd84fb5c-9356-4abe-a8e5-0aea77b7b7cb".toUUID()
-        val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUUID()
+        val id = "315cedda-a219-426d-8acc-ebeb7c70b9f7".toUuid()
+        val itemId = "3582407a-6c08-44ce-abf5-6a8545c48516".toUuid()
+        val itemTypeId = "2c3c5f3d-5c5e-4916-988c-225b57f91cfa".toUuid()
+        val receivedItemId = "786a1c86-6e7d-4cdc-bebf-d1540f67029b".toUuid()
+        val memoryId = "5b9f2b34-2a58-4b9d-9a2b-9f6a6e6f2a01".toUuid()
+        val memoryPdfFileId = "bd84fb5c-9356-4abe-a8e5-0aea77b7b7cb".toUuid()
+        val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUuid()
 
         val instant = Instant.ofEpochSecond(1759917121)
 

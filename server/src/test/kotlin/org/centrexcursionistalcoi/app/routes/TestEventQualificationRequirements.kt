@@ -13,13 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import java.time.Instant
-import kotlin.uuid.Uuid
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
@@ -41,27 +34,33 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.jetbrains.exposed.v1.core.and
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import java.time.Instant
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
 
 /**
  * Events may require qualifications: creating/patching them, exposing them, and enforcing them when a user
  * confirms assistance. Requirements are `AND` of `OR`s (see `Event.qualificationRequirements`).
  */
 class TestEventQualificationRequirements : ApplicationTestBase() {
-    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUUID()
-    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUUID()
+    private val departmentId = "54015d8b-951b-4492-b2a8-847f88d1f457".toUuid()
+    private val otherDepartmentId = "6f2d0b4e-1b0c-4a39-9d55-0c6a3c1de002".toUuid()
 
-    private val basic = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUUID()
-    private val lead = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d002".toUUID()
-    private val topRope = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d003".toUUID()
-    private val ice = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUUID()
+    private val basic = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d001".toUuid()
+    private val lead = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d002".toUuid()
+    private val topRope = "0c1b7a51-4d5a-4c88-a0b5-3e7ab3a9d003".toUuid()
+    private val ice = "b8a4c2f7-5e83-4f6b-8d3e-2a9c7f5b0003".toUuid()
 
-    private val eventId = "9d0c1b2a-3e4f-4a5b-8c6d-7e8f9a0b1c01".toUUID()
+    private val eventId = "9d0c1b2a-3e4f-4a5b-8c6d-7e8f9a0b1c01".toUuid()
 
     /**
      * Seeds two departments: "Test Department", with the qualifications [basic], [lead] and [topRope], and
@@ -284,7 +283,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         val response = client.createEvent(departmentId, """[["$basic"],["$lead","$topRope"]]""")
         assertEquals(HttpStatusCode.Created, response.status)
 
-        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUUID()
+        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUuid()
         assertEquals(sorted(listOf(listOf(basic), listOf(lead, topRope))), sorted(requirements(id)))
     }
 
@@ -311,7 +310,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     ) {
         val response = client.createEvent(departmentId, """[["$basic","$basic"],["$basic"]]""")
         assertEquals(HttpStatusCode.Created, response.status)
-        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUUID()
+        val id = response.headers[HttpHeaders.Location]!!.substringAfterLast('/').toUuid()
         assertEquals(listOf(listOf(basic)), requirements(id))
     }
 

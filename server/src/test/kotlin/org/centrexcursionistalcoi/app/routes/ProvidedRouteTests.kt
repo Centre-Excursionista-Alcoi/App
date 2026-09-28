@@ -15,26 +15,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
-import java.lang.reflect.InvocationTargetException
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
-import java.time.temporal.Temporal
-import java.util.Random
-import kotlin.uuid.Uuid
-import kotlin.io.encoding.Base64
-import kotlin.reflect.KCallable
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.full.memberProperties
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.toJavaInstant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.DeserializationStrategy
@@ -53,22 +33,44 @@ import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.test.*
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
 import org.centrexcursionistalcoi.app.utils.Zero
 import org.centrexcursionistalcoi.app.utils.toJsonElement
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.UuidEntity
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
-import kotlin.time.Instant as KotlinInstant
+import java.lang.reflect.InvocationTargetException
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
+import java.time.temporal.Temporal
+import java.util.Random
+import kotlin.io.encoding.Base64
+import kotlin.reflect.KCallable
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.memberProperties
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.toJavaInstant
+import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate as KotlinLocalDate
 import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
+import kotlin.time.Instant as KotlinInstant
 
 object ProvidedRouteTests {
     private suspend fun HttpClient.request(url: String, method: HttpMethod, contentType: ContentType?, expectedStatusCode: HttpStatusCode) {
@@ -297,7 +299,7 @@ object ProvidedRouteTests {
         defaultCreationValuesProvider = defaultCreationValuesProvider,
         locationRegex = locationRegex,
         entityClass = entityClass,
-        idTypeConverter = { it.toUUID() },
+        idTypeConverter = { it.toUuid() },
         exposedIdTypeConverter = { it },
         stubEntityProvider = stubEntityProvider,
         invalidEntityId = Uuid.Zero,

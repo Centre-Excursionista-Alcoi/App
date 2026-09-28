@@ -22,7 +22,7 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.utils.Zero
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import kotlin.test.Test
@@ -209,7 +209,7 @@ class TestPush {
             DynamicTest.dynamicTest("for ${notification.type}") {
                 mockFCM { messagingMock ->
                     val department = Database {
-                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
+                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUuid()) {
                             displayName = "Department"
                         }
                     }
@@ -252,7 +252,7 @@ class TestPush {
             DynamicTest.dynamicTest("for ${notification.type}") {
                 mockFCM { messagingMock ->
                     val department = Database {
-                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUUID()) {
+                        DepartmentEntity.new("2c216742-f008-4aaf-9450-c8dfb644e094".toUuid()) {
                             displayName = "Department"
                         }
                     }

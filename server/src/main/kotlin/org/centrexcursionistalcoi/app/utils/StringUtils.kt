@@ -1,20 +1,7 @@
 package org.centrexcursionistalcoi.app.utils
 
 import java.security.SecureRandom
-import java.util.*
-import kotlin.uuid.Uuid
-
-/**
- * Tries to convert the string to a UUID.
- * Returns `null` if the string is not a valid UUID.
- */
-fun String.toUUIDOrNull() = Uuid.parseOrNull(this)
-
-/**
- * Tries to convert the string to a UUID.
- * Throws `IllegalArgumentException` if the string is not a valid UUID.
- */
-fun String.toUUID() = Uuid.parse(this)
+import java.util.Random
 
 /**
  * Generates a random alphanumeric string of the given length.

@@ -1,7 +1,5 @@
 package org.centrexcursionistalcoi.app.routes
 
-import kotlinx.serialization.builtins.serializer
-import kotlin.uuid.Uuid
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -16,7 +14,9 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -55,7 +55,7 @@ import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
@@ -70,8 +70,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
-import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeParseException
+import kotlin.uuid.Uuid
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -122,7 +122,7 @@ private fun UserSession.canManageLending(lending: LendingEntity): Boolean {
  * @return The lending entity, or `null` if an error occurred. If `null` is returned, the response has already been sent, so it's safe to exit the upper function.
  */
 private suspend fun RoutingContext.lendingRequest(session: UserSession): LendingEntity? {
-    val lendingId = call.parameters["id"]?.toUUIDOrNull()
+    val lendingId = call.parameters["id"]?.toUuidOrNull()
 
     val lending = lendingId?.let { Database { LendingEntity.findById(it) } }
     if (lending == null) {
@@ -350,7 +350,7 @@ fun Route.lendingsRoutes() {
     post("inventory/lendings/{id}/cancel") {
         val session = getUserSessionOrFail() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        val lendingId = call.parameters["id"]?.toUuidOrNull()
         if (lendingId == null) {
             call.respondError(Error.MalformedId())
             return@post
@@ -532,7 +532,7 @@ fun Route.lendingsRoutes() {
     post("inventory/lendings/{id}/skip_memory") {
         assertAdmin() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUUIDOrNull()
+        val lendingId = call.parameters["id"]?.toUuidOrNull()
         if (lendingId == null) {
             respondError(Error.MalformedId())
             return@post
@@ -563,7 +563,7 @@ fun Route.lendingsRoutes() {
     getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
 
-        val typeId = call.parameters["id"]?.toUUIDOrNull()
+        val typeId = call.parameters["id"]?.toUuidOrNull()
         if (typeId == null) {
             call.respondError(Error.MalformedId())
             return@getWithLock

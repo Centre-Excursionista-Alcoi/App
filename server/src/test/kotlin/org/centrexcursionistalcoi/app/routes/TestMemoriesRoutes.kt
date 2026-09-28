@@ -1,40 +1,39 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.post
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.Headers
-import io.ktor.http.HttpMethod
-import org.centrexcursionistalcoi.app.ResourcesUtils
-import org.centrexcursionistalcoi.app.data.FileWithContext
-import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
-import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import io.ktor.client.request.delete
+import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.datetime.LocalTime
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
+import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
@@ -43,14 +42,15 @@ import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.storage.testStorage
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
-import org.centrexcursionistalcoi.app.utils.toUUID
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
-import org.centrexcursionistalcoi.app.storage.testStorage
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.utils.toUuid
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -68,8 +68,8 @@ import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 class TestMemoriesRoutes : ApplicationTestBase() {
 
-    private val exampleItemTypeId = "8e5b8c53-df8c-4e0a-9f9d-2a0f5c1a6a3a".toUUID()
-    private val exampleItemId = "1a9f6bda-53f0-4f38-9c9e-3f4e4f9c8b1c".toUUID()
+    private val exampleItemTypeId = "8e5b8c53-df8c-4e0a-9f9d-2a0f5c1a6a3a".toUuid()
+    private val exampleItemId = "1a9f6bda-53f0-4f38-9c9e-3f4e4f9c8b1c".toUuid()
 
     private suspend fun HttpClient.postMemory(request: CreateMemoryRequest): HttpResponse = post("/memories") {
         contentType(ContentType.Application.Json)
@@ -478,7 +478,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             assertStatusCode(HttpStatusCode.Created)
             headers[HttpHeaders.Location]!!
         }
-        val memoryId = location.substringAfterLast('/').toUUIDOrNull()
+        val memoryId = location.substringAfterLast('/').toUuidOrNull()
         assertNotNull(memoryId)
 
         val originalPdfId = client.get(location).run {

@@ -4,8 +4,6 @@ import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
 import io.sentry.Sentry
-import kotlin.uuid.Uuid
-import kotlin.io.encoding.Base64
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -26,7 +24,7 @@ import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.serialization.list
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -34,12 +32,14 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.io.encoding.Base64
+import kotlin.uuid.Uuid
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/types",
         entityClass = InventoryItemTypeEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemTypeEntity.all()
@@ -83,7 +83,7 @@ fun Route.inventoryRoutes() {
                                 }
                             }
                             "weight" -> weight = partData.value.toDoubleOrNull()
-                            "department" -> department = partData.value.toUUIDOrNull()
+                            "department" -> department = partData.value.toUuidOrNull()
                             "image" -> {
                                 image.populate(partData)
                             }
@@ -150,7 +150,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         base = "inventory/items",
         entityClass = InventoryItemEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
             else if (session.isAdmin()) InventoryItemEntity.all()

@@ -1,8 +1,5 @@
 package org.centrexcursionistalcoi.app.database.utils
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -13,7 +10,10 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serialization.getString
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class TestEntityUtils {
     @Test
@@ -56,7 +56,7 @@ class TestEntityUtils {
         val element = Json.decodeFromString(JsonElement.serializer(), json).jsonObject
         assertEquals(
             department.id.value,
-            element.getValue("id").jsonPrimitive.content.toUUIDOrNull()
+            element.getValue("id").jsonPrimitive.content.toUuidOrNull()
         )
         assertEquals(
             department.displayName,

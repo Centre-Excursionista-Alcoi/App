@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
-import kotlin.uuid.Uuid
-import io.ktor.http.content.*
-import io.ktor.server.routing.*
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.routing.Route
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.FileWithContext
@@ -17,14 +17,15 @@ import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.jdbc.insert
+import kotlin.uuid.Uuid
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
         base = "posts",
         entityClass = PostEntity,
-        idTypeConverter = { it.toUUIDOrNull() },
+        idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },
         visibleTo = { post, session -> post.isVisibleTo(session) },
         // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the current
@@ -44,7 +45,7 @@ fun Route.postsRoutes() {
                         when (partData.name) {
                             "title" -> title = partData.value
                             "content" -> content = partData.value
-                            "department" -> departmentId = partData.value.toUUIDOrNull()
+                            "department" -> departmentId = partData.value.toUuidOrNull()
                             "link" -> link = partData.value
                             "files" -> {
                                 val fileList: List<FileWithContext> = json.decodeFromString(

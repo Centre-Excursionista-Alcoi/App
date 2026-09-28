@@ -1,12 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.Month
-import java.time.ZoneOffset
-import java.util.Random
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.Department
@@ -23,16 +17,22 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.routes.ProvidedRouteTests.runTestsOnRoute
 import org.centrexcursionistalcoi.app.utils.generateRandomString
-import org.centrexcursionistalcoi.app.utils.toUUID
+import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.Month
+import java.time.ZoneOffset
+import java.util.Random
 
 class TestRoutes : ApplicationTestBase() {
-    private val testDepartmentId = "2c8876a9-ff7e-4dd8-b39c-dd270631b9d2".toUUID()
-    private val testItemTypeId = "3a305821-03f2-4ca8-98c8-ffe64e262cf7".toUUID()
-    private val testItemId = "3c509110-2115-4fd7-b3d5-20692cb935e5".toUUID()
-    private val testEventId = "cfa60697-5166-4e9e-881e-51e32de2e10f".toUUID()
+    private val testDepartmentId = "2c8876a9-ff7e-4dd8-b39c-dd270631b9d2".toUuid()
+    private val testItemTypeId = "3a305821-03f2-4ca8-98c8-ffe64e262cf7".toUuid()
+    private val testItemId = "3c509110-2115-4fd7-b3d5-20692cb935e5".toUuid()
+    private val testEventId = "cfa60697-5166-4e9e-881e-51e32de2e10f".toUuid()
     private val random = Random(0)
 
     /** Regexp for UUIDv4 */

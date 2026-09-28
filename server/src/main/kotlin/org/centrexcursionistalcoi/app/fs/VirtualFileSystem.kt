@@ -8,7 +8,7 @@ import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceDocumentEntity
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.dao.Entity
@@ -148,26 +148,26 @@ object VirtualFileSystem {
         RootDir(
             name = "Departments",
             entityClass = DepartmentEntity,
-            idConverter = { it.toUUIDOrNull() },
+            idConverter = { it.toUuidOrNull() },
             customFileDisplayName = { it.displayName },
         ) { it.image },
         RootDir(
             name = "Inventory Item",
             entityClass = InventoryItemTypeEntity,
-            idConverter = { it.toUUIDOrNull() },
+            idConverter = { it.toUuidOrNull() },
             customFileDisplayName = { it.displayName },
         ) { it.image },
         RootDir(
             name = "Lending Memories",
             entityClass = LendingEntity,
-            idConverter = { it.toUUIDOrNull() },
+            idConverter = { it.toUuidOrNull() },
             customFileDisplayName = { it.userSub.fullName + " :: " + it.from + " - " + it.to },
         ) { lending -> lending.memory?.pdf },
         // One entry per document: an insurance can have several.
         RootDir(
             name = "Insurances",
             entityClass = UserInsuranceDocumentEntity,
-            idConverter = { it.toUUIDOrNull() },
+            idConverter = { it.toUuidOrNull() },
             customFileDisplayName = { document ->
                 val insurance = document.insurance
                 val name = insurance.userSub.fullName + " :: " + insurance.insuranceCompany + " - " + insurance.policyNumber
@@ -259,7 +259,7 @@ object VirtualFileSystem {
         // If not found, try finding by FileEntity ID or display name
         if (fileEntity == null) {
             logger.warn("File not found by entity ID, trying FileEntity ID or display name")
-            val fileUuid = fileId.toUUIDOrNull()
+            val fileUuid = fileId.toUuidOrNull()
             if (fileUuid != null) {
                 fileEntity = Database { FileEntity.findById(fileUuid) }
             } else {

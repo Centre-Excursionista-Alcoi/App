@@ -2,12 +2,12 @@ package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.plugins.ratelimit.rateLimit
 import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
@@ -27,7 +27,7 @@ import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
-import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.centrexcursionistalcoi.app.version
 import org.centrexcursionistalcoi.app.versionCode
 
@@ -42,7 +42,7 @@ fun Application.configureRouting() {
         }
 
         get("/download/{uuid}") {
-            val uuid = call.parameters["uuid"]?.toUUIDOrNull()
+            val uuid = call.parameters["uuid"]?.toUuidOrNull()
             if (uuid == null) {
                 return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
             }
