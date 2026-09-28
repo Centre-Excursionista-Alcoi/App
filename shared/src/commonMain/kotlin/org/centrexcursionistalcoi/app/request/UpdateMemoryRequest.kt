@@ -18,7 +18,9 @@ data class UpdateMemoryRequest(
     val attachments: List<FileWithContext>? = null,
     val from: ZonedDateTime? = null,
     val to: ZonedDateTime? = null,
-): UpdateEntityRequest<Uuid, Memory> {
+): UpdateEntityRequest<Uuid, Memory>, RequestWithFiles<UpdateMemoryRequest> {
+    override fun mapFiles(transform: (FileWithContext) -> FileWithContext): UpdateMemoryRequest = copy(attachments = attachments?.map(transform))
+
     override fun isEmpty(): Boolean {
         return place.isNullOrEmpty() &&
             members.isNullOrEmpty() &&

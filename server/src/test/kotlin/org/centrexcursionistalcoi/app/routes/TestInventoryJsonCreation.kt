@@ -136,7 +136,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
         }
 
         val storedImage = Database { FileEntity.all().first() }
-        val storedBytes = Database { storedImage.bytes }
+        val storedBytes = storedImage.readBytes()
         assertEquals(imageBytes.toList(), storedBytes.toList())
     }
 

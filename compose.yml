@@ -37,8 +37,15 @@ services:
       # CEA Configuration
       CEA_USERNAME: admin
       CEA_PASSWORD: password
+      # File storage: Cloudflare R2 (required outside development). Without it, files are stored in FILES_PATH.
+      # S3_ENDPOINT: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+      # S3_BUCKET: cea-files
+      # S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      # S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      FILES_PATH: /files
     volumes:
       - keys:/keys
+      - files:/files
       - ./service-account-file.json:/service-account-file.json:ro
     networks:
       - internal
@@ -82,6 +89,7 @@ volumes:
   redis:
     driver: local
   keys:
+  files:
 
 networks:
   internal:

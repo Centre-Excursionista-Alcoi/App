@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
@@ -73,9 +72,7 @@ fun Application.configureRouting() {
                 )
             }
 
-            call.respondBytes(
-                contentType = file.contentType
-            ) { file.bytes }
+            call.respondStoredFile(file.objectKey, file.size, file.contentType, file.lastModified)
         }
 
         authTokenRoutes()

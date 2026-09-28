@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
+import io.ktor.http.ContentType
 import org.centrexcursionistalcoi.app.assertTrue
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.database.Database
@@ -33,18 +34,18 @@ class TestV6Migration : PostgresTestBase() {
             DepartmentEntity.new { displayName = "Department" }
         }
         val pdfFile = Database {
-            FileEntity.new {
-                name = "memory.pdf"
-                type = "application/pdf"
-                bytes = byteArrayOf(1, 2, 3, 4)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(1, 2, 3, 4),
+                name = "memory.pdf",
+                contentType = ContentType.parse("application/pdf"),
+            )
         }
         val attachmentFile = Database {
-            FileEntity.new {
-                name = "attachment.jpg"
-                type = "image/jpeg"
-                bytes = byteArrayOf(5, 6, 7, 8)
-            }
+            FileEntity.create(
+                bytes = byteArrayOf(5, 6, 7, 8),
+                name = "attachment.jpg",
+                contentType = ContentType.parse("image/jpeg"),
+            )
         }
         val member = Database { transaction { FakeUser.provideMemberEntity() } }
         val lending = Database {

@@ -46,6 +46,14 @@ import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
+import io.ktor.http.content.PartData
+import io.ktor.server.request.receiveMultipart
+import org.centrexcursionistalcoi.app.request.MissingPartException
+import org.centrexcursionistalcoi.app.request.PushedBackMultiPartData
+import org.centrexcursionistalcoi.app.request.RequestWithFiles
+import org.centrexcursionistalcoi.app.request.readRequestWithFiles
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 
 private val logger = LoggerFactory.getLogger("RoutesBase")
 
@@ -410,10 +418,25 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             }
             tryCreate { requireNotNull(jsonCreator)(request) } ?: return@post
         } else {
-            // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch (and
-            //   go back to requiring isJsonCreate unconditionally) once every entity has a JSON creator and the
-            //   oldest app version still served sends JSON.
-            createFromMultipart(creator, entityKClass) ?: return@post
+            val multipart = call.receiveMultipart()
+            val first = multipart.readPart()
+            if (createRequestSerializer != null && jsonCreator != null &&
+                first is PartData.FormItem && first.name == RequestWithFiles.REQUEST_PART
+            ) {
+                // The JSON request, with its files in parts of their own (see RequestWithFiles)
+                val received = try {
+                    multipart.readRequestWithFiles(first, createRequestSerializer)
+                } catch (e: Exception) {
+                    logger.error("Failed to decode multipart create request", e)
+                    respondError(Error.MalformedRequest())
+                    return@post
+                }
+                tryCreate { received.withUploads { jsonCreator(received.request) } } ?: return@post
+            } else {
+                // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch
+                //   once the oldest app version still served sends JSON (or the multipart form above).
+                createFromMultipart(creator, entityKClass, PushedBackMultiPartData(first, multipart)) ?: return@post
+            }
         }
 
         // The fine-grained check can only run once the entity (and thus its department) exists -- multipart
@@ -450,19 +473,14 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
 
         val id = getId() ?: return@patch
-        assertContentType(ContentType.Application.Json) ?: return@patch
+        assertRequestWithFilesContentType() ?: return@patch
         val session = assertMayWriteAtAll() ?: return@patch
         val item = assertEntity(id) ?: return@patch
         assertWritePermission(session, item) ?: return@patch
 
-        val body = call.receiveText()
-        val request = try {
-            json.decodeFromString(updater, body)
-        } catch (e: Exception) {
-            logger.error("Failed to decode update request. Body: $body", e)
-            respondError(Error.MalformedRequest())
-            return@patch
-        }
+        // As JSON, or as multipart with the files in parts of their own (see RequestWithFiles)
+        val received = receiveRequestWithFiles(updater) ?: return@patch
+        val request = received.request
         if (request.isEmpty()) {
             respondError(Error.NothingToUpdate())
             return@patch
@@ -473,14 +491,20 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         // the *destination* inside the same transaction as the patch, so an unauthorized move is rolled back
         // atomically rather than left half-applied.
         try {
-            Database {
-                patcher.patch(request)
-                if (writePermission != null && !session.isAdmin()) {
-                    val newDepartmentId = writePermission.departmentOfEntity(item)
-                    val allowed = newDepartmentId != null && session.hasDepartmentRole(newDepartmentId, writePermission.role)
-                    if (!allowed) throw PermissionDeniedException()
+            received.withUploads {
+                Database {
+                    patcher.patch(request)
+                    if (writePermission != null && !session.isAdmin()) {
+                        val newDepartmentId = writePermission.departmentOfEntity(item)
+                        val allowed = newDepartmentId != null && session.hasDepartmentRole(newDepartmentId, writePermission.role)
+                        if (!allowed) throw PermissionDeniedException()
+                    }
                 }
             }
+        } catch (e: MissingPartException) {
+            logger.error("Update request refers to a missing part", e)
+            respondError(Error.MalformedRequest())
+            return@patch
         } catch (_: PermissionDeniedException) {
             respondError(Error.PermissionRejected())
             return@patch

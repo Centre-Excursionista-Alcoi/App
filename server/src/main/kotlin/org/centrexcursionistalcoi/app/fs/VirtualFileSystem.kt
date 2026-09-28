@@ -52,11 +52,14 @@ object VirtualFileSystem {
         }
     }
 
+    /**
+     * The metadata of a file. Its contents are at [objectKey] in the storage.
+     */
     class ItemData(
         val contentType: ContentType,
-        val size: Int,
+        val size: Long,
         val lastModified: Instant,
-        val data: ByteArray,
+        val objectKey: String,
     )
 
     @VisibleForTesting
@@ -211,12 +214,11 @@ object VirtualFileSystem {
     }
 
     private fun mapItem(rootDir: RootDir<out Any, out Entity<out Any>>, entity: Entity<out Any>, fileEntity: FileEntity): Item {
-        val bytes = fileEntity.bytes
         return Item(
             path = "/webdav/${rootDir.name}/${entity.id.value}",
             name = rootDir.fileDisplayName(entity, fileEntity),
             isDirectory = false,
-            size = bytes.size.toLong(),
+            size = fileEntity.size,
             contentType = fileEntity.contentType,
             lastModified = fileEntity.lastModified,
         )
@@ -280,12 +282,11 @@ object VirtualFileSystem {
             return null
         }
 
-        val data = Database { fileEntity.bytes }
         return ItemData(
             contentType = fileEntity.contentType,
-            size = data.size,
+            size = fileEntity.size,
             lastModified = fileEntity.lastModified,
-            data = data,
+            objectKey = fileEntity.objectKey,
         )
     }
 }

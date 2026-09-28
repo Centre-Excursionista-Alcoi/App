@@ -29,11 +29,11 @@ class ApplicationTest: ApplicationTestBase() {
     @Test
     fun testDownload() = runApplicationTest(
         databaseInitBlock = {
-            FileEntity.new {
-                name = "square.png"
-                contentType = ContentType.Image.PNG
-                bytes = bytesFromResource("/square.png")
-            }.id.value
+            FileEntity.create(
+                bytes = bytesFromResource("/square.png"),
+                name = "square.png",
+                contentType = ContentType.Image.PNG,
+            ).id.value
         }
     ) { context ->
         val fileId = context.dibResult

@@ -53,7 +53,8 @@ import java.sql.Types
 import org.jetbrains.exposed.v1.jdbc.Database as JdbcDatabase
 
 object Database {
-    private val tables = listOf(
+    @VisibleForTesting
+    internal val tables = listOf(
         Files,
         ConfigTable,
         Departments,
@@ -268,6 +269,7 @@ object Database {
                 is Float -> statement.setFloat(idx + 1, arg)
                 is Double -> statement.setDouble(idx + 1, arg)
                 is ByteArray -> statement.setBytes(idx + 1, arg)
+                is java.util.UUID -> statement.setObject(idx + 1, arg)
                 is Array<*> -> statement.setArray(
                     idx + 1,
                     conn.createArrayOf(

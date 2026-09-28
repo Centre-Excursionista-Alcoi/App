@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import io.ktor.http.ContentType
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.Department
@@ -37,11 +38,12 @@ class TestDepartment {
         val departmentMember2Id = "29ddada8-2d21-433f-ab95-8bd5a5afc4b9".toUUID()
 
         val departmentEntity = Database {
-            val imageFileEntity = FileEntity.new(imageFileId) {
-                name = "test_image.png"
-                type = "image/png"
-                bytes = byteArrayOf(1, 2, 3)
-            }
+            val imageFileEntity = FileEntity.create(
+                bytes = byteArrayOf(1, 2, 3),
+                name = "test_image.png",
+                contentType = ContentType.parse("image/png"),
+                id = imageFileId,
+            )
             DepartmentEntity.new(departmentId) {
                 displayName = "Test Department"
                 image = imageFileEntity
@@ -117,11 +119,11 @@ class TestDepartment {
             DepartmentEntity.new {
                 displayName = "Test Department"
                 image = transaction {
-                    FileEntity.new {
-                        name = "test_image.png"
-                        type = "image/png"
-                        bytes = byteArrayOf(1, 2, 3)
-                    }
+                    FileEntity.create(
+                        bytes = byteArrayOf(1, 2, 3),
+                        name = "test_image.png",
+                        contentType = ContentType.parse("image/png"),
+                    )
                 }
             }
         }
@@ -139,6 +141,6 @@ class TestDepartment {
         assertEquals("Updated Department", updatedEntity.displayName)
         val image = Database { updatedEntity.image }
         assertNotNull(image)
-        assertContentEquals(byteArrayOf(4, 5, 6), image.bytes)
+        assertContentEquals(byteArrayOf(4, 5, 6), image.readBytes())
     }
 }

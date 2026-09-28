@@ -30,6 +30,8 @@ import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 
 class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, EntityDataConverter<Memory, Uuid>, EntityPatcher<UpdateMemoryRequest> {
     companion object : UUIDEntityClass<MemoryEntity>(Memories)
@@ -109,8 +111,11 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
         request.from?.let { from = it }
         request.to?.let { to = it }
+        val ownedFileIds = files.map { it.id.value }
+        // Same restriction as the attachments given on creation, see MemoriesRoutes
+        val attachmentRules = FileReadWriteRules(readUsers = listOf(submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
         request.attachments?.forEach { fileWithContext ->
-            val fileEntity = FileEntity.updateOrCreate(fileWithContext) { fileEntity ->
+            val fileEntity = FileEntity.updateOrCreate(fileWithContext, ownedFileIds, attachmentRules) { fileEntity ->
                 MemoriesFiles.deleteWhere { (MemoriesFiles.memory eq this@MemoryEntity.id) and (MemoriesFiles.file eq fileEntity.id) }
             }
             if (fileEntity != null) {
@@ -121,5 +126,11 @@ class MemoryEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entit
                 }
             }
         }
+    }
+
+    override fun delete() {
+        val files = files.toList() + listOfNotNull(pdf)
+        super.delete() // memories_files cascades
+        FileEntity.deleteOwnedFiles(files)
     }
 }

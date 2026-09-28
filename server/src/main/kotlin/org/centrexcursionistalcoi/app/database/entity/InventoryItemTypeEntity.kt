@@ -73,4 +73,10 @@ class InventoryItemTypeEntity(id: EntityID<UUID>): UUIDEntity(id), LastUpdateEnt
         notifyUpdateForEntity(Companion, id)
         Database { lastUpdate = now() }
     }
+
+    override fun delete() {
+        val image = image
+        super.delete()
+        FileEntity.deleteOwnedFiles(listOfNotNull(image))
+    }
 }

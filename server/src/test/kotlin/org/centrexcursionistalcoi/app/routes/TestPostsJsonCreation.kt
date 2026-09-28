@@ -128,7 +128,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
 
         val storedFile = Database { FileEntity.all().first() }
         assertEquals("doc.pdf", storedFile.name)
-        val storedBytes = Database { storedFile.bytes }
+        val storedBytes = storedFile.readBytes()
         assertEquals(fileBytes.toList(), storedBytes.toList())
     }
 

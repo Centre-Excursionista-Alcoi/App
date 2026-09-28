@@ -10,15 +10,21 @@ import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 @Serializable
 data class FileWithContext(
-    @Serializable(Base64Serializer::class) val bytes: ByteArray,
+    // Files sent by the server (e.g. post files) have no contents, they are downloaded from /download/{id}
+    @Serializable(Base64Serializer::class) val bytes: ByteArray = byteArrayOf(),
     val name: String? = null,
     @Serializable(ContentTypeSerializer::class) val contentType: ContentType? = null,
     @Serializable(InstantSerializer::class) val lastModified: Instant? = null,
     val id: Uuid? = null,
+    /**
+     * In a multipart request (see [org.centrexcursionistalcoi.app.request.RequestWithFiles]), the name of the part
+     * holding the contents of the file, sent there instead of in [bytes].
+     */
+    val part: String? = null,
 ) {
     companion object {
         fun FileWithContext?.isNullOrEmpty(): Boolean {
-            return this == null || this.bytes.isEmpty()
+            return this == null || this.isEmpty()
         }
 
         fun ByteArray.wrapFile(
@@ -37,8 +43,11 @@ data class FileWithContext(
         }
     }
 
+    /**
+     * Whether the file has no contents: neither [bytes], nor a [part] holding them.
+     */
     fun isEmpty(): Boolean {
-        return bytes.isEmpty()
+        return bytes.isEmpty() && part == null
     }
 
     override fun equals(other: Any?): Boolean {
@@ -50,6 +59,7 @@ data class FileWithContext(
         if (name != other.name) return false
         if (!bytes.contentEquals(other.bytes)) return false
         if (contentType != other.contentType) return false
+        if (part != other.part) return false
 
         return true
     }
@@ -60,6 +70,7 @@ data class FileWithContext(
         result = 31 * result + (contentType?.hashCode() ?: 0)
         result = 31 * result + (lastModified?.hashCode() ?: 0)
         result = 31 * result + (id?.hashCode() ?: 0)
+        result = 31 * result + (part?.hashCode() ?: 0)
         return result
     }
 }

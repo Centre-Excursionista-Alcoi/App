@@ -198,11 +198,11 @@ object ProvidedRouteTests {
                 is FileWithContext -> {
                     // For FileBytesWrapper, the setter is a FileEntity. We have to create a FileEntity first.
                     val fileEntity = transaction {
-                        FileEntity.new {
-                            this.name = value.name ?: "bytes"
-                            this.type = (value.contentType ?: ContentType.Application.OctetStream).toString()
-                            this.bytes = value.bytes
-                        }
+                        FileEntity.create(
+                            bytes = value.bytes,
+                            name = value.name ?: "bytes",
+                            contentType = value.contentType ?: ContentType.Application.OctetStream,
+                        )
                     }
                     member.call(this, fileEntity)
                 }
@@ -403,7 +403,7 @@ object ProvidedRouteTests {
                     when (this) {
                         is FileEntity -> {
                             assertIs<FileWithContext>(expected, "Expected value for $name should be a FileBytesWrapper")
-                            val actualBytes = Database { bytes }
+                            val actualBytes = readBytes()
                             assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         }
 
@@ -472,7 +472,7 @@ object ProvidedRouteTests {
                             assertIs<Uuid>(actual, "Expected value for $name should be a Uuid")
                             val fileEntity = Database { FileEntity.findById(actual.toJavaUuid()) }
                             assertNotNull(fileEntity, "FileEntity with id $actual not found in database")
-                            val actualBytes = Database { fileEntity.bytes }
+                            val actualBytes = fileEntity.readBytes()
                             assertContentEquals(expected.bytes, actualBytes, "Field $name contents does not match")
                         } else if (expected is UUID && actual is Uuid) {
                             // If expected is a UUID and actual is a Uuid, compare their values

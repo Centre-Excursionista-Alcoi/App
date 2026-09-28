@@ -58,6 +58,10 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.utils.toUUIDOrNull
+import org.centrexcursionistalcoi.app.storage.FileStorageProvider
+import org.centrexcursionistalcoi.app.request.MissingPartException
+import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -109,6 +113,8 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOw
     return memory
 }
 
+private class StoredAttachment(val objectKey: String, val size: Long, val name: String)
+
 /**
  * (Re)generates the memory's summary PDF from its current data and stores it as [MemoryEntity.pdf], deleting the
  * previous one (if any). Must be called after all field changes (including patched ones) have already been persisted.
@@ -133,23 +139,23 @@ private fun regenerateMemoryPdf(memory: MemoryEntity) {
             referencedMemory,
             itemsUsed = itemsUsed,
             submittedBy = submittedByName,
-            photoProvider = { uuid -> Database { FileEntity[uuid].bytes } },
+            photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
             outputStream = output,
         )
     }
 
     Database {
         val oldPdf = memory.pdf
-        memory.pdf = FileEntity.new {
-            name = "memory_${memory.id.value}.pdf"
-            contentType = ContentType.Application.Pdf
-            bytes = baos.toByteArray()
+        memory.pdf = FileEntity.create(
+            bytes = baos.toByteArray(),
+            name = "memory_${memory.id.value}.pdf",
+            contentType = ContentType.Application.Pdf,
             // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
             // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
             // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
             // department-role checks that read access to the memory itself is based on.
-            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME))
-        }
+            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
+        )
         oldPdf?.delete()
     }
 }
@@ -283,7 +289,13 @@ fun Route.memoriesRoutes() {
         // Store all attachments. Best-effort restriction: see the comment on the memory PDF's rules below --
         // department MEMORY_MANAGERs and tagged members can see the memory's data but not download these files.
         val attachmentRules = FileReadWriteRules(readUsers = listOf(session.sub), readGroups = listOf(ADMIN_GROUP_NAME))
-        val documentEntities = attachedFiles.map { file -> Database { file.newEntity(rules = attachmentRules) } }
+        val documentEntities = attachedFiles.map { file -> file.newEntity(rules = attachmentRules) }
+        // Read now: the entities' values can't be read outside a transaction later
+        val attachments = Database {
+            documentEntities.mapIndexed { i, file ->
+                StoredAttachment(file.objectKey, file.size, attachedFiles[i].originalFileName ?: "memory_attachment_$i")
+            }
+        }
 
         val memoryId = UUID.randomUUID()
         val memoryEntity = Database {
@@ -331,13 +343,14 @@ fun Route.memoriesRoutes() {
                 val fileAttachments = mutableListOf<MailerSendAttachment>()
                 var bytesCounter = 0L
                 val maxTotalSizeBytes = 20 * 1024 * 1024 // 20 MB
-                for ((i, file) in attachedFiles.withIndex()) {
-                    val fileBytes = file.baos.toByteArray()
-                    bytesCounter += fileBytes.size
+                for (attachment in attachments) {
+                    // Checked before reading them from the storage
+                    bytesCounter += attachment.size
                     if (bytesCounter > maxTotalSizeBytes) {
                         break
                     }
-                    fileAttachments.add(MailerSendAttachment(fileBytes, file.originalFileName ?: "memory_attachment_$i"))
+                    val fileBytes = FileStorageProvider.current.readBytes(attachment.objectKey)
+                    fileAttachments.add(MailerSendAttachment(fileBytes, attachment.name))
                 }
 
                 val url = AppLinks.adminLending(lending.id.value)
@@ -408,16 +421,14 @@ fun Route.memoriesRoutes() {
     }
     patch("memories/{id}") {
         val session = getUserSessionOrFail() ?: return@patch
-        assertContentType(ContentType.Application.Json) ?: return@patch
+        assertRequestWithFilesContentType() ?: return@patch
         val memory = memoryRequest(session) ?: return@patch
 
-        val body = call.receiveText()
-        val request = try {
-            json.decodeFromString(UpdateMemoryRequest.serializer(), body)
-        } catch (e: SerializationException) {
-            respondError(Error.SerializationError(e.message, body))
-            return@patch
-        }
+        // As JSON, or as multipart with the attachments in parts of their own (see RequestWithFiles)
+        val received = receiveRequestWithFiles(UpdateMemoryRequest.serializer()) { e, body ->
+            Error.SerializationError(e.message, body)
+        } ?: return@patch
+        val request = received.request
         if (request.isEmpty()) {
             respondError(Error.NothingToUpdate())
             return@patch
@@ -428,14 +439,19 @@ fun Route.memoriesRoutes() {
         // manage. Applying the patch and re-checking inside the same transaction keeps the move atomic: on
         // rejection, the exception propagates out of the `Database { }` block and rolls the reassignment back.
         try {
-            Database {
-                memory.patch(request)
-                val newDepartment = memory.department
-                val isAllowed = session.isAdmin() ||
-                    Database { memory.submittedBy.sub.value } == session.sub ||
-                    (newDepartment != null && session.hasDepartmentRole(newDepartment.id.value, DepartmentRole.MEMORY_MANAGER))
-                if (!isAllowed) throw PermissionDeniedException()
+            received.withUploads {
+                Database {
+                    memory.patch(request)
+                    val newDepartment = memory.department
+                    val isAllowed = session.isAdmin() ||
+                        Database { memory.submittedBy.sub.value } == session.sub ||
+                        (newDepartment != null && session.hasDepartmentRole(newDepartment.id.value, DepartmentRole.MEMORY_MANAGER))
+                    if (!isAllowed) throw PermissionDeniedException()
+                }
             }
+        } catch (e: MissingPartException) {
+            respondError(Error.SerializationError(e.message, null))
+            return@patch
         } catch (_: PermissionDeniedException) {
             respondError(Error.PermissionRejected())
             return@patch

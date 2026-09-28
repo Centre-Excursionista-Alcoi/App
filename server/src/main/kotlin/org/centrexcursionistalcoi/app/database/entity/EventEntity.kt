@@ -192,7 +192,20 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
         request.requiresConfirmation?.let { requiresConfirmation = it }
         request.requiresInsurance?.let { requiresInsurance = it }
         request.department?.let { department = DepartmentEntity.findById(it.toJavaUuid()) }
-        request.image?.let { image = FileEntity.updateOrCreate(it) }
+        request.image?.let { request ->
+            val oldImage = image
+            val ownedFileIds = listOfNotNull(oldImage?.id?.value)
+            // Unlink the image before it's deleted (if asked to remove it): events don't set their image to null on delete
+            val newImage = FileEntity.updateOrCreate(request, ownedFileIds) { image = null; this@EventEntity.flush() }
+            if (newImage != null) {
+                image = newImage
+                // Replaced, delete the old image
+                if (oldImage != null) {
+                    this@EventEntity.flush()
+                    FileEntity.deleteIfUnreferenced(oldImage)
+                }
+            }
+        }
 
         // Requirements can only be on the event's own department's qualifications, so they have to be checked
         // against the department the event ends up in -- which also catches moving an event that already has
@@ -227,5 +240,11 @@ class EventEntity(id: EntityID<UUID>) : UUIDEntity(id), LastUpdateEntity, Entity
             userSub = session.sub,
             isConfirmed = false,
         )
+    }
+
+    override fun delete() {
+        val image = image
+        super.delete()
+        FileEntity.deleteOwnedFiles(listOfNotNull(image))
     }
 }
