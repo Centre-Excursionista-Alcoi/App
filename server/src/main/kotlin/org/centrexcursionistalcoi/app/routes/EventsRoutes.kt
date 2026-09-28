@@ -47,13 +47,11 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.time.Clock.System.now
-import kotlin.time.toJavaInstant
 import kotlin.uuid.Uuid
 
 private val eventAssistanceMutex = Mutex()
@@ -99,8 +97,8 @@ fun Route.eventsRoutes() {
                 when (partData) {
                     is PartData.FormItem -> {
                         when (partData.name) {
-                            "start" -> start = partData.value.toLong().let(Instant::ofEpochMilli)
-                            "end" -> end = partData.value.toLong().let(Instant::ofEpochMilli)
+                            "start" -> start = partData.value.toLong().let(Instant::fromEpochMilliseconds)
+                            "end" -> end = partData.value.toLong().let(Instant::fromEpochMilliseconds)
                             "place" -> place = partData.value
                             "title" -> title = partData.value
                             "description" -> description = partData.value
@@ -177,8 +175,8 @@ fun Route.eventsRoutes() {
 
             Database {
                 EventEntity.new {
-                    this.start = request.start.toJavaInstant()
-                    this.end = request.end?.toJavaInstant()
+                    this.start = request.start
+                    this.end = request.end
                     this.place = request.place
                     this.title = request.title
                     this.description = request.description
@@ -233,7 +231,7 @@ fun Route.eventsRoutes() {
         } ?: return@postWithLock call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
 
         // Make sure the event is in the future
-        val now = now().toJavaInstant()
+        val now = now()
         if (event.start < now) {
             return@postWithLock call.respondError(Error.EventInThePast())
         }
@@ -254,9 +252,9 @@ fun Route.eventsRoutes() {
 
         // If the event requires insurance, check that the user has a valid insurance for the event dates
         if (event.requiresInsurance) {
-            val from = LocalDateTime.ofInstant(event.start, ZoneId.systemDefault()).toLocalDate()
+            val from = event.start.toLocalDateTime(TimeZone.currentSystemDefault()).date
             val to = if (event.end != null) {
-                LocalDateTime.ofInstant(event.end!!, ZoneId.systemDefault()).toLocalDate()
+                event.end!!.toLocalDateTime(TimeZone.currentSystemDefault()).date
             } else {
                 from
             }
@@ -280,7 +278,7 @@ fun Route.eventsRoutes() {
                     .where {
                         (UserQualifications.userSub eq session.sub) and
                             (UserQualifications.qualification inList required) and
-                            (UserQualifications.expiresAt.isNull() or (UserQualifications.expiresAt greater now().toJavaInstant()))
+                            (UserQualifications.expiresAt.isNull() or (UserQualifications.expiresAt greater now()))
                     }
                     .map { it[UserQualifications.qualification].value }
                     .toSet()
@@ -340,7 +338,7 @@ fun Route.eventsRoutes() {
         } ?: return@postWithLock call.respondError(Error.EntityNotFound(EventEntity::class, eventId))
 
         // Make sure the event is in the future
-        val now = now().toJavaInstant()
+        val now = now()
         if (event.start < now) {
             return@postWithLock call.respondError(Error.EventInThePast())
         }

@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import io.ktor.http.ContentType
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -200,7 +202,7 @@ class TestFileEntityStorage {
 
     @Test
     fun test_filesCleanup_deletesOnlyOldUnreferencedFiles() = runTest {
-        val old = Instant.now().minusSeconds(3 * 24 * 3600)
+        val old = (Clock.System.now() - (3 * 24 * 3600).seconds)
         val oldUnreferenced = createTestFile(byteArrayOf(1))
         val oldReferenced = createTestFile(byteArrayOf(2))
         val newUnreferenced = createTestFile(byteArrayOf(3))

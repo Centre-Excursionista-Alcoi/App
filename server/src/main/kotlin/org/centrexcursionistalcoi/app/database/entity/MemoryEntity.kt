@@ -23,10 +23,8 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 
@@ -50,17 +48,17 @@ class MemoryEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entit
 
     /** When the described activity started, as a [ZonedDateTime] combining [fromInstant]/[fromZone]. */
     var from: ZonedDateTime
-        get() = ZonedDateTime.fromInstant(fromInstant.toKotlinInstant(), TimeZone.of(fromZone))
+        get() = ZonedDateTime.fromInstant(fromInstant, TimeZone.of(fromZone))
         set(value) {
-            fromInstant = value.toInstant().toJavaInstant()
+            fromInstant = value.toInstant()
             fromZone = value.timeZone.id
         }
 
     /** When the described activity ended, as a [ZonedDateTime] combining [toInstant]/[toZone]. */
     var to: ZonedDateTime
-        get() = ZonedDateTime.fromInstant(toInstant.toKotlinInstant(), TimeZone.of(toZone))
+        get() = ZonedDateTime.fromInstant(toInstant, TimeZone.of(toZone))
         set(value) {
-            toInstant = value.toInstant().toJavaInstant()
+            toInstant = value.toInstant()
             toZone = value.timeZone.id
         }
 

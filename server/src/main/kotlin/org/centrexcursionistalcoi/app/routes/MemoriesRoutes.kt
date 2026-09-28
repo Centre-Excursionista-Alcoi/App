@@ -215,8 +215,8 @@ fun Route.memoriesRoutes() {
         val (from, to) = if (lending != null) {
             val zone = TimeZone.currentSystemDefault()
             Database {
-                ZonedDateTime(zone, lending.from.toKotlinLocalDate(), LocalTime(0, 0, 0)) to
-                    ZonedDateTime(zone, lending.to.toKotlinLocalDate(), LocalTime(23, 59, 59))
+                ZonedDateTime(zone, lending.from, LocalTime(0, 0, 0)) to
+                    ZonedDateTime(zone, lending.to, LocalTime(23, 59, 59))
             }
         } else {
             if (fromRaw == null) {

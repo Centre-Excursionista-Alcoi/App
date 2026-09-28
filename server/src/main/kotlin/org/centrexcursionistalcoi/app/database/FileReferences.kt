@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.database.table.Departments
 import org.centrexcursionistalcoi.app.database.table.Events

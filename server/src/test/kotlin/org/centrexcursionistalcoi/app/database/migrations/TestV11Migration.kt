@@ -1,9 +1,10 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
+import kotlin.time.Clock
 import kotlin.uuid.toKotlinUuid
 import io.ktor.http.ContentType
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.uuid.Uuid
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -94,7 +95,7 @@ class TestV11Migration : PostgresTestBase() {
         val eventImage = newFile(png)
         Database {
             Events.insert {
-                it[start] = Instant.now()
+                it[start] = Clock.System.now()
                 it[place] = "Place"
                 it[title] = "Event"
                 it[image] = eventImage
@@ -106,9 +107,9 @@ class TestV11Migration : PostgresTestBase() {
             val memory = Memories.insertAndGetId {
                 it[text] = "Memory"
                 it[submittedBy] = user.id
-                it[fromInstant] = Instant.now()
+                it[fromInstant] = Clock.System.now()
                 it[fromZone] = "Europe/Madrid"
-                it[toInstant] = Instant.now()
+                it[toInstant] = Clock.System.now()
                 it[toZone] = "Europe/Madrid"
                 it[Memories.pdf] = memoryPdf
             }
@@ -135,8 +136,8 @@ class TestV11Migration : PostgresTestBase() {
                 userSub = user
                 insuranceCompany = "Company"
                 policyNumber = "1234"
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
             }.addDocuments(listOf(FileEntity[insuranceDocument], FileEntity[untyped]))
         }
         referenced += listOf(departmentImage, typeImage, eventImage, memoryPdf, memoryAttachment, postFile, insuranceDocument, untyped)

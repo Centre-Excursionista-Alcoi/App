@@ -1,11 +1,12 @@
 package org.centrexcursionistalcoi.app
 
+import kotlin.time.Clock
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -27,7 +28,7 @@ class TestPasswordRecovery : ApplicationTestBase() {
             RecoverPasswordRequests.insert {
                 it[id] = "recovery-request"
                 it[this.user] = user.id
-                it[timestamp] = if (expired) Instant.EPOCH else Instant.now()
+                it[timestamp] = if (expired) Instant.fromEpochSeconds(0) else Clock.System.now()
             }
         },
     ) {

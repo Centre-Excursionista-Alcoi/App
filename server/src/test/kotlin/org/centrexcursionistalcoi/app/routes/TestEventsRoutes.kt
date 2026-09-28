@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.time.toJavaInstant
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -33,7 +36,7 @@ import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -69,7 +72,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         client.submitFormWithBinaryData(
             "/events",
             formData {
-                append("start", Instant.now().toEpochMilli())
+                append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Managed event")
                 append("place", "Somewhere")
                 append("department", department.id.value.toString())
@@ -101,7 +104,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         client.submitFormWithBinaryData(
             "/events",
             formData {
-                append("start", Instant.now().toEpochMilli())
+                append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Cross-department event")
                 append("place", "Somewhere")
                 append("department", otherDepartment.id.value.toString())
@@ -136,7 +139,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         client.submitFormWithBinaryData(
             "/events",
             formData {
-                append("start", Instant.now().toEpochMilli())
+                append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Cross-department event with image")
                 append("place", "Somewhere")
                 append("department", otherDepartment.id.value.toString())
@@ -175,7 +178,7 @@ class TestEventsRoutes : ApplicationTestBase() {
                 it[roles] = listOf(DepartmentRole.CONTENT_MANAGER.storageName)
             }
             val event = EventEntity.new {
-                start = Instant.now()
+                start = Clock.System.now()
                 title = "Managed event"
                 place = "Somewhere"
                 department = managed
@@ -207,7 +210,7 @@ class TestEventsRoutes : ApplicationTestBase() {
             FakeUser.provideEntity()
             val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
             EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Private event"
                 place = "Somewhere"
                 department = otherDepartment
@@ -233,7 +236,7 @@ class TestEventsRoutes : ApplicationTestBase() {
                 it[roles] = emptyList()
             }
             EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Department event"
                 place = "Somewhere"
                 department = dept
@@ -255,7 +258,7 @@ class TestEventsRoutes : ApplicationTestBase() {
             FakeUser.provideEntity()
             val otherDepartment = DepartmentEntity.new { displayName = "Other Department" }
             EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Private event"
                 place = "Somewhere"
                 department = otherDepartment
@@ -265,7 +268,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         val event = context.dibResult!!
 
         client.get("/events/${event.id.value}") {
-            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Instant.now().atZone(ZoneOffset.UTC)))
+            headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Clock.System.now().toJavaInstant().atZone(ZoneOffset.UTC)))
         }.assertStatusCode(HttpStatusCode.NotFound)
     }
 
@@ -275,7 +278,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         databaseInitBlock = {
             FakeUser.provideEntity()
             val event = EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Event with an attendee"
                 place = "Somewhere"
             }
@@ -305,7 +308,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
             EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Event with no attendees"
                 place = "Somewhere"
             }

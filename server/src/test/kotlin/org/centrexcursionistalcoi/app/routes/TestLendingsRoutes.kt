@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -11,11 +13,18 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import io.ktor.http.parameters
+import kotlinx.datetime.LocalDate
+import kotlin.uuid.Uuid
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
 import org.centrexcursionistalcoi.app.assertError
@@ -48,14 +57,6 @@ import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
-import java.time.LocalDate
-import java.time.ZoneOffset
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.uuid.Uuid
 
 class TestLendingsRoutes : ApplicationTestBase() {
 
@@ -199,7 +200,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_invalidRange() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
         databaseInitBlock = { getOrCreateItem() },
     ) {
         client.postLending(
@@ -217,7 +218,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     @Test
     fun test_create_lending_datesInPast() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
         databaseInitBlock = { getOrCreateItem() },
     ) {
         // Both dates in past
@@ -255,7 +256,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                 }
             }
         },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
     ) {
         // New lending starting on the day existing one starts
         client.postLending(
@@ -275,7 +276,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             FakeUser.provideEntity()
         },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
     ) {
         // New lending starting on the day existing one starts
         client.postLending(
@@ -299,8 +300,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             val adminUser = FakeAdminUser.provideEntity()
             LendingEntity.new {
                 this.userSub = adminUser
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.notes = "Existing lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -321,13 +322,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Add insurance for the user
             UserInsuranceEntity.new {
                 userSub = user
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
                 insuranceCompany = "Insurance Co"
                 policyNumber = "POL123456"
             }
         },
-        mockDate = LocalDate.of(2025, 10, 1),
+        mockDate = LocalDate(2025, 10, 1),
     ) {
         fun HttpResponse.delete() {
             val location = headers[HttpHeaders.Location]
@@ -390,13 +391,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
             val user = FakeUser.provideEntity()
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 1)
-                this.to = LocalDate.of(2025, 10, 3)
+                this.from = LocalDate(2025, 10, 1)
+                this.to = LocalDate(2025, 10, 3)
 
                 this.confirmed = true
                 this.taken = true
                 this.givenBy = FakeAdminUser.provideEntity().sub
-                this.givenAt = LocalDate.of(2025, 9, 30).atStartOfDay().toInstant(ZoneOffset.UTC)
+                this.givenAt = LocalDate(2025, 9, 30).atStartOfDayIn(TimeZone.UTC)
                 this.returned = true
 
                 this.notes = "Example lending"
@@ -410,7 +411,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
                     this.lending = lendingEntity
                     this.item = InventoryItemEntity[exampleItemId]
                     this.receivedBy = FakeAdminUser.provideEntity()
-                    this.receivedAt = LocalDate.of(2025, 10, 4).atStartOfDay().toInstant(ZoneOffset.UTC)
+                    this.receivedAt = LocalDate(2025, 10, 4).atStartOfDayIn(TimeZone.UTC)
                 }
             }
 
@@ -426,13 +427,13 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Add insurance for the user
             UserInsuranceEntity.new {
                 userSub = user
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
                 insuranceCompany = "Insurance Co"
                 policyNumber = "POL123456"
             }
         },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
     ) {
         // New lending without having submitted memory for previous lending
         client.postLending(
@@ -448,7 +449,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
     fun test_create_lending_correct() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { getOrCreateItem() },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
     ) { context ->
         val item = context.dibResult
         assertNotNull(item)
@@ -469,8 +470,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
         Database {
             UserInsuranceEntity.new {
                 userSub = user
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
                 insuranceCompany = "Insurance Co"
                 policyNumber = "POL123456"
             }
@@ -503,8 +504,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             assertBody(Lending.serializer()) { lending ->
                 assertEquals(lendingId, lending.id)
                 assertEquals(FakeUser.SUB, lending.userSub)
-                assertEquals(LocalDate.of(2025, 10, 10), lending.from.toJavaLocalDate())
-                assertEquals(LocalDate.of(2025, 10, 11), lending.to.toJavaLocalDate())
+                assertEquals(LocalDate(2025, 10, 10), lending.from)
+                assertEquals(LocalDate(2025, 10, 11), lending.to)
                 assertEquals("These are some notes", lending.notes)
                 assertEquals(1, lending.items.size)
                 assertEquals(item.id.value, lending.items[0].id)
@@ -535,14 +536,14 @@ class TestLendingsRoutes : ApplicationTestBase() {
             Database {
                 UserInsuranceEntity.new {
                     userSub = user
-                    validFrom = LocalDate.of(2025, 1, 1)
-                    validTo = LocalDate.of(2025, 12, 31)
+                    validFrom = LocalDate(2025, 1, 1)
+                    validTo = LocalDate(2025, 12, 31)
                     insuranceCompany = "Insurance Co"
                     policyNumber = "POL123456"
                 }
             }
         },
-        mockDate = LocalDate.of(2025, 10, 8),
+        mockDate = LocalDate(2025, 10, 8),
     ) {
         client.get(
             "/inventory/types/$exampleItemTypeId/allocate?from=2025-10-10&to=2025-10-11&amount=1",
@@ -567,8 +568,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             val userLending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.notes = "Existing lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -578,8 +579,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             val adminLending = LendingEntity.new {
                 this.userSub = admin
-                this.from = LocalDate.of(2025, 11, 10)
-                this.to = LocalDate.of(2025, 11, 15)
+                this.from = LocalDate(2025, 11, 10)
+                this.to = LocalDate(2025, 11, 15)
                 this.notes = "Admin lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -636,8 +637,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             val userLending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.notes = "Existing lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -647,8 +648,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             val adminLending1 = LendingEntity.new {
                 this.userSub = admin
-                this.from = LocalDate.of(2025, 11, 10)
-                this.to = LocalDate.of(2025, 11, 15)
+                this.from = LocalDate(2025, 11, 10)
+                this.to = LocalDate(2025, 11, 15)
                 this.notes = "Admin lending 1"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -658,8 +659,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             val adminLending2 = LendingEntity.new {
                 this.userSub = admin
-                this.from = LocalDate.of(2025, 12, 10)
-                this.to = LocalDate.of(2025, 12, 15)
+                this.from = LocalDate(2025, 12, 10)
+                this.to = LocalDate(2025, 12, 15)
                 this.notes = "Admin lending 2"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -673,8 +674,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             val adminLending3 = LendingEntity.new {
                 this.userSub = admin
-                this.from = LocalDate.of(2025, 1, 10)
-                this.to = LocalDate.of(2025, 1, 15)
+                this.from = LocalDate(2025, 1, 10)
+                this.to = LocalDate(2025, 1, 15)
                 this.notes = "Admin lending 3"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -727,8 +728,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             val userLending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.notes = "Existing lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -738,8 +739,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             }
             val adminLending = LendingEntity.new {
                 this.userSub = admin
-                this.from = LocalDate.of(2025, 11, 10)
-                this.to = LocalDate.of(2025, 11, 15)
+                this.from = LocalDate(2025, 11, 10)
+                this.to = LocalDate(2025, 11, 15)
                 this.notes = "Admin lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -779,8 +780,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.notes = "Existing lending"
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -809,8 +810,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -843,8 +844,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -893,12 +894,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
                 this.taken = true
                 this.givenBy = FakeAdminUser.provideEntity().sub
-                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+                this.givenAt = LocalDate(2025, 10, 9).atStartOfDayIn(TimeZone.UTC)
             }.also { lendingEntity ->
                 LendingItems.insert {
                     it[item] = exampleItemId
@@ -967,12 +968,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
                 this.taken = true
                 this.givenBy = FakeAdminUser.provideEntity().sub
-                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+                this.givenAt = LocalDate(2025, 10, 9).atStartOfDayIn(TimeZone.UTC)
             }.also { lendingEntity ->
                 LendingItems.insert {
                     it[item] = exampleItemId
@@ -1049,8 +1050,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items from the managed department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1089,8 +1090,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items from department2
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1132,8 +1133,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items from both departments
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1176,8 +1177,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items that have no department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1216,8 +1217,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items from the managed department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = false
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1261,8 +1262,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a confirmed lending with items from the managed department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1306,12 +1307,12 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a taken lending with items from the managed department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
                 this.taken = true
                 this.givenBy = FakeAdminUser.provideEntity().sub
-                this.givenAt = LocalDate.of(2025, 10, 9).atStartOfDay().toInstant(ZoneOffset.UTC)
+                this.givenAt = LocalDate(2025, 10, 9).atStartOfDayIn(TimeZone.UTC)
             }.also { lendingEntity ->
                 LendingItems.insert {
                     it[LendingItems.item] = item.id.value
@@ -1359,8 +1360,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending with items from a department
             LendingEntity.new {
                 this.userSub = FakeUser2.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1391,8 +1392,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending owned by FakeUser (the logged-in user)
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {
@@ -1421,8 +1422,8 @@ class TestLendingsRoutes : ApplicationTestBase() {
             // Create a lending from another user
             LendingEntity.new {
                 this.userSub = FakeUser.provideEntity()
-                this.from = LocalDate.of(2025, 10, 10)
-                this.to = LocalDate.of(2025, 10, 15)
+                this.from = LocalDate(2025, 10, 10)
+                this.to = LocalDate(2025, 10, 15)
                 this.confirmed = true
             }.also { lendingEntity ->
                 LendingItems.insert {

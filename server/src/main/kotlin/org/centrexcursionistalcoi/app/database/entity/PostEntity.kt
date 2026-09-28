@@ -81,7 +81,7 @@ class PostEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityD
     context(_: JdbcTransaction)
     override fun toData(): Post = Post(
         id = id.value,
-        date = date.toKotlinInstant(),
+        date = date,
         title = title,
         content = content,
         department = department?.id?.value,

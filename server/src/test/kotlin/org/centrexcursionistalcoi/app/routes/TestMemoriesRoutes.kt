@@ -18,7 +18,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
@@ -55,8 +54,8 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -64,7 +63,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
-import kotlinx.datetime.LocalDate as KotlinLocalDate
 
 class TestMemoriesRoutes : ApplicationTestBase() {
 
@@ -96,8 +94,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     @Test
     fun test_create_memory_standalone() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val zone = TimeZone.currentSystemDefault()
-        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
-        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+        val from = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(12, 0, 0))
 
         val location = client.postMemory(
             CreateMemoryRequest(
@@ -134,8 +132,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     @Test
     fun test_create_memory_pdfDownloadRestricted() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val zone = TimeZone.currentSystemDefault()
-        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
-        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+        val from = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(12, 0, 0))
 
         val location = client.postMemory(
             CreateMemoryRequest(
@@ -167,8 +165,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     @Test
     fun test_create_memory_invalid() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val zone = TimeZone.currentSystemDefault()
-        val from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0))
-        val to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0))
+        val from = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(10, 0, 0))
+        val to = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(12, 0, 0))
 
         client.postMemory(CreateMemoryRequest(text = "A memory", from = to, to = from))
             .assertError(Error.EndDateCannotBeBeforeStart())
@@ -186,8 +184,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val zone = TimeZone.currentSystemDefault()
         val request = CreateMemoryRequest(
             text = "A memory",
-            from = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
-            to = ZonedDateTime(zone, KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
+            from = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
+            to = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
             // One in a part of its own, the other one in the JSON
             attachments = listOf(FileWithContext(part = "file_0"), FileWithContext(png, "photo.png", ContentType.Image.PNG)),
         )
@@ -233,8 +231,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             val user = FakeUser.provideEntity()
             val lending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 8)
-                this.to = LocalDate.of(2025, 10, 9)
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
                 this.returned = true
             }
             item to lending
@@ -273,11 +271,11 @@ class TestMemoriesRoutes : ApplicationTestBase() {
                 val (lendingFrom, lendingTo) = Database { lending.from to lending.to }
                 val zone = TimeZone.currentSystemDefault()
                 assertEquals(
-                    ZonedDateTime(zone, lendingFrom.toKotlinLocalDate(), LocalTime(0, 0, 0)),
+                    ZonedDateTime(zone, lendingFrom, LocalTime(0, 0, 0)),
                     memory.from,
                 )
                 assertEquals(
-                    ZonedDateTime(zone, lendingTo.toKotlinLocalDate(), LocalTime(23, 59, 59)),
+                    ZonedDateTime(zone, lendingTo, LocalTime(23, 59, 59)),
                     memory.to,
                 )
             }
@@ -301,8 +299,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             val otherUser = FakeUser2.provideEntity()
             val lending = LendingEntity.new {
                 this.userSub = otherUser
-                this.from = LocalDate.of(2025, 10, 8)
-                this.to = LocalDate.of(2025, 10, 9)
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
                 this.returned = true
             }
             MemoryEntity.new {
@@ -471,8 +469,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val location = client.postMemory(
             CreateMemoryRequest(
                 text = "Original text",
-                from = ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
-                to = ZonedDateTime(TimeZone.currentSystemDefault(), KotlinLocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
+                from = ZonedDateTime(TimeZone.currentSystemDefault(), LocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
+                to = ZonedDateTime(TimeZone.currentSystemDefault(), LocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
             )
         ).run {
             assertStatusCode(HttpStatusCode.Created)
@@ -555,8 +553,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             val user = FakeUser.provideEntity()
             val lending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 8)
-                this.to = LocalDate.of(2025, 10, 9)
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
                 this.returned = true
                 this.memorySubmitted = true
                 this.memorySubmittedAt = Instant.parse("2025-10-01T10:00:00Z")
@@ -597,8 +595,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             val user = FakeUser.provideEntity()
             val lending = LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 10, 8)
-                this.to = LocalDate.of(2025, 10, 9)
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
                 this.returned = true
                 this.memorySubmitted = true
                 this.memorySubmittedAt = Instant.parse("2025-10-01T10:00:00Z")
@@ -618,8 +616,8 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             // The user has already been allowed to create a new lending, relying on this memory being submitted
             LendingEntity.new {
                 this.userSub = user
-                this.from = LocalDate.of(2025, 11, 10)
-                this.to = LocalDate.of(2025, 11, 12)
+                this.from = LocalDate(2025, 11, 10)
+                this.to = LocalDate(2025, 11, 12)
                 this.timestamp = Instant.parse("2025-11-01T10:00:00Z")
             }
             memory

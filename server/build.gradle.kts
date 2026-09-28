@@ -100,7 +100,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.crypt)
     implementation(libs.exposed.dao)
-    implementation(libs.exposed.datetime)
+    implementation(libs.exposed.kotlin.datetime)
     implementation(libs.exposed.json)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.migration.core)

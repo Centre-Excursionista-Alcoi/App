@@ -27,6 +27,6 @@ class ReceivedItemEntity(id: EntityID<Uuid>): UuidEntity(id) {
         itemId = item.id.value,
         notes = notes,
         receivedBy = receivedBy.sub.value,
-        receivedAt = receivedAt.toKotlinInstant(),
+        receivedAt = receivedAt,
     )
 }

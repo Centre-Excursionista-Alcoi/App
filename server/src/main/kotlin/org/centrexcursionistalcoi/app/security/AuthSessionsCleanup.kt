@@ -22,7 +22,7 @@ object AuthSessionsCleanup : PeriodicWorker(period = 6.hours) {
     private val retention = 30.days
 
     override suspend fun run() {
-        val threshold = now() - retention.toJavaDuration()
+        val threshold = now() - retention
         val deleted = Database {
             AuthSessions.deleteWhere {
                 (AuthSessions.expiresAt less threshold) or

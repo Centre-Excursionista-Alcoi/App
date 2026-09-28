@@ -261,6 +261,6 @@ class FileEntity(id: EntityID<Uuid>) : UuidEntity(id) {
         name = name,
         bytes = ByteArray(0),
         contentType = contentType,
-        lastModified = lastModified.toKotlinInstant(),
+        lastModified = lastModified,
     )
 }

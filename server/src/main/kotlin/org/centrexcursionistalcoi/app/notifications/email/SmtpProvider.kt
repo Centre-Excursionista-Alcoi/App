@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.notifications.email
 
+import kotlin.time.toJavaInstant
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import jakarta.activation.DataHandler
@@ -135,7 +136,7 @@ object SmtpProvider : EmailProvider {
             addHeader(HttpHeaders.ContentType, "text/HTML; charset=UTF-8")
             addHeader("format", "flowed")
             addHeader("Content-Transfer-Encoding", "8bit")
-            sentDate = Date.from(now())
+            sentDate = Date.from(now().toJavaInstant())
 
             val from = InternetAddress(NotificationsConfig.emailFromAddr, NotificationsConfig.emailFromName)
             setFrom(from)

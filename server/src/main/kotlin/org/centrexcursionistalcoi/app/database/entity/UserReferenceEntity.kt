@@ -127,8 +127,8 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                         userSub = this@UserReferenceEntity
                         insuranceCompany = "FEMECV"
                         policyNumber = license.code
-                        validFrom = license.validFrom.toJavaLocalDate()
-                        validTo = license.validTo.toJavaLocalDate()
+                        validFrom = license.validFrom
+                        validTo = license.validTo
                         femecvLicense = license
                     }.addDocuments(listOf(certificateEntity))
                 }

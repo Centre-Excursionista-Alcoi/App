@@ -8,8 +8,8 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.utils.ViaLink
 import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 object Posts : UuidTable("posts"), ViaLink<Uuid, PostEntity, Uuid, FileEntity> {

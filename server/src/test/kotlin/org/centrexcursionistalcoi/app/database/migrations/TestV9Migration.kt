@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -34,7 +36,7 @@ class TestV9Migration : PostgresTestBase() {
         Database { transaction { FakeUser.provideEntity() } }
         val event = Database {
             EventEntity.new {
-                start = Instant.now().plusSeconds(3600)
+                start = (Clock.System.now() + 3600.seconds)
                 title = "Event with an attendee"
                 place = "Somewhere"
             }

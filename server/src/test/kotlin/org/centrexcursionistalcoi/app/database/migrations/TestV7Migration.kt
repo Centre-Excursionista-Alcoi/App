@@ -1,5 +1,10 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlin.time.toKotlinInstant
 import org.centrexcursionistalcoi.app.assertTrue
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
@@ -7,8 +12,8 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.security.AES
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import java.time.ZoneId
 import java.util.UUID
 import kotlin.test.Test
@@ -33,8 +38,8 @@ class TestV7Migration : PostgresTestBase() {
         val lending = Database {
             LendingEntity.new {
                 userSub = user
-                from = LocalDate.of(2025, 10, 8)
-                to = LocalDate.of(2025, 10, 9)
+                from = LocalDate(2025, 10, 8)
+                to = LocalDate(2025, 10, 9)
                 returned = true
             }
         }
@@ -72,11 +77,11 @@ class TestV7Migration : PostgresTestBase() {
             """SELECT "fromInstant", "fromZone", "toInstant", "toZone" FROM memories WHERE id = '$lendingMemoryId'"""
         ).let { rs ->
             assertTrue(rs.next())
-            val expectedFrom = lending.from.atStartOfDay(ZoneId.systemDefault()).toInstant()
-            val expectedTo = lending.to.atTime(LocalTime.of(23, 59, 59)).atZone(ZoneId.systemDefault()).toInstant()
-            assertEquals(expectedFrom, rs.getTimestamp("fromInstant").toInstant())
+            val expectedFrom = lending.from.atStartOfDayIn(TimeZone.currentSystemDefault())
+            val expectedTo = lending.to.atTime(LocalTime(23, 59, 59)).toInstant(TimeZone.currentSystemDefault())
+            assertEquals(expectedFrom, rs.getTimestamp("fromInstant").toInstant().toKotlinInstant())
             assertEquals(zoneId, rs.getString("fromZone"))
-            assertEquals(expectedTo, rs.getTimestamp("toInstant").toInstant())
+            assertEquals(expectedTo, rs.getTimestamp("toInstant").toInstant().toKotlinInstant())
             assertEquals(zoneId, rs.getString("toZone"))
         }
 

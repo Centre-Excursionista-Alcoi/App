@@ -9,7 +9,7 @@ import org.centrexcursionistalcoi.app.fs.VirtualFileSystem.resetRootDirs
 import org.centrexcursionistalcoi.app.storage.testStorage
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.dao.Entity
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,7 +29,7 @@ class TestVirtualFileSystem {
                 name = "example.txt",
                 contentType = ContentType.Text.Plain,
                 id = "6489d244-cd88-4441-9526-1a4627b67453".toUuid(),
-            ).apply { lastModified = Instant.ofEpochSecond(1763383432) }
+            ).apply { lastModified = Instant.fromEpochSeconds(1763383432) }
         }
 
         val mockEntity = mockk<Entity<Any>>()
@@ -71,7 +71,7 @@ class TestVirtualFileSystem {
             assertEquals("/webdav/MockDir/123", item.path)
             assertEquals(false, item.isDirectory)
             assertEquals(3, item.size)
-            assertEquals(Instant.ofEpochSecond(1763383432), item.lastModified)
+            assertEquals(Instant.fromEpochSeconds(1763383432), item.lastModified)
         }
 
         // Files cannot be listed

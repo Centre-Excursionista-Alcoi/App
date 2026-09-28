@@ -14,7 +14,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.slf4j.LoggerFactory
-import java.time.Instant
+import kotlin.time.Instant
 
 object VirtualFileSystem {
     private val forcedExtensions = mapOf(
@@ -46,7 +46,7 @@ object VirtualFileSystem {
          * @return The generated ETag string.
          */
         fun eTag(): String {
-            val modifiedPart = lastModified?.toEpochMilli() ?: 0L
+            val modifiedPart = lastModified?.toEpochMilliseconds() ?: 0L
             val sizePart = size ?: 0L
             return "$modifiedPart-$sizePart"
         }

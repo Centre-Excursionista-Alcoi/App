@@ -38,7 +38,6 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Clock
-import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.Base64
@@ -48,7 +47,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 /** Where a request came from, recorded on the sessions it starts. */
 data class ClientInfo(val ipAddress: String?, val userAgent: String?) {
@@ -124,7 +124,7 @@ object AuthTokens {
     private val clock = object : Clock() {
         override fun getZone(): ZoneId = ZoneOffset.UTC
         override fun withZone(zone: ZoneId?): Clock = this
-        override fun instant(): Instant = now()
+        override fun instant(): java.time.Instant = now().toJavaInstant()
     }
 
     private val verifier: JWTVerifier by lazy {
@@ -178,14 +178,14 @@ object AuthTokens {
     fun startSession(user: UserReferenceEntity, method: AuthSessionMethod, client: ClientInfo): TokenResponse {
         val now = now()
         val userSub = user.sub.value
-        val expiresAt = now + refreshTokenIdleLifetime.toJavaDuration()
+        val expiresAt = now + refreshTokenIdleLifetime
         val sessionId = AuthSessions.insertAndGetId {
             it[AuthSessions.user] = userSub
             it[this.method] = method
             it[createdAt] = now
             it[lastUsedAt] = now
             it[this.expiresAt] = expiresAt
-            it[absoluteExpiresAt] = now + refreshTokenAbsoluteLifetime.toJavaDuration()
+            it[absoluteExpiresAt] = now + refreshTokenAbsoluteLifetime
             it[ipAddress] = client.ipAddress?.take(64)
             it[userAgent] = client.userAgent
         }.value
@@ -218,7 +218,7 @@ object AuthTokens {
             val successorUnused = successorHash != null && AuthRefreshTokens.selectAll()
                 .where { (AuthRefreshTokens.id eq successorHash) and AuthRefreshTokens.usedAt.isNull() }
                 .any()
-            val withinGracePeriod = usedAt + refreshTokenReuseGracePeriod.toJavaDuration() >= now
+            val withinGracePeriod = usedAt + refreshTokenReuseGracePeriod >= now
             if (!successorUnused || !withinGracePeriod) {
                 revokeSession(sessionId, AuthSessionRevocationReason.REFRESH_TOKEN_REUSE)
                 logger.warn("Refresh token reuse detected for user ${user.sub.value}, session $sessionId revoked.")
@@ -233,7 +233,7 @@ object AuthTokens {
             it[this.usedAt] = usedAt ?: now
             it[replacedBy] = hashRefreshToken(newRefreshToken)
         }
-        val expiresAt = minOf(now + refreshTokenIdleLifetime.toJavaDuration(), session[AuthSessions.absoluteExpiresAt])
+        val expiresAt = minOf(now + refreshTokenIdleLifetime, session[AuthSessions.absoluteExpiresAt])
         AuthSessions.update({ AuthSessions.id eq sessionId }) {
             it[lastUsedAt] = now
             it[this.expiresAt] = expiresAt
@@ -329,12 +329,12 @@ object AuthTokens {
             .withSubject(userSub)
             .withClaim(CLAIM_SESSION_ID, sessionId.toString())
             .withJWTId(Uuid.random().toString())
-            .withIssuedAt(Date.from(now))
-            .withExpiresAt(Date.from(now + accessTokenLifetime.toJavaDuration()))
+            .withIssuedAt(Date.from(now.toJavaInstant()))
+            .withExpiresAt(Date.from((now + accessTokenLifetime).toJavaInstant()))
             .sign(algorithm),
         accessTokenExpiresIn = accessTokenLifetime.inWholeSeconds,
         refreshToken = refreshToken,
-        refreshTokenExpiresIn = java.time.Duration.between(now, refreshTokenExpiresAt).seconds,
+        refreshTokenExpiresIn = (refreshTokenExpiresAt - now).inWholeSeconds,
         accountEmail = email,
     )
 

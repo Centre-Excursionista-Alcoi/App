@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
 import io.ktor.http.ContentType
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -41,8 +41,8 @@ class TestV10Migration : PostgresTestBase() {
                 userSub = user
                 insuranceCompany = "Rocalsub"
                 policyNumber = "WITH"
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
             }
         }
         val withoutDocument = Database {
@@ -50,8 +50,8 @@ class TestV10Migration : PostgresTestBase() {
                 userSub = user
                 insuranceCompany = "Rocalsub"
                 policyNumber = "WITHOUT"
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
             }
         }
 

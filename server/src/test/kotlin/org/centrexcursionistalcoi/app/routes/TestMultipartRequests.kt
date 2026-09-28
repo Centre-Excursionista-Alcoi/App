@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.time.Clock
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.patch
@@ -15,7 +16,7 @@ import io.ktor.http.escapeIfNeeded
 import io.ktor.server.testing.ApplicationTestBuilder
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -225,7 +226,7 @@ class TestMultipartRequests : ApplicationTestBase() {
     fun test_patch_event_newImage() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = {
-            EventEntity.new { start = Instant.now(); place = "Place"; title = "Event" }.id.value
+            EventEntity.new { start = Clock.System.now(); place = "Place"; title = "Event" }.id.value
         },
     ) { context ->
         patchMultipart(
@@ -270,9 +271,9 @@ class TestMultipartRequests : ApplicationTestBase() {
             Memories.insertAndGetId {
                 it[text] = "Memory"
                 it[submittedBy] = FakeAdminUser.provideEntity().id
-                it[fromInstant] = Instant.now()
+                it[fromInstant] = Clock.System.now()
                 it[fromZone] = "Europe/Madrid"
-                it[toInstant] = Instant.now()
+                it[toInstant] = Clock.System.now()
                 it[toZone] = "Europe/Madrid"
             }.value
         },
