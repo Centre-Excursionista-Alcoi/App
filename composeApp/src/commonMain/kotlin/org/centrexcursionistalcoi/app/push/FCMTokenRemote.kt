@@ -1,12 +1,14 @@
 package org.centrexcursionistalcoi.app.push
 
 import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
-import io.ktor.http.parameters
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.centrexcursionistalcoi.app.network.requestBody
+import org.centrexcursionistalcoi.app.request.RegisterFCMTokenRequest
 
 object FCMTokenRemote {
     /**
@@ -16,12 +18,9 @@ object FCMTokenRemote {
      */
     suspend fun registerNewToken(token: String) {
         val client = getHttpClient()
-        val response = client.submitForm(
-            url = "/profile/fcmToken",
-            formParameters = parameters {
-                append("token", token)
-            }
-        )
+        val response = client.post("/profile/fcmToken") {
+            setBody(requestBody(RegisterFCMTokenRequest(token), RegisterFCMTokenRequest.serializer()))
+        }
         if (!response.status.isSuccess()) {
             throw response.bodyAsError().toThrowable()
         }

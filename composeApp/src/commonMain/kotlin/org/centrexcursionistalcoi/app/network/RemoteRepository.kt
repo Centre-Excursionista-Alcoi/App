@@ -28,14 +28,6 @@ import org.centrexcursionistalcoi.app.storage.fs.write
 import org.centrexcursionistalcoi.app.storage.settings
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
-import io.ktor.http.Headers
-import io.ktor.http.content.OutgoingContent
-import io.ktor.http.content.TextContent
-import io.ktor.http.escapeIfNeeded
-import org.centrexcursionistalcoi.app.data.FileWithContext
-import org.centrexcursionistalcoi.app.request.RequestWithFiles
 
 private val log = logging()
 
@@ -288,8 +280,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     /**
-     * Handles the response to a `POST $endpoint` that just created a new entity -- shared between [create]
-     * (multipart) and [createJson], which only differ in how the request itself is built.
+     * Handles the response to a `POST $endpoint` that just created a new entity.
      */
     private suspend fun handleCreateResponse(response: HttpResponse, progressNotifier: ProgressNotifier?) {
         if (response.status.isSuccess()) {
@@ -313,27 +304,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         }
     }
 
-    // TODO(#659): multipart create, on the way out. The app itself no longer needs this once every
-    //   RemoteRepository has its own JSON create() the way PostsRemoteRepository does (see createJson below) --
-    //   remove this function and Entity<Id>.toFormData() (EntityExtensions.kt) together at that point. The
-    //   server keeps accepting multipart regardless, for app installs that predate this migration.
-    suspend fun create(item: RemoteEntity, progressNotifier: ProgressNotifier? = null) {
-        check(isCreationSupported) { "Creation of this entity is not supported" }
-        check(endpointSupported()) { "Endpoint $name is not supported on this version." }
-
-        val formData = item.toFormData()
-        val response = httpClient.submitFormWithBinaryData(
-            url = endpoint,
-            formData = formData
-        ) {
-            progressNotifier?.let { monitorUploadProgress(it) }
-        }
-        handleCreateResponse(response, progressNotifier)
-    }
-
     /**
-     * Creates a new entity from a JSON [request] instead of a multipart form -- the JSON counterpart of [create]
-     * (#659). The server accepts both on the same endpoint, so this is opt-in per repository, not a replacement.
+     * Creates a new entity from a JSON [request].
      */
     suspend fun <CR : Any> createJson(request: CR, serializer: KSerializer<CR>, progressNotifier: ProgressNotifier? = null) {
         check(isCreationSupported) { "Creation of this entity is not supported" }
@@ -344,52 +316,6 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             progressNotifier?.let { monitorUploadProgress(it) }
         }
         handleCreateResponse(response, progressNotifier)
-    }
-
-    /**
-     * The body to send [request] in: JSON, or, if it carries files with contents ([RequestWithFiles]), multipart,
-     * with each file in a part of its own instead of encoded in the JSON.
-     */
-    private fun <R : Any> requestBody(request: R, serializer: KSerializer<R>): OutgoingContent {
-        val files = mutableListOf<Pair<String, FileWithContext>>()
-        val requestWithoutContents = if (request is RequestWithFiles<*>) {
-            @Suppress("UNCHECKED_CAST")
-            request.mapFiles { file ->
-                if (file.bytes.isEmpty()) {
-                    file
-                } else {
-                    val part = "file_${files.size}"
-                    files += part to file
-                    file.copy(bytes = byteArrayOf(), part = part)
-                }
-            } as R
-        } else {
-            request
-        }
-        if (files.isEmpty()) {
-            return TextContent(json.encodeToString(serializer, request), ContentType.Application.Json)
-        }
-        return MultiPartFormDataContent(
-            formData {
-                // First, as the server tells multipart requests apart by it
-                append(
-                    RequestWithFiles.REQUEST_PART,
-                    json.encodeToString(serializer, requestWithoutContents),
-                    Headers.build { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) },
-                )
-                for ((part, file) in files) {
-                    append(
-                        part,
-                        file.bytes,
-                        Headers.build {
-                            append(HttpHeaders.ContentType, (file.contentType ?: ContentType.Application.OctetStream).toString())
-                            // The server streams only parts with a file name
-                            append(HttpHeaders.ContentDisposition, "filename=${(file.name ?: part).escapeIfNeeded()}")
-                        },
-                    )
-                }
-            }
-        )
     }
 
     suspend fun <UER : UpdateEntityRequest<RemoteIdType, RemoteEntity>> update(

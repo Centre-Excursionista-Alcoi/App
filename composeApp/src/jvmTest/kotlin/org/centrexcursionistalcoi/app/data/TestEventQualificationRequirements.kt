@@ -1,14 +1,10 @@
 package org.centrexcursionistalcoi.app.data
 
-import io.ktor.http.content.PartData
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.ReferencedEvent.Companion.referenced
 import org.centrexcursionistalcoi.app.database.RoomConverters
 import org.centrexcursionistalcoi.app.database.entity.EventEntity.Companion.toEntity
@@ -35,9 +31,6 @@ class TestEventQualificationRequirements {
         userSubList = emptyList(),
         qualificationRequirements = requirements,
     )
-
-    private fun List<PartData>.formItem(name: String): String? =
-        filterIsInstance<PartData.FormItem>().firstOrNull { it.name == name }?.value
 
     // ---- Room ----
 
@@ -78,22 +71,5 @@ class TestEventQualificationRequirements {
             kotlinx.serialization.json.JsonObject(element.let { it as kotlinx.serialization.json.JsonObject } - "qualificationRequirements")
         }
         assertEquals(emptyList(), json.decodeFromString(Event.serializer(), withoutField.toString()).qualificationRequirements)
-    }
-
-    // ---- Form data (event creation) ----
-
-    @Test
-    fun toFormData_encodesNestedGroups_asJsonTheServerParses() {
-        val groups = listOf(listOf(a), listOf(b, c))
-        val value = anEvent(groups).toFormData().formItem("qualificationRequirements")
-        assertIs<String>(value)
-        // The server reads this field as an array of arrays of id strings
-        val parsed = json.decodeFromString(ListSerializer(ListSerializer(String.serializer())), value)
-        assertEquals(groups.map { group -> group.map { it.toString() } }, parsed)
-    }
-
-    @Test
-    fun toFormData_emptyRequirements_areAnEmptyArray() {
-        assertEquals("[]", anEvent(emptyList()).toFormData().formItem("qualificationRequirements"))
     }
 }
