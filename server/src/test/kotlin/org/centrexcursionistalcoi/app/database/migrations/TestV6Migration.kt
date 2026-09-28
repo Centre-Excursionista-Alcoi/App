@@ -11,7 +11,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.centrexcursionistalcoi.app.security.AES
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -51,8 +51,8 @@ class TestV6Migration : PostgresTestBase() {
         val lending = Database {
             LendingEntity.new {
                 userSub = transaction { FakeUser.provideEntity() }
-                from = LocalDate.of(2025, 10, 8)
-                to = LocalDate.of(2025, 10, 9)
+                from = LocalDate(2025, 10, 8)
+                to = LocalDate(2025, 10, 9)
                 returned = true
                 memorySubmitted = true
             }

@@ -30,15 +30,18 @@ import org.centrexcursionistalcoi.app.storage.FilesCleanup
 import org.jetbrains.annotations.TestOnly
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 private val logger = LoggerFactory.getLogger("Application")
 
-var today: () -> LocalDate = { LocalDate.now() }
+var today: () -> LocalDate = { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
     private set
 
-var now: () -> Instant = { Instant.now() }
+var now: () -> Instant = { Clock.System.now() }
     private set
 
 @TestOnly
@@ -54,8 +57,8 @@ internal fun mockTime(date: LocalDate) {
 
 @TestOnly
 internal fun resetTimeFunctions() {
-    today = { LocalDate.now() }
-    now = { Instant.now() }
+    today = { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+    now = { Clock.System.now() }
     DatabaseNowExpression.reset()
 }
 

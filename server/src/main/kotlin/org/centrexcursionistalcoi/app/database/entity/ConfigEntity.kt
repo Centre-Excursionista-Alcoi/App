@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import java.time.Instant
+import kotlin.time.Instant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -45,7 +45,7 @@ class ConfigEntity(id: EntityID<String>) : Entity<String>(id) {
 
     object LastCEASync : ConfigEntry<Instant>(
         key = "last_cea_sync",
-        retrieve = { it?.toLongOrNull()?.let { Instant.ofEpochSecond(it) } },
-        store = { it.epochSecond.toString() },
+        retrieve = { it?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } },
+        store = { it.epochSeconds.toString() },
     )
 }

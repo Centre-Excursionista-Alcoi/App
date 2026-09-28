@@ -46,7 +46,6 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.neq
 import org.slf4j.LoggerFactory
-import java.time.temporal.ChronoUnit
 import kotlin.time.toKotlinInstant
 
 private val logger = LoggerFactory.getLogger("ProfileRoutes")
@@ -61,7 +60,7 @@ fun Route.profileRoutes() {
         try {
             if (reference.femecvUsername != null && reference.femecvPassword != null) {
                 val lastSync = reference.femecvLastSync
-                if (lastSync == null || lastSync.until(now(), ChronoUnit.DAYS) >= FEMECV.REFRESH_EVERY_DAYS) {
+                if (lastSync == null || (now() - lastSync).inWholeDays >= FEMECV.REFRESH_EVERY_DAYS) {
                     reference.refreshFEMECVData()
                 }
             }
@@ -91,7 +90,7 @@ fun Route.profileRoutes() {
                 lendingUser = lendingUser,
                 insurances = insurances,
                 femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
-                femecvLastSync = reference.femecvLastSync?.toKotlinInstant(),
+                femecvLastSync = reference.femecvLastSync,
             )
         )
     }
@@ -150,8 +149,8 @@ fun Route.profileRoutes() {
                         userSub = userReference
                         this.insuranceCompany = request.insuranceCompany
                         this.policyNumber = request.policyNumber
-                        this.validFrom = request.validFrom.toJavaLocalDate()
-                        this.validTo = request.validTo.toJavaLocalDate()
+                        this.validFrom = request.validFrom
+                        this.validTo = request.validTo
                     }.addDocuments(documentFiles)
                 }
             }

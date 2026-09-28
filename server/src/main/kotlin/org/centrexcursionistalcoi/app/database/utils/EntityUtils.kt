@@ -20,7 +20,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.centrexcursionistalcoi.app.data.JsonSerializable
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.security.UserSession
-import org.centrexcursionistalcoi.app.serialization.InstantSerializer
+import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
@@ -45,13 +45,13 @@ import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.UIntEntity
 import org.jetbrains.exposed.v1.dao.ULongEntity
 import org.jetbrains.exposed.v1.dao.UuidEntity
-import org.jetbrains.exposed.v1.javatime.JavaLocalDateColumnType
-import org.jetbrains.exposed.v1.javatime.JavaLocalTimeColumnType
+import org.jetbrains.exposed.v1.datetime.KotlinLocalDateColumnType
+import org.jetbrains.exposed.v1.datetime.KotlinLocalTimeColumnType
 import org.jetbrains.exposed.v1.json.JsonColumnType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.uuid.Uuid
 import kotlin.reflect.full.companionObjectInstance
 
@@ -123,8 +123,8 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                     is DoubleColumnType -> element<Double>(column.name, isOptional = type.nullable)
                     is LongColumnType -> element<Long>(column.name, isOptional = type.nullable)
                     is InstantColumnType<*> -> element(column.name, InstantSerializer.descriptor, isOptional = type.nullable)
-                    is JavaLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
-                    is JavaLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
+                    is KotlinLocalDateColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalDates are serialized as Strings
+                    is KotlinLocalTimeColumnType -> element<String>(column.name, isOptional = type.nullable) // LocalTimes are serialized as Strings
                     is UuidColumnType -> element(column.name, Uuid.serializer().descriptor, isOptional = type.nullable)
                     is EnumerationNameColumnType<*> -> element<String>(column.name, isOptional = type.nullable) // Enums are serialized as Strings
                     is BasicBinaryColumnType -> element(column.name, Base64Serializer.descriptor, isOptional = type.nullable) // ByteArrays are serialized as Base64 Strings
@@ -219,10 +219,10 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                         is InstantColumnType<*> -> {
                             encodeSerializableElement(descriptor, idx, InstantSerializer, typeValue as Instant)
                         }
-                        is JavaLocalDateColumnType -> {
+                        is KotlinLocalDateColumnType -> {
                             encodeStringElement(descriptor, idx, (typeValue as LocalDate).toString())
                         }
-                        is JavaLocalTimeColumnType -> {
+                        is KotlinLocalTimeColumnType -> {
                             encodeStringElement(descriptor, idx, typeValue.toString())
                         }
                         is UuidColumnType -> {

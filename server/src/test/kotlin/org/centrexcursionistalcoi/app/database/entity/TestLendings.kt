@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.database.entity
 import io.ktor.http.ContentType
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.data.Lending
@@ -22,13 +21,12 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.time.toKotlinInstant
 
 class TestLendings {
     @AfterTest
@@ -54,8 +52,8 @@ class TestLendings {
         val lending = Database {
             val lending = LendingEntity.new {
                 userSub = transaction { FakeUser.provideEntity() }
-                from = LocalDate.of(2025, 10, 8)
-                to = LocalDate.of(2025, 10, 9)
+                from = LocalDate(2025, 10, 8)
+                to = LocalDate(2025, 10, 9)
             }
             LendingItems.insert {
                 it[LendingItems.lending] = lending.id
@@ -85,8 +83,8 @@ class TestLendings {
             Database {
                 LendingEntity.new {
                     userSub = transaction { FakeUser.provideEntity() }
-                    from = LocalDate.of(2025, 10, 10)
-                    to = LocalDate.of(2025, 10, 9)
+                    from = LocalDate(2025, 10, 10)
+                    to = LocalDate(2025, 10, 9)
                 }
             }
         }
@@ -104,7 +102,7 @@ class TestLendings {
         val memoryPdfFileId = "bd84fb5c-9356-4abe-a8e5-0aea77b7b7cb".toUuid()
         val memoryAttachmentFileId = "79f71564-2b24-4612-911a-913ef4e7d23f".toUuid()
 
-        val instant = Instant.ofEpochSecond(1759917121)
+        val instant = Instant.fromEpochSeconds(1759917121)
 
         val department = Database {
             DepartmentEntity.new {
@@ -123,8 +121,8 @@ class TestLendings {
             LendingEntity.new(id) {
                 timestamp = instant
                 userSub = transaction { FakeUser.provideEntity() }
-                from = LocalDate.of(2025, 10, 8)
-                to = LocalDate.of(2025, 10, 9)
+                from = LocalDate(2025, 10, 8)
+                to = LocalDate(2025, 10, 9)
                 confirmed = true
                 taken = true
                 givenBy = transaction { FakeAdminUser.provideEntity().id }
@@ -186,8 +184,8 @@ class TestLendings {
                 sport = Sports.ORIENTEERING
                 this.department = department
                 submittedBy = entity.userSub
-                from = ZonedDateTime.fromInstant(instant.toKotlinInstant(), TimeZone.currentSystemDefault())
-                to = ZonedDateTime.fromInstant(instant.toKotlinInstant(), TimeZone.currentSystemDefault())
+                from = ZonedDateTime.fromInstant(instant, TimeZone.currentSystemDefault())
+                to = ZonedDateTime.fromInstant(instant, TimeZone.currentSystemDefault())
                 lending = entity
                 pdf = memoryPdfFileEntity
             }.also { memoryEntity ->
@@ -202,13 +200,13 @@ class TestLendings {
         val instance = Lending(
             id = id,
             userSub = FakeUser.SUB,
-            timestamp = instant.toKotlinInstant(),
-            from = LocalDate.of(2025, 10, 8).toKotlinLocalDate(),
-            to = LocalDate.of(2025, 10, 9).toKotlinLocalDate(),
+            timestamp = instant,
+            from = LocalDate(2025, 10, 8),
+            to = LocalDate(2025, 10, 9),
             confirmed = true,
             taken = true,
             givenBy = FakeAdminUser.SUB,
-            givenAt = instant.toKotlinInstant(),
+            givenAt = instant,
             returned = true,
             receivedItems = listOf(
                 ReceivedItem(
@@ -216,13 +214,13 @@ class TestLendings {
                     lendingId = id,
                     itemId = itemId,
                     notes = "Good",
-                    receivedAt = instant.toKotlinInstant(),
+                    receivedAt = instant,
                     receivedBy = FakeAdminUser.SUB
                 )
             ),
             notes = "notes",
             memorySubmitted = true,
-            memorySubmittedAt = instant.toKotlinInstant(),
+            memorySubmittedAt = instant,
             memory = memoryId,
             memoryReviewed = true,
             items = listOf(

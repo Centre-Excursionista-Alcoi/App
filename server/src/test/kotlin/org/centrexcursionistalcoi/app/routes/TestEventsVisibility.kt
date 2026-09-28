@@ -2,8 +2,9 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -28,7 +29,7 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 class TestEventsVisibility : ApplicationTestBase() {
     private val now: Instant = Instant.parse("2026-10-05T12:00:00Z")
 
-    private fun hours(h: Long) = Duration.ofHours(h)
+    private fun hours(h: Long) = h.hours
 
     /** Titles of the events a member of "Members' Department" is expected to see, and to be denied. */
     private val expectedVisible = setOf(
@@ -64,12 +65,12 @@ class TestEventsVisibility : ApplicationTestBase() {
             this.department = department
         }
 
-        event("to come, no end", start = now + Duration.ofDays(2))
+        event("to come, no end", start = now + 2.days)
         event("later today, no end", start = now + hours(3))
         event("started this morning, no end", start = now - hours(4))
         event("started 23 hours ago, no end", start = now - hours(23))
         event("started 25 hours ago, no end", start = now - hours(25))
-        event("multi-day, in progress", start = now - Duration.ofDays(2), end = now + Duration.ofDays(2))
+        event("multi-day, in progress", start = now - 2.days, end = now + 2.days)
         event("ended an hour ago", start = now - hours(5), end = now - hours(1))
         event("ends right now", start = now - hours(5), end = now)
         event("other department, in progress", start = now - hours(2), department = other)

@@ -252,7 +252,7 @@ fun Route.configureAuthRoutes() {
 
         // check expiration
         val timestamp = request[RecoverPasswordRequests.timestamp]
-        if (timestamp.plus(passwordRequestExpiration.toJavaDuration()) < now()) {
+        if (timestamp.plus(passwordRequestExpiration) < now()) {
             return@post respondError(Error.PasswordResetRequestExpired())
         }
 

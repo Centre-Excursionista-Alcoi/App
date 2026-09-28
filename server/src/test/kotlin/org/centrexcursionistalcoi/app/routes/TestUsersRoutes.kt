@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertStatusCode
@@ -20,7 +19,7 @@ import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -60,8 +59,8 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.userSub = fakeUser
                 this.insuranceCompany = "Insurance Co"
                 this.policyNumber = "POL123456"
-                this.validFrom = LocalDate.of(2025, 1, 1)
-                this.validTo = LocalDate.of(2025, 12, 31)
+                this.validFrom = LocalDate(2025, 1, 1)
+                this.validTo = LocalDate(2025, 12, 31)
             }
         }
     ) {
@@ -110,8 +109,8 @@ class TestUsersRoutes: ApplicationTestBase() {
                     assertEquals(FakeUser.SUB, insurance.userSub)
                     assertEquals("Insurance Co", insurance.insuranceCompany)
                     assertEquals("POL123456", insurance.policyNumber)
-                    assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom.toJavaLocalDate())
-                    assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo.toJavaLocalDate())
+                    assertEquals(LocalDate(2025, 1, 1), insurance.validFrom)
+                    assertEquals(LocalDate(2025, 12, 31), insurance.validTo)
                 }
             }
         }
@@ -159,8 +158,8 @@ class TestUsersRoutes: ApplicationTestBase() {
                 this.userSub = fakeUser
                 this.insuranceCompany = "Insurance Co"
                 this.policyNumber = "POL123456"
-                this.validFrom = LocalDate.of(2025, 1, 1)
-                this.validTo = LocalDate.of(2025, 12, 31)
+                this.validFrom = LocalDate(2025, 1, 1)
+                this.validTo = LocalDate(2025, 12, 31)
             }
         }
     ) {
@@ -201,8 +200,8 @@ class TestUsersRoutes: ApplicationTestBase() {
                     assertEquals(FakeUser.SUB, insurance.userSub)
                     assertEquals("Insurance Co", insurance.insuranceCompany)
                     assertEquals("POL123456", insurance.policyNumber)
-                    assertEquals(LocalDate.of(2025, 1, 1), insurance.validFrom.toJavaLocalDate())
-                    assertEquals(LocalDate.of(2025, 12, 31), insurance.validTo.toJavaLocalDate())
+                    assertEquals(LocalDate(2025, 1, 1), insurance.validFrom)
+                    assertEquals(LocalDate(2025, 12, 31), insurance.validTo)
                 }
             }
             users[1].let { user ->

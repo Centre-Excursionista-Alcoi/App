@@ -1,13 +1,12 @@
 package org.centrexcursionistalcoi.app.database
 
-import java.time.Instant
-import java.time.format.DateTimeFormatter
+import kotlin.time.Instant
 import org.jetbrains.exposed.v1.core.Function
 import org.jetbrains.exposed.v1.core.QueryBuilder
-import org.jetbrains.exposed.v1.javatime.JavaInstantColumnType
+import org.jetbrains.exposed.v1.datetime.KotlinInstantColumnType
 import org.slf4j.LoggerFactory
 
-object DatabaseNowExpression : Function<Instant>(JavaInstantColumnType()) {
+object DatabaseNowExpression : Function<Instant>(KotlinInstantColumnType()) {
     private val logger = LoggerFactory.getLogger(DatabaseNowExpression::class.java)
     private val fixedTime = ThreadLocal<Instant?>()
 
@@ -27,7 +26,7 @@ object DatabaseNowExpression : Function<Instant>(JavaInstantColumnType()) {
             // use ISO-8601 strings (e.g. '2023-11-27T10:00:00Z')
             logger.info("Using mocked CURRENT_TIMESTAMP: $mock")
             append("'")
-            append(DateTimeFormatter.ISO_INSTANT.format(mock))
+            append(mock.toString())
             append("'")
         } else {
             append("CURRENT_TIMESTAMP")

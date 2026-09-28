@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.utils
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
 import org.centrexcursionistalcoi.app.database.entity.LendingEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -28,7 +28,7 @@ object LendingUtils {
             val lendingTo = lending.to
 
             // If dates to not overlap, skip
-            val datesOverlap = !to.isBefore(lendingFrom) && !from.isAfter(lendingTo)
+            val datesOverlap = to >= lendingFrom && from <= lendingTo
             if (!datesOverlap) return@any false
 
             // Check for item overlap

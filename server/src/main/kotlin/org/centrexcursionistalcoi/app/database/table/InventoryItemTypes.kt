@@ -4,7 +4,7 @@ import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 object InventoryItemTypes : UuidTable("inventory_item_types") {
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)

@@ -5,7 +5,8 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingContext
 import java.sql.Timestamp
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.ifModifiedSince
@@ -41,8 +42,8 @@ suspend fun <ID: Any, T: Entity<ID>> notifyUpdateForEntity(
     id: ID,
 ) {
     val now = now()
-    RedisStoreMap.fromEnv.put(lastUpdateKeyFor(entity, id), now.toEpochMilli().toString())
-    RedisStoreMap.fromEnv.put(lastUpdateKeyForType(entity), now.toEpochMilli().toString())
+    RedisStoreMap.fromEnv.put(lastUpdateKeyFor(entity, id), now.toEpochMilliseconds().toString())
+    RedisStoreMap.fromEnv.put(lastUpdateKeyForType(entity), now.toEpochMilliseconds().toString())
 }
 
 /**
@@ -78,10 +79,10 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModified(
             entity.findById(id)?.let { it as? LastUpdateEntity }?.lastUpdate
         }
     if (lastUpdate != null) {
-        call.response.header("CEA-Last-Update", lastUpdate.toEpochMilli())
+        call.response.header("CEA-Last-Update", lastUpdate.toEpochMilliseconds())
 
         // Handle If-Modified-Since header
-        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()
+        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()?.toKotlinInstant()
         if (ifModifiedSince != null) {
             if (lastUpdate <= ifModifiedSince) {
                 call.respond(HttpStatusCode.NotModified)
@@ -115,7 +116,7 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModifiedForType(enti
                 .toList()
                 .mapNotNull { row ->
                     when (val value = row[lastUpdateColumn]) {
-                        is Timestamp -> value.toInstant()
+                        is Timestamp -> value.toInstant().toKotlinInstant()
                         is Instant -> value
                         is Long -> value.toInstant()
                         is String -> value.toLongOrNull()?.toInstant()
@@ -125,10 +126,10 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModifiedForType(enti
                 .maxOrNull()
         }
     if (lastUpdate != null) {
-        call.response.header("CEA-Last-Update", lastUpdate.toEpochMilli())
+        call.response.header("CEA-Last-Update", lastUpdate.toEpochMilliseconds())
 
         // Handle If-Modified-Since header
-        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()
+        val ifModifiedSince = call.request.ifModifiedSince()?.toInstant()?.toKotlinInstant()
         if (ifModifiedSince != null) {
             if (lastUpdate <= ifModifiedSince) {
                 call.respond(HttpStatusCode.NotModified)

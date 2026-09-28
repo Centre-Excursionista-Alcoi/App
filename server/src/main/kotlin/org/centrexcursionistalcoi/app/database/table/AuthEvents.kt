@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.database.table
 
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 /**
  * The kind of authentication-related request an [AuthEvents] row records.

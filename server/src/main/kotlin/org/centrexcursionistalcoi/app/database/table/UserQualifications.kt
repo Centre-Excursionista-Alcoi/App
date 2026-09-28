@@ -3,7 +3,7 @@ package org.centrexcursionistalcoi.app.database.table
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 /** The users holding each qualification, see [org.centrexcursionistalcoi.app.data.QualificationGrant]. */
 object UserQualifications : Table("user_qualifications") {

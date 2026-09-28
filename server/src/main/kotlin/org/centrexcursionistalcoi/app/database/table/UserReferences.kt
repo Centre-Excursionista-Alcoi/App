@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.crypt.encryptedBinary
 import org.jetbrains.exposed.v1.crypt.encryptedVarchar
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 object UserReferences : IdTable<String>(name = "user_references") {
     val sub = text("sub").uniqueIndex().entityId()

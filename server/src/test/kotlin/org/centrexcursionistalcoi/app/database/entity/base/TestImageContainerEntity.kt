@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.entity.base
 
 import io.ktor.http.ContentType
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -61,7 +61,7 @@ class TestImageContainerEntity {
     @Test
     fun test_updateOrSetImage_sameId_replacesContents() {
         val oldImage = createTestFile(byteArrayOf(1, 2, 3), name = "old.bin")
-        Database { oldImage.lastModified = Instant.ofEpochSecond(1_000) }
+        Database { oldImage.lastModified = Instant.fromEpochSeconds(1_000) }
         val oldKey = Database { oldImage.objectKey }
         val department = newDepartment(oldImage)
 
@@ -80,7 +80,7 @@ class TestImageContainerEntity {
         // The type is detected from the contents when not given
         assertEquals(ContentType.Image.PNG, image.contentType)
         assertEquals(imageBytes.size.toLong(), image.size)
-        assertTrue(image.lastModified.isAfter(Instant.ofEpochSecond(1_000)))
+        assertTrue(image.lastModified > Instant.fromEpochSeconds(1_000))
         assertContentEquals(imageBytes, image.readBytes())
         assertEquals(listOf(image.objectKey), testStorage.keys(), "The old contents must be deleted")
     }

@@ -14,7 +14,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
@@ -69,9 +68,8 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
 import kotlin.uuid.Uuid
+import kotlinx.datetime.LocalDate
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -144,18 +142,18 @@ fun Route.lendingsRoutes() {
         val session = getUserSessionOrFail() ?: return@postWithLock
 
         val request = receiveJson(CreateLendingRequest.serializer()) ?: return@postWithLock
-        val from = request.from.toJavaLocalDate()
-        val to = request.to.toJavaLocalDate()
+        val from = request.from
+        val to = request.to
         val notes = request.notes
 
-        if (to.isBefore(from)) {
+        if (to < from) {
             call.respondError(Error.EndDateCannotBeBeforeStart())
             return@postWithLock
         }
 
         // Make sure dates are in the future
         val today = today()
-        if (from.isBefore(today) || to.isBefore(today)) {
+        if (from < today || to < today) {
             call.respondError(Error.DateMustBeInFuture())
             return@postWithLock
         }
@@ -581,7 +579,7 @@ fun Route.lendingsRoutes() {
 
         val from = try {
             fromText?.let { LocalDate.parse(it) }
-        } catch (_: DateTimeParseException) {
+        } catch (_: IllegalArgumentException) {
             null
         }
         if (from == null) {
@@ -590,7 +588,7 @@ fun Route.lendingsRoutes() {
         }
         val to = try {
             toText?.let { LocalDate.parse(it) }
-        } catch (_: DateTimeParseException) {
+        } catch (_: IllegalArgumentException) {
             null
         }
         if (to == null) {
@@ -598,13 +596,13 @@ fun Route.lendingsRoutes() {
             return@getWithLock
         }
 
-        if (to.isBefore(from)) {
+        if (to < from) {
             call.respondError(Error.InvalidArgument(message = "'to' date cannot be before 'from' date"))
             return@getWithLock
         }
 
         val today = today()
-        if (to.isBefore(today)) {
+        if (to < today) {
             call.respondError(Error.InvalidArgument(message = "dates must be in the future"))
             return@getWithLock
         }

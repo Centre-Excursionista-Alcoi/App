@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntity
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.junit.jupiter.api.DynamicTest
-import java.time.Instant
+import kotlin.time.Instant
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 
 data class TestCase<EID: Any, EE: ExposedEntity<EID>>(

@@ -85,8 +85,8 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
                     qualificationId = it[UserQualifications.qualification].value,
                     userSub = it[UserQualifications.userSub].value,
                     grantedBy = it[UserQualifications.grantedBy]?.value,
-                    grantedAt = it[UserQualifications.grantedAt].toKotlinInstant(),
-                    expiresAt = it[UserQualifications.expiresAt]?.toKotlinInstant(),
+                    grantedAt = it[UserQualifications.grantedAt],
+                    expiresAt = it[UserQualifications.expiresAt],
                 )
             }
     }

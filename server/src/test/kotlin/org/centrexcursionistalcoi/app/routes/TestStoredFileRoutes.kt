@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.time.Clock
 import io.ktor.http.Headers
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.forms.formData
@@ -18,8 +19,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.uuid.Uuid
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -53,7 +54,6 @@ import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.RequestWithFiles
-import kotlinx.datetime.LocalDate as KotlinLocalDate
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.storage.createTestFile
@@ -177,7 +177,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
             val department = DepartmentEntity.new { displayName = "Department"; image = newFile() }
             val type = InventoryItemTypeEntity.new { displayName = "Type"; image = newFile() }
             val event = EventEntity.new {
-                start = Instant.now(); place = "Place"; title = "Event"; image = newFile()
+                start = Clock.System.now(); place = "Place"; title = "Event"; image = newFile()
             }
             val post = PostEntity.new { title = "Post"; content = "Content" }
             listOf(newFile(), newFile()).forEach { file ->
@@ -215,9 +215,9 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val memory = Memories.insertAndGetId {
             it[text] = "Memory"
             it[Memories.submittedBy] = submittedBy
-            it[fromInstant] = Instant.now()
+            it[fromInstant] = Clock.System.now()
             it[fromZone] = "Europe/Madrid"
-            it[toInstant] = Instant.now()
+            it[toInstant] = Clock.System.now()
             it[toZone] = "Europe/Madrid"
             it[pdf] = newFile().id
         }
@@ -235,8 +235,8 @@ class TestStoredFileRoutes : ApplicationTestBase() {
                 userSub = user
                 insuranceCompany = "Company"
                 policyNumber = "1234"
-                validFrom = LocalDate.of(2025, 1, 1)
-                validTo = LocalDate.of(2025, 12, 31)
+                validFrom = LocalDate(2025, 1, 1)
+                validTo = LocalDate(2025, 12, 31)
             }.addDocuments(listOf(newFile(), newFile()))
         },
     ) {
@@ -284,8 +284,8 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val request = CreateInsuranceRequest(
             insuranceCompany = "Company",
             policyNumber = policyNumber,
-            validFrom = KotlinLocalDate(2025, 1, 1),
-            validTo = KotlinLocalDate(2025, 12, 31),
+            validFrom = LocalDate(2025, 1, 1),
+            validTo = LocalDate(2025, 12, 31),
             documents = listOf(FileWithContext(part = "file_0")),
         )
         append(

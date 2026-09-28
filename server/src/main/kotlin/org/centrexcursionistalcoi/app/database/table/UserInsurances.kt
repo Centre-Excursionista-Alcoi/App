@@ -4,7 +4,7 @@ import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
 import org.centrexcursionistalcoi.app.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.javatime.date
+import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.json.json
 
 object UserInsurances : UuidTable("UserInsurances") {

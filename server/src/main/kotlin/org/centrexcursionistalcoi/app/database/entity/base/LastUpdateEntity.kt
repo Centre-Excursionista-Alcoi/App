@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity.base
 
-import java.time.Instant
+import kotlin.time.Instant
 
 interface LastUpdateEntity {
     var lastUpdate: Instant

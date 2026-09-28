@@ -105,7 +105,7 @@ fun Application.configureRouting() {
 
         get("/info") {
             val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0
-            val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilli() ?: 0L
+            val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilliseconds() ?: 0L
 
             call.respond(ServerInfo(
                 version = ServerInfo.Version(

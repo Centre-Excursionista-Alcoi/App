@@ -23,7 +23,7 @@ object FilesCleanup : PeriodicWorker(period = 24.hours) {
     private val gracePeriod = 1.days
 
     public override suspend fun run() {
-        val threshold = now() - gracePeriod.toJavaDuration()
+        val threshold = now() - gracePeriod
         val deleted = Database {
             FileReferences.unreferencedFileIds(modifiedBefore = threshold)
                 .mapNotNull { FileEntity.findById(it) }

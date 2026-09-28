@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.utils
 
-import java.time.Instant
+import kotlin.time.Instant
 
 /**
- * Converts a [Long] representing epoch milliseconds to a Java [Instant].
+ * Converts a [Long] representing epoch milliseconds to an [Instant].
  * @return the corresponding [Instant].
  */
-fun Long.toInstant() = Instant.ofEpochMilli(this)
+fun Long.toInstant() = Instant.fromEpochMilliseconds(this)

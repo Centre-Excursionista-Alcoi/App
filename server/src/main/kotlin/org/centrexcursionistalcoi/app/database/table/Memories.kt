@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.lessEq
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import kotlin.uuid.Uuid
 

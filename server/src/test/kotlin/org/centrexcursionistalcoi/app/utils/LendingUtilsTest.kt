@@ -9,7 +9,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.LendingUtils.conflictsWith
 import org.jetbrains.exposed.v1.jdbc.insert
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -50,8 +50,8 @@ class LendingUtilsTest {
             // Create a lending from 2025-10-01 to 2025-10-03 with item1 and item2
             LendingEntity.new {
                 userSub = user
-                from = LocalDate.of(2025, 10, 1)
-                to = LocalDate.of(2025, 10, 3)
+                from = LocalDate(2025, 10, 1)
+                to = LocalDate(2025, 10, 3)
             }.also { entity ->
                 LendingItems.insert {
                     it[lending] = entity.id
@@ -65,8 +65,8 @@ class LendingUtilsTest {
             // Create a lending from 2025-1-1 to 2025-12-31 with all items, but completed
             LendingEntity.new {
                 userSub = user
-                from = LocalDate.of(2025, 1, 1)
-                to = LocalDate.of(2025, 12, 31)
+                from = LocalDate(2025, 1, 1)
+                to = LocalDate(2025, 12, 31)
                 // set all fields to complete
                 confirmed = true
                 taken = true
@@ -92,8 +92,8 @@ class LendingUtilsTest {
         assertFalse("Before") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 5, 1),
-                    to = LocalDate.of(2025, 5, 2),
+                    from = LocalDate(2025, 5, 1),
+                    to = LocalDate(2025, 5, 2),
                     items = listOf(item1, item2, item3)
                 )
             }
@@ -101,8 +101,8 @@ class LendingUtilsTest {
         assertFalse("After") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 11, 1),
-                    to = LocalDate.of(2025, 11, 2),
+                    from = LocalDate(2025, 11, 1),
+                    to = LocalDate(2025, 11, 2),
                     items = listOf(item1, item2, item3)
                 )
             }
@@ -111,8 +111,8 @@ class LendingUtilsTest {
         assertFalse("Start overlap different items") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 1),
-                    to = LocalDate.of(2025, 10, 2),
+                    from = LocalDate(2025, 10, 1),
+                    to = LocalDate(2025, 10, 2),
                     items = listOf(item3)
                 )
             }
@@ -121,8 +121,8 @@ class LendingUtilsTest {
         assertTrue("Start overlap same items") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 1),
-                    to = LocalDate.of(2025, 10, 1),
+                    from = LocalDate(2025, 10, 1),
+                    to = LocalDate(2025, 10, 1),
                     items = listOf(item1, item3)
                 )
             }
@@ -130,8 +130,8 @@ class LendingUtilsTest {
         assertTrue("Enclosed same items") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 1),
-                    to = LocalDate.of(2025, 10, 2),
+                    from = LocalDate(2025, 10, 1),
+                    to = LocalDate(2025, 10, 2),
                     items = listOf(item1, item3)
                 )
             }
@@ -139,8 +139,8 @@ class LendingUtilsTest {
         assertTrue("End overlap same items") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 2),
-                    to = LocalDate.of(2025, 10, 3),
+                    from = LocalDate(2025, 10, 2),
+                    to = LocalDate(2025, 10, 3),
                     items = listOf(item1, item3)
                 )
             }
@@ -148,8 +148,8 @@ class LendingUtilsTest {
         assertTrue("End overlap same items inclusive") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 3),
-                    to = LocalDate.of(2025, 10, 3),
+                    from = LocalDate(2025, 10, 3),
+                    to = LocalDate(2025, 10, 3),
                     items = listOf(item1, item3)
                 )
             }
@@ -157,8 +157,8 @@ class LendingUtilsTest {
         assertTrue("Enclosing same items") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 9, 25),
-                    to = LocalDate.of(2025, 10, 1),
+                    from = LocalDate(2025, 9, 25),
+                    to = LocalDate(2025, 10, 1),
                     items = listOf(item1, item3)
                 )
             }
@@ -166,8 +166,8 @@ class LendingUtilsTest {
         assertTrue("Enclosing same items inclusive") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 9, 25),
-                    to = LocalDate.of(2025, 10, 3),
+                    from = LocalDate(2025, 9, 25),
+                    to = LocalDate(2025, 10, 3),
                     items = listOf(item1, item3)
                 )
             }
@@ -175,8 +175,8 @@ class LendingUtilsTest {
         assertTrue("Enclosing same items after") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 1),
-                    to = LocalDate.of(2025, 10, 25),
+                    from = LocalDate(2025, 10, 1),
+                    to = LocalDate(2025, 10, 25),
                     items = listOf(item1, item3)
                 )
             }
@@ -184,8 +184,8 @@ class LendingUtilsTest {
         assertTrue("Enclosing same items inclusive after") {
             Database {
                 lendings.conflictsWith(
-                    from = LocalDate.of(2025, 10, 3),
-                    to = LocalDate.of(2025, 10, 25),
+                    from = LocalDate(2025, 10, 3),
+                    to = LocalDate(2025, 10, 25),
                     items = listOf(item1, item3)
                 )
             }

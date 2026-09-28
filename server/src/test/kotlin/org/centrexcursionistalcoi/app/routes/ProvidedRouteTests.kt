@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlinx.datetime.LocalDate
+import kotlin.time.Duration.Companion.days
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -15,7 +17,23 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
-import kotlinx.datetime.toJavaLocalDate
+import java.lang.reflect.InvocationTargetException
+import kotlin.time.Instant
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.util.Random
+import kotlin.uuid.Uuid
+import kotlin.io.encoding.Base64
+import kotlin.reflect.KCallable
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.memberProperties
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.toJavaInstant
 import kotlinx.datetime.toJavaLocalTime
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
@@ -47,27 +65,6 @@ import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
-import java.lang.reflect.InvocationTargetException
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
-import java.time.temporal.Temporal
-import java.util.Random
-import kotlin.io.encoding.Base64
-import kotlin.reflect.KCallable
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.full.memberProperties
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.toJavaInstant
-import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDate as KotlinLocalDate
 import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 import kotlin.time.Instant as KotlinInstant
@@ -175,7 +172,7 @@ object ProvidedRouteTests {
                 ).also { println("- $key: byte array (size=${value.bytes.size})") }
                 is Number -> append(key, value).also { println("- $key: $value") }
                 is Boolean -> append(key, value).also { println("- $key: $value") }
-                is Instant -> append(key, value.toEpochMilli()).also { println("- $key: $value") }
+                is Instant -> append(key, value.toEpochMilliseconds()).also { println("- $key: $value") }
                 null -> {}
                 else -> append(key, value.toString()).also { println("- $key: $value") }
             }
@@ -194,7 +191,7 @@ object ProvidedRouteTests {
                 is Number -> member.call(this, value)
                 is Boolean -> member.call(this, value)
                 is ByteArray -> member.call(this, value)
-                is Temporal -> member.call(this, value)
+                is Instant, is LocalDate -> member.call(this, value)
                 is FileWithContext -> {
                     // For FileBytesWrapper, the setter is a FileEntity. We have to create a FileEntity first.
                     val fileEntity = transaction {
@@ -478,12 +475,8 @@ object ProvidedRouteTests {
                         } else if (expected is ByteArray) {
                             assertIs<ByteArray>(actual, "Expected value for $name should be a ByteArray")
                             assertContentEquals(expected, actual, "Field $name contents does not match")
-                        } else if (expected is LocalDate && actual is KotlinLocalDate) {
-                            assertEquals(expected, actual.toJavaLocalDate(), "Date $name does not match")
                         } else if (expected is LocalTime && actual is KotlinLocalTime) {
                             assertEquals(expected, actual.toJavaLocalTime(), "Time $name does not match")
-                        } else if (expected is Instant && actual is KotlinInstant) {
-                            assertEquals(expected, actual.toJavaInstant(), "Instant $name does not match")
                         } else {
                             assertEquals(expected, actual, "Field $name does not match")
                         }
@@ -576,7 +569,7 @@ object ProvidedRouteTests {
                         .find { it.endsWith("LastUpdateEntity") } != null
                     if (isLastUpdateEntity) {
                         client.get(baseUrl) {
-                            val time = org.centrexcursionistalcoi.app.now().plus(1, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC).toLocalDateTime()
+                            val time = (org.centrexcursionistalcoi.app.now() + 1.days).toJavaInstant().atOffset(ZoneOffset.UTC).toLocalDateTime()
                             headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(time))
                         }.apply {
                             assertStatusCode(HttpStatusCode.NotModified)

@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -40,6 +42,8 @@ import java.time.format.DateTimeFormatter
 private val logger = LoggerFactory.getLogger("WebDAV")
 
 private val rfc1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC)
+
+private fun Instant.toRfc1123(): String = rfc1123.format(toJavaInstant())
 
 fun Route.propfind(body: RoutingHandler): Route {
     return method(HttpMethod("PROPFIND")) { handle(body) }
@@ -169,7 +173,7 @@ fun Route.webDavRoutes() {
             if (data != null) {
                 call.response.header(HttpHeaders.ContentLength, data.size.toString())
                 call.response.header(HttpHeaders.ContentType, data.contentType.toString())
-                call.response.header(HttpHeaders.LastModified, rfc1123.format(data.lastModified))
+                call.response.header(HttpHeaders.LastModified, data.lastModified.toRfc1123())
                 call.respond(HttpStatusCode.OK)
             } else {
                 val list = try {
@@ -185,7 +189,7 @@ fun Route.webDavRoutes() {
                     // Send the latest modification time among the directory items
                     list.mapNotNull { it.lastModified }
                         .maxOrNull()
-                        ?.let { call.response.header(HttpHeaders.LastModified, rfc1123.format(it)) }
+                        ?.let { call.response.header(HttpHeaders.LastModified, it.toRfc1123()) }
 
                     call.respond(HttpStatusCode.OK)
                 } else {
@@ -322,7 +326,7 @@ private fun buildMultiStatusXml(requestPath: String, basePath: String, items: Li
             it.contentType?.let { ct -> sb.append("<D:getcontenttype>").append(ct.toString()).append("</D:getcontenttype>") }
         }
         it.lastModified?.let { lm ->
-            sb.append("<D:getlastmodified>").append(rfc1123.format(lm)).append("</D:getlastmodified>")
+            sb.append("<D:getlastmodified>").append(lm.toRfc1123()).append("</D:getlastmodified>")
         }
         sb.append("<D:getetag>\"").append(it.eTag()).append("\"</D:getetag>")
         sb.append("</D:prop>")

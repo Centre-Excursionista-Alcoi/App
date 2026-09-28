@@ -57,8 +57,8 @@ private fun ResultRow.toQualificationGrant() = QualificationGrant(
     qualificationId = this[UserQualifications.qualification].value,
     userSub = this[UserQualifications.userSub].value,
     grantedBy = this[UserQualifications.grantedBy]?.value,
-    grantedAt = this[UserQualifications.grantedAt].toKotlinInstant(),
-    expiresAt = this[UserQualifications.expiresAt]?.toKotlinInstant(),
+    grantedAt = this[UserQualifications.grantedAt],
+    expiresAt = this[UserQualifications.expiresAt],
 )
 
 /** A qualification resolved from the `id` path parameter, together with the department that owns it. */
@@ -195,8 +195,8 @@ fun Route.qualificationsRoutes() {
         val request = qualificationRequest(DepartmentRole.EXAMINER) ?: return@post
         val body = receiveJson(GrantQualificationRequest.serializer()) ?: return@post
 
-        val expiresAt = body.expiresAt?.toJavaInstant()
-        if (expiresAt != null && !expiresAt.isAfter(now())) {
+        val expiresAt = body.expiresAt
+        if (expiresAt != null && expiresAt <= now()) {
             call.respondError(Error.DateMustBeInFuture())
             return@post
         }

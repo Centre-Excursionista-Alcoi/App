@@ -42,7 +42,7 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -50,7 +50,6 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 class TestAuthTokens : ApplicationTestBase() {
     private val password = "TestPassword123"
@@ -125,14 +124,14 @@ class TestAuthTokens : ApplicationTestBase() {
     @Test
     fun test_accessToken_expires() = runTokenTest {
         val tokens = client.login()
-        mockTime(startTime + (AuthTokens.accessTokenLifetime + 1.minutes).toJavaDuration())
+        mockTime(startTime + (AuthTokens.accessTokenLifetime + 1.minutes))
         client.profile(tokens.accessToken).assertError(Error.NotLoggedIn())
     }
 
     @Test
     fun test_refresh_rotatesTokens() = runTokenTest {
         val first = client.login()
-        mockTime(startTime + 5.minutes.toJavaDuration())
+        mockTime(startTime + 5.minutes)
 
         val second = client.refresh(first.refreshToken).apply { assertStatusCode(HttpStatusCode.OK) }.body<TokenResponse>()
         assertNotEquals(first.refreshToken, second.refreshToken)
@@ -148,7 +147,7 @@ class TestAuthTokens : ApplicationTestBase() {
         val first = client.login()
         val second = client.refresh(first.refreshToken).body<TokenResponse>()
 
-        mockTime(startTime + (AuthTokens.refreshTokenReuseGracePeriod + 1.seconds).toJavaDuration())
+        mockTime(startTime + (AuthTokens.refreshTokenReuseGracePeriod + 1.seconds))
         client.refresh(first.refreshToken).assertError(Error.NotLoggedIn())
 
         // Every token of the session is now useless, including the legitimate ones.
@@ -165,7 +164,7 @@ class TestAuthTokens : ApplicationTestBase() {
         // The client never got this response.
         val lost = client.refresh(first.refreshToken).body<TokenResponse>()
 
-        mockTime(startTime + (AuthTokens.refreshTokenReuseGracePeriod - 1.seconds).toJavaDuration())
+        mockTime(startTime + (AuthTokens.refreshTokenReuseGracePeriod - 1.seconds))
         val retried = client.refresh(first.refreshToken).apply { assertStatusCode(HttpStatusCode.OK) }.body<TokenResponse>()
 
         client.refresh(retried.refreshToken).assertStatusCode(HttpStatusCode.OK)
@@ -192,7 +191,7 @@ class TestAuthTokens : ApplicationTestBase() {
     @Test
     fun test_refresh_expiresAfterIdleLifetime() = runTokenTest {
         val tokens = client.login()
-        mockTime(startTime + (AuthTokens.refreshTokenIdleLifetime + 1.minutes).toJavaDuration())
+        mockTime(startTime + (AuthTokens.refreshTokenIdleLifetime + 1.minutes))
         client.refresh(tokens.refreshToken).assertError(Error.NotLoggedIn())
     }
 

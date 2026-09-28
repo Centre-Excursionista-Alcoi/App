@@ -34,10 +34,9 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
@@ -49,14 +48,14 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
          * always covers the rest of the day it starts on, in whatever time zone, so a client can trim the list to
          * the exact end of that day in its own zone without the server having to know it.
          */
-        private val WITHOUT_END_LASTS: Duration = Duration.ofDays(1)
+        private val WITHOUT_END_LASTS: Duration = 1.days
 
         /**
          * The events that aren't over yet at [now] -- still to come or in progress -- as a query condition. Must
          * agree with [isNotOverAt].
          */
         private fun notOverAt(now: Instant): Op<Boolean> =
-            (Events.end greaterEq now) or (Events.end.isNull() and (Events.start greaterEq now.minus(WITHOUT_END_LASTS)))
+            (Events.end greaterEq now) or (Events.end.isNull() and (Events.start greaterEq now - WITHOUT_END_LASTS))
 
         context(_: JdbcTransaction)
         fun forSession(session: UserSession?) = when {
@@ -108,7 +107,7 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
      * Whether this event is still to come or in progress at [now]: it hasn't reached its end date or, without one,
      * a day after it started. Must agree with the query condition [notOverAt] used by [forSession].
      */
-    private fun isNotOverAt(now: Instant): Boolean = (end ?: start.plus(WITHOUT_END_LASTS)) >= now
+    private fun isNotOverAt(now: Instant): Boolean = (end ?: start + WITHOUT_END_LASTS) >= now
 
     val created by Events.created
     override var lastUpdate by Events.lastUpdate
@@ -164,8 +163,8 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
     context(_: JdbcTransaction)
     override fun toData(): Event = Event(
         id = id.value,
-        start = start.toKotlinInstant(),
-        end = end?.toKotlinInstant(),
+        start = start,
+        end = end,
         place = place,
         title = title,
         description = description,
@@ -180,8 +179,8 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateEventRequest) {
-        request.start?.let { start = it.toJavaInstant() }
-        request.end?.let { end = it.toJavaInstant() }
+        request.start?.let { start = it }
+        request.end?.let { end = it }
         request.place?.let { place = it }
         request.title?.let { title = it }
         request.description?.let { description = it }

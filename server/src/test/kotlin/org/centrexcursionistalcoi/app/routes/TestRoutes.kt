@@ -1,6 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import io.ktor.http.ContentType
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
+import java.util.Random
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.data.Department
@@ -21,12 +26,6 @@ import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.Month
-import java.time.ZoneOffset
-import java.util.Random
 
 class TestRoutes : ApplicationTestBase() {
     private val testDepartmentId = "2c8876a9-ff7e-4dd8-b39c-dd270631b9d2".toUuid()
@@ -136,14 +135,14 @@ class TestRoutes : ApplicationTestBase() {
         runTestsOnRoute(
             title = "Events",
             baseUrl = "/events",
-            now = LocalDateTime.of(LocalDate.of(2025, Month.SEPTEMBER, 1), LocalTime.of(12, 0)).toInstant(ZoneOffset.UTC),
+            now = LocalDateTime(2025, Month.SEPTEMBER, 1, 12, 0).toInstant(TimeZone.UTC),
             requiredCreationValuesProvider = mapOf(
-                "start" to { LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15).toInstant(ZoneOffset.UTC) },
+                "start" to { LocalDateTime(2025, Month.OCTOBER, 10, 10, 15).toInstant(TimeZone.UTC) },
                 "title" to { "Test Event" },
                 "place" to { "Test Place" },
             ),
             optionalCreationValuesProvider = mapOf(
-                "end" to { LocalDateTime.of(2025, Month.OCTOBER, 11, 12, 50).toInstant(ZoneOffset.UTC) },
+                "end" to { LocalDateTime(2025, Month.OCTOBER, 11, 12, 50).toInstant(TimeZone.UTC) },
                 "description" to { "This is a test event description." },
                 "department" to { testDepartmentId },
                 "maxPeople" to { 50L },
@@ -167,7 +166,7 @@ class TestRoutes : ApplicationTestBase() {
             },
             stubEntityProvider = {
                 EventEntity.new(testEventId) {
-                    start = LocalDateTime.of(2025, Month.OCTOBER, 10, 10, 15).toInstant(ZoneOffset.UTC)
+                    start = LocalDateTime(2025, Month.OCTOBER, 10, 10, 15).toInstant(TimeZone.UTC)
                     title = "Test Event"
                     place = "Test Place"
                 }

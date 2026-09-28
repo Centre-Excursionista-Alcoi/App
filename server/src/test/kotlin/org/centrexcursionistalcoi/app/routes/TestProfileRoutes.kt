@@ -17,7 +17,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.headers
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -25,7 +25,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
-import java.time.LocalDate as JavaLocalDate
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -101,7 +100,7 @@ class TestProfileRoutes : ApplicationTestBase() {
     fun test_conditionalHeaders_ifModifiedSince() {
         runApplicationTest(
             // GMT: Tuesday 20 October 2015 0:00:00
-            mockNow = Instant.ofEpochSecond(1445299200),
+            mockNow = Instant.fromEpochSeconds(1445299200),
             shouldLogIn = LoginType.USER,
         ) {
             client.get("/profile") {
@@ -159,15 +158,15 @@ class TestProfileRoutes : ApplicationTestBase() {
                     userSub = FakeUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL123"
-                    validFrom = JavaLocalDate.of(2025, 1, 1)
-                    validTo = JavaLocalDate.of(2025, 12, 31)
+                    validFrom = LocalDate(2025, 1, 1)
+                    validTo = LocalDate(2025, 12, 31)
                 }
                 UserInsuranceEntity.new {
                     userSub = FakeAdminUser.provideEntity()
                     insuranceCompany = "FEMECV"
                     policyNumber = "POL456"
-                    validFrom = JavaLocalDate.of(2025, 1, 1)
-                    validTo = JavaLocalDate.of(2025, 12, 31)
+                    validFrom = LocalDate(2025, 1, 1)
+                    validTo = LocalDate(2025, 12, 31)
                 }
             }
         }

@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -13,6 +15,13 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
@@ -39,13 +48,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.time.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.uuid.Uuid
 
 /**
  * Events may require qualifications: creating/patching them, exposing them, and enforcing them when a user
@@ -99,7 +101,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     /** A future event of "Test Department" requiring [requirements]. */
     private fun JdbcTransaction.seedEvent(vararg requirements: List<Uuid>): EventEntity =
         EventEntity.new(eventId) {
-            start = Instant.now().plusSeconds(7 * 24 * 3600)
+            start = (Clock.System.now() + (7 * 24 * 3600).seconds)
             place = "Somewhere"
             title = "Climbing day"
             department = DepartmentEntity[departmentId]
@@ -202,7 +204,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     @Test
     fun test_confirm_expiredGrant_doesNotCount() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = Instant.now().minusSeconds(3600)) },
+        databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = (Clock.System.now() - 3600.seconds)) },
     ) {
         client.post("/events/$eventId/confirm").assertError(Error.MissingQualifications())
     }
@@ -210,7 +212,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     @Test
     fun test_confirm_grantExpiringInTheFuture_counts() = runApplicationTest(
         shouldLogIn = LoginType.USER,
-        databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = Instant.now().plusSeconds(3600)) },
+        databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = (Clock.System.now() + 3600.seconds)) },
     ) {
         client.post("/events/$eventId/confirm").assertStatusCode(HttpStatusCode.NoContent)
     }
@@ -267,7 +269,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     ): HttpResponse = submitFormWithBinaryData(
         "/events",
         formData {
-            append("start", Instant.now().plusSeconds(3600).toEpochMilli())
+            append("start", (Clock.System.now() + 3600.seconds).toEpochMilliseconds())
             append("title", "New event")
             append("place", "Somewhere")
             department?.let { append("department", it.toString()) }

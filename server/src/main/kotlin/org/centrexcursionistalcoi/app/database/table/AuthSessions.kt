@@ -2,7 +2,7 @@ package org.centrexcursionistalcoi.app.database.table
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
-import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 /** How an [AuthSessions] row was started. */
 enum class AuthSessionMethod {

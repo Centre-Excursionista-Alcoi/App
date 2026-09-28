@@ -5,7 +5,7 @@ import io.ktor.http.isSuccess
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -21,7 +21,7 @@ class TestInfo : ApplicationTestBase() {
             mockkObject(ConfigEntity.DatabaseVersion)
             every { ConfigEntity.DatabaseVersion.get() } returns 123
             mockkObject(ConfigEntity.LastCEASync)
-            every { ConfigEntity.LastCEASync.get() } returns Instant.ofEpochSecond(1763531703)
+            every { ConfigEntity.LastCEASync.get() } returns Instant.fromEpochSeconds(1763531703)
 
             val response = client.get("/info")
             assertTrue(response.status.isSuccess())
