@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.di
 
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.auth.Passkeys
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
@@ -108,6 +109,7 @@ class TestKoinModules {
         assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
+        assertNotNull(koin.get<Passkeys>())
         assertNotNull(koin.get<SettingsStore>())
 
         assertNotNull(koin.get<PathsProvider>())

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -53,6 +54,9 @@ import cea_app.composeapp.generated.resources.confirm_password
 import cea_app.composeapp.generated.resources.email
 import cea_app.composeapp.generated.resources.login_action
 import cea_app.composeapp.generated.resources.login_error_invalid_credentials
+import cea_app.composeapp.generated.resources.login_error_passkey
+import cea_app.composeapp.generated.resources.login_error_password_not_set
+import cea_app.composeapp.generated.resources.login_error_password_not_set_desktop
 import cea_app.composeapp.generated.resources.login_error_unknown
 import cea_app.composeapp.generated.resources.login_error_user_not_registered
 import cea_app.composeapp.generated.resources.login_existing_account_logout
@@ -63,8 +67,10 @@ import cea_app.composeapp.generated.resources.login_forgot_password_dialog_actio
 import cea_app.composeapp.generated.resources.login_forgot_password_dialog_message
 import cea_app.composeapp.generated.resources.login_forgot_password_dialog_title
 import cea_app.composeapp.generated.resources.login_forgot_password_success_title
+import cea_app.composeapp.generated.resources.login_or_type
 import cea_app.composeapp.generated.resources.login_password_changed_message
 import cea_app.composeapp.generated.resources.login_password_changed_title
+import cea_app.composeapp.generated.resources.login_saved_credential_action
 import cea_app.composeapp.generated.resources.password
 import cea_app.composeapp.generated.resources.people
 import cea_app.composeapp.generated.resources.register_action
@@ -72,10 +78,12 @@ import cea_app.composeapp.generated.resources.register_title
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.auth.PasskeyException
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
 import org.centrexcursionistalcoi.app.ui.resources.GenderedStringResource
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
@@ -96,14 +104,23 @@ fun AuthScreen(
     val error by model.error.collectAsState()
     val existingAccountEmail by model.existingAccountEmail.collectAsState()
 
+    // Tells the platform's autofill the form was submitted successfully, so it offers to save the password.
+    val autofillManager = LocalAutofillManager.current
+    val afterLogin: () -> Unit = {
+        autofillManager?.commit()
+        onLoginSuccess()
+    }
+
     AuthScreen(
         isLoading = isLoading,
         error = error,
         changedPassword = changedPassword,
         existingAccountEmail = existingAccountEmail,
+        canUseSavedCredentials = model.canUseSavedCredentials,
         onForgetExistingAccount = model::forgetExistingAccount,
-        onLoginRequest = { email, password -> model.login(email, password, onLoginSuccess) },
-        onRegisterRequest = { email, password -> model.register(email, password, onLoginSuccess) },
+        onSavedCredentialRequest = { model.signInWithSavedCredential(onLoginSuccess) },
+        onLoginRequest = { email, password -> model.login(email, password, afterLogin = afterLogin) },
+        onRegisterRequest = { email, password -> model.register(email, password, afterLogin) },
         onForgotPassword = { email, ar -> model.forgotPassword(email, ar) },
         onClearErrors = model::clearError,
     )
@@ -116,7 +133,9 @@ private fun AuthScreen(
     error: Throwable?,
     changedPassword: Boolean,
     existingAccountEmail: String? = null,
+    canUseSavedCredentials: Boolean = false,
     onForgetExistingAccount: () -> Unit = {},
+    onSavedCredentialRequest: () -> Unit = {},
     onLoginRequest: (email: String, password: String) -> Unit,
     onRegisterRequest: (email: String, password: String) -> Unit,
     onForgotPassword: (email: String, afterRequest: () -> Unit) -> Job,
@@ -177,6 +196,8 @@ private fun AuthScreen(
                     0 -> AuthScreen_Login(
                         isLoading = isLoading,
                         error = error,
+                        canUseSavedCredentials = canUseSavedCredentials,
+                        onSavedCredentialRequest = onSavedCredentialRequest,
                         onLoginRequest = { email, password ->
                             onLoginRequest(email.toString(), password.toString())
                         },
@@ -237,6 +258,7 @@ private fun AuthScreen_Form(
     onSubmit: () -> Unit,
     auxText: String? = null,
     onAux: () -> Unit = {},
+    isPasskeysSupported: Boolean = false,
     content: @Composable () -> Unit
 ) {
     Image(
@@ -273,8 +295,13 @@ private fun AuthScreen_Form(
                     when (serverException.errorCode) {
                         Error.ERROR_USER_NOT_REGISTERED -> stringResource(Res.string.login_error_user_not_registered)
                         Error.ERROR_INCORRECT_PASSWORD_OR_EMAIL -> stringResource(Res.string.login_error_invalid_credentials)
+                        Error.ERROR_PASSWORD_NOT_SET -> stringResource(
+                            if (isPasskeysSupported) Res.string.login_error_password_not_set else Res.string.login_error_password_not_set_desktop
+                        )
                         else -> stringResource(Res.string.login_error_unknown, serverException.message ?: unknown())
                     }
+                } else if (error is PasskeyException) {
+                    stringResource(Res.string.login_error_passkey, error.message ?: unknown())
                 } else {
                     error.toString()
                 }
@@ -308,6 +335,8 @@ private fun AuthScreen_Form(
 private fun AuthScreen_Login(
     isLoading: Boolean = false,
     error: Throwable? = null,
+    canUseSavedCredentials: Boolean = false,
+    onSavedCredentialRequest: () -> Unit = {},
     onLoginRequest: (email: CharSequence, password: CharSequence) -> Unit,
     onRegisterRequest: () -> Unit,
     onForgotPassword: (email: CharSequence) -> Job,
@@ -364,8 +393,25 @@ private fun AuthScreen_Login(
             onLoginRequest(email.text, password.text)
         },
         auxText = stringResource(Res.string.login_forgot_password),
-        onAux = { showingForgotPasswordDialog = true }
+        onAux = { showingForgotPasswordDialog = true },
+        isPasskeysSupported = canUseSavedCredentials,
     ) {
+        if (canUseSavedCredentials) {
+            Button(
+                enabled = !isLoading,
+                onClick = onSavedCredentialRequest,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            ) {
+                Icon(MaterialSymbols.Security, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text(stringResource(Res.string.login_saved_credential_action))
+            }
+            Text(
+                text = stringResource(Res.string.login_or_type),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp),
+            )
+        }
         OutlinedTextField(
             state = email,
             enabled = !isLoading,
@@ -375,7 +421,8 @@ private fun AuthScreen_Login(
                 .padding(horizontal = 8.dp)
                 .padding(top = 4.dp)
                 .semantics {
-                    contentType = ContentType.EmailAddress
+                    // The account's username is its email: password managers fill both kinds of fields.
+                    contentType = ContentType.Username + ContentType.EmailAddress
                 },
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
@@ -388,7 +435,6 @@ private fun AuthScreen_Login(
                 .padding(horizontal = 8.dp)
                 .padding(top = 4.dp),
             enabled = !isLoading,
-            semanticsIsNewPassword = true,
             showNextButton = true,
         )
     }

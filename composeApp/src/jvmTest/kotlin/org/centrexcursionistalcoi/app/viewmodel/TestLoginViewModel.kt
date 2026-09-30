@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
+import org.centrexcursionistalcoi.app.auth.Passkeys
 import org.centrexcursionistalcoi.app.auth.SavedAccount
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -64,7 +65,7 @@ class TestLoginViewModel {
             current.value = SavedAccount("user@example.com")
         }
 
-        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore, profileRemoteRepository)
+        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore, profileRemoteRepository, Passkeys())
         assertNull(viewModel.existingAccountEmail.value, "No account was saved before the screen loaded")
 
         var loggedIn = false

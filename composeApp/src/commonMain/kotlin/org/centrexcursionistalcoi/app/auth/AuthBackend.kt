@@ -5,11 +5,13 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import org.centrexcursionistalcoi.app.data.RefreshTokenRequest
+import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -71,9 +73,42 @@ class AuthBackend(
         }
         if (response.status.isSuccess()) {
             log.d { "Login successful." }
-            sessionTokens.onLoggedIn(response.body<TokenResponse>())
-            // So that this account can be logged in on a new device without the password.
-            restoreKeys.create()
+            onLoggedIn(response.body<TokenResponse>())
+        } else {
+            throw response.bodyAsError().toThrowable()
+        }
+    }
+
+    /** Saves the session of a new login. */
+    private suspend fun onLoggedIn(tokens: TokenResponse) {
+        sessionTokens.onLoggedIn(tokens)
+        // So that this account can be logged in on a new device without signing in again.
+        restoreKeys.create()
+    }
+
+    /**
+     * The WebAuthn request options to sign in with a passkey, for [Passkeys.signIn]: any of the user's passkeys,
+     * since the server doesn't know who is signing in yet.
+     */
+    suspend fun passkeySignInOptions(): String {
+        val response = getHttpClient().post(Api.GenerateAuthChallenge()) { skipSessionAuth() }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        return response.bodyAsText()
+    }
+
+    /** Logs in with a passkey's [authenticationResponseJson], see [Passkeys.signIn]. */
+    suspend fun loginWithPasskey(authenticationResponseJson: String) {
+        // Clear storage before logging in, so nothing from a previous account is left behind
+        settings.clear()
+
+        val response = getHttpClient().post(Api.Auth.WebAuthnVerify()) {
+            skipSessionAuth()
+            contentType(ContentType.Application.Json)
+            setBody(RestoreKeyVerificationRequest(authenticationResponseJson))
+        }
+        if (response.status.isSuccess()) {
+            log.d { "Passkey login successful." }
+            onLoggedIn(response.body<TokenResponse>())
         } else {
             throw response.bodyAsError().toThrowable()
         }

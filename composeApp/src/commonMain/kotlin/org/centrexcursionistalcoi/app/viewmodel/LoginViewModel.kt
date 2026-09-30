@@ -9,6 +9,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
+import org.centrexcursionistalcoi.app.auth.PasskeyException
+import org.centrexcursionistalcoi.app.auth.Passkeys
+import org.centrexcursionistalcoi.app.auth.SavedCredential
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
@@ -20,6 +23,7 @@ class LoginViewModel(
     private val dispatcherProvider: DispatcherProvider,
     credentialsStore: CredentialsStore,
     private val profileRemoteRepository: ProfileRemoteRepository,
+    private val passkeys: Passkeys,
 ) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
@@ -43,15 +47,54 @@ class LoginViewModel(
         authBackend.forgetLocalAccount()
     }
 
-    fun login(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.launch {
+    /** Whether the user can sign in with a passkey, or a password saved in the platform's password manager. */
+    val canUseSavedCredentials: Boolean get() = passkeys.isSupported
+
+    /**
+     * Logs in with a password the user typed.
+     * @param isSaved Whether the password came from the password manager, so it doesn't need saving.
+     */
+    fun login(email: String, password: String, isSaved: Boolean = false, afterLogin: () -> Unit) = viewModelScope.launch {
         try {
             _isLoading.emit(true)
+            clearError()
 
             authBackend.login(email, password)
+            if (!isSaved) passkeys.savePassword(email, password)
             profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
             withContext(dispatcherProvider.main) { afterLogin() }
         } catch (e: ServerException) {
+            setError(e)
+        } finally {
+            _isLoading.emit(false)
+        }
+    }
+
+    /**
+     * Shows the platform's sign-in sheet, with the user's passkeys and saved passwords, and logs in with the one they
+     * pick. If they have nothing saved, or cancel, nothing happens: the email and password form is still there.
+     */
+    fun signInWithSavedCredential(afterLogin: () -> Unit) = viewModelScope.launch {
+        try {
+            _isLoading.emit(true)
+            clearError()
+
+            val options = authBackend.passkeySignInOptions()
+            when (val credential = passkeys.signIn(options)) {
+                null -> return@launch
+                is SavedCredential.Password -> {
+                    login(credential.email, credential.password, isSaved = true, afterLogin = afterLogin).join()
+                    return@launch
+                }
+                is SavedCredential.Passkey -> authBackend.loginWithPasskey(credential.authenticationResponseJson)
+            }
+            profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+
+            withContext(dispatcherProvider.main) { afterLogin() }
+        } catch (e: ServerException) {
+            setError(e)
+        } catch (e: PasskeyException) {
             setError(e)
         } finally {
             _isLoading.emit(false)
@@ -67,7 +110,7 @@ class LoginViewModel(
             authBackend.register(email, password)
 
             // If successful, log in
-            login(email, password, afterLogin).join()
+            login(email, password, afterLogin = afterLogin).join()
         } catch (e: ServerException) {
             setError(e)
         } finally {
