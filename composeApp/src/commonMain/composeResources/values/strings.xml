@@ -31,9 +31,9 @@
     <string name="login_action">Login</string>
     <string name="login_password_changed_title">Password updated!</string>
     <string name="login_password_changed_message">You can now log in with your new password.</string>
-    <string name="login_forgot_password">Password forgotten?</string>
-    <string name="login_forgot_password_dialog_title">Have you forgotten your password?</string>
-    <string name="login_forgot_password_dialog_message">Enter your email, and if you have been registered before, you will receive an email to update your password.</string>
+    <string name="login_forgot_password">Can't sign in?</string>
+    <string name="login_forgot_password_dialog_title">Can't sign in?</string>
+    <string name="login_forgot_password_dialog_message">Enter your email, and if you have been registered before, you will receive an email to set a new password. If you signed in with a passkey, it stops working, and you can create a new one afterwards.</string>
     <string name="login_forgot_password_dialog_action">Send Email</string>
     <string name="login_forgot_password_success_title">Please, check your inbox.</string>
     <string name="login_error_unknown">Server error: %1$s</string>
@@ -42,6 +42,11 @@
     <string name="login_existing_account_title">Already have an account saved</string>
     <string name="login_existing_account_message">You already have an account saved on this device (%1$s). Log out from it before adding a different one?</string>
     <string name="login_existing_account_logout">Log out</string>
+    <string name="login_saved_credential_action">Sign in with a passkey or saved password</string>
+    <string name="login_or_type">Or type your email and password</string>
+    <string name="login_error_password_not_set">This account signs in with a passkey, not a password. Tap "Sign in with a passkey or saved password" above.</string>
+    <string name="login_error_password_not_set_desktop">This account signs in with a passkey, which can't be used on this computer. To sign in here, add a password from Security &amp; Privacy in the app on your phone.</string>
+    <string name="login_error_passkey">The passkey couldn't be used: %1$s</string>
 
     <string name="register_title">Register an Account</string>
     <string name="register_action">Register</string>

@@ -26,6 +26,7 @@ class AppBase : Application(), KoinComponent {
 
     override fun onCreate() {
         super.onCreate()
+        registerActivityLifecycleCallbacks(CurrentActivity)
         KmLogging.addLogger(PlatformLogger(FixedLogLevel(true)))
 
         initKoin {
