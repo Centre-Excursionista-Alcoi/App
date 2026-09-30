@@ -83,7 +83,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Error
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Passkey
 import org.centrexcursionistalcoi.app.ui.resources.GenderedStringResource
 import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
@@ -402,7 +402,7 @@ private fun AuthScreen_Login(
                 onClick = onSavedCredentialRequest,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             ) {
-                Icon(MaterialSymbols.Security, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Icon(MaterialSymbols.Passkey, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                 Text(stringResource(Res.string.login_saved_credential_action))
             }
             Text(
