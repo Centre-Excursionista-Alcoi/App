@@ -14,5 +14,7 @@ data class CreationOptionsResponse(
         PubKeyCredParam(type = "public-key", alg = -257)
     ),
     val authenticatorSelection: AuthenticatorSelection = AuthenticatorSelection(),
-    val timeout: Long = 1800000 // 30 minutes in milliseconds
+    val timeout: Long = 1800000, // 30 minutes in milliseconds
+    /** Credentials the user already has, so the same authenticator doesn't create a second one. */
+    val excludeCredentials: List<PublicKeyCredentialDescriptor> = emptyList(),
 )

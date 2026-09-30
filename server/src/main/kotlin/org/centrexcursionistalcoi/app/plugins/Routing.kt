@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.routes.profileRoutes
 import org.centrexcursionistalcoi.app.routes.qualificationsRoutes
 import org.centrexcursionistalcoi.app.routes.respondAppLinkFallbackOr
 import org.centrexcursionistalcoi.app.routes.robotsRoute
+import org.centrexcursionistalcoi.app.routes.securityRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
@@ -88,6 +89,7 @@ fun Application.configureRouting() {
         configureSSERoutes()
 
         profileRoutes()
+        securityRoutes()
         departmentsRoutes()
         eventsRoutes()
         qualificationsRoutes()

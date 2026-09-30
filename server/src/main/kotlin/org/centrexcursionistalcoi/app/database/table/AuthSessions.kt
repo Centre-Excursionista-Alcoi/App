@@ -9,8 +9,11 @@ enum class AuthSessionMethod {
     /** Email and password, through `/auth/login`. */
     PASSWORD,
 
-    /** A WebAuthn credential (a restore key), through `/auth/webauthn/verify`. */
+    /** A restore key, through `/auth/webauthn/verify`. */
     WEBAUTHN,
+
+    /** A passkey, through `/auth/webauthn/verify`, or a new account's passkey through `/register/passkey`. */
+    PASSKEY,
 }
 
 /** Why an [AuthSessions] row was revoked. */

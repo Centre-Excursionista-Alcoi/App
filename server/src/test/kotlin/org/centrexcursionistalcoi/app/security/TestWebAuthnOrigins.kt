@@ -13,7 +13,7 @@ class TestWebAuthnOrigins {
     }
 
     @Test
-    fun test_androidOrigins_toleratesWhitespaceAndEmptyEntries() {
+    fun test_origins_toleratesWhitespaceAndEmptyEntries_andIncludeTheIosOrigin() {
         WellKnownConfigProvider.override(WellKnownConfigProvider.SHA256_CERT_FINGERPRINTS_VARIABLE, "AA:BB, CC:DD ,")
 
         assertEquals(
@@ -21,8 +21,10 @@ class TestWebAuthnOrigins {
                 // 0xAABB and 0xCCDD, Base64Url without padding
                 Origin.create("android:apk-key-hash:qrs"),
                 Origin.create("android:apk-key-hash:zN0"),
+                // iOS
+                Origin.create("https://$webAuthnRpId"),
             ),
-            webAuthnAndroidOrigins,
+            webAuthnOrigins,
         )
     }
 }

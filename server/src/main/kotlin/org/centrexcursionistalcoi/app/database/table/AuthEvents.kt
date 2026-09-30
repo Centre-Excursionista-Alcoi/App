@@ -13,6 +13,21 @@ enum class AuthEventType {
     /** A restore key (WebAuthn) redeemed for tokens. */
     WEBAUTHN_LOGIN,
 
+    /** A passkey used to log in. */
+    PASSKEY_LOGIN,
+
+    /** A registration code emailed, to prove the email is the registering user's. */
+    REGISTRATION_CODE,
+
+    /** A passkey added to an account (including a new account's first). */
+    PASSKEY_ADDED,
+
+    /** A passkey removed from an account. */
+    PASSKEY_REMOVED,
+
+    /** The password of an account set, changed or removed from its security settings. */
+    PASSWORD_CHANGED,
+
     /** Only failed refreshes are recorded: successful ones happen every few minutes per active user. */
     TOKEN_REFRESH,
 

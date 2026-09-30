@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.CredentialKind
 import org.centrexcursionistalcoi.app.database.table.AuthEventType
 import org.centrexcursionistalcoi.app.database.table.AuthSessionMethod
 import org.centrexcursionistalcoi.app.database.table.AuthSessionRevocationReason
@@ -26,9 +27,9 @@ import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.ClientInfo
 import org.centrexcursionistalcoi.app.security.RefreshResult
-import org.centrexcursionistalcoi.app.security.RestoreKeyVerification
+import org.centrexcursionistalcoi.app.security.AssertionVerification
 import org.centrexcursionistalcoi.app.security.getAccessTokenSessionId
-import org.centrexcursionistalcoi.app.security.verifyRestoreKey
+import org.centrexcursionistalcoi.app.security.verifyAssertion
 
 /**
  * Token-based authentication (see [AuthTokens]). Every route that hands out tokens responds a [TokenResponse].
@@ -57,15 +58,20 @@ fun Route.authTokenRoutes() {
         post<Api.Auth.WebAuthnVerify> {
             val request = call.receiveNullable<RestoreKeyVerificationRequest>()
                 ?: return@post respondError(Error.MissingArgument("authenticationResponseJson"))
-            when (val result = verifyRestoreKey(request)) {
-                is RestoreKeyVerification.Failure ->
+            when (val result = verifyAssertion(request.authenticationResponseJson)) {
+                is AssertionVerification.Failure ->
                     respondAuthError(AuthEventType.WEBAUTHN_LOGIN, null, result.error)
-                is RestoreKeyVerification.Success -> {
-                    recordAuthEvent(AuthEventType.WEBAUTHN_LOGIN, result.user.email, null)
+                is AssertionVerification.Success -> {
+                    val isPasskey = result.kind == CredentialKind.PASSKEY
+                    recordAuthEvent(
+                        if (isPasskey) AuthEventType.PASSKEY_LOGIN else AuthEventType.WEBAUTHN_LOGIN,
+                        result.user.email,
+                        null,
+                    )
                     val tokens = Database {
                         AuthTokens.startSession(
                             result.user,
-                            AuthSessionMethod.WEBAUTHN,
+                            if (isPasskey) AuthSessionMethod.PASSKEY else AuthSessionMethod.WEBAUTHN,
                             ClientInfo.from(call),
                         )
                     }
@@ -103,7 +109,7 @@ fun Route.authTokenRoutes() {
     }
 }
 
-private suspend fun RoutingContext.respondTokens(tokens: TokenResponse) {
+internal suspend fun RoutingContext.respondTokens(tokens: TokenResponse) {
     // RFC 6749 §5.1: token responses must never be cached.
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.response.header(HttpHeaders.Pragma, "no-cache")

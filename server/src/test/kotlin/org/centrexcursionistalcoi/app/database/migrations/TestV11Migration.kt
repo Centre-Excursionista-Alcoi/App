@@ -274,7 +274,7 @@ class TestV11Migration : PostgresTestBase() {
         val result = Database.init()
 
         assertEquals(Database.INIT_RESULT_MIGRATION_EXECUTED, result and Database.INIT_RESULT_MIGRATION_EXECUTED)
-        assertEquals(11, ConfigEntity.DatabaseVersion.get())
+        assertEquals(DatabaseMigration.VERSION, ConfigEntity.DatabaseVersion.get())
         assertMigrated(FileStorageProvider.current)
     }
 }

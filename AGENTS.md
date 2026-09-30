@@ -361,7 +361,20 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   only deleted by the next `saveSession`/`clear`.
 - **WebDAV has its own cookie** (`WEBDAV_SESSION`, path `/webdav`, 1 hour), started with HTTP Basic: it grants
   nothing in the rest of the API.
-- A password reset revokes every session and deletes the user's WebAuthn credentials.
+- A password reset revokes every session and deletes the user's WebAuthn credentials (passkeys included: it's also
+  how someone who lost their only passkey gets back in).
+- **WebAuthn credentials are restore keys or passkeys** (`UserCredentialRecords.kind`). Both sign in through
+  `/generate-auth-challenge` + `/auth/webauthn/verify` (`verifyAssertion` in `security/WebAuthn.kt`); only
+  passkeys require user verification, and only passkeys are listed in `/profile/security`. Allowed origins are
+  the Android `apk-key-hash`es and `https://<rp id>` (iOS).
+- **An account may have no password** (an empty `user_references.password`, `UserReferenceEntity.hasPassword`):
+  it signs in with passkeys only, and a password login answers `Error.PasswordNotSet`. Removing a passkey or the
+  password never leaves an account without a way in (`Error.LastLoginMethod`), and — like setting a password —
+  needs a `Reauthentication` (the password, or a fresh passkey sign-in with one of the user's own passkeys).
+- **Registering needs the emailed code** (`/register/verification`, `security/RegistrationCodes.kt`), for a
+  password (`POST /register`'s `code`) or a passkey (`/register/passkey`) alike: nothing else proves the email
+  is the person's. In tests, get a code with `RegistrationCodes.create(email)`; `SoftwareAuthenticator` (test
+  sources) creates and signs in with real, software passkeys.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token

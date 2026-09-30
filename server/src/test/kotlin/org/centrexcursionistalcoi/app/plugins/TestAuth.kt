@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.test.Test
 import kotlin.text.toCharArray
@@ -22,6 +23,7 @@ class TestAuth: ApplicationTestBase() {
     private val parameters = mapOf(
         "email" to FakeUser.EMAIL,
         "password" to "TestPassword123",
+        "code" to "000000",
     )
 
     @Test
@@ -78,10 +80,53 @@ class TestAuth: ApplicationTestBase() {
             FakeUser.provideMemberEntity()
         }
     ) {
+        val code = RegistrationCodes.create(FakeUser.EMAIL.uppercase())
+        client.submitForm(href(Api.Register()),
+            parameters { appendAll(parameters + ("code" to code)) },
+        ).apply {
+            assertSuccess()
+        }
+    }
+
+    @Test
+    fun test_registration_wrongCode() = runApplicationTest(
+        databaseInitBlock = {
+            FakeUser.provideMemberEntity()
+        }
+    ) {
+        val code = RegistrationCodes.create(FakeUser.EMAIL.uppercase())
+        val wrongCode = if (code == "000000") "000001" else "000000"
+        client.submitForm(href(Api.Register()),
+            parameters { appendAll(parameters + ("code" to wrongCode)) },
+        ).apply {
+            assertError(Error.InvalidVerificationCode())
+        }
+    }
+
+    @Test
+    fun test_registration_withoutRequestingACode() = runApplicationTest(
+        databaseInitBlock = {
+            FakeUser.provideMemberEntity()
+        }
+    ) {
         client.submitForm(href(Api.Register()),
             parameters { appendAll(parameters) },
         ).apply {
-            assertSuccess()
+            assertError(Error.InvalidVerificationCode())
+        }
+    }
+
+    @Test
+    fun test_login_passwordless_isNotAnError500() = runApplicationTest(
+        databaseInitBlock = {
+            val entity = transaction { FakeUser.provideEntity() }
+            entity.password = ByteArray(0)
+        }
+    ) {
+        client.submitForm(href(Api.Auth.Login()),
+            parameters { appendAll(parameters) },
+        ).apply {
+            assertError(Error.PasswordNotSet())
         }
     }
 

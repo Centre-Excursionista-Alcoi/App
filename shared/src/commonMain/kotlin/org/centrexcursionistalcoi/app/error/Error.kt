@@ -551,6 +551,46 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
     }
 
+    @Serializable
+    @SerialName("LastLoginMethod")
+    class LastLoginMethod(): Error {
+        override val code: Int = ERROR_LAST_LOGIN_METHOD
+        override val description: String = "This is the only way left to sign in to the account, so it can't be removed."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("InvalidVerificationCode")
+    class InvalidVerificationCode(): Error {
+        override val code: Int = ERROR_INVALID_VERIFICATION_CODE
+        override val description: String = "The verification code is wrong, or has expired."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("ReauthenticationFailed")
+    class ReauthenticationFailed(): Error {
+        override val code: Int = ERROR_REAUTHENTICATION_FAILED
+        override val description: String = "Confirming the user's identity failed: the password or passkey is missing or wrong."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Forbidden
+    }
+
+    @Serializable
+    @SerialName("PasswordNotSet")
+    class PasswordNotSet(): Error {
+        override val code: Int = ERROR_PASSWORD_NOT_SET
+        override val description: String = "The account has no password: it signs in with passkeys only."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Unauthorized
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -601,6 +641,10 @@ sealed interface Error {
         const val ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER = 46
         const val ERROR_QUALIFICATION_ALREADY_EXISTS = 47
         const val ERROR_MISSING_QUALIFICATIONS = 48
+        const val ERROR_LAST_LOGIN_METHOD = 49
+        const val ERROR_INVALID_VERIFICATION_CODE = 50
+        const val ERROR_REAUTHENTICATION_FAILED = 51
+        const val ERROR_PASSWORD_NOT_SET = 52
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -652,6 +696,10 @@ sealed interface Error {
             ERROR_CANNOT_DELETE_MEMORY_LENDING_CREATED_AFTER -> CannotDeleteMemoryLendingCreatedAfter.serializer()
             ERROR_QUALIFICATION_ALREADY_EXISTS -> QualificationAlreadyExists.serializer()
             ERROR_MISSING_QUALIFICATIONS -> MissingQualifications.serializer()
+            ERROR_LAST_LOGIN_METHOD -> LastLoginMethod.serializer()
+            ERROR_INVALID_VERIFICATION_CODE -> InvalidVerificationCode.serializer()
+            ERROR_REAUTHENTICATION_FAILED -> ReauthenticationFailed.serializer()
+            ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
             else -> null
         }
     }

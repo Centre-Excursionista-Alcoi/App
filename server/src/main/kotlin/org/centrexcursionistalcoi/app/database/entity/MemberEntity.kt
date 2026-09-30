@@ -24,11 +24,11 @@ class MemberEntity(id: EntityID<UInt>) : UIntEntity(id) {
      * Assumes that the member data is valid:
      * - [nif] is not null and valid
      * - [email] is not null and valid
-     * @param hashedPassword The hashed password to set for the user.
+     * @param hashedPassword The hashed password to set for the user, or `null` if they sign in with passkeys only.
+     * @param sub The id of the user, if it has already been chosen (e.g. for the user handle of their passkey).
      * @return The created [UserReferenceEntity].
      */
-    fun insertUser(hashedPassword: ByteArray) = Database {
-        val sub = generateRandomString(16)
+    fun insertUser(hashedPassword: ByteArray?, sub: String = generateUserSub()) = Database {
         UserReferenceEntity.new(sub) {
             this.memberNumber = this@MemberEntity.memberNumber
 
@@ -40,9 +40,12 @@ class MemberEntity(id: EntityID<UInt>) : UIntEntity(id) {
 
             this.groups = listOf("cea_member")
 
-            this.password = hashedPassword
+            this.password = hashedPassword ?: ByteArray(0)
         }
     }
 
     fun toMember() = Member(memberNumber, status, fullName, nif, email)
 }
+
+/** A new, random id for a user. */
+fun generateUserSub(): String = generateRandomString(16)

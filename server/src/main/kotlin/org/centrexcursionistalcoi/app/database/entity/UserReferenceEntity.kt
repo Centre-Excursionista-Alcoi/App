@@ -72,6 +72,9 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
 
     var password by UserReferences.password
 
+    /** Whether the user can sign in with a password: an account can also sign in with passkeys only. */
+    val hasPassword: Boolean get() = password.isNotEmpty()
+
     var femecvUsername by UserReferences.femecvUsername
     var femecvPassword by UserReferences.femecvPassword
     var femecvLastSync by UserReferences.femecvLastSync
