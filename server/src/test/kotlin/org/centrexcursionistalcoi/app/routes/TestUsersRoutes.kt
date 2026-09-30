@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.plugins.resources.get
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.builtins.ListSerializer
@@ -20,6 +21,7 @@ import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.href
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -27,7 +29,7 @@ import kotlin.test.assertTrue
 
 class TestUsersRoutes: ApplicationTestBase() {
     @Test
-    fun test_users_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/users")
+    fun test_users_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Users()))
 
     @Test
     fun test_users() = runApplicationTest(
@@ -64,7 +66,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/users").apply {
+        client.get(Api.Users()).apply {
             assertStatusCode(HttpStatusCode.OK)
 
             val departments = Database { DepartmentEntity.all().associate { it.id.value to it.toData() } }
@@ -163,7 +165,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/users").apply {
+        client.get(Api.Users()).apply {
             assertStatusCode(HttpStatusCode.OK)
 
             val departments = Database { DepartmentEntity.all().associate { it.id.value to it.toData() } }
@@ -220,7 +222,7 @@ class TestUsersRoutes: ApplicationTestBase() {
     fun test_users_not_admin() = runApplicationTest(
         shouldLogIn = LoginType.USER,
     ) {
-        client.get("/users").apply {
+        client.get(Api.Users()).apply {
             assertStatusCode(HttpStatusCode.OK)
             val users = bodyAsJson(ListSerializer(UserData.serializer()))
             assertEquals(1, users.size, "Non-admin user should only see themself")
@@ -235,13 +237,13 @@ class TestUsersRoutes: ApplicationTestBase() {
     // arbitrary sub exists.
 
     @Test
-    fun test_users_sub_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/users/${FakeUser.SUB}")
+    fun test_users_sub_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Users.Sub("${FakeUser.SUB}")))
 
     @Test
     fun test_users_sub_self() = runApplicationTest(
         shouldLogIn = LoginType.USER,
     ) {
-        client.get("/users/${FakeUser.SUB}").apply {
+        client.get(Api.Users.Sub("${FakeUser.SUB}")).apply {
             assertStatusCode(HttpStatusCode.OK)
             val user = bodyAsJson(UserData.serializer())
             assertEquals(FakeUser.SUB, user.sub)
@@ -255,7 +257,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             FakeUser.provideEntity()
         }
     ) {
-        client.get("/users/${FakeUser.SUB}").apply {
+        client.get(Api.Users.Sub("${FakeUser.SUB}")).apply {
             assertStatusCode(HttpStatusCode.OK)
             val user = bodyAsJson(UserData.serializer())
             assertEquals(FakeUser.SUB, user.sub)
@@ -284,7 +286,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/users/${FakeUser2.SUB}").apply {
+        client.get(Api.Users.Sub("${FakeUser2.SUB}")).apply {
             assertStatusCode(HttpStatusCode.OK)
             val user = bodyAsJson(UserData.serializer())
             assertEquals(FakeUser2.SUB, user.sub)
@@ -317,7 +319,7 @@ class TestUsersRoutes: ApplicationTestBase() {
     ) {
         // fakeUser2 is in a department fakeUser doesn't manage, so this must behave exactly like
         // the sub not existing at all -- not a 403, which would confirm fakeUser2's existence.
-        client.get("/users/${FakeUser2.SUB}").apply {
+        client.get(Api.Users.Sub("${FakeUser2.SUB}")).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -329,7 +331,7 @@ class TestUsersRoutes: ApplicationTestBase() {
             FakeUser2.provideEntity()
         }
     ) {
-        client.get("/users/${FakeUser2.SUB}").apply {
+        client.get(Api.Users.Sub("${FakeUser2.SUB}")).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -338,7 +340,7 @@ class TestUsersRoutes: ApplicationTestBase() {
     fun test_users_sub_unknown_returnsNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
     ) {
-        client.get("/users/does-not-exist").apply {
+        client.get(Api.Users.Sub("does-not-exist")).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }

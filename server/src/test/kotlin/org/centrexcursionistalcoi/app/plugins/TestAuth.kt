@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -9,6 +10,8 @@ import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -23,16 +26,15 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_registration_contentType() = runApplicationTest {
-        val response = client.post("/register")
+        val response = client.post(Api.Register())
         response.assertStatusCode(HttpStatusCode.BadRequest)
     }
 
     @Test
     fun test_registration_missingFields() = runApplicationTest {
-        client.submitForm("/register").assertStatusCode(HttpStatusCode.BadRequest)
+        client.submitForm(href(Api.Register())).assertStatusCode(HttpStatusCode.BadRequest)
         for ((key) in parameters) {
-            client.submitForm(
-                "/register",
+            client.submitForm(href(Api.Register()),
                 parameters { appendAll(parameters.filterKeys { it != key }) },
             ).apply {
                 assertError(Error.MissingArgument(key))
@@ -42,8 +44,7 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_registration_invalidEmail() = runApplicationTest {
-        client.submitForm(
-            "/register",
+        client.submitForm(href(Api.Register()),
             parameters { appendAll(parameters + ("email" to "invalid")) },
         ).apply {
             assertError(Error.InvalidArgument("email"))
@@ -54,8 +55,7 @@ class TestAuth: ApplicationTestBase() {
     fun test_registration_invalidPassword() = runApplicationTest {
         val passwords = listOf("", "short", "alllowercase", "ALLUPPERCASE", "1234567890", "NoNumbers", "nouppercase1", "NOLOWERCASE1")
         for (password in passwords) {
-            client.submitForm(
-                "/register",
+            client.submitForm(href(Api.Register()),
                 parameters { appendAll(parameters + ("password" to password)) },
             ).apply {
                 assertError(Error.PasswordNotSafeEnough())
@@ -65,8 +65,7 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_registration_memberDoesNotExist() = runApplicationTest {
-        client.submitForm(
-            "/register",
+        client.submitForm(href(Api.Register()),
             parameters { appendAll(parameters) },
         ).apply {
             assertError(Error.EmailNotFound())
@@ -79,8 +78,7 @@ class TestAuth: ApplicationTestBase() {
             FakeUser.provideMemberEntity()
         }
     ) {
-        client.submitForm(
-            "/register",
+        client.submitForm(href(Api.Register()),
             parameters { appendAll(parameters) },
         ).apply {
             assertSuccess()
@@ -90,15 +88,14 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_login_empty() = runApplicationTest {
-        val response = client.post("/auth/login")
+        val response = client.post(Api.Auth.Login())
         response.assertStatusCode(HttpStatusCode.BadRequest)
     }
 
     @Test
     fun test_login_missingFields() = runApplicationTest {
         for ((key) in parameters) {
-            client.submitForm(
-                "/auth/login",
+            client.submitForm(href(Api.Auth.Login()),
                 parameters { appendAll(parameters.filterKeys { it != key }) },
             ).apply {
                 assertError(Error.IncorrectPasswordOrEmail())
@@ -108,8 +105,7 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_login_wrongEmail() = runApplicationTest {
-        client.submitForm(
-            "/auth/login",
+        client.submitForm(href(Api.Auth.Login()),
             parameters { appendAll(parameters + ("email" to "invalid")) },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())
@@ -118,8 +114,7 @@ class TestAuth: ApplicationTestBase() {
 
     @Test
     fun test_login_wrongPassword() = runApplicationTest {
-        client.submitForm(
-            "/auth/login",
+        client.submitForm(href(Api.Auth.Login()),
             parameters { appendAll(parameters + ("password" to "invalid")) },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())
@@ -133,8 +128,7 @@ class TestAuth: ApplicationTestBase() {
             entity.password = Passwords.hash(parameters.getValue("password").toCharArray())
         }
     ) {
-        client.submitForm(
-            "/auth/login",
+        client.submitForm(href(Api.Auth.Login()),
             parameters { appendAll(parameters) },
         ).apply {
             assertSuccess()

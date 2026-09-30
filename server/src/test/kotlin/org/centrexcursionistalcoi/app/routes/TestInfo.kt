@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
+import io.ktor.client.plugins.resources.get
 import io.ktor.http.isSuccess
 import io.mockk.every
 import io.mockk.mockkObject
@@ -23,7 +23,7 @@ class TestInfo : ApplicationTestBase() {
             mockkObject(ConfigEntity.LastCEASync)
             every { ConfigEntity.LastCEASync.get() } returns Instant.fromEpochSeconds(1763531703)
 
-            val response = client.get("/info")
+            val response = client.get(Api.Info())
             assertTrue(response.status.isSuccess())
             val body = response.bodyAsJson(ServerInfo.serializer())
             assertEquals(123, body.version.databaseVersion)

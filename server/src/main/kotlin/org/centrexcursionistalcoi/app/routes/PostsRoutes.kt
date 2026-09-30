@@ -23,7 +23,7 @@ import kotlin.uuid.Uuid
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
-        base = "posts",
+        resources = Api.Posts.resources,
         entityClass = PostEntity,
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },

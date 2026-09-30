@@ -1,9 +1,10 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.delete
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -21,6 +22,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
 import org.centrexcursionistalcoi.app.request.UpdateQualificationRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.koin.core.annotation.Singleton
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -74,7 +76,7 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
     }
 
     suspend fun create(departmentId: Uuid, name: String, description: String?): Qualification {
-        val created = httpClient.post("/departments/$departmentId/qualifications") {
+        val created = httpClient.post(Api.Departments.Id.Qualifications(Api.Departments.Id(departmentId.toString()))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(CreateQualificationRequest.serializer(), CreateQualificationRequest(name, description)))
         }.orThrow("create qualification").decode(Qualification.serializer())
@@ -85,7 +87,7 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
 
     /** Only the given fields change: a `null` [name] or [description] is left as it is, and a blank [description] clears it. */
     suspend fun update(id: Uuid, name: String? = null, description: String? = null): Qualification {
-        val updated = httpClient.patch("/qualifications/$id") {
+        val updated = httpClient.patch(Api.Qualifications.Id(id.toString())) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name, description)))
         }.orThrow("update qualification").decode(Qualification.serializer())
@@ -98,7 +100,7 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
 
     /** Also deletes every grant of it. The server refuses while an event still requires it. */
     suspend fun delete(id: Uuid) {
-        httpClient.delete("/qualifications/$id").orThrow("delete qualification")
+        httpClient.delete(Api.Qualifications.Id(id.toString())).orThrow("delete qualification")
 
         patchDepartmentOwning(id) { department ->
             department.copy(
@@ -110,7 +112,7 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
 
     /** Grants [qualificationId] to [userSub], replacing their existing grant if they already hold it. */
     suspend fun grant(qualificationId: Uuid, userSub: String, expiresAt: Instant? = null): QualificationGrant {
-        val grant = httpClient.post("/qualifications/$qualificationId/grants") {
+        val grant = httpClient.post(Api.Qualifications.Id.Grants(Api.Qualifications.Id(qualificationId.toString()))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(GrantQualificationRequest.serializer(), GrantQualificationRequest(userSub, expiresAt)))
         }.orThrow("grant qualification").decode(QualificationGrant.serializer())
@@ -123,7 +125,7 @@ class QualificationsRemoteRepository(private val departmentsRepository: Departme
     }
 
     suspend fun revoke(qualificationId: Uuid, userSub: String) {
-        httpClient.delete("/qualifications/$qualificationId/grants/$userSub").orThrow("revoke qualification")
+        httpClient.delete(Api.Qualifications.Id.Grants.Sub(userSub, Api.Qualifications.Id.Grants(Api.Qualifications.Id(qualificationId.toString())))).orThrow("revoke qualification")
 
         patchDepartmentOwning(qualificationId) { department ->
             department.copy(qualificationGrants = department.qualificationGrants.orEmpty().filterNot { it.qualificationId == qualificationId && it.userSub == userSub })

@@ -5,11 +5,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.resources.get
+import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.Member
@@ -65,6 +65,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.table.Memories
+import org.centrexcursionistalcoi.app.routes.Api
 
 /**
  * The duration after which a password recovery request expires.
@@ -130,7 +131,7 @@ internal suspend fun RoutingContext.respondAuthError(type: AuthEventType, email:
 fun Route.configureAuthRoutes() {
     webAuthnRoutes()
 
-    post("/register") {
+    post<Api.Register> {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
@@ -171,14 +172,14 @@ fun Route.configureAuthRoutes() {
         call.respond(HttpStatusCode.OK)
     }
 
-    post("/lost_password") {
+    post<Api.LostPassword> { lostPassword ->
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
         val email = parameters["email"]?.trim()?.uppercase()
             ?: return@post respondAuthError(AuthEventType.LOST_PASSWORD, null, Error.MissingArgument("email"))
 
-        val redirectTo = call.parameters["redirect_to"]?.trim()
+        val redirectTo = lostPassword.redirectTo?.trim()
 
         // check that the user exists
         val userReference = Database { UserReferenceEntity.findByEmail(email) }
@@ -213,7 +214,7 @@ fun Route.configureAuthRoutes() {
         call.respond(HttpStatusCode.Accepted)
     }
 
-    post("/reset_password") {
+    post<Api.ResetPassword> {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
 
         val parameters = call.receiveParameters()
@@ -305,10 +306,10 @@ fun Route.configureAuthRoutes() {
         }
     }
 
-    get("/reset_password") {
-        val requestId = call.parameters["request_id"]?.trim()
-        val errorCode = call.parameters["error"]?.trim()?.toIntOrNull()
-        val success = call.parameters["success"]?.trim()?.toBoolean() ?: false
+    get<Api.ResetPassword> { page ->
+        val requestId = page.requestId?.trim()
+        val errorCode = page.error?.trim()?.toIntOrNull()
+        val success = page.success?.trim()?.toBoolean() ?: false
 
         val error = passwordResetErrorMessage(errorCode)
 
@@ -322,7 +323,7 @@ fun Route.configureAuthRoutes() {
         )
     }
 
-    post("/delete_account") {
+    post<Api.DeleteAccount> {
         val session = getUserSessionOrFail() ?: return@post
 
         val userReference = Database { UserReferenceEntity.findByEmail(session.email) } ?:

@@ -1,13 +1,13 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
 import kotlin.time.toJavaInstant
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
@@ -28,6 +28,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeUser
@@ -69,8 +70,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val department = context.dibResult!!
 
-        client.submitFormWithBinaryData(
-            "/events",
+        client.submitFormWithBinaryData(href(Api.Events()),
             formData {
                 append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Managed event")
@@ -101,8 +101,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val otherDepartment = context.dibResult!!
 
-        client.submitFormWithBinaryData(
-            "/events",
+        client.submitFormWithBinaryData(href(Api.Events()),
             formData {
                 append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Cross-department event")
@@ -136,8 +135,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val otherDepartment = context.dibResult!!
 
-        client.submitFormWithBinaryData(
-            "/events",
+        client.submitFormWithBinaryData(href(Api.Events()),
             formData {
                 append("start", Clock.System.now().toEpochMilliseconds())
                 append("title", "Cross-department event with image")
@@ -188,7 +186,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val (event, managedDepartment, otherDepartment) = context.dibResult!!
 
-        client.patch("/events/${event.id.value}") {
+        client.patch(Api.Events.Id("${event.id.value}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(JsonObject(mapOf("department" to otherDepartment.id.value.toJsonElement()))))
         }.apply {
@@ -220,7 +218,7 @@ class TestEventsRoutes : ApplicationTestBase() {
         val event = context.dibResult!!
 
         // FakeUser is logged in, but not a member of the event's department.
-        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Events.Id("${event.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -245,7 +243,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val event = context.dibResult!!
 
-        client.get("/events/${event.id.value}").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Events.Id("${event.id.value}")).assertStatusCode(HttpStatusCode.OK)
     }
 
     // Visibility must be checked before handleIfModified: otherwise an outsider could send If-Modified-Since on
@@ -267,7 +265,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val event = context.dibResult!!
 
-        client.get("/events/${event.id.value}") {
+        client.get(Api.Events.Id("${event.id.value}")) {
             headers.append(HttpHeaders.IfModifiedSince, ifModifiedSinceFormatter.format(Clock.System.now().toJavaInstant().atZone(ZoneOffset.UTC)))
         }.assertStatusCode(HttpStatusCode.NotFound)
     }
@@ -291,7 +289,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val event = context.dibResult!!
 
-        client.delete("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Events.Id("${event.id.value}")).assertStatusCode(HttpStatusCode.NoContent)
 
         Database {
             assertNull(EventEntity.findById(event.id), "Event should have been deleted")
@@ -316,7 +314,7 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val event = context.dibResult!!
 
-        client.delete("/events/${event.id.value}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Events.Id("${event.id.value}")).assertStatusCode(HttpStatusCode.NoContent)
 
         val remaining = Database { EventEntity.findById(event.id) }
         assertEquals(null, remaining, "Event should have been deleted")

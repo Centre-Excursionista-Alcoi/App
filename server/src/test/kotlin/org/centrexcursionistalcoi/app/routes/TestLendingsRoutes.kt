@@ -3,7 +3,9 @@ package org.centrexcursionistalcoi.app.routes
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import io.ktor.client.HttpClient
-import io.ktor.client.request.delete
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -45,6 +47,7 @@ import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
 import org.centrexcursionistalcoi.app.serialization.list
@@ -61,7 +64,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 class TestLendingsRoutes : ApplicationTestBase() {
 
     @Test
-    fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings", HttpMethod.Post)
+    fun test_create_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Inventory.Lendings()), HttpMethod.Post)
 
     private val exampleItemTypeId = "66868070-47fe-4c2f-8fca-484ef6dee119".toUuid()
     private val exampleItemType2Id = "7dab4555-e969-43f9-806e-051910363e3e".toUuid()
@@ -125,7 +128,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { getOrCreateItem() },
     ) {
-        client.post("/inventory/lendings").apply {
+        client.post(Api.Inventory.Lendings()).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
@@ -554,7 +557,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_list_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/inventory/lendings")
+    fun test_list_lending_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Inventory.Lendings()))
 
     @Test
     fun test_list_lending_notAdmin() = runApplicationTest(
@@ -595,7 +598,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         assertNotNull(lending)
         val (userLending, adminLending) = lending
 
-        client.get("/inventory/lendings").apply {
+        client.get(Api.Inventory.Lendings()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(1, lendings.size)
@@ -694,7 +697,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         assertNotNull(lending)
         val (userLending, adminLending1, adminLending2) = lending
 
-        client.get("/inventory/lendings").apply {
+        client.get(Api.Inventory.Lendings()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(3, lendings.size)
@@ -755,7 +758,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         assertNotNull(lending)
         val (userLending, adminLending) = lending
 
-        client.get("/inventory/lendings").apply {
+        client.get(Api.Inventory.Lendings()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer().list()) { lendings ->
                 assertEquals(2, lendings.size)
@@ -792,7 +795,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
     ) {
         // try deleting exampleItemId
-        client.delete("/inventory/items/$exampleItemId").apply {
+        client.delete(Api.Inventory.Items.Id("$exampleItemId")).apply {
             assertError(Error.EntityDeleteReferencesExist())
         }
     }
@@ -826,7 +829,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
     ) { context ->
         val entity = context.dibResult!!
-        client.post("inventory/lendings/${entity.id.value}/pickup").apply {
+        client.post(Api.Inventory.Lendings.Id.Pickup(Api.Inventory.Lendings.Id("${entity.id.value}"))).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
     }
@@ -913,8 +916,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
     ) { context ->
         val entity = context.dibResult!!
-        client.post(
-            "inventory/lendings/${entity.id.value}/return",
+        client.post(Api.Inventory.Lendings.Id.Return(Api.Inventory.Lendings.Id("${entity.id.value}")),
         ) {
             contentType(ContentType.Application.Json)
             setBody(
@@ -987,8 +989,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         }
     ) { context ->
         val entity = context.dibResult!!
-        client.post(
-            "inventory/lendings/${entity.id.value}/return",
+        client.post(Api.Inventory.Lendings.Id.Return(Api.Inventory.Lendings.Id("${entity.id.value}")),
         ) {
             contentType(ContentType.Application.Json)
             setBody(
@@ -1064,7 +1065,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should be able to delete the lending
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
     }
@@ -1104,7 +1105,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should NOT be able to delete the lending from another department
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.Forbidden)
             assertError(Error.PermissionRejected())
         }
@@ -1151,7 +1152,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should NOT be able to delete the lending with items from multiple departments
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.Forbidden)
             assertError(Error.PermissionRejected())
         }
@@ -1191,7 +1192,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should NOT be able to delete the lending with no department affiliation
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.Forbidden)
             assertError(Error.PermissionRejected())
         }
@@ -1231,7 +1232,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should be able to confirm the lending
-        client.post("/inventory/lendings/${lending.id.value}/confirm").apply {
+        client.post(Api.Inventory.Lendings.Id.Confirm(Api.Inventory.Lendings.Id("${lending.id.value}"))).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
 
@@ -1276,7 +1277,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should be able to pickup the lending
-        client.post("/inventory/lendings/${lending.id.value}/pickup").apply {
+        client.post(Api.Inventory.Lendings.Id.Pickup(Api.Inventory.Lendings.Id("${lending.id.value}"))).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
 
@@ -1324,7 +1325,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Department manager should be able to return the lending
-        client.post("/inventory/lendings/${lending.id.value}/return") {
+        client.post(Api.Inventory.Lendings.Id.Return(Api.Inventory.Lendings.Id("${lending.id.value}"))) {
             contentType(ContentType.Application.Json)
             setBody(
                 json.encodeToString(
@@ -1374,7 +1375,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Regular user without manager role should NOT be able to delete the lending
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.Forbidden)
             assertError(Error.PermissionRejected())
         }
@@ -1406,7 +1407,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Lending owner should be able to get their own lending
-        client.get("/inventory/lendings/${lending.id.value}").apply {
+        client.get(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.OK)
         }
     }
@@ -1436,7 +1437,7 @@ class TestLendingsRoutes : ApplicationTestBase() {
         val lending = context.dibResult!!
 
         // Admin should be able to delete any lending
-        client.delete("/inventory/lendings/${lending.id.value}").apply {
+        client.delete(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
     }

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -38,7 +39,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
  * `PostsRoutes.kt`.
  */
 class TestPostsJsonCreation : ApplicationTestBase() {
-    private suspend fun HttpClient.postJson(request: CreatePostRequest) = post("/posts") {
+    private suspend fun HttpClient.postJson(request: CreatePostRequest) = post(Api.Posts()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreatePostRequest.serializer(), request))
     }
@@ -57,7 +58,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_malformedBody_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/posts") {
+        client.post(Api.Posts()) {
             contentType(ContentType.Application.Json)
             setBody("not json")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -65,7 +66,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_missingRequiredField_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/posts") {
+        client.post(Api.Posts()) {
             contentType(ContentType.Application.Json)
             // "title" is required by CreatePostRequest and has no default -- decoding this must fail.
             setBody("""{"content":"Content"}""")
@@ -168,7 +169,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_multipartStillWorks_alongsideJson() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/posts") {
+        client.post(Api.Posts()) {
             // No body/content-type at all: neither multipart nor JSON -- must still be rejected the same way
             // it always was, not silently accepted as an empty JSON create.
         }.assertStatusCode(HttpStatusCode.BadRequest)

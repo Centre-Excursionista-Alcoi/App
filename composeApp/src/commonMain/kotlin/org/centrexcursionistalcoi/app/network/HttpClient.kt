@@ -11,6 +11,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -38,6 +39,7 @@ private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()
         // as JSON (see Sentry APP-ANDROID-2E). Follow redirects for every method so that keeps working.
         checkHttpMethod = false
     }
+    install(Resources)
     configureLogging()
 }.installSessionAuth()
 

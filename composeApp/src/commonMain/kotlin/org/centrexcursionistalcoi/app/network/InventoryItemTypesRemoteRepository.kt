@@ -9,6 +9,7 @@ import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemTypeEntity.Companion.toEntity
 import org.centrexcursionistalcoi.app.request.CreateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -17,7 +18,7 @@ import kotlin.uuid.Uuid
 class InventoryItemTypesRemoteRepository(
     private val inventoryItemTypesRepository: InventoryItemTypesRepository,
 ) : RemoteRepository<Uuid, ReferencedInventoryItemType, Uuid, InventoryItemType>(
-    "/inventory/types",
+    Api.Inventory.Types.resources,
     SETTINGS_LAST_INVENTORY_ITEM_TYPES_SYNC,
     InventoryItemType.serializer(),
     inventoryItemTypesRepository,

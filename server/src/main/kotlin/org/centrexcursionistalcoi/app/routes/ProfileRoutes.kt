@@ -2,14 +2,14 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.resources.delete
+import io.ktor.server.resources.get
+import io.ktor.server.resources.post
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import io.ktor.utils.io.copyTo
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import kotlinx.datetime.toJavaLocalDate
@@ -51,7 +51,7 @@ import kotlin.time.toKotlinInstant
 private val logger = LoggerFactory.getLogger("ProfileRoutes")
 
 fun Route.profileRoutes() {
-    get("/profile") {
+    get<Api.Profile> {
         val session = getUserSessionOrFail() ?: return@get
 
         handleIfModified(UserReferenceEntity, session.sub) ?: return@get
@@ -94,7 +94,7 @@ fun Route.profileRoutes() {
             )
         )
     }
-    post("/profile/lendingSignUp") {
+    post<Api.Profile.LendingSignUp> {
         val session = getUserSessionOrFail() ?: return@post
 
         val existingUser = Database { LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull() }
@@ -120,13 +120,13 @@ fun Route.profileRoutes() {
 
         call.respond(HttpStatusCode.Created)
     }
-    get("/profile/insurances") {
+    get<Api.Profile.Insurances> {
         val session = getUserSessionOrFail() ?: return@get
 
         val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
         call.respond(insurances)
     }
-    post("/profile/insurances") {
+    post<Api.Profile.Insurances> {
         val session = getUserSessionOrFail() ?: return@post
 
         val received = receiveRequestWithFiles(CreateInsuranceRequest.serializer()) ?: return@post
@@ -162,7 +162,7 @@ fun Route.profileRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    post("/profile/femecvSync") {
+    post<Api.Profile.FEMECVSync> {
         val session = getUserSessionOrFail() ?: return@post
 
         val request = receiveJson(LinkFEMECVRequest.serializer()) ?: return@post
@@ -193,7 +193,7 @@ fun Route.profileRoutes() {
 
         call.respondText("FEMECV account linked and data synchronized successfully", status = HttpStatusCode.OK)
     }
-    delete("/profile/femecvSync") {
+    delete<Api.Profile.FEMECVSync> {
         val session = getUserSessionOrFail() ?: return@delete
 
         val userReference = Database { UserReferenceEntity[session.sub] }
@@ -214,9 +214,8 @@ fun Route.profileRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    get("/profile/femecvSync/image/{year}") {
-        val yearParam = call.parameters["year"] ?: return@get respondError(Error.MissingArgument("year"))
-        val year = yearParam.toIntOrNull() ?: return@get respondError(Error.InvalidArgument("year", "Must be a valid year"))
+    get<Api.Profile.FEMECVSync.Image.ByYear> {
+        val year = it.year
 
         this::class.java.getResourceAsStream("/insurances/femecv/$year.png")?.use { stream ->
             call.respondBytesWriter(ContentType.Image.PNG) {
@@ -224,7 +223,7 @@ fun Route.profileRoutes() {
             }
         } ?: call.respond(HttpStatusCode.NotFound)
     }
-    post("/profile/fcmToken") {
+    post<Api.Profile.FCMToken> {
         val session = getUserSessionOrFail() ?: return@post
 
         val request = receiveJson(RegisterFCMTokenRequest.serializer()) ?: return@post
@@ -244,7 +243,7 @@ fun Route.profileRoutes() {
         call.respond(HttpStatusCode.Created)
     }
     // Delete by device id
-    delete("/profile/fcmToken") {
+    delete<Api.Profile.FCMToken> {
         val session = getUserSessionOrFail() ?: return@delete
 
         val request = receiveJson(RevokeFCMTokenRequest.serializer()) ?: return@delete
@@ -262,13 +261,11 @@ fun Route.profileRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     // Delete by token id
-    delete("/profile/fcmToken/{token}") {
+    delete<Api.Profile.FCMToken.ByToken> { byToken ->
         val session = getUserSessionOrFail() ?: return@delete
 
-        val token = call.parameters["token"]!!
-
         Database {
-            FCMRegistrationTokenEntity.findById(token)
+            FCMRegistrationTokenEntity.findById(byToken.token)
                 // Make sure the token belongs to the user
                 ?.takeIf { it.user.sub.value == session.sub }
                 // Delete the token

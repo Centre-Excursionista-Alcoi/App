@@ -1,11 +1,11 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.delete
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.get
-import io.ktor.client.request.post
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -40,6 +40,7 @@ import org.centrexcursionistalcoi.app.database.entity.LendingUserEntity
 import org.centrexcursionistalcoi.app.database.entity.UserInsuranceEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
@@ -79,14 +80,13 @@ class TestProfileRoutes : ApplicationTestBase() {
     )
 
     private suspend fun HttpClient.insurances(): List<UserInsurance> =
-        get("/profile/insurances").bodyAsJson(ListSerializer(UserInsurance.serializer()))
+        get(Api.Profile.Insurances()).bodyAsJson(ListSerializer(UserInsurance.serializer()))
 
     @Test
-    fun test_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile")
+    fun test_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Profile()))
 
     @Test
-    fun test_loggedIn() = ProvidedRouteTests.test_loggedIn(
-        "/profile",
+    fun test_loggedIn() = ProvidedRouteTests.test_loggedIn(href(Api.Profile()),
         ProfileResponse.serializer()
     ) { response ->
         assertEquals(FakeUser.FULL_NAME, response.fullName)
@@ -103,7 +103,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             mockNow = Instant.fromEpochSeconds(1445299200),
             shouldLogIn = LoginType.USER,
         ) {
-            client.get("/profile") {
+            client.get(Api.Profile()) {
                 headers.append(HttpHeaders.IfModifiedSince, "Wed, 21 Oct 2015 07:28:00 GMT")
             }.apply {
                 assertStatusCode(HttpStatusCode.NotModified)
@@ -113,7 +113,7 @@ class TestProfileRoutes : ApplicationTestBase() {
 
     @Test
     fun test_lendingSignUp_notLoggedIn() = runApplicationTest {
-        client.post("/profile/lendingSignUp").apply {
+        client.post(Api.Profile.LendingSignUp()).apply {
             assertStatusCode(HttpStatusCode.Unauthorized)
         }
     }
@@ -122,7 +122,7 @@ class TestProfileRoutes : ApplicationTestBase() {
     fun test_lendingSignUp_invalidContentType() = runApplicationTest(
         shouldLogIn = LoginType.USER
     ) {
-        client.post("/profile/lendingSignUp").apply {
+        client.post(Api.Profile.LendingSignUp()).apply {
             assertStatusCode(HttpStatusCode.BadRequest)
         }
     }
@@ -146,7 +146,7 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_insurances_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances")
+    fun test_insurances_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Profile.Insurances()))
 
     @Test
     fun test_insurances_loggedIn() = runApplicationTest(
@@ -171,7 +171,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/profile/insurances").apply {
+        client.get(Api.Profile.Insurances()).apply {
             assertStatusCode(HttpStatusCode.OK)
             val response = bodyAsJson(ListSerializer(UserInsurance.serializer()))
             assertEquals(1, response.size)
@@ -184,7 +184,7 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_insurances_post_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/profile/insurances", HttpMethod.Post)
+    fun test_insurances_post_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Profile.Insurances()), HttpMethod.Post)
 
     // ---- /profile/lendingSignUp ----
 
@@ -203,7 +203,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             assertContentEquals(listOf(Sports.CLIMBING, Sports.HIKING), lendingUser.sports)
         }
 
-        val lendingUser = client.get("/profile").bodyAsJson(ProfileResponse.serializer()).lendingUser
+        val lendingUser = client.get(Api.Profile()).bodyAsJson(ProfileResponse.serializer()).lendingUser
         assertNotNull(lendingUser)
         assertEquals(FakeUser.SUB, lendingUser.sub)
         assertEquals("123456789", lendingUser.phoneNumber)
@@ -221,11 +221,11 @@ class TestProfileRoutes : ApplicationTestBase() {
             LendingSignUpRequest.serializer(),
             LendingSignUpRequest("123456789", emptyList()),
         ).assertError(Error.MissingArgument("sports"))
-        client.post("/profile/lendingSignUp") {
+        client.post(Api.Profile.LendingSignUp()) {
             contentType(ContentType.Application.Json)
             setBody("""{"phoneNumber":"123456789"}""")
         }.assertError(Error.MalformedRequest())
-        client.post("/profile/lendingSignUp") {
+        client.post(Api.Profile.LendingSignUp()) {
             contentType(ContentType.Application.Json)
             setBody("""{"phoneNumber":"123456789","sports":["NOT_A_SPORT"]}""")
         }.assertError(Error.MalformedRequest())
@@ -254,7 +254,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             .assertError(Error.MissingArgument("insuranceCompany"))
         client.sendJson("/profile/insurances", CreateInsuranceRequest.serializer(), insurance().copy(policyNumber = " "))
             .assertError(Error.MissingArgument("policyNumber"))
-        client.post("/profile/insurances") {
+        client.post(Api.Profile.Insurances()) {
             contentType(ContentType.Application.Json)
             setBody("""{"insuranceCompany":"Rocalsub","policyNumber":"POL123","validFrom":"invalid-date","validTo":"2025-12-31"}""")
         }.assertError(Error.MalformedRequest())
@@ -277,14 +277,14 @@ class TestProfileRoutes : ApplicationTestBase() {
 
         val insurance = client.insurances().single()
         assertEquals(2, insurance.documents.size)
-        assertContentEquals(pdf, client.get("/download/${insurance.documents[0]}").bodyAsBytes())
-        assertContentEquals(png, client.get("/download/${insurance.documents[1]}").bodyAsBytes())
+        assertContentEquals(pdf, client.get(Api.Download.Id("${insurance.documents[0]}")).bodyAsBytes())
+        assertContentEquals(png, client.get(Api.Download.Id("${insurance.documents[1]}")).bodyAsBytes())
     }
 
     @Test
     fun test_insurances_post_multipartDocuments_restricted() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val request = insurance(listOf(FileWithContext(part = "file_0"), FileWithContext(part = "file_1")))
-        client.post("/profile/insurances") {
+        client.post(Api.Profile.Insurances()) {
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -303,14 +303,14 @@ class TestProfileRoutes : ApplicationTestBase() {
         // Both documents, in order
         val insurance = client.insurances().single()
         assertEquals(2, insurance.documents.size)
-        assertContentEquals(pdf, client.get("/download/${insurance.documents[0]}").bodyAsBytes())
-        assertContentEquals(png, client.get("/download/${insurance.documents[1]}").bodyAsBytes())
+        assertContentEquals(pdf, client.get(Api.Download.Id("${insurance.documents[0]}")).bodyAsBytes())
+        assertContentEquals(png, client.get(Api.Download.Id("${insurance.documents[1]}")).bodyAsBytes())
 
         // Only the owner can download them
         Database { FakeUser2.provideEntity() }
         loginAsFakeUser2()
         for (document in insurance.documents) {
-            client.get("/download/$document").assertStatusCode(HttpStatusCode.Forbidden)
+            client.get(Api.Download.Id("$document")).assertStatusCode(HttpStatusCode.Forbidden)
         }
     }
 
@@ -343,7 +343,7 @@ class TestProfileRoutes : ApplicationTestBase() {
             }
         },
     ) {
-        client.delete("/profile/femecvSync").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Profile.FEMECVSync()).assertStatusCode(HttpStatusCode.NoContent)
 
         Database {
             val reference = UserReferenceEntity[FakeUser.SUB]

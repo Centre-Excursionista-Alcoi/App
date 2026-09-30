@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
  * beyond [createFromMultipart] itself, on purpose: once every entity has a JSON creator
  * (`provideEntityRoutes`'s `createRequestSerializer`/`jsonCreator`) and the oldest app version this server still
  * needs to serve always sends JSON, delete this file, [createFromMultipart]'s one call site in `RoutesBase.kt`
- * (the multipart branch of `post("/$base")`), and the `creator`/[MultiPartData] parameter (and its KDoc) there.
+ * (the multipart branch of the collection `POST` handler), and the `creator`/[MultiPartData] parameter (and its KDoc) there.
  */
 private val logger = LoggerFactory.getLogger("LegacyMultipartCreate")
 

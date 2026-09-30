@@ -12,11 +12,11 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.request.receive
+import io.ktor.server.resources.post
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.post
 import io.ktor.server.sessions.SessionTransportTransformerEncrypt
 import io.ktor.server.sessions.Sessions
 import io.ktor.server.sessions.cookie
@@ -35,6 +35,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserCredentialRecordEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
@@ -229,7 +230,7 @@ fun Application.configureAuthentication(isTesting: Boolean, isDevelopment: Boole
 fun Route.webAuthnRoutes() {
     // App requests options to create a credential on the OLD device (Restore Credential today; the same
     // ceremony a user explicitly registering a passkey would use).
-    post("/generate-restore-challenge") {
+    post<Api.GenerateRestoreChallenge> {
         // Only allow logged-in users to request one.
         val user = getUserSessionOrFail() ?: return@post
 
@@ -254,7 +255,7 @@ fun Route.webAuthnRoutes() {
     }
 
     // App requests options to redeem a credential on a NEW device, before it has any session at all.
-    post("/generate-auth-challenge") {
+    post<Api.GenerateAuthChallenge> {
         val challenge = generateWebAuthnChallenge()
         val challengeBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(challenge.value)
 
@@ -270,7 +271,7 @@ fun Route.webAuthnRoutes() {
         )
     }
 
-    post("/register-restore-key") {
+    post<Api.RegisterRestoreKey> {
         val user = getUserSessionOrFail() ?: return@post
         val request = call.receive<RegisterRestoreKeyRequest>()
 

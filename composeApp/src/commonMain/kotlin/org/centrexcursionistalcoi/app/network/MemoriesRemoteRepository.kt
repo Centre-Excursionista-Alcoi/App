@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_MEMORIES_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -37,7 +38,7 @@ import kotlin.uuid.Uuid
 class MemoriesRemoteRepository(
     private val memoriesRepository: MemoriesRepository,
 ) : RemoteRepository<Uuid, ReferencedMemory, Uuid, Memory>(
-    "/memories",
+    Api.Memories.resources,
     SETTINGS_LAST_MEMORIES_SYNC,
     Memory.serializer(),
     memoriesRepository,
@@ -67,7 +68,7 @@ class MemoriesRemoteRepository(
             to = to,
             attachments = attachments.map { it.fileWithContext() },
         )
-        val response = httpClient.post("memories") {
+        val response = httpClient.post(Api.Memories()) {
             setBody(requestBody(request, CreateMemoryRequest.serializer()))
             monitorUploadProgress(progress)
         }

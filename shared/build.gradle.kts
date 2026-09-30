@@ -45,6 +45,7 @@ kotlin {
             api(libs.kotlin.crypto.random)
             api(libs.kotlin.crypto.sha2)
             api(libs.ktor.client.core)
+            api(libs.ktor.resources)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

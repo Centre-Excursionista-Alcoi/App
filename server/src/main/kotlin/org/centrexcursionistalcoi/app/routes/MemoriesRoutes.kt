@@ -3,15 +3,15 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.resources.delete
+import io.ktor.server.resources.get
+import io.ktor.server.resources.patch
+import io.ktor.server.resources.post
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
@@ -158,7 +158,7 @@ private fun regenerateMemoryPdf(memory: MemoryEntity) {
 private val logger = LoggerFactory.getLogger("MemoriesRoutes")
 
 fun Route.memoriesRoutes() {
-    post("memories") {
+    post<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@post
 
         val received = receiveRequestWithFiles(CreateMemoryRequest.serializer()) ?: return@post
@@ -345,7 +345,7 @@ fun Route.memoriesRoutes() {
         call.response.header(HttpHeaders.Location, "/memories/${memoryEntity.id.value}")
         call.respond(HttpStatusCode.Created)
     }
-    get("memories") {
+    get<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@get
 
         val memories = Database {
@@ -374,7 +374,7 @@ fun Route.memoriesRoutes() {
             json.encodeEntityListToString(memories, MemoryEntity)
         }
     }
-    get("memories/{id}") {
+    get<Api.Memories.Id> {
         val session = getUserSessionOrFail() ?: return@get
         val memory = memoryRequest(session, requireOwnerOrAdmin = false) ?: return@get
 
@@ -382,7 +382,7 @@ fun Route.memoriesRoutes() {
             json.encodeEntityToString(memory, MemoryEntity)
         }
     }
-    patch("memories/{id}") {
+    patch<Api.Memories.Id> {
         val session = getUserSessionOrFail() ?: return@patch
         assertRequestWithFilesContentType() ?: return@patch
         val memory = memoryRequest(session) ?: return@patch
@@ -424,10 +424,10 @@ fun Route.memoriesRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    delete("memories/{id}") {
+    delete<Api.Memories.Id> { memory ->
         val session = getUserSessionOrFail() ?: return@delete
 
-        val id = call.parameters["id"]?.toUuidOrNull()
+        val id = memory.id.toUuidOrNull()
         if (id == null) {
             respondError(Error.MalformedId())
             return@delete

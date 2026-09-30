@@ -1,10 +1,12 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
+import io.ktor.client.plugins.resources.get
 import io.ktor.client.request.get
 import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.response.bodyAsJson
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_SERVER_INFO
 import org.koin.core.annotation.Singleton
@@ -27,7 +29,7 @@ class ServerInfoRepository(
      */
     suspend fun loadInfo() {
         try {
-            val httpResponse = httpClient.get("/info")
+            val httpResponse = httpClient.get(Api.Info())
             if (!httpResponse.status.isSuccess()) {
                 log.w { "Error fetching server info: Server responded with error." }
                 info = settings.get(SETTINGS_SERVER_INFO, ServerInfo.serializer())

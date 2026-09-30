@@ -31,7 +31,8 @@ Inside `:composeApp/src/commonMain/kotlin/org/centrexcursionistalcoi/app/`:
 Inside `:server/src/main/kotlin/org/centrexcursionistalcoi/app/`:
 
 - `routes/` — one file per entity (`DepartmentRoutes.kt`, `EventsRoutes.kt`, ...), most CRUD goes through the
-  generic `provideEntityRoutes` in `routes/RoutesBase.kt`
+  generic `provideEntityRoutes` in `routes/RoutesBase.kt`. Paths are Ktor type-safe resources, defined once in
+  `:shared`'s `routes/Api.kt` and used by both the server's routes and the app's requests (see §7)
 - `security/` — `DepartmentPermissions.kt` (RBAC checks, see §5), session handling
 - `database/` — Exposed tables/entities, `Database.kt` (connection config + **migrations** — see §2 gotchas)
 - `notifications/`, `integration/` — email/push/Telegram/FEMECV/CEA external integrations
@@ -368,6 +369,17 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
 
 ## 7. Other gotchas worth knowing upfront
 
+- **API paths are the `Api` resources in `:shared`'s `routes/Api.kt`** — add a route there and use it on both
+  sides (`post<Api.X> { }` on the server, `httpClient.post(Api.X())` in the app), never a string path. Two traps:
+  a nested resource only gets its outer class's path through a **`parent` property** (`class Join(val parent:
+  Id)`) — nesting the class alone makes it a root path (`/join`), silently; and on the server, `post<T>`,
+  `patch<T>`, etc. must be imported from `io.ktor.server.resources`, because `io.ktor.server.routing.post<T>`
+  also compiles and means something else (a `POST` on the *current* path, with the body received as `T`).
+  Everything lives in the `Api` object because several resource names (`Departments`, `Events`, ...) match
+  Exposed tables. Ids are `String`s so a malformed one still gets the API's own error, not Ktor's 400. The app's
+  HTTP client (and every test client) needs `install(Resources)`: without it, requests throw "Resources plugin is
+  not installed". Only non-API routes (`/`, `robots.txt`, `.well-known`, WebDAV, the app-link fallback) and SSE
+  (Ktor has no resource-based `sse`) still use string paths.
 - **Apostrophes/quotes in `strings.xml` do NOT need Android-resource-style backslash escaping** in this
   Compose Multiplatform resources file — a bare `'` is correct. If you see a literal `\'` rendered on screen
   (rather than a clean apostrophe), that's exactly this mistake. There's already a cleanup script for a

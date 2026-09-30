@@ -1,12 +1,14 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.delete
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
@@ -56,6 +58,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.href
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -69,13 +72,13 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     private val exampleItemTypeId = "8e5b8c53-df8c-4e0a-9f9d-2a0f5c1a6a3a".toUuid()
     private val exampleItemId = "1a9f6bda-53f0-4f38-9c9e-3f4e4f9c8b1c".toUuid()
 
-    private suspend fun HttpClient.postMemory(request: CreateMemoryRequest): HttpResponse = post("/memories") {
+    private suspend fun HttpClient.postMemory(request: CreateMemoryRequest): HttpResponse = post(Api.Memories()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreateMemoryRequest.serializer(), request))
     }
 
     @Test
-    fun test_create_memory_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/memories", HttpMethod.Post)
+    fun test_create_memory_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Memories()), HttpMethod.Post)
 
     @Test
     fun test_create_memory_missingText() = runApplicationTest(shouldLogIn = LoginType.USER) {
@@ -154,12 +157,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // The submitter can download it.
-        client.get("/download/$pdfId").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Download.Id("$pdfId")).assertStatusCode(HttpStatusCode.OK)
 
         // A different, unrelated logged-in user cannot.
         Database { FakeUser2.provideEntity() }
         loginAsFakeUser2()
-        client.get("/download/$pdfId").assertStatusCode(HttpStatusCode.Forbidden)
+        client.get(Api.Download.Id("$pdfId")).assertStatusCode(HttpStatusCode.Forbidden)
     }
 
     @Test
@@ -189,7 +192,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             // One in a part of its own, the other one in the JSON
             attachments = listOf(FileWithContext(part = "file_0"), FileWithContext(png, "photo.png", ContentType.Image.PNG)),
         )
-        val location = client.post("/memories") {
+        val location = client.post(Api.Memories()) {
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -211,14 +214,14 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         client.get(location).assertBody(Memory.serializer()) { attachments = it.attachments }
         assertEquals(
             setOf(pdf.toList(), png.toList()),
-            attachments.map { client.get("/download/$it").bodyAsBytes().toList() }.toSet(),
+            attachments.map { client.get(Api.Download.Id("$it")).bodyAsBytes().toList() }.toSet(),
         )
 
         // Only the submitter can download them
         Database { FakeUser2.provideEntity() }
         loginAsFakeUser2()
         for (attachment in attachments) {
-            client.get("/download/$attachment").assertStatusCode(HttpStatusCode.Forbidden)
+            client.get(Api.Download.Id("$attachment")).assertStatusCode(HttpStatusCode.Forbidden)
         }
     }
 
@@ -250,7 +253,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // The lending should now expose its memory's id, and be marked as submitted
-        val memoryId = client.get("/inventory/lendings/${lending.id.value}").run {
+        val memoryId = client.get(Api.Inventory.Lendings.Id("${lending.id.value}")).run {
             assertStatusCode(HttpStatusCode.OK)
             var memoryId: kotlin.uuid.Uuid? = null
             assertBody(Lending.serializer()) { fetchedLending ->
@@ -263,7 +266,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // The memory itself should be fetchable and contain the submitted content, with its date range taken
         // automatically from the lending's own from/to.
-        client.get("/memories/$memoryId").apply {
+        client.get(Api.Memories.Id("$memoryId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Memory.serializer()) { memory ->
                 assertEquals("Everything went great", memory.text)
@@ -314,7 +317,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     ) { context ->
         val memory = context.dibResult!!
 
-        client.get("/memories/${memory.id.value}").apply {
+        client.get(Api.Memories.Id("${memory.id.value}")).apply {
             assertError(Error.PermissionRejected())
         }
     }
@@ -338,7 +341,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memory = context.dibResult!!
 
         // The tagged member can see the memory in the list...
-        client.get("/memories").apply {
+        client.get(Api.Memories()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(ListSerializer(Memory.serializer())) { memories ->
                 assertTrue(memories.any { it.id == memory.id.value }, "Tagged memory should be in the list")
@@ -346,12 +349,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // ...and fetch it directly...
-        client.get("/memories/${memory.id.value}").apply {
+        client.get(Api.Memories.Id("${memory.id.value}")).apply {
             assertStatusCode(HttpStatusCode.OK)
         }
 
         // ...but still cannot modify it, since they are not the submitter nor an admin
-        client.patch("/memories/${memory.id.value}") {
+        client.patch(Api.Memories.Id("${memory.id.value}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Nice try")))
         }.apply {
@@ -388,7 +391,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memory = context.dibResult!!
 
         // The department's memory manager sees the memory in the list...
-        client.get("/memories").apply {
+        client.get(Api.Memories()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(ListSerializer(Memory.serializer())) { memories ->
                 assertTrue(memories.any { it.id == memory.id.value }, "Managed department's memory should be in the list")
@@ -396,12 +399,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // ...can fetch it directly...
-        client.get("/memories/${memory.id.value}").apply {
+        client.get(Api.Memories.Id("${memory.id.value}")).apply {
             assertStatusCode(HttpStatusCode.OK)
         }
 
         // ...and can modify it, unlike a mere tagged member.
-        client.patch("/memories/${memory.id.value}") {
+        client.patch(Api.Memories.Id("${memory.id.value}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
         }.apply {
@@ -439,7 +442,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val (memory, managedDepartment, otherDepartment) = context.dibResult!!
 
         // The manager can patch fields while keeping the memory in their own department...
-        client.patch("/memories/${memory.id.value}") {
+        client.patch(Api.Memories.Id("${memory.id.value}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
         }.apply {
@@ -447,7 +450,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         // ...but cannot move it into a department they don't hold MEMORY_MANAGER in.
-        client.patch("/memories/${memory.id.value}") {
+        client.patch(Api.Memories.Id("${memory.id.value}")) {
             contentType(ContentType.Application.Json)
             setBody(
                 json.encodeToString(
@@ -488,7 +491,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             }
             pdfId!!
         }
-        val originalPdfBytes = client.get("/download/$originalPdfId").run {
+        val originalPdfBytes = client.get(Api.Download.Id("$originalPdfId")).run {
             assertStatusCode(HttpStatusCode.OK)
             bodyAsBytes()
         }
@@ -514,13 +517,13 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // The PDF must have been regenerated: a new file, with content reflecting the patched data
         assertNotEquals(originalPdfId, newPdfId, "The PDF should have been regenerated (a new file) after patching")
-        client.get("/download/$newPdfId").run {
+        client.get(Api.Download.Id("$newPdfId")).run {
             assertStatusCode(HttpStatusCode.OK)
             assertTrue(!bodyAsBytes().contentEquals(originalPdfBytes), "The regenerated PDF's content should reflect the patched data")
         }
 
         // The old PDF file is no longer referenced by anything, so it should have been deleted
-        client.get("/download/$originalPdfId").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Download.Id("$originalPdfId")).assertStatusCode(HttpStatusCode.NotFound)
         // With its contents
         assertEquals(Database { FileEntity.all().map { it.objectKey } }.toSet(), testStorage.keys().toSet())
     }
@@ -541,7 +544,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memory = context.dibResult!!
 
         // A memory not linked to any lending can always be deleted
-        client.delete("/memories/${memory.id.value}").apply {
+        client.delete(Api.Memories.Id("${memory.id.value}")).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
     }
@@ -575,12 +578,12 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     ) { context ->
         val (lending, memory) = context.dibResult!!
 
-        client.delete("/memories/${memory.id.value}").apply {
+        client.delete(Api.Memories.Id("${memory.id.value}")).apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
 
         // The lending should be reset back to "memory not submitted", allowing the user to submit a new one
-        client.get("/inventory/lendings/${lending.id.value}").apply {
+        client.get(Api.Inventory.Lendings.Id("${lending.id.value}")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Lending.serializer()) { fetchedLending ->
                 assertEquals(false, fetchedLending.memorySubmitted)
@@ -626,7 +629,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         val memory = context.dibResult!!
 
         // Deleting the memory now would retroactively invalidate the newer lending, so it must be rejected
-        client.delete("/memories/${memory.id.value}").apply {
+        client.delete(Api.Memories.Id("${memory.id.value}")).apply {
             assertError(Error.CannotDeleteMemoryLendingCreatedAfter())
         }
     }

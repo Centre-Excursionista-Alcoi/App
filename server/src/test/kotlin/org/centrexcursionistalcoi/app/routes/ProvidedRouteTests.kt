@@ -66,6 +66,8 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.DynamicTest
 import kotlinx.datetime.LocalTime as KotlinLocalTime
+import org.centrexcursionistalcoi.app.collectionHref
+import org.centrexcursionistalcoi.app.itemHref
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
 import kotlin.time.Instant as KotlinInstant
 
@@ -233,7 +235,7 @@ object ProvidedRouteTests {
     context(_: ApplicationTestBase)
     fun <EE: UuidEntity, ET: Entity<Uuid>> runTestsOnRoute(
         title: String,
-        baseUrl: String,
+        resources: EntityResources<*, *>,
         now: Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
@@ -285,7 +287,7 @@ object ProvidedRouteTests {
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> = runTestsOnRoute(
         title = title,
-        baseUrl = baseUrl,
+        resources = resources,
         now = now,
         listLoginType = listLoginType,
         filterEntitiesForListLoginType = filterEntitiesForListLoginType,
@@ -310,7 +312,7 @@ object ProvidedRouteTests {
     context(_: ApplicationTestBase)
     fun <EID: Comparable<EID>, EE: ExposedEntity<EID>, TID: Comparable<TID>, ET: Entity<TID>> runTestsOnRoute(
         title: String,
-        baseUrl: String,
+        resources: EntityResources<*, *>,
         now: Instant? = null,
 
         listLoginType: LoginType = LoginType.USER,
@@ -375,6 +377,7 @@ object ProvidedRouteTests {
 
         dataEntitySerializer: KSerializer<ET>
     ): List<DynamicTest> {
+        val baseUrl = resources.collectionHref()
         val seededRandom = Random(seed)
 
         fun provideRequiredCreationValues(): Map<String, Any> = requiredCreationValuesProvider.mapValues { (_, provider) -> provider() }
@@ -684,21 +687,21 @@ object ProvidedRouteTests {
             }.toTypedArray(),
 
             "$title - Test patch when not logged in" runs {
-                test_notLoggedIn("$baseUrl/$invalidEntityId", HttpMethod.Patch, ContentType.Application.Json)
+                test_notLoggedIn(resources.itemHref(invalidEntityId), HttpMethod.Patch, ContentType.Application.Json)
             },
             "$title - Test patch not admin" runs {
-                test_loggedIn_notAdmin("$baseUrl/$invalidEntityId", HttpMethod.Patch, ContentType.Application.Json)
+                test_loggedIn_notAdmin(resources.itemHref(invalidEntityId), HttpMethod.Patch, ContentType.Application.Json)
             } skipIf (modificationsLoginType != LoginType.ADMIN),
             "$title - Test patch with invalid content type" runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    client.patch("$baseUrl/$invalidEntityId").apply {
+                    client.patch(resources.itemHref(invalidEntityId)).apply {
                         assertStatusCode(HttpStatusCode.BadRequest)
                     }
                 }
             },
             "$title - Test patch on unknown entity" runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    client.patch("$baseUrl/$invalidEntityId") {
+                    client.patch(resources.itemHref(invalidEntityId)) {
                         contentType(ContentType.Application.Json)
                         setBody("{}")
                     }.apply {
@@ -708,7 +711,7 @@ object ProvidedRouteTests {
             },
             "$title - Test patch without data" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    client.patch(baseUrl.withEntityId()) {
+                    client.patch(resources.withEntityId()) {
                         contentType(ContentType.Application.Json)
                         setBody("{}")
                     }.apply {
@@ -728,7 +731,7 @@ object ProvidedRouteTests {
                                     .map { (name, value) -> name to value.toJsonElement() }
                                     .toMap()
                             )
-                            client.patch(baseUrl.withEntityId()) {
+                            client.patch(resources.withEntityId()) {
                                 contentType(ContentType.Application.Json)
                                 setBody(json.encodeToString(obj))
                             }.apply {
@@ -747,7 +750,7 @@ object ProvidedRouteTests {
                             val data = JsonObject(
                                 mapOf(name to value.toJsonElement())
                             )
-                            val location = client.patch(baseUrl.withEntityId()) {
+                            val location = client.patch(resources.withEntityId()) {
                                 contentType(ContentType.Application.Json)
                                 setBody(json.encodeToString(data))
                             }.run {
@@ -780,7 +783,7 @@ object ProvidedRouteTests {
                         val data = JsonObject(
                             creationValues.map { (name, value) -> name to value.toJsonElement() }.toMap()
                         )
-                        val location = client.patch(baseUrl.withEntityId()) {
+                        val location = client.patch(resources.withEntityId()) {
                             contentType(ContentType.Application.Json)
                             setBody(json.encodeToString(data))
                         }.run {

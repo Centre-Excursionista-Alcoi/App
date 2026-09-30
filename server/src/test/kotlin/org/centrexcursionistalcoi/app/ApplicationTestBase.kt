@@ -4,6 +4,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -89,6 +90,7 @@ abstract class ApplicationTestBase {
                         level = LogLevel.ALL
                     }
                     install(SSE)
+                    install(Resources)
                     defaultRequest {
                         // Evaluated for every request: follows whoever the test is logged in as. A request that
                         // sets its own Authorization header keeps it.

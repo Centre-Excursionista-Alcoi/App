@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.ContentType
@@ -76,7 +77,7 @@ class TestQualificationsRemoteRepository {
         _httpClient = HttpClient(MockEngine { request ->
             requests += request
             handler(request)
-        })
+        }) { install(Resources) }
         val database = getRoomDatabase(Room.inMemoryDatabaseBuilder<AppDatabase>(), Dispatchers.IO)
         db = database
         departmentsRepository = DepartmentsRepository(database)

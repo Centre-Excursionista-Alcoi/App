@@ -9,6 +9,8 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.AuthEventType
 import org.centrexcursionistalcoi.app.database.table.AuthEvents
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -28,8 +30,7 @@ class TestAuthEvents : ApplicationTestBase() {
 
     @Test
     fun test_login_failure_isRecorded() = runApplicationTest {
-        client.submitForm(
-            "/auth/login",
+        client.submitForm(href(Api.Auth.Login()),
             parameters { parameters.forEach { (key, value) -> append(key, value) } },
         ).apply {
             assertError(Error.IncorrectPasswordOrEmail())
@@ -50,8 +51,7 @@ class TestAuthEvents : ApplicationTestBase() {
             FakeUser.provideMemberEntity()
         }
     ) {
-        client.submitForm(
-            "/register",
+        client.submitForm(href(Api.Register()),
             parameters { parameters.forEach { (key, value) -> append(key, value) } },
         ).apply {
             assertSuccess()

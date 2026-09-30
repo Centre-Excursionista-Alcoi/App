@@ -5,6 +5,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -100,6 +101,7 @@ class TestAuthBackendRestoreKeys {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }) {
+            install(Resources)
             defaultRequest { url(BuildKonfig.SERVER_URL) }
             install(ContentNegotiation) { json(json) }
         }

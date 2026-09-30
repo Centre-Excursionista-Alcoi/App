@@ -1,5 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import kotlin.time.Clock
 import io.ktor.http.Headers
 import io.ktor.client.request.forms.submitFormWithBinaryData
@@ -8,8 +12,6 @@ import io.ktor.client.request.basicAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.head
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsBytes
@@ -70,6 +72,7 @@ import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.database.table.AuthSessionMethod
 import org.centrexcursionistalcoi.app.security.ClientInfo
 import io.ktor.client.request.header
+import org.centrexcursionistalcoi.app.href
 
 /**
  * Tests that routes serve, create and delete the contents of files in the file storage.
@@ -88,7 +91,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { newFile().id.value },
     ) { context ->
-        val response = client.get("/download/${context.dibResult}")
+        val response = client.get(Api.Download.Id("${context.dibResult}"))
 
         response.assertStatusCode(HttpStatusCode.OK)
         assertEquals(png.size.toString(), response.headers[HttpHeaders.ContentLength])
@@ -104,7 +107,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
     ) { context ->
         testStorage.objects.clear()
 
-        client.get("/download/${context.dibResult}").assertStatusCode(HttpStatusCode.InternalServerError)
+        client.get(Api.Download.Id("${context.dibResult}")).assertStatusCode(HttpStatusCode.InternalServerError)
     }
 
     @Test
@@ -118,7 +121,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         },
     ) { context ->
         val (_, fileId) = context.dibResult!!
-        val body = client.get("/posts").also { it.assertStatusCode(HttpStatusCode.OK) }.bodyAsText()
+        val body = client.get(Api.Posts()).also { it.assertStatusCode(HttpStatusCode.OK) }.bodyAsText()
 
         val file = json.parseToJsonElement(body).jsonArray.single().jsonObject["files"]!!.jsonArray.single().jsonObject
         assertEquals(fileId.toString(), file["id"]!!.jsonPrimitive.content)
@@ -142,7 +145,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         databaseInitBlock = { PostEntity.new { title = "Post"; content = "Content" }.id.value },
     ) { context ->
         val postId = context.dibResult!!
-        client.patch("/posts/$postId") {
+        client.patch(Api.Posts.Id("$postId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(png, name = "new.png")))))
         }.assertStatusCode(HttpStatusCode.OK)
@@ -161,7 +164,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
     ) { context ->
         val (postId, otherFile) = context.dibResult!!
         // An empty file means "remove it from the post": only the post's own files can be removed
-        client.patch("/posts/$postId") {
+        client.patch(Api.Posts.Id("$postId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(id = otherFile)))))
         }
@@ -205,7 +208,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
     ) { context ->
         assertEquals(2, storedKeys().size)
 
-        client.delete("/memories/${context.dibResult}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Memories.Id("${context.dibResult}")).assertStatusCode(HttpStatusCode.NoContent)
 
         assertEquals(0, Database { FileEntity.count() })
         assertTrue(storedKeys().isEmpty())
@@ -242,7 +245,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
     ) {
         assertEquals(4, storedKeys().size)
 
-        client.post("/delete_account").assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.DeleteAccount()).assertStatusCode(HttpStatusCode.NoContent)
 
         assertEquals(0, Database { MemoryEntity.count() })
         assertEquals(0, Database { FileEntity.count() })
@@ -308,7 +311,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val token = Database {
             AuthTokens.startSession(FakeUser.provideEntity(), AuthSessionMethod.PASSWORD, ClientInfo(null, "test"))
         }.accessToken
-        createClient { }.submitFormWithBinaryData("/profile/insurances", insuranceForm(document, "1234")) {
+        createClient { }.submitFormWithBinaryData(href(Api.Profile.Insurances()), insuranceForm(document, "1234")) {
             header(HttpHeaders.Authorization, "Bearer $token")
         }.assertStatusCode(HttpStatusCode.NoContent)
 
@@ -325,7 +328,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val before = uploadTempFiles()
 
         // Rejected after receiving the document, before storing it
-        client.submitFormWithBinaryData("/profile/insurances", insuranceForm(byteArrayOf(1, 2, 3), policyNumber = ""))
+        client.submitFormWithBinaryData(href(Api.Profile.Insurances()), insuranceForm(byteArrayOf(1, 2, 3), policyNumber = ""))
             .assertStatusCode(HttpStatusCode.BadRequest)
 
         assertEquals(before, uploadTempFiles(), "The temporary file of the upload must be deleted")

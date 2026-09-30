@@ -2,7 +2,10 @@ package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.resources.Resources
+import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -12,6 +15,7 @@ import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
@@ -32,6 +36,7 @@ import org.centrexcursionistalcoi.app.version
 import org.centrexcursionistalcoi.app.versionCode
 
 fun Application.configureRouting() {
+    install(Resources)
     routing {
         get("/") {
             // On the app-links host (centrexcursionistalcoi.app by default), the bare domain behaves the same as
@@ -41,8 +46,8 @@ fun Application.configureRouting() {
             }
         }
 
-        get("/download/{uuid}") {
-            val uuid = call.parameters["uuid"]?.toUuidOrNull()
+        get<Api.Download.Id> { downloadId ->
+            val uuid = downloadId.uuid.toUuidOrNull()
             if (uuid == null) {
                 return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
             }
@@ -103,7 +108,7 @@ fun Application.configureRouting() {
 
         appLinkFallbackRoutes()
 
-        get("/info") {
+        get<Api.Info> {
             val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0
             val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilliseconds() ?: 0L
 

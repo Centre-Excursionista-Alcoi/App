@@ -41,7 +41,7 @@ class TestRoutes : ApplicationTestBase() {
     fun runRouteTests(): List<DynamicTest> = listOf(
         runTestsOnRoute(
             title = "Department",
-            baseUrl = "/departments",
+            resources = Api.Departments.resources,
             requiredCreationValuesProvider = mapOf("displayName" to { "Test Department" }),
             optionalCreationValuesProvider = mapOf(
                 "image" to { ResourcesUtils.bytesFromResource("/square.png").wrapFile("square", ContentType.Image.PNG) }
@@ -57,7 +57,7 @@ class TestRoutes : ApplicationTestBase() {
         ),
         runTestsOnRoute(
             title = "Posts",
-            baseUrl = "/posts",
+            resources = Api.Posts.resources,
             requiredCreationValuesProvider = mapOf(
                 "title" to { "Test Post" },
                 "content" to { "Content for Test Post." },
@@ -92,7 +92,7 @@ class TestRoutes : ApplicationTestBase() {
         ),
         runTestsOnRoute(
             title = "Inventory Item Types",
-            baseUrl = "/inventory/types",
+            resources = Api.Inventory.Types.resources,
             requiredCreationValuesProvider = mapOf("displayName" to { "Test Item Type" }),
             optionalCreationValuesProvider = mapOf(
                 "description" to { "This is a test description for the item" },
@@ -110,7 +110,7 @@ class TestRoutes : ApplicationTestBase() {
         ),
         runTestsOnRoute(
             title = "Inventory Items",
-            baseUrl = "/inventory/items",
+            resources = Api.Inventory.Items.resources,
             requiredCreationValuesProvider = mapOf("type" to { testItemTypeId }),
             optionalCreationValuesProvider = mapOf(
                 "variation" to { "This is a test variation for the item" },
@@ -134,7 +134,7 @@ class TestRoutes : ApplicationTestBase() {
         ),
         runTestsOnRoute(
             title = "Events",
-            baseUrl = "/events",
+            resources = Api.Events.resources,
             now = LocalDateTime(2025, Month.SEPTEMBER, 1, 12, 0).toInstant(TimeZone.UTC),
             requiredCreationValuesProvider = mapOf(
                 "start" to { LocalDateTime(2025, Month.OCTOBER, 10, 10, 15).toInstant(TimeZone.UTC) },

@@ -4,19 +4,24 @@ import androidx.datastore.preferences.core.Preferences
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onUpload
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.resources.serialization.ResourcesFormat
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
@@ -37,6 +42,8 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.routes.Api
+import org.centrexcursionistalcoi.app.routes.EntityResources
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.AppFile
 import org.centrexcursionistalcoi.app.storage.fs.write
@@ -48,7 +55,7 @@ import kotlin.uuid.Uuid
 private val log = logging()
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
-    val endpoint: String,
+    private val resources: EntityResources<*, *>,
     private val lastSyncSettingsKey: Preferences.Key<Long>,
     private val serializer: KSerializer<RemoteEntity>,
     private val repository: Repository<LocalEntity, LocalIdType>,
@@ -63,7 +70,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      */
     protected open val availableSinceVersionCode: Int? = null
 
-    private val name = endpoint.trim(' ', '/')
+    private val name = ResourcesFormat().encodeToPathPattern(resources.collectionSerializer).trim('/')
 
     protected val httpClient = getHttpClient()
 
@@ -108,7 +115,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<RemoteEntity> {
         if (!endpointSupported()) return emptyList()
 
-        val response = httpClient.get(endpoint) {
+        val response = httpClient.get {
+            collection(httpClient, resources)
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
         }
@@ -129,21 +137,22 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     /**
-     * Fetches the entity with the given URL from the remote server.
-     * @param url The URL of the remote entity to fetch.
+     * Fetches an entity from the remote server.
+     * @param url Sets the URL of the remote entity to fetch.
      * @param progress An optional progress notifier to report progress.
      * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
      * @return The local entity converted from the remote entity, or `null` if not found.
      * @throws ResourceNotModifiedException if the data has not changed since the last fetch.
      */
     private suspend fun getUrl(
-        url: String,
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
+        url: HttpRequestBuilder.() -> Unit,
     ): RemoteEntity? {
         if (!endpointSupported()) return null
 
-        val response = httpClient.get(url) {
+        val response = httpClient.get {
+            url()
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
         }
@@ -160,7 +169,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         } else if (status == HttpStatusCode.NotFound) {
             // A 404 always means "not found" regardless of whether the body could be parsed as
             // an Error.EntityNotFound -- some 404s (e.g. an unmatched route) carry no body at all.
-            log.e { "$name #${url.substringAfterLast('/')} was not found." }
+            log.e { "$name #${response.request.url.segments.lastOrNull()} was not found." }
             return null
         } else {
             val error = response.bodyAsError()
@@ -180,7 +189,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         id: RemoteIdType,
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
-    ): RemoteEntity? = getUrl("$endpoint/$id", progress, ignoreIfModifiedSince)
+    ): RemoteEntity? = getUrl(progress, ignoreIfModifiedSince) { item(httpClient, resources, id.toString()) }
 
     /**
      * Fetches the entity with the given ID from the remote server and updates or inserts it into the local database.
@@ -299,7 +308,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     /**
-     * Handles the response to a `POST $endpoint` that just created a new entity.
+     * Handles the response to a `POST` on the collection that just created a new entity.
      */
     private suspend fun handleCreateResponse(response: HttpResponse, progressNotifier: ProgressNotifier?) {
         if (response.status.isSuccess()) {
@@ -307,7 +316,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val location = response.headers[HttpHeaders.Location]
                 checkNotNull(location) { "Creation didn't return any location for the new item." }
 
-                val item = getUrl(location, progressNotifier, ignoreIfModifiedSince = true)
+                val item = getUrl(progressNotifier, ignoreIfModifiedSince = true) { url(location) }
                 checkNotNull(item) { "Could not retrieve the created item from the server." }
                 progressNotifier?.invoke(Progress.LocalDBWrite)
                 insertRemoteEntity(item)?.let { downloadFileForEntity(it, progressNotifier) }
@@ -330,7 +339,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         check(isCreationSupported) { "Creation of this entity is not supported" }
         check(endpointSupported()) { "Endpoint $name is not supported on this version." }
 
-        val response = httpClient.post(endpoint) {
+        val response = httpClient.post {
+            collection(httpClient, resources)
             setBody(requestBody(request, serializer))
             progressNotifier?.let { monitorUploadProgress(it) }
         }
@@ -347,7 +357,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
         check(endpointSupported()) { "Endpoint $name is not supported on this version." }
 
         log.d { "Patching $name#$id: $request" }
-        val response = httpClient.patch("$endpoint/$id") {
+        val response = httpClient.patch {
+            item(httpClient, resources, id.toString())
             setBody(requestBody(request, serializer))
             progressNotifier?.let { notify ->
                 onUpload { current, total -> notify(Progress.NamedUpload(id.toString(), current, total)) }
@@ -360,7 +371,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
                 val location = response.headers[HttpHeaders.Location]
                 checkNotNull(location) { "Patch didn't return any location for the new item." }
 
-                getUrl(location, ignoreIfModifiedSince = true)
+                getUrl(ignoreIfModifiedSince = true) { url(location) }
             }
 
             checkNotNull(item) { "Could not retrieve the patched item from the server." }
@@ -386,7 +397,8 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun <T: Any> delete(id: RemoteIdType, data: T?, serializer: KSerializer<T>?, progressNotifier: ProgressNotifier? = null) {
         if (!endpointSupported()) return
 
-        val response = httpClient.delete("$endpoint/$id") {
+        val response = httpClient.delete {
+            item(httpClient, resources, id.toString())
             if (data != null && serializer != null) {
                 contentType(ContentType.Application.Json)
                 val body = json.encodeToString(serializer, data)
@@ -443,7 +455,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             progressNotifier: ProgressNotifier? = null
         ) {
             log.d { "Downloading $uuid..." }
-            val channel = httpClient.get("/download/$uuid") {
+            val channel = httpClient.get(Api.Download.Id(uuid.toString())) {
                 progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
             }.let {
                 if (!it.status.isSuccess()) {

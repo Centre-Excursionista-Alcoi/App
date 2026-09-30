@@ -15,7 +15,7 @@ import com.webauthn4j.data.client.CollectedClientData
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.DefaultChallenge
 import com.webauthn4j.data.extension.authenticator.RegistrationExtensionAuthenticatorOutput
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserCredentialRecordEntity
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.WellKnownConfigProvider
 import org.centrexcursionistalcoi.app.test.LoginType
 import java.security.KeyPairGenerator
@@ -111,12 +112,12 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
     ) {
         WellKnownConfigProvider.override(WellKnownConfigProvider.SHA256_CERT_FINGERPRINTS_VARIABLE, "AA:BB")
 
-        val challengeResponse = client.post("/generate-restore-challenge")
+        val challengeResponse = client.post(Api.GenerateRestoreChallenge())
         challengeResponse.assertStatusCode(HttpStatusCode.OK)
         val challenge = Json.parseToJsonElement(challengeResponse.bodyAsText()).jsonObject["challenge"]!!.jsonPrimitive.content
 
         val registrationResponseJson = restoreKeyRegistrationResponseJson(challenge, origin = "android:apk-key-hash:qrs")
-        client.post("/register-restore-key") {
+        client.post(Api.RegisterRestoreKey()) {
             contentType(ContentType.Application.Json)
             setBody(RegisterRestoreKeyRequest(registrationResponseJson))
         }.assertStatusCode(HttpStatusCode.OK)
@@ -127,14 +128,14 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
 
     @Test
     fun test_generateRestoreChallenge_requiresLogin() = runApplicationTest {
-        client.post("/generate-restore-challenge").assertError(Error.NotLoggedIn())
+        client.post(Api.GenerateRestoreChallenge()).assertError(Error.NotLoggedIn())
     }
 
     @Test
     fun test_generateRestoreChallenge_returnsTheRealDomainAsRpId_notThePackageName() = runApplicationTest(
         shouldLogIn = LoginType.USER,
     ) {
-        val response = client.post("/generate-restore-challenge")
+        val response = client.post(Api.GenerateRestoreChallenge())
         response.assertStatusCode(HttpStatusCode.OK)
 
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -147,12 +148,12 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
 
     @Test
     fun test_generateAuthChallenge_doesNotRequireLogin() = runApplicationTest {
-        client.post("/generate-auth-challenge").assertStatusCode(HttpStatusCode.OK)
+        client.post(Api.GenerateAuthChallenge()).assertStatusCode(HttpStatusCode.OK)
     }
 
     @Test
     fun test_generateAuthChallenge_returnsTheAuthenticationOptionsShape_notARegistrationShapeWithADummyUser() = runApplicationTest {
-        val response = client.post("/generate-auth-challenge")
+        val response = client.post(Api.GenerateAuthChallenge())
         response.assertStatusCode(HttpStatusCode.OK)
 
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -168,7 +169,7 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
 
     @Test
     fun test_registerRestoreKey_requiresLogin() = runApplicationTest {
-        client.post("/register-restore-key") {
+        client.post(Api.RegisterRestoreKey()) {
             contentType(ContentType.Application.Json)
             setBody(RegisterRestoreKeyRequest("{}"))
         }.assertError(Error.NotLoggedIn())
@@ -179,7 +180,7 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
     ) {
         // No prior call to /generate-restore-challenge -- nothing in Redis for this user to match against.
-        val response = client.post("/register-restore-key") {
+        val response = client.post(Api.RegisterRestoreKey()) {
             contentType(ContentType.Application.Json)
             setBody(RegisterRestoreKeyRequest("{}"))
         }
@@ -189,7 +190,7 @@ class TestWebAuthnRoutes : ApplicationTestBase() {
 
     @Test
     fun test_verifyRestoreKey_withAMalformedCredentialResponse_respondsWithAStructuredErrorNotARawString() = runApplicationTest {
-        val response = client.post("/auth/webauthn/verify") {
+        val response = client.post(Api.Auth.WebAuthnVerify()) {
             contentType(ContentType.Application.Json)
             setBody(RestoreKeyVerificationRequest("not a real WebAuthn response"))
         }

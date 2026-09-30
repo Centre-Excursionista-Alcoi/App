@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
@@ -41,7 +41,7 @@ class TestPostsRoutes : ApplicationTestBase() {
     ) { context ->
         val post = context.dibResult!!
 
-        client.get("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Posts.Id("${post.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -60,7 +60,7 @@ class TestPostsRoutes : ApplicationTestBase() {
         val post = context.dibResult!!
 
         // FakeUser is logged in, but not a member of the post's department.
-        client.get("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Posts.Id("${post.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -84,7 +84,7 @@ class TestPostsRoutes : ApplicationTestBase() {
     ) { context ->
         val post = context.dibResult!!
 
-        client.get("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Posts.Id("${post.id.value}")).assertStatusCode(HttpStatusCode.OK)
     }
 
     @Test
@@ -98,7 +98,7 @@ class TestPostsRoutes : ApplicationTestBase() {
     ) { context ->
         val post = context.dibResult!!
 
-        client.get("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Posts.Id("${post.id.value}")).assertStatusCode(HttpStatusCode.OK)
     }
 
     // deleteReferencesCheck previously compared Posts.department against the post's own id (copy-pasted from a
@@ -129,7 +129,7 @@ class TestPostsRoutes : ApplicationTestBase() {
     ) { context ->
         val post = context.dibResult!!
 
-        client.delete("/posts/${post.id.value}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Posts.Id("${post.id.value}")).assertStatusCode(HttpStatusCode.NoContent)
 
         val remainingPost = Database { PostEntity.findById(post.id) }
         assertNull(remainingPost, "Post should have been deleted")

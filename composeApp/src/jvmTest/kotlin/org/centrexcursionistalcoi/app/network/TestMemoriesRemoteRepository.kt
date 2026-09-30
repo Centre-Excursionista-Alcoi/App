@@ -4,6 +4,7 @@ import androidx.room3.Room
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
@@ -76,7 +77,7 @@ class TestMemoriesRemoteRepository {
                 json.encodeToString(ListSerializer(Memory.serializer()), listOf(memory)),
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
-        })
+        }) { install(Resources) }
         val database = getRoomDatabase(Room.inMemoryDatabaseBuilder<AppDatabase>(), Dispatchers.IO)
         db = database
         val repository = MemoriesRemoteRepository(MemoriesRepository(database))

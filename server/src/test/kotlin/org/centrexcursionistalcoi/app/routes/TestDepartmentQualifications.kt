@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
+import io.ktor.client.plugins.resources.get
 import io.ktor.http.HttpStatusCode
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertBody
@@ -60,7 +60,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.get("/departments/$departmentId").apply {
+        client.get(Api.Departments.Id("$departmentId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Department.serializer()) { department ->
                 assertEquals(listOf("Lead climbing"), department.qualifications?.map { it.name })
@@ -73,7 +73,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
-        client.get("/departments/$departmentId").apply {
+        client.get(Api.Departments.Id("$departmentId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Department.serializer()) { department ->
                 assertEquals(listOf(FakeUser2.SUB), department.qualificationGrants?.map { it.userSub })
@@ -86,7 +86,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.QUALIFICATIONS_MANAGER)) },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(1, department.qualificationGrants?.size)
         }
     }
@@ -96,7 +96,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(1, department.qualificationGrants?.size)
         }
     }
@@ -112,7 +112,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
             }
         },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(listOf(FakeUser.SUB), department.qualificationGrants?.map { it.userSub })
         }
     }
@@ -122,7 +122,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = emptyList()) },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(emptyList(), department.qualificationGrants)
         }
     }
@@ -132,7 +132,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(emptyList(), department.qualificationGrants)
         }
     }
@@ -144,7 +144,7 @@ class TestDepartmentQualifications : ApplicationTestBase() {
             DepartmentEntity.new(departmentId) { displayName = "Empty Department" }
         },
     ) {
-        client.get("/departments/$departmentId").assertBody(Department.serializer()) { department ->
+        client.get(Api.Departments.Id("$departmentId")).assertBody(Department.serializer()) { department ->
             assertEquals(emptyList(), department.qualifications)
             assertEquals(emptyList(), department.qualificationGrants)
         }
