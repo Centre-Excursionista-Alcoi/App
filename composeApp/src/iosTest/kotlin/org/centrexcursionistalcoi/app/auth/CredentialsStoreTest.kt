@@ -1,8 +1,11 @@
 package org.centrexcursionistalcoi.app.auth
 
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 
@@ -15,19 +18,19 @@ class CredentialsStoreTest {
     private val store = CredentialsStore(service)
 
     @AfterTest
-    fun tearDown() {
+    fun tearDown() = runBlocking {
         store.clear()
     }
 
     @Test
-    fun `nothing is returned when nothing is saved`() {
+    fun `nothing is returned when nothing is saved`() = runTest {
         store.clear()
         assertNull(store.getSession())
         assertNull(store.current.value)
     }
 
     @Test
-    fun `saveSession persists the session retrievable via both getSession and current`() {
+    fun `saveSession persists the session retrievable via both getSession and current`() = runTest {
         store.saveSession("credentials-test@example.com", "refresh-token")
 
         val saved = store.getSession()
@@ -37,7 +40,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `saving again replaces the refresh token and the account`() {
+    fun `saving again replaces the refresh token and the account`() = runTest {
         store.saveSession("first@example.com", "first-token")
         store.saveSession("second@example.com", "second-token")
 
@@ -47,25 +50,20 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `saving a session deletes the legacy credentials`() {
+    fun `saving a session deletes the legacy credentials`() = runTest {
         store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
         assertNull(store.getSession())
 
         store.saveSession("legacy@example.com", "refresh-token")
+        assertFalse(store.hasLegacyCredentialsForTests())
         assertEquals("refresh-token", store.getSession()?.refreshToken)
-
-        // current falls back to the legacy item, so it would still show the account if that wasn't deleted.
-        CredentialsStore(service).let { reopened ->
-            reopened.clear()
-            assertNull(reopened.current.value)
-        }
     }
 
     @Test
-    fun `clear removes both the session and legacy credentials`() {
+    fun `clear removes both the session and legacy credentials`() = runTest {
         store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
         store.clear()
-        assertNull(store.current.value)
+        assertFalse(store.hasLegacyCredentialsForTests())
 
         store.saveSession("credentials-test@example.com", "refresh-token")
         store.clear()
@@ -74,7 +72,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `new instance reads the persisted session and initializes current`() {
+    fun `new instance reads the persisted session and initializes current`() = runTest {
         store.saveSession("persisted@example.com", "persisted-token")
         val reopened = CredentialsStore(service)
         assertEquals("persisted@example.com", reopened.getSession()?.email)
@@ -83,7 +81,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `unicode round trips`() {
+    fun `unicode round trips`() = runTest {
         val email = "excursió@example.com"
         store.saveSession(email, "密碼🔑é-token")
         assertEquals(email, store.getSession()?.email)
@@ -91,7 +89,7 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `save and clear do not affect another service`() {
+    fun `save and clear do not affect another service`() = runTest {
         val other = CredentialsStore("$service.other")
         try {
             other.saveSession("other@example.com", "other-token")

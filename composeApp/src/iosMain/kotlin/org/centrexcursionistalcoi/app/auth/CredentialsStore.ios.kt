@@ -134,6 +134,9 @@ actual class CredentialsStore internal constructor() {
         mutableCurrent.value = readAccount()
     }
 
+    /** Whether the password saved by versions before token authentication is still there. Only for tests. */
+    internal fun hasLegacyCredentialsForTests(): Boolean = readItem(service) != null
+
     private fun readAccount(): SavedAccount? =
         (readItem(sessionService) ?: readItem(service))?.let { (email) -> SavedAccount(email) }
 
