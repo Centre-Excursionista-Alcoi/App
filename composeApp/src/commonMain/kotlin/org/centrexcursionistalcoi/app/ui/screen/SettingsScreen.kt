@@ -35,6 +35,8 @@ import cea_app.composeapp.generated.resources.arnyminerz
 import cea_app.composeapp.generated.resources.flag_ca
 import cea_app.composeapp.generated.resources.flag_en
 import cea_app.composeapp.generated.resources.flag_es
+import cea_app.composeapp.generated.resources.security_summary
+import cea_app.composeapp.generated.resources.security_title
 import cea_app.composeapp.generated.resources.settings_category_general
 import cea_app.composeapp.generated.resources.settings_category_privacy
 import cea_app.composeapp.generated.resources.settings_category_push
@@ -73,6 +75,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CloudSync
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Language
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Mail
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Warning
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Web
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
@@ -104,6 +107,7 @@ fun languageFromCode(code: String): Language? = availableLanguages.firstOrNull {
 fun SettingsScreen(
     onBack: () -> Unit,
     onDeleteAccount: () -> Unit,
+    onSecurityRequested: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(onDeleteAccount) },
 ) {
     val language by viewModel.language.collectAsState()
@@ -133,6 +137,7 @@ fun SettingsScreen(
         privacySessionReplay = privacySessionReplay,
         onPrivacySessionReplayChange = viewModel::onPrivacySessionReplayChange,
         onAccountDeleteRequest = viewModel::deleteAccount,
+        onSecurityRequested = onSecurityRequested,
         onBack = onBack,
     )
 }
@@ -159,6 +164,7 @@ private fun SettingsScreen(
     onPrivacySessionReplayChange: (Boolean) -> Unit,
 
     onAccountDeleteRequest: () -> Job,
+    onSecurityRequested: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val sseNotificationsListener = koinInject<SSENotificationsListener>()
@@ -243,6 +249,14 @@ private fun SettingsScreen(
             item(key = "privacy_category", contentType = "category") {
                 SettingsCategory(
                     text = stringResource(Res.string.settings_category_privacy)
+                )
+            }
+            item(key = "security", contentType = "option") {
+                SettingsRow(
+                    icon = MaterialSymbols.Security,
+                    title = stringResource(Res.string.security_title),
+                    summary = stringResource(Res.string.security_summary),
+                    onClick = onSecurityRequested,
                 )
             }
             item(key = "report_errors", contentType = "option") {

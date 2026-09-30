@@ -65,7 +65,7 @@ class TestLoginViewModel {
             current.value = SavedAccount("user@example.com")
         }
 
-        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore, profileRemoteRepository, Passkeys())
+        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore, profileRemoteRepository, Passkeys(), mockk(relaxed = true))
         assertNull(viewModel.existingAccountEmail.value, "No account was saved before the screen loaded")
 
         var loggedIn = false

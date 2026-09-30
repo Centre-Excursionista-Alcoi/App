@@ -47,6 +47,7 @@ import org.centrexcursionistalcoi.app.ui.screen.LendingSignUpScreen
 import org.centrexcursionistalcoi.app.ui.screen.LoadingScreen
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
 import org.centrexcursionistalcoi.app.ui.screen.MainScreen
+import org.centrexcursionistalcoi.app.ui.screen.SecurityScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
@@ -225,10 +226,16 @@ private fun App(
                         },
                     )
                 }
+                destination<Destination.Security> {
+                    SecurityScreen(onBack = { navigator.goBack() })
+                }
                 destination<Destination.Settings> {
                     SettingsScreen(
                         onBack = {
                             navigator.goBack()
+                        },
+                        onSecurityRequested = {
+                            navigator.navigate(Destination.Security)
                         },
                         onDeleteAccount = {
                             navigator.navigateClearingStack(Destination.Loading)

@@ -51,8 +51,9 @@ actual class Passkeys(context: Context) {
         null
     }
 
-    actual suspend fun signIn(requestJson: String): SavedCredential? = try {
-        val request = GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson), GetPasswordOption()))
+    actual suspend fun signIn(requestJson: String, includePasswords: Boolean): SavedCredential? = try {
+        val options = listOfNotNull(GetPublicKeyCredentialOption(requestJson), GetPasswordOption().takeIf { includePasswords })
+        val request = GetCredentialRequest(options)
         when (val credential = credentialManager.getCredential(activity, request).credential) {
             is PublicKeyCredential -> SavedCredential.Passkey(credential.authenticationResponseJson)
             is PasswordCredential -> SavedCredential.Password(credential.id, credential.password)

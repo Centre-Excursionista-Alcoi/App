@@ -48,10 +48,12 @@ expect class Passkeys {
     /**
      * Shows the platform's sign-in sheet, with the user's passkeys for the WebAuthn request options [requestJson],
      * and their saved passwords.
+     * @param includePasswords Whether to offer saved passwords too, or only passkeys (e.g. to confirm it's the user,
+     * see [org.centrexcursionistalcoi.app.data.Reauthentication]).
      * @return what the user picked, or `null` if they cancelled or have nothing saved.
      * @throws PasskeyException if the sheet couldn't be shown.
      */
-    suspend fun signIn(requestJson: String): SavedCredential?
+    suspend fun signIn(requestJson: String, includePasswords: Boolean = true): SavedCredential?
 
     /** Offers to save the password the user just signed in with, if the platform doesn't do it on its own. */
     suspend fun savePassword(email: String, password: String)

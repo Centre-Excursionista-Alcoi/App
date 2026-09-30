@@ -82,12 +82,23 @@ class SettingsStore {
         }
     }
 
+    /**
+     * Removes every setting, except the device's own (named [DEVICE_KEY_PREFIX]...), which aren't about the account
+     * logged in, and must outlive logging out and in (e.g. when the user was last asked to create a passkey).
+     */
     suspend fun clear() {
         store.updateData { preferences ->
             preferences.toMutablePreferences().also { preferences ->
-                preferences.clear()
+                preferences.asMap().keys
+                    .filterNot { it.name.startsWith(DEVICE_KEY_PREFIX) }
+                    .forEach { preferences.remove(it) }
             }
         }
+    }
+
+    companion object {
+        /** The prefix of the names of the settings [clear] keeps. */
+        const val DEVICE_KEY_PREFIX = "device."
     }
 }
 

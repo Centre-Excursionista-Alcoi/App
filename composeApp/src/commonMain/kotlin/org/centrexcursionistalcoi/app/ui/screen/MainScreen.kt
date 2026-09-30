@@ -93,6 +93,7 @@ import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibilit
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LendingsHistoryDialog
 import org.centrexcursionistalcoi.app.ui.dialog.LogoutConfirmationDialog
+import org.centrexcursionistalcoi.app.ui.dialog.PasskeyReminderSheet
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Add
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Face
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.FaceFilled
@@ -179,6 +180,7 @@ fun MainScreen(
             onShoppingListConfirmed = onShoppingListConfirmed,
             onEditMemoryRequest = onEditMemoryRequest,
         )
+        PasskeyReminderSheet()
     } ?: LoadingBox()
 }
 

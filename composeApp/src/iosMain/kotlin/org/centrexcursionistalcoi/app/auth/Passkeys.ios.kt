@@ -172,14 +172,14 @@ actual class Passkeys {
         }
     }
 
-    actual suspend fun signIn(requestJson: String): SavedCredential? {
+    actual suspend fun signIn(requestJson: String, includePasswords: Boolean): SavedCredential? {
         val options = json.parseToJsonElement(requestJson).jsonObject
         val passkeyRequest = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier = options.string("rpId"))
             .createCredentialAssertionRequestWithChallenge(options.string("challenge").base64UrlToNSData())
             .apply { userVerificationPreference = ASAuthorizationPublicKeyCredentialUserVerificationPreferenceRequired }
-        val passwordRequest = ASAuthorizationPasswordProvider().createRequest()
+        val passwordRequest = ASAuthorizationPasswordProvider().createRequest().takeIf { includePasswords }
 
-        val authorization = perform(listOf(passkeyRequest, passwordRequest)) ?: return null
+        val authorization = perform(listOfNotNull(passkeyRequest, passwordRequest)) ?: return null
         return when (val credential = authorization.credential) {
             is ASAuthorizationPlatformPublicKeyCredentialAssertion -> {
                 val id = credential.credentialID.toBase64Url()

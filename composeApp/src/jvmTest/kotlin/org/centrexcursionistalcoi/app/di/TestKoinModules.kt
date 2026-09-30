@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.di
 
 import org.centrexcursionistalcoi.app.auth.AuthBackend
+import org.centrexcursionistalcoi.app.auth.PasskeyUpgrade
 import org.centrexcursionistalcoi.app.auth.Passkeys
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -23,6 +24,7 @@ import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SecurityRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.platform.PlatformCalendarSync
 import org.centrexcursionistalcoi.app.platform.PlatformDragAndDrop
@@ -110,6 +112,8 @@ class TestKoinModules {
 
         assertNotNull(koin.get<AuthBackend>())
         assertNotNull(koin.get<Passkeys>())
+        assertNotNull(koin.get<PasskeyUpgrade>())
+        assertNotNull(koin.get<SecurityRemoteRepository>())
         assertNotNull(koin.get<SettingsStore>())
 
         assertNotNull(koin.get<PathsProvider>())
