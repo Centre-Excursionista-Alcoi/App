@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app
 
+import io.ktor.client.plugins.resources.get
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
@@ -13,6 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import org.centrexcursionistalcoi.app.ResourcesUtils.bytesFromResource
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.routes.Api
 
 class ApplicationTest: ApplicationTestBase() {
 
@@ -40,20 +42,20 @@ class ApplicationTest: ApplicationTestBase() {
         assertNotNull(fileId)
 
         // unknown is not a valid UUID
-        client.get("/download/unknown").assertStatusCode(HttpStatusCode.BadRequest)
+        client.get(Api.Download.Id("unknown")).assertStatusCode(HttpStatusCode.BadRequest)
 
         // non-existing UUID
-        client.get("/download/00000000-0000-0000-0000-000000000000").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Download.Id("00000000-0000-0000-0000-000000000000")).assertStatusCode(HttpStatusCode.NotFound)
 
         // A file with no rules set requires at least a logged-in session (see Routing.kt) -- it's not a
         // deliberate "public" file, just one nothing ever restricted.
-        client.get("/download/$fileId").assertStatusCode(HttpStatusCode.Unauthorized)
+        client.get(Api.Download.Id("$fileId")).assertStatusCode(HttpStatusCode.Unauthorized)
 
         loginAsFakeUser()
 
         val rawFile = bytesFromResource("/square.png")
 
-        client.get("/download/$fileId").let { response ->
+        client.get(Api.Download.Id("$fileId")).let { response ->
             response.assertStatusCode(HttpStatusCode.OK)
             assertEquals(ContentType.Image.PNG, response.contentType())
             assertContentEquals(rawFile, response.bodyAsBytes())

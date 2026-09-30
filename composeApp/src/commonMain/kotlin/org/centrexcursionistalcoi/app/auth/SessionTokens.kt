@@ -5,8 +5,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.plugin
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -21,6 +21,7 @@ import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.data.RefreshTokenRequest
 import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.error.bodyAsError
+import org.centrexcursionistalcoi.app.routes.Api
 import org.koin.core.annotation.Singleton
 import org.koin.mp.KoinPlatformTools
 import kotlin.time.Clock
@@ -87,7 +88,7 @@ class SessionTokens(private val credentialsStore: CredentialsStore) {
 
     private suspend fun refreshLocked(client: HttpClient): String? {
         val session = credentialsStore.getSession() ?: return null
-        val response = client.post("/auth/refresh") {
+        val response = client.post(Api.Auth.Refresh()) {
             skipSessionAuth()
             contentType(ContentType.Application.Json)
             setBody(RefreshTokenRequest(session.refreshToken))

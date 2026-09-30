@@ -6,14 +6,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.request.receiveText
+import io.ktor.server.resources.get
+import io.ktor.server.resources.patch
+import io.ktor.server.resources.post
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import org.centrexcursionistalcoi.app.CEAInfo
 import org.centrexcursionistalcoi.app.data.DepartmentJoinRequest
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -78,7 +78,7 @@ internal suspend fun RoutingContext.departmentRequest(requiredRole: DepartmentRo
 
 fun Route.departmentsRoutes() {
     provideEntityRoutes(
-        base = "departments",
+        resources = Api.Departments.resources,
         entityClass = DepartmentEntity,
         idTypeConverter = { it.toUuidOrNull() },
         // The default listProvider (entityClass.all()) is unrestricted for every session, including anonymous --
@@ -148,7 +148,7 @@ fun Route.departmentsRoutes() {
     )
 
     // Allows a user to join a department
-    post("/departments/{id}/join") {
+    post<Api.Departments.Id.Join> {
         val (session, department) = departmentRequest() ?: return@post
 
         val member = Database {
@@ -186,7 +186,7 @@ fun Route.departmentsRoutes() {
         }
     }
 
-    post("/departments/{id}/leave") {
+    post<Api.Departments.Id.Leave> {
         val (session, department) = departmentRequest() ?: return@post
 
         val member = Database {
@@ -205,15 +205,10 @@ fun Route.departmentsRoutes() {
             call.respond(HttpStatusCode.NoContent)
         }
     }
-    post("/departments/{id}/leave/{sub}") {
+    post<Api.Departments.Id.Leave.Member> { leave ->
         val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
-        val sub = call.parameters["sub"]
-        if (sub == null) {
-            // in theory this should never happen due to the route structure
-            call.respondError(Error.MissingArgument("sub"))
-            return@post
-        }
+        val sub = leave.sub
 
         val member = Database {
             DepartmentMemberEntity
@@ -243,7 +238,7 @@ fun Route.departmentsRoutes() {
         }
     }
 
-    get("/departments/{id}/members") {
+    get<Api.Departments.Id.Members> {
         val (session, department) = departmentRequest() ?: return@get
 
         // Shared with Departments.extraColumns (DepartmentEntity.visibleMembersFor) so this and GET
@@ -264,10 +259,10 @@ fun Route.departmentsRoutes() {
     }
 
     // Allows an admin or people manager to confirm and deny join requests
-    post("/departments/{id}/confirm/{requestId}") {
+    post<Api.Departments.Id.Confirm> { confirm ->
         val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
-        val requestId = call.parameters["requestId"]?.toUuidOrNull()
+        val requestId = confirm.requestId.toUuidOrNull()
         if (requestId == null) {
             call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
             return@post
@@ -305,10 +300,10 @@ fun Route.departmentsRoutes() {
 
         call.respondText("Join request confirmed", status = HttpStatusCode.OK)
     }
-    post("/departments/{id}/deny/{requestId}") {
+    post<Api.Departments.Id.Deny> { deny ->
         val (_, department) = departmentRequest(DepartmentRole.PEOPLE_MANAGER) ?: return@post
 
-        val requestId = call.parameters["requestId"]?.toUuidOrNull()
+        val requestId = deny.requestId.toUuidOrNull()
         if (requestId == null) {
             call.respondText("Missing or malformed request id", status = HttpStatusCode.BadRequest)
             return@post
@@ -345,10 +340,10 @@ fun Route.departmentsRoutes() {
     // Allows a department admin (or global admin) to (re)assign a confirmed member's roles within the department.
     // Gated by DepartmentRole.ADMIN specifically -- not any lesser role -- since assigning roles (including ADMIN
     // itself) is privilege-escalation-capable.
-    patch("/departments/{id}/members/{memberId}/roles") {
+    patch<Api.Departments.Id.Members.Roles> { roles ->
         val (_, department) = departmentRequest(DepartmentRole.ADMIN) ?: return@patch
 
-        val memberId = call.parameters["memberId"]?.toUuidOrNull()
+        val memberId = roles.memberId.toUuidOrNull()
         if (memberId == null) {
             call.respondError(Error.MalformedId())
             return@patch

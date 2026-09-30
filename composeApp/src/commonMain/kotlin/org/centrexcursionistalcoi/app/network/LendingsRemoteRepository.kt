@@ -2,9 +2,10 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -39,6 +40,7 @@ import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
 import org.centrexcursionistalcoi.app.request.PickupLendingRequest
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnLendingRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_LENDINGS_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -52,7 +54,7 @@ class LendingsRemoteRepository(
     private val usersRepository: UsersRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
 ) : RemoteRepository<Uuid, ReferencedLending, Uuid, Lending>(
-    "/inventory/lendings",
+    Api.Inventory.Lendings.resources,
     SETTINGS_LAST_LENDINGS_SYNC,
     Lending.serializer(),
     lendingsRepository,
@@ -96,7 +98,7 @@ class LendingsRemoteRepository(
         }
     }
     suspend fun create(from: LocalDate, to: LocalDate, itemsIds: List<Uuid>, notes: String? = null) {
-        val response = httpClient.post("inventory/lendings") {
+        val response = httpClient.post(Api.Inventory.Lendings()) {
             setBody(requestBody(CreateLendingRequest(from, to, itemsIds, notes), CreateLendingRequest.serializer()))
         }
         if (response.status.isSuccess()) {
@@ -128,7 +130,7 @@ class LendingsRemoteRepository(
     suspend fun allocate(typeId: Uuid, from: LocalDate, to: LocalDate, amount: Int): List<Uuid> {
         require(amount > 0) { "Amount must be greater than zero" }
 
-        val response = httpClient.get("inventory/types/$typeId/allocate") {
+        val response = httpClient.get(Api.Inventory.Types.Id.Allocate(Api.Inventory.Types.Id(typeId.toString()))) {
             parameter("from", from.toString())
             parameter("to", to.toString())
             parameter("amount", amount)
@@ -166,7 +168,7 @@ class LendingsRemoteRepository(
      * @throws ServerException if the cancellation fails.
      */
     suspend fun cancel(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post("inventory/lendings/$lendingId/cancel") {
+        val response = httpClient.post(Api.Inventory.Lendings.Id.Cancel(Api.Inventory.Lendings.Id(lendingId.toString()))) {
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
@@ -184,7 +186,7 @@ class LendingsRemoteRepository(
      * @throws NoSuchElementException if the lending is not found after confirmation.
      */
     suspend fun confirm(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post("inventory/lendings/$lendingId/confirm") {
+        val response = httpClient.post(Api.Inventory.Lendings.Id.Confirm(Api.Inventory.Lendings.Id(lendingId.toString()))) {
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {
@@ -207,7 +209,7 @@ class LendingsRemoteRepository(
         dismissItemsIds: List<Uuid>,
         progress: ProgressNotifier? = null
     ) {
-        val response = httpClient.post("inventory/lendings/$lendingId/pickup") {
+        val response = httpClient.post(Api.Inventory.Lendings.Id.Pickup(Api.Inventory.Lendings.Id(lendingId.toString()))) {
             setBody(requestBody(PickupLendingRequest(dismissItemsIds), PickupLendingRequest.serializer()))
             monitorUploadProgress(progress)
         }
@@ -232,7 +234,7 @@ class LendingsRemoteRepository(
         items: List<Pair<Uuid, String?>>,
         progress: ProgressNotifier? = null
     ) {
-        val response = httpClient.post("inventory/lendings/$lendingId/return") {
+        val response = httpClient.post(Api.Inventory.Lendings.Id.Return(Api.Inventory.Lendings.Id(lendingId.toString()))) {
             monitorUploadProgress(progress)
             contentType(ContentType.Application.Json)
             setBody(
@@ -290,7 +292,7 @@ class LendingsRemoteRepository(
             lending = lendingId,
             attachments = files.map { it.fileWithContext() },
         )
-        val response = httpClient.post("memories") {
+        val response = httpClient.post(Api.Memories()) {
             setBody(requestBody(request, CreateMemoryRequest.serializer()))
             monitorUploadProgress(progress)
         }
@@ -316,7 +318,7 @@ class LendingsRemoteRepository(
      * @throws NoSuchElementException if the lending is not found after skipping memory.
      */
     suspend fun skipMemory(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post("inventory/lendings/$lendingId/skip_memory") {
+        val response = httpClient.post(Api.Inventory.Lendings.Id.SkipMemory(Api.Inventory.Lendings.Id(lendingId.toString()))) {
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) {

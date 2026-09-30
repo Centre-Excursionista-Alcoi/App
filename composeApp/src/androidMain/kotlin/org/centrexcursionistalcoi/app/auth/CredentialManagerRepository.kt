@@ -13,7 +13,7 @@ import androidx.credentials.RestoreCredential
 import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 import com.diamondedge.logging.logging
 import io.ktor.client.call.body
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.data.webauthn.AuthenticationOptionsRespons
 import org.centrexcursionistalcoi.app.data.webauthn.CreationOptionsResponse
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.centrexcursionistalcoi.app.routes.Api
 import org.koin.core.annotation.Singleton
 
 /**
@@ -66,7 +67,7 @@ class CredentialManagerRepository(private val context: Context) {
      * the key (e.g. unsupported device, or no provider available).
      */
     suspend fun create() {
-        val challengeResponse = httpClient.post("/generate-restore-challenge")
+        val challengeResponse = httpClient.post(Api.GenerateRestoreChallenge())
             .successOrThrow()
             .body<CreationOptionsResponse>()
         val requestJson = webAuthnJson.encodeToString(CreationOptionsResponse.serializer(), challengeResponse)
@@ -78,7 +79,7 @@ class CredentialManagerRepository(private val context: Context) {
             createCredential(requestJson, isCloudBackupEnabled = false)
         }
 
-        httpClient.post("/register-restore-key") {
+        httpClient.post(Api.RegisterRestoreKey()) {
             contentType(ContentType.Application.Json)
             setBody(
                 RegisterRestoreKeyRequest(
@@ -115,7 +116,7 @@ class CredentialManagerRepository(private val context: Context) {
      * @throws ServerException if the server rejects the challenge request or the credential.
      */
     suspend fun recover(): TokenResponse {
-        val challengeResponse = httpClient.post("/generate-auth-challenge") { skipSessionAuth() }
+        val challengeResponse = httpClient.post(Api.GenerateAuthChallenge()) { skipSessionAuth() }
             .successOrThrow()
             .body<AuthenticationOptionsResponse>()
 
@@ -126,7 +127,7 @@ class CredentialManagerRepository(private val context: Context) {
         val credential = getResponse.credential as? RestoreCredential
             ?: error("Unexpected credential type: ${getResponse.credential.type}")
 
-        return httpClient.post("/auth/webauthn/verify") {
+        return httpClient.post(Api.Auth.WebAuthnVerify()) {
             skipSessionAuth()
             contentType(ContentType.Application.Json)
             setBody(RestoreKeyVerificationRequest(credential.authenticationResponseJson))

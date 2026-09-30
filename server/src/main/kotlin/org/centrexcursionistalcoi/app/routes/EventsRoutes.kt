@@ -3,9 +3,9 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
@@ -72,7 +72,7 @@ private fun parseQualificationRequirements(value: String): List<List<Uuid>> {
 
 fun Route.eventsRoutes() {
     provideEntityRoutes(
-        base = "events",
+        resources = Api.Events.resources,
         entityClass = EventEntity,
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> EventEntity.forSession(session) },
@@ -193,7 +193,7 @@ fun Route.eventsRoutes() {
             departmentOfEntity = { it.department?.id?.value },
         ),
     )
-    get("/events/calendar") {
+    get<Api.Events.Calendar> {
         val session = call.getUserSession()
         val events = Database { EventEntity.forSession(session).toList() }
 
@@ -221,9 +221,9 @@ fun Route.eventsRoutes() {
         sb.append("END:VCALENDAR\r\n")
     }
 
-    postWithLock("/events/{id}/confirm", eventAssistanceMutex) {
+    postWithLock<Api.Events.Id.Confirm>(eventAssistanceMutex) { confirm ->
         val session = getUserSessionOrFail() ?: return@postWithLock
-        val eventId = call.parameters["id"]?.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
+        val eventId = confirm.parent.id.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
 
         // Make sure the event exists
         val event = Database {
@@ -328,9 +328,9 @@ fun Route.eventsRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    postWithLock("/events/{id}/reject", eventAssistanceMutex) {
+    postWithLock<Api.Events.Id.Reject>(eventAssistanceMutex) { reject ->
         val session = getUserSessionOrFail() ?: return@postWithLock
-        val eventId = call.parameters["id"]?.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
+        val eventId = reject.parent.id.toUuidOrNull() ?: return@postWithLock call.respondError(Error.InvalidArgument("id"))
 
         // Make sure the event exists
         val event = Database {

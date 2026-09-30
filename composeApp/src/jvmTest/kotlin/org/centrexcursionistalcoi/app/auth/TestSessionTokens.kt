@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.client.request.get
@@ -93,6 +94,7 @@ class TestSessionTokens {
             }
         }
     }) {
+        install(Resources)
         defaultRequest { url(BuildKonfig.SERVER_URL) }
         install(ContentNegotiation) { json(json) }
     }.installSessionAuth()

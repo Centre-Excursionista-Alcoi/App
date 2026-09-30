@@ -1,13 +1,13 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -37,6 +37,7 @@ import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
@@ -134,7 +135,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent() },
     ) {
-        client.post("/events/$eventId/confirm").assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertStatusCode(HttpStatusCode.NoContent)
     }
 
     @Test
@@ -142,7 +143,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)) },
     ) {
-        client.post("/events/$eventId/confirm").apply {
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).apply {
             assertError(Error.MissingQualifications())
             assertEquals(listOf(listOf(basic)), missing())
         }
@@ -155,7 +156,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic) },
     ) {
-        client.post("/events/$eventId/confirm").assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertStatusCode(HttpStatusCode.NoContent)
         assertEquals(1, Database { EventMembers.selectAll().count() })
     }
 
@@ -164,7 +165,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic), listOf(lead)); grant(basic) },
     ) {
-        client.post("/events/$eventId/confirm").apply {
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).apply {
             assertError(Error.MissingQualifications())
             assertEquals(listOf(listOf(lead)), missing())
         }
@@ -176,7 +177,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         // basic AND (lead OR topRope), holding basic and only the second alternative
         databaseInitBlock = { seed(); seedEvent(listOf(basic), listOf(lead, topRope)); grant(basic); grant(topRope) },
     ) {
-        client.post("/events/$eventId/confirm").assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertStatusCode(HttpStatusCode.NoContent)
     }
 
     @Test
@@ -184,7 +185,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic), listOf(lead, topRope)); grant(lead); grant(topRope) },
     ) {
-        client.post("/events/$eventId/confirm").apply {
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).apply {
             assertError(Error.MissingQualifications())
             assertEquals(listOf(listOf(basic)), missing())
         }
@@ -195,7 +196,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic), listOf(lead, topRope)) },
     ) {
-        client.post("/events/$eventId/confirm").apply {
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).apply {
             assertError(Error.MissingQualifications())
             assertEquals(sorted(listOf(listOf(basic), listOf(lead, topRope))), sorted(missing()))
         }
@@ -206,7 +207,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = (Clock.System.now() - 3600.seconds)) },
     ) {
-        client.post("/events/$eventId/confirm").assertError(Error.MissingQualifications())
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertError(Error.MissingQualifications())
     }
 
     @Test
@@ -214,7 +215,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, expiresAt = (Clock.System.now() + 3600.seconds)) },
     ) {
-        client.post("/events/$eventId/confirm").assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertStatusCode(HttpStatusCode.NoContent)
     }
 
     @Test
@@ -222,7 +223,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)); grant(basic, sub = FakeUser2.SUB) },
     ) {
-        client.post("/events/$eventId/confirm").assertError(Error.MissingQualifications())
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertError(Error.MissingQualifications())
     }
 
     @Test
@@ -230,7 +231,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { seed(); seedEvent(listOf(basic)); FakeAdminUser.provideEntity() },
     ) {
-        client.post("/events/$eventId/confirm").assertError(Error.MissingQualifications())
+        client.post(Api.Events.Id.Confirm(Api.Events.Id("$eventId"))).assertError(Error.MissingQualifications())
     }
 
     // ---- Exposing: GET /events ----
@@ -240,7 +241,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent(listOf(basic), listOf(lead, topRope)) },
     ) {
-        client.get("/events/$eventId").apply {
+        client.get(Api.Events.Id("$eventId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             val event = json.decodeFromString(Event.serializer(), bodyAsText())
             assertEquals(
@@ -255,7 +256,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(); seedEvent() },
     ) {
-        client.get("/events/$eventId").apply {
+        client.get(Api.Events.Id("$eventId")).apply {
             val event = json.decodeFromString(Event.serializer(), bodyAsText())
             assertEquals(emptyList(), event.qualificationRequirements)
         }
@@ -266,8 +267,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     private suspend fun io.ktor.client.HttpClient.createEvent(
         department: Uuid?,
         qualificationRequirements: String?,
-    ): HttpResponse = submitFormWithBinaryData(
-        "/events",
+    ): HttpResponse = submitFormWithBinaryData(href(Api.Events()),
         formData {
             append("start", (Clock.System.now() + 3600.seconds).toEpochMilliseconds())
             append("title", "New event")
@@ -378,7 +378,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
     // ---- Updating: PATCH /events/{id} ----
 
     private suspend fun io.ktor.client.HttpClient.patchEvent(request: UpdateEventRequest): HttpResponse =
-        patch("/events/$eventId") {
+        patch(Api.Events.Id("$eventId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateEventRequest.serializer(), request))
         }
@@ -519,7 +519,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.QUALIFICATIONS_MANAGER)); seedEvent(listOf(basic, lead)) },
     ) {
-        client.delete("/qualifications/$basic").assertError(Error.EntityDeleteReferencesExist())
+        client.delete(Api.Qualifications.Id("$basic")).assertError(Error.EntityDeleteReferencesExist())
         assertTrue(Database { QualificationEntity.findById(basic) != null })
         // Requirements are untouched
         assertEquals(listOf(listOf(basic, lead).sortedBy(Uuid::toString)), requirements())
@@ -533,7 +533,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent(listOf(basic)).setQualificationRequirements(emptyList())
         },
     ) {
-        client.delete("/qualifications/$basic").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Qualifications.Id("$basic")).assertStatusCode(HttpStatusCode.NoContent)
         assertNull(Database { QualificationEntity.findById(basic) })
     }
 
@@ -545,8 +545,8 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
             seedEvent(listOf(basic))
         },
     ) {
-        client.delete("/events/$eventId").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Events.Id("$eventId")).assertStatusCode(HttpStatusCode.NoContent)
         assertEquals(0, Database { EventQualificationRequirements.selectAll().where { EventQualificationRequirements.qualification eq basic }.count() })
-        client.delete("/qualifications/$basic").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Qualifications.Id("$basic")).assertStatusCode(HttpStatusCode.NoContent)
     }
 }

@@ -5,14 +5,14 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.contentLength
 import io.ktor.server.request.receiveText
+import io.ktor.server.resources.delete
+import io.ktor.server.resources.get
+import io.ktor.server.resources.post
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
@@ -138,7 +138,7 @@ private suspend fun RoutingContext.lendingRequest(session: UserSession): Lending
 }
 
 fun Route.lendingsRoutes() {
-    postWithLock("inventory/lendings", lendingsMutex) {
+    postWithLock<Api.Inventory.Lendings>(lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
 
         val request = receiveJson(CreateLendingRequest.serializer()) ?: return@postWithLock
@@ -271,7 +271,7 @@ fun Route.lendingsRoutes() {
         )
         call.respond(HttpStatusCode.Created)
     }
-    getWithLock("inventory/lendings", lendingsMutex) {
+    getWithLock<Api.Inventory.Lendings>(lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
 
         if (session.isAdmin()) {
@@ -312,7 +312,7 @@ fun Route.lendingsRoutes() {
             }
         }
     }
-    get("inventory/lendings/{id}") {
+    get<Api.Inventory.Lendings.Id> {
         val session = getUserSessionOrFail() ?: return@get
         val lending = lendingRequest(session) ?: return@get
 
@@ -320,7 +320,7 @@ fun Route.lendingsRoutes() {
             json.encodeEntityToString(lending, LendingEntity)
         }
     }
-    delete("inventory/lendings/{id}") {
+    delete<Api.Inventory.Lendings.Id> {
         val session = getUserSessionOrFail() ?: return@delete
         val lending = lendingRequest(session) ?: return@delete
 
@@ -345,10 +345,10 @@ fun Route.lendingsRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    post("inventory/lendings/{id}/cancel") {
+    post<Api.Inventory.Lendings.Id.Cancel> { cancel ->
         val session = getUserSessionOrFail() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUuidOrNull()
+        val lendingId = cancel.parent.id.toUuidOrNull()
         if (lendingId == null) {
             call.respondError(Error.MalformedId())
             return@post
@@ -379,7 +379,7 @@ fun Route.lendingsRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    post("inventory/lendings/{id}/confirm") {
+    post<Api.Inventory.Lendings.Id.Confirm> {
         val session = getUserSessionOrFail() ?: return@post
         val lending = lendingRequest(session) ?: return@post
 
@@ -397,7 +397,7 @@ fun Route.lendingsRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    post("inventory/lendings/{id}/pickup") {
+    post<Api.Inventory.Lendings.Id.Pickup> {
         val session = getUserSessionOrFail() ?: return@post
         val lending = lendingRequest(session) ?: return@post
 
@@ -441,7 +441,7 @@ fun Route.lendingsRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    post("inventory/lendings/{id}/return") {
+    post<Api.Inventory.Lendings.Id.Return> {
         assertContentType(ContentType.Application.Json) ?: return@post
         val session = getUserSessionOrFail() ?: return@post
         val lending = lendingRequest(session) ?: return@post
@@ -527,10 +527,10 @@ fun Route.lendingsRoutes() {
     // Memory creation/submission lives in memoriesRoutes() (see MemoriesRoutes.kt), which accepts an optional
     // "lending" reference, since memories are no longer exclusively tied to a lending.
     // Allows admins to skip the memory submission for a lending
-    post("inventory/lendings/{id}/skip_memory") {
+    post<Api.Inventory.Lendings.Id.SkipMemory> { skip ->
         assertAdmin() ?: return@post
 
-        val lendingId = call.parameters["id"]?.toUuidOrNull()
+        val lendingId = skip.parent.id.toUuidOrNull()
         if (lendingId == null) {
             respondError(Error.MalformedId())
             return@post
@@ -558,10 +558,10 @@ fun Route.lendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
     // Checks availability and allocates items of a given type for lending. Returns a list of possible item IDs for the date range.
-    getWithLock("inventory/types/{id}/allocate", lendingsMutex) {
+    getWithLock<Api.Inventory.Types.Id.Allocate>(lendingsMutex) { allocate ->
         val session = getUserSessionOrFail() ?: return@getWithLock
 
-        val typeId = call.parameters["id"]?.toUuidOrNull()
+        val typeId = allocate.parent.id.toUuidOrNull()
         if (typeId == null) {
             call.respondError(Error.MalformedId())
             return@getWithLock

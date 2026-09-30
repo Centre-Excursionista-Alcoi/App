@@ -37,7 +37,7 @@ import kotlin.uuid.Uuid
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
-        base = "inventory/types",
+        resources = Api.Inventory.Types.resources,
         entityClass = InventoryItemTypeEntity,
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
@@ -148,7 +148,7 @@ fun Route.inventoryRoutes() {
         ),
     )
     provideEntityRoutes(
-        base = "inventory/items",
+        resources = Api.Inventory.Items.resources,
         entityClass = InventoryItemEntity,
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->

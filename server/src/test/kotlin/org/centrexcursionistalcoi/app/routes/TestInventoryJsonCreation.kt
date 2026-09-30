@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -40,12 +41,12 @@ import org.jetbrains.exposed.v1.jdbc.insert
  * harness, unaffected by any of this.
  */
 class TestInventoryJsonCreation : ApplicationTestBase() {
-    private suspend fun HttpClient.postTypeJson(request: CreateInventoryItemTypeRequest) = post("/inventory/types") {
+    private suspend fun HttpClient.postTypeJson(request: CreateInventoryItemTypeRequest) = post(Api.Inventory.Types()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreateInventoryItemTypeRequest.serializer(), request))
     }
 
-    private suspend fun HttpClient.postItemJson(request: CreateInventoryItemRequest) = post("/inventory/items") {
+    private suspend fun HttpClient.postItemJson(request: CreateInventoryItemRequest) = post(Api.Inventory.Items()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreateInventoryItemRequest.serializer(), request))
     }
@@ -64,7 +65,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_createType_json_malformedBody_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/inventory/types") {
+        client.post(Api.Inventory.Types()) {
             contentType(ContentType.Application.Json)
             setBody("not json")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -72,7 +73,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_createType_json_missingRequiredField_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/inventory/types") {
+        client.post(Api.Inventory.Types()) {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -175,7 +176,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_createItem_json_missingRequiredField_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/inventory/items") {
+        client.post(Api.Inventory.Items()) {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -183,7 +184,7 @@ class TestInventoryJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_createItem_json_malformedBody_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/inventory/items") {
+        client.post(Api.Inventory.Items()) {
             contentType(ContentType.Application.Json)
             setBody("not json")
         }.assertStatusCode(HttpStatusCode.BadRequest)

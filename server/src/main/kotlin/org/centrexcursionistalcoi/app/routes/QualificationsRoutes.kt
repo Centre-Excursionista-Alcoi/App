@@ -3,14 +3,14 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
+import io.ktor.server.resources.delete
+import io.ktor.server.resources.get
+import io.ktor.server.resources.patch
+import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.DepartmentRosterMember
@@ -110,7 +110,7 @@ fun Route.qualificationsRoutes() {
     // GET /departments/{id} (see Departments.extraColumns), synced along with the rest of a department like any
     // other referenced data, rather than fetched separately.
 
-    post("/departments/{id}/qualifications") {
+    post<Api.Departments.Id.Qualifications> {
         val (_, department) = departmentRequest(DepartmentRole.QUALIFICATIONS_MANAGER) ?: return@post
         val request = receiveJson(CreateQualificationRequest.serializer()) ?: return@post
 
@@ -140,7 +140,7 @@ fun Route.qualificationsRoutes() {
         )
     }
 
-    patch("/qualifications/{id}") {
+    patch<Api.Qualifications.Id> {
         val request = qualificationRequest(DepartmentRole.QUALIFICATIONS_MANAGER) ?: return@patch
         val qualification = request.qualification
         val update = receiveJson(UpdateQualificationRequest.serializer()) ?: return@patch
@@ -174,7 +174,7 @@ fun Route.qualificationsRoutes() {
 
     // Deleting a qualification also deletes every grant of it, but not while an event still requires it: that
     // would silently drop a requirement from the event and open it to people it was meant to exclude.
-    delete("/qualifications/{id}") {
+    delete<Api.Qualifications.Id> {
         val request = qualificationRequest(DepartmentRole.QUALIFICATIONS_MANAGER) ?: return@delete
         val qualificationId = request.qualification.id.value
         val requiredByAnEvent = Database {
@@ -191,7 +191,7 @@ fun Route.qualificationsRoutes() {
     // Grants are private: only the department's examiners/qualifications managers/people managers (and global
     // admins) may see who holds a qualification, mirrored by DepartmentEntity.visibleQualificationGrantsFor for
     // the embedded GET /departments/{id} view. Everybody else sees just their own there.
-    post("/qualifications/{id}/grants") {
+    post<Api.Qualifications.Id.Grants> {
         val request = qualificationRequest(DepartmentRole.EXAMINER) ?: return@post
         val body = receiveJson(GrantQualificationRequest.serializer()) ?: return@post
 
@@ -248,9 +248,9 @@ fun Route.qualificationsRoutes() {
     }
 
     // Idempotent: revoking a grant that doesn't exist also succeeds.
-    delete("/qualifications/{id}/grants/{sub}") {
+    delete<Api.Qualifications.Id.Grants.Sub> { grant ->
         val request = qualificationRequest(DepartmentRole.EXAMINER) ?: return@delete
-        val sub = call.parameters["sub"] ?: return@delete call.respondError(Error.MissingArgument("sub"))
+        val sub = grant.sub
 
         val qualificationId = request.qualification.id.value
         Database {
@@ -262,10 +262,10 @@ fun Route.qualificationsRoutes() {
     // The confirmed members of a department, for an examiner to pick who to grant a qualification to. Deliberately
     // only carries what's needed to identify a member (sub, full name) -- not the email/NIF/roles that
     // GET /departments/{id}/members or /users expose to people managers.
-    get("/departments/{id}/roster") {
+    get<Api.Departments.Id.Roster> { roster ->
         val (_, department) = departmentRequest(DepartmentRole.EXAMINER) ?: return@get
-        val query = call.request.queryParameters["q"]?.trim()?.takeIf { it.isNotEmpty() }
-        val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: ROSTER_DEFAULT_LIMIT).coerceIn(1, ROSTER_MAX_LIMIT)
+        val query = roster.q?.trim()?.takeIf { it.isNotEmpty() }
+        val limit = (roster.limit?.toIntOrNull() ?: ROSTER_DEFAULT_LIMIT).coerceIn(1, ROSTER_MAX_LIMIT)
 
         val roster = Database {
             department.confirmedMembers

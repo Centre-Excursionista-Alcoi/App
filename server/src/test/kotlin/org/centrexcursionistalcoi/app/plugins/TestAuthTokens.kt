@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.plugins
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.basicAuth
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.forms.submitForm
@@ -32,8 +34,10 @@ import org.centrexcursionistalcoi.app.database.table.AuthSessionRevocationReason
 import org.centrexcursionistalcoi.app.database.table.AuthSessions
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.mockTime
 import org.centrexcursionistalcoi.app.module
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.security.SessionsKeys
@@ -63,27 +67,25 @@ class TestAuthTokens : ApplicationTestBase() {
         },
     ) { block() }
 
-    private suspend fun HttpClient.login(): TokenResponse = submitForm(
-        "/auth/login",
+    private suspend fun HttpClient.login(): TokenResponse = submitForm(href(Api.Auth.Login()),
         parameters {
             append("email", FakeUser.EMAIL)
             append("password", password)
         },
     ).apply { assertStatusCode(HttpStatusCode.OK) }.body()
 
-    private suspend fun HttpClient.refresh(refreshToken: String): HttpResponse = post("/auth/refresh") {
+    private suspend fun HttpClient.refresh(refreshToken: String): HttpResponse = post(Api.Auth.Refresh()) {
         contentType(ContentType.Application.Json)
         setBody(RefreshTokenRequest(refreshToken))
     }
 
-    private suspend fun HttpClient.profile(accessToken: String): HttpResponse = get("/profile") {
+    private suspend fun HttpClient.profile(accessToken: String): HttpResponse = get(Api.Profile()) {
         bearerAuth(accessToken)
     }
 
     @Test
     fun test_login_issuesTokensThatAuthenticate() = runTokenTest {
-        val response = client.submitForm(
-            "/auth/login",
+        val response = client.submitForm(href(Api.Auth.Login()),
             parameters {
                 append("email", FakeUser.EMAIL)
                 append("password", password)
@@ -104,8 +106,7 @@ class TestAuthTokens : ApplicationTestBase() {
 
     @Test
     fun test_login_wrongPassword() = runTokenTest {
-        client.submitForm(
-            "/auth/login",
+        client.submitForm(href(Api.Auth.Login()),
             parameters {
                 append("email", FakeUser.EMAIL)
                 append("password", "WrongPassword123")
@@ -115,7 +116,7 @@ class TestAuthTokens : ApplicationTestBase() {
 
     @Test
     fun test_invalidBearer_isRejected() = runTokenTest {
-        client.get("/profile") { bearerAuth("not-a-token") }.apply {
+        client.get(Api.Profile()) { bearerAuth("not-a-token") }.apply {
             assertError(Error.NotLoggedIn())
             assertEquals("Bearer error=\"invalid_token\"", headers[HttpHeaders.WWWAuthenticate])
         }
@@ -198,7 +199,7 @@ class TestAuthTokens : ApplicationTestBase() {
     @Test
     fun test_logout_revokesTheSession() = runTokenTest {
         val tokens = client.login()
-        client.post("/auth/logout") {
+        client.post(Api.Auth.Logout()) {
             bearerAuth(tokens.accessToken)
             contentType(ContentType.Application.Json)
             setBody(RefreshTokenRequest(tokens.refreshToken))
@@ -210,7 +211,7 @@ class TestAuthTokens : ApplicationTestBase() {
 
     @Test
     fun test_logout_withAnUnknownToken_stillSucceeds() = runTokenTest {
-        client.post("/auth/logout") {
+        client.post(Api.Auth.Logout()) {
             contentType(ContentType.Application.Json)
             setBody(RefreshTokenRequest("cea_rt_unknown"))
         }.assertStatusCode(HttpStatusCode.NoContent)
@@ -219,7 +220,7 @@ class TestAuthTokens : ApplicationTestBase() {
     @Test
     fun test_logout_withOnlyTheAccessToken() = runTokenTest {
         val tokens = client.login()
-        client.post("/auth/logout") { bearerAuth(tokens.accessToken) }.assertStatusCode(HttpStatusCode.NoContent)
+        client.post(Api.Auth.Logout()) { bearerAuth(tokens.accessToken) }.assertStatusCode(HttpStatusCode.NoContent)
         client.profile(tokens.accessToken).assertError(Error.NotLoggedIn())
         client.refresh(tokens.refreshToken).assertError(Error.NotLoggedIn())
     }
@@ -250,7 +251,7 @@ class TestAuthTokens : ApplicationTestBase() {
     fun test_groupChanges_applyImmediately() = runTokenTest {
         val tokens = client.login()
         // An admin-only route, for a user that doesn't exist: only an admin gets past the permission check.
-        suspend fun promote() = client.post("/users/unknown-user/promote") { bearerAuth(tokens.accessToken) }
+        suspend fun promote() = client.post(Api.Users.Sub.Promote(Api.Users.Sub("unknown-user"))) { bearerAuth(tokens.accessToken) }
         promote().assertError(Error.NotAnAdmin())
 
         Database { UserReferenceEntity[FakeUser.SUB].groups = FakeUser.GROUPS + ADMIN_GROUP_NAME }
@@ -266,8 +267,7 @@ class TestAuthTokens : ApplicationTestBase() {
                 it[user] = FakeUser.SUB
             }
         }
-        client.submitForm(
-            "/reset_password",
+        client.submitForm(href(Api.ResetPassword()),
             parameters {
                 append("request_id", "reset-request")
                 append("password", "NewPassword123")
@@ -316,7 +316,7 @@ class TestAuthTokens : ApplicationTestBase() {
         assertEquals(WebDavSession.PATH, cookie.path)
 
         // Grants nothing outside WebDAV, even if sent there.
-        client.get("/profile") {
+        client.get(Api.Profile()) {
             header(HttpHeaders.Cookie, renderCookieHeader(cookie))
         }.assertError(Error.NotLoggedIn())
         // But works for WebDAV without the password.

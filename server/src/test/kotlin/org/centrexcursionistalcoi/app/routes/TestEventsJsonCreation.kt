@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -43,7 +44,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 class TestEventsJsonCreation : ApplicationTestBase() {
     private val future = Clock.System.now().plus(7.days)
 
-    private suspend fun HttpClient.postJson(request: CreateEventRequest) = post("/events") {
+    private suspend fun HttpClient.postJson(request: CreateEventRequest) = post(Api.Events()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreateEventRequest.serializer(), request))
     }
@@ -60,7 +61,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_malformedBody_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/events") {
+        client.post(Api.Events()) {
             contentType(ContentType.Application.Json)
             setBody("not json")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -68,7 +69,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_missingRequiredField_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/events") {
+        client.post(Api.Events()) {
             contentType(ContentType.Application.Json)
             setBody("""{"place":"Somewhere","title":"Event"}""")
         }.assertStatusCode(HttpStatusCode.BadRequest)

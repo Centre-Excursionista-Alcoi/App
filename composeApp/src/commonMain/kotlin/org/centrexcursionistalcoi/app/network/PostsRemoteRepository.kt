@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.database.entity.PostEntity.Companion.toEnt
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_POSTS_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -18,7 +19,7 @@ import kotlin.uuid.Uuid
 class PostsRemoteRepository(
     private val postsRepository: PostsRepository,
 ) : RemoteRepository<Uuid, ReferencedPost, Uuid, Post>(
-    "/posts",
+    Api.Posts.resources,
     SETTINGS_LAST_POSTS_SYNC,
     Post.serializer(),
     postsRepository,

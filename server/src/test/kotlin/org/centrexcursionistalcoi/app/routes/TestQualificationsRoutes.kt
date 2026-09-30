@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
@@ -26,6 +29,7 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateQualificationRequest
 import org.centrexcursionistalcoi.app.request.GrantQualificationRequest
@@ -108,7 +112,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
     // ---- Definitions: create ----
 
     @Test
-    fun test_create_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/qualifications", HttpMethod.Post)
+    fun test_create_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Departments.Id.Qualifications(Api.Departments.Id("$departmentId"))), HttpMethod.Post)
 
     @Test
     fun test_create_plainMember_forbidden() = runApplicationTest(
@@ -225,7 +229,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.QUALIFICATIONS_MANAGER)) },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name = "Sport climbing", description = "Leads sport routes")))
         }.apply {
@@ -245,7 +249,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             QualificationEntity[qualificationId].description = "Something"
         },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(description = " ")))
         }.assertStatusCode(HttpStatusCode.OK)
@@ -260,7 +264,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             QualificationEntity.new { department = DepartmentEntity[departmentId]; name = "Rappel" }
         },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name = "rappel")))
         }.assertError(Error.QualificationAlreadyExists())
@@ -271,7 +275,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name = "LEAD CLIMBING")))
         }.assertStatusCode(HttpStatusCode.OK)
@@ -282,7 +286,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { seed(callerRoles = null) },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertError(Error.NothingToUpdate())
@@ -293,7 +297,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name = "Nope")))
         }.assertError(Error.PermissionRejected())
@@ -302,7 +306,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
 
     @Test
     fun test_patch_notFound() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.patch("/qualifications/$qualificationId") {
+        client.patch(Api.Qualifications.Id("$qualificationId")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateQualificationRequest.serializer(), UpdateQualificationRequest(name = "Nope")))
         }.assertError(Error.EntityNotFound(QualificationEntity::class, qualificationId))
@@ -320,7 +324,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         },
     ) {
         assertNotNull(grantRow(FakeUser2.SUB))
-        client.delete("/qualifications/$qualificationId").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Qualifications.Id("$qualificationId")).assertStatusCode(HttpStatusCode.NoContent)
         assertNull(Database { QualificationEntity.findById(qualificationId) })
         assertNull(grantRow(FakeUser2.SUB))
     }
@@ -330,14 +334,14 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
-        client.delete("/qualifications/$qualificationId").assertError(Error.PermissionRejected())
+        client.delete(Api.Qualifications.Id("$qualificationId")).assertError(Error.PermissionRejected())
         assertNotNull(Database { QualificationEntity.findById(qualificationId) })
     }
 
     // ---- Grants ----
 
     @Test
-    fun test_grant_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/qualifications/$qualificationId/grants", HttpMethod.Post)
+    fun test_grant_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Qualifications.Id.Grants(Api.Qualifications.Id("$qualificationId"))), HttpMethod.Post)
 
     @Test
     fun test_grant_asExaminer() = runApplicationTest(
@@ -479,10 +483,10 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             }
         },
     ) {
-        client.delete("/qualifications/$qualificationId/grants/${FakeUser2.SUB}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Qualifications.Id.Grants.Sub("${FakeUser2.SUB}", Api.Qualifications.Id.Grants(Api.Qualifications.Id("$qualificationId")))).assertStatusCode(HttpStatusCode.NoContent)
         assertNull(grantRow(FakeUser2.SUB))
         // Idempotent
-        client.delete("/qualifications/$qualificationId/grants/${FakeUser2.SUB}").assertStatusCode(HttpStatusCode.NoContent)
+        client.delete(Api.Qualifications.Id.Grants.Sub("${FakeUser2.SUB}", Api.Qualifications.Id.Grants(Api.Qualifications.Id("$qualificationId")))).assertStatusCode(HttpStatusCode.NoContent)
     }
 
     @Test
@@ -496,7 +500,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             }
         },
     ) {
-        client.delete("/qualifications/$qualificationId/grants/${FakeUser2.SUB}").assertError(Error.PermissionRejected())
+        client.delete(Api.Qualifications.Id.Grants.Sub("${FakeUser2.SUB}", Api.Qualifications.Id.Grants(Api.Qualifications.Id("$qualificationId")))).assertError(Error.PermissionRejected())
         assertNotNull(grantRow(FakeUser2.SUB))
     }
 
@@ -515,7 +519,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
             }
         },
     ) {
-        client.get("/departments/$departmentId/roster").apply {
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody { body ->
                 // Only the id and name of each member, nothing else
@@ -523,7 +527,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
                 assertTrue(FakeUser.NIF !in body && FakeUser2.NIF !in body, "the roster must not expose NIFs: $body")
             }
         }
-        client.get("/departments/$departmentId/roster").assertBody(DepartmentRosterMember.serializer().list()) { roster ->
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"))).assertBody(DepartmentRosterMember.serializer().list()) { roster ->
             assertEquals(
                 setOf(FakeUser.SUB, FakeUser2.SUB),
                 roster.map { it.sub }.toSet(),
@@ -538,11 +542,11 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
         val fragment = FakeUser2.FULL_NAME.take(4).uppercase()
-        client.get("/departments/$departmentId/roster?q=$fragment").assertBody(DepartmentRosterMember.serializer().list()) { roster ->
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"), q = "$fragment")).assertBody(DepartmentRosterMember.serializer().list()) { roster ->
             assertTrue(roster.all { it.fullName.contains(fragment, ignoreCase = true) })
             assertTrue(roster.any { it.sub == FakeUser2.SUB })
         }
-        client.get("/departments/$departmentId/roster?q=zzzz-no-match").assertBody(DepartmentRosterMember.serializer().list()) {
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"), q = "zzzz-no-match")).assertBody(DepartmentRosterMember.serializer().list()) {
             assertTrue(it.isEmpty())
         }
     }
@@ -552,7 +556,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
-        client.get("/departments/$departmentId/roster?limit=1").assertBody(DepartmentRosterMember.serializer().list()) {
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"), limit = "1")).assertBody(DepartmentRosterMember.serializer().list()) {
             assertEquals(1, it.size)
         }
     }
@@ -562,7 +566,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.QUALIFICATIONS_MANAGER)) },
     ) {
-        client.get("/departments/$departmentId/roster").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"))).assertStatusCode(HttpStatusCode.OK)
     }
 
     @Test
@@ -570,7 +574,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = emptyList()) },
     ) {
-        client.get("/departments/$departmentId/roster").assertError(Error.PermissionRejected())
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"))).assertError(Error.PermissionRejected())
     }
 
     @Test
@@ -578,7 +582,7 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.PEOPLE_MANAGER)) },
     ) {
-        client.get("/departments/$departmentId/roster").assertError(Error.PermissionRejected())
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$departmentId"))).assertError(Error.PermissionRejected())
     }
 
     @Test
@@ -586,6 +590,6 @@ class TestQualificationsRoutes : ApplicationTestBase() {
         shouldLogIn = LoginType.USER,
         databaseInitBlock = { seed(callerRoles = listOf(DepartmentRole.EXAMINER)) },
     ) {
-        client.get("/departments/$otherDepartmentId/roster").assertError(Error.PermissionRejected())
+        client.get(Api.Departments.Id.Roster(Api.Departments.Id("$otherDepartmentId"))).assertError(Error.PermissionRejected())
     }
 }

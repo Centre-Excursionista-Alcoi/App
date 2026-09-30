@@ -2,9 +2,11 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
+import io.ktor.resources.serialization.ResourcesFormat
 import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
@@ -12,10 +14,6 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -111,8 +109,8 @@ suspend fun RoutingContext.assertIdParameter(): Uuid? {
 }
 
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoutes(
-    base: String,
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, C : Any, I : Any> Route.provideEntityRoutes(
+    resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
     noinline creator: suspend (MultiPartData) -> EE,
@@ -142,11 +140,11 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>> Route.provideEntityRoute
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>, Any>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>, Any, C, I>(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>> Route.provideEntityRoutes(
-    base: String,
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, C : Any, I : Any> Route.provideEntityRoutes(
+    resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
     /**
@@ -189,17 +187,17 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
      * otherwise be orphaned by a rejected creation.
      */
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, ID, E, UER, Any>(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes<EID, EE, ID, E, UER, Any, C, I>(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 /**
- * Like the [provideEntityRoutes] overload above, but also lets `POST /$base` accept an `application/json` body
+ * Like the [provideEntityRoutes] overload above, but also lets `POST` on the collection accept an `application/json` body
  * (decoded with [createRequestSerializer], built into an entity by [jsonCreator]) alongside the existing
- * multipart path -- see [RoutingContext]'s `post("/$base")` handler in the base implementation. Transitional
+ * multipart path -- see [RoutingContext]'s collection `POST` handler in the base implementation. Transitional
  * (#659): a client old enough to only know multipart keeps working unchanged either way.
  */
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any> Route.provideEntityRoutes(
-    base: String,
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
+    resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
     noinline creator: suspend (MultiPartData) -> EE,
@@ -213,11 +211,11 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     writePermission: EntityWritePermission<EE>? = null,
     noinline afterCreate: suspend (EE) -> Unit = {},
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes(base, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, createRequestSerializer, jsonCreator, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, createRequestSerializer, jsonCreator, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
-fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any> Route.provideEntityRoutes(
-    base: String,
+fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
+    resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     entityKClass: KClass<EE>,
     idTypeConverter: (String) -> EID?,
@@ -231,7 +229,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * TODO(#659): server-only backward compat for app installs older than the JSON create endpoint -- the current
      *   app never sends multipart for an entity once it has [createRequestSerializer]/[jsonCreator] (see Posts).
      *   Remove [creator]/[MultiPartData] entirely, along with every entity's multipart lambda and the `else`
-     *   branch in `post("/$base")` below, once every entity has a JSON creator and the oldest app version the
+     *   branch of the collection `POST` handler below, once every entity has a JSON creator and the oldest app version the
      *   backend still needs to serve sends JSON for all of them.
      */
     creator: suspend (MultiPartData) -> EE,
@@ -242,7 +240,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      */
     updater: KSerializer<UER>? = null,
     /**
-     * If non-null (together with [jsonCreator]), `POST /$base` also accepts an `application/json` body decoded
+     * If non-null (together with [jsonCreator]), `POST` on the collection also accepts an `application/json` body decoded
      * with this serializer, alongside the existing multipart path -- see [jsonCreator]. Transitional (#659): a
      * client old enough to only know multipart keeps working unchanged either way.
      */
@@ -279,8 +277,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      */
     onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
 ) {
-    require(!base.startsWith("/")) { "Base path must not start with '/'" }
-    require(!base.endsWith("/")) { "Base path must not end with '/'" }
+    val base = ResourcesFormat().encodeToPathPattern(resources.collectionSerializer).trim('/')
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
     require((createRequestSerializer == null) == (jsonCreator == null)) { "createRequestSerializer and jsonCreator must be given together" }
 
@@ -313,8 +310,8 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
     }
 
-    suspend fun RoutingContext.getId(): EID? {
-        val id = call.parameters["id"]?.let(idTypeConverter)
+    suspend fun RoutingContext.getId(resource: I): EID? {
+        val id = idTypeConverter(resources.idOf(resource))
         if (id == null) {
             respondError(Error.MalformedId())
             return null
@@ -333,7 +330,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     /**
      * Fetches the entity by [id], but only if it's also visible to [session] per [visibleTo] -- otherwise
      * responds [Error.EntityNotFound], exactly as if it didn't exist. Unlike [assertEntity] (used by
-     * PATCH/DELETE, which are gated by [writePermission] instead), this is what GET /$base/{id} uses, so a
+     * PATCH/DELETE, which are gated by [writePermission] instead), this is what `GET` on an item uses, so a
      * resource can never be read individually by ID if the caller couldn't also see it in the list.
      */
     suspend fun RoutingContext.assertVisibleEntity(id: EID, session: UserSession?): EE? {
@@ -348,9 +345,9 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         return item
     }
 
-    get("/$base") {
+    handle(resources.collectionSerializer, HttpMethod.Get) {
         val session = getUserSession()
-        handleIfModifiedForType(entityClass) ?: return@get
+        handleIfModifiedForType(entityClass) ?: return@handle
         val list = Database { listProvider(session).toList() }
 
         call.respondText(ContentType.Application.Json) {
@@ -358,14 +355,14 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
     }
 
-    get("/$base/{id}") {
-        val id = getId() ?: return@get
+    handle(resources.itemSerializer, HttpMethod.Get) { resource ->
+        val id = getId(resource) ?: return@handle
         val session = getUserSession()
         // Visibility must be checked before handleIfModified: a 304 (or its Last-Modified header) would
         // otherwise confirm an invisible entity's existence/last-modified time to a caller who can't see it,
         // via a path that skips assertVisibleEntity entirely.
-        val item = assertVisibleEntity(id, session) ?: return@get
-        handleIfModified(entityClass, id) ?: return@get
+        val item = assertVisibleEntity(id, session) ?: return@handle
+        handleIfModified(entityClass, id) ?: return@handle
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityToString(item, entityClass, session)
@@ -396,16 +393,16 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         null
     }
 
-    post("/$base") {
+    handle(resources.collectionSerializer, HttpMethod.Post) {
         val requestContentType = call.request.contentType()
         val isJsonCreate = createRequestSerializer != null && jsonCreator != null && requestContentType.match(ContentType.Application.Json)
         val isMultipartCreate = requestContentType.match(ContentType.MultiPart.FormData)
         if (!isJsonCreate && !isMultipartCreate) {
             respondError(Error.InvalidContentType(ContentType.MultiPart.FormData, requestContentType))
-            return@post
+            return@handle
         }
 
-        val session = assertMayWriteAtAll() ?: return@post
+        val session = assertMayWriteAtAll() ?: return@handle
 
         val item = if (isJsonCreate) {
             val body = call.receiveText()
@@ -414,9 +411,9 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             } catch (e: Exception) {
                 logger.error("Failed to decode create request. Body: $body", e)
                 respondError(Error.MalformedRequest())
-                return@post
+                return@handle
             }
-            tryCreate { requireNotNull(jsonCreator)(request) } ?: return@post
+            tryCreate { requireNotNull(jsonCreator)(request) } ?: return@handle
         } else {
             val multipart = call.receiveMultipart()
             val first = multipart.readPart()
@@ -429,13 +426,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
                 } catch (e: Exception) {
                     logger.error("Failed to decode multipart create request", e)
                     respondError(Error.MalformedRequest())
-                    return@post
+                    return@handle
                 }
-                tryCreate { received.withUploads { jsonCreator(received.request) } } ?: return@post
+                tryCreate { received.withUploads { jsonCreator(received.request) } } ?: return@handle
             } else {
                 // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch
                 //   once the oldest app version still served sends JSON (or the multipart form above).
-                createFromMultipart(creator, entityKClass, PushedBackMultiPartData(first, multipart)) ?: return@post
+                createFromMultipart(creator, entityKClass, PushedBackMultiPartData(first, multipart)) ?: return@handle
             }
         }
 
@@ -445,7 +442,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         // orphaned data behind.
         if (assertWritePermission(session, item) == null) {
             Database { onWriteRejected(item) }
-            return@post
+            return@handle
         }
 
         if (item is LastUpdateEntity) {
@@ -462,28 +459,28 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             )
         }
 
-        call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")
+        call.response.header(HttpHeaders.Location, href(resources.itemSerializer, resources.item(item.id.value.toString())))
         call.respondText("$base created", status = HttpStatusCode.Created)
     }
 
-    patch("$base/{id}") {
+    handle(resources.itemSerializer, HttpMethod.Patch) { resource ->
         if (updater == null) {
             respondError(Error.OperationNotSupported())
-            return@patch
+            return@handle
         }
 
-        val id = getId() ?: return@patch
-        assertRequestWithFilesContentType() ?: return@patch
-        val session = assertMayWriteAtAll() ?: return@patch
-        val item = assertEntity(id) ?: return@patch
-        assertWritePermission(session, item) ?: return@patch
+        val id = getId(resource) ?: return@handle
+        assertRequestWithFilesContentType() ?: return@handle
+        val session = assertMayWriteAtAll() ?: return@handle
+        val item = assertEntity(id) ?: return@handle
+        assertWritePermission(session, item) ?: return@handle
 
         // As JSON, or as multipart with the files in parts of their own (see RequestWithFiles)
-        val received = receiveRequestWithFiles(updater) ?: return@patch
+        val received = receiveRequestWithFiles(updater) ?: return@handle
         val request = received.request
         if (request.isEmpty()) {
             respondError(Error.NothingToUpdate())
-            return@patch
+            return@handle
         }
         @Suppress("UNCHECKED_CAST")
         val patcher = item as EntityPatcher<UER>
@@ -504,13 +501,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         } catch (e: MissingPartException) {
             logger.error("Update request refers to a missing part", e)
             respondError(Error.MalformedRequest())
-            return@patch
+            return@handle
         } catch (_: PermissionDeniedException) {
             respondError(Error.PermissionRejected())
-            return@patch
+            return@handle
         } catch (e: PatchRejectedException) {
             respondError(e.error)
-            return@patch
+            return@handle
         }
 
         if (item is LastUpdateEntity) {
@@ -523,20 +520,20 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
             )
         }
 
-        call.response.header(HttpHeaders.Location, "/$base/${item.id.value}")
+        call.response.header(HttpHeaders.Location, href(resources.itemSerializer, resources.item(item.id.value.toString())))
         call.respondText("$base created", status = HttpStatusCode.OK)
     }
 
-    delete("$base/{id}") {
-        val id = getId() ?: return@delete
-        val session = assertMayWriteAtAll() ?: return@delete
-        val item = assertEntity(id) ?: return@delete
-        assertWritePermission(session, item) ?: return@delete
+    handle(resources.itemSerializer, HttpMethod.Delete) { resource ->
+        val id = getId(resource) ?: return@handle
+        val session = assertMayWriteAtAll() ?: return@handle
+        val item = assertEntity(id) ?: return@handle
+        assertWritePermission(session, item) ?: return@handle
 
         val referencesCheck = Database { deleteReferencesCheck(item) }
         if (!referencesCheck) {
             respondError(Error.EntityDeleteReferencesExist())
-            return@delete
+            return@handle
         }
 
         Database { item.delete() }

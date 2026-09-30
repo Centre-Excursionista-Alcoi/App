@@ -1,10 +1,10 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.resources.get
+import io.ktor.server.resources.post
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
@@ -31,7 +31,7 @@ fun Route.usersRoutes() {
     // Provides a list of all users. Admins and Users Managers get all users, everyone else only gets users in
     // departments they hold PEOPLE_MANAGER in (if they hold that role in no department, only themselves are
     // included in the list).
-    get("/users") {
+    get<Api.Users> {
         val session = getUserSessionOrFail() ?: return@get
         var managingDepartments: List<DepartmentEntity>? = null
         if (!session.isAdmin() && !session.isUsersManager()) {
@@ -113,9 +113,9 @@ fun Route.usersRoutes() {
 
         call.respond(users)
     }
-    get("/users/{sub}") {
+    get<Api.Users.Sub> { user ->
         val session = getUserSessionOrFail() ?: return@get
-        val sub = call.parameters["sub"]!!
+        val sub = user.sub
 
         val user = Database {
             val canView = session.sub == sub || session.isAdmin() || session.isUsersManager() || run {
@@ -137,10 +137,10 @@ fun Route.usersRoutes() {
         call.respond(user)
     }
     // Promote a user to admin - admin only
-    post("/users/{sub}/promote") {
+    post<Api.Users.Sub.Promote> { promote ->
         assertAdmin() ?: return@post
 
-        val sub = call.parameters["sub"]!!
+        val sub = promote.parent.sub
 
         // Find user reference
         val reference = Database { UserReferenceEntity.find { UserReferences.sub eq sub }.firstOrNull() }
@@ -160,7 +160,7 @@ fun Route.usersRoutes() {
 
         call.respond(HttpStatusCode.NoContent)
     }
-    get("/members") {
+    get<Api.Members> {
         val session = getUserSessionOrFail() ?: return@get
 
         var members = Database { MemberEntity.all().map { it.toMember() } }

@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.CreateDepartmentRequest
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_DEPARTMENTS_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -28,7 +29,7 @@ class DepartmentsRemoteRepository(
     departmentsRepository: DepartmentsRepository,
     private val inventoryItemTypesRepository: InventoryItemTypesRepository
 ) : SymmetricRemoteRepository<Uuid, Department>(
-    "/departments",
+    Api.Departments.resources,
     SETTINGS_LAST_DEPARTMENTS_SYNC,
     Department.serializer(),
     departmentsRepository
@@ -48,7 +49,7 @@ class DepartmentsRemoteRepository(
     suspend fun confirmJoinRequest(request: DepartmentMemberInfo) {
         log.i { "Confirming join request: departmentId=${request.departmentId}, requestId=${request.id}" }
 
-        val response = httpClient.post("/departments/${request.departmentId}/confirm/${request.id}")
+        val response = httpClient.post(Api.Departments.Id.Confirm(request.id.toString(), Api.Departments.Id(request.departmentId.toString())))
         if (response.status.isSuccess()) {
             log.i { "Join request confirmed successfully." }
             update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
@@ -63,7 +64,7 @@ class DepartmentsRemoteRepository(
     suspend fun denyJoinRequest(request: DepartmentMemberInfo) {
         log.i { "Denying join request: departmentId=${request.departmentId}, requestId=${request.id}" }
 
-        val response = httpClient.post("/departments/${request.departmentId}/deny/${request.id}")
+        val response = httpClient.post(Api.Departments.Id.Deny(request.id.toString(), Api.Departments.Id(request.departmentId.toString())))
         if (response.status.isSuccess()) {
             log.i { "Join request denied successfully." }
             update(request.departmentId, ignoreIfModifiedSince = true) // Refresh department data
@@ -78,7 +79,7 @@ class DepartmentsRemoteRepository(
     suspend fun requestJoin(departmentId: Uuid) {
         log.i { "Requesting to join department: departmentId=$departmentId" }
 
-        val response = httpClient.post("/departments/$departmentId/join")
+        val response = httpClient.post(Api.Departments.Id.Join(Api.Departments.Id(departmentId.toString())))
         if (response.status.isSuccess()) {
             log.i { "Join request sent successfully." }
             update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
@@ -93,7 +94,7 @@ class DepartmentsRemoteRepository(
     suspend fun leave(departmentId: Uuid) {
         log.i { "Leaving department $departmentId..." }
 
-        val response = httpClient.post("/departments/$departmentId/leave")
+        val response = httpClient.post(Api.Departments.Id.Leave(Api.Departments.Id(departmentId.toString())))
         if (response.status.isSuccess()) {
             log.i { "Left department successfully" }
 
@@ -114,7 +115,7 @@ class DepartmentsRemoteRepository(
     suspend fun kick(departmentId: Uuid, sub: String) {
         log.i { "Kicking user $sub from department $departmentId..." }
 
-        val response = httpClient.post("/departments/$departmentId/leave/$sub")
+        val response = httpClient.post(Api.Departments.Id.Leave.Member(sub, Api.Departments.Id.Leave(Api.Departments.Id(departmentId.toString()))))
         if (response.status.isSuccess()) {
             log.i { "Kicked from department successfully" }
             update(departmentId, ignoreIfModifiedSince = true) // Refresh department data
@@ -134,7 +135,7 @@ class DepartmentsRemoteRepository(
     suspend fun updateMemberRoles(departmentId: Uuid, memberId: Uuid, roles: List<DepartmentRole>) {
         log.i { "Updating roles for member $memberId in department $departmentId: $roles" }
 
-        val response = httpClient.patch("/departments/$departmentId/members/$memberId/roles") {
+        val response = httpClient.patch(Api.Departments.Id.Members.Roles(memberId.toString(), Api.Departments.Id.Members(Api.Departments.Id(departmentId.toString())))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(roles)))
         }

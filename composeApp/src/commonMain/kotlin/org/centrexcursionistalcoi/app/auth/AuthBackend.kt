@@ -2,8 +2,8 @@ package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
 import io.ktor.client.call.body
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -14,7 +14,9 @@ import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
+import org.centrexcursionistalcoi.app.network.resource
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.koin.core.annotation.Singleton
@@ -32,13 +34,14 @@ class AuthBackend(
     private val log = logging()
     
     suspend fun register(email: String, password: String) {
-        val response = getHttpClient().submitForm(
-            url = "/register",
-            formParameters = parameters {
-                append("email", email)
-                append("password", password)
-            }
-        )
+        val response = getHttpClient().let { client ->
+            client.submitForm(
+                formParameters = parameters {
+                    append("email", email)
+                    append("password", password)
+                }
+            ) { resource(client, Api.Register()) }
+        }
         if (response.status.isSuccess()) {
             log.d { "Registration successful." }
         } else {
@@ -55,13 +58,17 @@ class AuthBackend(
 
     /** Starts a session with [email] and [password], saving its tokens. */
     internal suspend fun authenticate(email: String, password: String) {
-        val response = getHttpClient().submitForm(
-            url = "/auth/login",
-            formParameters = parameters {
-                append("email", email)
-                append("password", password)
+        val response = getHttpClient().let { client ->
+            client.submitForm(
+                formParameters = parameters {
+                    append("email", email)
+                    append("password", password)
+                }
+            ) {
+                resource(client, Api.Auth.Login())
+                skipSessionAuth()
             }
-        ) { skipSessionAuth() }
+        }
         if (response.status.isSuccess()) {
             log.d { "Login successful." }
             sessionTokens.onLoggedIn(response.body<TokenResponse>())
@@ -113,7 +120,7 @@ class AuthBackend(
      */
     private suspend fun endSession() {
         val session = credentialsStore.getSession()
-        val response = getHttpClient().post("/auth/logout") {
+        val response = getHttpClient().post(Api.Auth.Logout()) {
             skipSessionAuth()
             if (session != null) {
                 contentType(ContentType.Application.Json)
@@ -168,12 +175,13 @@ class AuthBackend(
     }
 
     suspend fun forgotPassword(email: String) {
-        val response = getHttpClient().submitForm(
-            url = "/lost_password",
-            formParameters = parameters {
-                append("email", email)
-            }
-        )
+        val response = getHttpClient().let { client ->
+            client.submitForm(
+                formParameters = parameters {
+                    append("email", email)
+                }
+            ) { resource(client, Api.LostPassword()) }
+        }
         if (response.status.isSuccess()) {
             log.d { "Forgot password request successful." }
         } else {
@@ -182,7 +190,7 @@ class AuthBackend(
     }
 
     suspend fun deleteAccount() {
-        val response = getHttpClient().post("/delete_account")
+        val response = getHttpClient().post(Api.DeleteAccount())
         if (response.status.isSuccess()) {
             log.w { "Account delete request successful. Removing all data..." }
             clearLocalData()

@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.plugins.resources.patch
 import kotlin.time.Clock
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -359,7 +360,7 @@ class TestMultipartRequests : ApplicationTestBase() {
 
     @Test
     fun test_patch_unknownEntity() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.patch("/departments/${Uuid.random()}") {
+        client.patch(Api.Departments.Id("${Uuid.random()}")) {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertStatusCode(HttpStatusCode.NotFound)
@@ -370,7 +371,7 @@ class TestMultipartRequests : ApplicationTestBase() {
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { DepartmentEntity.new { displayName = "Department" }.id.value },
     ) { context ->
-        client.patch("/departments/${context.dibResult}").assertStatusCode(HttpStatusCode.BadRequest)
+        client.patch(Api.Departments.Id("${context.dibResult}")).assertStatusCode(HttpStatusCode.BadRequest)
     }
 
     @Test
@@ -379,7 +380,7 @@ class TestMultipartRequests : ApplicationTestBase() {
         databaseInitBlock = { DepartmentEntity.new { displayName = "Department" }.id.value },
     ) { context ->
         // Sent by app versions from before multipart requests: contents encoded in the JSON
-        client.patch("/departments/${context.dibResult}") {
+        client.patch(Api.Departments.Id("${context.dibResult}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentRequest.serializer(), UpdateDepartmentRequest(image = FileWithContext(png, name = "logo.png"))))
         }.assertStatusCode(HttpStatusCode.OK)

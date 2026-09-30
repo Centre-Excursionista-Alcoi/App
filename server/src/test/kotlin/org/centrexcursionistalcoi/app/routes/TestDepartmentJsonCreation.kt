@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -33,7 +34,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
  * stays covered by `TestRoutes.kt`'s generic `runTestsOnRoute` harness, unaffected by any of this.
  */
 class TestDepartmentJsonCreation : ApplicationTestBase() {
-    private suspend fun HttpClient.postJson(request: CreateDepartmentRequest) = post("/departments") {
+    private suspend fun HttpClient.postJson(request: CreateDepartmentRequest) = post(Api.Departments()) {
         contentType(ContentType.Application.Json)
         setBody(json.encodeToString(CreateDepartmentRequest.serializer(), request))
     }
@@ -45,7 +46,7 @@ class TestDepartmentJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_malformedBody_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/departments") {
+        client.post(Api.Departments()) {
             contentType(ContentType.Application.Json)
             setBody("not json")
         }.assertStatusCode(HttpStatusCode.BadRequest)
@@ -53,7 +54,7 @@ class TestDepartmentJsonCreation : ApplicationTestBase() {
 
     @Test
     fun test_create_json_missingRequiredField_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        client.post("/departments") {
+        client.post(Api.Departments()) {
             contentType(ContentType.Application.Json)
             setBody("{}")
         }.assertStatusCode(HttpStatusCode.BadRequest)

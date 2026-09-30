@@ -2,9 +2,9 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.delete
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
 import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
 import org.koin.core.annotation.Singleton
@@ -47,7 +48,7 @@ class ProfileRemoteRepository(
      * @throws ResourceNotModifiedException if the profile has not changed since the last fetch.
      */
     suspend fun getProfile(progressNotifier: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): ProfileResponse? {
-        val response = httpClient.get("/profile") {
+        val response = httpClient.get(Api.Profile()) {
             progressNotifier?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
         }
@@ -70,7 +71,7 @@ class ProfileRemoteRepository(
         sports: List<Sports>,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        val response = httpClient.post("/profile/lendingSignUp") {
+        val response = httpClient.post(Api.Profile.LendingSignUp()) {
             setBody(requestBody(LendingSignUpRequest(phoneNumber, sports), LendingSignUpRequest.serializer()))
             progressNotifier?.let { monitorUploadProgress(it) }
         }
@@ -99,7 +100,7 @@ class ProfileRemoteRepository(
             validTo = validTo,
             documents = documents.map { it.fileWithContext() },
         )
-        val response = httpClient.post("/profile/insurances") {
+        val response = httpClient.post(Api.Profile.Insurances()) {
             setBody(requestBody(request, CreateInsuranceRequest.serializer()))
             monitorUploadProgress(progressNotifier)
         }
@@ -149,7 +150,7 @@ class ProfileRemoteRepository(
     }
 
     suspend fun connectFEMECV(username: String, password: CharArray, progressNotifier: ProgressNotifier? = null) {
-        val response = httpClient.post("/profile/femecvSync") {
+        val response = httpClient.post(Api.Profile.FEMECVSync()) {
             setBody(requestBody(LinkFEMECVRequest(username, password.concatToString()), LinkFEMECVRequest.serializer()))
             progressNotifier?.let { monitorUploadProgress(it) }
         }
@@ -160,7 +161,7 @@ class ProfileRemoteRepository(
     }
 
     suspend fun disconnectFEMECV(progressNotifier: ProgressNotifier? = null) {
-        val response = httpClient.delete("/profile/femecvSync") {
+        val response = httpClient.delete(Api.Profile.FEMECVSync()) {
             progressNotifier?.let { monitorDownloadProgress(it) }
         }
         if (!response.status.isSuccess()) throw ServerException.fromResponse(response)

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.resources.get
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
@@ -233,7 +234,7 @@ class TestAppLinkFallbackRoutes : ApplicationTestBase() {
     @Test
     fun test_aRouteThatMatchesButAnswers404ForItsOwnReasons_isNotHijacked() = runApplicationTest {
         // /events/{id} is a real, matched route; a missing entity's 404 is its own business logic, not "unmatched"
-        client.get("/events/${Uuid.random()}").apply {
+        client.get(Api.Events.Id("${Uuid.random()}")).apply {
             assertStatusCode(HttpStatusCode.NotFound)
             assertContains(bodyAsText(), "EntityNotFound")
         }

@@ -1,8 +1,8 @@
 package org.centrexcursionistalcoi.app
 
+import io.ktor.client.plugins.resources.get
 import kotlin.time.Clock
 import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -16,6 +16,7 @@ import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -32,9 +33,9 @@ class TestPasswordRecovery : ApplicationTestBase() {
             }
         },
     ) {
-        val page = client.get("/reset_password?request_id=recovery-request").bodyAsText()
+        val page = client.get(Api.ResetPassword(requestId = "recovery-request")).bodyAsText()
         assertTrue(page.contains("name=\"request_id\" value=\"recovery-request\""))
-        val response = client.submitForm("/reset_password", Parameters.build {
+        val response = client.submitForm(href(Api.ResetPassword()), Parameters.build {
             append("request_id", "recovery-request")
             append("webui", "true")
             append("password", password)
@@ -58,7 +59,7 @@ class TestPasswordRecovery : ApplicationTestBase() {
                 assertTrue(Passwords.verify(password.toCharArray(), user.password))
                 assertEquals(0, RecoverPasswordRequests.selectAll().count().toInt())
             }
-            val reused = client.submitForm("/reset_password", Parameters.build {
+            val reused = client.submitForm(href(Api.ResetPassword()), Parameters.build {
                 append("request_id", "recovery-request")
                 append("webui", "true")
                 append("password", "OtherPassword123")
@@ -71,7 +72,7 @@ class TestPasswordRecovery : ApplicationTestBase() {
     }
 
     @Test fun `missing request shows a web error`() = runApplicationTest {
-        val response = client.submitForm("/reset_password", Parameters.build {
+        val response = client.submitForm(href(Api.ResetPassword()), Parameters.build {
             append("webui", "true")
             append("password", "NewPassword123")
         })
@@ -80,7 +81,7 @@ class TestPasswordRecovery : ApplicationTestBase() {
     }
 
     @Test fun `API validation still returns a structured error`() = runApplicationTest {
-        val response = client.submitForm("/reset_password", Parameters.build {
+        val response = client.submitForm(href(Api.ResetPassword()), Parameters.build {
             append("request_id", "recovery-request")
             append("password", "weak")
         })

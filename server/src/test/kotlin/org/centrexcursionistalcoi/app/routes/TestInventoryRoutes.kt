@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
+import io.ktor.client.plugins.resources.get
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -29,7 +29,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) { context ->
         val type = context.dibResult!!
 
-        client.get("/inventory/types/${type.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Inventory.Types.Id("${type.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -46,7 +46,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) { context ->
         val type = context.dibResult!!
 
-        client.get("/inventory/types/${type.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Inventory.Types.Id("${type.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -69,7 +69,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) { context ->
         val type = context.dibResult!!
 
-        client.get("/inventory/types/${type.id.value}").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Inventory.Types.Id("${type.id.value}")).assertStatusCode(HttpStatusCode.OK)
     }
 
     @Test
@@ -81,7 +81,7 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) { context ->
         val item = context.dibResult!!
 
-        client.get("/inventory/items/${item.id.value}").assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Inventory.Items.Id("${item.id.value}")).assertStatusCode(HttpStatusCode.NotFound)
     }
 
     @Test
@@ -105,6 +105,6 @@ class TestInventoryRoutes : ApplicationTestBase() {
     ) { context ->
         val item = context.dibResult!!
 
-        client.get("/inventory/items/${item.id.value}").assertStatusCode(HttpStatusCode.OK)
+        client.get(Api.Inventory.Items.Id("${item.id.value}")).assertStatusCode(HttpStatusCode.OK)
     }
 }

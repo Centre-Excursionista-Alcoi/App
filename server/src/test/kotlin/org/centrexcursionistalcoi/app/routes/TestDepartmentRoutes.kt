@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
 import app.cash.turbine.test
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
+import io.ktor.client.plugins.resources.get
+import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -23,6 +23,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.push.PushNotification
@@ -77,7 +78,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         databaseInitBlock = { departmentWithFakeUser(confirmed = false) },
     ) {
         val notification = awaitPushToFakeUser {
-            client.post("/departments/$departmentId/confirm/$joinRequestId").assertStatusCode(HttpStatusCode.OK)
+            client.post(Api.Departments.Id.Confirm("$joinRequestId", Api.Departments.Id("$departmentId"))).assertStatusCode(HttpStatusCode.OK)
         }
 
         assertTrue(notification is PushNotification.DepartmentJoinRequestUpdated)
@@ -92,7 +93,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         databaseInitBlock = { departmentWithFakeUser(confirmed = false) },
     ) {
         val notification = awaitPushToFakeUser {
-            client.post("/departments/$departmentId/deny/$joinRequestId").assertStatusCode(HttpStatusCode.OK)
+            client.post(Api.Departments.Id.Deny("$joinRequestId", Api.Departments.Id("$departmentId"))).assertStatusCode(HttpStatusCode.OK)
         }
 
         assertTrue(notification is PushNotification.DepartmentJoinRequestUpdated)
@@ -107,7 +108,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
         databaseInitBlock = { departmentWithFakeUser(confirmed = true) },
     ) {
         val notification = awaitPushToFakeUser {
-            client.post("/departments/$departmentId/leave/${FakeUser.SUB}").assertSuccess()
+            client.post(Api.Departments.Id.Leave.Member("${FakeUser.SUB}", Api.Departments.Id.Leave(Api.Departments.Id("$departmentId")))).assertSuccess()
         }
 
         assertTrue(notification is PushNotification.DepartmentKicked)
@@ -115,13 +116,13 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/join", HttpMethod.Post)
+    fun test_join_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))), HttpMethod.Post)
 
     @Test
     fun test_join_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.USER
     ) {
-        client.post("/departments/$departmentId/join").apply {
+        client.post(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -139,7 +140,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/join").apply {
+        client.post(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.Conflict)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -160,7 +161,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/join").apply {
+        client.post(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.Conflict)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -177,7 +178,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/join").apply {
+        client.post(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.Created)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -194,7 +195,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/join").apply {
+        client.post(Api.Departments.Id.Join(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
             val header = headers[HttpHeaders.CEAInfo]
             assertNotNull(header)
@@ -204,13 +205,13 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_members_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/$departmentId/members")
+    fun test_members_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Departments.Id.Members(Api.Departments.Id("$departmentId"))))
 
     @Test
     fun test_members_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.get("/departments/$departmentId/members").apply {
+        client.get(Api.Departments.Id.Members(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -234,7 +235,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId/members").apply {
+        client.get(Api.Departments.Id.Members(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(DepartmentJoinRequest.serializer().list()) { requests ->
                 assertEquals(1, requests.size)
@@ -265,7 +266,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId/members").apply {
+        client.get(Api.Departments.Id.Members(Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(DepartmentJoinRequest.serializer().list()) { requests ->
                 assertEquals(2, requests.size)
@@ -285,13 +286,13 @@ class TestDepartmentRoutes : ApplicationTestBase() {
 
 
     @Test
-    fun test_confirm_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn("/departments/abc/confirm/abc", HttpMethod.Post)
+    fun test_confirm_notLoggedIn() = ProvidedRouteTests.test_notLoggedIn(href(Api.Departments.Id.Confirm("abc", Api.Departments.Id("abc"))), HttpMethod.Post)
 
     @Test
     fun test_confirm_notAdmin() = runApplicationTest(
         shouldLogIn = LoginType.USER
     ) {
-        client.post("/departments/abc/confirm/abc").apply {
+        client.post(Api.Departments.Id.Confirm("abc", Api.Departments.Id("abc"))).apply {
             assertStatusCode(HttpStatusCode.Forbidden)
         }
     }
@@ -300,7 +301,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     fun test_confirm_departmentNotFound() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN
     ) {
-        client.post("/departments/$departmentId/confirm/abc").apply {
+        client.post(Api.Departments.Id.Confirm("abc", Api.Departments.Id("$departmentId"))).apply {
             assertError(Error.PermissionRejected())
         }
     }
@@ -314,7 +315,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
+        client.post(Api.Departments.Id.Confirm("$joinRequestId", Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.NotFound)
         }
     }
@@ -333,7 +334,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
+        client.post(Api.Departments.Id.Confirm("$joinRequestId", Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
             headers[HttpHeaders.CEAInfo]?.let { ceaInfo ->
                 assertEquals("member", ceaInfo)
@@ -355,7 +356,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/confirm/$joinRequestId").apply {
+        client.post(Api.Departments.Id.Confirm("$joinRequestId", Api.Departments.Id("$departmentId"))).apply {
             assertStatusCode(HttpStatusCode.OK)
         }
 
@@ -374,7 +375,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/leave").apply {
+        client.post(Api.Departments.Id.Leave(Api.Departments.Id("$departmentId"))).apply {
             assertSuccess()
         }
     }
@@ -395,7 +396,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     ) { context ->
         context.dibResult!!
 
-        client.post("/departments/$departmentId/leave").apply {
+        client.post(Api.Departments.Id.Leave(Api.Departments.Id("$departmentId"))).apply {
             assertSuccess()
         }
 
@@ -413,7 +414,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+        client.post(Api.Departments.Id.Leave.Member("${FakeUser.SUB}", Api.Departments.Id.Leave(Api.Departments.Id("$departmentId")))).apply {
             assertError(Error.PermissionRejected())
         }
     }
@@ -427,7 +428,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+        client.post(Api.Departments.Id.Leave.Member("${FakeUser.SUB}", Api.Departments.Id.Leave(Api.Departments.Id("$departmentId")))).apply {
             assertError(Error.EntityNotFound(DepartmentMemberEntity::class, FakeUser.SUB))
         }
     }
@@ -448,7 +449,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     ) { context ->
         context.dibResult!!
 
-        client.post("/departments/$departmentId/leave/${FakeUser.SUB}").apply {
+        client.post(Api.Departments.Id.Leave.Member("${FakeUser.SUB}", Api.Departments.Id.Leave(Api.Departments.Id("$departmentId")))).apply {
             assertSuccess()
         }
 
@@ -481,7 +482,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     ) { context ->
         val member = context.dibResult!!
 
-        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+        client.patch(Api.Departments.Id.Members.Roles("${member.id.value}", Api.Departments.Id.Members(Api.Departments.Id("$departmentId")))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.INVENTORY_MANAGER))))
         }.apply {
@@ -516,7 +517,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     ) { context ->
         val member = context.dibResult!!
 
-        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+        client.patch(Api.Departments.Id.Members.Roles("${member.id.value}", Api.Departments.Id.Members(Api.Departments.Id("$departmentId")))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.INVENTORY_MANAGER))))
         }.apply {
@@ -544,7 +545,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
     ) { context ->
         val member = context.dibResult!!
 
-        client.patch("/departments/$departmentId/members/${member.id.value}/roles") {
+        client.patch(Api.Departments.Id.Members.Roles("${member.id.value}", Api.Departments.Id.Members(Api.Departments.Id("$departmentId")))) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentMemberRolesRequest.serializer(), UpdateDepartmentMemberRolesRequest(listOf(DepartmentRole.LENDING_MANAGER))))
         }.apply {
@@ -570,7 +571,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId").apply {
+        client.get(Api.Departments.Id("$departmentId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Department.serializer()) { department ->
                 assertTrue(department.members.orEmpty().isEmpty(), "Anonymous caller should not see any member")
@@ -595,7 +596,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId").apply {
+        client.get(Api.Departments.Id("$departmentId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Department.serializer()) { department ->
                 val members = department.members.orEmpty()
@@ -623,7 +624,7 @@ class TestDepartmentRoutes : ApplicationTestBase() {
             }
         }
     ) {
-        client.get("/departments/$departmentId").apply {
+        client.get(Api.Departments.Id("$departmentId")).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Department.serializer()) { department ->
                 assertEquals(2, department.members.orEmpty().size, "A people manager should see every member, including unconfirmed ones")

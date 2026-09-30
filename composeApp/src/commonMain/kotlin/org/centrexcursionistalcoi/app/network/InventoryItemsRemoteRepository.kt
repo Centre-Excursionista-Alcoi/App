@@ -8,6 +8,7 @@ import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity.Compan
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.CreateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
+import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_INVENTORY_ITEMS_SYNC
 import org.koin.core.annotation.Singleton
 import kotlin.uuid.Uuid
@@ -16,7 +17,7 @@ import kotlin.uuid.Uuid
 class InventoryItemsRemoteRepository(
     private val inventoryItemsRepository: InventoryItemsRepository,
 ) : RemoteRepository<Uuid, ReferencedInventoryItem, Uuid, InventoryItem>(
-    "/inventory/items",
+    Api.Inventory.Items.resources,
     SETTINGS_LAST_INVENTORY_ITEMS_SYNC,
     InventoryItem.serializer(),
     inventoryItemsRepository,

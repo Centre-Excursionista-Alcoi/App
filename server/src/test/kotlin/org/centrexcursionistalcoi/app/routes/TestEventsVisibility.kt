@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.client.request.get
+import io.ktor.client.plugins.resources.get
 import io.ktor.http.HttpStatusCode
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -83,7 +83,7 @@ class TestEventsVisibility : ApplicationTestBase() {
         mockNow = now,
         databaseInitBlock = { seed() },
     ) {
-        client.get("/events").apply {
+        client.get(Api.Events()).apply {
             assertStatusCode(HttpStatusCode.OK)
             assertBody(Event.serializer().list()) { events ->
                 assertEquals(expectedVisible, events.map { it.title }.toSet())
@@ -99,11 +99,11 @@ class TestEventsVisibility : ApplicationTestBase() {
     ) { context ->
         val ids = context.dibResult!!
         for (title in expectedVisible) {
-            client.get("/events/${ids.getValue(title)}").assertStatusCode(HttpStatusCode.OK)
+            client.get(Api.Events.Id("${ids.getValue(title)}")).assertStatusCode(HttpStatusCode.OK)
         }
         for (title in expectedHidden) {
             // a denied event is answered exactly as if it didn't exist
-            client.get("/events/${ids.getValue(title)}").assertStatusCode(HttpStatusCode.NotFound)
+            client.get(Api.Events.Id("${ids.getValue(title)}")).assertStatusCode(HttpStatusCode.NotFound)
         }
     }
 
@@ -113,7 +113,7 @@ class TestEventsVisibility : ApplicationTestBase() {
         mockNow = now,
         databaseInitBlock = { seed() },
     ) {
-        client.get("/events").apply {
+        client.get(Api.Events()).apply {
             assertBody(Event.serializer().list()) { events ->
                 assertEquals(expectedVisible.size + expectedHidden.size, events.size)
             }

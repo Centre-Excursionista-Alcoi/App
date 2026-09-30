@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.data
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpStatusCode
 import java.io.File
@@ -80,7 +81,7 @@ class TestFileContainerExtensions {
         _httpClient = HttpClient(MockEngine { request ->
             requests += request
             respond(content, status)
-        })
+        }) { install(Resources) }
     }
 
     private fun insurance(documentId: Uuid?) = UserInsurance(
